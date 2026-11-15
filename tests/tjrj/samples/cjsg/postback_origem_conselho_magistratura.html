@@ -1,0 +1,840 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>
+	Tribunal de Justiça do Estado do Rio de Janeiro
+</title><meta http-equiv="X-UA-Compatible" content="IE=Edge" /><link href="./img/favicon.ico" rel="Shortcut Icon" /><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><link id="Link3" rel="stylesheet" media="screen" href="Styles/importacao-sistemas.css" /><link id="Link1" rel="stylesheet" media="screen" href="Styles/Site.css" />
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeyHqQUAAAAACUVxyWku1hGU2sHi2vof7q-vCH7" type="text/javascript"></script>
+    <meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="cache-control" content="no-cache" /><meta http-equiv="Expires" content="-1" />
+    <!-- Google tag (gtag.js) -->
+    <script type="text/javascript">
+        var googleAnalyticsId = 'G-5ZKHD9TRY6';
+        var scriptTag = document.createElement('script');
+        scriptTag.async = true;
+        scriptTag.src = 'https://www.googletagmanager.com/gtag/js?id=' + googleAnalyticsId;
+        document.head.appendChild(scriptTag);
+    </script>
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-5ZKHD9TRY6');
+    </script>
+    <script src="Scripts/jquery-1.11.0.min.js" type="text/javascript"
+        language="javascript"></script>
+    <script src="Scripts/MPS.TJRJ.Util.min.js?Version=1.2.2.3" type="text/javascript"
+        language="javascript"></script>
+    <script src="Scripts/jquery-jtemplates-0.8.4.js" type="text/javascript"
+        language="javascript"></script>
+    <script type="text/javascript" language="javascript" defer="defer">
+
+        $(window).bind("pageshow", function () {
+            var btnPesquisar = document.getElementById('ContentPlaceHolder1_btnPesquisar');
+            if (btnPesquisar != null)
+                btnPesquisar.disabled = false;
+
+            if (performance.getEntriesByType("navigation")[0].type == "back_forward") {
+                var parametrosPesquisa = window.sessionStorage.getItem("parametrosPesquisa");
+                if (parametrosPesquisa != null)
+                    PreencherCamposTela(parametrosPesquisa);
+            }            
+        });
+
+        function AdicionarCombo(element) {
+            var tRow = element.parentElement.parentElement;
+            var table = tRow.parentElement;
+            var i = $("." + tRow.className).last().index() + 1;
+            var row = table.insertRow(i);
+            row.className = tRow.className;
+            var cell1 = row.insertCell(0);
+            cell1.classList.add("labeldireita");
+            var novoCampo = $(tRow).find($(".campo")).last().clone(true);
+            novoCampo.appendTo(row);
+            return novoCampo; //retona a TD com o novo combo dentro.
+            $(element).attr("disabled", "disabled");
+        }
+
+        //Definindo ids com a intenção de encontrar os campos para uso nos eventos
+        var hfCodRamos = 'ContentPlaceHolder1_hfCodRamos';
+        var hfCodMags = 'ContentPlaceHolder1_hfCodMags';
+        var hfCodOrgs = 'ContentPlaceHolder1_hfCodOrgs';
+
+        var cmbRamo = 'ContentPlaceHolder1_cmbRamo';
+        var cmbOrgao = 'ContentPlaceHolder1_cmbOrgaoJulgador';
+        var cmbMagistrado = 'ContentPlaceHolder1_cmbMagistrado';
+        var cmbTipNum = 'ContentPlaceHolder1_cmbTipNumeracao';
+
+        function PreencherCombos(idElement, values, classElement) {
+            if ($("#" + idElement).val() !== "") {
+                $.each(values.split(";"), function (index, value) {
+                    if ((index > 0) && (value > 0))
+                        $(AdicionarCombo(document.getElementById(idElement))).find($("." + classElement)).val(value);
+                });
+            }
+        }
+
+        function CriarCombos() {
+            var CodRamos = $("#"+ hfCodRamos).val();
+            var CodOrgs = $("#"+ hfCodOrgs).val();
+            var CodMags = $("#"+ hfCodMags).val();
+
+            if (CodRamos != "")
+                PreencherCombos(cmbRamo, CodRamos, "cmbRamo");
+            if (CodOrgs != "")
+                PreencherCombos(cmbOrgao, CodOrgs, "cmbOrgaoJulgador");
+            if (CodMags != "")
+                PreencherCombos(cmbMagistrado, CodMags, "cmbMagistrado");
+        }
+
+        window.onload = function () {
+            CriarCombos();
+            cmbChange(document.getElementById(cmbRamo), hfCodRamos);
+            cmbChange(document.getElementById(cmbMagistrado), hfCodMags);
+            cmbChange(document.getElementById(cmbOrgao), hfCodOrgs);
+            cmbTipNumeracaoChange(document.getElementById(cmbTipNum));
+        }
+
+        function LimparHiddenFields() {
+            $("#" + hfCodRamos).val("");
+            $("#" + hfCodOrgs).val("");
+            $("#" + hfCodMags).val("");
+        }
+
+        function cmbChange(element, hfElement) {
+            $("#" + hfElement).val(retornaValores(element));
+        }
+
+        function habilitaBtnCombos(element, btnElement) {
+            var habilita = true;
+            $.grep($("." + element.className).map(function() {
+                habilita = habilita & ($(this).val() !== "");
+            }));
+            if (habilita)
+                btnElement.removeAttr('disabled');
+            else
+                btnElement.attr('disabled', 'disabled');
+        }
+
+        function cmbTipNumeracaoChange(element) {
+            var eTxtNumeracao = $("#ContentPlaceHolder1_txtNumeracao");
+            eTxtNumeracao.val("");
+            if ($(element).val() === "1") {
+                eTxtNumeracao.attr({ "MaxLength": "25", "onblur": "javascript: FormataNumCNJ(this.id,this.value);" });
+            } else {
+                eTxtNumeracao.attr({ "MaxLength": "17", "onblur": "javascript: FormataNumAntigo(this.id,this.value);" });
+            }
+        }
+
+        function retornaValores(element) {
+            return $.grep($("." + element.className).map(function() {
+                   return $(this).val(); // retorna todos os valores das combos com a classe css selecionada
+                }).get(), function(v) {
+                   return v !== ""; // filtra os valores, retornando apenas os que não são vazios
+                }
+            ).join(";");//Separador
+        }
+
+        function ValidarPreenchimento() {
+            var retorno = true;
+            var txtTextoPesq = document.getElementById('ContentPlaceHolder1_txtTextoPesq');
+            var txtNumeracao = document.getElementById('ContentPlaceHolder1_txtNumeracao');
+
+            if ((txtTextoPesq.value.trim() == "") && (txtNumeracao.value.trim() == "")) {
+                alert('Para a execução da pesquisa devem ser informados no mínimo os parâmetros:\n "Pesquisa Livre", "Num. Única" ou "Num. Antiga"');
+                retorno = false;
+            }
+            if (retorno)
+                retorno = ValidarPalavrasOperadores('ContentPlaceHolder1_txtTextoPesq');
+
+            return retorno;
+        }
+
+        function PreencherCamposTela(parametrosPesquisa) {
+            var par = JSON.parse(window.sessionStorage.getItem("parametrosPesquisa"));
+
+            if (!isNullOrWhitespace(par.NumAntigo) || !isNullOrWhitespace(par.NumCnj)) {
+                compId = 'ContentPlaceHolder1_txtNumeracao';
+                cmpCmbTipNum = document.getElementById(cmbTipNum);
+                if (!isNullOrWhitespace(par.NumCnj)) {
+                    setarIndexSelect(cmpCmbTipNum, 1)
+                    cmbTipNumeracaoChange(cmpCmbTipNum);
+                    $("#" + compId).val(par.NumCnj);
+                    $("#" + compId).blur();
+                } else {
+                    setarIndexSelect(cmpCmbTipNum, 2);
+                    cmbTipNumeracaoChange(cmpCmbTipNum);
+                    $("#" + compId).val(par.NumAntigo);
+                    $("#" + compId).blur();
+                }
+            } else {
+                var compId = 'ContentPlaceHolder1_txtTextoPesq';
+                $("#" + compId).val(par.TextoPesq);
+
+                compId = 'ContentPlaceHolder1_cmbOrigem';
+                setarIndexSelect(document.getElementById(compId), par.CodOrig);
+                __doPostBack(compId, '');
+                //Usar settimeout para dar tempo de executar o __doPostBack
+                setTimeout(function () {
+
+                    /*Combo Ramos*/
+                    $.each(par.CodRamos, function (index, value) {
+                        //Adicionar um combo na tela para cada Ramo, pular o primeiro por já existir por padrão
+                        if (index > 0)
+                            $(AdicionarCombo(document.getElementById(cmbRamo)));
+                    });
+
+                    //selecionar todos os combos de Ramo
+                    var listaCombos = $(".cmbRamo").map(function () {
+                        return $(this);
+                    });
+
+                    carregarCombosLista(par.CodRamos, listaCombos);
+
+                    compId = 'ContentPlaceHolder1_chkAcordao';
+                    document.getElementById(compId).checked = (par.IndAcordao == true);
+
+                    compId = 'ContentPlaceHolder1_chkDecMon';
+                    document.getElementById(compId).checked = (par.IndDecMon == true);
+
+                    compId = 'ContentPlaceHolder1_chkEmentario';
+                    document.getElementById(compId).checked = (par.IndEmentario == true);
+        
+                    compId = 'ContentPlaceHolder1_chkIntTeor';
+                    document.getElementById(compId).checked = (par.IndInteiroTeor == true);
+        
+                    SetarDependenciasOrigem(par);
+
+                }, 500);
+            }
+
+            setTimeout(function () {
+                var elemento = document.getElementById(cmbRamo);
+                cmbChange(elemento, hfCodRamos);
+                habilitaBtnCombos(elemento, $('#btnAddRamo'));
+
+                elemento = document.getElementById(cmbMagistrado);
+                cmbChange(elemento, hfCodMags);
+                habilitaBtnCombos(elemento, $('#btnAddMag'));
+
+                elemento = document.getElementById(cmbOrgao);
+                cmbChange(elemento, hfCodOrgs);
+                habilitaBtnCombos(elemento, $('#btnAddOrg'));
+
+            }, 1500);
+
+            //window.sessionStorage.removeItem("parametrosPesquisa");
+        }
+
+        function SetarDependenciasOrigem(par) {
+            compId = 'ContentPlaceHolder1_cmbAnoInicio';
+                    setarIndexSelect(document.getElementById(compId), par.AnoInicio);
+
+            compId = 'ContentPlaceHolder1_cmbAnoFim'
+            setarIndexSelect(document.getElementById(compId), par.AnoFim);
+
+            compId = 'ContentPlaceHolder1_cmbCompetencia';
+            setarIndexSelect(document.getElementById(compId), par.CodCompt);
+            __doPostBack(compId, '');
+            //Usar settimeout para dar tempo de executar o __doPostBack
+            setTimeout(
+                function () {
+                    /*Combo Magistrados*/
+                    $.each(par.CodMags, function (index, value) {
+                        //Adicionar um combo na tela para cada Magistrado, pular o primeiro por já existir por padrão
+                        if (index > 0)
+                            $(AdicionarCombo(document.getElementById(cmbMagistrado)));
+                    });
+
+                    //selecionar todos os combos de Magistrado
+                    var listaCombos = $(".cmbMagistrado").map(function () {
+                        return $(this);
+                    });
+
+                    carregarCombosLista(par.CodMags, listaCombos);
+
+                    SetarDependenciasCompetencia(par);
+
+                }, 500);
+        }
+
+        function SetarDependenciasCompetencia(par) {
+            $.each(par.CodOrgJulgs, function (index, value) {
+                if (index > 0)
+                    $(AdicionarCombo(document.getElementById(cmbOrgao)));
+            });
+
+            //selecionar todos os combos de OJ
+            var listaCombos = $(".cmbOrgaoJulgador").map(function () {
+                return $(this);
+            });
+
+            carregarCombosLista(par.CodOrgJulgs, listaCombos);
+        }
+
+        function carregarCombosLista(listaValores, listaCombos) {
+            $.each(listaValores, function (index, value) {
+                var cmb = listaCombos[index];
+                setarIndexSelect(cmb[0], value);
+            });
+        }
+    </script>
+    <style type="text/css">
+        .btnAdd {
+            padding: 1vmin 1em !important;
+            background-color: #286090 !important;
+        }
+        .btnAdd:disabled {
+            background-color: #bbb !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="tudo">
+        <!-- Ini­cio da div#tudo -->
+        <link href="Styles/aplication.css" rel="stylesheet" />
+<nav role="navigation" class="navbar navbar-default navbar-static-top" style="margin-bottom: 0;">
+	<app-header>
+		<div class="navbar-header">
+			<div class="navbar-header">
+				<a href="https://www.tjrj.jus.br">
+					<div id="logomarca-tribunal">
+						<span id="descricao-logomarca-sistema">Logomarca do Poder Judiciário do Estado do Rio de Janeiro</span>
+					</div>
+				</a>
+			</div>
+		</div>
+		<ul id="lista-acessibilidade" style="margin-top: 10px; margin-bottom: 0; margin-right: 15px;">
+			<!---->
+			<!---->
+		</ul>
+		<p-toast class="ng-tns-c24-0">
+			<div class="ng-tns-c24-0 p-toast p-component p-toast-top-right">
+				<!---->
+			</div>
+		</p-toast>
+	</app-header>
+</nav>            
+        <!-- Fim da div#cabecalho -->
+        <!-- Inicio da div#container -->
+        <div id="container">
+            <!-- Início DIV da barra de Ferramentas do Sistema-->
+            <div id="content-barra">
+                <a href="javascript:history.go(-1);"><img height="17" width="26" class="margin-icos" src="./Img/ico-voltar.gif" title="voltar" alt="voltar"/></a>
+                <a href="javascript:history.go(1);"><img height="17" width="26" class="margin-icos" src="./Img/ico-avancar.gif" title="avançar" alt="avançar"/></a>
+                <a href="javascript:window.print();"><img height="17" width="26" class="margin-icos" src="./Img/ico-print.gif" title="imprimir" alt="imprimir"/></a>
+                <a href="javascript:decreaseFontSize();"><img src="./Img/ico-font-menos.gif" class="margin-icos" alt="Diminuir fonte" title="Diminuir fonte"/></a>&nbsp;
+                <a href="javascript:defaultFontSize();"><img src="./Img/ico-font-default.gif" class="margin-icos" alt="Normalizar fonte" title="Normalizar fonte"/></a>&nbsp;
+                <a href="javascript:increaseFontSize();"><img src="./Img/ico-font-mais.gif" class="margin-icos" alt="Aumentar fonte" title="Aumentar fonte"/></a>
+            </div>
+            <!-- FIM do DIV da barra de ferramentas do Sistema-->
+             <div id="content" name="content">
+                <form method="post" action="./ConsultarJurisprudencia.aspx" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="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SVJFSVRPIFDDmkJMSUNPBQEyZxAFDURJUkVJVE8gQ0lWSUwFATFnEAUkRElSRUlUTyBEQSBDUklBTsOHQSBFIERPIEFET0xFU0NFTlRFBQIxM2cQBRVESVJFSVRPIERPIENPTlNVTUlET1IFATNnEAUTRElSRUlUTyBETyBUUkFCQUxITwUCMTBnEAUmRElSRUlUTyBFTEVJVE9SQUwgRSBQUk9DRVNTTyBFTEVJVE9SQUwFATRnEAUVRElSRUlUTyBJTlRFUk5BQ0lPTkFMBQE2ZxAFEURJUkVJVE8gTUFSw41USU1PBQIxNGcQBQ1ESVJFSVRPIFBFTkFMBQE4ZxAFFURJUkVJVE8gUEVOQUwgTUlMSVRBUgUCMTVnEAUXRElSRUlUTyBQUkVWSURFTkNJw4FSSU8FAjEyZxAFGERJUkVJVE8gUFJPQ0VTU1VBTCBDSVZJTAUBN2cQBRhESVJFSVRPIFBST0NFU1NVQUwgUEVOQUwFATlnEAUgRElSRUlUTyBQUk9DRVNTVUFMIFBFTkFMIE1JTElUQVIFAjE2ZxAFE0RJUkVJVE8gVFJJQlVUw4FSSU8FAjExZxAFE1JFR0lTVFJPUyBQw5pCTElDT1MFATVnZGQCDA8QZBAVcwxTZWxlY2lvbmUuLi4VQURFTUlSIFBBVUxPIFBJTUVOVEVMDUFGUkFOSU8gU0FZQU8jQUdPU1RJTkhPIFRFSVhFSVJBIERFIEFMTUVJREEgRklMSE8UQUxCRVJUTyBNT1RUQSBNT1JBRVMWQU1BVVJZIEFSUlVEQSBERSBTT1VaQR1BTkEgTUFSSUEgUEVSRUlSQSBERSBPTElWRUlSQR9BTkRSRSBHVVNUQVZPIENPUlJFQSBERSBBTkRSQURFH0FOVE9OSU8gRURVQVJETyBGRVJSRUlSQSBEVUFSVEUaQU5UT05JTyBKT1NFIEFaRVZFRE8gUElOVE8YQkVORURJQ1RPIFVMVFJBICBBQklDQUlSHEJFUk5BUkRPIE1PUkVJUkEgR0FSQ0VaIE5FVE8gQ0FFVEFOTyBFUk5FU1RPIERBIEZPTlNFQ0EgQ09TVEEiQ0FSTE9TIERBVklEU09OIERFIE1FTkVaRVMgRkVSUkFSSRRDRUxTTyBGRVJSRUlSQSBGSUxITxhDRUxTTyBNVU5JWiBHVUVERVMgUElOVE8ZQ0zDgVVESU8gREUgTUVMTE8gVEFWQVJFUx1DTMOBVURJTyBMVUlaIEJSQUdBIERFTEwnT1JUTxRERUNJTyBNRUlSRUxMRVMgR09FUxVERU5JU0UgTklDT0xMIFNJTcOVRVMbREVOSVNFIFZBQ0NBUkkgTUFDSEFETyBQQUVTG0VEU09OIEFHVUlBUiBERSBWQVNDT05DRUxPUx9FTElTQUJFVEUgRklMSVpaT0xBICBBU1NVTsOHw4NPF0VMSVpBQkVUSCBHT01FUyBHUkVHT1JZF0VMTElTIEhFUk1ZRElPIEZJR1VFSVJBC0ZBQklPIERVVFJBIUZFUk5BTkRPIE1BUlFVRVMgREUgQ0FNUE9TIENBQlJBTBtGUkFOQ0lTQ08gREUgQVNTSVMgUEVTU0FOSEEXR0lMTUFSIEFVR1VTVE8gVEVJWEVJUkEaR1VTVEFWTyBBRE9MUEhPIEtVSEwgTEVJVEUcSEVMRU5PIFJJQkVJUk8gUEVSRUlSQSBOVU5FUyNIRU5SSVFVRSBDQVJMT1MgREUgQU5EUkFERSBGSUdVRUlSQRlJU01FTklPIFBFUkVJUkEgREUgQ0FTVFJPGkpBQ1FVRUxJTkUgTElNQSBNT05URU5FR1JPHUpFU1PDiSBUT1JSRVMgUEVSRUlSQSBKw5pOSU9SI0pPQU8gQ0FSTE9TIFBFU1RBTkEgREUgQUdVSUFSIFNJTFZBFEpPU0UgQUZGT05TTyBST05ERUFVGUpPU0UgQ0FSTE9TIERFIEZJR1VFSVJFRE8iSk9Tw4kgQ0FSTE9TIE1BTERPTkFETyBERSBDQVJWQUxITxdKT1NFIERFIE1BR0FMSEFFUyBQRVJFUyFKT1NFIExVQ0FTIE1PUkVJUkEgQUxWRVMgREUgQlJJVE8TSk9TRSBST0RSSUdVRVogTEVNQSVLQVRZQSBNQVJJQSBERSBQQVVMQSBNRU5FWkVTIE1PTk5FUkFUDUxBRVJTT04gTUFVUk8uTEVJTEEgTUFSSUEgQ0FSUklMTyBDQVZBTENBTlRFIFJJQkVJUk8gTUFSSUFOTxdMRVRJQ0lBIERFIEZBUklBIFNBUkRBUxVMVUNJQSBIRUxFTkEgRE8gUEFTU08NTFVDSUFOTyBCRUxFTRVMVUNJQU5PIFNJTFZBIEJBUlJFVE8cTFVJU0EgQ1JJU1RJTkEgQk9UVFJFTCBTT1VaQSlMVUlaIEZFTElQRSBNSVJBTkRBIERFIE1FREVJUk9TIEZSQU5DSVNDTx5MVUlaIEZFUk5BTkRPIERFIEFORFJBREUgUElOVE8hTFVJWiBGRVJOQU5ETyBSSUJFSVJPIERFIENBUlZBTEhPEUxVSVogTEVJVEUgQVJBVUpPDExVSVogWlZFSVRFUhVNQU5PRUwgQ0FSUEVOQSBBTU9SSU0rTUFSQ0VMTyBDQVNUUk8gQU7DgVRPQ0xFUyBEQSBTSUxWQSBGRVJSRUlSQRlNQVJDSVVTIERBIENPU1RBIEZFUlJFSVJBH01BUkNPIEFVUkVMSU8gQkVMTElaWkUgT0xJVkVJUkEeTUFSQ08gQVVSRUxJTyBET1MgU0FOVE9TIEZST0VTH01BUkNPUyBBTENJTk8gREUgQVpFVkVETyBUT1JSRVMdTUFSQ1VTIEFOVE9OSU8gREUgU09VWkEgRkFWRVIeTUFSQ1VTIEhFTlJJUVVFIFBJTlRPIEJBU8ONTElPKE1BUklBIEFOR8OJTElDQSBHVUlNQVLDg0VTIEdVRVJSQSBHVUVERVMoTUFSSUEgQVVHVVNUQSBWQVogTU9OVEVJUk8gREUgRklHVUVJUkVETxpNQVJJQSBIRUxFTkEgUElOVE8gTUFDSEFETxtNQVJJQSBJTsOKUyBEQSBQRU5IQSBHQVNQQVIgTUFSSUEgU0FORFJBIFJPQ0hBIEtBWUFUIERJUkVJVE8WTUFSSUEgU1RFTExBIFJPRFJJR1VFUyhNQVJJQU5OQSBQRVJFSVJBIE5VTkVTIEZFVEVJUkEgR09OQ0FMVkVTFk1BUklPIERPUyBTQU5UT1MgUEFVTE8YTUFSTEFOIERFIE1PUkFFUyBNQVJJTkhPFk1BVVLDjUNJTyBDQUxEQVMgTE9QRVMcTUFVUk8gRk9OU0VDQSBQSU5UTyBOT0dVRUlSQRVNQVVSTyBQRVJFSVJBIE1BUlRJTlMMTUlHVUVMIFBBQ0hBGU1JTFRPTiBGRVJOQU5ERVMgREUgU09VWkEcTcOUTklDQSBNQVJJQSBDT1NUQSBESSBQSUVSTyVNVVJJTE8gQU5EUsOJIEtJRUxJTkcgQ0FSRE9OQSBQRVJFSVJBIE1ZUklBTSBNRURFSVJPUyBEQSBGT05TRUNBIENPU1RBEk5BR0lCIFNMQUlCSSBGSUxITxZOQU1FVEFMQSBNQUNIQURPIEpPUkdFHU5BU0NJTUVOVE8gQU5UT05JTyBQT1ZPQVMgVkFaH05JTFRPTiBNT05ERUdPIERFIENBUlZBTEhPIExJTUELTklMWkEgQklUQVIkUEFVTE8gREUgT0xJVkVJUkEgTEFOWklMTE9UVEEgQkFMREVaFFBBVUxPIERFIFRBUlNPIE5FVkVTGlBBVUxPIEdPTUVTIERBIFNJTFZBIEZJTEhPG1BBVUxPIFJPQkVSVE8gTEVJVEUgVkVOVFVSQSVQQVVMTyBTRVJHSU8gREUgQVJBVUpPIEUgU0lMVkEgRkFCSUFPF1JBVUwgQ0VMU08gTElOUyBFIFNJTFZBKFJBVUwgREUgU0FOIFRJQUdPIERBTlRBUyBCQVJCT1NBIFFVRU5UQUwNUkVCRUxMTyBIT1JUQRxSRUlOQUxETyBQSU5UTyBBTEJFUlRPIEZJTEhPFFJFTkFUQSBNQUNIQURPIENPVFRBF1JJQ0FSRE8gQ09VVE8gREUgQ0FTVFJPGVJJQ0FSRE8gUk9EUklHVUVTIENBUkRPWk8YUk9CRVJUTyBERSBBQlJFVSBFIFNJTFZBGlJPR8OJUklPIERFIE9MSVZFSVJBIFNPVVpBIlJVWVogQVRIQVlERSBBTENBTlRBUkEgREUgQ0FSVkFMSE8KU0VNWSBHTEFOWhZTRVJHSU8gREUgU09VWkEgVkVSQU5JH1NFUkdJTyBMVUNJTyBERSBPTElWRUlSQSBFIENSVVoiU0VSR0lPIFJJQ0FSRE8gREUgQVJSVURBIEZFUk5BTkRFUxpTRVJWSU8gVFVMSU8gU0FOVE9TIFZJRUlSQRZTSURORVkgSEFSVFVORyBCVUFSUVVFFFNJRE5FWSBST1NBIERBIFNJTFZBFlNVRUxZIExPUEVTIE1BR0FMSMODRVMWU1VJTUVJIE1FSVJBIENBVkFMSUVSSRhTWUxWSU8gQ0FQQU5FTUEgREUgU09VWkEdVkFMRVJJQSBHQVJDSUEgREEgU0lMVkEgTUFST04YVkFMTUlSIERFIE9MSVZFSVJBIFNJTFZBGVdBTFRFUiBGRUxJUFBFIEQnQUdPU1RJTk8OV0lMU09OIE1BUlFVRVMhV0lMU09OIFNBTlRJQUdPIE1FU1FVSVRBIERFIE1FTExPFXMABTExNjg2BTEwODA3BTI5ODM5BTExMjAyBTEwODMxBTEzNzcyBTEzNzcwBTE4MzEwBTE4MTIwBTI5ODE3BDYzMDcFMjA0OTQFMTA3MTgENzI4NwQ0NzU1BTE5NDQxBTE0NTY2BDgxMjAFMTc1MzgFMTU2MjIENzI3MgQ2MzIwBDUyMTIEOTgyNAQ5NzAwBDcyNjIFMjQ3NDQFMTM5MzUEMzQ2NQUxMzc2OQQ5Njc0BTI5ODE4BTE2MDY1BDcyNjcEMjMzMwQzNDk2BTExNzEyBDk2NzcENzU1MgQyMzk4BDIzMjMFMTQ1NjIEMzQ1NwUxMTk0NgQ2MzAzBTE1Mzg3AzIxNAUxNTM5MAQ4ODc2BDk2NDAFMTc1NDQENjI3NQUxMTY4NwUxODMxMQQ0NzI4BTE2NTkyBTE2MDgwBTEzNzY4BDc1NTkEOTY3MwUxMDk1OAQ5Njk2BTEzNzc1BDYyODQFMTY1OTEFMTE4NjkFMTU2MzADMjE2BTEwMzEwBDcyNjYFMTEyMTAFMjQzNTIFMTE3MTYFMTY2OTIENDc0NQQ3MjgzBTI5ODM1BTE1NjI2BTE1NDExBDYyNjgFMTE2ODEEMzcyNQQzNDczBTExNjg0BTE0OTkxBDg4NzcFMTA1MDYFMTExOTEEMzQ2MQUxOTA4MwQxNDQ0BDUyMDUENTIwNAUzMDM4NAUxNTQwNAQ5NjY3BDYzMTMFMTM5MzIFMTE2ODMEMjMyMAQzNzI2BDYyNzYFMTYwNzUENDcwNgQxNTc3BTE0NTg0BDc1NTUFMTQ5OTYFMTY3NTIEMjA2MwQ2Mjg5BTExNDg3BDMxNDYFMTA2OTEUKwNzZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2RkAg0PEA8WAh4HQ2hlY2tlZGdkZGRkAg4PEA8WAh8AZ2RkZGQCDw8QZBAVAQxTZWxlY2lvbmUuLi4VAQAUKwMBZ2RkAhAPEGQQFQILTnVtLiDDmm5pY2ELTnVtLiBBbnRpZ2EVAgExATIUKwMCZ2dkZAISDxAPFgIfAGdkZGRkAhMPEA8WAh8AZ2RkZGQCFA8QDxYCHwBnZGRkZAIVDxAPFgIfAGhkZGRkGAEFHl9fQ29udHJvbHNSZXF1aXJlUG9zdEJhY2tLZXlfXxYGBSJjdGwwMCRDb250ZW50UGxhY2VIb2xkZXIxJGNoa0F0aXZvBSRjdGwwMCRDb250ZW50UGxhY2VIb2xkZXIxJGNoa0luYXRpdm8FJGN0bDAwJENvbnRlbnRQbGFjZUhvbGRlcjEkY2hrQWNvcmRhbwUjY3RsMDAkQ29udGVudFBsYWNlSG9sZGVyMSRjaGtEZWNNb24FJGN0bDAwJENvbnRlbnRQbGFjZUhvbGRlcjEkY2hrSW50VGVvcgUmY3RsMDAkQ29udGVudFBsYWNlSG9sZGVyMSRjaGtFbWVudGFyaW+ao+1U9OHvcCX2gEvyYTUCa98sPd9WtXidoXkIFMAcSw==" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['form1'];
+if (!theForm) {
+    theForm = document.form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/EJURIS/WebResource.axd?d=tM9Ogh4Eotrwb90nqmufbqQ26wWTtGVMiAzRHQnSVuA-mt4vsraXQsTdNg2XxipoujFyCOlzM5yamJx_HEPbWlsev48HPdJS_xd-DWDp4tE1&amp;t=639190725332169432" type="text/javascript"></script>
+
+
+<script type="text/javascript">
+//<![CDATA[
+ var _AmbienteDescr = 'Segunda Instância'; var SolicitarSenhaProvisoria = 'true'; var URL_Portal = 'https://www.tjrj.jus.br'; var URL_ConsEjud = 'https://www3.tjrj.jus.br/ejud'; var URL_ConsEjud_CM = 'https://www3.tjrj.jus.br/ejud_conselho'; var URL_ConsAlcCiv = 'https://www3.tjrj.jus.br/ejud/ConsultaProcessoTA.aspx?N=NumProcCons&T=18'; var URL_ConsAlcCri = 'https://www3.tjrj.jus.br/ejud/ConsultaProcessoTA.aspx?N=NumProcCons&T=21'; var PagConsProcEjud = 'ConsultaProcesso.aspx'; var URL_InteiroTeor = 'https://www3.tjrj.jus.br/gedcacheweb/default.aspx?UZIP=1&GEDID='; var CodTipDocAcord = '1'; var CodOrig_CM = '5'; var CodOrig_CR = '4'; var CodOrig_Alc_Civ = '2'; var CodOrig_Alc_Crim = '3'; var MsgErroPadrao = 'Se for a primeira ocorrência do erro, tente novamente, caso contrário comunique à informática.'; var ConsultaPrivada = false;//]]>
+</script>
+
+<script src="/EJURIS/ScriptResource.axd?d=KBGVLi4OJ1wsxMpS3MBTTMBb1yjncnICHR0hDmYxWh74gUIvIoDzQeBXD04kZ__Q59LRQ6YFWYdPzUXX7Ef-YomID5EjtDrT_xqUEFNty55WNTDUOCkERDvsd7n0evTcxZwnNn8H4WBSryRBDg_gZMGSV-Kvp9rRir0oZ1hwJ2A1&amp;t=ffffffffbec1863d" type="text/javascript"></script>
+<script src="/EJURIS/ScriptResource.axd?d=_202aCzbzRB2rOEZHn08o_DGORyuAnq6kDpaiJOJLT4escb7UYDSzz-xc_I0onOl2Q_t8sKkglF0CocOOMdR6sfduBXTCMo51l3tOrSr7xNsnozAGc_gKEznhEGOeypizAkLYNyuCLBRS9WtgXwQly3qjasqWJVBBQWR5r_Hxof6JLSFVjZ_AHOf8puyTLfv0&amp;t=ffffffffbec1863d" type="text/javascript"></script>
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="17008992" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="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" />
+</div>
+                <!-- inÃ­cio da div#content 
+                <h3>
+                    Consulta Processual - N&uacute;mero - Segunda Inst&acirc;ncia</h3>-->
+                
+    <!--os componentes asp:ScriptManager e asp:UpdatePanel são para uso de Ajax, 
+        como na atualização do DropDownList(combo delpheiros!) de órgão julgador ao mudar o valor no combo Origem -->
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$ContentPlaceHolder1$ScriptManager1', 'form1', ['tctl00$ContentPlaceHolder1$ctl00','ContentPlaceHolder1_ctl00'], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfListaPalavrasBloqueadas" id="hfListaPalavrasBloqueadas" value="A;ACIMA;COM;DA;DAS;DE;DO;DOS;E;EM;NA;NAS;NO;NOS;O;PARA;POR;SEM;SOB;SOBRE" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodRamos" id="ContentPlaceHolder1_hfCodRamos" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodMags" id="ContentPlaceHolder1_hfCodMags" />
+    <input type="hidden" name="ctl00$ContentPlaceHolder1$hfCodOrgs" id="ContentPlaceHolder1_hfCodOrgs" />
+    <div id="ContentPlaceHolder1_ctl00">
+	
+            <table border="0" cellspacing="1" cellpadding="0" width="100%" class="tab-bord" >
+                <tr style="text-align: center">
+                    <td colspan="2">
+                        <h3>CONSULTA JURISPRUDÊNCIA</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <h4>Pesquisa livre</h4>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input name="ctl00$ContentPlaceHolder1$txtTextoPesq" type="text" value="dano" id="ContentPlaceHolder1_txtTextoPesq" onfocus="javascript: posicionarCursor(this);" onkeypress="return EnterEvent(event,this.value)" style="width:74%;" />
+                        
+                    </td>
+                </tr>
+                <table>
+                    <tr>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorE" value="e" id="ContentPlaceHolder1_btnConectorE" title="Conector lógico E, o documento recuperado deve conter ambos os verbetes informados." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorOU" value="ou" id="ContentPlaceHolder1_btnConectorOU" title="Conector lógico OU, o documento recuperado deve conter um ou ambos os verbetes informados." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorADJ" value="adj" id="ContentPlaceHolder1_btnConectorADJ" title="Conector lógico ADJ, O documento recuperado deve conter ambos os verbetes informados, na ordem especificada pelos operadores." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorNAO" value="não" id="ContentPlaceHolder1_btnConectorNAO" title="Conector lógico NÃO, O documento recuperado deve conter o primeiro verbete, mas não o segundo." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorPROX" value="prox" id="ContentPlaceHolder1_btnConectorPROX" title="Conector lógico PROX, ver Ajuda para mais informações." />
+                        </td>
+                        <td class="Botoes">
+                            <input type="submit" name="ctl00$ContentPlaceHolder1$btnConectorCoringa" value="$" id="ContentPlaceHolder1_btnConectorCoringa" title="Operador Coringa, ignorar um ou mais caracteres após o operador. Ver Ajuda para mais informações" />
+                        </td>
+                    </tr>
+                </table>
+                
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td colspan="2">
+                                    <h4>Pesquisa por campos específicos:</h4>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Origem:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbOrigem" onchange="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$cmbOrigem\&#39;,\&#39;\&#39;)&#39;, 0)" id="ContentPlaceHolder1_cmbOrigem" class="cmbOrigem" style="width:100%;">
+		<option value="1">Tribunal de Justica do Rio de Janeiro 2a Inst&#226;ncia</option>
+		<option value="2">Tribunal de Al&#231;ada Civel</option>
+		<option value="3">Tribunal de Al&#231;ada Criminal</option>
+		<option value="4">Turma Recursal</option>
+		<option selected="selected" value="5">Conselho da Magistratura</option>
+
+	</select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Julgados a partir do ano de:</td>
+                                <td>
+                                    <table width="100%" border="0">
+                                        <tr>                                           
+                                             <td class="campo" style="width: 80px;">
+                                                <select name="ctl00$ContentPlaceHolder1$cmbAnoInicio" id="ContentPlaceHolder1_cmbAnoInicio" onBlur="javascript: ValidarIntervaloData(this);">
+		<option value="2026">2026</option>
+		<option value="2025">2025</option>
+		<option value="2024">2024</option>
+		<option value="2023">2023</option>
+		<option value="2022">2022</option>
+		<option value="2021">2021</option>
+		<option value="2020">2020</option>
+		<option value="2019">2019</option>
+		<option value="2018">2018</option>
+		<option value="2017">2017</option>
+		<option value="2016">2016</option>
+		<option value="2015">2015</option>
+		<option value="2014">2014</option>
+		<option value="2013">2013</option>
+		<option value="2012">2012</option>
+		<option value="2011">2011</option>
+		<option value="2010">2010</option>
+		<option value="2009">2009</option>
+		<option value="2008">2008</option>
+		<option value="2007">2007</option>
+		<option value="2006">2006</option>
+		<option value="2005">2005</option>
+		<option value="2004">2004</option>
+		<option value="2003">2003</option>
+		<option value="2002">2002</option>
+		<option value="2001">2001</option>
+		<option value="2000">2000</option>
+		<option value="1999">1999</option>
+		<option value="1998">1998</option>
+		<option value="1997">1997</option>
+		<option value="1996">1996</option>
+		<option value="1995">1995</option>
+		<option value="1994">1994</option>
+		<option value="1993">1993</option>
+		<option value="1992">1992</option>
+		<option value="1991">1991</option>
+		<option value="1990">1990</option>
+		<option value="1989">1989</option>
+		<option value="1988">1988</option>
+		<option value="1987">1987</option>
+		<option value="1986">1986</option>
+		<option value="1985">1985</option>
+		<option value="1984">1984</option>
+		<option value="1983">1983</option>
+		<option value="1982">1982</option>
+		<option value="1981">1981</option>
+		<option value="1980">1980</option>
+		<option value="1979">1979</option>
+		<option value="1978">1978</option>
+		<option value="1977">1977</option>
+		<option value="1976">1976</option>
+		<option value="1975">1975</option>
+
+	</select>
+                                            </td>
+                                            <td class="labeldireita">Até o ano de:</td>
+                                            <td class="campo">
+                                                <select name="ctl00$ContentPlaceHolder1$cmbAnoFim" id="ContentPlaceHolder1_cmbAnoFim" onBlur="javascript: ValidarIntervaloData(this);">
+		<option value="2026">2026</option>
+		<option value="2025">2025</option>
+		<option value="2024">2024</option>
+		<option value="2023">2023</option>
+		<option value="2022">2022</option>
+		<option value="2021">2021</option>
+		<option value="2020">2020</option>
+		<option value="2019">2019</option>
+		<option value="2018">2018</option>
+		<option value="2017">2017</option>
+		<option value="2016">2016</option>
+		<option value="2015">2015</option>
+		<option value="2014">2014</option>
+		<option value="2013">2013</option>
+		<option value="2012">2012</option>
+		<option value="2011">2011</option>
+		<option value="2010">2010</option>
+		<option value="2009">2009</option>
+		<option value="2008">2008</option>
+		<option value="2007">2007</option>
+		<option value="2006">2006</option>
+		<option value="2005">2005</option>
+		<option value="2004">2004</option>
+		<option value="2003">2003</option>
+		<option value="2002">2002</option>
+		<option value="2001">2001</option>
+		<option value="2000">2000</option>
+		<option value="1999">1999</option>
+		<option value="1998">1998</option>
+		<option value="1997">1997</option>
+		<option value="1996">1996</option>
+		<option value="1995">1995</option>
+		<option value="1994">1994</option>
+		<option value="1993">1993</option>
+		<option value="1992">1992</option>
+		<option value="1991">1991</option>
+		<option value="1990">1990</option>
+		<option value="1989">1989</option>
+		<option value="1988">1988</option>
+		<option value="1987">1987</option>
+		<option value="1986">1986</option>
+		<option value="1985">1985</option>
+		<option value="1984">1984</option>
+		<option value="1983">1983</option>
+		<option value="1982">1982</option>
+		<option value="1981">1981</option>
+		<option value="1980">1980</option>
+		<option value="1979">1979</option>
+		<option value="1978">1978</option>
+		<option value="1977">1977</option>
+		<option value="1976">1976</option>
+		<option value="1975">1975</option>
+
+	</select>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">Competência:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbCompetencia" onchange="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$cmbCompetencia\&#39;,\&#39;\&#39;)&#39;, 0)" id="ContentPlaceHolder1_cmbCompetencia" style="width:100%;">
+		<option selected="selected" value="0">Selecione...</option>
+
+	</select>
+                                </td>
+                            </tr>
+                            <tr class="trRamo"><!--Adição de classe CSS trRamo para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Ramo do direito:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbRamo" id="ContentPlaceHolder1_cmbRamo" class="cmbRamo" onchange="cmbChange(this, hfCodRamos); habilitaBtnCombos(this, $(&#39;#btnAddRamo&#39;));" style="width:100%;">
+		<option selected="selected" value="">Selecione...</option>
+		<option value="2">DIREITO ADMINISTRATIVO E OUTRAS MAT&#201;RIAS DE DIREITO P&#218;BLICO</option>
+		<option value="1">DIREITO CIVIL</option>
+		<option value="13">DIREITO DA CRIAN&#199;A E DO ADOLESCENTE</option>
+		<option value="3">DIREITO DO CONSUMIDOR</option>
+		<option value="10">DIREITO DO TRABALHO</option>
+		<option value="4">DIREITO ELEITORAL E PROCESSO ELEITORAL</option>
+		<option value="6">DIREITO INTERNACIONAL</option>
+		<option value="14">DIREITO MAR&#205;TIMO</option>
+		<option value="8">DIREITO PENAL</option>
+		<option value="15">DIREITO PENAL MILITAR</option>
+		<option value="12">DIREITO PREVIDENCI&#193;RIO</option>
+		<option value="7">DIREITO PROCESSUAL CIVIL</option>
+		<option value="9">DIREITO PROCESSUAL PENAL</option>
+		<option value="16">DIREITO PROCESSUAL PENAL MILITAR</option>
+		<option value="11">DIREITO TRIBUT&#193;RIO</option>
+		<option value="5">REGISTROS P&#218;BLICOS</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddRamo" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Ramo do Direito" disabled="disabled"/>
+                                </td>
+                            </tr>
+                            <tr class="trMagistrado"> <!--Adição de classe CSS trMagistrado para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Magistrado:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbMagistrado" id="ContentPlaceHolder1_cmbMagistrado" class="cmbMagistrado" onchange="cmbChange(this, hfCodMags); habilitaBtnCombos(this, $(&#39;#btnAddMag&#39;));" style="width:100%;">
+		<option value="">Selecione...</option>
+		<option value="11686">ADEMIR PAULO PIMENTEL</option>
+		<option value="10807">AFRANIO SAYAO</option>
+		<option value="29839">AGOSTINHO TEIXEIRA DE ALMEIDA FILHO</option>
+		<option value="11202">ALBERTO MOTTA MORAES</option>
+		<option value="10831">AMAURY ARRUDA DE SOUZA</option>
+		<option value="13772">ANA MARIA PEREIRA DE OLIVEIRA</option>
+		<option value="13770">ANDRE GUSTAVO CORREA DE ANDRADE</option>
+		<option value="18310">ANTONIO EDUARDO FERREIRA DUARTE</option>
+		<option value="18120">ANTONIO JOSE AZEVEDO PINTO</option>
+		<option value="29817">BENEDICTO ULTRA  ABICAIR</option>
+		<option value="6307">BERNARDO MOREIRA GARCEZ NETO</option>
+		<option value="20494">CAETANO ERNESTO DA FONSECA COSTA</option>
+		<option value="10718">CARLOS DAVIDSON DE MENEZES FERRARI</option>
+		<option value="7287">CELSO FERREIRA FILHO</option>
+		<option value="4755">CELSO MUNIZ GUEDES PINTO</option>
+		<option value="19441">CL&#193;UDIO DE MELLO TAVARES</option>
+		<option value="14566">CL&#193;UDIO LUIZ BRAGA DELL&#39;ORTO</option>
+		<option value="8120">DECIO MEIRELLES GOES</option>
+		<option value="17538">DENISE NICOLL SIM&#213;ES</option>
+		<option value="15622">DENISE VACCARI MACHADO PAES</option>
+		<option value="7272">EDSON AGUIAR DE VASCONCELOS</option>
+		<option value="6320">ELISABETE FILIZZOLA  ASSUN&#199;&#195;O</option>
+		<option value="5212">ELIZABETH GOMES GREGORY</option>
+		<option value="9824">ELLIS HERMYDIO FIGUEIRA</option>
+		<option value="9700">FABIO DUTRA</option>
+		<option value="7262">FERNANDO MARQUES DE CAMPOS CABRAL</option>
+		<option value="24744">FRANCISCO DE ASSIS PESSANHA</option>
+		<option value="13935">GILMAR AUGUSTO TEIXEIRA</option>
+		<option value="3465">GUSTAVO ADOLPHO KUHL LEITE</option>
+		<option value="13769">HELENO RIBEIRO PEREIRA NUNES</option>
+		<option value="9674">HENRIQUE CARLOS DE ANDRADE FIGUEIRA</option>
+		<option value="29818">ISMENIO PEREIRA DE CASTRO</option>
+		<option value="16065">JACQUELINE LIMA MONTENEGRO</option>
+		<option value="7267">JESS&#201; TORRES PEREIRA J&#218;NIOR</option>
+		<option value="2333">JOAO CARLOS PESTANA DE AGUIAR SILVA</option>
+		<option value="3496">JOSE AFFONSO RONDEAU</option>
+		<option value="11712">JOSE CARLOS DE FIGUEIREDO</option>
+		<option value="9677">JOS&#201; CARLOS MALDONADO DE CARVALHO</option>
+		<option value="7552">JOSE DE MAGALHAES PERES</option>
+		<option value="2398">JOSE LUCAS MOREIRA ALVES DE BRITO</option>
+		<option value="2323">JOSE RODRIGUEZ LEMA</option>
+		<option value="14562">KATYA MARIA DE PAULA MENEZES MONNERAT</option>
+		<option value="3457">LAERSON MAURO</option>
+		<option value="11946">LEILA MARIA CARRILO CAVALCANTE RIBEIRO MARIANO</option>
+		<option value="6303">LETICIA DE FARIA SARDAS</option>
+		<option value="15387">LUCIA HELENA DO PASSO</option>
+		<option value="214">LUCIANO BELEM</option>
+		<option value="15390">LUCIANO SILVA BARRETO</option>
+		<option value="8876">LUISA CRISTINA BOTTREL SOUZA</option>
+		<option value="9640">LUIZ FELIPE MIRANDA DE MEDEIROS FRANCISCO</option>
+		<option value="17544">LUIZ FERNANDO DE ANDRADE PINTO</option>
+		<option value="6275">LUIZ FERNANDO RIBEIRO DE CARVALHO</option>
+		<option value="11687">LUIZ LEITE ARAUJO</option>
+		<option value="18311">LUIZ ZVEITER</option>
+		<option value="4728">MANOEL CARPENA AMORIM</option>
+		<option value="16592">MARCELO CASTRO AN&#193;TOCLES DA SILVA FERREIRA</option>
+		<option value="16080">MARCIUS DA COSTA FERREIRA</option>
+		<option value="13768">MARCO AURELIO BELLIZZE OLIVEIRA</option>
+		<option value="7559">MARCO AURELIO DOS SANTOS FROES</option>
+		<option value="9673">MARCOS ALCINO DE AZEVEDO TORRES</option>
+		<option value="10958">MARCUS ANTONIO DE SOUZA FAVER</option>
+		<option value="9696">MARCUS HENRIQUE PINTO BAS&#205;LIO</option>
+		<option value="13775">MARIA ANG&#201;LICA GUIMAR&#195;ES GUERRA GUEDES</option>
+		<option value="6284">MARIA AUGUSTA VAZ MONTEIRO DE FIGUEIREDO</option>
+		<option value="16591">MARIA HELENA PINTO MACHADO</option>
+		<option value="11869">MARIA IN&#202;S DA PENHA GASPAR</option>
+		<option value="15630">MARIA SANDRA ROCHA KAYAT DIREITO</option>
+		<option value="216">MARIA STELLA RODRIGUES</option>
+		<option value="10310">MARIANNA PEREIRA NUNES FETEIRA GONCALVES</option>
+		<option value="7266">MARIO DOS SANTOS PAULO</option>
+		<option value="11210">MARLAN DE MORAES MARINHO</option>
+		<option value="24352">MAUR&#205;CIO CALDAS LOPES</option>
+		<option value="11716">MAURO FONSECA PINTO NOGUEIRA</option>
+		<option value="16692">MAURO PEREIRA MARTINS</option>
+		<option value="4745">MIGUEL PACHA</option>
+		<option value="7283">MILTON FERNANDES DE SOUZA</option>
+		<option value="29835">M&#212;NICA MARIA COSTA DI PIERO</option>
+		<option value="15626">MURILO ANDR&#201; KIELING CARDONA PEREIRA</option>
+		<option value="15411">MYRIAM MEDEIROS DA FONSECA COSTA</option>
+		<option value="6268">NAGIB SLAIBI FILHO</option>
+		<option value="11681">NAMETALA MACHADO JORGE</option>
+		<option value="3725">NASCIMENTO ANTONIO POVOAS VAZ</option>
+		<option value="3473">NILTON MONDEGO DE CARVALHO LIMA</option>
+		<option value="11684">NILZA BITAR</option>
+		<option value="14991">PAULO DE OLIVEIRA LANZILLOTTA BALDEZ</option>
+		<option value="8877">PAULO DE TARSO NEVES</option>
+		<option value="10506">PAULO GOMES DA SILVA FILHO</option>
+		<option value="11191">PAULO ROBERTO LEITE VENTURA</option>
+		<option value="3461">PAULO SERGIO DE ARAUJO E SILVA FABIAO</option>
+		<option value="19083">RAUL CELSO LINS E SILVA</option>
+		<option value="1444">RAUL DE SAN TIAGO DANTAS BARBOSA QUENTAL</option>
+		<option value="5205">REBELLO HORTA</option>
+		<option value="5204">REINALDO PINTO ALBERTO FILHO</option>
+		<option value="30384">RENATA MACHADO COTTA</option>
+		<option value="15404">RICARDO COUTO DE CASTRO</option>
+		<option value="9667">RICARDO RODRIGUES CARDOZO</option>
+		<option value="6313">ROBERTO DE ABREU E SILVA</option>
+		<option value="13932">ROG&#201;RIO DE OLIVEIRA SOUZA</option>
+		<option value="11683">RUYZ ATHAYDE ALCANTARA DE CARVALHO</option>
+		<option value="2320">SEMY GLANZ</option>
+		<option value="3726">SERGIO DE SOUZA VERANI</option>
+		<option value="6276">SERGIO LUCIO DE OLIVEIRA E CRUZ</option>
+		<option value="16075">SERGIO RICARDO DE ARRUDA FERNANDES</option>
+		<option value="4706">SERVIO TULIO SANTOS VIEIRA</option>
+		<option value="1577">SIDNEY HARTUNG BUARQUE</option>
+		<option value="14584">SIDNEY ROSA DA SILVA</option>
+		<option value="7555">SUELY LOPES MAGALH&#195;ES</option>
+		<option value="14996">SUIMEI MEIRA CAVALIERI</option>
+		<option value="16752">SYLVIO CAPANEMA DE SOUZA</option>
+		<option value="2063">VALERIA GARCIA DA SILVA MARON</option>
+		<option value="6289">VALMIR DE OLIVEIRA SILVA</option>
+		<option value="11487">WALTER FELIPPE D&#39;AGOSTINO</option>
+		<option value="3146">WILSON MARQUES</option>
+		<option value="10691">WILSON SANTIAGO MESQUITA DE MELLO</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddMag" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Magistrado" disabled="disabled"/>
+                                </td>
+                                <td style="width: 10em;">
+                                    <input id="ContentPlaceHolder1_chkAtivo" type="checkbox" name="ctl00$ContentPlaceHolder1$chkAtivo" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkAtivo\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkAtivo">Ativo</label>
+                                    <input id="ContentPlaceHolder1_chkInativo" type="checkbox" name="ctl00$ContentPlaceHolder1$chkInativo" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkInativo\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkInativo">Inativo</label>
+                                </td>
+                            </tr>
+                            <tr class="trOrgJulg"> <!--Adição de classe CSS trOrgJulg para encontrar o elemento com JQuery em razão do id ser dinâmico-->
+                                <td class="labeldireita">Órgão Julgador:</td>
+                                <td class="campo">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbOrgaoJulgador" id="ContentPlaceHolder1_cmbOrgaoJulgador" class="cmbOrgaoJulgador" onchange="cmbChange(this, hfCodOrgs); habilitaBtnCombos(this, $(&#39;#btnAddOrg&#39;));" style="width:100%;">
+		<option value="">Selecione...</option>
+
+	</select>
+                                </td>
+                                <td>
+                                    <input type="button" id="btnAddOrg" value="+" class="btnAdd" onclick="AdicionarCombo(this); $(this).attr('disabled','disabled');" title="Conjugar mais de um Órgão Julgador" disabled="disabled"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="labeldireita">
+                                    <select name="ctl00$ContentPlaceHolder1$cmbTipNumeracao" id="ContentPlaceHolder1_cmbTipNumeracao" onchange="cmbTipNumeracaoChange(this);">
+		<option selected="selected" value="1">Num. &#218;nica</option>
+		<option value="2">Num. Antiga</option>
+
+	</select>
+                                </td>
+                                <td class="campo">
+                                    <input name="ctl00$ContentPlaceHolder1$txtNumeracao" type="text" maxlength="25" id="ContentPlaceHolder1_txtNumeracao" onblur="javascript: FormataNumCNJ(this.id,this.value);" style="width:100%;" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp</td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkAcordao" type="checkbox" name="ctl00$ContentPlaceHolder1$chkAcordao" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkAcordao\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkAcordao">Acórdão (ementa)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkDecMon" type="checkbox" name="ctl00$ContentPlaceHolder1$chkDecMon" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkDecMon\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkDecMon">Decisão Monocrática (ementa)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkIntTeor" type="checkbox" name="ctl00$ContentPlaceHolder1$chkIntTeor" checked="checked" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkIntTeor\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkIntTeor">Inteiro Teor (PDF)</label>
+                                </td>
+                                <td align="left">
+                                    <input id="ContentPlaceHolder1_chkEmentario" type="checkbox" name="ctl00$ContentPlaceHolder1$chkEmentario" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$chkEmentario\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_chkEmentario">Ementário</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="principal">
+                            <tr>
+                                <td colspan="2">
+                                    <h3></h3>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="submit" name="ctl00$ContentPlaceHolder1$btnAjuda" value="Ajuda" onclick="window.open(&#39;AjudaConsultaJuris.aspx&#39;, &#39;_blank&#39;);" id="ContentPlaceHolder1_btnAjuda" />
+                                </td>
+                                <td align="right">
+                                    <input type="button" name="ctl00$ContentPlaceHolder1$btnPesquisar" value="Pesquisar" onclick="if (!ValidarPreenchimento()){return false;} else {this.disabled = true;} ;__doPostBack(&#39;ctl00$ContentPlaceHolder1$btnPesquisar&#39;,&#39;&#39;)" id="ContentPlaceHolder1_btnPesquisar" class="submit" />
+                                    <input type="submit" name="ctl00$ContentPlaceHolder1$btnLimpar" value="Limpar" onclick="LimparHiddenFields();" id="ContentPlaceHolder1_btnLimpar" AutoPostBack="true" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <h3></h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Senhores usuários, </br><p>Para melhor atendê-los, alteramos o layout da Consulta à Jurisprudência, que oferece maior refinamento na pesquisa e permite consultar o Ementário através da mesma página.</p>
+                    </td>
+                </tr>
+                
+            </table>
+        
+</div>
+
+                <!-- Fim da div#content -->
+                </form>
+            </div>
+            <div class="clear" />
+        </div>
+        <!-- Fim da div#container -->
+    </div>
+<!-- INICIO DIV do Rodapé do Sistema-->
+        <!-- Fim da div#tudo -->
+        <noscript>o seu navegador não suporta JavaScript!</noscript>
+</body>
+</html>

@@ -23,8 +23,10 @@ class InputCJSGTJRJ(SearchBase):
     ano_fim: str | int | None = None
     # Opcoes de ``cmbCompetencia`` e ``cmbOrigem`` no formulario do ejuris. A
     # lista de competencias muda com a origem (``"3"`` Fazendaria so aparece na
-    # Turma Recursal); a combinacao fica a cargo do backend.
-    competencia: Literal["1", "2", "3"] = "1"
+    # Turma Recursal; o Conselho da Magistratura so tem ``"0"``, "Selecione...").
+    # O download confere a combinacao com o form da origem; ``None`` usa a
+    # primeira opcao do form, como o navegador.
+    competencia: Literal["1", "2", "3"] | None = None
     origem: Literal["1", "2", "3", "4", "5"] = "1"
     tipo_acordao: bool = True
     tipo_monocratica: bool = True

@@ -25,18 +25,39 @@ _HIDDEN_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Bloco <select name="...cmbAnoInicio">...</select> e suas <option value="AAAA">.
-_ANO_SELECT_RE = re.compile(
-    r'<select[^>]*name="ctl00\$ContentPlaceHolder1\$cmbAnoInicio".*?</select>',
-    re.IGNORECASE | re.DOTALL,
+_OPTION_RE = re.compile(r'<option[^>]*value="(?P<value>[^"]*)"', re.IGNORECASE)
+_SELECTED_OPTION_RE = re.compile(
+    r'<option[^>]*selected="selected"[^>]*value="(?P<value>[^"]*)"', re.IGNORECASE
 )
-_ANO_OPTION_RE = re.compile(r'<option[^>]*value="(?P<value>[^"]*)"', re.IGNORECASE)
 
-_ORIGEM_SELECTED_RE = re.compile(
-    r'<select[^>]*name="ctl00\$ContentPlaceHolder1\$cmbOrigem"(?:(?!</select>).)*?'
-    r'<option[^>]*selected="selected"[^>]*value="(?P<value>[^"]*)"',
-    re.IGNORECASE | re.DOTALL,
-)
+
+def _select_block(html: str, campo: str) -> str | None:
+    """Bloco ``<select name="...<campo>">...</select>`` do form, ou ``None``."""
+    match = re.search(
+        rf'<select[^>]*name="{re.escape(_FIELD_PREFIX + campo)}".*?</select>',
+        html,
+        re.IGNORECASE | re.DOTALL,
+    )
+    return match.group(0) if match else None
+
+
+def extract_select_options(html: str, campo: str) -> list[str]:
+    """Valores nao vazios das ``<option>`` do ``<select>`` ``campo``, na ordem da pagina.
+
+    Devolve ``[]`` quando o ``<select>`` nao aparece, e o chamador nao valida
+    contra uma lista que nao conseguiu ler.
+    """
+    block = _select_block(html, campo)
+    if block is None:
+        return []
+    return [valor for valor in _OPTION_RE.findall(block) if valor.strip()]
+
+
+def _selected_option(html: str, campo: str) -> str | None:
+    """Valor da ``<option selected>`` do ``<select>`` ``campo``, ou ``None``."""
+    block = _select_block(html, campo)
+    match = _SELECTED_OPTION_RE.search(block) if block else None
+    return match.group("value") if match else None
 
 
 def extract_viewstate_fields(html: str) -> dict:
@@ -74,15 +95,10 @@ def extract_default_year(html: str) -> str:
     ``\\d{4}`` encontrado no bloco; em ultimo caso, o maior do HTML inteiro.
     Nunca devolve ``""`` — string vazia e exatamente o que provoca o 500.
     """
-    block_match = _ANO_SELECT_RE.search(html)
-    block = block_match.group(0) if block_match else html
-    values = [
-        m.group("value")
-        for m in _ANO_OPTION_RE.finditer(block)
-        if m.group("value").strip()
-    ]
+    values = extract_select_options(html, "cmbAnoInicio")
     if values:
         return values[0]
+    block = _select_block(html, "cmbAnoInicio") or html
     anos = re.findall(r"\b(\d{4})\b", block) or re.findall(r"\b(\d{4})\b", html)
     return str(max(anos)) if anos else ""
 
@@ -143,12 +159,31 @@ def build_cjsg_payload(
     return data
 
 
+def _valor_do_form(html: str, campo: str, nome: str, valor: str | None, origem: str, fallback: str) -> str:
+    """Devolve o valor de ``campo`` para a busca, conferido contra o ``<select>`` do form.
+
+    Vazio vira o padrao do navegador: a opcao marcada ou, sem ela, a primeira
+    (``fallback`` se o ``<select>`` nao parsear). O servidor responde HTTP 500
+    a um valor que o combo da origem nao oferece; o erro sai aqui, antes da
+    busca, com as opcoes da origem.
+    """
+    opcoes = extract_select_options(html, campo)
+    if not valor:
+        return _selected_option(html, campo) or (opcoes[0] if opcoes else fallback)
+    if opcoes and valor not in opcoes:
+        raise ValueError(
+            f"TJRJ: {nome}={valor!r} nao existe no formulario da origem {origem!r}; "
+            f"opcoes: {', '.join(opcoes)}."
+        )
+    return valor
+
+
 def _init_session(
     request_fn: RequestFn,
     pesquisa: str,
     ano_inicio: str | None,
     ano_fim: str | None,
-    competencia: str,
+    competencia: str | None,
     origem: str,
     tipo_acordao: bool,
     tipo_monocratica: bool,
@@ -160,44 +195,50 @@ def _init_session(
     O servidor numera as buscas de uma mesma sessao ASP.NET (0, 1, 2...) e
     guarda os parametros de cada uma em separado; o XHR de resultados escolhe
     a busca pelo ``pageSeq``. O numero vem na URL do redirect do POST.
+
+    ``ano_inicio``, ``ano_fim`` e ``competencia`` vazios ficam com o padrao do
+    form da origem, como no navegador: a opcao marcada do combo ou, sem ela, a
+    primeira. Valor que o combo da origem nao oferece levanta ``ValueError``.
     """
     resp = request_fn("GET", FORM_URL, timeout=30)
     html = resp.text
-    # O backend exige cmbAnoInicio/cmbAnoFim nao-vazios (refs #278); quando o
-    # usuario nao filtra por ano, replicamos o padrao do site preenchendo ambos
-    # com o ano corrente (a opcao default do dropdown). O preenchimento e por
-    # campo: passar so um dos dois (ex.: ano_inicio=2020 sem ano_fim) faz o
-    # outro virar o ano corrente, resultando num intervalo 2020..ano-corrente.
+    # Anos e competencia aqui sao os padroes do form inicial e so alimentam o
+    # postback de origem; os da busca saem do form da origem, mais abaixo. O
+    # backend exige anos nao-vazios (refs #278). Passar so um dos dois anos
+    # (ex.: ano_inicio=2020) faz o outro virar o mais recente da origem.
     default_year = extract_default_year(html)
     data = build_cjsg_payload(
         hidden=extract_viewstate_fields(html),
         pesquisa=pesquisa,
-        ano_inicio=ano_inicio or default_year,
-        ano_fim=ano_fim or default_year,
-        competencia=competencia,
+        ano_inicio=default_year,
+        ano_fim=default_year,
         origem=origem,
         tipo_acordao=tipo_acordao,
         tipo_monocratica=tipo_monocratica,
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    selecionada = _ORIGEM_SELECTED_RE.search(html)
-    if selecionada is None or selecionada.group("value") != origem:
+    if _selected_option(html, "cmbOrigem") != origem:
         # Trocar a origem no mesmo POST da busca dispara o evento de troca de
         # cmbOrigem no servidor, que recarrega os combos de ano no padrao (ano
         # corrente) depois de ler os anos enviados: o filtro de ano se perdia
         # sem erro. O navegador faz este postback ao mudar o combo; a busca
-        # vai em seguida com o estado devolvido por ele.
-        # O postback leva a competencia padrao do form inicial (``"1"``): a
-        # ``"3"`` (Fazendaria) so existe depois que a Turma Recursal carrega, e
-        # com ela o servidor respondia HTTP 500. A busca leva a pedida.
-        postback = dict(
-            data,
-            __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem",
-            **{f"{_FIELD_PREFIX}cmbCompetencia": "1"},
-        )
+        # vai em seguida com o estado devolvido por ele. O postback leva os
+        # anos e a competencia padrao do form inicial: a ``"3"`` (Fazendaria),
+        # por exemplo, so existe depois que a Turma Recursal carrega.
+        postback = dict(data, __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem")
         html = request_fn("POST", FORM_URL, data=postback, timeout=30).text
         data.update(extract_viewstate_fields(html))
+    # Cada origem tem seus combos: os Tribunais de Alcada vao de 1975 a 1998,
+    # o de Alcada Criminal so tem a competencia "2" e o Conselho da
+    # Magistratura so a "0" (15/11/2026). Fora deles, o servidor responde 500.
+    default_year = extract_default_year(html)
+    for campo, nome, valor, fallback in (
+        ("cmbAnoInicio", "ano_inicio", ano_inicio, default_year),
+        ("cmbAnoFim", "ano_fim", ano_fim, default_year),
+        ("cmbCompetencia", "competencia", competencia, "1"),
+    ):
+        data[_FIELD_PREFIX + campo] = _valor_do_form(html, campo, nome, valor, origem, fallback)
     resp = request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)
     page_seq = parse_qs(urlparse(resp.url).query).get("PageSeq")
     if not page_seq:
@@ -232,7 +273,7 @@ def cjsg_download(
     request_fn: RequestFn,
     ano_inicio: str | None,
     ano_fim: str | None,
-    competencia: str,
+    competencia: str | None,
     origem: str,
     tipo_acordao: bool,
     tipo_monocratica: bool,
