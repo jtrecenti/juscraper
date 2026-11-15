@@ -137,9 +137,9 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
             resultado["erro"] = exc
 
     worker = threading.Thread(target=trabalhar, name="juscraper-govbr", daemon=True)
-    worker.start()
     concluiu = False
     try:
+        worker.start()
         worker.join()
         concluiu = True
     finally:

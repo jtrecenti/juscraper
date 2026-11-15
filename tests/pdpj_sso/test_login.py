@@ -520,6 +520,34 @@ def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
     assert cancelado.wait(5)
 
 
+def test_ctrl_c_logo_depois_de_iniciar_o_worker_cancela_o_login(mocker):
+    """Ctrl-C entre o ``start`` do worker e o ``join`` tambem cancela o login.
+
+    O ``KeyboardInterrupt`` chega quando o worker ja esta rodando; sem o
+    cancelamento, o navegador ficaria aberto ate o prazo do login.
+    """
+    cancelado = threading.Event()
+
+    def worker(_timeout, _navegador, sessao):
+        sessao.cancelar.wait(10)
+        cancelado.set()
+        raise RuntimeError("Login no gov.br cancelado.")
+
+    mocker.patch.object(login, "_obter_credencial", side_effect=worker)
+    start_original = threading.Thread.start
+
+    def start(self):
+        start_original(self)
+        raise KeyboardInterrupt
+
+    mocker.patch.object(threading.Thread, "start", start)
+
+    with pytest.raises(KeyboardInterrupt):
+        obter_credencial_govbr(timeout=5)
+
+    assert cancelado.wait(5)
+
+
 def test_abrir_navegador_sem_porta_no_prazo_encerra_o_processo(mocker, tmp_path):
     processo = _Processo()
     mocker.patch.object(login.subprocess, "Popen", return_value=processo)
