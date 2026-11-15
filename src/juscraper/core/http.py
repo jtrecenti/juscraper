@@ -422,9 +422,10 @@ class HTTPScraper(BaseScraper):
                 ``base_backoff`` não for número positivo e finito ou se
                 ``perfil`` não estiver declarado.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
-            requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError:
-                Na primeira ocorrência, ou na última tentativa quando a política
-                retenta esse erro.
+            requests.Timeout: Na primeira ocorrência, ou na última tentativa se a política o retenta.
+            requests.ConnectionError: Na primeira ocorrência, ou na última tentativa se a política o retenta.
+            requests.exceptions.ChunkedEncodingError: Na primeira ocorrência, ou na última tentativa
+                se a política o retenta.
             InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).

@@ -1,24 +1,12 @@
 """Reprova docstrings que o parser Google do griffe lê diferente do pretendido.
 
 O quartodoc usa esse parser, e o ``quartodoc build`` passa mesmo quando ele lê
-errado; o defeito só aparece na referência publicada. Este teste pega duas
-formas:
-
-* **Entrada sem par** ``nome: descrição``. Em ``Raises:``, várias exceções
-  separadas por vírgula, partidas em duas linhas, fazem o griffe avisar
-  ``Failed to get 'exception: description' pair``; a tabela fica só com a
-  última exceção ou, se a segunda linha for recuada, a seção some. Em
-  ``Args:``, a lista de nomes partida em duas linhas perde a primeira linha.
-  A forma certa é uma exceção por entrada, repetindo a descrição, e a lista
-  de nomes numa linha só.
-* **Continuação sem recuo em** ``Returns:``. Cada linha no recuo do item é um
-  retorno novo, e um único ``pd.DataFrame`` sai como tabela de várias linhas.
-  A continuação leva recuo a mais, como em ``Args:`` e ``Raises:``. Mais de um
-  item só vale para função anotada com ``tuple``.
-
-Reprova também a seção ``Warns:``, que o quartodoc 0.11.1 não renderiza: o
-``quartodoc build`` termina em ``NotImplementedError`` e o site não é
-publicado. Avisos vão em ``Avisos:``, texto livre, como manda o CONTRIBUTING.
+errado; o defeito só aparece na referência publicada. O teste reprova aviso de
+falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
+linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` com mais de
+um item em função que não devolve ``tuple`` (continuação sem recuo) e a seção
+``Warns:``, que derruba o build. As formas certas estão no CONTRIBUTING, em
+"Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
@@ -56,12 +44,26 @@ def _objetos(objeto: griffe.Object):
             yield from _objetos(membro)
 
 
+def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> str | None:
+    if isinstance(secao, griffe.DocstringSectionWarns):
+        return "seção 'Warns:', que derruba o quartodoc build; usar 'Avisos:'"
+    if isinstance(secao, griffe.DocstringSectionRaises):
+        grupos = [str(excecao.annotation) for excecao in secao.value if "," in str(excecao.annotation)]
+        if grupos:
+            return f"Raises com várias exceções numa entrada ({'; '.join(grupos)}); usar uma por entrada"
+    devolve_tupla = objeto.is_function and _ANOTACAO_TUPLA.match(str(objeto.returns or ""))
+    if isinstance(secao, griffe.DocstringSectionReturns) and len(secao.value) > 1 and not devolve_tupla:
+        return (
+            f"Returns com {len(secao.value)} itens em função que não devolve tupla;"
+            " recuar as linhas de continuação"
+        )
+    return None
+
+
 def problemas_do_codigo(codigo: str, modulo: str = "modulo", caminho: Path | None = None) -> list[str]:
     """Lista os problemas das docstrings de ``codigo``, um texto por problema."""
     caminho = caminho or Path(f"{modulo}.py")
     raiz = griffe.visit(modulo, filepath=caminho, code=codigo)
-    raiz_repo = RAIZ_PACOTE.parents[1]
-    exibido = caminho.relative_to(raiz_repo) if caminho.is_relative_to(raiz_repo) else caminho
     problemas = []
     coletor = _Coletor()
     logger = logging.getLogger("griffe")
@@ -72,21 +74,10 @@ def problemas_do_codigo(codigo: str, modulo: str = "modulo", caminho: Path | Non
         for objeto in _objetos(raiz):
             if objeto.docstring is None:
                 continue
-            secoes = objeto.docstring.parse("google")
-            for secao in secoes:
-                if isinstance(secao, griffe.DocstringSectionWarns):
-                    problemas.append(
-                        f"{exibido}:{objeto.docstring.lineno}: {objeto.name}: seção 'Warns:', que derruba o"
-                        " quartodoc build; usar 'Avisos:'"
-                    )
-                if not isinstance(secao, griffe.DocstringSectionReturns) or len(secao.value) < 2:
-                    continue
-                if objeto.is_function and _ANOTACAO_TUPLA.match(str(objeto.returns or "")):
-                    continue
-                problemas.append(
-                    f"{exibido}:{objeto.docstring.lineno}: {objeto.name}: Returns com {len(secao.value)} itens"
-                    " em função que não devolve tupla; recuar as linhas de continuação"
-                )
+            for secao in objeto.docstring.parse("google"):
+                motivo = _motivo_da_secao(objeto, secao)
+                if motivo:
+                    problemas.append(f"{caminho}:{objeto.docstring.lineno}: {objeto.name}: {motivo}")
     finally:
         logger.removeHandler(coletor)
         logger.setLevel(nivel)
@@ -99,7 +90,8 @@ def _problemas_do_pacote() -> list[str]:
     problemas = []
     for arquivo in sorted(RAIZ_PACOTE.rglob("*.py")):
         modulo = ".".join(arquivo.relative_to(raiz_src).with_suffix("").parts)
-        problemas.extend(problemas_do_codigo(arquivo.read_text(encoding="utf-8"), modulo, arquivo))
+        caminho = arquivo.relative_to(RAIZ_PACOTE.parents[1])
+        problemas.extend(problemas_do_codigo(arquivo.read_text(encoding="utf-8"), modulo, caminho))
     return problemas
 
 
@@ -140,8 +132,20 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Warns:\n'
         '        UserWarning: Quando a busca volta vazia.\n'
         '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Raises:\n'
+        '        ValueError, TypeError: Quando falha.\n'
+        '    """\n',
     ],
-    ids=["raises-com-virgula", "args-partido", "returns-sem-recuo", "returns-sem-anotacao", "warns"],
+    ids=[
+        "raises-com-virgula",
+        "args-partido",
+        "returns-sem-recuo",
+        "returns-sem-anotacao",
+        "warns",
+        "raises-numa-linha",
+    ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
     assert problemas_do_codigo(codigo)

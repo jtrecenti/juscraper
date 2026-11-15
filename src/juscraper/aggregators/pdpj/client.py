@@ -674,7 +674,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             RetryExhaustedError: Quando a requisicao de qualquer pagina falha.
             requests.Timeout: Quando a requisicao de qualquer pagina falha.
             requests.ConnectionError: Quando a requisicao de qualquer pagina falha.
-            InvalidJSONResponseError: Quando a requisicao de qualquer pagina falha.
+            InvalidJSONResponseError: Quando alguma pagina responde sem JSON valido.
 
         See Also:
             :class:`InputPesquisaPdpj` -- schema pydantic e a fonte da

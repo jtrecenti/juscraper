@@ -66,8 +66,9 @@ def fetch_process_list(
 
     Raises:
         requests.HTTPError: Status de erro fora dos retentáveis, exceto o 404.
-        RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
-            ``HTTPScraper._request_with_retry``.
+        RetryExhaustedError: Ver ``HTTPScraper._request_with_retry``.
+        requests.Timeout: Ver ``HTTPScraper._request_with_retry``.
+        requests.ConnectionError: Ver ``HTTPScraper._request_with_retry``.
         InvalidJSONResponseError: Corpo que não é JSON, ou objeto sem a lista
             ``content`` de objetos.
     """
@@ -100,8 +101,9 @@ def fetch_process_details(
 
     Raises:
         requests.HTTPError: Status de erro fora dos retentáveis, inclusive o 404.
-        RetryExhaustedError, requests.Timeout, requests.ConnectionError: Ver
-            ``HTTPScraper._request_with_retry``.
+        RetryExhaustedError: Ver ``HTTPScraper._request_with_retry``.
+        requests.Timeout: Ver ``HTTPScraper._request_with_retry``.
+        requests.ConnectionError: Ver ``HTTPScraper._request_with_retry``.
         InvalidJSONResponseError: Corpo que não é JSON, ou que não é objeto nem
             lista cujo primeiro item é objeto.
     """
