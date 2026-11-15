@@ -6,7 +6,7 @@ import logging
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Mapping
-from typing import Any, ClassVar, NamedTuple, NoReturn, cast
+from typing import Any, ClassVar, cast
 
 import pandas as pd
 import requests
@@ -28,6 +28,20 @@ from .download import (
 
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
+from .paginacao import (
+    _descrever_falha_de_shards,
+    _falha_pagina,
+    _FimPagina,
+    _hits_da_pagina,
+    _mensagem_falha_parcial,
+    _next_search_after,
+    _total_para_diagnostico,
+    _total_primeira_pagina,
+    _verificar_data_frame_vazio,
+    _verificar_fim_pagina,
+    _verificar_pagina_vazia,
+    _verificar_shards,
+)
 from .parse import parse_datajud_api_response  # To be created for API response parsing
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
 
@@ -39,15 +53,6 @@ logger = logging.getLogger(__name__)
 
 DatajudFilterInput = InputListarProcessosDataJud | InputContarProcessosDataJud
 AliasSelection = tuple[str, str | list[str] | None]
-
-
-class _FimPagina(NamedTuple):
-    """Contexto mínimo para diagnosticar o término de uma página."""
-
-    alias: str
-    pagina: int
-    recebidos: int
-    last_page: int | None
 
 
 def _pop_plural_aliases(kwargs: dict) -> None:
@@ -116,57 +121,6 @@ def _group_cnjs_by_alias(numero_processo: str | list[str]) -> list[AliasSelectio
     return list(processos_por_alias.items())
 
 
-def _next_search_after(
-    api_response: dict[str, Any],
-    *,
-    alias: str,
-    effective_size: int,
-) -> list[Any] | None:
-    hits = api_response.get("hits", {}).get("hits", [])
-    if not hits or len(hits) < effective_size:
-        logger.info(
-            "Last page reached for alias %s (less than %d results or no hits).",
-            alias,
-            effective_size,
-        )
-        return None
-    search_after = hits[-1].get("sort")
-    if not isinstance(search_after, list):
-        logger.warning(
-            "Sort parameters for 'search_after' not found in last hit. "
-            "Cannot continue deep pagination."
-        )
-        return None
-    return search_after
-
-
-def _mensagem_falha_parcial(
-    alias: str,
-    pagina: int,
-    recebidos: int,
-    total_info: dict[str, Any] | None,
-) -> str:
-    """Diagnóstico da paginação interrompida, com quanto veio e quanto faltou.
-
-    Vira a mensagem do ``ColetaParcialError``; os registros recebidos ficam
-    em ``erro.resultado``.
-
-    ``total_info`` é o ``hits.total`` da página 1, que a consulta já traz
-    (``track_total_hits``); é ``None`` quando a falha foi na própria página 1.
-    ``relation == "gte"`` indica total truncado pelo Elasticsearch, então o
-    texto diz "pelo menos".
-    """
-    inicio = f"DataJud: falha ao consultar alias {alias!r} na página {pagina}."
-    if total_info is None:
-        return f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
-    recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
-    total = total_info.get("value")
-    if not isinstance(total, int):
-        return f"{recebidos_txt}; a consulta não informou o total encontrado."
-    total_txt = str(total) if total_info.get("relation", "eq") == "eq" else f"pelo menos {total}"
-    return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
-
-
 def _e_timeout_de_leitura(exc: Exception) -> bool:
     """``Timeout`` que não é de conexão: ``ConnectTimeout`` também herda de ``ConnectionError``."""
     return isinstance(exc, requests.Timeout) and not isinstance(exc, requests.ConnectionError)
@@ -223,176 +177,22 @@ def _sufixo_causa(exc: Exception) -> str:
     return f" Causa: {_descrever_causa(exc)}.{dica}"
 
 
-def _falha_pagina(mensagem: str, causa: Exception) -> NoReturn:
-    """Propaga falha de página com a causa original preservada."""
-    raise ColetaParcialError(
-        mensagem,
-        resultado=pd.DataFrame(),
-        falhas=[(None, None, causa)],
-    ) from causa
-
-
-def _total_primeira_pagina(api_response: dict[str, Any], alias: str, pagina: int) -> dict[str, Any]:
-    """Valida o total informado pela primeira página."""
-    total_info = api_response.get("hits", {}).get("total")
-    if total_info is not None and not isinstance(total_info, dict):
-        causa = ValueError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
-        mensagem = (
-            f"{_mensagem_falha_parcial(alias, pagina, 0, None)} "
-            "Resposta inválida: campo 'hits.total' deve ser um objeto."
-        )
-        _falha_pagina(mensagem, causa)
-    total_info = total_info or {}
-    logger.info(
-        "Total de processos encontrados para %s: %s (%s)",
-        alias,
-        total_info.get("value", "?"),
-        total_info.get("relation", "eq"),
-    )
-    return total_info
-
-
-def _hits_da_pagina(
-    api_response: dict[str, Any],
-    alias: str,
-    pagina: int,
-    recebidos: int,
-    total_info: dict[str, Any] | None,
-) -> list[dict[str, Any]]:
-    """Valida a estrutura dos resultados antes do uso do cursor."""
-    diagnostico = _mensagem_falha_parcial(alias, pagina, recebidos, total_info)
-    hits_obj = api_response.get("hits")
-    if not isinstance(hits_obj, dict):
-        causa: Exception = TypeError("Campo 'hits' da resposta DataJud deve ser um objeto.")
-        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits' deve ser um objeto.", causa)
-    if "hits" not in hits_obj:
-        causa = ValueError("Campo obrigatório 'hits.hits' ausente na resposta DataJud.")
-        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits.hits' ausente.", causa)
-    hits = hits_obj["hits"]
-    if not isinstance(hits, list):
-        causa = ValueError("Campo 'hits.hits' da resposta DataJud deve ser uma lista.")
-        _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits.hits' deve ser uma lista.", causa)
-    if any(not isinstance(hit, dict) for hit in hits):
-        causa = TypeError("Cada elemento de 'hits.hits' da resposta DataJud deve ser um objeto.")
-        _falha_pagina(f"{diagnostico} Resposta inválida: cada hit deve ser um objeto.", causa)
-    return hits
-
-
-def _verificar_termino_prematuro(
-    hits: list[dict[str, Any]],
-    effective_size: int,
-    total_info: dict[str, Any] | None,
-    percorridos: int,
-    contexto: _FimPagina,
-) -> None:
-    """Sinaliza página vazia ou curta antes do total exato.
-
-    Vale com e sem ``paginas``: ``percorridos`` conta todas as páginas
-    percorridas pelo cursor, inclusive as que ``paginas`` descarta, então
-    uma página curta antes do total é falha mesmo quando a última página
-    pedida ainda não chegou.
-    """
-    total_exato = _total_exato(total_info)
-    if total_exato is None or percorridos >= total_exato:
-        return
-    if not hits:
-        causa = RuntimeError("Página vazia antes de alcançar o total exato da consulta.")
-    elif len(hits) < effective_size:
-        causa = RuntimeError("Página curta antes de alcançar o total exato da consulta.")
-    else:
-        return
-    diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
-    _falha_pagina(f"{diagnostico} Paginação encerrada prematuramente: {causa}", causa)
-
-
-def _total_exato(total_info: dict[str, Any] | None) -> int | None:
-    """Total informado pela consulta quando exato (``relation == "eq"``); ``None`` nos outros casos."""
-    if not total_info or total_info.get("relation", "eq") != "eq":
-        return None
-    total = total_info.get("value")
-    return total if isinstance(total, int) and not isinstance(total, bool) else None
-
-
-def _verificar_fim_pagina(
-    hits: list[dict[str, Any]],
-    effective_size: int,
-    total_info: dict[str, Any] | None,
-    percorridos: int,
-    contexto: _FimPagina,
-) -> None:
-    """Verifica cursor pendente e término prematuro após consumir a página."""
-    total_exato = _total_exato(total_info)
-    cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
-    pagina_pendente = contexto.last_page is None or contexto.pagina < contexto.last_page
-    total_esgotado = total_exato is not None and percorridos >= total_exato
-    if cursor_ausente and pagina_pendente and not total_esgotado:
-        mensagem = (
-            f"DataJud: cursor search_after ausente no alias {contexto.alias!r} "
-            f"após a página {contexto.pagina}; não foi possível consultar a próxima página."
-        )
-        _falha_pagina(mensagem, RuntimeError(mensagem))
-    _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
-
-
-def _verificar_pagina_vazia(
-    hits: list[dict[str, Any]],
-    effective_size: int,
-    total_info: dict[str, Any] | None,
-    percorridos: int,
-    contexto: _FimPagina,
-) -> None:
-    """Detecta página vazia inconsistente antes de entregá-la ao consumidor."""
-    if not hits:
-        _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
-
-
 def _parse_pagina(
     api_response: dict[str, Any],
     *,
     mostrar_movs: bool,
     diagnostico: str,
 ) -> pd.DataFrame:
-    """Converte uma página; a falha sobe como coleta parcial."""
+    """Converte uma página; a falha sobe como coleta parcial, com a falha de shards da página, se houver."""
     try:
         return parse_datajud_api_response(api_response, mostrar_movs)
     except Exception as exc:
+        partes = (diagnostico, _descrever_falha_de_shards(api_response), "Erro ao parsear a resposta.")
         raise ColetaParcialError(
-            f"{diagnostico} Erro ao parsear a resposta.",
+            " ".join(filter(None, partes)),
             resultado=pd.DataFrame(),
             falhas=[(None, None, exc)],
         ) from exc
-
-
-def _verificar_data_frame_vazio(
-    api_response: dict[str, Any],
-    alias: str,
-    pagina: int,
-    recebidos: int,
-    total_info: dict[str, Any] | None,
-) -> None:
-    """Distingue fim vazio legítimo de hits que não geraram dados úteis."""
-    if not api_response["hits"]["hits"]:
-        return
-    causa = ValueError("A página contém hits, mas não produziu dados utilizáveis no DataFrame.")
-    mensagem = (
-        f"{_mensagem_falha_parcial(alias, pagina, recebidos, total_info)} "
-        "A resposta continha hits, mas o parsing não produziu dados utilizáveis."
-    )
-    _falha_pagina(mensagem, causa)
-
-
-def _total_para_diagnostico(
-    api_response: dict[str, Any],
-    pagina: int,
-    total_info: dict[str, Any] | None,
-) -> dict[str, Any] | None:
-    """Guarda o total da primeira página para diagnosticar falhas posteriores."""
-    if pagina != 1:
-        return total_info
-    hits = api_response.get("hits")
-    if isinstance(hits, dict) and isinstance(hits.get("total"), dict):
-        return cast(dict[str, Any], hits["total"])
-    return total_info
 
 
 class DatajudScraper(HTTPScraper):
@@ -793,6 +593,9 @@ class DatajudScraper(HTTPScraper):
                 (429, 502 ou 503 em todas as tentativas, status em
                 ``.status_code``), ``requests.Timeout``, erro de conexão ou
                 ``requests.JSONDecodeError`` (resposta 200 que não é JSON).
+                Resposta 200 com ``_shards.failed > 0`` (busca parcial do
+                Elasticsearch) também levanta, com os hits válidos da página
+                em ``erro.resultado``.
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
@@ -988,8 +791,10 @@ class DatajudScraper(HTTPScraper):
             if paginas is None or current_page in paginas:
                 recebidos += len(hits)
             contexto = _FimPagina(alias, current_page, recebidos, last_page)
-            _verificar_pagina_vazia(hits, effective_size, total_info, percorridos, contexto)
+            _verificar_pagina_vazia(api_response, effective_size, total_info, percorridos, contexto)
             yield current_page, api_response
+            # Depois do ``yield``: o consumidor já guardou os hits válidos da página.
+            _verificar_shards(api_response, total_info, contexto)
             if next_search_after is None:
                 _verificar_fim_pagina(hits, effective_size, total_info, percorridos, contexto)
                 return
