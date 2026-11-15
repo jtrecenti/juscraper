@@ -13,6 +13,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
 from tests._helpers import load_sample, load_sample_bytes
 
 
@@ -109,8 +110,13 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
 
 
 @responses.activate
-def test_cpopg_missing_process_returns_row_with_only_id_cnj() -> None:
-    """Missing CNJ yields one row keyed by ``id_cnj``, no extra HTTP fetch."""
+def test_cpopg_missing_process_keeps_detail_columns_empty() -> None:
+    """CNJ ausente sai numa linha com ``id_cnj``, sem pedir o detalhe.
+
+    As colunas do detalhe continuam no DataFrame, vazias, mesmo quando
+    nenhum CNJ do lote foi lido (#442: o notebook selecionava
+    ``df[["processo", "classe", "orgao_julgador"]]`` e caía em ``KeyError``).
+    """
     responses.add(
         responses.GET,
         LIST_URL,
@@ -126,6 +132,23 @@ def test_cpopg_missing_process_returns_row_with_only_id_cnj() -> None:
     df = scraper.cpopg("00000000020994050000")
     assert len(df) == 1
     assert df.iloc[0]["id_cnj"] == "00000000020994050000"
+    assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj", "motivo_falha"]
+    assert df.iloc[0][list(COLUNAS_DETALHE)].isna().all()
+    assert df.iloc[0]["motivo_falha"] is None
+
+
+def test_cpopg_parse_sem_html_mantem_colunas_do_detalhe() -> None:
+    """``cpopg_parse`` só com ``None`` sai com as colunas do detalhe vazias."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    df = scraper.cpopg_parse([None], ["00000000020994050000"])
+    assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj"]
+    assert df.iloc[0][list(COLUNAS_DETALHE)].isna().all()
+
+
+def test_colunas_detalhe_sao_as_chaves_de_parse_detail() -> None:
+    """``COLUNAS_DETALHE`` acompanha o registro de ``parse_detail``, na mesma ordem."""
+    record = parse_detail(load_sample_bytes("trf5", "cpopg/detail_normal.html").decode("latin-1"))
+    assert tuple(record) == COLUNAS_DETALHE
 
 
 def test_cpopg_rejects_unknown_kwargs() -> None:
