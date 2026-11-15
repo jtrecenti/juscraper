@@ -26,6 +26,12 @@ class _InvalidProcessCodeError(ValueError):
 
 _TENTATIVAS = 5
 
+# Prazo, em segundos, de cada pedido do cpopg, o mesmo do cposg. Sem ele, uma
+# conexão que o eSAJ deixa aberta sem responder prende o lote inteiro, e o
+# retry de cpopg_download_html_single nunca roda. O timeout vira
+# requests.Timeout, que o retry e _FALHAS_DE_DOCUMENTO já tratam (#484).
+_TIMEOUT = 60
+
 
 # Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
 # sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
@@ -107,7 +113,7 @@ class _PecasPublicas:
         """Grava em ``pasta_processo`` o PDF de cada documento público de ``html`` que ainda não está lá."""
         def get(url):
             time.sleep(self.sleep_time)
-            resposta = sessao.get(url)
+            resposta = sessao.get(url, timeout=_TIMEOUT)
             resposta.raise_for_status()
             return resposta
 
@@ -230,7 +236,7 @@ def cpopg_download_html_single(
     ultimo_erro: Exception | None = None
     for tentativa in range(_TENTATIVAS):
         try:
-            r = session.get(u, params=parms)
+            r = session.get(u, params=parms, timeout=_TIMEOUT)
             _verificar_bloqueio(r.text)
             if get_links_callback is None:
                 raise RuntimeError(
@@ -338,7 +344,7 @@ def _salvar_resultados_html(
     else:
         for indice, link in enumerate(links):
             # urljoin junta base e href com barra simples; "//cpopg/show.do" dá 404.
-            resposta_documento = sessao.get(urljoin(url_base, link))
+            resposta_documento = sessao.get(urljoin(url_base, link), timeout=_TIMEOUT)
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."
@@ -487,7 +493,7 @@ def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
     parametros = {'processo.codigo': codigo_processo}
     if cursor:
         parametros['cursor'] = cursor
-    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros)
+    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros, timeout=_TIMEOUT)
     if resposta.status_code != 200:
         raise requests.HTTPError(
             f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}."

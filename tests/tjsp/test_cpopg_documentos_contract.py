@@ -23,6 +23,7 @@ import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
 from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
 from tests.tjsp.test_cpopg_contract import (
+    CNJ,
     CNJ_INCIDENTE,
     CURSOR_PAGINA_2,
     CURSOR_PAGINA_3,
@@ -340,3 +341,34 @@ def test_varios_incidentes_baixam_os_pdfs_de_cada_um_antes_do_show_seguinte(tmp_
     assert _documentos_pedidos() == list(PUBLICOS)
     assert sorted(p.stem for p in tmp_path.rglob("*.pdf")) == sorted(PUBLICOS)
     assert len(list(tmp_path.rglob("*.html"))) == 2
+
+
+@responses.activate
+def test_todo_pedido_do_cpopg_tem_timeout(tmp_path, mocker):
+    """Busca, show.do, movimentações, pasta e getPDF saem com prazo: conexão parada não trava o lote (#484)."""
+    mocker.patch("time.sleep")
+    _registrar_processo()
+    for cd in PUBLICOS:
+        _registrar_documento(cd)
+    codigo_lista = "1W001AAAA0000"
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/search.do",
+        body=f'<div id="listagemDeProcessos"><a href="/cpopg/show.do?processo.codigo={codigo_lista}">x</a></div>',
+        content_type=_HTML,
+        match=[query_param_matcher({"dadosConsulta.valorConsultaNuUnificado": CNJ}, strict_match=False)],
+    )
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/show.do",
+        body=_show_antigo(codigo_lista, PUBLICOS[0]),
+        content_type=_HTML,
+    )
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    scraper.cpopg_download([CNJ_INCIDENTE, CNJ], download_pecas=True)
+
+    rotas = {c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls}
+    assert rotas >= {"search.do", "show.do", "carregarMovimentacoesAjax.do", ROTA_DOCUMENTO, "getPDF.do"}
+    sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
+    assert sem_timeout == []
