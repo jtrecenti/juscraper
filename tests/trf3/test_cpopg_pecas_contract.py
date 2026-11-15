@@ -15,6 +15,7 @@ import responses
 
 import juscraper as jus
 from tests._helpers import load_sample, load_sample_bytes
+from tests.trf3.test_cpopg_contract import _AKAMAI_403, _processo_encontrado
 
 LIST_URL = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
 DETAIL_URL = (
@@ -219,3 +220,51 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path) -> None:
     # Só a segunda peça foi salva.
     assert len(saved) == 1
     assert Path(saved[0]).is_file()
+
+
+@responses.activate
+def test_cpopg_bloqueio_nas_pecas_preserva_o_detalhe(tmp_path) -> None:
+    """Akamai no download das peças: o detalhe e as peças já salvas ficam, e a linha sai ``bloqueio_anti_bot``."""
+    _processo_encontrado()
+    doc_body = load_sample_bytes("trf3", "cpopg_pecas/documento_html.html")
+    responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+    responses.add(
+        responses.GET,
+        DOC_URL,
+        body=_AKAMAI_403,
+        status=403,
+    )
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.warns(UserWarning, match="processo 50059460920254036324: bloqueio_anti_bot"):
+        df = scraper.cpopg("50059460920254036324", download_pecas=True, diretorio=str(tmp_path))
+
+    row = df.iloc[0]
+    assert row["processo"] == "5005946-09.2025.4.03.6324"
+    assert row["motivo_falha"] == "bloqueio_anti_bot"
+    assert len(row["pecas"]) == 1 and Path(row["pecas"][0]).is_file()
+    # Nenhuma peça pedida depois do bloqueio.
+    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == 2
+
+
+@responses.activate
+def test_cpopg_bloqueio_no_detalhe_nao_pede_pecas(tmp_path) -> None:
+    """Bloqueio na busca do 2º CNJ: nenhuma peça é pedida depois, e o 1º sai com o detalhe e ``bloqueio_anti_bot``."""
+    _processo_encontrado()
+    responses.add(
+        responses.POST,
+        LIST_URL,
+        body=_AKAMAI_403,
+        status=403,
+    )
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.warns(UserWarning, match="bloqueio_anti_bot"):
+        df = scraper.cpopg(
+            ["50059460920254036324", "50059460920254036325"], download_pecas=True, diretorio=str(tmp_path)
+        )
+
+    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert list(df["pecas"]) == [[], []]
+    assert not any(c.request.url.startswith(DOC_URL) for c in responses.calls)

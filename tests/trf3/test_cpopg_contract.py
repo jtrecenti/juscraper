@@ -43,6 +43,19 @@ DETAIL_URL = (
     "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
 )
 
+# Corpo do 403 do Akamai, como o portal devolve a IPs bloqueados.
+_AKAMAI_403 = (
+    b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
+    b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>"
+)
+
+
+def _processo_encontrado() -> None:
+    """Formulário, busca com um resultado e detalhe do processo, nessa ordem."""
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf3", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf3", "cpopg/search_one_result.html"))
+    responses.add(responses.GET, DETAIL_URL, body=load_sample_bytes("trf3", "cpopg/detail_normal.html"))
+
 
 def test_akamai_block_raises_dedicated_exception() -> None:
     """403 ``Access Denied`` (Akamai) vira ``BotChallengeBlockedError`` com mensagem clara."""
@@ -54,12 +67,7 @@ def test_akamai_block_raises_dedicated_exception() -> None:
     class FakeResp:
         status_code = 403
         url = "https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam"
-        content = (
-            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY>"
-            b"<H1>Access Denied</H1>"
-            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c"
-            b"</BODY></HTML>"
-        )
+        content = _AKAMAI_403
 
     with _pt.raises(BotChallengeBlockedError) as exc_info:
         _check_bot_challenge(FakeResp(), "TRF3")  # type: ignore[arg-type]
@@ -332,7 +340,10 @@ def test_cpopg_batch_continues_after_download_error() -> None:
     )
 
     scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(["00000000020994030000", "50059460920254036324"])
+    # ConnectionError nativo, e não o do requests: fora do vocabulário de motivos.
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = scraper.cpopg(["00000000020994030000", "50059460920254036324"])
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
     assert list(df["id_cnj"]) == ["00000000020994030000", "50059460920254036324"]
     # CNJ que falhou no download vira linha só com id_cnj.
     assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
@@ -385,7 +396,64 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     monkeypatch.setattr(trf_base, "parse_detail", flaky_parse)
 
     scraper = jus.scraper("trf3", sleep_time=0)
-    df = scraper.cpopg(["50059460920254036324", "50059460920254036325"])
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = scraper.cpopg(["50059460920254036324", "50059460920254036325"])
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
     assert list(df["id_cnj"]) == ["50059460920254036324", "50059460920254036325"]
     assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
     assert df.iloc[1]["processo"] == "5005946-09.2025.4.03.6324"
+
+
+@responses.activate
+def test_cpopg_bloqueio_no_meio_do_lote_preserva_as_linhas_anteriores() -> None:
+    """Akamai no 2º de 3 CNJs: o 1º sai inteiro, o lote para e o 2º e o 3º saem ``bloqueio_anti_bot``."""
+    _processo_encontrado()
+    responses.add(responses.POST, LIST_URL, body=_AKAMAI_403, status=403)
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    cnjs = ["50059460920254036324", "50059460920254036325", "50059460920254036326"]
+    with pytest.warns(UserWarning, match=r"TRF3Scraper\.cpopg: 2 consulta\(s\) de processo falharam"):
+        df = scraper.cpopg(cnjs)
+
+    assert list(df["id_cnj"]) == cnjs
+    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
+    assert list(df["motivo_falha"]) == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert df.iloc[1:]["processo"].isna().all()
+    # Depois do bloqueio, nenhum pedido novo: form + busca + detalhe + busca bloqueada.
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+def test_cpopg_falha_http_de_um_cnj_vira_motivo_e_o_lote_segue() -> None:
+    """Falha de requisição no vocabulário sai com o motivo dela; o CNJ seguinte é consultado."""
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf3", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, status=404)
+    responses.add(responses.POST, LIST_URL, body=load_sample("trf3", "cpopg/search_no_results.html"))
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.warns(UserWarning, match="processo 00000000020994030000: http_404"):
+        df = scraper.cpopg(["00000000020994030000", "00000000020994030001"])
+
+    # O segundo é ausente da consulta pública: a consulta respondeu, sem motivo.
+    assert list(df["motivo_falha"]) == ["http_404", None]
+
+
+@responses.activate
+def test_cpopg_download_e_parse_avisam_sem_coluna_de_motivo() -> None:
+    """No fluxo em duas etapas, o bloqueio vira ``None`` com aviso, e ``cpopg_parse`` não afirma motivo."""
+    responses.add(responses.GET, LIST_URL, body=load_sample("trf3", "cpopg/form_initial.html"))
+    responses.add(responses.POST, LIST_URL, body=_AKAMAI_403, status=403)
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    cnjs = ["50059460920254036324", "50059460920254036325"]
+    with pytest.warns(UserWarning, match=r"TRF3Scraper\.cpopg_download: 2 consulta\(s\)"):
+        htmls = scraper.cpopg_download(cnjs)
+    assert htmls == [None, None]
+
+    df = scraper.cpopg_parse(htmls, cnjs)
+    assert list(df["id_cnj"]) == cnjs
+    assert "motivo_falha" not in df.columns
+
+
+def test_cpopg_parse_lista_vazia_devolve_dataframe_vazio() -> None:
+    assert jus.scraper("trf3", sleep_time=0).cpopg_parse([], []).empty

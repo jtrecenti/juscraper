@@ -13,8 +13,8 @@ import juscraper as jus
 from tests._helpers import assert_no_mojibake
 
 # A consulta pública PJe do TRF3 é protegida por Akamai: de IPs de datacenter/CI
-# o portal devolve 403 ``Access Denied`` e o scraper levanta
-# ``BotChallengeBlockedError``. O marker ``anti_bot`` faz o conftest converter
+# o portal devolve 403 ``Access Denied`` e o ``cpopg`` registra a linha com
+# ``bloqueio_anti_bot`` e emite ``UserWarning``. O marker ``anti_bot`` faz o conftest converter
 # esse bloqueio em xfail (falha ambiental, não regressão). Ver issue #292.
 pytestmark = pytest.mark.anti_bot
 
