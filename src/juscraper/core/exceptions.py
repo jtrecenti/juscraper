@@ -10,14 +10,33 @@ em ``CLAUDE.md``.
 """
 from __future__ import annotations
 
-import functools
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import pandas as pd
 
 
-class RetryExhaustedError(Exception):
+class _RecriaSemInit(Exception):
+    """Base das exceções cujo ``__init__`` pede outros argumentos que não a mensagem.
+
+    ``args`` só guarda a mensagem: sem o ``__reduce__`` abaixo, pickle e
+    ``copy`` chamariam ``__init__(mensagem)`` e quebrariam, o que perderia o
+    erro numa coleta rodada em ``ProcessPoolExecutor``. O erro é recriado sem
+    passar pelo ``__init__``, e os atributos voltam pelo ``__dict__``; vale
+    também para as subclasses, cada uma com o próprio ``__init__``.
+    """
+
+    def __reduce__(self) -> tuple[object, ...]:
+        """Recria o erro com os mesmos ``args`` e atributos, sem o ``__init__``."""
+        return (_recriar_sem_init, (type(self), *self.args), self.__dict__)
+
+
+def _recriar_sem_init(cls: type[BaseException], *args: object) -> BaseException:
+    # ``BaseException.__new__`` já guarda ``args``; o ``__init__`` fica de fora.
+    return cls.__new__(cls, *args)
+
+
+class RetryExhaustedError(_RecriaSemInit):
     """Levantada quando ``_request_with_retry`` esgota o número de tentativas."""
 
     def __init__(self, status_code: int | None, attempts: int):
@@ -26,14 +45,6 @@ class RetryExhaustedError(Exception):
         super().__init__(
             f"HTTP request failed after {attempts} attempts (last status: {status_code})"
         )
-
-    def __reduce__(self) -> tuple[type[RetryExhaustedError], tuple[int | None, int]]:
-        """Reconstrói o erro pelos argumentos do ``__init__``, não pela mensagem.
-
-        Sem isto, pickle chamaria ``__init__(mensagem)``. Isso quebraria o
-        pickle de :class:`ColetaParcialError` quando uma janela esgota os retries.
-        """
-        return (type(self), (self.status_code, self.attempts))
 
 
 class HTTPSemanticError(Exception):
@@ -48,7 +59,7 @@ class CaptchaEsgotadoError(HTTPSemanticError, RuntimeError):
     """
 
 
-class BotChallengeBlockedError(Exception):
+class BotChallengeBlockedError(_RecriaSemInit):
     """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai, CloudFront).
 
     O sintoma típico é HTTP 403 com body curto ``Access Denied`` e uma referência
@@ -65,7 +76,8 @@ class BotChallengeBlockedError(Exception):
 
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
-    HTML ``The request could not be satisfied`` servida pelo próprio CDN.
+    HTML ``The request could not be satisfied`` servida pelo próprio CDN, e
+    :class:`WafChallengeError` e o TJTO passam ``"AWS WAF"``.
 
     ``mensagem`` substitui o texto padrão, que descreve o 403: as subclasses
     cujo sintoma é outro (desafio JavaScript com HTTP 200, cookie que não
@@ -132,10 +144,10 @@ class WafChallengeError(BotChallengeBlockedError):
             )
         else:
             mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
-        super().__init__(tribunal, url, mensagem=mensagem)
+        super().__init__(tribunal, url, bot_manager="AWS WAF", mensagem=mensagem)
 
 
-class ColetaParcialError(RuntimeError):
+class ColetaParcialError(_RecriaSemInit, RuntimeError):
     """Levantada quando parte de uma coleta falha e o resultado ficaria incompleto.
 
     O auto-chunk do eSAJ divide a busca em janelas de data. Devolver só as
@@ -171,17 +183,8 @@ class ColetaParcialError(RuntimeError):
         self.resultado = resultado
         self.falhas = falhas
 
-    def __reduce__(self) -> tuple[functools.partial[ColetaParcialError], tuple[object, ...]]:
-        """Reconstrói o erro com ``resultado`` e ``falhas`` em pickle e ``copy``.
 
-        ``args`` só guarda a mensagem: sem isto, pickle e ``copy`` chamariam
-        ``__init__(mensagem)`` e quebrariam nos dois keyword-only, o que
-        perderia o erro numa coleta rodada em ``ProcessPoolExecutor``.
-        """
-        return (functools.partial(type(self), resultado=self.resultado, falhas=self.falhas), self.args)
-
-
-class InvalidJSONResponseError(HTTPSemanticError):
+class InvalidJSONResponseError(_RecriaSemInit, HTTPSemanticError):
     """Resposta com status < 400 cujo corpo não é JSON válido, mesmo após retries.
 
     Levantada por ``HTTPScraper._request_with_retry`` quando chamado com
