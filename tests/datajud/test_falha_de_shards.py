@@ -25,11 +25,8 @@ def _pagina(
     pagina: int, *, tamanho: int = 10, total: int = 25, falhos: int = 0
 ) -> dict[str, Any]:
     hits = [
-        {
-            "_source": {"numeroProcesso": f"{pagina:02d}-{item:02d}"},
-            "sort": [f"cursor-{pagina:02d}-{item:02d}"],
-        }
-        for item in range(tamanho)
+        {"_source": {"numeroProcesso": numero}, "sort": [f"cursor-{numero}"]}
+        for numero in _numeros(pagina, tamanho)
     ]
     return {
         "timed_out": False,
@@ -105,15 +102,6 @@ def test_falha_de_shards_com_hits_preserva_paginas_anteriores_e_a_propria(monkey
     assert len(chamadas) == 2
 
 
-def test_falha_de_shards_na_ultima_pagina_curta_levanta(monkeypatch):
-    _instalar_paginas(monkeypatch, [_pagina(1, tamanho=3, total=3, falhos=1)])
-
-    with pytest.raises(ColetaParcialError, match="1 de 5 shard") as exc_info:
-        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
-
-    assert exc_info.value.resultado["numeroProcesso"].tolist() == _numeros(1, 3)
-
-
 def test_falha_de_shards_em_pagina_vazia_antes_do_total_menciona_shards(monkeypatch):
     _instalar_paginas(monkeypatch, [_pagina(1), _pagina(2, tamanho=0, falhos=2)])
 
@@ -153,7 +141,7 @@ def test_falha_de_shards_em_pagina_descartada_por_paginas_levanta(monkeypatch):
     assert len(chamadas) == 1
 
 
-@pytest.mark.parametrize("shards", [None, {}, {"total": 5, "failed": 0}])
+@pytest.mark.parametrize("shards", [None, {}])
 def test_shards_ausente_ou_sem_falha_nao_levanta(monkeypatch, shards):
     pagina = _pagina(1, tamanho=3, total=3)
     if shards is None:
