@@ -201,5 +201,5 @@ def test_cjsg_pagina_desconhecida_levanta_erro(mocker):
     _add_get_consulta()
     _add_post_consulta("cjsg/step_01_consulta.html")
 
-    with pytest.raises(RuntimeError, match="fora dos formatos conhecidos"):
+    with pytest.raises(ValueError, match="fora dos formatos conhecidos"):
         jus.scraper("tjpe").cjsg("dano moral", paginas=1)

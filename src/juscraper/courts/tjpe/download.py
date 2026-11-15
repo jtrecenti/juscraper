@@ -355,26 +355,30 @@ def cjsg_download(
     )
     time.sleep(1)
 
+    if is_sem_resultados_page(response_html):
+        avisar(
+            f"TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca {pesquisa!r}, "
+            "e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal "
+            f"({CONSULTA_URL}): com a pesquisa fora do ar, ele responde assim a qualquer termo."
+        )
+        return []
+
     # Step 2 may return results directly (single type) or escolha page (multiple types)
     if is_escolha_page(response_html):
         # Step 3 - choose result type
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
-    elif is_results_page(response_html) or is_sem_resultados_page(response_html):
+    elif is_results_page(response_html):
         results_html = response_html
     else:
-        raise RuntimeError(
+        raise ValueError(
             "TJPE cjsg: a busca devolveu uma página fora dos formatos conhecidos "
             "(nem resultados, nem escolha do tipo, nem 'Nenhum documento encontrado')."
         )
 
     total_docs = extract_total_docs(results_html)
     if total_docs == 0:
-        avisar(
-            f"TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca {pesquisa!r}, "
-            "e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal "
-            f"({CONSULTA_URL}): com a pesquisa fora do ar, ele responde assim a qualquer termo."
-        )
+        logger.info("TJPE: no documents found for '%s'", pesquisa)
         return []
 
     total_pages = math.ceil(total_docs / RESULTS_PER_PAGE)
