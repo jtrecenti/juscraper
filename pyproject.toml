@@ -94,6 +94,10 @@ waf = [
     # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE).
     "playwright>=1.49",
 ]
+tls = [
+    # TLS de navegador (curl_cffi) na consulta processual do TRF3, cujo Akamai não responde ao `requests`.
+    "curl_cffi>=0.7",
+]
 stf = [
     # Alias de `waf`, mantido para quem ja instala `juscraper[stf]` desde a 0.4.0.
     "juscraper[waf]",

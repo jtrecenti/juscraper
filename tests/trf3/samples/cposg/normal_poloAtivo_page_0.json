@@ -1,0 +1,33 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "UNIMED NACIONAL - COOPERATIVA CENTRAL - CNPJ: 02.8XX.XXX/XXXX-XX (APELANTE)",
+   "nome": "UNIMED NACIONAL - COOPERATIVA CENTRAL",
+   "tipo": "APELANTE",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "PAULA REGINA GUERRA DE RESENDE COURI registrado(a) civilmente como PAULA REGINA GUERRA DE RESENDE COURI - OAB MG80788-A - CPF: 003.XXX.XXX-XX (ADVOGADO)",
+   "nome": "PAULA REGINA GUERRA DE RESENDE COURI registrado(a) civilmente como PAULA REGINA GUERRA DE RESENDE COURI",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 2
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "5026242-75.2026.4.03.0000",
+  "dataDistribuicao": "2026-08-22T00:44:02.75",
+  "classeJudicial": "AGRAVO DE INSTRUMENTO (202)",
+  "assunto": "DIREITO ADMINISTRATIVO E OUTRAS MATÉRIAS DE DIREITO PÚBLICO (9985) - Atos Administrativos (9997) - Infração Administrativa (10022) - Multas e demais Sanções (10023) \nDIREITO ADMINISTRATIVO E OUTRAS MATÉRIAS DE DIREITO PÚBLICO (9985) - Dívida Ativa não-tributária (10394) - Multas e demais Sanções (10395) \nDIREITO TRIBUTÁRIO (14) - Crédito Tributário (5986) - Suspensão da Exigibilidade (5987) - Carta de fiança (5988)",
+  "jurisdicao": "Tribunal Regional Federal da 3ª Região",
+  "orgaoJulgador": "Gab. 11 - DES. FED. ANDRÉ NABARRETE",
+  "orgaoJulgadorColegiado": "4ª Turma",
+  "endereco": "Avenida Paulista, 1842, Avenida Paulista 1842, Bela Vista, SãO PAULO - SP - CEP: 01310-936",
+  "enderecoOrgaoJulgadorColegiado": "Avenida Paulista 1842, SãO PAULO - SP - CEP: 01310-936",
+  "numeroProcessoReferencia": null
+ }
+}

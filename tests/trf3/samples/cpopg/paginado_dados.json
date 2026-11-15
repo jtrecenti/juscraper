@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "5003536-21.2025.4.03.6342",
+  "dataDistribuicao": "2025-09-24T15:10:17.231",
+  "classeJudicial": "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)",
+  "assunto": "DIREITO ASSISTENCIAL (12734) - Benefício Assistencial (Art. 203,V CF/88) (6114) - Pessoa com Deficiência (11946)",
+  "jurisdicao": "Subseção Judiciária de Barueri (Juizado Especial Federal Cível)",
+  "orgaoJulgador": "1ª Vara Gabinete JEF de Barueri",
+  "orgaoJulgadorColegiado": "",
+  "endereco": "Avenida Piracema, 1362, Tamboré, BARUERI - SP - CEP: 06460-030",
+  "enderecoOrgaoJulgadorColegiado": "",
+  "numeroProcessoReferencia": null
+ }
+}

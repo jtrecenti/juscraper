@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "ZLvvaGwAtK3kNd3y8LKq1gohUJiHiE-ZDmDP5X-bAWvGpFBNI3zeGoUZjFAo9HZkMDM",
+   "numeroProcesso": "5003536-21.2025.4.03.6342",
+   "classe": "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL",
+   "classeSigla": "PJEC",
+   "assunto": "Pessoa com Deficiência",
+   "ultimaMovimentacao": "Juntada de Petição de recurso inominado (24/09/2026 11:38:16)",
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "CINTIA REGIANE CORREA DOS SANTOS",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}

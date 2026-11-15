@@ -162,7 +162,7 @@ Os testes marcados `integration` e os notebooks rodam localmente, de IP residenc
 Ao mexer num tribunal ou agregador, rodar antes do PR os testes de integração, o notebook e o teste `release` dele:
 
 ```bash
-uv sync --extra dev --extra docs --extra waf     # TJMG: ver a nota do extra [tjmg] em Notebooks
+uv sync --extra dev --extra docs --extra waf --extra tls  # TJMG: ver a nota do extra [tjmg] em Notebooks; tls: TRF3
 uv run playwright install chromium               # navegador do extra waf (STF, TJPE)
 uv run pytest tests/<nome> -m integration
 uv run pytest --nbmake docs/notebooks/<nome>.ipynb --nbmake-timeout=300

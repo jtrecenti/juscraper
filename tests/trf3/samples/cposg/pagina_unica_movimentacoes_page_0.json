@@ -1,0 +1,113 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/09/2026 17:57:13 - Decisão Monocrática Terminativa Com Resolução de Mérito (Decisão Monocrática Terminativa Com Resolução de Mérito)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/09/2026 17:57:13",
+   "idDocumento": "4_TcY-o-SPag0wjrNynfI6HvN6gfOEmYfXg35c9myHY9aKiC5KBnbz5fsjxDrpePhBVq"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/09/2026 15:21:26 - Decisão Monocrática Terminativa Com Resolução de Mérito (Decisão Monocrática Terminativa Com Resolução de Mérito)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/09/2026 17:56:53",
+   "idDocumento": "A8cHrM0bHX_h8khs2rHbg5d2shPFDxqN-hFoOrICOTnU0infA-WnnLjAluBCjwRBEkX-"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrôinica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "16/09/2026 17:53:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Negado monocraticamente o provimento do recurso",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/09/2026 15:21:26 - Decisão Monocrática Terminativa Com Resolução de Mérito (Decisão Monocrática Terminativa Com Resolução de Mérito)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/09/2026 15:21:26",
+   "idDocumento": "1knh4bWMJ3AAuduK_aRYzZQyChM_Y57oCNcrWNfrsNwy0IGezJ3pqsDMvJzv_46tcn99"
+  },
+  {
+   "movimento": "Juntada de Petição de custas",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/08/2026 00:02:56",
+   "idDocumento": "86mHZUfm5zG1XP1-4QTPOLF_84xxeeXDR_xgZyBG1q1_94hLBFay-1EsU5aITZpyZElz"
+  },
+  {
+   "movimento": "Conclusos para julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/08/2026 16:27:56",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Remetidos os Autos (para processamento) da Distribuição para Gabinete do Relator",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/08/2026 16:27:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "25/08/2026 16:27:50",
+   "idDocumento": "xSulH7HBBBptvZ5yXdjgoLV1C4KEf6JD4NFak7Aus1hVC-gOHoqgIZR5hcI61xxR8PH9"
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/08/2026 00:44:03",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/08/2026 00:44:02",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 10
+ }
+}

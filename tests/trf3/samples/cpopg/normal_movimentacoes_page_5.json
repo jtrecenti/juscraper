@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Publicado Sentença em 19/06/2020.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/06/2020 17:57:06 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/06/2020 00:56:15",
+   "idDocumento": "RZgckBxMOGIpwe-hpUIuJncPJWfEQR6bolmx6sTD9ZdnbJhAK2YAbWKByXA5J4UL0bQ"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 19/06/2020",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/06/2020 17:57:06 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/06/2020 00:56:15",
+   "idDocumento": "mRaNfthElRX001VZCbPyMoLnbHvzBjDoAPPCE4DLTrX9A9dfYZPNQoy6R4JLR3Oytlg"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/06/2020 17:57:06 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/06/2020 17:57:11",
+   "idDocumento": "vhDhpTYyCl1NoNkljD-FhBDjw0YBpry5UzVhCOWcp--ketH7ubzyIevzu0IeWubp6ok"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/06/2020 17:57:06 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/06/2020 17:57:11",
+   "idDocumento": "RcVD0WSeovJQIHWP0wzk4lQOis7m2Q30RPOS-0DGAyOK1Ba_rJn1pDremnjdGcI_tzQ"
+  },
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "16/06/2020 17:57:06 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/06/2020 17:57:07",
+   "idDocumento": "2kNRHDWxUVVrM7SK2u0febFM0A_o7CinoWzwWW28ukjcvR5S9_wrsly_Oz8QIUg-pe8"
+  },
+  {
+   "movimento": "Julgado improcedente o pedido",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "24/03/2020 14:42:19 - Sentença (Sentença)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/03/2020 17:10:00",
+   "idDocumento": "Oc9ZbDBeDdVmM5Q_9riaMlG_QxthTYRr_fOkvynn2_U-c3y4EXqvvvuyY5UP1_dYZRE"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/10/2019 17:00:33",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de AGENCIA NACIONAL DE SAUDE SUPLEMENTAR em 03/07/2019 23:59:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/07/2019 00:40:44",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de CENTRAL NACIONAL UNIMED - COOPERATIVA CENTRAL em 06/06/2019 23:59:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/06/2019 00:49:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de réplica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "01/06/2019 12:06:22",
+   "idDocumento": "7uogwJ31PKfxhBZaRNZxJyBfXN8ZMOULqCQ3oYCeMrZTN1Vq4R_mAaMRj3FZGUa3uPk"
+  },
+  {
+   "movimento": "Publicado Intimação em 16/05/2019.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/05/2019 00:03:53",
+   "idDocumento": "hU_N9NYm5WkCGtf86ecXFu7KDH4piC-J3LoHDTcuFix_yaRuM7zm2j1NJ8yat7nLniM"
+  },
+  {
+   "movimento": "Disponibilizado no DJE no dia útil anterior à publicação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "16/05/2019 00:03:53",
+   "idDocumento": "VBVcdK0a0t4_hpfuYb4nhpwCjrdlC-9YW2B0VAyik3M1wruLvDSvofUCkYSEw7qutA4"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2019 14:17:26",
+   "idDocumento": "U84E8kgU89bd-8CEhPxoQrdN9VAuiPpEbX925gdUaeIStkmHtW5lLcHZtZo4Vqmk3VA"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2019 14:17:26",
+   "idDocumento": "rs7qbSo_Zt67bmddhi7N2GvOtzVcYvBYox4CfDUGINdNr0agSFiHBxlTIboxXG09858"
+  },
+  {
+   "movimento": "Expedição de Comunicação via sistema.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/05/2019 14:17:20",
+   "idDocumento": "wXUyp0syJMxHE_LlKkcIt3Y4DZEzOaqNIaOISNYmcSCfgud6CkS4H-tO1b-pDiPrscI"
+  }
+ ],
+ "pageInfo": {
+  "current": 6,
+  "last": 8,
+  "size": 15,
+  "count": 117
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "5025507-75.2026.4.03.6100",
+  "dataDistribuicao": "2026-08-19T18:22:09.345",
+  "classeJudicial": "MANDADO DE SEGURANÇA CÍVEL (120)",
+  "assunto": "DIREITO ADMINISTRATIVO E OUTRAS MATÉRIAS DE DIREITO PÚBLICO (9985) - Atos Administrativos (9997) - Inquérito / Processo / Recurso Administrativo (10009) \nDIREITO ADMINISTRATIVO E OUTRAS MATÉRIAS DE DIREITO PÚBLICO (9985) - Dívida Ativa não-tributária (10394) - Cadastro de Indadimplentes - CADIN (14913)",
+  "jurisdicao": "Subseção Judiciária de São Paulo (Varas Cíveis)",
+  "orgaoJulgador": "26ª Vara Cível Federal de São Paulo",
+  "orgaoJulgadorColegiado": "",
+  "endereco": "Avenida Paulista, 1682, - de 1512 a 2132 - lado par, Bela Vista, SãO PAULO - SP - CEP: 01310-200",
+  "enderecoOrgaoJulgadorColegiado": "",
+  "numeroProcessoReferencia": null
+ }
+}
