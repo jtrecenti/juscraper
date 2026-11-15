@@ -5,8 +5,8 @@ errado; o defeito só aparece na referência publicada. O teste reprova aviso de
 falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
 linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` com um número
 de itens que não é um nem o de elementos da ``tuple`` devolvida (continuação
-sem recuo), ``Returns:`` que começa pelo tipo seguido de dois-pontos e a seção
-``Warns:``, que derruba o build. As formas certas estão no CONTRIBUTING, em
+sem recuo), ``Returns:`` que começa pelo tipo ou por um nome seguido de
+dois-pontos e a seção ``Warns:``, que derruba o build. As formas certas estão no CONTRIBUTING, em
 "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
@@ -61,9 +61,10 @@ def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> s
 def _itens_esperados(objeto: griffe.Object) -> int | None:
     """Itens que o griffe distribui pelos elementos da ``tuple`` devolvida; ``None`` se variádica."""
     retorno = objeto.returns if objeto.is_function else None
-    if not getattr(retorno, "is_tuple", False):
+    # ``tuple[int]`` tem um elemento só, sem ``elements``; o griffe não o distribui.
+    elementos = getattr(retorno, "is_tuple", False) and getattr(retorno.slice, "elements", None)
+    if not elementos:
         return 1
-    elementos = retorno.slice.elements
     return None if "..." in map(str, elementos) else len(elementos)
 
 
@@ -72,19 +73,17 @@ def _motivo_dos_retornos(objeto: griffe.Object, retornos: list[griffe.DocstringR
     if len(retornos) > 1 and esperados is not None and len(retornos) != esperados:
         return (
             f"Returns com {len(retornos)} itens para {esperados} valor(es) devolvido(s);"
-            " recuar as linhas de continuação"
+            " recuar as linhas de continuação ou juntar a descrição numa entrada"
         )
     for retorno in retornos:
-        if retorno.name and retorno.name == str(retorno.annotation):
-            tipo = retorno.name
-        elif prefixo := _PREFIXO_DE_TIPO.match(retorno.description):
-            tipo = prefixo.group(1)
-        else:
-            continue
-        return (
-            f"Returns começa pelo tipo ('{tipo}:'), que a referência repete;"
-            " tirar o tipo quando a assinatura o anota, ou pô-lo entre parênteses"
-        )
+        # ``str: ...`` vira nome do valor; ``pd.DataFrame: ...``, começo da descrição.
+        prefixo = _PREFIXO_DE_TIPO.match(retorno.description)
+        tipo = retorno.name or (prefixo and prefixo.group(1))
+        if tipo:
+            return (
+                f"Returns começa por '{tipo}:', que a referência mostra como nome ou na descrição;"
+                " tirar o tipo quando a assinatura o anota, ou pô-lo entre parênteses"
+            )
     return None
 
 
@@ -193,6 +192,16 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '        int: Primeiro.\n'
         '        str: Segundo.\n'
         '    """\n',
+        'def f() -> "pd.DataFrame":\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        DataFrame: Uma linha por processo.\n'
+        '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        str: Caminho do diretório.\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -206,6 +215,8 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "returns-prefixo-sem-anotacao",
         "tupla-com-itens-a-mais",
         "tupla-com-prefixo",
+        "returns-nome-curto-do-tipo",
+        "returns-nome-sem-anotacao",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
@@ -248,6 +259,11 @@ def test_forma_correta_e_tupla_passam():
         '    """Resumo.\n\n'
         "    Returns:\n"
         "        (dict[str, str]): Motivo de cada falha.\n"
+        '    """\n\n'
+        "def k() -> tuple[int]:\n"
+        '    """Resumo.\n\n'
+        "    Returns:\n"
+        "        Único elemento.\n"
         '    """\n'
     )
     assert problemas_do_codigo(codigo) == []
