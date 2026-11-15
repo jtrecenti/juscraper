@@ -7,7 +7,7 @@ from juscraper.courts.tjrs.client import TJRSScraper
 @pytest.mark.integration
 def test_cjsg_basic_dataframe():
     scraper = TJRSScraper()
-    df = scraper.cjsg("direito civil")
+    df = scraper.cjsg("direito civil", paginas=1)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
     assert {"ementa", "url"}.issubset(set(df.columns))
@@ -18,8 +18,8 @@ def test_cjsg_basic_dataframe():
 @pytest.mark.integration
 def test_cjsg_parametros_secao():
     scraper = TJRSScraper()
-    df_civel = scraper.cjsg("família", secao="civel")
-    df_crime = scraper.cjsg("homicídio", secao="crime")
+    df_civel = scraper.cjsg("família", paginas=1, secao="civel")
+    df_crime = scraper.cjsg("homicídio", paginas=1, secao="crime")
     assert isinstance(df_civel, pd.DataFrame)
     assert not df_civel.empty
     assert "ementa" in df_civel.columns
@@ -33,7 +33,7 @@ def test_cjsg_parametros_secao():
 @pytest.mark.integration
 def test_cjsg_dataframe():
     scraper = TJRSScraper()
-    df = scraper.cjsg("acórdão")
+    df = scraper.cjsg("acórdão", paginas=1)
     print("DataFrame columns:", df.columns)
     print("First rows:\n", df.head())
     assert isinstance(df, pd.DataFrame)
