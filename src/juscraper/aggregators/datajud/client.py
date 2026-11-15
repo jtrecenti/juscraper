@@ -29,7 +29,7 @@ from .download import (
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
 from .paginacao import (
-    _descrever_falha_de_shards,
+    _descrever_resposta_parcial,
     _falha_pagina,
     _FimPagina,
     _hits_da_pagina,
@@ -40,7 +40,7 @@ from .paginacao import (
     _verificar_data_frame_vazio,
     _verificar_fim_pagina,
     _verificar_pagina_vazia,
-    _verificar_shards,
+    _verificar_resposta_parcial,
 )
 from .parse import contagem_da_resposta, parse_datajud_api_response
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
@@ -183,11 +183,11 @@ def _parse_pagina(
     mostrar_movs: bool,
     diagnostico: str,
 ) -> pd.DataFrame:
-    """Converte uma página; a falha sobe como coleta parcial, com a falha de shards da página, se houver."""
+    """Converte uma página; a falha sobe como coleta parcial, com a resposta parcial da página, se houver."""
     try:
         return parse_datajud_api_response(api_response, mostrar_movs)
     except Exception as exc:
-        partes = (diagnostico, _descrever_falha_de_shards(api_response), "Erro ao parsear a resposta.")
+        partes = (diagnostico, _descrever_resposta_parcial(api_response), "Erro ao parsear a resposta.")
         raise ColetaParcialError(
             " ".join(filter(None, partes)),
             resultado=pd.DataFrame(),
@@ -351,7 +351,10 @@ class DatajudScraper(HTTPScraper):
             ``"retry_esgotado_429"``, ``"timeout"``, ``"conexao"``,
             ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele. A resposta
             200 sem a contagem em ``hits.total`` (uma lista, por exemplo) sai
-            ``"json_invalido"``.
+            ``"json_invalido"``. A resposta 200 parcial do Elasticsearch
+            (``_shards.failed > 0`` ou ``timed_out: true``), cuja contagem pode
+            sair menor, sai ``"RuntimeError: Resposta parcial do
+            Elasticsearch: ..."``, com os motivos dos shards.
 
         Raises:
             requests.HTTPError: No 401 (chave inválida), que interrompe a
@@ -424,6 +427,11 @@ class DatajudScraper(HTTPScraper):
             except FALHAS_DE_TRANSPORTE as exc:
                 _relancar_se_token_invalido(exc, rows)
                 rows.append(_linha_de_falha(tribunal_sigla, alias, exc))
+                continue
+            # Antes do formato: resposta parcial é a causa, mesmo se ``hits.total`` vier faltando.
+            parcial = _descrever_resposta_parcial(api_response, "a contagem pode estar incompleta")
+            if parcial:  # Contagem menor que a real, como a página parcial de ``listar_processos``
+                rows.append(_linha_de_falha(tribunal_sigla, alias, RuntimeError(parcial)))
                 continue
             try:
                 count, relation = contagem_da_resposta(api_response)
@@ -599,9 +607,12 @@ class DatajudScraper(HTTPScraper):
                 (429, 502 ou 503 em todas as tentativas, status em
                 ``.status_code``), ``requests.Timeout``, erro de conexão ou
                 ``requests.JSONDecodeError`` (resposta 200 que não é JSON).
-                Resposta 200 com ``_shards.failed > 0`` (busca parcial do
-                Elasticsearch) também levanta, com os hits válidos da página
-                em ``erro.resultado``.
+                Resposta 200 parcial do Elasticsearch (``_shards.failed > 0``
+                ou ``timed_out: true``) também levanta, com os motivos dos
+                shards na mensagem e os hits válidos da página em
+                ``erro.resultado``. Na página 1, ``hits.total`` fora do
+                formato que :meth:`contar_processos` exige (objeto com
+                ``value`` inteiro e ``relation`` ``"eq"``/``"gte"``) também.
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
@@ -717,7 +728,7 @@ class DatajudScraper(HTTPScraper):
                     api_response,
                     mostrar_movs=inp.mostrar_movs,
                     diagnostico=_mensagem_falha_parcial(
-                        alias, current_page, recebidos, total_info or {},
+                        alias, current_page, recebidos, total_info,
                     ),
                 )
                 if frame.empty:
@@ -800,7 +811,7 @@ class DatajudScraper(HTTPScraper):
             _verificar_pagina_vazia(api_response, effective_size, total_info, percorridos, contexto)
             yield current_page, api_response
             # Depois do ``yield``: o consumidor já guardou os hits válidos da página.
-            _verificar_shards(api_response, total_info, contexto)
+            _verificar_resposta_parcial(api_response, total_info, contexto)
             if next_search_after is None:
                 _verificar_fim_pagina(hits, effective_size, total_info, percorridos, contexto)
                 return

@@ -10,6 +10,8 @@ from typing import Any, NamedTuple, NoReturn, cast
 import pandas as pd
 
 from ...core.exceptions import ColetaParcialError
+from ...core.failures import exemplos_do_aviso
+from .parse import contagem_da_resposta
 
 logger = logging.getLogger(__name__)
 
@@ -67,9 +69,7 @@ def _mensagem_falha_parcial(
     if total_info is None:
         return f"{inicio} Resultados parciais em erro.resultado: nenhum registro recebido."
     recebidos_txt = f"{inicio} Resultados parciais em erro.resultado: {recebidos} registro(s) recebido(s)"
-    total = total_info.get("value")
-    if not isinstance(total, int):
-        return f"{recebidos_txt}; a consulta não informou o total encontrado."
+    total = total_info["value"]  # inteiro: a página 1 passou por ``contagem_da_resposta``
     total_txt = str(total) if total_info.get("relation", "eq") == "eq" else f"pelo menos {total}"
     return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
 
@@ -84,23 +84,18 @@ def _falha_pagina(mensagem: str, causa: Exception) -> NoReturn:
 
 
 def _total_primeira_pagina(api_response: dict[str, Any], alias: str, pagina: int) -> dict[str, Any]:
-    """Valida o total informado pela primeira página."""
-    total_info = api_response.get("hits", {}).get("total")
-    if total_info is not None and not isinstance(total_info, dict):
-        causa = ValueError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
-        mensagem = (
-            f"{_mensagem_falha_parcial(alias, pagina, 0, None)} "
-            "Resposta inválida: campo 'hits.total' deve ser um objeto."
+    """Valida o total da primeira página com a mesma regra de ``contar_processos``."""
+    try:
+        value, relation = contagem_da_resposta(api_response)
+    except TypeError as causa:
+        partes = (
+            _mensagem_falha_parcial(alias, pagina, 0, None),
+            _descrever_resposta_parcial(api_response),
+            f"Resposta inválida: {causa}",
         )
-        _falha_pagina(mensagem, causa)
-    total_info = total_info or {}
-    logger.info(
-        "Total de processos encontrados para %s: %s (%s)",
-        alias,
-        total_info.get("value", "?"),
-        total_info.get("relation", "eq"),
-    )
-    return total_info
+        _falha_pagina(" ".join(filter(None, partes)), causa)
+    logger.info("Total de processos encontrados para %s: %s (%s)", alias, value, relation)
+    return {"value": value, "relation": relation}
 
 
 def _hits_da_pagina(
@@ -185,34 +180,90 @@ def _verificar_fim_pagina(
     _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 
-def _descrever_falha_de_shards(api_response: dict[str, Any]) -> str:
-    """Texto da resposta parcial do Elasticsearch (``_shards.failed > 0``); vazio na resposta completa.
+LIMITE_DO_MOTIVO = 120
+"""Caracteres do texto de cada ``reason`` citados na mensagem; o resto vira ``"…"``."""
 
-    ``_shards`` ausente conta como resposta completa.
+
+def _motivo_do_shard(falha: object) -> tuple[str, str] | None:
+    """``(chave, texto)`` do ``reason`` de um item de ``_shards.failures``; ``None`` sem motivo.
+
+    A chave é o ``type``, quando há: o texto do mesmo erro muda de shard para
+    shard (nó, endereço, horário), e agrupar por ele repetiria o motivo.
     """
-    shards = api_response.get("_shards")
+    razao = falha.get("reason") if isinstance(falha, dict) else None
+    if isinstance(razao, str):
+        razao = {"reason": razao}
+    if not isinstance(razao, dict):
+        return None
+    tipo, texto = razao.get("type"), razao.get("reason")
+    if isinstance(texto, str) and len(texto) > LIMITE_DO_MOTIVO:
+        texto = texto[:LIMITE_DO_MOTIVO].rstrip() + "…"
+    partes = [str(parte) for parte in (tipo, texto) if parte]
+    return (partes[0], ": ".join(partes)) if partes else None
+
+
+def _motivos_dos_shards(shards: dict[str, Any]) -> str:
+    """Motivos distintos de ``_shards.failures``, como ``" (motivo: tipo: texto)"``; vazio sem motivo.
+
+    Um motivo por ``type``, com o texto encurtado, e só os primeiros, por
+    :func:`~juscraper.core.failures.exemplos_do_aviso`: com o DataJud
+    sobrecarregado, dezenas de shards falham com o mesmo erro.
+    """
+    falhas = shards.get("failures")
+    motivos: dict[str, str] = {}
+    for falha in falhas if isinstance(falhas, list) else []:
+        motivo = _motivo_do_shard(falha)
+        if motivo:
+            motivos.setdefault(*motivo)
+    return f" (motivo: {'; '.join(exemplos_do_aviso(list(motivos.values())))})" if motivos else ""
+
+
+def _descrever_shards_falhos(shards: object) -> str:
+    """``"N de T shard(s) falharam"``, com os motivos; vazio sem ``_shards.failed > 0``."""
     falhos = shards.get("failed") if isinstance(shards, dict) else None
     if not isinstance(falhos, int) or isinstance(falhos, bool) or falhos <= 0:
         return ""
-    total = cast(dict[str, Any], shards).get("total")
+    shards = cast(dict[str, Any], shards)
+    total = shards.get("total")
     de_total = f" de {total}" if isinstance(total, int) and not isinstance(total, bool) else ""
-    return (
-        f"Resposta parcial: {falhos}{de_total} shard(s) falharam no Elasticsearch; "
-        "a página e o total podem estar incompletos."
-    )
+    return f"{falhos}{de_total} shard(s) falharam{_motivos_dos_shards(shards)}"
 
 
-def _verificar_shards(
+def _descrever_resposta_parcial(
+    api_response: object,
+    consequencia: str = "a página e o total podem estar incompletos",
+) -> str:
+    """Texto da resposta 200 incompleta do Elasticsearch; vazio na resposta completa.
+
+    Incompleta é a busca que estourou o tempo (``timed_out: true``) ou em
+    que algum shard falhou (``_shards.failed > 0``). ``_shards`` ou
+    ``timed_out`` ausentes, ou resposta que não é objeto, contam como
+    resposta completa.
+    """
+    if not isinstance(api_response, dict):
+        return ""
+    problemas = []
+    if api_response.get("timed_out") is True:
+        problemas.append("a busca excedeu o tempo limite (timed_out)")
+    shards_falhos = _descrever_shards_falhos(api_response.get("_shards"))
+    if shards_falhos:
+        problemas.append(shards_falhos)
+    if not problemas:
+        return ""
+    return f"Resposta parcial do Elasticsearch: {' e '.join(problemas)}; {consequencia}."
+
+
+def _verificar_resposta_parcial(
     api_response: dict[str, Any],
     total_info: dict[str, Any] | None,
     contexto: _FimPagina,
 ) -> None:
-    """Sinaliza resposta parcial do Elasticsearch (``_shards.failed > 0``), mesmo com HTTP 200.
+    """Sinaliza resposta parcial do Elasticsearch (shards falhos ou ``timed_out``), mesmo com HTTP 200.
 
-    Com shards falhos, a página pode vir incompleta ou vazia, e o cursor dela
-    pularia os registros perdidos; por isso a coleta do alias para aqui.
+    Com resposta parcial, a página pode vir incompleta ou vazia, e o cursor
+    dela pularia os registros perdidos; por isso a coleta do alias para aqui.
     """
-    falha = _descrever_falha_de_shards(api_response)
+    falha = _descrever_resposta_parcial(api_response)
     if not falha:
         return
     diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
@@ -228,13 +279,13 @@ def _verificar_pagina_vazia(
 ) -> None:
     """Detecta página vazia inconsistente antes de entregá-la ao consumidor.
 
-    A falha de shards vem primeiro: sem hits, não há o que preservar da
+    A resposta parcial vem primeiro: sem hits, não há o que preservar da
     página, e ela passaria por fim legítimo ou por término prematuro.
     ``hits.hits`` já passou por :func:`_hits_da_pagina`.
     """
     hits = api_response["hits"]["hits"]
     if not hits:
-        _verificar_shards(api_response, total_info, contexto)
+        _verificar_resposta_parcial(api_response, total_info, contexto)
         _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 

@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 def contagem_da_resposta(api_response: object) -> tuple[int, str]:
     """``count`` e ``relation`` de ``hits.total`` na resposta de ``contar_processos``.
 
+    A página 1 de ``listar_processos`` passa pela mesma regra.
+
     Raises:
         TypeError: JSON na forma errada: resposta que não é objeto, sem o
             objeto ``hits.total``, com ``value`` que não é inteiro ou
