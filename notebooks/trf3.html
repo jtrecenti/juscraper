@@ -416,10 +416,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
   <li><a href="#inspecting-movements" id="toc-inspecting-movements" class="nav-link" data-scroll-target="#inspecting-movements">Inspecting movements</a></li>
   <li><a href="#inspecting-parties" id="toc-inspecting-parties" class="nav-link" data-scroll-target="#inspecting-parties">Inspecting parties</a></li>
-  <li><a href="#looking-up-multiple-processes-at-once" id="toc-looking-up-multiple-processes-at-once" class="nav-link" data-scroll-target="#looking-up-multiple-processes-at-once">Looking up multiple processes at once</a></li>
+  <li><a href="#appeals-cposg" id="toc-appeals-cposg" class="nav-link" data-scroll-target="#appeals-cposg">Appeals (<code>cposg</code>)</a></li>
   <li><a href="#handling-processes-the-public-portal-cannot-return" id="toc-handling-processes-the-public-portal-cannot-return" class="nav-link" data-scroll-target="#handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</a></li>
+  <li><a href="#downloading-the-documents" id="toc-downloading-the-documents" class="nav-link" data-scroll-target="#downloading-the-documents">Downloading the documents</a></li>
   <li><a href="#splitting-download-from-parse" id="toc-splitting-download-from-parse" class="nav-link" data-scroll-target="#splitting-download-from-parse">Splitting download from parse</a></li>
-  <li><a href="#downloading-peças-anexos" id="toc-downloading-peças-anexos" class="nav-link" data-scroll-target="#downloading-peças-anexos">Downloading peças (anexos)</a></li>
   <li><a href="#searching-case-law-cjsg" id="toc-searching-case-law-cjsg" class="nav-link" data-scroll-target="#searching-case-law-cjsg">Searching case law (<code>cjsg</code>)</a>
   <ul class="collapse">
   <li><a href="#the-other-bases" id="toc-the-other-bases" class="nav-link" data-scroll-target="#the-other-bases">The other bases</a></li>
@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Public process consultation (<code>cpopg</code>) for the federal courts under the third region (SP and MS), via the PJe <code>ConsultaPublica</code> system at <a href="https://pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam">pje1g.trf3.jus.br/pje/</a>.</p>
+<p>Public process consultation for the federal courts of the third region (SP and MS), through the JSON API behind the PJe public consultation apps: <a href="https://pje1g-consultapublica.trf3.jus.br/">pje1g-consultapublica.trf3.jus.br</a> (first instance, <code>cpopg</code>) and <a href="https://pje2g-consultapublica.trf3.jus.br/">pje2g-consultapublica.trf3.jus.br</a> (appeals, <code>cposg</code>). Case-law search (<code>cjsg</code>) uses the separate portal at <a href="https://web.trf3.jus.br/jurisprudencia/">web.trf3.jus.br/jurisprudencia</a>.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -465,7 +465,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>cposg</td>
-<td>No</td>
+<td>Yes</td>
 </tr>
 <tr class="odd">
 <td>cjsg</td>
@@ -479,20 +479,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="looking-up-a-single-process" class="level2">
 <h2 class="anchored" data-anchor-id="looking-up-a-single-process">Looking up a single process</h2>
-<div id="c5d45b20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-24T12:24:42.511501Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-24T12:24:42.511501Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-24T12:24:43.199207Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-24T12:24:43.198196Z&quot;}" data-execution_count="1">
+<div id="db528d2e" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:35.095568Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:35.095473Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:35.332517Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:35.331929Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>trf3 <span class="op">=</span> jus.scraper(<span class="st">"trf3"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="5661af3d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:38.174221Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:38.174221Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:39.284015Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:39.283009Z&quot;}" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trf3.cpopg(<span class="st">"5005946-09.2025.4.03.6324"</span>)</span>
+<div id="3b47cac7" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:35.333947Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:35.333794Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:40.237377Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:40.236985Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trf3.cpopg(<span class="st">"5003536-21.2025.4.03.6342"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"data_distribuicao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"data_distribuicao"</span>, <span class="st">"orgao_julgador"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>TRF3 cpopg: 100%|██████████| 1/1 [00:01&lt;00:00,  1.08s/it]</code></pre>
+<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:04&lt;00:00,  4.87s/it]TRF3 cpopg: 100%|██████████| 1/1 [00:04&lt;00:00,  4.87s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(1, 12)</code></pre>
+<pre><code>(1, 14)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -509,15 +509,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">data_distribuicao</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>50059460920254036324</td>
-<td>5005946-09.2025.4.03.6324</td>
+<td>50035362120254036342</td>
+<td>5003536-21.2025.4.03.6342</td>
 <td>PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)</td>
-<td>29/09/2025</td>
+<td>24/09/2025</td>
+<td>1ª Vara Gabinete JEF de Barueri</td>
 </tr>
 </tbody>
 </table>
@@ -528,77 +530,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="e81b84e9" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:39.286015Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:39.285014Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:39.288951Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:39.288951Z&quot;}" data-execution_count="3">
+<div id="41744254" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:40.238891Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:40.238738Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:40.241594Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:40.241173Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
-<pre><code>['processo',
- 'data_distribuicao',
+<pre><code>['id_cnj',
+ 'processo',
  'classe',
  'assunto',
- 'jurisdicao',
+ 'data_distribuicao',
  'orgao_julgador',
+ 'orgao_julgador_colegiado',
+ 'jurisdicao',
  'endereco_orgao',
  'polo_ativo',
  'polo_passivo',
+ 'outros_interessados',
  'movimentacoes',
- 'documentos',
- 'id_cnj']</code></pre>
+ 'documentos']</code></pre>
 </div>
 </div>
-<p>The first three columns are the canonical scalars; the trailing four are list-typed and carry the nested arrays (parties, movements, attached documents).</p>
+<p>The scalar columns come first; <code>polo_ativo</code>, <code>polo_passivo</code>, <code>outros_interessados</code>, <code>movimentacoes</code> and <code>documentos</code> are lists of dicts. Paginated sections (movements are served 15 per page) are fetched in full.</p>
 </section>
 <section id="inspecting-movements" class="level2">
 <h2 class="anchored" data-anchor-id="inspecting-movements">Inspecting movements</h2>
-<div id="5cad79b0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:39.290956Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:39.290956Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:39.293761Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:39.293761Z&quot;}" data-execution_count="4">
+<div id="905f088e" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:40.242551Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:40.242453Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:40.244824Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:40.244261Z&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>movs <span class="op">=</span> df.iloc[<span class="dv">0</span>][<span class="st">"movimentacoes"</span>]</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(movs)<span class="sc">}</span><span class="ss"> events recorded"</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> movs[:<span class="dv">3</span>]:</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>m[<span class="st">'data'</span>]<span class="sc">}</span><span class="ss"> - </span><span class="sc">{</span>m[<span class="st">'descricao'</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>11 events recorded
-  29/04/2026 12:51:15 - Remetidos os Autos ao CEJUSC ou Centros de Conciliação/Mediação da Subseção Judiciária
-  29/04/2026 12:37:09 - Expedida/certificada a intimação eletrônica
-  29/04/2026 12:37:08 - Proferido despacho de mero expediente</code></pre>
+<pre><code>70 events recorded
+  24/09/2026 11:38:16 - Juntada de Petição de recurso inominado
+  23/09/2026 13:25:54 - Juntada de Petição de ciência
+  23/09/2026 10:23:38 - Expedição de Outros documentos.</code></pre>
 </div>
 </div>
 </section>
 <section id="inspecting-parties" class="level2">
 <h2 class="anchored" data-anchor-id="inspecting-parties">Inspecting parties</h2>
-<div id="a767b78b" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:39.295765Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:39.294765Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:39.298765Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:39.298765Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo ativo:"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_ativo"</span>]:</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'participante'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo passivo:"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_passivo"</span>]:</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'participante'</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="a55f8ded" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:40.245748Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:40.245597Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:40.248186Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:40.247735Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> polo <span class="kw">in</span> [<span class="st">"polo_ativo"</span>, <span class="st">"polo_passivo"</span>]:</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(polo)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][polo]:</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'nome'</span>]<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>p[<span class="st">'tipo'</span>]<span class="sc">}</span><span class="ss">)"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Polo ativo:
-  - JOAO PAULO NASCIMENTO DA SILVA - CPF: 003.XXX.XXX-XX (AUTOR)
-
-Polo passivo:
-  - CAIXA ECONOMICA FEDERAL - CEF - CNPJ: 00.3XX.XXX/XXXX-XX (REU) Departamento Jurídico - Caixa Econômica Federal</code></pre>
+<pre><code>polo_ativo
+  - CINTIA REGIANE CORREA DOS SANTOS (AUTOR)
+  - FERNANDO VANCETTI DA SILVA (ADVOGADO)
+  - PAULO LEANDRO FAUSTINO (ADVOGADO)
+polo_passivo
+  - INSTITUTO NACIONAL DO SEGURO SOCIAL - INSS (REU)</code></pre>
 </div>
 </div>
 </section>
-<section id="looking-up-multiple-processes-at-once" class="level2">
-<h2 class="anchored" data-anchor-id="looking-up-multiple-processes-at-once">Looking up multiple processes at once</h2>
-<div id="0c142f46" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:39.301060Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:39.300062Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:43.457253Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:43.457253Z&quot;}" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cnjs <span class="op">=</span> [</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50059460920254036324"</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50061271020254036324"</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"50035362120254036342"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>df_batch <span class="op">=</span> trf3.cpopg(cnjs)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>df_batch[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="appeals-cposg" class="level2">
+<h2 class="anchored" data-anchor-id="appeals-cposg">Appeals (<code>cposg</code>)</h2>
+<p><code>cposg</code> takes the same arguments and returns the same columns, querying the second-instance app. An appeal usually keeps the CNJ number of the original case; <code>orgao_julgador_colegiado</code> carries the panel (turma).</p>
+<div id="c8b38221" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:40.249023Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:40.248935Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:43.178518Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:43.178165Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df_2g <span class="op">=</span> trf3.cposg(<span class="st">"5021122-65.2018.4.03.6100"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>df_2g[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"orgao_julgador_colegiado"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>
-TRF3 cpopg:   0%|          | 0/3 [00:00&lt;?, ?it/s]
-TRF3 cpopg:  33%|███▎      | 1/3 [00:01&lt;00:02,  1.42s/it]
-TRF3 cpopg:  67%|██████▋   | 2/3 [00:03&lt;00:01,  1.63s/it]
-TRF3 cpopg: 100%|██████████| 3/3 [00:04&lt;00:00,  1.30s/it]
-TRF3 cpopg: 100%|██████████| 3/3 [00:04&lt;00:00,  1.37s/it]</code></pre>
+<pre><code>TRF3 cposg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cposg: 100%|██████████| 1/1 [00:02&lt;00:00,  2.92s/it]TRF3 cposg: 100%|██████████| 1/1 [00:02&lt;00:00,  2.92s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div>
@@ -611,26 +603,18 @@ TRF3 cpopg: 100%|██████████| 3/3 [00:04&lt;00:00,  1.37s/it]
 <th data-quarto-table-cell-role="th">id_cnj</th>
 <th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>50059460920254036324</td>
-<td>5005946-09.2025.4.03.6324</td>
-<td>PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>50061271020254036324</td>
-<td>5006127-10.2025.4.03.6324</td>
-<td>PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>50035362120254036342</td>
-<td>5003536-21.2025.4.03.6342</td>
-<td>PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)</td>
+<td>50211226520184036100</td>
+<td>5021122-65.2018.4.03.6100</td>
+<td>APELAÇÃO CÍVEL (198)</td>
+<td>Gab. 13 - DES. FED. MONICA NOBRE</td>
+<td>4ª Turma</td>
 </tr>
 </tbody>
 </table>
@@ -641,50 +625,75 @@ TRF3 cpopg: 100%|██████████| 3/3 [00:04&lt;00:00,  1.37s/it]
 </section>
 <section id="handling-processes-the-public-portal-cannot-return" class="level2">
 <h2 class="anchored" data-anchor-id="handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</h2>
-<p>When a CNJ does not surface in the public consultation (sigilo, archived, or simply not found), the row carries only <code>id_cnj</code>. The other columns come back as <code>None</code>/<code>NaN</code>, so callers can still distinguish “looked up but missing” from “never tried”.</p>
-<div id="25ebd22f" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:43.459289Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:43.459289Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:43.586693Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:43.586693Z&quot;}" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> trf3.cpopg(<span class="st">"00000000020994030000"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"processo:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"processo"</span>))</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"classe:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"classe"</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>When a CNJ does not surface in the public consultation (sealed or simply not found), the row carries only <code>id_cnj</code>, with <code>motivo_falha</code> set to <code>None</code>. A lookup that fails (network or HTTP error on the search or on <code>/dados</code> after the retries, an unexpected response, a parser error) also yields a row with only <code>id_cnj</code>, but <code>motivo_falha</code> names the reason (<code>timeout</code>, <code>conexao</code>, <code>retry_esgotado_&lt;status&gt;</code>, <code>resposta_inesperada</code>), and the failures come in a single <code>UserWarning</code> at the end. An Akamai block stops the batch: the blocked CNJ and the following ones come back as <code>bloqueio_anti_bot</code>, without new requests, under a <code>BloqueioAntiBotWarning</code>.</p>
+<div id="59040b19" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:43.179624Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:43.179522Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:43.239479Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:43.239144Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> trf3.cpopg(<span class="st">"00000000020994030000"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>df_missing</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>
-TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]
-TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  8.34it/s]
-TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  8.19it/s]</code></pre>
+<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00, 17.88it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id_cnj</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>00000000020994030000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="downloading-the-documents" class="level2">
+<h2 class="anchored" data-anchor-id="downloading-the-documents">Downloading the documents</h2>
+<p>With <code>download_pecas=True</code>, each listed document is saved as a PDF under <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>, and the <code>pecas</code> column lists the paths. The documents that could not be downloaded go to <code>pecas_falhas</code>, as <code>{"id": ..., "motivo_falha": ...}</code>.</p>
+<div id="e29881fb" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:43.240762Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:43.240663Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:28:51.477075Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:28:51.476709Z&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>df_pecas <span class="op">=</span> trf3.cpopg(<span class="st">"5003536-21.2025.4.03.6342"</span>, download_pecas<span class="op">=</span><span class="va">True</span>, diretorio<span class="op">=</span>tempfile.mkdtemp())</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> caminho <span class="kw">in</span> df_pecas.iloc[<span class="dv">0</span>][<span class="st">"pecas"</span>]:</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(Path(caminho).parent.name, Path(caminho).stat().st_size, <span class="st">"bytes"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:04&lt;00:00,  4.84s/it]TRF3 cpopg: 100%|██████████| 1/1 [00:04&lt;00:00,  4.84s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>processo: None
-classe: None</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
+<pre><code>50035362120254036342 41357 bytes
+50035362120254036342 5555 bytes
+50035362120254036342 22494 bytes</code></pre>
 </div>
 </div>
 </section>
 <section id="splitting-download-from-parse" class="level2">
 <h2 class="anchored" data-anchor-id="splitting-download-from-parse">Splitting download from parse</h2>
-<p><code>cpopg</code> is a thin wrapper over <code>cpopg_download</code> (raw HTML) + <code>cpopg_parse</code> (HTML → DataFrame). Splitting them is useful when you want to cache the raw HTMLs to disk before processing.</p>
-<div id="86d4e0d8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:23:43.588697Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:23:43.588697Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:23:44.020114Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:23:44.020114Z&quot;}" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>htmls <span class="op">=</span> trf3.cpopg_download(<span class="st">"5005946-09.2025.4.03.6324"</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"got </span><span class="sc">{</span><span class="bu">len</span>(htmls)<span class="sc">}</span><span class="ss"> HTML(s), </span><span class="sc">{</span><span class="bu">len</span>(htmls[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf3.cpopg_parse(htmls, [<span class="st">"50059460920254036324"</span>])</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_distribuicao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>cpopg_download</code> returns, per CNJ, a dict with the raw JSON envelopes of each API route (or <code>None</code> when the process was not found or the lookup failed, with the failures in a <code>UserWarning</code>); <code>cpopg_parse</code> turns that list into the DataFrame, without the <code>motivo_falha</code> column. Useful to cache the raw responses before processing.</p>
+<div id="73535111" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-07T20:28:51.478202Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-07T20:28:51.478110Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-07T20:29:03.923724Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-07T20:29:03.923341Z&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> trf3.cpopg_download(<span class="st">"5003536-21.2025.4.03.6342"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">sorted</span>(brutos[<span class="dv">0</span>]))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf3.cpopg_parse(brutos, [<span class="st">"50035362120254036342"</span>])</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_distribuicao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>
-TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]
-TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]
-TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]</code></pre>
+<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:12&lt;00:00, 12.44s/it]TRF3 cpopg: 100%|██████████| 1/1 [00:12&lt;00:00, 12.44s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>got 1 HTML(s), 85297 chars</code></pre>
+<pre><code>['busca', 'dados', 'documentos', 'movimentacoes', 'outrosInteressados', 'poloAtivo', 'poloPassivo']</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
 
@@ -700,43 +709,14 @@ TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>50059460920254036324</td>
-<td>5005946-09.2025.4.03.6324</td>
-<td>29/09/2025</td>
+<td>50035362120254036342</td>
+<td>5003536-21.2025.4.03.6342</td>
+<td>24/09/2025</td>
 </tr>
 </tbody>
 </table>
 
 </div>
-</div>
-</div>
-</section>
-<section id="downloading-peças-anexos" class="level2">
-<h2 class="anchored" data-anchor-id="downloading-peças-anexos">Downloading peças (anexos)</h2>
-<p>By default <code>cpopg</code> returns metadata only: process info, parties, movements, and a <code>documentos</code> list (id / date / description). The actual peça files (HTML viewer payloads) are <strong>not</strong> downloaded.</p>
-<p>To also download the peças, pass <code>download_pecas=True</code> and a <code>diretorio</code>. Each peça is saved as <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id_processo_doc&gt;.html</code> (a self- contained XHTML with images embedded as <code>data:</code> URLs), and the returned DataFrame gains a <code>pecas</code> column with the list of saved paths.</p>
-<p>The flag lives on <code>cpopg</code> (instead of a separate <code>cpopg_download_pecas</code> method) because the <code>ca</code> tokens that identify each peça are bound to the Seam conversation that produced the detail page — peças must be fetched from the same <code>requests.Session</code>. A separate method would have to re-issue the detail GET internally just to obtain fresh tokens; folding the optional download into <code>cpopg</code> avoids that duplicate round-trip.</p>
-<div id="pecas-code-72247" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-05-24T12:24:43.201208Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-05-24T12:24:43.201208Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-05-24T12:24:48.284574Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-05-24T12:24:48.283553Z&quot;}" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> tempfile.TemporaryDirectory() <span class="im">as</span> tmp:</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    df_pecas <span class="op">=</span> trf3.cpopg(</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"5005946-09.2025.4.03.6324"</span>,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>        download_pecas<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        diretorio<span class="op">=</span>tmp,</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    saved <span class="op">=</span> df_pecas.iloc[<span class="dv">0</span>][<span class="st">"pecas"</span>]</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"saved </span><span class="sc">{</span><span class="bu">len</span>(saved)<span class="sc">}</span><span class="ss"> peça(s)"</span>)</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="kw">in</span> saved[:<span class="dv">3</span>]:</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">" "</span>, p)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>TRF3 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.31it/s]TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.31it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>saved 4 peça(s)
-  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\582695147.html
-  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\581769486.html
-  C:\Users\jtrec\AppData\Local\Temp\tmpkxwx55p9\50059460920254036324\578698643.html</code></pre>
 </div>
 </div>
 </section>
@@ -775,29 +755,29 @@ TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]
 </table>
 <p>Each call opens its own session on the portal and reads the result list, which already carries the ementa and the full text of every document: the cost is three fixed requests (opening the tab, the search POST and the GET of its redirect, which is page 1) plus one per extra page, with <code>sleep_time</code> between pages.</p>
 <div id="a3c1f0e2" class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_cjsg <span class="op">=</span> trf3.cjsg(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_cjsg.shape)</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>df_cjsg[[<span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"relator"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"meio_publicacao"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>df_cjsg <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_cjsg.shape)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>df_cjsg[[<span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"relator"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"meio_publicacao"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="the-other-bases" class="level3">
 <h3 class="anchored" data-anchor-id="the-other-bases">The other bases</h3>
 <p>In the single-judge bases, <code>ementa</code> holds the text of the decision (there is no ementa) and <code>orgao_julgador</code> is empty; <code>data_julgamento</code> is the date of the decision.</p>
 <p>In part of the older appeal-panel judgments (<code>turmas_recursais</code>), <code>ementa</code> is null because the portal sends an empty ementa block; <code>inteiro_teor</code> still carries the full text. When this was measured, every ementa from 2013 and 2014 was empty, and some from 2011.</p>
 <div id="a3c1f0e4" class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> base <span class="kw">in</span> [<span class="st">"turmas_recursais"</span>, <span class="st">"monocraticas"</span>, <span class="st">"monocraticas_turmas_recursais"</span>]:</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    df_base <span class="op">=</span> trf3.cjsg(</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"medicamento"</span>,</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        base<span class="op">=</span>base,</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>        paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>        data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(base, df_base.shape, df_base[<span class="st">"relator"</span>].iloc[<span class="dv">0</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> base <span class="kw">in</span> [<span class="st">"turmas_recursais"</span>, <span class="st">"monocraticas"</span>, <span class="st">"monocraticas_turmas_recursais"</span>]:</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    df_base <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"medicamento"</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        base<span class="op">=</span>base,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(base, df_base.shape, df_base[<span class="st">"relator"</span>].iloc[<span class="dv">0</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="filters" class="level3">
@@ -806,15 +786,15 @@ TRF3 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  2.43it/s]
 <p><code>orgao_julgador</code> picks one option of the órgão dropdown of the tab, by its label (<code>"3ª Turma"</code>, <code>"11ª Turma Recursal da Seção Judiciária de São Paulo"</code>) or by its indexed name (<code>"TERCEIRA TURMA"</code>, <code>"11ª TURMA RECURSAL DE SÃO PAULO"</code>), ignoring case and spacing. The value in the <code>orgao_julgador</code> column also works: as in the portal’s form, <code>"1a. seção"</code> becomes <code>"1A"</code>, so <code>"QUINTA TURMA - 1A. SEÇÃO"</code> matches the option <code>QUINTA TURMA - 1a. SEÇÃO</code>. The search reads the dropdown from the tab it already opens and sends the pair the browser sends, the label and the indexed name of the option, and the portal returns the documents recorded under either (measured with “medicamento”: <code>"QUINTA TURMA"</code> finds 576 documents, against 443 for the label alone and 133 for the indexed name alone). A label shared by more than one option, such as <code>"5ª Turma"</code> in the acórdãos base, raises <code>ValueError</code> listing the indexed names that resolve it; text that matches no option is sent as is and only finds what the portal records with that spelling. The monocratic bases have no órgão filter.</p>
 <p>The form has a single date pair, so pass either <code>data_julgamento_*</code> or <code>data_publicacao_*</code>, not both.</p>
 <div id="a3c1f0e6" class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>df_filtrado <span class="op">=</span> trf3.cjsg(</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="st">"NERY JUNIOR"</span>,</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="st">"AI - AGRAVO DE INSTRUMENTO"</span>,</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>df_filtrado[[<span class="st">"processo"</span>, <span class="st">"relator"</span>, <span class="st">"relator_acordao"</span>, <span class="st">"data_publicacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_filtrado <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="st">"NERY JUNIOR"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="st">"AI - AGRAVO DE INSTRUMENTO"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>df_filtrado[[<span class="st">"processo"</span>, <span class="st">"relator"</span>, <span class="st">"relator_acordao"</span>, <span class="st">"data_publicacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 

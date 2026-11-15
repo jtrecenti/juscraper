@@ -160,6 +160,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cjsg" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cjsg">cjsg</a></li>
   <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_download" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_download">cjsg_download</a></li>
   <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse">cjsg_parse</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cpopg">cpopg</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cpopg_download" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse">cpopg_parse</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cposg">cposg</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg_download" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cposg_download" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cposg_download">cposg_download</a></li>
+  <li><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg_parse" id="toc-juscraper.courts.trf3.client.TRF3Scraper.cposg_parse" class="nav-link" data-scroll-target="#juscraper.courts.trf3.client.TRF3Scraper.cposg_parse">cposg_parse</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -179,8 +185,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">1.0</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Raspador do TRF3: consulta pública do PJe e busca de jurisprudência.</p>
-<p><code>cpopg</code> consulta processos de 1º grau no PJe (<code>pje1g.trf3.jus.br</code>), pela base <code>TRFConsultaScraper</code>. <code>cjsg</code> pesquisa jurisprudência em <code>web.trf3.jus.br/jurisprudencia</code>, um sistema separado, com sessão e perfil HTTP próprios (<code>perfis_http["cjsg"]</code>).</p>
+<p>Raspador do TRF3: consulta pública do PJe (1º e 2º grau) e jurisprudência.</p>
+<p><code>cpopg</code> e <code>cposg</code> consultam a API JSON da consulta pública do PJe. <code>cjsg</code> pesquisa <code>web.trf3.jus.br/jurisprudencia</code>, sistema separado com sessão própria.</p>
+<p>Perfis HTTP ajustáveis com <code>politica=</code>: <code>"api"</code> (busca e detalhe, timeout de leitura de 20 s, 4 tentativas), <code>"documento"</code> (PDF das peças, timeout de leitura de 60 s, 3 tentativas) e <code>"cjsg"</code> (busca de jurisprudência, timeout de leitura de 60 s, 4 tentativas).</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -202,6 +209,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cjsg_parse">cjsg_parse</a></td>
 <td>Converte as páginas de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cjsg_download"><code>cjsg_download</code></a> em DataFrame.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg">cpopg</a></td>
+<td>Consulta processos de 1º grau na consulta pública do PJe do TRF3.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</a></td>
+<td>Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse">cpopg_parse</a></td>
+<td>Transforma a saída de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a> num DataFrame, uma linha por CNJ.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg">cposg</a></td>
+<td>Consulta processos de 2º grau na consulta pública do PJe do TRF3.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg_download">cposg_download</a></td>
+<td>Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.trf3.client.TRF3Scraper.cposg_parse">cposg_parse</a></td>
+<td>Transforma a saída de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg_download"><code>cposg_download</code></a> num DataFrame, uma linha por CNJ.</td>
 </tr>
 </tbody>
 </table>
@@ -367,9 +398,296 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-
-
 </section>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg">cpopg</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    id_cnj,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    download_pecas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta processos de 1º grau na consulta pública do PJe do TRF3.</p>
+<p>Exige o extra <code>juscraper[tls]</code>. Limitação conhecida: em 15/11/2026 a API do 1º grau respondia 403 do Akamai a qualquer cliente, inclusive navegadores, e o <code>cpopg</code> saía <code>bloqueio_anti_bot</code> no primeiro pedido. O <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg"><code>cposg</code></a> não tinha esse bloqueio.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>CNJ único ou lista, com ou sem máscara.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>download_pecas</td>
+<td><code>bool</code></td>
+<td>Se <code>True</code>, baixa o PDF de cada documento listado no processo, logo depois dos dados do processo. Só por nome. Default <code>False</code>.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum outro argumento é aceito; nome desconhecido levanta <code>TypeError</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>DataFrame com uma linha por CNJ e as colunas <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code> (<code>DD/MM/AAAA</code>), <code>orgao_julgador</code>, <code>orgao_julgador_colegiado</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>outros_interessados</code>, <code>movimentacoes</code>, <code>documentos</code> e <code>motivo_falha</code>. Com <code>download_pecas=True</code>, ganha <code>pecas</code>, a lista de caminhos gravados, e <code>pecas_falhas</code>, as peças que não puderam ser baixadas, cada uma como <code>{"id": &lt;id da peça&gt;, "motivo_falha": &lt;motivo&gt;}</code>; as falhas de peça saem num <code>UserWarning</code> próprio ao fim e não mudam <code>motivo_falha</code> do processo, salvo o bloqueio anti-bot (abaixo). <code>motivo_falha</code> é <code>None</code> quando a consulta respondeu, inclusive para o CNJ que a consulta pública não devolve (inexistente ou em segredo de justiça), que sai como linha só com <code>id_cnj</code>. Quando a consulta de um CNJ falha, a linha sai só com <code>id_cnj</code> e o motivo, no vocabulário de <code>juscraper.core.failures.MOTIVOS_FALHA</code> (erro HTTP ou de rede na busca ou em <code>/dados</code> depois das tentativas; <code>resposta_inesperada</code> para resposta fora do formato esperado), e o lote segue. As falhas entram num único <code>UserWarning</code> ao fim (<code>BloqueioAntiBotWarning</code> quando há bloqueio anti-bot). Um bloqueio do Akamai vale para a sessão inteira: o lote para no CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem com <code>bloqueio_anti_bot</code>. As linhas anteriores são preservadas, com as peças já gravadas. O processo bloqueado nas peças sai com os dados lidos, as peças já gravadas e <code>bloqueio_anti_bot</code>; a bloqueada e as seguintes entram em <code>pecas_falhas</code>. Aguarde alguns minutos ou troque de IP e peça de novo só as linhas com <code>motivo_falha</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ImportError</code></td>
+<td>O extra <code>juscraper[tls]</code> (<code>curl_cffi</code>) não está instalado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
+<p><code>InputCpopgTRF3</code>: schema dos argumentos aceitos.</p>
+</section>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.</p>
+<p>Aceita os mesmos argumentos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a>. <code>download_pecas</code> e <code>diretorio</code> passam pela validação e são ignorados, porque este método não baixa peças. Devolve uma lista alinhada à entrada: um dicionário por processo (chaves <code>busca</code>, <code>dados</code> e uma por recurso paginado) ou <code>None</code> para o CNJ que a consulta pública não devolveu ou cuja consulta falhou. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>. Um bloqueio anti-bot encerra o lote, e os CNJs restantes saem <code>None</code>.</p>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse">cpopg_parse</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg_parse(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    brutos<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    id_cnj_list<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Transforma a saída de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a> num DataFrame, uma linha por CNJ.</p>
+<p>Sem a coluna <code>motivo_falha</code>: um <code>None</code> vindo de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a> pode ser processo ausente ou consulta que falhou, e só <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a> sabe qual. O bruto que o parser recusa vira linha só com <code>id_cnj</code> e entra num <code>UserWarning</code>.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>brutos</td>
+<td><code>list</code>[<code>dict</code>[<code>str</code>, <code>Any</code>] | None] | None</td>
+<td>Lista devolvida por <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a>, com um dicionário de envelopes JSON ou <code>None</code> por CNJ. Entradas <code>None</code> viram linha só com <code>id_cnj</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>id_cnj_list</td>
+<td><code>list</code>[<code>str</code>] | None</td>
+<td>CNJs na mesma ordem de <code>brutos</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Só o alias deprecado <code>htmls</code>, descrito abaixo. Qualquer outro nome levanta <code>TypeError</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>htmls</code> -&gt; <code>brutos</code> (DeprecationWarning). O nome vem da época em que o <code>cpopg_download</code> devolvia HTML; o conteúdo agora precisa ser o dicionário da API.</li>
+</ul>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td><code>brutos</code> ou <code>id_cnj_list</code> ausentes, kwarg desconhecido, ou item de <code>brutos</code> que não é dicionário nem <code>None</code> (o HTML do portal antigo, por exemplo).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValueError</code></td>
+<td><code>brutos</code> e <code>id_cnj_list</code> de tamanhos diferentes, ou <code>brutos</code> e <code>htmls</code> passados juntos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cposg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cposg">cposg</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cposg(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    id_cnj,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    download_pecas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta processos de 2º grau na consulta pública do PJe do TRF3.</p>
+<p>O CNJ do recurso costuma ser o mesmo do processo de origem; a consulta de 2º grau devolve o recurso (apelação, agravo, remessa) que tramita no tribunal com esse número. Se a busca devolver mais de um processo com o número pedido, só o primeiro é consultado, e o logger <code>juscraper.trf3</code> avisa quantos a busca devolveu; nas consultas observadas a busca devolveu no máximo um. Exige o extra <code>juscraper[tls]</code>.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>CNJ único ou lista, com ou sem máscara.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>download_pecas</td>
+<td><code>bool</code></td>
+<td>Se <code>True</code>, baixa o PDF de cada documento listado no processo, logo depois dos dados do processo. Só por nome. Default <code>False</code>.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum outro argumento é aceito; nome desconhecido levanta <code>TypeError</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>DataFrame com as mesmas colunas e o mesmo tratamento de falhas de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a>. No 2º grau, <code>orgao_julgador_colegiado</code> traz a turma, e o CNJ sem recurso no 2º grau sai como linha só com <code>id_cnj</code> e <code>motivo_falha</code> <code>None</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ImportError</code></td>
+<td>O extra <code>juscraper[tls]</code> (<code>curl_cffi</code>) não está instalado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="see-also-2" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
+<p><code>InputCposgTRF3</code>: schema dos argumentos aceitos.</p>
+</section>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cposg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cposg_download">cposg_download</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cposg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.</p>
+<p>Mesmo retorno e mesmos avisos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a>, consultando a aplicação de 2º grau. Os argumentos são os de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg"><code>cposg</code></a>; <code>download_pecas</code> e <code>diretorio</code> passam pela validação e são ignorados, porque este método não baixa peças.</p>
+</section>
+<section id="juscraper.courts.trf3.client.TRF3Scraper.cposg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cposg_parse">cposg_parse</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cposg_parse(brutos, id_cnj_list)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Transforma a saída de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg_download"><code>cposg_download</code></a> num DataFrame, uma linha por CNJ.</p>
+<p>Como <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse"><code>cpopg_parse</code></a>, sem a coluna <code>motivo_falha</code>.</p>
+
+
 </section>
 </section>
 </section>
