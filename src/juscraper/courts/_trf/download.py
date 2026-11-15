@@ -110,7 +110,7 @@ class FormFieldIds:
 
     processo_referencia: str  # ``fPP:j_idNNN:processoReferenciaInput``
     nome_advogado: str  # ``fPP:j_idNNN:nomeAdv``
-    classe: str  # ``fPP:j_idNNN:<CLASSE_FIELD_NAME>`` (autocomplete or popup)
+    classe: str  # ``fPP:j_idNNN:<CLASSE_FIELD_NAME>`` (the classe autocomplete)
     oab_decoration: str  # ``fPP:Decoration:j_idNNN`` (second OAB digit field)
     search_trigger: str  # ``fPP:j_idNNN`` — JSF Ajax behaviour bound to ``executarPesquisa()``
 
@@ -176,10 +176,10 @@ def build_search_payload(
     backend tolerates omitted optional fields only when the radio/select
     "control" fields are present alongside.
 
-    ``classe_fields`` carries the classe component (and, for TRF1/TRF3, the
-    ``dataAutuacaoDecoration`` date block) — it is supplied by
-    :meth:`TRFConsultaScraper._classe_payload_fields`, which is the only
-    per-tribunal divergence in this payload.
+    ``classe_fields`` carries the classe component and the
+    ``dataAutuacaoDecoration`` date block — it is supplied by
+    :meth:`TRFConsultaScraper._classe_payload_fields`, the hook for a
+    deployment whose classe component differs.
     """
     return {
         "AJAXREQUEST": "_viewRoot",
