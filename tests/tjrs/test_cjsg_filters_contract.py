@@ -1,4 +1,6 @@
 """Filter-propagation contract for TJRS cjsg."""
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
@@ -20,10 +22,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         assunto="Dano moral",
         orgao_julgador="Primeira Camara",
         relator="FULANO DE TAL",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        data_publicacao_inicio="2024-02-01",
-        data_publicacao_fim="2024-04-30",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="01/02/2024",
+        data_publicacao_fim="30/04/2024",
         tipo_processo="Civel",
         secao="crime",
     )
@@ -41,6 +43,37 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         data_publicacao_fim="2024-04-30",
         tipo_processo="Civel",
         secao="crime",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_datas_vao_no_formato_do_formulario_do_portal(mocker):
+    """As datas chegam ao portal como ``DD/MM/AAAA``, seja qual for a entrada.
+
+    O formulário do portal valida os quatro campos de data com
+    ``jQuery.datepicker.parseDate("d/m/yy", ...)`` e os envia sem conversão;
+    em ISO, a busca volta vazia (#496).
+    """
+    mocker.patch("time.sleep")
+    _add_page(
+        "direito",
+        1,
+        "cjsg/no_results.json",
+        data_julgamento_inicio="01/10/2026",
+        data_julgamento_fim="31/10/2026",
+        data_publicacao_inicio="10/03/2025",
+        data_publicacao_fim="29/04/2025",
+    )
+
+    df = jus.scraper("tjrs").cjsg(
+        "direito",
+        paginas=1,
+        data_julgamento_inicio="01/10/2026",
+        data_julgamento_fim="2026-10-31",
+        data_publicacao_inicio=date(2025, 3, 10),
+        data_publicacao_fim="29-04-2025",
     )
 
     assert isinstance(df, pd.DataFrame)
@@ -81,8 +114,8 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
         "dano moral",
         1,
         "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
     )
 
     with pytest.warns(DeprecationWarning) as warning_list:
