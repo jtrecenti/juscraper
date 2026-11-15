@@ -337,13 +337,12 @@ class HTTPScraper(BaseScraper):
                 f"Perfil HTTP desconhecido em {type(self).__name__}: {perfil!r}. "
                 f"Perfis declarados: {sorted(self._perfis_http)}."
             )
-        if max_retries is not None:
-            policy = replace(policy, max_retries=max_retries)
-        if base_backoff is not None:
-            policy = replace(policy, base_backoff=base_backoff)
-        if expect_json is not None:
-            policy = replace(policy, expect_json=expect_json)
-        return policy
+        # Um ``replace`` só, que valida os kwargs juntos; nenhum sem kwarg explícito.
+        explicitos: dict[str, Any] = {
+            "max_retries": max_retries, "base_backoff": base_backoff, "expect_json": expect_json,
+        }
+        ajustes = {campo: valor for campo, valor in explicitos.items() if valor is not None}
+        return replace(policy, **ajustes) if ajustes else policy
 
     @staticmethod
     def _send_once(
