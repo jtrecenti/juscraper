@@ -3,11 +3,10 @@
 O quartodoc usa esse parser, e o ``quartodoc build`` passa mesmo quando ele lê
 errado; o defeito só aparece na referência publicada. O teste reprova aviso de
 falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
-linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` com um número
-de itens que não é um nem o de elementos da ``tuple`` devolvida (continuação
-sem recuo), ``Returns:`` que começa pelo tipo ou por um nome seguido de
-dois-pontos e a seção ``Warns:``, que derruba o build. As formas certas estão no CONTRIBUTING, em
-"Docstrings de métodos públicos com kwargs".
+linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
+lê com itens a mais, com o tipo repetido ou com tipo diferente da assinatura, e
+a seção ``Warns:``, que derruba o build. Os casos e as formas certas estão no
+CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
@@ -25,7 +24,8 @@ from tests.test_docstring_examples import RAIZ_PACOTE
 
 _FALHA_DE_PAR = "Failed to get '"
 # Um tipo (``pd.DataFrame``, ``dict[str, Any]``, ``str | None``) seguido de dois-pontos.
-_PREFIXO_DE_TIPO = re.compile(r"^([A-Za-z_][\w.]*(\[[^:]*\])?(\s*\|\s*[A-Za-z_][\w.]*(\[[^:]*\])?)*):(\s|$)")
+_TIPO = r"[A-Za-z_][\w.]*(?:\[[^:]*\])?"
+_PREFIXO_DE_TIPO = re.compile(rf"^({_TIPO}(?:\s*\|\s*{_TIPO})*):(?:\s|$)")
 
 
 class _Coletor(logging.Handler):
@@ -84,6 +84,12 @@ def _motivo_dos_retornos(objeto: griffe.Object, retornos: list[griffe.DocstringR
                 f"Returns começa por '{tipo}:', que a referência mostra como nome ou na descrição;"
                 " tirar o tipo quando a assinatura o anota, ou pô-lo entre parênteses"
             )
+    assinatura = objeto.returns if objeto.is_function else None
+    if len(retornos) == 1 and assinatura is not None and str(retornos[0].annotation) != str(assinatura):
+        return (
+            f"Returns com '({retornos[0].annotation}):' em função anotada com '{assinatura}';"
+            " tirar os parênteses, que sobrepõem a anotação"
+        )
     return None
 
 
@@ -202,6 +208,11 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Returns:\n'
         '        str: Caminho do diretório.\n'
         '    """\n',
+        'def f() -> "pd.DataFrame":\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        (pd.DataFrame | int): Uma linha por processo.\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -217,6 +228,7 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "tupla-com-prefixo",
         "returns-nome-curto-do-tipo",
         "returns-nome-sem-anotacao",
+        "returns-parenteses-com-anotacao",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):

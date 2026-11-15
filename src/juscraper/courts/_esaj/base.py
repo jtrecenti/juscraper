@@ -409,7 +409,7 @@ class EsajSearchScraper(HTTPScraper):
         pesquisa: str,
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de segundo grau do tribunal (CJSG).
 
         Delega para :meth:`cjsg_download` + :meth:`cjsg_parse` e remove o
@@ -478,7 +478,7 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            (pd.DataFrame | int): Resultados parseados (colunas conforme
+            Resultados parseados (colunas conforme
                 :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
                 via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
                 ``cd_foro``); ``int`` com o total de resultados quando

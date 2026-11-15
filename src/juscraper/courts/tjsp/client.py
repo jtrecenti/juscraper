@@ -190,7 +190,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         pesquisa: str = "",
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de segundo grau do TJSP (CJSG).
 
         Override raso de :meth:`EsajSearchScraper.cjsg` so para ancorar a
@@ -248,7 +248,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
         Returns:
-            (pd.DataFrame | int): Resultados parseados (colunas conforme
+            Resultados parseados (colunas conforme
                 :class:`OutputCJSGTJSP` — ``processo``, ``ementa``,
                 ``data_julgamento``, ``cd_acordao``, ``relator``,
                 ``orgao_julgador``); ``int`` com o total de resultados quando
@@ -365,7 +365,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         pesquisa: str = "",
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de primeiro grau do TJSP (CJPG).
 
         Delega para :meth:`cjpg_download` + :meth:`cjpg_parse` e remove
@@ -433,7 +433,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 :func:`~juscraper.courts.tjsp.cjpg_parse.cjpg_parse_manager`.
 
         Returns:
-            (pd.DataFrame | int): Resultados parseados (colunas conforme
+            Resultados parseados (colunas conforme
                 :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
                 campos extras emitidos pelo parser via ``extra='allow'`` —
                 ``classe``, ``assunto``, ``magistrado``, ``comarca``,
