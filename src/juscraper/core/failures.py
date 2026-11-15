@@ -307,11 +307,12 @@ class _ComMotivo(Protocol):
 
 
 _Consulta = TypeVar("_Consulta", bound=_ComMotivo)
+_Item = TypeVar("_Item")
 
 
 def consultar_em_lote(
-    cnjs: Collection[str],
-    consultar: Callable[[str], _Consulta],
+    cnjs: Collection[_Item],
+    consultar: Callable[[_Item], _Consulta],
     falha: Callable[[str | None], _Consulta],
     *,
     sleep_time: float,
@@ -327,7 +328,8 @@ def consultar_em_lote(
 
     Args:
         cnjs: CNJs a consultar, em geral dentro de ``tqdm`` para a barra de
-            progresso.
+            progresso. Pode ser outro item, como as linhas de um DataFrame
+            nos downloads em lote do eSAJ.
         consultar: Consulta de um CNJ. Não levanta para falha do item, que
             vem no ``motivo`` do resultado: uma exceção, inclusive de
             bloqueio, propaga e descarta o lote.

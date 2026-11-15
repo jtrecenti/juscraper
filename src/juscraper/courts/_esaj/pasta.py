@@ -37,6 +37,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import ClassVar
 from urllib.parse import unquote_plus
@@ -54,6 +55,7 @@ _PARAMETROS_RE = re.compile(r'"parametros":"([^"]+)"')
 # ``linkMovVincProc-2-<cdDocumento>`` (descrição), com ou sem senha.
 _CD_DOCUMENTO_NO_ID = re.compile(r"^linkMovVincProc-(?:\d+-)?(\d+)$")
 _ACESSO_NAO_VALIDADO = "Não foi possível validar o seu acesso"
+_TITULO = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 
 
 class DocumentoIndisponivelError(Exception):
@@ -179,13 +181,27 @@ def pdf_pela_pasta(
             raise PastaInesperadaError(documento, "o eSAJ recusou o acesso: a sessão não listou o documento.")
         raise PastaInesperadaError(documento, f"a página de {pagina.url} não traz 'parametros'.")
     resposta = get(f"{url_base}pastadigital/getPDF.do?{parametros}")
-    if not resposta.content.startswith(b"%PDF"):
-        inicio = resposta.content[:60].decode("utf-8", "replace")
-        raise DocumentoNaoPdfError(
-            documento,
-            f"getPDF.do respondeu {resposta.headers.get('Content-Type')!r} começando por {inicio!r}; nada foi gravado.",
-        )
-    return resposta.content
+    return conteudo_pdf(resposta, "getPDF.do", partial(DocumentoNaoPdfError, documento))
+
+
+def conteudo_pdf(resposta: requests.Response, rota: str, erro: Callable[[str], Exception]) -> bytes:
+    """Corpo de ``resposta`` quando ele começa por ``%PDF``.
+
+    Args:
+        resposta: Resposta do pedido do PDF.
+        rota: Pedido, para a mensagem (``"getPDF.do"``).
+        erro: Monta a exceção a partir da mensagem, que traz o ``Content-Type``
+            e o título da página (ou o início do corpo, quando não há título).
+
+    Raises:
+        Exception: A de ``erro``, quando o corpo não é PDF; nada é gravado.
+    """
+    if resposta.content.startswith(b"%PDF"):
+        return resposta.content
+    inicio = resposta.content[:4096].decode("utf-8", "replace")
+    titulo = _TITULO.search(inicio)
+    descricao = titulo.group(1).strip() if titulo else inicio[:60].strip()
+    raise erro(f"{rota} respondeu {resposta.headers.get('Content-Type')!r} ({descricao!r}); nada foi gravado.")
 
 
 def gravar_pdf(conteudo: bytes, destino: Path) -> Path:

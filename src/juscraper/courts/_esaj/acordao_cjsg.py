@@ -16,32 +16,30 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import partial
 from pathlib import Path
 
 import pandas as pd
 
-from ...core.failures import COLUNA_MOTIVO_FALHA, EXCECOES_DE_FALHA_POR_LINHA, avisar_falhas, motivo_falha
-from .acordao import COLUNA_CAMINHO_ACORDAO, EntradaInvalidaError, _ausente
+from .acordao import COLUNA_CAMINHO_ACORDAO, EntradaInvalidaError, codigo_da_linha
 from .base import EsajSearchScraper
-from .pasta import DocumentoIndisponivelError, DocumentoNaoPdfError, gravar_pdf
+from .lote import DownloadEmLote, baixar_em_lote
+from .pasta import DocumentoIndisponivelError, DocumentoNaoPdfError, conteudo_pdf, gravar_pdf
 
 logger = logging.getLogger("juscraper._esaj.acordao_cjsg")
 
-_TITULO = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
+_CODIGO = re.compile(r"[0-9]+")
 
 
-def _codigo(campo: str, valor: object) -> str:
-    """Código numérico da linha do cjsg; recusa o vazio e o que não é só dígitos.
-
-    Aceita o ``float`` inteiro (``3834193.0``), que a coluna vira ao voltar de
-    CSV ou parquet com alguma célula vazia.
-    """
-    if isinstance(valor, float) and valor.is_integer():
-        valor = int(valor)
-    texto = "" if _ausente(valor) else str(valor).strip()
-    if not re.fullmatch(r"[0-9]+", texto):
-        raise EntradaInvalidaError(f"{campo} inválido: {valor!r}. Use o valor da coluna {campo} do cjsg.")
-    return texto
+_LOTE_ACORDAO_CJSG = DownloadEmLote(
+    origem="cjsg",
+    colunas=("cd_acordao", "cd_foro"),
+    erros_com_motivo=(DocumentoIndisponivelError, EntradaInvalidaError),
+    coluna_caminho=COLUNA_CAMINHO_ACORDAO,
+    descricao="download(s) de acórdão",
+    logger=logger,
+    rotulo=lambda linha: str(getattr(linha, "processo", None) or linha.cd_acordao),
+)
 
 
 class EsajAcordaoCjsgScraper(EsajSearchScraper):
@@ -76,22 +74,14 @@ class EsajAcordaoCjsgScraper(EsajSearchScraper):
             >>> df = tjms.cjsg("dano moral", paginas=1)
             >>> caminho = tjms.baixar_acordao(df.cd_acordao[0], df.cd_foro[0])
         """
-        acordao = _codigo("cd_acordao", cd_acordao)
-        foro = _codigo("cd_foro", cd_foro)
+        acordao = codigo_da_linha("cd_acordao", cd_acordao, _CODIGO, "cjsg")
+        foro = codigo_da_linha("cd_foro", cd_foro, _CODIGO, "cjsg")
         resposta = self._get_espacado(
             f"{self.BASE_URL}cjsg/getArquivo.do", params={"cdAcordao": acordao, "cdForo": foro}
         )
-        if not resposta.content.startswith(b"%PDF"):
-            inicio = resposta.content[:4096].decode("utf-8", "replace")
-            titulo = _TITULO.search(inicio)
-            descricao = titulo.group(1).strip() if titulo else inicio[:60].strip()
-            raise DocumentoNaoPdfError(
-                acordao,
-                f"getArquivo.do respondeu {resposta.headers.get('Content-Type')!r} ({descricao!r}); "
-                "nada foi gravado.",
-            )
+        conteudo = conteudo_pdf(resposta, "getArquivo.do", partial(DocumentoNaoPdfError, acordao))
         destino = Path(diretorio or self.download_path) / "acordaos" / f"{acordao}.pdf"
-        return str(gravar_pdf(resposta.content, destino))
+        return str(gravar_pdf(conteudo, destino))
 
     def baixar_acordaos(self, cjsg: pd.DataFrame, diretorio: str | None = None) -> pd.DataFrame:
         """Baixa o PDF do acórdão de cada linha do cjsg; ver :meth:`baixar_acordao`.
@@ -106,26 +96,13 @@ class EsajAcordaoCjsgScraper(EsajSearchScraper):
                 falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
                 ``nao_pdf`` ou um motivo de rede de
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-                também num único ``UserWarning`` ao fim.
+                também num único ``UserWarning`` ao fim. O primeiro
+                ``bloqueio_anti_bot`` encerra o lote: as linhas seguintes saem
+                com o mesmo motivo, sem pedido ao tribunal.
         """
-        faltando = {"cd_acordao", "cd_foro"} - set(cjsg.columns)
-        if faltando:
-            raise ValueError(f"cjsg sem as colunas {sorted(faltando)}.")
-        caminhos: list[str | None] = []
-        motivos: list[str | None] = []
-        falhas: list[str] = []
-        for linha in cjsg.itertuples(index=False):
-            try:
-                caminho, motivo = self.baixar_acordao(linha.cd_acordao, linha.cd_foro, diretorio), None
-            except (DocumentoIndisponivelError, EntradaInvalidaError) as erro:
-                caminho, motivo = None, erro.motivo
-                logger.info("%s: %s", linha.cd_acordao, erro)
-            except EXCECOES_DE_FALHA_POR_LINHA as erro:
-                caminho, motivo = None, motivo_falha(erro)
-                logger.info("%s: %s", linha.cd_acordao, erro)
-            if motivo is not None:
-                falhas.append(f"{getattr(linha, 'processo', None) or linha.cd_acordao}: {motivo}")
-            caminhos.append(caminho)
-            motivos.append(motivo)
-        avisar_falhas(falhas, f"{type(self).__name__}.baixar_acordaos", "download(s) de acórdão")
-        return cjsg.assign(**{COLUNA_CAMINHO_ACORDAO: caminhos, COLUNA_MOTIVO_FALHA: motivos})
+        return baixar_em_lote(
+            cjsg,
+            lambda linha: self.baixar_acordao(linha.cd_acordao, linha.cd_foro, diretorio),
+            _LOTE_ACORDAO_CJSG,
+            f"{type(self).__name__}.baixar_acordaos",
+        )

@@ -18,7 +18,7 @@ import requests
 import responses
 
 import juscraper as jus
-from juscraper.core.exceptions import WafChallengeError
+from juscraper.core.exceptions import BloqueioAntiBotWarning, WafChallengeError
 from juscraper.courts._esaj.acordao import (
     AcordaoNaoEncontradoError,
     EntradaInvalidaError,
@@ -269,20 +269,20 @@ def test_baixar_acordaos_registra_falha_de_rede_e_segue(tjac):
 
 
 @responses.activate
-def test_baixar_acordaos_desafio_anti_bot_no_meio_do_lote_nao_perde_as_linhas(tjac):
-    """Desafio na linha 2 de 3: a linha sai ``bloqueio_anti_bot`` e as outras ficam (#471)."""
+def test_baixar_acordaos_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(tjac):
+    """Desafio na linha 2 de 3: a linha 1 fica (#471), e a 3 sai ``bloqueio_anti_bot`` sem pedido."""
     registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
     responses.add(
         responses.GET, f"{BASE}cposg5/search.do", body=WafChallengeError("TJAC", f"{BASE}cposg5/search.do")
     )
-    registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
     cjsg = pd.DataFrame({"processo": [CNJ, CNJ, CNJ], "data_julgamento": ["13/04/2026", "13/04/2026", "27/10/2026"]})
 
-    with pytest.warns(UserWarning, match=f"1 download\\(s\\) de acórdão falharam.*{CNJ}: bloqueio_anti_bot"):
+    with pytest.warns(BloqueioAntiBotWarning, match=f"2 download\\(s\\) de acórdão falharam.*{CNJ}: bloqueio_anti_bot"):
         saida = tjac.baixar_acordaos(cjsg)
 
-    assert saida["caminho_acordao"].isna().tolist() == [False, True, False]
-    assert saida["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", None]
+    assert saida["caminho_acordao"].isna().tolist() == [False, True, True]
+    assert saida["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(_chamadas("search.do")) == 2
 
 
 def test_parametros_sem_tipo_de_documento():

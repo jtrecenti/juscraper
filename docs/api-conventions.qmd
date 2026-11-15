@@ -413,6 +413,11 @@ movements in the second-degree consultation instead, as the R package
   them, the method returns the next acórdão of the process instead; a
   `logging` warning then says how many protected documents were skipped
   before the returned one.
+- **Anti-bot block.** The first row that gets `bloqueio_anti_bot` ends the
+  batch, because the block holds for the whole session: the following rows
+  get the same reason without a request, and the rows already downloaded
+  stay in the result. The same holds for TJCE and TJMS `baixar_acordaos` and
+  for `baixar_sentencas`. Retry only the failed rows later or from another IP.
 - **Pace.** `sleep_time` is the minimum interval between two requests to
   the court, also inside a single row: one TJSP acórdão takes the search,
   one page per incident, the movement pages and the folder of each
