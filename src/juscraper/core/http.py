@@ -414,7 +414,7 @@ class HTTPScraper(BaseScraper):
 
         Returns:
             ``requests.Response`` na primeira resposta com status < 400 (e, se
-            ``expect_json=True``, com corpo JSON válido).
+                ``expect_json=True``, com corpo JSON válido).
 
         Raises:
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.

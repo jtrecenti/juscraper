@@ -113,8 +113,8 @@ def build_payload(
         base (str): ``"decisoes"`` (monocraticas) ou ``"acordaos"``.
         classe (str | list[str] | None): Sigla(s) da classe processual (ex.: ``"Rcl"``).
         inteiro_teor (bool): Pesquisa tambem no inteiro teor, como a opcao do portal.
-        data_julgamento_inicio, data_julgamento_fim, data_publicacao_inicio,
-        data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
+        data_julgamento_inicio, data_julgamento_fim (str | None): Datas ja no formato ``ddMMyyyy``.
+        data_publicacao_inicio, data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
         reference_time (str | None): Referência UTC fixa para o decaimento do score.
             ``None`` mantém o ``now`` do portal.
 

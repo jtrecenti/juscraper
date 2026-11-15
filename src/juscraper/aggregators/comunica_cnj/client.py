@@ -92,8 +92,8 @@ class ComunicaCNJScraper(HTTPScraper):
 
         Returns:
             DataFrame com uma linha por comunicacao. As colunas refletem
-            o JSON ``items`` da API (campos como ``numero_processo``,
-            ``siglaTribunal``, ``texto``, ``link``, etc.).
+                o JSON ``items`` da API (campos como ``numero_processo``,
+                ``siglaTribunal``, ``texto``, ``link``, etc.).
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.

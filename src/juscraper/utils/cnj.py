@@ -62,8 +62,8 @@ def format_cnj(numero: str | None, strict: bool = True) -> str | None:
 
     Returns:
         String no formato canônico. Quando ``strict=False`` e o número não
-        puder ser formatado, retorna o input original (``None``, vazio,
-        não-string ou sem 20 dígitos).
+            puder ser formatado, retorna o input original (``None``, vazio,
+            não-string ou sem 20 dígitos).
     """
     if not strict:
         if not numero or not isinstance(numero, str):

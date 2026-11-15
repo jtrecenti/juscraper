@@ -141,12 +141,12 @@ class FalcaoScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por documento. Colunas canonicas
-            garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
-            ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
-            ``ementa`` (texto sem HTML), ``data_julgamento`` e
-            ``data_juntada``. Os demais campos brutos da colecao sao
-            preservados, exceto os ``highlight*`` (ver
-            :class:`OutputListarDecisoesFalcao`).
+                garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
+                ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
+                ``ementa`` (texto sem HTML), ``data_julgamento`` e
+                ``data_juntada``. Os demais campos brutos da colecao sao
+                preservados, exceto os ``highlight*`` (ver
+                :class:`OutputListarDecisoesFalcao`).
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (inclusive
@@ -243,7 +243,7 @@ class FalcaoScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Resultados concatenados (veja :meth:`listar_decisoes` para as
-            colunas canonicas).
+                colunas canonicas).
         """
         pasta = Path(diretorio)
         arquivos = sorted(pasta.rglob("*.json"))

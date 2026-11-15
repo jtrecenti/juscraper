@@ -341,19 +341,19 @@ class DatajudScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por tribunal consultado, com colunas
-            ``tribunal`` (sigla), ``alias`` (índice ES), ``count``
-            (inteiro anulável ``Int64``) e ``relation`` (``"eq"`` exato ou
-            ``"gte"`` truncado pelo cap interno do Elasticsearch). Quando a
-            chamada falha para um tribunal, ``count`` é ``<NA>`` e a coluna
-            ``error`` traz o motivo no vocabulário de
-            ``juscraper.core.failures.motivo_falha`` (``"http_500"``,
-            ``"retry_esgotado_429"``, ``"timeout"``, ``"conexao"``,
-            ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele. A resposta
-            200 sem a contagem em ``hits.total`` (uma lista, por exemplo) sai
-            ``"json_invalido"``. A resposta 200 parcial do Elasticsearch
-            (``_shards.failed > 0`` ou ``timed_out: true``), cuja contagem pode
-            sair menor, sai ``"RuntimeError: Resposta parcial do
-            Elasticsearch: ..."``, com os motivos dos shards.
+                ``tribunal`` (sigla), ``alias`` (índice ES), ``count``
+                (inteiro anulável ``Int64``) e ``relation`` (``"eq"`` exato ou
+                ``"gte"`` truncado pelo cap interno do Elasticsearch). Quando a
+                chamada falha para um tribunal, ``count`` é ``<NA>`` e a coluna
+                ``error`` traz o motivo no vocabulário de
+                ``juscraper.core.failures.motivo_falha`` (``"http_500"``,
+                ``"retry_esgotado_429"``, ``"timeout"``, ``"conexao"``,
+                ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele. A resposta
+                200 sem a contagem em ``hits.total`` (uma lista, por exemplo) sai
+                ``"json_invalido"``. A resposta 200 parcial do Elasticsearch
+                (``_shards.failed > 0`` ou ``timed_out: true``), cuja contagem pode
+                sair menor, sai ``"RuntimeError: Resposta parcial do
+                Elasticsearch: ..."``, com os motivos dos shards.
 
         Raises:
             requests.HTTPError: No 401 (chave inválida), que interrompe a
@@ -615,8 +615,8 @@ class DatajudScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
-            do parser e passthrough do ``_source`` Elasticsearch — colunas
-            seguem nomenclatura camelCase do CNJ.
+                do parser e passthrough do ``_source`` Elasticsearch — colunas
+                seguem nomenclatura camelCase do CNJ.
 
         Examples: Exemplo
             >>> import juscraper as jus

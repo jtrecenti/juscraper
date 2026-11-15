@@ -129,10 +129,10 @@ class EsajSentencaScraper(EsajSearchScraper):
 
         Returns:
             pd.DataFrame: As linhas de entrada com ``caminho_sentenca`` (``None``
-            quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
-            ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
-            :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-            também num único ``UserWarning`` ao fim.
+                quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
+                ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
+                :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
+                também num único ``UserWarning`` ao fim.
         """
         faltando = set(COLUNAS_CODIGOS_SENTENCA) - set(cjpg.columns)
         if faltando:

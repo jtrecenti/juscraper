@@ -844,8 +844,7 @@ def apply_input_pipeline_search(
         kwargs: The caller's local ``kwargs`` dict. Mutated in place: nominal
             dates are merged in, consumed aliases are popped, and what remains
             is forwarded to the schema.
-        data_julgamento_inicio, data_julgamento_fim,
-        data_publicacao_inicio, data_publicacao_fim: Nominal date arguments
+        data_julgamento_inicio, data_julgamento_fim, data_publicacao_inicio, data_publicacao_fim: Nominal date arguments
             from the public method signature. Each accepts ``str`` in any of
             the four supported formats (``DD/MM/AAAA``, ``DD-MM-AAAA``,
             ``AAAA-MM-DD``, ``AAAA/MM/DD``), :class:`datetime.date`,

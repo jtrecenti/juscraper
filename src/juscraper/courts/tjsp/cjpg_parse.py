@@ -231,7 +231,7 @@ def cjpg_parse_manager(path):
 
     Returns:
         pd.DataFrame: Uma linha por processo. Vazio quando o diretório não tem
-        arquivo HTML ou quando nenhuma página traz resultados.
+            arquivo HTML ou quando nenhuma página traz resultados.
 
     Raises:
         FileNotFoundError: Quando ``path`` não existe ou não é arquivo nem

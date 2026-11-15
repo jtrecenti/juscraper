@@ -163,8 +163,8 @@ def parse_documentos(data: dict[str, Any], colecao: str) -> list[dict[str, Any]]
 
     Returns:
         Lista de dicionarios prontos para virar linhas de ``pd.DataFrame``,
-        cada um com as colunas canonicas garantidas (:class:`.schemas.
-        OutputListarDecisoesFalcao`) alem dos campos brutos da colecao.
+            cada um com as colunas canonicas garantidas (:class:`.schemas.
+            OutputListarDecisoesFalcao`) alem dos campos brutos da colecao.
     """
     documentos = data.get("documentos")
     if documentos is None:

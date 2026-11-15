@@ -502,18 +502,19 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             ``bool`` quando ``id_cnj`` e ``str``; ``pd.DataFrame`` com
-            colunas ``processo``, ``existe`` e ``motivo_falha`` quando e
-            ``list``. Na lista, o processo cuja consulta falhou sai com
-            ``existe=None`` e o motivo, ``nao_encontrado`` no processo ausente
-            (ver a classe).
+                colunas ``processo``, ``existe`` e ``motivo_falha`` quando e
+                ``list``. Na lista, o processo cuja consulta falhou sai com
+                ``existe=None`` e o motivo, ``nao_encontrado`` no processo ausente
+                (ver a classe).
 
         Raises:
             requests.HTTPError: No 401, e com ``str`` em qualquer erro HTTP.
             ErroSsoPdpj: Quando o SSO do PJe recusa ou não consegue renovar o
                 token; na lista, com as falhas anteriores numa nota do erro.
-            RetryExhaustedError, requests.Timeout, requests.ConnectionError,
-            InvalidJSONResponseError: Com ``str``, quando a consulta falha;
-                a resposta sem ``true``/``false`` levanta o ultimo.
+            RetryExhaustedError: Com ``str``, quando a consulta falha.
+            requests.Timeout: Com ``str``, quando a consulta falha.
+            requests.ConnectionError: Com ``str``, quando a consulta falha.
+            InvalidJSONResponseError: Com ``str``, quando a consulta falha ou a resposta nao traz ``true``/``false``.
 
         See Also:
             :class:`InputCnjPdpj` -- schema pydantic.
@@ -538,16 +539,16 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             DataFrame com uma linha por tramitacao do processo. Colunas
-            principais: ``processo`` (CNJ pesquisado, dignos de digito),
-            ``numero_processo`` (formatado pela API), ``sigla_tribunal``,
-            ``segmento_justica``, ``data_atualizacao``, ``detalhes``
-            (dict com a resposta completa) e ``motivo_falha``. A API que
-            responde lista vazia gera uma linha com
-            ``status_consulta="Nao encontrado"``; a consulta que falha gera
-            uma linha com ``status_consulta`` igual a
-            :data:`juscraper.core.failures.STATUS_CONSULTA_FALHA` e o motivo.
-            O processo ausente do data lake (ver a classe) sai nessa linha,
-            com o motivo ``nao_encontrado``.
+                principais: ``processo`` (CNJ pesquisado, dignos de digito),
+                ``numero_processo`` (formatado pela API), ``sigla_tribunal``,
+                ``segmento_justica``, ``data_atualizacao``, ``detalhes``
+                (dict com a resposta completa) e ``motivo_falha``. A API que
+                responde lista vazia gera uma linha com
+                ``status_consulta="Nao encontrado"``; a consulta que falha gera
+                uma linha com ``status_consulta`` igual a
+                :data:`juscraper.core.failures.STATUS_CONSULTA_FALHA` e o motivo.
+                O processo ausente do data lake (ver a classe) sai nessa linha,
+                com o motivo ``nao_encontrado``.
 
         Raises:
             requests.HTTPError: No 401 (token ausente, expirado ou invalido),
@@ -663,16 +664,17 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             DataFrame com uma linha por processo retornado. A API responde 404
-            ("Não foram encontrados registros") a pagina seguinte a ultima com
-            dados e a busca sem resultado; o 404 encerra a coleta, e a busca
-            sem resultado devolve DataFrame vazio.
+                ("Não foram encontrados registros") a pagina seguinte a ultima com
+                dados e a busca sem resultado; o 404 encerra a coleta, e a busca
+                sem resultado devolve DataFrame vazio.
 
         Raises:
-            requests.HTTPError, RetryExhaustedError, requests.Timeout,
-            requests.ConnectionError, InvalidJSONResponseError: Quando a
-                requisicao de qualquer pagina falha, com status diferente de
-                404. Pagina nao vira linha de falha, e devolver as paginas
-                anteriores truncaria o resultado sem aviso.
+            requests.HTTPError: Quando a requisicao de qualquer pagina falha, com status diferente de 404.
+                Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.
+            RetryExhaustedError: Quando a requisicao de qualquer pagina falha.
+            requests.Timeout: Quando a requisicao de qualquer pagina falha.
+            requests.ConnectionError: Quando a requisicao de qualquer pagina falha.
+            InvalidJSONResponseError: Quando a requisicao de qualquer pagina falha.
 
         See Also:
             :class:`InputPesquisaPdpj` -- schema pydantic e a fonte da
@@ -752,7 +754,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         os relacionados a paginacao/ordenacao. Retorna ``int``.
 
         Raises:
-            requests.HTTPError, RetryExhaustedError, requests.Timeout,
+            requests.HTTPError: Quando a requisicao falha.
+            RetryExhaustedError: Quando a requisicao falha.
+            requests.Timeout: Quando a requisicao falha.
             requests.ConnectionError: Quando a requisicao falha.
             InvalidJSONResponseError: Quando a resposta nao traz um inteiro.
         """
@@ -820,8 +824,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             DataFrame com uma linha por documento. Inclui colunas
-            ``texto`` e ``binario`` (quando solicitados), ``None`` nos
-            documentos cujo download falhou, e ``motivo_falha``.
+                ``texto`` e ``binario`` (quando solicitados), ``None`` nos
+                documentos cujo download falhou, e ``motivo_falha``.
 
         Raises:
             ValidationError: Quando ``base_df`` nao e um DataFrame ou
