@@ -15,13 +15,14 @@ from typing import Any, NamedTuple
 import pandas as pd
 import requests
 from pydantic import ValidationError
+from tqdm import tqdm
 
 from ...core.base import BaseScraper
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
-    MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_CAPTCHA_ESGOTADO,
     avisar_falhas_de_processos,
-    consultar_ate_bloqueio,
+    consultar_em_lote,
     consultar_processo,
     linhas_de_processos,
 )
@@ -51,8 +52,25 @@ class TRF6Scraper(BaseScraper):
         download_path: str | None = None,
         sleep_time: float = 1.0,
         max_captcha_attempts: int = 3,
+        max_captcha_esgotado_seguidos: int | None = 3,
         **kwargs: Any,
     ):
+        """Configura a sessão da consulta pública.
+
+        Args:
+            verbose: Nível de log.
+            download_path: Diretório de downloads.
+            sleep_time: Pausa entre CNJs, em segundos.
+            max_captcha_attempts: Captchas tentados por CNJ antes de ele sair
+                com ``captcha_esgotado``.
+            max_captcha_esgotado_seguidos: CNJs seguidos com
+                ``captcha_esgotado`` que encerram o lote: o resolvedor está
+                errando sempre, e os CNJs restantes saem com o mesmo motivo,
+                sem nova consulta. ``None`` não encerra.
+            **kwargs: Guardados em ``self.args``.
+        """
+        if max_captcha_esgotado_seguidos is not None and max_captcha_esgotado_seguidos < 1:
+            raise ValueError("max_captcha_esgotado_seguidos deve ser None ou um inteiro maior que zero.")
         super().__init__("TRF6")
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
@@ -60,6 +78,7 @@ class TRF6Scraper(BaseScraper):
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
         self.max_captcha_attempts = max_captcha_attempts
+        self.max_captcha_esgotado_seguidos = max_captcha_esgotado_seguidos
         self.args = kwargs
 
     # --- internal helpers -----------------------------------------------
@@ -94,13 +113,23 @@ class TRF6Scraper(BaseScraper):
         Regras de falha e de bloqueio anti-bot em :meth:`cpopg`. ``ImportError``
         (``txtcaptcha`` ausente) propaga.
         """
-        return consultar_ate_bloqueio(
-            cnjs,
+        return consultar_em_lote(
+            tqdm(cnjs, desc="TRF6 cpopg"),
             self._consultar,
-            lambda: _Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT),
+            lambda motivo: _Consulta(None, motivo),
             sleep_time=self.sleep_time,
-            desc="TRF6 cpopg",
+            encerrar=self._captcha_errando_sempre,
         )
+
+    def _captcha_errando_sempre(self, consultas: list[_Consulta]) -> bool:
+        """Se as últimas ``max_captcha_esgotado_seguidos`` consultas esgotaram o captcha."""
+        limite = self.max_captcha_esgotado_seguidos
+        if limite is None or len(consultas) < limite:
+            return False
+        if any(c.motivo != MOTIVO_CAPTCHA_ESGOTADO for c in consultas[-limite:]):
+            return False
+        logger.warning("TRF6: captcha recusado em %d CNJs seguidos; o lote para aqui.", limite)
+        return True
 
     def _consultar(self, cnj: str) -> _Consulta:
         """A consulta de um CNJ; a falha vem no motivo, e não como exceção."""
@@ -123,8 +152,9 @@ class TRF6Scraper(BaseScraper):
         Devolve uma lista na ordem da entrada. ``None`` indica processo que a
         consulta pública não devolveu: sigilo, CNJ inexistente ou falha da
         consulta (requisição, captcha esgotado). Falhas individuais não
-        interrompem o lote; um bloqueio anti-bot encerra o lote e os CNJs
-        restantes saem ``None``. As falhas entram num único ``UserWarning``
+        interrompem o lote; um bloqueio anti-bot, ou o captcha esgotado em
+        ``max_captcha_esgotado_seguidos`` CNJs seguidos, encerra o lote, e os
+        CNJs restantes saem ``None``. As falhas entram num único ``UserWarning``
         ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
@@ -174,11 +204,16 @@ class TRF6Scraper(BaseScraper):
         Quando a consulta de um CNJ falha, a linha sai só com ``id_cnj`` e
         o motivo, no vocabulário de
         :data:`juscraper.core.failures.MOTIVOS_FALHA` (``http_<status>``,
-        ``timeout``, ``conexao``; ``resposta_inesperada`` para captcha
-        esgotado, formulário sem captcha, HTML que o parser recusa ou outro
-        erro), e o lote segue. Um desafio anti-bot vale para a sessão
-        inteira: o lote para no CNJ desafiado, sem novos pedidos, e ele e os
-        seguintes saem com ``bloqueio_anti_bot``. As falhas entram num único
+        ``timeout``, ``conexao``; ``captcha_esgotado`` para captcha recusado
+        nas ``max_captcha_attempts`` tentativas; ``resposta_inesperada`` para
+        formulário sem captcha, HTML que o parser recusa ou outro erro), e o
+        lote segue. Um desafio anti-bot vale para a sessão inteira: o lote
+        para no CNJ desafiado, sem novos pedidos, e ele e os seguintes saem
+        com ``bloqueio_anti_bot``. Do mesmo modo, depois de
+        ``max_captcha_esgotado_seguidos`` CNJs seguidos com
+        ``captcha_esgotado`` (default 3), o resolvedor está errando sempre: o
+        lote para, e os CNJs seguintes saem com ``captcha_esgotado`` sem nova
+        consulta. As falhas entram num único
         ``UserWarning`` ao fim
         (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning` quando
         há bloqueio anti-bot).

@@ -12,6 +12,7 @@ from juscraper.core import failures
 from juscraper.core.exceptions import (
     BloqueioAntiBotWarning,
     BotChallengeBlockedError,
+    CaptchaEsgotadoError,
     InvalidJSONResponseError,
     RetryExhaustedError,
     WafChallengeError,
@@ -26,7 +27,7 @@ from juscraper.core.failures import (
     anotar_falhas_anteriores,
     avisar_falhas,
     avisar_falhas_de_processos,
-    consultar_ate_bloqueio,
+    consultar_em_lote,
     consultar_processo,
     e_token_invalido,
     linhas_de_processos,
@@ -88,6 +89,7 @@ def test_vocabulario_publicado():
     assert set(MOTIVOS_FALHA) == {
         "http_<status>", "retry_esgotado_<status>", "timeout", "conexao", "json_invalido", "nao_encontrado",
         "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida", "bloqueio_anti_bot",
+        "captcha_esgotado",
     }
 
 
@@ -210,7 +212,7 @@ class _Consulta(NamedTuple):
     pecas: list[str]
 
 
-def test_consultar_ate_bloqueio_para_no_bloqueio_e_preenche_os_seguintes(monkeypatch):
+def test_consultar_em_lote_para_no_bloqueio_e_preenche_os_seguintes(monkeypatch):
     """O CNJ bloqueado encerra o lote; os seguintes não são consultados e recebem cada um o seu resultado."""
     pausas: list[float] = []
     monkeypatch.setattr(failures, "time", SimpleNamespace(sleep=pausas.append))
@@ -221,12 +223,11 @@ def test_consultar_ate_bloqueio_para_no_bloqueio_e_preenche_os_seguintes(monkeyp
         consultados.append(cnj)
         return _Consulta(cnj if motivos[cnj] is None else None, motivos[cnj], [])
 
-    consultas = consultar_ate_bloqueio(
+    consultas = consultar_em_lote(
         ["a", "b", "c", "d", "e"],
         consultar,
-        lambda: _Consulta(None, "bloqueio_anti_bot", []),
+        lambda motivo: _Consulta(None, motivo, []),
         sleep_time=0.5,
-        desc="teste",
     )
 
     assert consultados == ["a", "b", "c"]
@@ -235,14 +236,33 @@ def test_consultar_ate_bloqueio_para_no_bloqueio_e_preenche_os_seguintes(monkeyp
     assert consultas[3].pecas is not consultas[4].pecas
 
 
-def test_consultar_ate_bloqueio_sem_pausa_depois_do_ultimo(monkeypatch):
+def test_consultar_em_lote_sem_pausa_depois_do_ultimo(monkeypatch):
     pausas: list[float] = []
     monkeypatch.setattr(failures, "time", SimpleNamespace(sleep=pausas.append))
-    consultas = consultar_ate_bloqueio(
-        ["a", "b"], lambda cnj: _Consulta(cnj, None, []), lambda: _Consulta(None, None, []), sleep_time=1, desc="t"
+    consultas = consultar_em_lote(
+        ["a", "b"], lambda cnj: _Consulta(cnj, None, []), lambda motivo: _Consulta(None, motivo, []), sleep_time=1
     )
     assert [c.html for c in consultas] == ["a", "b"]
     assert pausas == [1]
+
+
+def test_consultar_em_lote_encerrar_preenche_com_o_motivo_da_ultima():
+    """``encerrar`` vê as consultas feitas; os CNJs seguintes recebem o motivo da que encerrou."""
+    vistas: list[int] = []
+
+    def encerrar(consultas: list[_Consulta]) -> bool:
+        vistas.append(len(consultas))
+        return [c.motivo for c in consultas[-2:]] == ["captcha_esgotado"] * 2
+
+    consultas = consultar_em_lote(
+        ["a", "b", "c", "d"],
+        lambda _cnj: _Consulta(None, "captcha_esgotado", []),
+        lambda motivo: _Consulta(None, motivo, []),
+        sleep_time=0,
+        encerrar=encerrar,
+    )
+    assert vistas == [1, 2]
+    assert [c.motivo for c in consultas] == ["captcha_esgotado"] * 4
 
 
 def _parse(html: str) -> dict[str, str]:
@@ -295,7 +315,8 @@ def _buscar(erro: BaseException | None, html: str | None = None):
         (_buscar(None), (None, None)),
         (_buscar(BotChallengeBlockedError("TRF6", "https://example.test")), (None, "bloqueio_anti_bot")),
         (_buscar(requests.ReadTimeout()), (None, "timeout")),
-        (_buscar(RuntimeError("captcha esgotado")), (None, "resposta_inesperada")),
+        (_buscar(CaptchaEsgotadoError("TRF6: captcha recusado")), (None, "captcha_esgotado")),
+        (_buscar(RuntimeError("formulário sem captcha")), (None, "resposta_inesperada")),
     ],
 )
 def test_consultar_processo(buscar, esperado):

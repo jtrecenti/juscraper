@@ -28,6 +28,9 @@ def test_cpopg_lookup_returns_real_data() -> None:
     assert row["processo"] == "1005229-55.2023.4.06.3801"
     assert row["classe"]  # truthy
     assert isinstance(row["movimentacoes"], list) and row["movimentacoes"]
+    # Em cumprimento de sentença desde 2026, os polos vêm como EXEQUENTE/EXECUTADO.
+    assert row["polo_ativo"]
+    assert row["polo_passivo"]
 
 
 @pytest.mark.integration

@@ -217,7 +217,7 @@ def test_cpopg_retries_on_captcha_failure(monkeypatch):
 
 @responses.activate
 def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
-    """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``resposta_inesperada``; o 2º CNJ é consultado."""
+    """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``captcha_esgotado``; o 2º CNJ é consultado."""
     for _ in range(3):
         _form()
         _busca("cpopg/search_bad_captcha.html")
@@ -229,12 +229,78 @@ def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
     monkeypatch.setattr(download, "solve_captcha", lambda b64: "wrong")
 
     scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=3)
-    with pytest.warns(UserWarning, match="processo 00000000020994060000: resposta_inesperada"):
+    with pytest.warns(UserWarning, match="processo 00000000020994060000: captcha_esgotado"):
         df = scraper.cpopg(["00000000020994060000", "10052295520234063801"])
 
-    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
+    assert list(df["motivo_falha"]) == ["captcha_esgotado", None]
     assert pd.isna(df.iloc[0]["processo"])
     assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
+
+
+CNJS = ["00000000020994060000", "00000000030994060000", "00000000040994060000", "10052295520234063801"]
+
+
+@responses.activate
+@pytest.mark.parametrize(("limite", "consultados"), [(2, 2), (3, 3)])
+def test_cpopg_captcha_errando_sempre_encerra_o_lote(monkeypatch, limite, consultados):
+    """Após ``max_captcha_esgotado_seguidos`` CNJs com captcha esgotado, os seguintes saem sem consulta."""
+    for _ in range(2 * consultados):
+        _form()
+        _busca("cpopg/search_bad_captcha.html")
+
+    from juscraper.courts.trf6 import download
+
+    monkeypatch.setattr(download, "solve_captcha", lambda b64: "wrong")
+
+    scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=2, max_captcha_esgotado_seguidos=limite)
+    with pytest.warns(UserWarning, match="4 consulta.*captcha_esgotado"):
+        df = scraper.cpopg(CNJS)
+
+    assert list(df["motivo_falha"]) == ["captcha_esgotado"] * 4
+    assert len(responses.calls) == 2 * 2 * consultados  # form + busca por tentativa
+
+
+@responses.activate
+def test_cpopg_captcha_que_volta_a_acertar_zera_a_contagem(monkeypatch):
+    """O limite conta CNJs seguidos: um acerto no meio zera a contagem, e o lote vai até o fim."""
+    respostas = ["bad", "detail", "bad", "detail"]
+    for resposta in respostas:
+        _form()
+        _busca("cpopg/search_bad_captcha.html" if resposta == "bad" else "cpopg/detail_normal.html")
+
+    from juscraper.courts.trf6 import download
+
+    monkeypatch.setattr(download, "solve_captcha", lambda b64: "x")
+
+    scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=1, max_captcha_esgotado_seguidos=2)
+    with pytest.warns(UserWarning, match="2 consulta.*captcha_esgotado"):
+        df = scraper.cpopg(CNJS)
+
+    assert list(df["motivo_falha"]) == ["captcha_esgotado", None, "captcha_esgotado", None]
+
+
+@responses.activate
+def test_cpopg_sem_limite_de_captcha_esgotado_consulta_todos(monkeypatch):
+    for _ in CNJS:
+        _form()
+        _busca("cpopg/search_bad_captcha.html")
+
+    from juscraper.courts.trf6 import download
+
+    monkeypatch.setattr(download, "solve_captcha", lambda b64: "wrong")
+
+    scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=1, max_captcha_esgotado_seguidos=None)
+    with pytest.warns(UserWarning, match="4 consulta.*captcha_esgotado"):
+        df = scraper.cpopg(CNJS)
+
+    assert list(df["motivo_falha"]) == ["captcha_esgotado"] * 4
+    assert len(responses.calls) == 2 * len(CNJS)
+
+
+@pytest.mark.parametrize("limite", [0, -1])
+def test_max_captcha_esgotado_seguidos_invalido(limite):
+    with pytest.raises(ValueError, match="max_captcha_esgotado_seguidos"):
+        jus.scraper("trf6", max_captcha_esgotado_seguidos=limite)
 
 
 @responses.activate

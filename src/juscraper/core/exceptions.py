@@ -40,6 +40,14 @@ class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
 
 
+class CaptchaEsgotadoError(HTTPSemanticError, RuntimeError):
+    """O portal recusou o captcha resolvido em todas as tentativas de uma consulta.
+
+    Vira o motivo :data:`juscraper.core.failures.MOTIVO_CAPTCHA_ESGOTADO`.
+    Herda de ``RuntimeError``, que era o erro levantado antes dela.
+    """
+
+
 class BotChallengeBlockedError(Exception):
     """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai, CloudFront).
 

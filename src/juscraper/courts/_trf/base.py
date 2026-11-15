@@ -19,6 +19,7 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
+from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
@@ -26,7 +27,7 @@ from ...core.failures import (
     MOTIVO_BLOQUEIO_ANTI_BOT,
     avisar_falhas,
     avisar_falhas_de_processos,
-    consultar_ate_bloqueio,
+    consultar_em_lote,
     consultar_processo,
     linhas_de_processos,
     motivo_falha_ou_inesperada,
@@ -200,12 +201,11 @@ class TRFConsultaScraper(HTTPScraper):
         demais seguem. ``ImportError`` (extra ``juscraper[waf]`` ausente)
         propaga.
         """
-        return consultar_ate_bloqueio(
-            cnjs,
+        return consultar_em_lote(
+            tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} cpopg"),
             lambda cnj: self._consultar(cnj, pecas_dir),
-            lambda: _Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], []),
+            lambda motivo: _Consulta(None, motivo, [], []),
             sleep_time=self.sleep_time,
-            desc=f"{self.TRIBUNAL_NAME} cpopg",
         )
 
     def _consultar(self, cnj: str, pecas_dir: str | None) -> _Consulta:

@@ -31,7 +31,7 @@ import requests
 
 from juscraper import __version__
 
-from ...core.exceptions import BotChallengeBlockedError
+from ...core.exceptions import BotChallengeBlockedError, CaptchaEsgotadoError
 
 logger = logging.getLogger("juscraper.trf6.download")
 
@@ -227,9 +227,10 @@ def fetch_detail(
 
     Returns the detail HTML (latin-1 decoded text) on success, or ``None``
     when the CNJ matches no process (the form is re-served). Raises
-    :class:`RuntimeError` if the captcha solver keeps failing past
-    ``max_captcha_attempts`` retries or the response is neither the detail
-    nor the form, and :class:`DesafioF5Error` when the portal serves the F5
+    :class:`~juscraper.core.exceptions.CaptchaEsgotadoError` if the captcha
+    solver keeps failing past ``max_captcha_attempts`` retries,
+    :class:`RuntimeError` if the response is neither the detail nor the
+    form, and :class:`DesafioF5Error` when the portal serves the F5
     challenge.
     Each retry fetches a fresh captcha — the captcha is bound to the
     session's ``PHPSESSID`` cookie, so re-using a stale image silently
@@ -260,7 +261,7 @@ def fetch_detail(
             "o detalhe do processo nem o formulário da consulta"
         )
 
-    raise RuntimeError(
+    raise CaptchaEsgotadoError(
         f"TRF6: captcha solver failed {max_captcha_attempts} times for "
         f"{numero_processo!r} (last attempt: {last_err})"
     )
