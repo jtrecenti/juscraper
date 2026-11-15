@@ -169,7 +169,7 @@ uv run pytest --nbmake docs/notebooks/<nome>.ipynb --nbmake-timeout=300
 uv run pytest tests/test_release_date_filter.py -m release -k <nome>
 ```
 
-`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que os commits de uma branch tocam, (o que ainda não foi commitado fica de fora):
+`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que os commits de uma branch tocam (o que ainda não foi commitado fica de fora):
 
 ```bash
 git fetch origin
