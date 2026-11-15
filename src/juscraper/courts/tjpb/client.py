@@ -113,7 +113,7 @@ class TJPBScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJPB` — schema pydantic e a fonte da verdade dos
@@ -173,7 +173,7 @@ class TJPBScraper(HTTPScraper):
         Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns:
-            list: Lista de respostas JSON cruas (uma por pagina).
+            Lista de respostas JSON cruas (uma por pagina).
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo
@@ -213,6 +213,6 @@ class TJPBScraper(HTTPScraper):
         """Parse downloaded CJSG JSON responses.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
         """
         return cjsg_parse_manager(resultados_brutos)

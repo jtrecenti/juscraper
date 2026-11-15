@@ -58,7 +58,7 @@ def obter_waf_token(
             outro caminho sem Playwright (ex.: passar um cookie ja obtido).
 
     Returns:
-        str: Valor do cookie ``aws-waf-token``.
+        Valor do cookie ``aws-waf-token``.
 
     Raises:
         ImportError: Quando o Playwright nao esta instalado (extra ``juscraper[waf]``).

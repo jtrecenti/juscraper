@@ -160,7 +160,7 @@ class TJMGScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com os acordaos.
+            DataFrame com os acordaos.
 
         See also:
             :class:`InputCJSGTJMG` — schema pydantic e a fonte da verdade dos
@@ -250,7 +250,7 @@ class TJMGScraper(HTTPScraper):
             ValueError: Quando um numero nao tem 17 nem 20 digitos.
 
         Returns:
-            pd.DataFrame: Uma linha por recurso, com ``id_cnj``, ``processo``,
+            Uma linha por recurso, com ``id_cnj``, ``processo``,
                 ``processo_interno``, ``segredo_justica``, ``situacao``,
                 ``secretaria``, ``classe``, ``assunto``, ``orgao_julgador``,
                 ``data_cadastramento``, ``data_distribuicao`` e ``partes``.

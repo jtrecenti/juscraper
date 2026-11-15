@@ -99,7 +99,7 @@ class TJROScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos

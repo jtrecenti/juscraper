@@ -114,7 +114,7 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
             procura um instalado. Default ``None``.
 
     Returns:
-        CredencialPdpj: Access token e, quando o SSO o entrega ao navegador,
+        Access token e, quando o SSO o entrega ao navegador,
             refresh token.
 
     Raises:

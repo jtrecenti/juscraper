@@ -79,7 +79,7 @@ def cjpg_n_results(page_source) -> int:
     raises instead of undercounting a potentially truncated response.
 
     Returns:
-        int: Number of results (0 when the search returned no hits).
+        Number of results (0 when the search returned no hits).
 
     Raises:
         ValueError: When the page reports an error, contains a full results
@@ -223,14 +223,14 @@ def _parse_diretorio(diretorio: Path) -> pd.DataFrame:
     ) from erro
 
 
-def cjpg_parse_manager(path):
+def cjpg_parse_manager(path) -> pd.DataFrame:
     """Processa os arquivos baixados por ``cjpg_download``.
 
     ``path`` pode ser um arquivo HTML ou um diretório, percorrido de forma
     recursiva.
 
     Returns:
-        pd.DataFrame: Uma linha por processo. Vazio quando o diretório não tem
+        Uma linha por processo. Vazio quando o diretório não tem
             arquivo HTML ou quando nenhuma página traz resultados.
 
     Raises:

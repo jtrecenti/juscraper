@@ -163,7 +163,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             ValueError: Quando ``grau`` nao esta disponivel.
 
         Returns:
-            pd.DataFrame: Arvore de varas (colunas ``id``, ``nome``,
+            Arvore de varas (colunas ``id``, ``nome``,
                 ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
         """
         return self._listar_arvore(f"varas_{grau}")
@@ -190,7 +190,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         pesquisa: str = "",
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de segundo grau do TJSP (CJSG).
 
         Override raso de :meth:`EsajSearchScraper.cjsg` so para ancorar a
@@ -248,7 +248,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
         Returns:
-            pd.DataFrame | int: Resultados parseados (colunas conforme
+            Resultados parseados (colunas conforme
                 :class:`OutputCJSGTJSP` — ``processo``, ``ementa``,
                 ``data_julgamento``, ``cd_acordao``, ``relator``,
                 ``orgao_julgador``); ``int`` com o total de resultados quando
@@ -325,7 +325,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             QueryTooLongError: Quando ``pesquisa`` excede 120 chars.
 
         Returns:
-            str: Caminho do diretorio onde os HTMLs foram salvos.
+            Caminho do diretorio onde os HTMLs foram salvos.
         """
         pesquisa = _resolve_cjsg_pesquisa(pesquisa, kwargs)
         validate_pesquisa_length(pesquisa, endpoint="CJSG")
@@ -365,7 +365,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         pesquisa: str = "",
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de primeiro grau do TJSP (CJPG).
 
         Delega para :meth:`cjpg_download` + :meth:`cjpg_parse` e remove
@@ -433,7 +433,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 :func:`~juscraper.courts.tjsp.cjpg_parse.cjpg_parse_manager`.
 
         Returns:
-            pd.DataFrame | int: Resultados parseados (colunas conforme
+            Resultados parseados (colunas conforme
                 :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
                 campos extras emitidos pelo parser via ``extra='allow'`` —
                 ``classe``, ``assunto``, ``magistrado``, ``comarca``,
@@ -588,7 +588,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 refs #232).
 
         Returns:
-            str: Caminho do diretorio onde os HTMLs foram salvos.
+            Caminho do diretorio onde os HTMLs foram salvos.
         """
         # Aliases plurais ja foram popados em ``cjpg()``; chamada direta a
         # ``cjpg_download()`` precisa fazer a pop tambem. ``_pop_cjpg_plural_aliases``
@@ -679,7 +679,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 argumentos.
 
         Returns:
-            dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
+            (dict[str, pd.DataFrame]): Tabelas ``basicos``, ``partes``,
                 ``movimentacoes`` e ``peticoes_diversas``. ``basicos`` traz a
                 ``situacao`` do cabecalho ("Extinto", "Suspenso" etc.) e
                 ``movimentacoes`` traz a lista completa, que o download busca
@@ -750,7 +750,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 e pede so os PDFs que faltam. Default ``False``.
 
         Returns:
-            dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
+            (dict[str, str]): ``{CNJ formatado: motivo_falha}`` dos processos
                 que ficaram sem arquivo; vazio quando todos foram baixados. Os
                 motivos sao os de :meth:`cpopg`, e as falhas tambem saem num
                 ``UserWarning``. Elas ficam gravadas na pasta do download, e
@@ -844,7 +844,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 Default ``None``.
 
         Returns:
-            dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
+            (dict[str, str]): ``{CNJ formatado: motivo_falha}`` dos processos
                 que ficaram sem arquivo; vazio quando todos foram baixados. Os
                 motivos são os de :meth:`cposg`, e as falhas também saem num
                 ``UserWarning``. Elas ficam gravadas na pasta do download, e

@@ -54,7 +54,7 @@ class TJPAScraper(HTTPScraper):
         da validacao.
 
         Returns:
-            list: Respostas JSON cruas (uma por pagina).
+            Respostas JSON cruas (uma por pagina).
 
         See also:
             :class:`InputCJSGTJPA` — fonte da verdade dos filtros aceitos.
@@ -158,7 +158,7 @@ class TJPAScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos

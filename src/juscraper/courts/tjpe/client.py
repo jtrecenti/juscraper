@@ -61,7 +61,7 @@ class TJPEScraper(HTTPScraper):
                 temporário).
 
         Returns:
-            pd.DataFrame: Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
+            Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
                 ``classe``, ``assunto``, ``data_distribuicao``,
                 ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``,
                 ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
@@ -120,7 +120,7 @@ class TJPEScraper(HTTPScraper):
         e levanta e avisa nos mesmos casos.
 
         Returns:
-            list: Lista de strings HTML brutas, uma por pagina.
+            Lista de strings HTML brutas, uma por pagina.
         """
         classe = resolve_deprecated_alias(kwargs, "classe_cnj", "classe", classe)
         assunto = resolve_deprecated_alias(kwargs, "assunto_cnj", "assunto", assunto)
@@ -228,7 +228,7 @@ class TJPEScraper(HTTPScraper):
                 o portal responde assim a qualquer termo.
 
         Returns:
-            pd.DataFrame: Uma linha por decisao. Colunas canonicas:
+            Uma linha por decisao. Colunas canonicas:
                 ``processo``, ``classe``, ``assunto``, ``relator``,
                 ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
                 ``ementa``, ``acordao``, ``meio_tramitacao``,

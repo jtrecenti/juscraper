@@ -23,7 +23,7 @@ def obter_waf_token(timeout: float = 60.0) -> str:
         timeout (float): Segundos de espera pela pagina e pelo cookie. Default ``60``.
 
     Returns:
-        str: Valor do cookie ``aws-waf-token``.
+        Valor do cookie ``aws-waf-token``.
 
     Raises:
         ImportError: Quando o Playwright nao esta instalado (extra ``juscraper[waf]``).

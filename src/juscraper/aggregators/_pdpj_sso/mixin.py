@@ -98,7 +98,7 @@ class PdpjSsoMixin:
             **kwargs: Nenhum parametro adicional e aceito.
 
         Returns:
-            bool: ``True`` quando o token foi aceito.
+            ``True`` quando o token foi aceito.
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.

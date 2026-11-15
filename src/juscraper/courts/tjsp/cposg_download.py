@@ -35,7 +35,7 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     Downloads the HTML of one or more processes from the CPOSG.
 
     Returns:
-        dict[str, str]: ``{CNJ formatado: motivo}`` dos processos que ficaram
+        (dict[str, str]): ``{CNJ formatado: motivo}`` dos processos que ficaram
             sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
             processo que a consulta de 2º grau não mostra ("Não existem
             informações disponíveis") sai ``nao_encontrado``. Vazio quando todos

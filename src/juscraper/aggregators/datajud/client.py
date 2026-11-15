@@ -342,7 +342,7 @@ class DatajudScraper(HTTPScraper):
                 :class:`InputContarProcessosDataJud`.
 
         Returns:
-            pd.DataFrame: Uma linha por tribunal consultado, com colunas
+            Uma linha por tribunal consultado, com colunas
                 ``tribunal`` (sigla), ``alias`` (índice ES), ``count``
                 (inteiro anulável ``Int64``) e ``relation`` (``"eq"`` exato ou
                 ``"gte"`` truncado pelo cap interno do Elasticsearch). Quando a
@@ -618,7 +618,7 @@ class DatajudScraper(HTTPScraper):
                 ``value`` inteiro e ``relation`` ``"eq"``/``"gte"``) também.
 
         Returns:
-            pd.DataFrame: Um DataFrame com uma linha por processo. ``extra``
+            Um DataFrame com uma linha por processo. ``extra``
                 do parser e passthrough do ``_source`` Elasticsearch — colunas
                 seguem nomenclatura camelCase do CNJ.
 

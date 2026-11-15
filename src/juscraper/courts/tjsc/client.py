@@ -94,7 +94,7 @@ class TJSCScraper(HTTPScraper):
                 fica vazia nessas linhas.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJSC` — schema pydantic e a fonte da verdade dos

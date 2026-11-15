@@ -3,10 +3,10 @@
 O quartodoc usa esse parser, e o ``quartodoc build`` passa mesmo quando ele lê
 errado; o defeito só aparece na referência publicada. O teste reprova aviso de
 falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
-linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` com mais de
-um item em função que não devolve ``tuple`` (continuação sem recuo) e a seção
-``Warns:``, que derruba o build. As formas certas estão no CONTRIBUTING, em
-"Docstrings de métodos públicos com kwargs".
+linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
+lê com itens a mais, com o tipo repetido ou com tipo diferente da assinatura, e
+a seção ``Warns:``, que derruba o build. Os casos e as formas certas estão no
+CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
@@ -23,7 +23,9 @@ import pytest
 from tests.test_docstring_examples import RAIZ_PACOTE
 
 _FALHA_DE_PAR = "Failed to get '"
-_ANOTACAO_TUPLA = re.compile(r"^['\"]?(typing\.)?(tuple|Tuple)\b")
+# Um tipo (``pd.DataFrame``, ``dict[str, Any]``, ``str | None``) seguido de dois-pontos.
+_TIPO = r"[A-Za-z_][\w.]*(?:\[[^:]*\])?"
+_PREFIXO_DE_TIPO = re.compile(rf"^({_TIPO}(?:\s*\|\s*{_TIPO})*):(?:\s|$)")
 
 
 class _Coletor(logging.Handler):
@@ -51,11 +53,42 @@ def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> s
         grupos = [str(excecao.annotation) for excecao in secao.value if "," in str(excecao.annotation)]
         if grupos:
             return f"Raises com várias exceções numa entrada ({'; '.join(grupos)}); usar uma por entrada"
-    devolve_tupla = objeto.is_function and _ANOTACAO_TUPLA.match(str(objeto.returns or ""))
-    if isinstance(secao, griffe.DocstringSectionReturns) and len(secao.value) > 1 and not devolve_tupla:
+    if isinstance(secao, griffe.DocstringSectionReturns):
+        return _motivo_dos_retornos(objeto, secao.value)
+    return None
+
+
+def _itens_esperados(objeto: griffe.Object) -> int | None:
+    """Itens que o griffe distribui pelos elementos da ``tuple`` devolvida; ``None`` se variádica."""
+    retorno = objeto.returns if objeto.is_function else None
+    # ``tuple[int]`` tem um elemento só, sem ``elements``; o griffe não o distribui.
+    elementos = getattr(retorno, "is_tuple", False) and getattr(retorno.slice, "elements", None)
+    if not elementos:
+        return 1
+    return None if "..." in map(str, elementos) else len(elementos)
+
+
+def _motivo_dos_retornos(objeto: griffe.Object, retornos: list[griffe.DocstringReturn]) -> str | None:
+    esperados = _itens_esperados(objeto)
+    if len(retornos) > 1 and esperados is not None and len(retornos) != esperados:
         return (
-            f"Returns com {len(secao.value)} itens em função que não devolve tupla;"
-            " recuar as linhas de continuação"
+            f"Returns com {len(retornos)} itens para {esperados} valor(es) devolvido(s);"
+            " recuar as linhas de continuação ou juntar a descrição numa entrada"
+        )
+    for retorno in retornos:
+        # ``str: ...`` vira nome do valor; ``pd.DataFrame: ...``, começo da descrição.
+        prefixo = _PREFIXO_DE_TIPO.match(retorno.description)
+        tipo = retorno.name or (prefixo and prefixo.group(1))
+        if tipo:
+            return (
+                f"Returns começa por '{tipo}:', que a referência mostra como nome ou na descrição;"
+                " tirar o tipo quando a assinatura o anota, ou pô-lo entre parênteses"
+            )
+    assinatura = objeto.returns if objeto.is_function else None
+    if len(retornos) == 1 and assinatura is not None and str(retornos[0].annotation) != str(assinatura):
+        return (
+            f"Returns com '({retornos[0].annotation}):' em função anotada com '{assinatura}';"
+            " tirar os parênteses, que sobrepõem a anotação"
         )
     return None
 
@@ -137,6 +170,49 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Raises:\n'
         '        ValueError, TypeError: Quando falha.\n'
         '    """\n',
+        'def f() -> "pd.DataFrame":\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        pd.DataFrame: Uma linha por processo.\n'
+        '    """\n',
+        'def f() -> str:\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        str: Caminho do diretório.\n'
+        '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        dict[str, str]: Motivo de cada falha.\n'
+        '    """\n',
+        'def f() -> tuple[int, str]:\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        Primeiro.\n'
+        '        Segundo, com\n'
+        '        continuação sem recuo.\n'
+        '    """\n',
+        'def f() -> tuple[int, str]:\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        int: Primeiro.\n'
+        '        str: Segundo.\n'
+        '    """\n',
+        'def f() -> "pd.DataFrame":\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        DataFrame: Uma linha por processo.\n'
+        '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        str: Caminho do diretório.\n'
+        '    """\n',
+        'def f() -> "pd.DataFrame":\n'
+        '    """Resumo.\n\n'
+        '    Returns:\n'
+        '        (pd.DataFrame | int): Uma linha por processo.\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -145,6 +221,14 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "returns-sem-anotacao",
         "warns",
         "raises-numa-linha",
+        "returns-prefixo-com-ponto",
+        "returns-tipo-lido-como-nome",
+        "returns-prefixo-sem-anotacao",
+        "tupla-com-itens-a-mais",
+        "tupla-com-prefixo",
+        "returns-nome-curto-do-tipo",
+        "returns-nome-sem-anotacao",
+        "returns-parenteses-com-anotacao",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
@@ -161,14 +245,37 @@ def test_forma_correta_e_tupla_passam():
         "        ValueError: Quando falha.\n"
         "        TypeError: Quando falha.\n\n"
         "    Returns:\n"
-        "        int: Uma descrição\n"
+        "        Uma descrição: com dois-pontos\n"
         "            em duas linhas.\n"
         '    """\n\n'
         "def g() -> tuple[int, str]:\n"
         '    """Resumo.\n\n'
         "    Returns:\n"
-        "        int: Primeiro.\n"
-        "        str: Segundo.\n"
+        "        Primeiro.\n"
+        "        Segundo, com\n"
+        "            continuação recuada.\n"
+        '    """\n\n'
+        "def h() -> tuple[int, str]:\n"
+        '    """Resumo.\n\n'
+        "    Returns:\n"
+        "        ``(numero, texto)`` numa entrada só.\n"
+        '    """\n\n'
+        "def i() -> tuple[int, ...]:\n"
+        '    """Resumo.\n\n'
+        "    Returns:\n"
+        "        Primeiro.\n"
+        "        Segundo.\n"
+        "        Terceiro.\n"
+        '    """\n\n'
+        "def j():\n"
+        '    """Resumo.\n\n'
+        "    Returns:\n"
+        "        (dict[str, str]): Motivo de cada falha.\n"
+        '    """\n\n'
+        "def k() -> tuple[int]:\n"
+        '    """Resumo.\n\n'
+        "    Returns:\n"
+        "        Único elemento.\n"
         '    """\n'
     )
     assert problemas_do_codigo(codigo) == []
