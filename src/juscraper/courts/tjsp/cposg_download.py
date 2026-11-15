@@ -16,7 +16,7 @@ from ...core.failures import MOTIVO_ENTRADA_INVALIDA, MOTIVO_NAO_ENCONTRADO
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
-from ._falhas import avisar_processos_sem_arquivo, cnj_invalido, motivo_do_processo
+from ._falhas import cnj_invalido, motivo_do_processo, registrar_falhas
 from .cpopg_download import _TIMEOUT
 
 logger = logging.getLogger('juscraper.cposg_download')
@@ -39,7 +39,9 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
         sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
         processo que a consulta de 2º grau não mostra ("Não existem
         informações disponíveis") sai ``nao_encontrado``. Vazio quando todos
-        foram baixados. As falhas também saem num ``UserWarning``.
+        foram baixados. As falhas ficam gravadas em ``<download_path>/cposg``,
+        de onde ``cposg_parse_manager`` as lê; o ``UserWarning`` delas sai de
+        ``TJSPScraper.cposg_download``.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
@@ -53,16 +55,15 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue
         try:
-            path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
+            if _cposg_download_html_single(id_cnj, session, u_base, download_path) is None:
+                falhas[cnj] = MOTIVO_NAO_ENCONTRADO
         except (OSError, UnicodeDecodeError, ValueError, AttributeError,
                 RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
             falhas[cnj] = motivo_do_processo(e)
-            continue
-        if path is None:
-            falhas[cnj] = MOTIVO_NAO_ENCONTRADO
+        # Também depois de um erro: o eSAJ bloqueia buscas em sequência rápida.
         time.sleep(sleep_time)
-    avisar_processos_sem_arquivo(falhas, "TJSPScraper.cposg_download", "cposg os devolve no DataFrame")
+    registrar_falhas(Path(download_path, 'cposg'), id_cnj_list, falhas)
     return falhas
 
 

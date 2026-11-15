@@ -10,7 +10,6 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ...core.avisos import avisar
-from ...core.failures import COLUNA_MOTIVO_FALHA
 from ...utils.params import (
     SEARCH_ALIASES,
     apply_input_pipeline_search,
@@ -21,12 +20,12 @@ from ...utils.params import (
 from .._esaj.acordao import EsajAcordaoScraper
 from .._esaj.base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .._esaj.sentenca import EsajSentencaScraper
-from ._falhas import com_linhas_de_falha
+from ._falhas import avisar_falhas_de_processo
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
 from .cpopg_download import cpopg_download_html, validar_download_pecas
-from .cpopg_parse import arquivos_candidatos, cpopg_parse_manager, get_cpopg_download_links, tabelas_vazias
+from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links, tabelas_vazias
 from .cposg_download import cposg_download_html
 from .cposg_parse import cposg_parse_manager
 from .exceptions import QueryTooLongError, validate_pesquisa_length
@@ -696,8 +695,8 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             a consulta diz nao ter o numero, ``entrada_invalida``,
             ``http_<status>``, ``conexao``, ``timeout`` ou
             ``resposta_inesperada``), e o arquivo baixado que nao pode ser
-            lido sai ``resposta_inesperada``. As falhas tambem saem num
-            ``UserWarning``.
+            lido sai ``resposta_inesperada``. As falhas de download e as de
+            leitura saem juntas num unico ``UserWarning``.
         """
         self.set_method(method)
         validar_download_pecas(baixar_movimentacoes, download_pecas)
@@ -708,19 +707,17 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             )
         if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
             raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
-        falhas = self.cpopg_download(
-            id_cnj, method, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
+        ids = [id_cnj] if isinstance(id_cnj, str) else id_cnj
+        # Sem o aviso do download: o parse lê as falhas que ele gravou na
+        # pasta e avisa uma vez só, junto com as de leitura.
+        self._baixar_cpopg(
+            ids, self.download_path, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
         )
-        # Lote em que nenhum processo foi baixado: não há o que ler, e as
-        # linhas de falha vão em tabelas vazias.
-        baixados = bool(arquivos_candidatos(Path(self.download_path)))
-        result = self.cpopg_parse(self.download_path) if baixados else tabelas_vazias()
-        result["basicos"] = com_linhas_de_falha(result["basicos"], [
-            {"id_processo": cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in falhas.items()
-        ])
+        # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
+        result = cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg") if ids else tabelas_vazias()
         if diretorio is not None:
             result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
-        # Lote só com entrada inválida não cria a pasta de download.
+        # O lote vazio não cria a pasta de download.
         if Path(self.download_path).exists():
             shutil.rmtree(self.download_path)
         return result
@@ -756,25 +753,46 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
             que ficaram sem arquivo; vazio quando todos foram baixados. Os
             motivos sao os de :meth:`cpopg`, e as falhas tambem saem num
-            ``UserWarning``.
+            ``UserWarning``. Elas ficam gravadas na pasta do download, e
+            :meth:`cpopg_parse` as devolve em ``basicos``, como o :meth:`cpopg`.
         """
         self.set_method(method)
         validar_download_pecas(baixar_movimentacoes, download_pecas)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
-        return cpopg_download_html(
-            id_cnj_list=id_cnj,
+        falhas = self._baixar_cpopg(
+            id_cnj, diretorio or self.download_path,
+            baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
+        )
+        avisar_falhas_de_processo(
+            falhas, [], "TJSPScraper.cpopg_download",
+            "Esses processos ficam sem arquivo; cpopg_parse os devolve na tabela basicos",
+        )
+        return falhas
+
+    def _baixar_cpopg(
+        self, ids: list, pasta: str, *, baixar_movimentacoes: bool, download_pecas: bool,
+    ) -> dict[str, str]:
+        """Download do cpopg sem o aviso, que fica com quem chama: ``cpopg_download`` ou o parse do ``cpopg``."""
+        falhas: dict[str, str] = cpopg_download_html(
+            id_cnj_list=ids,
             session=self.session,
             u_base=self.u_base,
-            download_path=diretorio or self.download_path,
+            download_path=pasta,
             sleep_time=self.sleep_time,
             get_links_callback=get_cpopg_download_links,
             baixar_movimentacoes=baixar_movimentacoes,
             download_pecas=download_pecas,
         )
+        return falhas
 
     def cpopg_parse(self, path: str):
         """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
+
+        ``basicos`` traz a coluna ``motivo_falha``, como no :meth:`cpopg`:
+        o arquivo que nao pode ser lido e o processo que
+        :meth:`cpopg_download` nao baixou nessa pasta saem numa linha com o
+        motivo, e as falhas, num ``UserWarning``.
 
         Raises:
             ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
@@ -797,15 +815,14 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         de 2º grau não mostra o número, ``entrada_invalida``,
         ``http_<status>``, ``conexao``, ``timeout`` ou
         ``resposta_inesperada``), e o arquivo baixado que não pode ser lido
-        sai ``resposta_inesperada``. As falhas também saem num
-        ``UserWarning``.
+        sai ``resposta_inesperada``. As falhas de download e as de leitura
+        saem juntas num único ``UserWarning``.
         """
         self.set_method(method)
         path = self.download_path
-        falhas = self.cposg_download(id_cnj, method)
-        result = com_linhas_de_falha(self.cposg_parse(path), [
-            {"processo": cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in falhas.items()
-        ])
+        # Como no cpopg: o parse lê as falhas do download e avisa uma vez só.
+        self._baixar_cposg(id_cnj, path)
+        result = cposg_parse_manager(path, metodo="TJSPScraper.cposg")
         if Path(path).exists():
             shutil.rmtree(path)
         else:
@@ -830,21 +847,35 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
             que ficaram sem arquivo; vazio quando todos foram baixados. Os
             motivos são os de :meth:`cposg`, e as falhas também saem num
-            ``UserWarning``.
+            ``UserWarning``. Elas ficam gravadas na pasta do download, e
+            :meth:`cposg_parse` as devolve no DataFrame, como o :meth:`cposg`.
         """
         self.set_method(method)
-        if isinstance(id_cnj, str):
-            id_cnj = [id_cnj]
-        return cposg_download_html(
-            id_cnj_list=id_cnj,
+        falhas = self._baixar_cposg(id_cnj, diretorio or self.download_path)
+        avisar_falhas_de_processo(
+            falhas, [], "TJSPScraper.cposg_download",
+            "Esses processos ficam sem arquivo; cposg_parse os devolve no DataFrame",
+        )
+        return falhas
+
+    def _baixar_cposg(self, id_cnj: str | list, pasta: str) -> dict[str, str]:
+        """Download do cposg sem o aviso, que fica com quem chama: ``cposg_download`` ou o parse do ``cposg``."""
+        falhas: dict[str, str] = cposg_download_html(
+            id_cnj_list=[id_cnj] if isinstance(id_cnj, str) else id_cnj,
             session=self.session,
             u_base=self.u_base,
-            download_path=diretorio or self.download_path,
+            download_path=pasta,
             sleep_time=self.sleep_time,
         )
+        return falhas
 
     def cposg_parse(self, path: str):
-        """Parse downloaded CPOSG files into a DataFrame."""
+        """Parse downloaded CPOSG files into a DataFrame.
+
+        Com a coluna ``motivo_falha``, como no :meth:`cposg`: o arquivo que não
+        pode ser lido e o processo que :meth:`cposg_download` não baixou nessa
+        pasta saem numa linha com o motivo, e as falhas, num ``UserWarning``.
+        """
         return cposg_parse_manager(path)
 
 

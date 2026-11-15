@@ -21,6 +21,9 @@ logger = logging.getLogger("juscraper.cjpg_parse")
 
 _CJPG_PAGE_SIZE = 10
 
+MARCA_PAGINA_NAO_BAIXADA = "juscraper-pagina-nao-baixada"
+"""``id`` do elemento que ``cjpg_download`` grava no lugar da página que não conseguiu baixar."""
+
 
 def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
     # A cascata do CJPG difere da que o CJSG usa em
@@ -167,6 +170,9 @@ def cjpg_parse_single(path):
     # Página de erro do eSAJ (captcha, por exemplo) não traz resultados, mas
     # não é página sem resultados: levanta, para não sair como página lida.
     _raise_page_error(soup)
+    nao_baixada = soup.find(id=MARCA_PAGINA_NAO_BAIXADA)
+    if nao_baixada is not None:
+        raise ValueError(f"o download falhou: {nao_baixada.get_text()}")
     processos = []
     div_dados_resultado = soup.find('div', {'id': 'divDadosResultado'})
     if div_dados_resultado:

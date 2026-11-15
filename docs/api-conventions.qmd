@@ -171,8 +171,11 @@ and the `motivo_falha` column is `None` for the cases read. A CNJ that was not
 downloaded keeps a row with only the number and the reason: `nao_encontrado`
 when the public lookup does not show it (no such case, or under seal),
 `entrada_invalida`, `http_<status>`, `conexao`, `timeout` or
-`resposta_inesperada`. The failures also go into one `UserWarning`, and
-`cpopg_download`/`cposg_download` return them as `{cnj: motivo_falha}`.
+`resposta_inesperada`. Download and parse failures go into a single
+`UserWarning`, and `cpopg_download`/`cposg_download` return them as
+`{cnj: motivo_falha}`. The download also records them in
+`falhas_download.json`, inside its `cpopg/` or `cposg/` folder, so
+`cpopg_parse`/`cposg_parse` return the same failure rows as the one-step call.
 
 ```python
 res = tjsp.cpopg(cnjs)
@@ -181,7 +184,9 @@ falhas = res["basicos"].query("motivo_falha.notna()")
 
 A lost `cjpg` page has no row to carry the reason, so a partial read raises
 `ColetaParcialError`, as in the eSAJ auto-chunk; the pages read are in
-`.resultado`:
+`.resultado`. Each page from the second on gets up to five requests, and an
+HTTP error status counts as a failure; a page that fails all of them is lost
+the same way:
 
 ```python
 from juscraper.core.exceptions import ColetaParcialError

@@ -9,6 +9,9 @@ HTML flow: GET ``cpopg/search.do?…`` → scraper extracts one
 ``processo.codigo`` → saves the search response itself (the eSAJ returns
 the process details directly when the CNJ is unique).
 """
+import warnings
+
+import numpy as np
 import pandas as pd
 import pytest
 import requests
@@ -129,7 +132,7 @@ def test_cpopg_html_todo_cnj_pedido_sai_em_basicos_com_motivo_falha(tmp_path, mo
 
     with pytest.warns(
         UserWarning,
-        match=rf"cpopg_download: 2 consulta\(s\) de processo falharam\. Falhas: {CNJ_INEXISTENTE}: nao_encontrado; "
+        match=rf"TJSPScraper\.cpopg: 2 consulta\(s\) de processo falharam\. Falhas: {CNJ_INEXISTENTE}: nao_encontrado; "
         rf"{CNJ_SEM_CONEXAO}: conexao\..*segredo de justiça",
     ):
         result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg([CNJ, CNJ_INEXISTENTE, CNJ_SEM_CONEXAO])
@@ -184,8 +187,8 @@ def test_cpopg_html_busca_com_status_de_erro_sai_com_o_status(tmp_path, mocker):
     assert len(responses.calls) == 5
 
 
-def test_cpopg_lote_so_com_entrada_invalida_nao_cria_nem_apaga_pasta(tmp_path):
-    """Sem nenhuma requisição, a pasta de download não existe, e ``cpopg`` devolve a linha sem erro."""
+def test_cpopg_lote_so_com_entrada_invalida_nao_deixa_pasta(tmp_path):
+    """Sem nenhuma requisição, ``cpopg`` devolve as linhas sem erro e não deixa a pasta de download."""
     pasta = tmp_path / "nao_criada"
 
     with pytest.warns(UserWarning, match="123: entrada_invalida"):
@@ -451,3 +454,100 @@ def test_method_api_removido_levanta_erro_sem_rede(tmp_path, metodo):
         getattr(scraper, metodo)(CNJ, method="api")
 
     assert not responses.calls
+
+
+@responses.activate
+def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mocker):
+    """Lote com falha de download e de leitura avisa uma vez, com as duas, como o composto do TRF.
+
+    Antes, saíam dois avisos: o do download e o do parse.
+    """
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
+    # Processos já na pasta de download: um legível e um que o parse recusa.
+    legivel = tmp_path / "cpopg" / "10093677620178260344"
+    legivel.mkdir(parents=True)
+    (legivel / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
+    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel.mkdir()
+    (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
+
+    with warnings.catch_warnings(record=True) as avisos:
+        warnings.simplefilter("always")
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_SEM_CONEXAO)
+
+    assert len(avisos) == 1
+    mensagem = str(avisos[0].message)
+    assert mensagem.startswith(
+        "TJSPScraper.cpopg: 2 consulta(s) de processo ou leitura(s) de arquivo falharam. "
+        f"Falhas: {CNJ_SEM_CONEXAO}: conexao; "
+    )
+    assert "quebrado.html: resposta_inesperada" in mensagem
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": "1009367-76.2017.8.26.0344", "motivo_falha": None},
+        {"id_processo": CNJ, "motivo_falha": "resposta_inesperada"},
+        {"id_processo": CNJ_SEM_CONEXAO, "motivo_falha": "conexao"},
+    ]
+
+
+@responses.activate
+def test_cpopg_parse_devolve_o_processo_que_o_download_nao_baixou(tmp_path, mocker):
+    """No fluxo em duas etapas, o CNJ que o download não baixou sai em ``basicos``, como no ``cpopg``."""
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(
+        CNJ, body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
+    )
+    _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.warns(UserWarning, match=rf"cpopg_download: .*{CNJ_SEM_CONEXAO}: conexao.*cpopg_parse os devolve"):
+        scraper.cpopg_download([CNJ, CNJ_SEM_CONEXAO, "123"])
+    with pytest.warns(UserWarning, match=rf"cpopg_parse: 2 consulta\(s\) de processo falharam.*{CNJ_SEM_CONEXAO}"):
+        result = scraper.cpopg_parse(str(tmp_path))
+
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": CNJ, "motivo_falha": None},
+        {"id_processo": CNJ_SEM_CONEXAO, "motivo_falha": "conexao"},
+        {"id_processo": "123", "motivo_falha": "entrada_invalida"},
+    ]
+
+
+@responses.activate
+def test_cpopg_download_que_passa_depois_tira_a_falha_anterior(tmp_path, mocker):
+    """O CNJ que falhou e foi baixado depois, na mesma pasta, não sai mais como falha no parse."""
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ, body=requests.ConnectionError("recusada"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(UserWarning, match=f"{CNJ}: conexao"):
+        scraper.cpopg_download(CNJ)
+    with pytest.warns(UserWarning, match=f"{CNJ}: conexao"):
+        assert scraper.cpopg_parse(str(tmp_path))["basicos"]["motivo_falha"].tolist() == ["conexao"]
+
+    responses.replace(
+        responses.GET, f"{ESAJ}/cpopg/search.do",
+        body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
+    )
+    scraper.cpopg_download(CNJ)
+
+    basicos = scraper.cpopg_parse(str(tmp_path))["basicos"]
+    assert basicos[["id_processo", "motivo_falha"]].to_dict("records") == [{"id_processo": CNJ, "motivo_falha": None}]
+    assert not (tmp_path / "cpopg" / "falhas_download.json").exists()
+
+
+def test_cpopg_lote_vazio_devolve_as_tabelas_vazias(tmp_path):
+    """``cpopg([])`` devolve as quatro tabelas vazias, com ``motivo_falha`` em ``basicos``, sem erro de leitura."""
+    result = jus.scraper("tjsp", download_path=str(tmp_path / "x")).cpopg([])
+
+    assert all(tabela.empty for tabela in result.values())
+    assert "motivo_falha" in result["basicos"].columns
+
+
+def test_cpopg_entrada_que_nao_e_texto_vira_linha_de_falha(tmp_path):
+    """Número de uma coluna numérica (``numpy.int64``) e ``None`` saem ``entrada_invalida``, sem quebrar o registro."""
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg([np.int64(123), None])
+
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": "123", "motivo_falha": "entrada_invalida"},
+        {"id_processo": "None", "motivo_falha": "entrada_invalida"},
+    ]
