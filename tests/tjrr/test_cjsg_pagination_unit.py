@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+from bs4 import BeautifulSoup
 
 from juscraper.courts.tjrr import download
 from juscraper.courts.tjrr.download import (
@@ -17,6 +18,10 @@ from tests._helpers import load_sample
 
 def _sample(name: str) -> str:
     return load_sample("tjrr", f"cjsg/{name}")
+
+
+def _soup(html: str) -> BeautifulSoup:
+    return BeautifulSoup(html, "html.parser")
 
 
 def test_get_total_pages_results_normal():
@@ -121,7 +126,7 @@ def test_paginate_payload_replicates_browser():
         captured["headers"] = kwargs.get("headers")
         return _FakeResp("<?xml version='1.0'?><partial-response></partial-response>")
 
-    form = _pagination_form(html)
+    form = _pagination_form(_soup(html))
     _paginate(fake_request_fn, form, page=2, datatable_id=dtid)
 
     data = captured["data"]
@@ -153,7 +158,7 @@ _MONOCRATICAS = "dataTablePesquisa2"
 def test_datatables_with_pages_reads_each_paginator(sample, n_acordaos, n_monocraticas):
     """Cada tabela de resultados tem paginador próprio (#319)."""
     html = _sample(sample)
-    assert _datatables_with_pages(html) == [
+    assert _datatables_with_pages(html, _soup(html)) == [
         (_extract_datatable_id(html), n_acordaos),
         (_extract_datatable_id(html, _MONOCRATICAS), n_monocraticas),
     ]
@@ -164,7 +169,7 @@ def test_datatables_with_pages_without_second_table():
         '<div id="formPesquisa:j_idt1:dataTablePesquisa">'
         '<span class="ui-paginator-current">(1 of 7)</span></div>'
     )
-    assert _datatables_with_pages(html) == [("formPesquisa:j_idt1:dataTablePesquisa", 7)]
+    assert _datatables_with_pages(html, _soup(html)) == [("formPesquisa:j_idt1:dataTablePesquisa", 7)]
 
 
 def test_datatables_with_pages_finds_second_table_in_other_container():
@@ -176,7 +181,7 @@ def test_datatables_with_pages_finds_second_table_in_other_container():
         '<div id="formPesquisa:j_idt9:dataTablePesquisa2">'
         '<span class="ui-paginator-current">(1 of 4)</span></div>'
     )
-    assert _datatables_with_pages(html) == [
+    assert _datatables_with_pages(html, _soup(html)) == [
         ("formPesquisa:j_idt1:dataTablePesquisa", 7),
         ("formPesquisa:j_idt9:dataTablePesquisa2", 4),
     ]
@@ -185,7 +190,8 @@ def test_datatables_with_pages_finds_second_table_in_other_container():
 def test_datatables_with_pages_without_datatable():
     """Página sem tabela de resultados não levanta: a página 1 continua
     utilizável, como antes da #319."""
-    assert _datatables_with_pages("<html><body>nada</body></html>") == []
+    html = "<html><body>nada</body></html>"
+    assert _datatables_with_pages(html, _soup(html)) == []
 
 
 def _no_request(*args, **kwargs):
@@ -259,7 +265,9 @@ def test_manager_paginas_1_nao_conta_paginas(mocker, paginate_calls):
     mocker.patch.object(download, "_search", return_value="<p1>")
     contagem = mocker.patch.object(download, "_datatables_with_pages")
     form = mocker.patch.object(download, "_pagination_form")
+    parse = mocker.spy(download, "BeautifulSoup")
     assert download.cjsg_download_manager("x", [1], request_fn=_no_request) == ["<p1>"]
+    parse.assert_not_called()
     contagem.assert_not_called()
     form.assert_not_called()
     assert paginate_calls == []
@@ -288,6 +296,26 @@ def test_manager_le_o_form_da_pagina_1_uma_vez(mocker):
     assert recebidos[0]["formPesquisa:consultaAtual"] == "dano moral"
 
 
+@pytest.mark.parametrize("paginas", [None, range(1, 4)])
+def test_manager_parseia_o_html_da_pagina_1_uma_vez(mocker, paginas):
+    """A contagem das tabelas e o form da paginação saem do mesmo parse do
+    HTML inteiro da página 1, sem um ``BeautifulSoup`` para cada. A contagem
+    (mockada aqui) ainda parseia o ``div`` de cada tabela no helper
+    compartilhado ``extract_count_with_cascade``."""
+    html = _sample("step_02_search.html")
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value=html)
+    mocker.patch.object(download, "_get_total_pages", return_value=3)
+    mocker.patch("time.sleep")
+    mocker.patch.object(download, "_paginate", return_value="")
+    parse = mocker.spy(download, "BeautifulSoup")
+    form = mocker.spy(download, "_pagination_form")
+    out = download.cjsg_download_manager("x", paginas, request_fn=_no_request)
+    assert len(out) == 3
+    assert parse.call_count == 1
+    assert form.call_count == 1
+
+
 def test_manager_sem_tabela_levanta_erro_da_tabela(mocker):
     """Página 1 sem tabela (nem ViewState): o erro diz que falta a tabela de
     resultados, não o ViewState."""
@@ -299,4 +327,4 @@ def test_manager_sem_tabela_levanta_erro_da_tabela(mocker):
 
 def test_pagination_form_sem_viewstate_levanta():
     with pytest.raises(RuntimeError, match="ViewState"):
-        _pagination_form("<html><body>sem form</body></html>")
+        _pagination_form(_soup("<html><body>sem form</body></html>"))
