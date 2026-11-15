@@ -165,8 +165,8 @@ class RequestPolicy:
     def espera(self, tentativa: int) -> float:
         """Segundos de backoff depois da ``tentativa``: ``base_backoff ** tentativa``, até ``max_backoff``.
 
-        A potência é feita em ``float`` para que a base enorme vire ``inf`` e
-        caia no teto, em vez de levantar ``OverflowError``.
+        A potência de ``float`` levanta ``OverflowError`` com base enorme
+        (``1e200 ** 2``); o ``except`` a trata como ``inf``, que cai no teto.
         """
         try:
             exponencial = float(self.base_backoff) ** tentativa

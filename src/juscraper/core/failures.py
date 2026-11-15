@@ -133,8 +133,6 @@ def motivo_falha(exc: BaseException) -> str:
         if exc.status_code is None:
             raise TypeError("RetryExhaustedError sem status não tem motivo de falha.") from exc
         return f"retry_esgotado_{exc.status_code}"
-    # ``requests.JSONDecodeError`` traduz, mas fica fora de
-    # ``EXCECOES_DE_FALHA_POR_LINHA``: quem captura só aquela tupla não muda.
     if isinstance(exc, (InvalidJSONResponseError, requests.JSONDecodeError)):
         return "json_invalido"
     if isinstance(exc, requests.HTTPError):
