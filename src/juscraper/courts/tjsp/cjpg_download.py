@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
 from .cjpg_parse import cjpg_n_pags
+from .cpopg_download import _TIMEOUT
 from .exceptions import QueryTooLongError
 
 __all__ = ["QueryTooLongError", "cjpg_download", "fetch_cjpg_first_page"]
@@ -100,7 +101,7 @@ def fetch_cjpg_first_page(
         'dadosConsulta.ordenacao': 'DESC'
     }
 
-    return session.get(f"{u_base}cjpg/pesquisar.do", params=query)
+    return session.get(f"{u_base}cjpg/pesquisar.do", params=query, timeout=_TIMEOUT)
 
 
 def cjpg_download(
@@ -165,6 +166,6 @@ def cjpg_download(
     for page in tqdm(remaining, desc="Baixando documentos", total=total, initial=initial):
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
-        r = session.get(u)
+        r = session.get(u, timeout=_TIMEOUT)
         _save_page(path, page, r.text)
     return str(path)

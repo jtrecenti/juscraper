@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cjpg_download import cjpg_download
+from juscraper.courts.tjsp.cjpg_download import _TIMEOUT, cjpg_download
 from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
 from tests._helpers import load_sample, load_sample_bytes
 
@@ -378,7 +378,7 @@ class TestCJPGDownload1Based:
 
         assert files == ["cjpg_00001.html", "cjpg_00003.html"]
         assert mock_session.get.call_args_list[1:] == [
-            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=")
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=", timeout=_TIMEOUT)
         ]
         sleep.assert_called_once_with(0.25)
 
@@ -399,8 +399,8 @@ class TestCJPGDownload1Based:
             "cjpg_00005.html",
         ]
         assert mock_session.get.call_args_list[1:] == [
-            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId="),
-            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=5&conversationId="),
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=", timeout=_TIMEOUT),
+            call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=5&conversationId=", timeout=_TIMEOUT),
         ]
         assert sleep.call_args_list == [call(0.4), call(0.4)]
 

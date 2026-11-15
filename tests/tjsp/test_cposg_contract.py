@@ -250,3 +250,35 @@ def test_cposg_outra_mensagem_do_esaj_nao_vira_processo(tmp_path, mocker, caplog
 
     assert "Não foi possível executar esta operação" in caplog.text
     assert not list(tmp_path.rglob("*.html"))
+
+
+@responses.activate
+def test_todo_pedido_do_cposg_tem_timeout(tmp_path, mocker):
+    """open.do, busca, show.do (listagem e incidentes) e movimentações saem com prazo (#484)."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    cnj_listagem, cnj_incidentes = "0000001-00.2024.8.26.0001", "0000002-00.2024.8.26.0001"
+    respostas_da_busca = {
+        cnj_listagem: (
+            '<div id="listagemDeProcessos"><a class="linkProcesso" href="/cposg/show.do?processo.codigo=L1">x</a></div>'
+        ),
+        cnj_incidentes: '<div id="modalIncidentes"><input id="processoSelecionado" value="I1"></div>',
+    }
+    for cnj, corpo in respostas_da_busca.items():
+        responses.add(
+            responses.GET,
+            f"{ESAJ}/cposg/search.do",
+            body=corpo,
+            content_type="text/html; charset=utf-8",
+            match=[query_param_matcher({"dePesquisaNuUnificado": cnj}, strict_match=False)],
+        )
+    responses.add(responses.GET, f"{ESAJ}/cposg/show.do", body="<html>processo</html>", content_type="text/html")
+
+    jus.scraper("tjsp", download_path=str(tmp_path)).cposg_download([CNJ, cnj_listagem, cnj_incidentes])
+
+    rotas = [c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls]
+    assert set(rotas) == {"open.do", "search.do", "show.do", "carregarMovimentacoesAjax.do"}
+    assert rotas.count("show.do") == 2
+    sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
+    assert sem_timeout == []

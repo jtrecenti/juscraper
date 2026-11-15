@@ -26,11 +26,12 @@ class _InvalidProcessCodeError(ValueError):
 
 _TENTATIVAS = 5
 
-# (conexão, leitura), em segundos, de cada pedido do cpopg. Sem prazo, uma
-# conexão que o eSAJ deixa aberta sem responder prende o lote inteiro, e o
-# retry de cpopg_download_html_single nunca roda. O prazo estourado vira
-# requests.Timeout, que o retry e _FALHAS_DE_DOCUMENTO já tratam (#484). A
-# conexão curta faz o portal fora do ar falhar logo, sem 60 s por tentativa.
+# (conexão, leitura), em segundos, de cada pedido do cpopg; o cposg e o cjpg
+# importam esta constante. Sem prazo, uma conexão que o eSAJ deixa aberta sem
+# responder prende o lote inteiro, e o retry de cpopg_download_html_single
+# nunca roda. O prazo estourado vira requests.Timeout, que o retry e
+# _FALHAS_DE_DOCUMENTO já tratam (#484). A conexão curta faz o portal fora do
+# ar falhar logo, sem 60 s por tentativa.
 _TIMEOUT = (10, 60)
 
 
@@ -105,10 +106,14 @@ class _PecasPublicas:
     Falha de um documento não derruba o processo: ela vai para ``falhas``, o
     PDF fica faltando, e o próximo download com ``download_pecas`` no mesmo
     diretório pede de novo só o que falta.
+
+    ``falhas`` guarda o último motivo de cada documento: quando outro erro faz
+    o processo ser refeito, o documento que falhou é pedido de novo e não deve
+    sair duas vezes no aviso, nem sair nele se desta vez foi gravado.
     """
 
     sleep_time: float
-    falhas: list[str] = field(default_factory=list)
+    falhas: dict[str, str] = field(default_factory=dict)
 
     def baixar(self, html, sessao, url_base, pasta_processo, id_limpo):
         """Grava em ``pasta_processo`` o PDF de cada documento público de ``html`` que ainda não está lá."""
@@ -122,16 +127,15 @@ class _PecasPublicas:
             destino = caminho_do_documento(pasta_processo, documento.cd_documento)
             if not documento.publico or destino.is_file():
                 continue
+            chave = f"{id_limpo}/{documento.cd_documento}"
             try:
                 conteudo = pdf_pela_pasta(get, f"{url_base}{documento.url}", url_base, documento.cd_documento)
             except _FALHAS_DE_DOCUMENTO as erro:
-                self._falhou(id_limpo, documento.cd_documento, _motivo_do_documento(erro), erro)
+                logger.warning("Processo %s, documento %s: %s", id_limpo, documento.cd_documento, erro)
+                self.falhas[chave] = _motivo_do_documento(erro)
                 continue
             gravar_pdf(conteudo, destino)
-
-    def _falhou(self, id_limpo, cd_documento, motivo, erro):
-        logger.warning("Processo %s, documento %s: %s", id_limpo, cd_documento, erro)
-        self.falhas.append(f"{id_limpo}/{cd_documento}: {motivo}")
+            self.falhas.pop(chave, None)
 
 
 def _motivo_do_documento(erro):
@@ -188,7 +192,11 @@ def cpopg_download_html(
             )
             continue
     if pecas is not None:
-        avisar_falhas(pecas.falhas, "TJSPScraper.cpopg_download", "download(s) de documento público")
+        avisar_falhas(
+            [f"{chave}: {motivo}" for chave, motivo in pecas.falhas.items()],
+            "TJSPScraper.cpopg_download",
+            "download(s) de documento público",
+        )
 
 
 def cpopg_download_html_single(

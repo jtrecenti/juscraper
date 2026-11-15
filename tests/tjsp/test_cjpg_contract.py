@@ -233,3 +233,16 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     assert isinstance(n, int)
     assert n == 39764 + 25  # soma bruta cross-janela
     assert len(responses.calls) == 2
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_todo_pedido_do_cjpg_tem_timeout(tmp_path, mocker):
+    """pesquisar.do e trocarDePagina.do saem com prazo: conexão parada não trava a coleta (#484)."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    _add_trocar_de_pagina(2, "cjpg/results_normal_page_02.html")
+
+    jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(responses.calls) == 2
+    assert [c.request.req_kwargs.get("timeout") is not None for c in responses.calls] == [True, True]
