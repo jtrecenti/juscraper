@@ -12,12 +12,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpr.download import build_cjsg_form_body
-from tests._helpers import (
-    assert_unknown_kwarg_raises,
-    corpo_form_enviado,
-    load_sample,
-    query_param_subset_matcher,
-)
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_home
 
 

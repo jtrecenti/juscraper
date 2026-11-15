@@ -8,6 +8,7 @@ from responses.matchers import json_params_matcher
 import juscraper as jus
 from juscraper.courts.stf.download import BASE_URL, build_payload
 from tests._helpers import load_sample
+from tests.stf._collection_helpers import assert_filtros_no_corpo
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
 
@@ -55,19 +56,7 @@ def test_todos_os_filtros_chegam_ao_corpo_e_busca_vazia_da_total_zero(stf):
     assert len(responses.calls) == 1
     assert df.iloc[0].to_dict() == {"faceta": "total", "valor": None, "n": 0}
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
-    corpo = json.loads(responses.calls[0].request.body)
-    assert corpo["post_filter"]["bool"]["must"] == [
-        {"term": {"base": "acordaos"}},
-        {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["Rcl", "ARE"]}},
-    ]
-    consulta_bool = corpo["query"]["function_score"]["query"]["bool"]
-    busca = consulta_bool["filter"][0]["query_string"]
-    assert busca["query"] == PESQUISA
-    assert "inteiro_teor_texto.plural" in busca["fields"]
-    assert consulta_bool["filter"][1:] == [
-        {"range": {"julgamento_data": {"format": "ddMMyyyy", "from": "01012024", "lte": "31122024"}}},
-        {"range": {"publicacao_data": {"format": "ddMMyyyy", "from": "01022024", "lte": "30112024"}}},
-    ]
+    assert_filtros_no_corpo(json.loads(responses.calls[0].request.body), PESQUISA, ["Rcl", "ARE"])
 
 
 @responses.activate

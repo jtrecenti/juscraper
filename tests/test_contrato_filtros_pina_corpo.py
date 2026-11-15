@@ -6,20 +6,20 @@ local) confere que o raspador chama o builder, mas não o que o builder produz:
 trocar uma chave do backend no builder passa sem reprovar (issue #514; o caso
 do TJRO foi o #438, corrigido no #512). Por isso, todo contrato de filtros que
 importa um ``build_*`` do pacote tem de ler, no código, a requisição enviada
-(``.request.body``, ``.request.params``, ``.request.url`` ou
-``corpo_form_enviado``) e compará-la com os nomes de campo do backend escritos
-à mão.
+(``.request.body``, ``.request.params`` ou ``corpo_form_enviado``) e
+compará-la com os nomes de campo do backend escritos à mão.
 
 A conferência é por arquivo: basta uma leitura da requisição no módulo. O
 lugar dela é o teste que passa todos os filtros.
 """
 import ast
+from functools import cache
 from pathlib import Path
 
 import pytest
 
 RAIZ_TESTES = Path(__file__).resolve().parent
-ATRIBUTOS_DA_REQUISICAO = {"body", "params", "url"}
+ATRIBUTOS_DA_REQUISICAO = {"body", "params"}
 # Helpers de tests/_helpers.py que leem o corpo da requisição enviada.
 LEITORES_DE_CORPO = {"corpo_form_enviado"}
 
@@ -48,13 +48,14 @@ def _chama_leitor_de_corpo(no: ast.AST) -> bool:
 
 
 def le_requisicao_enviada(arvore: ast.Module) -> bool:
-    """``<x>.request.body``, ``.params``, ``.url`` ou ``corpo_form_enviado(...)`` no código.
+    """``<x>.request.body``, ``<x>.request.params`` ou ``corpo_form_enviado(...)`` no código.
 
     Docstring e comentário não contam.
     """
     return any(_le_atributo_da_requisicao(no) or _chama_leitor_de_corpo(no) for no in ast.walk(arvore))
 
 
+@cache
 def _arvore(caminho: Path) -> ast.Module:
     return ast.parse(caminho.read_text(encoding="utf-8"), filename=str(caminho))
 
@@ -93,7 +94,7 @@ def test_importa_builder(codigo, esperado):
     [
         ("json.loads(responses.calls[0].request.body)", True),
         ("responses.calls[0].request.params == {}", True),
-        ("busca.request.url", True),
+        ("busca.request.url", False),
         ("corpo_form_enviado(busca.request)", True),
         ('"""Confere responses.calls[0].request.body."""', False),
         ("# responses.calls[0].request.body", False),

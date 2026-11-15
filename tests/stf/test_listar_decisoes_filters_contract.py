@@ -6,7 +6,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts.stf.download import build_payload, traduzir_operadores
-from tests.stf._collection_helpers import Source, add_sample, make_rows
+from tests.stf._collection_helpers import Source, add_sample, assert_filtros_no_corpo, make_rows
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
 
@@ -52,19 +52,7 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
     assert len(responses.calls) == 3
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
     for chamada in responses.calls:
-        corpo = json.loads(chamada.request.body)
-        assert corpo["post_filter"]["bool"]["must"] == [
-            {"term": {"base": "acordaos"}},
-            {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["ARE", "Rcl"]}},
-        ]
-        consulta_bool = corpo["query"]["function_score"]["query"]["bool"]
-        busca = consulta_bool["filter"][0]["query_string"]
-        assert busca["query"] == PESQUISA
-        assert "inteiro_teor_texto.plural" in busca["fields"]
-        assert consulta_bool["filter"][1:] == [
-            {"range": {"julgamento_data": {"format": "ddMMyyyy", "from": "01012024", "lte": "31122024"}}},
-            {"range": {"publicacao_data": {"format": "ddMMyyyy", "from": "01022024", "lte": "30112024"}}},
-        ]
+        assert_filtros_no_corpo(json.loads(chamada.request.body), PESQUISA, ["ARE", "Rcl"])
 
 
 @responses.activate

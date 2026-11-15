@@ -63,7 +63,7 @@ def load_sample_bytes(tribunal: str, relative_path: str) -> bytes:
     return path.read_bytes()
 
 
-def corpo_form_enviado(request, *, encoding: str = "utf-8") -> dict[str, str]:
+def corpo_form_enviado(request) -> dict[str, str]:
     """Corpo ``application/x-www-form-urlencoded`` de uma requisição já enviada.
 
     Para contratos que conferem os nomes de campo do backend contra um
@@ -72,8 +72,8 @@ def corpo_form_enviado(request, *, encoding: str = "utf-8") -> dict[str, str]:
     """
     body = request.body or ""
     if isinstance(body, bytes):
-        body = body.decode(encoding)
-    return dict(parse_qsl(body, keep_blank_values=True, encoding=encoding))
+        body = body.decode("utf-8")
+    return dict(parse_qsl(body, keep_blank_values=True))
 
 
 def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
