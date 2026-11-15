@@ -36,6 +36,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.parse import cjsg_parse
@@ -235,9 +236,9 @@ def test_cjsg_falha_persistente_numa_pagina_guarda_as_anteriores(mock_txtcaptcha
     with pytest.raises(ColetaParcialError, match=r"página 3 falhou.*faltam as páginas \[3, 4, 5\]") as erro:
         getattr(jus.scraper("tjmg"), metodo)("dano moral", paginas=range(1, 6))
 
-    esperado = cjsg_parse(
+    esperado = _texto_ausente_como_none(cjsg_parse(
         [load_sample_bytes("tjmg", f"cjsg/results_normal_page_0{n}.html").decode("iso-8859-1") for n in (1, 2)]
-    )
+    ))
     pd.testing.assert_frame_equal(erro.value.resultado, esperado)
     assert isinstance(erro.value.__cause__, requests.ConnectionError)
     assert [type(f[2]) for f in erro.value.falhas] == [requests.ConnectionError]

@@ -11,6 +11,7 @@ estrategia como helper generico para os tribunais nao-eSAJ.
 """
 from __future__ import annotations
 
+import logging
 import math
 import re
 from collections.abc import Iterable, Sequence
@@ -193,3 +194,23 @@ def resolve_total_pages(
             f"em páginas de {resultados_por_pagina} dão {total} página(s)."
         )
     return total
+
+
+def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
+    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida, com aviso no log para as demais.
+
+    ``paginas=None`` vale todas, de 1 a ``n_pags``.
+
+    O aviso sai no logger do tribunal (``juscraper.<sigla>``), onde já saía
+    antes de o filtro virar helper.
+    """
+    logger = logging.getLogger(f"juscraper.{tribunal.lower()}")
+    if paginas is None:
+        return list(range(1, n_pags + 1))
+    validas = []
+    for pagina in paginas:
+        if 1 <= pagina <= n_pags:
+            validas.append(pagina)
+        else:
+            logger.warning("%s: página %s fora do intervalo 1-%s", tribunal, pagina, n_pags)
+    return validas

@@ -7,12 +7,14 @@ import json
 import warnings
 from typing import Any
 
+import pandas as pd
 import pytest
 import requests
 import responses
 
 import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from tests._helpers import load_sample
 
@@ -97,6 +99,8 @@ def test_resposta_estruturalmente_malformada_apos_pagina_valida_preserva_parcial
 
     assert len(exc_info.value.resultado) == 10
     assert exc_info.value.resultado["numeroProcesso"].tolist() == processos_sample
+    # O parcial sai no formato do retorno completo, com ``None`` no texto ausente.
+    pd.testing.assert_frame_equal(exc_info.value.resultado, _texto_ausente_como_none(exc_info.value.resultado))
 
 
 @responses.activate
