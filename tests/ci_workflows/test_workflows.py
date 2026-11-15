@@ -45,11 +45,13 @@ def test_piso_de_cobertura():
 
 def test_pre_commit_no_ci_pula_so_o_que_roda_em_outro_passo():
     lint = linhas("lint.yml")
-    trava = tomllib.loads((RAIZ / "uv.lock").read_text(encoding="utf-8"))
-    (versao,) = [pacote["version"] for pacote in trava["package"] if pacote["name"] == "pre-commit"]
-    # Sem o extra dev instalado, o job roda o pre-commit pelo uvx, na mesma
-    # versão que o uv.lock dá a quem roda os hooks localmente.
-    assert f"run: uvx --python 3.12 pre-commit=={versao} run --all-files --show-diff-on-failure" in lint
+    # Sem o extra dev instalado, o job roda o pre-commit pelo uvx, restrito às
+    # versões do uv.lock.
+    assert 'uv export --extra dev --no-hashes --no-emit-project --quiet -o "$RUNNER_TEMP/restricoes.txt"' in lint
+    assert (
+        'uvx --python 3.12 --constraints "$RUNNER_TEMP/restricoes.txt" '
+        "pre-commit run --all-files --show-diff-on-failure"
+    ) in lint
     assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity,pytest"]
 
 

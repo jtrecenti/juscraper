@@ -57,5 +57,8 @@ jobs:
           SKIP: lint-policy,complexity,pytest
         # Cada hook roda no ambiente próprio que o pre-commit monta, e nenhum
         # dos que sobram usa o do projeto; por isso o job não instala o extra
-        # dev. A versão do pre-commit é a do uv.lock (tests/ci_workflows).
-        run: uvx --python 3.12 pre-commit==4.7.0 run --all-files --show-diff-on-failure
+        # dev. As restrições exportadas do uv.lock fixam o pre-commit e as
+        # dependências dele nas versões de quem roda os hooks localmente.
+        run: |
+          uv export --extra dev --no-hashes --no-emit-project --quiet -o "$RUNNER_TEMP/restricoes.txt"
+          uvx --python 3.12 --constraints "$RUNNER_TEMP/restricoes.txt" pre-commit run --all-files --show-diff-on-failure
