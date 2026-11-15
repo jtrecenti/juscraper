@@ -51,12 +51,12 @@ _OUTPUT_COLUMNS = (
 _DETAIL_TABLE_STYLE = 'margin-left:15px; margin-top:1px;'
 
 
-def cposg_parse(path: str):
+def cposg_parse(path: str) -> pd.DataFrame:
     """Interpreta os arquivos HTML do CPOSG em ``path``."""
     return cposg_parse_manager(path)
 
 
-def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse"):
+def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse") -> pd.DataFrame:
     """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame.
 
     A coluna ``motivo_falha`` é ``None`` em cada processo lido. O arquivo que
@@ -349,7 +349,7 @@ def _extract_first_instance(tables: list) -> list[dict]:
     return first_instance
 
 
-def cposg_parse_single_html(html_path):
+def cposg_parse_single_html(html_path) -> list[dict]:
     """Parse a single HTML document from CPOSG."""
     with Path(html_path).open('r', encoding='utf-8') as file:
         soup = BeautifulSoup(file.read(), 'html.parser')

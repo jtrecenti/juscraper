@@ -16,7 +16,7 @@ import math
 import re
 from collections.abc import Iterable, Sequence
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
@@ -37,7 +37,7 @@ def _extract_from_match(match: re.Match[str]) -> int | None:
     return _coerce_int(match.group(0))
 
 
-def _has_zero_marker(soup: BeautifulSoup, zero_markers: Sequence[str]) -> bool:
+def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
     if not zero_markers:
         return False
     text_lower = soup.get_text(" ", strip=True).lower()
@@ -45,7 +45,7 @@ def _has_zero_marker(soup: BeautifulSoup, zero_markers: Sequence[str]) -> bool:
 
 
 def _collect_candidates(
-    soup: BeautifulSoup,
+    soup: Tag,
     html: str,
     css_selectors: Sequence[str],
 ) -> list[str]:
@@ -83,7 +83,7 @@ def _extract_fallback_max(candidate: str) -> int | None:
 
 
 def extract_count_with_cascade(
-    html: str,
+    html: str | Tag,
     *,
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
@@ -98,7 +98,11 @@ def extract_count_with_cascade(
     caller preserva o comportamento legado de cada scraper.
 
     Args:
-        html: HTML bruto da primeira pagina de resultados.
+        html: HTML bruto da primeira pagina de resultados, ou o trecho ja
+            parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
+            tabela, sem parsear de novo. Com uma ``Tag``, a
+            cascata inteira (seletores, regex no HTML bruto e
+            ``zero_markers``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
             candidato.
@@ -128,11 +132,11 @@ def extract_count_with_cascade(
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
             nao salvar. ``0`` quando ``zero_markers`` casarem.
     """
-    soup = BeautifulSoup(html, "html.parser")
+    soup, bruto = (html, str(html)) if isinstance(html, Tag) else (BeautifulSoup(html, "html.parser"), html)
     if _has_zero_marker(soup, zero_markers):
         return 0
 
-    candidates = _collect_candidates(soup, html, css_selectors)
+    candidates = _collect_candidates(soup, bruto, css_selectors)
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value

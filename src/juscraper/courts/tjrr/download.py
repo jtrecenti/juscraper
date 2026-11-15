@@ -3,7 +3,7 @@ import re
 import time
 import unicodedata
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
@@ -224,7 +224,7 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 )
 
 
-def _get_total_pages(html: str) -> int:
+def _get_total_pages(html: str | Tag) -> int:
     """Extract total pages from the PrimeFaces paginator."""
     n = extract_count_with_cascade(
         html,
@@ -366,8 +366,8 @@ def _datatables_with_pages(html: str, soup: BeautifulSoup) -> list[tuple[str, in
         except RuntimeError:
             continue
         div = soup.find(id=dtid)
-        if div is not None:
-            tables.append((dtid, _get_total_pages(str(div))))
+        if isinstance(div, Tag):
+            tables.append((dtid, _get_total_pages(div)))
         elif nome == _ACORDAOS:
             tables.append((dtid, _get_total_pages(html)))
     return tables
