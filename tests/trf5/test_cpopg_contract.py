@@ -2,8 +2,7 @@
 
 Same shape as ``tests/trf3/test_cpopg_contract.py``. Distinct from the TRF3
 suite to keep sample fixtures and matchers independent — TRF5 ships
-slightly different form field IDs (``j_id156`` vs ``j_id165``) and a
-``classeProcessual`` popup field instead of an autocomplete.
+different form field IDs (``j_id162`` vs ``j_id165``).
 """
 from __future__ import annotations
 
@@ -62,8 +61,13 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "0058457-31.2025.4.05.8000",
                     "AJAXREQUEST": "_viewRoot",
-                    "fPP:j_id224": "fPP:j_id224",
-                    "fPP:j_id183:classeProcessualProcessoHidden": "",
+                    "fPP:j_id244": "fPP:j_id244",
+                    # Desde 11/2026 o TRF5 usa o autocomplete ``classeJudicial``
+                    # e o bloco de datas, como o resto da família.
+                    "fPP:j_id189:classeJudicial": "",
+                    "fPP:j_id189:sgbClasseJudicial_selection": "",
+                    "fPP:dataAutuacaoDecoration:dataAutuacaoInicioInputDate": "",
+                    "fPP:dataAutuacaoDecoration:dataAutuacaoFimInputDate": "",
                 },
             ),
         ],
@@ -96,6 +100,9 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     row = df.iloc[0]
     assert row["id_cnj"] == "00584573120254058000"
     assert row["processo"] == "0058457-31.2025.4.05.8000"
+    # Órgão e endereço vêm em negrito num painel de rótulo vazio.
+    assert row["orgao_julgador"] == "Ambiente do Centro de Conciliação de Maceió"
+    assert row["endereco_orgao"] == "Avenida Menino Marcelo, Serraria, MACEIó - AL - CEP: 57046-000"  # grafia da fonte
     # TRF5 sample has 2 active polo (party + lawyer) and 1 passive (defendant).
     assert isinstance(row["polo_ativo"], list) and len(row["polo_ativo"]) >= 1
     assert isinstance(row["polo_passivo"], list) and len(row["polo_passivo"]) >= 1
