@@ -76,8 +76,10 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "orgaoJulgadorColegiado": "1a Turma",
         "classe": "Apelacao",
         "assunto": "Dano moral",
-        "dataJulgamentoInicio": "2024-01-01",
-        "dataJulgamentoFim": "2024-03-31",
+        # O BFF devolve o julgado em D+1 para o filtro D: o julgamento vai um
+        # dia antes do pedido, inclusive na virada de ano; publicacao, nao (#508).
+        "dataJulgamentoInicio": "2023-12-31",
+        "dataJulgamentoFim": "2024-03-30",
         "dataPublicacaoInicio": "2024-02-01",
         "dataPublicacaoFim": "2024-04-30",
     }
@@ -188,9 +190,9 @@ def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
     Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
     ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJPA`
     e convertendo ambos os intervalos via ``coerce_brazilian_date``. Se o
-    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, o backend recebe
-    ``dataJulgamentoInicio=01/01/2024`` em vez de ``2024-01-01`` e o
-    matcher dispara ``ConnectionError`` (refs #182, #173, #167)."""
+    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, a data chega em
+    ``DD/MM/YYYY`` ao ``build_cjsg_payload``, que nao a le como ISO, e o
+    teste falha (refs #182, #173, #167)."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,

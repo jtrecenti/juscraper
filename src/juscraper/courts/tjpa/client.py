@@ -49,7 +49,8 @@ class TJPAScraper(HTTPScraper):
 
         Filtros de data (``data_julgamento_inicio``/``_fim``,
         ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
-        validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
+        validados pelo schema :class:`InputCJSGTJPA`; as de julgamento vao ao
+        portal um dia antes (#508). Aliases deprecados
         (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
         da validacao.
 
@@ -143,7 +144,8 @@ class TJPAScraper(HTTPScraper):
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``.
+                  ``YYYY-MM-DD``. Enviadas ao portal um dia antes, que
+                  compensa o desvio do filtro do TJPA (#508).
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
                   ``YYYY-MM-DD``.
 
