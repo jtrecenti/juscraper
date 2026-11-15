@@ -20,7 +20,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from juscraper.courts.tjsp.cjpg_parse import cjpg_parse_single
+from juscraper.courts._esaj.cjpg_parse import cjpg_parse_single
 from tests._helpers import load_sample
 
 _SAMPLES = Path(__file__).parent / "samples" / "cjpg"

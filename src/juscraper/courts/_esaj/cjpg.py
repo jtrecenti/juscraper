@@ -1,10 +1,8 @@
 """cjpg do eSAJ (consulta de julgados de primeiro grau), comum a TJSP e TJMS.
 
 Os dois portais usam as mesmas rotas e parâmetros de busca e paginação. O
-download e o parse continuam em :mod:`juscraper.courts.tjsp.cjpg_download` e
-:mod:`juscraper.courts.tjsp.cjpg_parse`, e o schema em
-:mod:`juscraper.courts.tjsp.schemas`: é a única dependência de ``_esaj``
-para um tribunal, a desfazer trazendo os três para cá. O limite de
+download fica em :mod:`.cjpg_download`, o parse em :mod:`.cjpg_parse` e os
+schemas em :mod:`.schemas` (``InputCJPGEsaj``/``OutputCJPGEsaj``). O limite de
 tamanho de ``pesquisa`` fica no hook :meth:`EsajSearchScraper._validate_pesquisa`
 de cada tribunal: o de 120 caracteres é do TJSP.
 """
@@ -17,15 +15,15 @@ from pydantic import BaseModel
 
 from ...core.avisos import avisar
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
-from ..tjsp.cjpg_download import cjpg_download as cjpg_download_mod
-from ..tjsp.cjpg_download import fetch_cjpg_first_page
-from ..tjsp.cjpg_parse import cjpg_n_results, cjpg_parse_manager
-from ..tjsp.schemas import InputCJPGTJSP
 from .base import ESAJ_JANELA_ANOS, somar_contagens_por_janela
+from .cjpg_download import cjpg_download as cjpg_download_mod
+from .cjpg_download import fetch_cjpg_first_page
+from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
+from .schemas import InputCJPGEsaj
 from .sentenca import EsajSentencaScraper
 
 # Plurais legados de cjpg (refs #232). Singular canonico ja declarado em
-# ``InputCJPGTJSP``; plurais aparecem so como alias deprecados.
+# ``InputCJPGEsaj``; plurais aparecem so como alias deprecados.
 _CJPG_PLURAL_ALIASES: tuple[tuple[str, str], ...] = (
     ("classes", "classe"),
     ("assuntos", "assunto"),
@@ -40,7 +38,7 @@ def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
 
     1. ``cjpg()`` antes de :func:`run_auto_chunk` — a validacao upfront do
        schema dentro do chunking nao tolera kwargs nao-canonicos
-       (``extra_forbidden`` em :class:`InputCJPGTJSP`), entao precisa
+       (``extra_forbidden`` em :class:`InputCJPGEsaj`), entao precisa
        acontecer aqui, nao apenas em ``cjpg_download``.
     2. ``cjpg_download()`` para chamadas diretas que nao passaram por
        ``cjpg()``. Idempotente: se ``cjpg()`` ja popou, e no-op.
@@ -63,13 +61,13 @@ def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
 class EsajCjpgScraper(EsajSentencaScraper):
     """Base eSAJ com ``cjpg`` e o PDF da sentença de cada linha dele (``baixar_sentenca``)."""
 
-    INPUT_CJPG: type[BaseModel] = InputCJPGTJSP
+    INPUT_CJPG: type[BaseModel] = InputCJPGEsaj
 
     # --- cjpg -----------------------------------------------------------
     # A orquestracao (probe count_only -> auto-chunk -> download -> parse)
     # e compartilhada com ``cjsg`` via ``EsajSearchScraper._run_search``
     # (Template Method, #205). Os internals de download/parse
-    # (``tjsp/cjpg_download.py`` + ``tjsp/cjpg_parse.py``) entram em
+    # (``cjpg_download.py`` + ``cjpg_parse.py``) entram em
     # ``_run_search`` como hooks resolvidos por nome.
 
     def cjpg(
@@ -92,7 +90,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
                 (raises ``QueryTooLongError``).
             paginas (int | list | range | None): Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            **kwargs: Filtros aceitos por :class:`InputCJPGTJSP` (todos
+            **kwargs: Filtros aceitos por :class:`InputCJPGEsaj` (todos
                 opcionais; ``None`` = sem filtro):
 
                 * ``classe`` (int | str | list[int | str]): ID(s) internos
@@ -142,11 +140,11 @@ class EsajCjpgScraper(EsajSentencaScraper):
                 sao passados simultaneamente.
             ColetaParcialError: Quando parte das paginas baixadas nao pode
                 ser lida; ``.resultado`` traz as paginas lidas. Ver
-                :func:`~juscraper.courts.tjsp.cjpg_parse.cjpg_parse_manager`.
+                :func:`~juscraper.courts._esaj.cjpg_parse.cjpg_parse_manager`.
 
         Returns:
             Resultados parseados (colunas conforme
-                :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
+                :class:`OutputCJPGEsaj` — ``id_processo``, ``cd_processo`` e
                 campos extras emitidos pelo parser via ``extra='allow'`` —
                 ``classe``, ``assunto``, ``magistrado``, ``comarca``,
                 ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
@@ -166,7 +164,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             >>> n = tjsp.cjpg("dano moral", count_only=True)
 
         See Also:
-            :class:`~juscraper.courts.tjsp.schemas.InputCJPGTJSP` —
+            :class:`~juscraper.courts._esaj.schemas.InputCJPGEsaj` —
             schema pydantic e a fonte da verdade dos filtros aceitos.
 
         Auto-chunking (issue #130):
@@ -288,7 +286,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             diretorio (str | None): Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjpg` (validados
-                por :class:`InputCJPGTJSP`).
+                por :class:`InputCJPGEsaj`).
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
@@ -319,7 +317,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             origem_mensagem="O eSAJ",
         )
         # Roda apos o pipeline para validar o valor ja resolvido (caso o
-        # usuario passe `query=<string longa>`). InputCJPGTJSP nao tem
+        # usuario passe `query=<string longa>`). InputCJPGEsaj nao tem
         # ``max_length`` em ``pesquisa``, entao ordem antes/depois do
         # pydantic e funcionalmente equivalente.
         self._validate_pesquisa(inp.pesquisa, endpoint="cjpg")

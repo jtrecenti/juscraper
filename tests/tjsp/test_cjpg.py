@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cjpg_download import _TIMEOUT, cjpg_download
-from juscraper.courts.tjsp.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
+from juscraper.courts._esaj.cjpg_download import _TIMEOUT, cjpg_download
+from juscraper.courts._esaj.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
 from tests._helpers import load_sample, load_sample_bytes
 
 
@@ -271,7 +271,7 @@ class TestCJPGDownload1Based:
         page_response = self._make_mock_response("<html>page2+</html>")
         mock_session.get.side_effect = [r0_response] + [page_response] * (n_pags + 10)
         count_pages = mocker.patch(
-            "juscraper.courts.tjsp.cjpg_download.cjpg_n_pags",
+            "juscraper.courts._esaj.cjpg_download.cjpg_n_pags",
             return_value=n_pags,
         )
 
@@ -366,7 +366,7 @@ class TestCJPGDownload1Based:
         assert mock_session.get.call_count == 1
 
     def test_sparse_page_list_discards_unavailable_pages(self, tmp_path, mocker):
-        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+        sleep = mocker.patch("juscraper.courts._esaj.cjpg_download.time.sleep")
 
         _, files, _, mock_session, _, _ = self._download_with_mocks(
             tmp_path,
@@ -383,7 +383,7 @@ class TestCJPGDownload1Based:
         sleep.assert_called_once_with(0.25)
 
     def test_range_step_preserves_page_order_and_request_urls(self, tmp_path, mocker):
-        sleep = mocker.patch("juscraper.courts.tjsp.cjpg_download.time.sleep")
+        sleep = mocker.patch("juscraper.courts._esaj.cjpg_download.time.sleep")
 
         _, files, _, mock_session, _, _ = self._download_with_mocks(
             tmp_path,
@@ -409,7 +409,7 @@ class TestCJPGDownload1Based:
         mock_session.get.return_value = self._make_mock_response("<html>diagnostico</html>")
         upstream_error = RuntimeError("falha ao contar páginas")
         mocker.patch(
-            "juscraper.courts.tjsp.cjpg_download.cjpg_n_pags",
+            "juscraper.courts._esaj.cjpg_download.cjpg_n_pags",
             side_effect=upstream_error,
         )
         # A pasta de download ainda não existe: o diagnóstico precisa criá-la

@@ -26,7 +26,7 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.courts.tjsp.cjpg_download import QueryTooLongError
+from juscraper.courts.tjsp.exceptions import QueryTooLongError
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 

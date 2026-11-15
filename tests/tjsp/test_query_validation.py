@@ -13,7 +13,7 @@ from juscraper.courts.tjsp.exceptions import QueryTooLongError, validate_pesquis
 class TestCJPGQueryValidation:
     """The public scraper entry point (``TJSPScraper.cjpg_download``) is the
     single validation boundary; the internal ``cjpg_download`` helper trusts
-    its input (see :mod:`juscraper.courts.tjsp.cjpg_download`)."""
+    its input (see :mod:`juscraper.courts._esaj.cjpg_download`)."""
 
     def test_scraper_rejects_long_query(self, tmp_path):
         scraper = jus.scraper("tjsp", download_path=str(tmp_path))

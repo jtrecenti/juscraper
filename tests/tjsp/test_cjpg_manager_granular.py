@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.courts.tjsp.cjpg_parse import cjpg_parse_manager
+from juscraper.courts._esaj.cjpg_parse import cjpg_parse_manager
 
 _COM_RESULTADO = (
     '<div id="divDadosResultado"><tr class="fundocinza1"><table>'

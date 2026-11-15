@@ -7,8 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from juscraper.courts._esaj.base import run_auto_chunk
-from juscraper.courts._esaj.schemas import InputCJSGEsajPuro
-from juscraper.courts.tjsp.schemas import InputCJPGTJSP
+from juscraper.courts._esaj.schemas import InputCJPGEsaj, InputCJSGEsajPuro
 
 
 def _deprecation_messages(caught: list[warnings.WarningMessage]) -> list[str]:
@@ -30,7 +29,7 @@ def test_disabled_auto_chunk_only_removes_control_flag():
     result = run_auto_chunk(
         method=fetch,
         method_label="TJSPScraper.cjpg()",
-        input_cls=InputCJPGTJSP,
+        input_cls=InputCJPGEsaj,
         dedup_key="id_processo",
         pesquisa="dano moral",
         paginas=None,
@@ -59,7 +58,7 @@ def test_short_window_canonicalizes_date_aliases_and_warns_once():
         result = run_auto_chunk(
             method=fetch,
             method_label="TJSPScraper.cjpg()",
-            input_cls=InputCJPGTJSP,
+            input_cls=InputCJPGEsaj,
             dedup_key="id_processo",
             pesquisa="dano moral",
             paginas=None,
@@ -127,7 +126,7 @@ def test_empty_search_is_valid_for_cjpg_long_window():
     result = run_auto_chunk(
         method=fetch,
         method_label="TJSPScraper.cjpg()",
-        input_cls=InputCJPGTJSP,
+        input_cls=InputCJPGEsaj,
         dedup_key="id_processo",
         pesquisa="",
         paginas=None,
@@ -154,7 +153,7 @@ def test_search_alias_supplies_every_long_window_and_warns_once(alias):
         result = run_auto_chunk(
             method=fetch,
             method_label="TJSPScraper.cjpg()",
-            input_cls=InputCJPGTJSP,
+            input_cls=InputCJPGEsaj,
             dedup_key="id_processo",
             pesquisa="",
             paginas=None,
@@ -177,7 +176,7 @@ def test_search_alias_supplies_every_long_window_and_warns_once(alias):
     ("input_cls", "dedup_key", "date_kwargs", "aliases"),
     [
         (
-            InputCJPGTJSP,
+            InputCJPGEsaj,
             "id_processo",
             {
                 "data_inicio": "01/01/2022",
@@ -186,7 +185,7 @@ def test_search_alias_supplies_every_long_window_and_warns_once(alias):
             {"data_inicio", "data_fim"},
         ),
         (
-            InputCJPGTJSP,
+            InputCJPGEsaj,
             "id_processo",
             {
                 "data_julgamento_de": "01/01/2022",

@@ -1,11 +1,12 @@
-"""Pydantic schemas for TJSP cjsg, cjpg, cpopg and cposg.
+"""Pydantic schemas for TJSP cjsg, cpopg and cposg.
 
 TJSP has a divergent public API from the 5 eSAJ-puros:
 
 - ``cjsg``: uses ``baixar_sg: bool`` instead of ``origem: Literal["T","R"]``;
   drops ``numero_recurso`` and ``data_publicacao_*``.
-- ``cjpg``: entirely different filter set (``classes`` plural, ``assuntos``
-  plural, ``varas``, ``id_processo``); no ementa/classe/etc.
+- ``cjpg``: schemas shared with TJMS, in :mod:`juscraper.courts._esaj.schemas`
+  (``InputCJPGEsaj``/``OutputCJPGEsaj``); ``InputCJPGTJSP`` and
+  ``OutputCJPGTJSP`` are aliases kept for compatibility.
 - ``cpopg`` / ``cposg``: consulta processual com ``method="html"``, o
   unico aceito (o ``"api"`` foi removido).
 
@@ -18,8 +19,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
-
 from ...schemas import (
     AutoChunkMixin,
     CnjInputBase,
@@ -31,6 +30,7 @@ from ...schemas import (
     SearchBase,
 )
 from ...schemas.cjsg import OutputCJSGBase
+from .._esaj.schemas import InputCJPGEsaj, OutputCJPGEsaj
 
 
 class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
@@ -66,42 +66,10 @@ class OutputCJSGTJSP(OutputCJSGBase):
     orgao_julgador: str | None = None
 
 
-class InputCJPGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
-    """Accepted input for ``cjpg`` (TJSP and TJMS). Unknown kwargs raise via ``extra='forbid'``.
-
-    Sobrescreve ``pesquisa`` com default vazio porque o TJSP permite buscar
-    so por filtros (ex.: ``classe=[417]``) sem termo textual.
-
-    ``classe``/``assunto``/``vara`` aceitam ``int``, ``str`` ou
-    ``list[int | str]`` via :data:`IdFiltro` (refs #232). Nomes canonicos
-    seguem o singular do projeto; os plurais ``classes``/``assuntos``/``varas``
-    sao alias deprecados popados no client (:meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg_download`)
-    com :class:`DeprecationWarning`.
-    """
-
-    pesquisa: str = ""
-    classe: IdFiltro = None
-    assunto: IdFiltro = None
-    vara: IdFiltro = None
-    id_processo: str | None = None
-
-
-class OutputCJPGTJSP(BaseModel):
-    """Colunas observaveis numa linha do DataFrame do ``cjpg`` do TJSP e do TJMS.
-
-    Reflete ``tjsp.cjpg_parse``. Diferente do ``cjsg``, ``cjpg`` nao
-    entrega ementa nem ``processo`` formatado em CNJ — so o par de IDs
-    internos (``id_processo`` / ``cd_processo``) que permitem seguir para
-    a consulta de 1o grau.
-    """
-
-    id_processo: str
-    cd_processo: str | None = None
-    cd_foro: str | None = None
-    nm_alias: str | None = None
-    cd_documento: str | None = None
-
-    model_config = ConfigDict(extra="allow")
+# O cjpg e do eSAJ, comum a TJSP e TJMS: os schemas ficam em ``_esaj.schemas``.
+# Os nomes antigos continuam importaveis daqui.
+InputCJPGTJSP = InputCJPGEsaj
+OutputCJPGTJSP = OutputCJPGEsaj
 
 
 class InputCPOPGTJSP(CnjInputBase):
