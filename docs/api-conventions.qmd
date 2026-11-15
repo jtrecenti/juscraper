@@ -418,7 +418,31 @@ movements in the second-degree consultation instead, as the R package
   one page per incident, the movement pages and the folder of each
   candidate document.
 
-TJAL, TJAM, TJCE and TJMS do not have these methods yet.
+### TJCE: straight from `cd_acordao`
+
+In TJCE the direct route of the `cjsg` works without login or captcha, so
+the methods take the codes of the `cjsg` row instead of the process number:
+`baixar_acordao(cd_acordao, cd_foro)` makes one request to
+`cjsg/getArquivo.do` and writes `<diretorio>/acordaos/<cd_acordao>.pdf`;
+`baixar_acordaos(df)` reads the `cd_acordao` and `cd_foro` columns and adds
+`caminho_acordao` and `motivo_falha`, as above:
+
+```python
+tjce = jus.scraper("tjce")
+df = tjce.cjsg("dano moral", paginas=1)
+df = tjce.baixar_acordaos(df)
+df[["processo", "cd_acordao", "caminho_acordao", "motivo_falha"]]
+```
+
+`cd_acordao` already identifies one acórdão, so there is no choice by date.
+When the court answers with an HTML page instead of the PDF ("Arquivo não
+localizado" for an unknown code, or a captcha or login page),
+`baixar_acordao` raises `DocumentoNaoPdfError`, from
+`juscraper.courts._esaj.pasta`, and writes nothing; in `baixar_acordaos` the
+row gets `nao_pdf`. A code that is empty or not only digits raises
+`EntradaInvalidaError` (`entrada_invalida`) before any request.
+
+TJAL, TJAM and TJMS do not have these methods yet.
 
 ## Case documents of the first instance (TJSP)
 
