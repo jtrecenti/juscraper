@@ -36,6 +36,7 @@ import re
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date
+from functools import partial
 from pathlib import Path
 from typing import ClassVar
 
@@ -44,21 +45,19 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 from ...core.failures import (
-    COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
     MOTIVO_ENTRADA_INVALIDA,
     MOTIVO_NAO_ENCONTRADO,
     MOTIVO_NAO_PDF,
     MOTIVO_RESPOSTA_INESPERADA,
     MOTIVO_SEM_ACORDAO,
-    avisar_falhas,
-    motivo_falha,
 )
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import coerce_brazilian_date
 from .base import EsajSearchScraper
-from .pasta import parse_parametros_pasta, tipo_documento
+from .lote import DownloadEmLote, baixar_em_lote
+from .pasta import conteudo_pdf, gravar_pdf, parse_parametros_pasta, tipo_documento
 
 logger = logging.getLogger("juscraper._esaj.acordao")
 
@@ -295,6 +294,23 @@ def _ausente(valor: object) -> bool:
     return valor is None or valor is pd.NaT or valor is pd.NA or (isinstance(valor, float) and math.isnan(valor))
 
 
+def codigo_da_linha(campo: str, valor: object, formato: re.Pattern[str], origem: str) -> str:
+    """Código de uma coluna do cjsg ou do cjpg, validado contra o formato que o eSAJ usa.
+
+    Aceita o ``float`` inteiro (``3834193.0``), que a coluna numérica vira ao
+    voltar de CSV ou parquet com alguma célula vazia.
+
+    Raises:
+        EntradaInvalidaError: Valor vazio ou fora de ``formato``.
+    """
+    if isinstance(valor, float) and valor.is_integer():
+        valor = int(valor)
+    texto = "" if _ausente(valor) else str(valor).strip()
+    if not formato.fullmatch(texto):
+        raise EntradaInvalidaError(f"{campo} inválido: {valor!r}. Use o valor da coluna {campo} do {origem}.")
+    return texto
+
+
 def _como_data(valor: object) -> date:
     """``data_julgamento`` do usuário nos formatos de :func:`coerce_brazilian_date`."""
     erro = EntradaInvalidaError(f"data_julgamento inválida: {valor!r}. Use DD/MM/AAAA ou date.")
@@ -320,6 +336,17 @@ def _como_cnj(valor: object) -> str:
 _FALHAS_DA_CHECAGEM_DE_EMPATE: tuple[type[BaseException], ...] = (
     AcordaoIndisponivelError,
     *EXCECOES_DE_FALHA_POR_LINHA,
+)
+
+
+_LOTE_ACORDAO = DownloadEmLote(
+    origem="cjsg",
+    colunas=("processo", "data_julgamento"),
+    erros_com_motivo=(AcordaoIndisponivelError, EntradaInvalidaError),
+    coluna_caminho=COLUNA_CAMINHO_ACORDAO,
+    descricao="download(s) de acórdão",
+    logger=logger,
+    rotulo=lambda linha: str(linha.processo),
 )
 
 
@@ -439,29 +466,16 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 ``nao_encontrado``, ``sem_acordao``, ``nao_pdf``,
                 ``resposta_inesperada`` ou um motivo de rede de
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-                também num único ``UserWarning`` ao fim.
+                também num único ``UserWarning`` ao fim. O primeiro
+                ``bloqueio_anti_bot`` encerra o lote: as linhas seguintes saem
+                com o mesmo motivo, sem pedido ao tribunal.
         """
-        faltando = {"processo", "data_julgamento"} - set(cjsg.columns)
-        if faltando:
-            raise ValueError(f"cjsg sem as colunas {sorted(faltando)}.")
-        caminhos: list[str | None] = []
-        motivos: list[str | None] = []
-        falhas: list[str] = []
-        for linha in cjsg.itertuples(index=False):
-            try:
-                caminho, motivo = self.baixar_acordao(linha.processo, linha.data_julgamento, diretorio), None
-            except (AcordaoIndisponivelError, EntradaInvalidaError) as erro:
-                caminho, motivo = None, erro.motivo
-                logger.info("%s: %s", linha.processo, erro)
-            except EXCECOES_DE_FALHA_POR_LINHA as erro:
-                caminho, motivo = None, motivo_falha(erro)
-                logger.info("%s: %s", linha.processo, erro)
-            if motivo is not None:
-                falhas.append(f"{linha.processo}: {motivo}")
-            caminhos.append(caminho)
-            motivos.append(motivo)
-        avisar_falhas(falhas, f"{type(self).__name__}.baixar_acordaos", "download(s) de acórdão")
-        return cjsg.assign(**{COLUNA_CAMINHO_ACORDAO: caminhos, COLUNA_MOTIVO_FALHA: motivos})
+        return baixar_em_lote(
+            cjsg,
+            lambda linha: self.baixar_acordao(linha.processo, linha.data_julgamento, diretorio),
+            _LOTE_ACORDAO,
+            f"{type(self).__name__}.baixar_acordaos",
+        )
 
     def _abrir_processo(self, cnj: str) -> list[tuple[str, str]]:
         """``(cdProcesso, html da página)`` de cada processo que a busca devolve."""
@@ -602,15 +616,12 @@ class EsajAcordaoScraper(EsajSearchScraper):
 
     def _gravar_pdf(self, cnj: str, mov: Movimentacao, parametros: str, diretorio: str | None) -> str:
         resposta = self._get_espacado(f"{self.BASE_URL}pastadigital/getPDF.do?{parametros}")
-        if not resposta.content.startswith(b"%PDF"):
-            inicio = resposta.content[:60].decode("utf-8", "replace")
-            raise RespostaNaoPdfError(
-                cnj,
-                f"getPDF.do do documento {mov.cd_documento} respondeu "
-                f"{resposta.headers.get('Content-Type')!r} começando por {inicio!r}; nada foi gravado.",
-            )
-        pasta = Path(diretorio or self.download_path) / "acordaos"
-        pasta.mkdir(parents=True, exist_ok=True)
-        caminho = pasta / f"{clean_cnj(cnj)}_{mov.cd_processo}_{mov.cd_documento}.pdf"
-        caminho.write_bytes(resposta.content)
-        return str(caminho)
+        conteudo = conteudo_pdf(
+            resposta, f"getPDF.do do documento {mov.cd_documento}", partial(RespostaNaoPdfError, cnj)
+        )
+        destino = (
+            Path(diretorio or self.download_path)
+            / "acordaos"
+            / f"{clean_cnj(cnj)}_{mov.cd_processo}_{mov.cd_documento}.pdf"
+        )
+        return str(gravar_pdf(conteudo, destino))

@@ -17,7 +17,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError
 from tests._helpers import PDF_FALSO, load_sample_bytes
@@ -146,6 +146,27 @@ def test_baixar_acordaos_desafio_anti_bot_vira_motivo_da_linha(tjce):
         resultado = tjce.baixar_acordaos(cjsg)
 
     assert resultado["motivo_falha"].tolist() == ["bloqueio_anti_bot"]
+
+
+@responses.activate
+def test_baixar_acordaos_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(tjce):
+    """Bloqueio na linha 2 de 3: a linha 1 fica (#471), e a 3 sai ``bloqueio_anti_bot`` sem pedido."""
+    cjsg = _cjsg().head(3)
+    _registrar(cjsg.iloc[0].cd_acordao)
+    responses.add(
+        responses.GET,
+        URL,
+        body=BotChallengeBlockedError("TJCE", URL),
+        match=[query_param_matcher({"cdAcordao": cjsg.iloc[1].cd_acordao}, strict_match=False)],
+    )
+    _registrar(cjsg.iloc[2].cd_acordao)
+
+    with pytest.warns(BloqueioAntiBotWarning, match="2 download\\(s\\) de acórdão falharam"):
+        resultado = tjce.baixar_acordaos(cjsg)
+
+    assert resultado["caminho_acordao"].isna().tolist() == [False, True, True]
+    assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(responses.calls) == 2
 
 
 def test_baixar_acordaos_exige_as_colunas_dos_codigos(tjce):

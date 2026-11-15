@@ -16,9 +16,9 @@ from urllib.parse import urlencode
 
 import pandas as pd
 
-from ...core.failures import COLUNA_MOTIVO_FALHA, EXCECOES_DE_FALHA_POR_LINHA, avisar_falhas, motivo_falha
-from .acordao import EntradaInvalidaError, _ausente
+from .acordao import EntradaInvalidaError, codigo_da_linha
 from .base import EsajSearchScraper
+from .lote import DownloadEmLote, baixar_em_lote
 from .pasta import DocumentoIndisponivelError, gravar_pdf, pdf_pela_pasta
 
 logger = logging.getLogger("juscraper._esaj.sentenca")
@@ -39,12 +39,15 @@ _FORMATOS = {
 }
 
 
-def _codigo(campo: str, valor: object) -> str:
-    """Código da linha do cjpg, validado contra o formato que o eSAJ usa."""
-    texto = "" if _ausente(valor) else str(valor).strip()
-    if not _FORMATOS[campo].fullmatch(texto):
-        raise EntradaInvalidaError(f"{campo} inválido: {valor!r}. Use o valor da coluna {campo} do cjpg.")
-    return texto
+_LOTE_SENTENCA = DownloadEmLote(
+    origem="cjpg",
+    colunas=COLUNAS_CODIGOS_SENTENCA,
+    erros_com_motivo=(DocumentoIndisponivelError, EntradaInvalidaError),
+    coluna_caminho=COLUNA_CAMINHO_SENTENCA,
+    descricao="download(s) de sentença",
+    logger=logger,
+    rotulo=lambda linha: f"{linha.cd_processo}/{linha.cd_documento}",
+)
 
 
 class EsajSentencaScraper(EsajSearchScraper):
@@ -92,7 +95,7 @@ class EsajSentencaScraper(EsajSearchScraper):
             >>> caminho = tjsp.baixar_sentenca(linha.cd_processo, linha.cd_foro, linha.cd_documento, linha.nm_alias)
         """
         codigos = {
-            campo: _codigo(campo, valor)
+            campo: codigo_da_linha(campo, valor, _FORMATOS[campo], "cjpg")
             for campo, valor in zip(
                 COLUNAS_CODIGOS_SENTENCA, (cd_processo, cd_foro, nm_alias, cd_documento), strict=True
             )
@@ -132,29 +135,15 @@ class EsajSentencaScraper(EsajSearchScraper):
                 quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
                 ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-                também num único ``UserWarning`` ao fim.
+                também num único ``UserWarning`` ao fim. O primeiro
+                ``bloqueio_anti_bot`` encerra o lote: as linhas seguintes saem
+                com o mesmo motivo, sem pedido ao tribunal.
         """
-        faltando = set(COLUNAS_CODIGOS_SENTENCA) - set(cjpg.columns)
-        if faltando:
-            raise ValueError(f"cjpg sem as colunas {sorted(faltando)}.")
-        caminhos: list[str | None] = []
-        motivos: list[str | None] = []
-        falhas: list[str] = []
-        for linha in cjpg.itertuples(index=False):
-            try:
-                caminho = self.baixar_sentenca(
-                    linha.cd_processo, linha.cd_foro, linha.cd_documento, linha.nm_alias, diretorio
-                )
-                motivo = None
-            except (DocumentoIndisponivelError, EntradaInvalidaError) as erro:
-                caminho, motivo = None, erro.motivo
-                logger.info("%s: %s", linha.cd_processo, erro)
-            except EXCECOES_DE_FALHA_POR_LINHA as erro:
-                caminho, motivo = None, motivo_falha(erro)
-                logger.info("%s: %s", linha.cd_processo, erro)
-            if motivo is not None:
-                falhas.append(f"{linha.cd_processo}/{linha.cd_documento}: {motivo}")
-            caminhos.append(caminho)
-            motivos.append(motivo)
-        avisar_falhas(falhas, f"{type(self).__name__}.baixar_sentencas", "download(s) de sentença")
-        return cjpg.assign(**{COLUNA_CAMINHO_SENTENCA: caminhos, COLUNA_MOTIVO_FALHA: motivos})
+        return baixar_em_lote(
+            cjpg,
+            lambda linha: self.baixar_sentenca(
+                linha.cd_processo, linha.cd_foro, linha.cd_documento, linha.nm_alias, diretorio
+            ),
+            _LOTE_SENTENCA,
+            f"{type(self).__name__}.baixar_sentencas",
+        )

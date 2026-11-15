@@ -18,7 +18,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, parse_parametros_pasta
 from juscraper.courts.tjsp.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
@@ -210,21 +210,35 @@ def test_baixar_sentencas_erro_de_rede_vira_motivo(tmp_path, mocker):
 
 
 @responses.activate
-def test_baixar_sentencas_desafio_anti_bot_no_meio_do_lote_nao_perde_as_linhas(tmp_path, mocker):
-    """Bloqueio na linha 2 de 3: a linha sai ``bloqueio_anti_bot`` e as outras ficam (#471)."""
+def test_baixar_sentencas_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(tmp_path, mocker):
+    """Bloqueio na linha 2 de 3: a linha 1 fica (#471), e a 3 sai ``bloqueio_anti_bot`` sem pedido."""
     mocker.patch("time.sleep")
     cjpg = pd.concat([_cjpg().head(1)] * 3, ignore_index=True)
     _registrar_sentenca()
     responses.add(
         responses.GET, f"{ESAJ}/cjpg/obterArquivo.do", body=BotChallengeBlockedError("TJSP", f"{ESAJ}/cjpg")
     )
-    _registrar_sentenca()
 
-    with pytest.warns(UserWarning, match="1 download\\(s\\) de sentença falharam.*bloqueio_anti_bot"):
+    with pytest.warns(BloqueioAntiBotWarning, match="2 download\\(s\\) de sentença falharam.*bloqueio_anti_bot"):
         resultado = jus.scraper("tjsp", download_path=str(tmp_path)).baixar_sentencas(cjpg)
 
-    assert resultado["caminho_sentenca"].isna().tolist() == [False, True, False]
-    assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", None]
+    assert resultado["caminho_sentenca"].isna().tolist() == [False, True, True]
+    assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(_pedidos("obterArquivo.do")) == 2
+
+
+@responses.activate
+def test_baixar_sentenca_aceita_codigo_float_inteiro_de_csv(tmp_path, mocker):
+    """A coluna numérica volta de CSV como ``float`` quando tem célula vazia."""
+    mocker.patch("time.sleep")
+    _registrar_sentenca()
+
+    caminho = jus.scraper("tjsp", download_path=str(tmp_path)).baixar_sentenca(
+        CD_PROCESSO, float(CD_FORO), float(CD_DOCUMENTO)
+    )
+
+    assert caminho == str(tmp_path / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf")
+    assert parse_qsl(urlsplit(_pedidos("obterArquivo.do")[0].url).query)[1] == ("cdForo", CD_FORO)
 
 
 def test_baixar_sentencas_exige_as_colunas_dos_codigos(tmp_path):

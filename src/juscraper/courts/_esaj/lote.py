@@ -1,0 +1,104 @@
+"""Laço comum dos downloads em lote do eSAJ (``baixar_acordaos``, ``baixar_sentencas``).
+
+Uma linha de entrada vira uma linha de saída, com o caminho do arquivo ou o
+motivo da falha. O bloqueio anti-bot vale para a sessão inteira: a primeira
+linha que sai :data:`~juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`
+encerra o lote, e as seguintes saem com o mesmo motivo, sem pedido, por
+:func:`~juscraper.core.failures.consultar_em_lote`.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, NamedTuple
+
+import pandas as pd
+
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
+    avisar_falhas,
+    consultar_em_lote,
+    motivo_falha,
+)
+
+
+@dataclass(frozen=True)
+class DownloadEmLote:
+    """O que muda entre os downloads em lote.
+
+    Attributes:
+        origem: Método que produz a tabela (``"cjsg"``, ``"cjpg"``), para a
+            mensagem da coluna que falta.
+        colunas: Colunas que o download de uma linha lê.
+        erros_com_motivo: Exceções do download com o atributo de classe
+            ``motivo``, que vira o motivo da linha.
+        coluna_caminho: Coluna com o caminho do arquivo (``None`` na falha).
+        descricao: O que falhou, no plural, para o aviso agregado.
+        logger: Logger do módulo do download, que registra a falha de cada linha.
+        rotulo: Identifica a linha (de ``itertuples``) no log e no aviso agregado.
+    """
+
+    origem: str
+    colunas: tuple[str, ...]
+    erros_com_motivo: tuple[type[Exception], ...]
+    coluna_caminho: str
+    descricao: str
+    logger: logging.Logger
+    rotulo: Callable[[Any], str]
+
+
+class _Download(NamedTuple):
+    caminho: str | None
+    motivo: str | None
+
+
+def baixar_em_lote(
+    tabela: pd.DataFrame,
+    baixar: Callable[[Any], str],
+    lote: DownloadEmLote,
+    metodo: str,
+) -> pd.DataFrame:
+    """``tabela`` com ``lote.coluna_caminho`` e :data:`~juscraper.core.failures.COLUNA_MOTIVO_FALHA`.
+
+    Args:
+        tabela: Linhas de entrada.
+        baixar: Baixa o arquivo de uma linha de ``itertuples`` e devolve o caminho.
+        lote: Ver :class:`DownloadEmLote`.
+        metodo: Nome qualificado do método público, para o aviso.
+
+    Raises:
+        ValueError: ``tabela`` sem alguma das ``lote.colunas``.
+
+    Returns:
+        As linhas de ``tabela`` com as duas colunas; as falhas saem também num único ``UserWarning`` ao fim.
+    """
+    faltando = set(lote.colunas) - set(tabela.columns)
+    if faltando:
+        raise ValueError(f"{lote.origem} sem as colunas {sorted(faltando)}.")
+
+    def baixar_linha(linha: object) -> _Download:
+        try:
+            return _Download(baixar(linha), None)
+        except lote.erros_com_motivo as erro:
+            motivo, mensagem = erro.motivo, str(erro)  # type: ignore[attr-defined]
+        except EXCECOES_DE_FALHA_POR_LINHA as erro:
+            motivo, mensagem = motivo_falha(erro), str(erro)
+        if motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
+            lote.logger.warning(
+                "%s: bloqueio anti-bot em %s; o lote para aqui: %s", metodo, lote.rotulo(linha), mensagem
+            )
+        else:
+            lote.logger.info("%s: %s", lote.rotulo(linha), mensagem)
+        return _Download(None, motivo)
+
+    linhas = list(tabela.itertuples(index=False))
+    downloads = consultar_em_lote(linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0)
+    falhas = [f"{lote.rotulo(linha)}: {d.motivo}" for linha, d in zip(linhas, downloads, strict=True) if d.motivo]
+    avisar_falhas(falhas, metodo, lote.descricao)
+    return tabela.assign(
+        **{lote.coluna_caminho: [d.caminho for d in downloads], COLUNA_MOTIVO_FALHA: [d.motivo for d in downloads]}
+    )
