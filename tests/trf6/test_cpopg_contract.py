@@ -18,6 +18,7 @@ import responses
 
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
+from juscraper.courts.trf6.parse import COLUNAS_DETALHE, parse_detail
 from tests._helpers import load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
@@ -121,8 +122,12 @@ def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
 
 
 @responses.activate
-def test_cpopg_missing_process_returns_row_with_only_id_cnj(fake_captcha_solver):
-    """When the CNJ doesn't match, eproc re-serves the form (no detail)."""
+def test_cpopg_missing_process_keeps_detail_columns_empty(fake_captcha_solver):
+    """CNJ ausente (o eproc devolve o formulário, sem detalhe) sai numa linha com ``id_cnj``.
+
+    As colunas do detalhe continuam no DataFrame, com ``None``, mesmo quando
+    nenhum CNJ do lote foi lido (mesmo sintoma do #442 no TRF5).
+    """
     responses.add(
         responses.GET,
         GET_URL,
@@ -139,9 +144,40 @@ def test_cpopg_missing_process_returns_row_with_only_id_cnj(fake_captcha_solver)
     assert len(df) == 1
     row = df.iloc[0]
     assert row["id_cnj"] == "00000000020994060000"
-    assert pd.isna(row.get("processo")) or row.get("processo") is None
+    assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj", "motivo_falha"]
+    assert all(row[col] is None for col in COLUNAS_DETALHE)
     # Ausente da consulta pública não é falha da requisição.
     assert row["motivo_falha"] is None
+
+
+@responses.activate
+def test_cpopg_lote_sem_nenhuma_resposta_mantem_colunas_do_detalhe(fake_captcha_solver):
+    """Falha de requisição em todo o lote: colunas do detalhe com ``None``, motivo na linha."""
+    responses.add(responses.GET, GET_URL, body=requests.exceptions.ConnectionError("recusada"))
+    responses.add(responses.GET, GET_URL, body=requests.exceptions.ConnectionError("recusada"))
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="conexao"):
+        df = scraper.cpopg(["00000000020994060000", "10052295520234063801"])
+
+    assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj", "motivo_falha"]
+    assert list(df["motivo_falha"]) == ["conexao", "conexao"]
+    assert df[list(COLUNAS_DETALHE)].map(lambda v: v is None).all().all()
+
+
+def test_cpopg_parse_sem_html_mantem_colunas_do_detalhe():
+    """``cpopg_parse`` só com ``None`` sai com as colunas do detalhe em ``None``."""
+    scraper = jus.scraper("trf6", sleep_time=0)
+    df = scraper.cpopg_parse([None], ["00000000020994060000"])
+    assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj"]
+    assert all(df.iloc[0][col] is None for col in COLUNAS_DETALHE)
+
+
+@pytest.mark.parametrize("sample", ["cpopg/detail_normal.html", "cpopg/detail_cumprimento_sentenca.html"])
+def test_colunas_detalhe_sao_as_chaves_de_parse_detail(sample):
+    """``COLUNAS_DETALHE`` acompanha o registro de ``parse_detail``, na mesma ordem."""
+    record = parse_detail(load_sample_bytes("trf6", sample).decode("latin-1"))
+    assert tuple(record) == COLUNAS_DETALHE
 
 
 @responses.activate

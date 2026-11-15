@@ -190,6 +190,23 @@ def _parse_eventos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
     return []
 
 
+COLUNAS_DETALHE: tuple[str, ...] = (
+    *_CAPA_FIELD_IDS.values(),
+    "orgao_julgador",
+    "assuntos",
+    "polo_ativo",
+    "polo_passivo",
+    "mpf",
+    "perito",
+    "movimentacoes",
+)
+"""Colunas de :func:`parse_detail`, na ordem do registro.
+
+O DataFrame do ``cpopg`` as traz mesmo quando nenhum CNJ do lote foi lido,
+em vez de sair só com ``id_cnj`` e ``motivo_falha``.
+"""
+
+
 def parse_detail(html: str) -> dict[str, Any]:
     """Parse a TRF6 detail page into a flat record.
 
