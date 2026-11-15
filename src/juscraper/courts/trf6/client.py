@@ -28,7 +28,7 @@ from ...core.failures import (
     motivo_falha_ou_inesperada,
 )
 from ...utils.cnj import clean_cnj, format_cnj
-from .download import BROWSER_HEADERS, fetch_detail
+from .download import HEADERS, fetch_detail
 from .parse import parse_detail
 from .schemas import InputCpopgTRF6
 
@@ -50,7 +50,7 @@ class TRF6Scraper(BaseScraper):
     ):
         super().__init__("TRF6")
         self.session = requests.Session()
-        self.session.headers.update(BROWSER_HEADERS)
+        self.session.headers.update(HEADERS)
         self.set_verbose(verbose)
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
@@ -86,11 +86,7 @@ class TRF6Scraper(BaseScraper):
     def _baixar(self, cnjs: list[str]) -> tuple[list[str | None], list[str | None]]:
         """Detalhe HTML e motivo de falha de cada CNJ, na ordem da entrada.
 
-        Processo ausente da consulta pública sai ``None`` sem motivo. O CNJ
-        que falha (requisição, captcha esgotado, formulário sem captcha) sai
-        ``None`` com o motivo, e o lote segue. O desafio anti-bot vale para a
-        sessão inteira: ele encerra o lote, e o CNJ desafiado e os seguintes
-        saem com ``bloqueio_anti_bot`` sem novos pedidos. ``ImportError``
+        Regras de falha e de bloqueio anti-bot em :meth:`cpopg`. ``ImportError``
         (``txtcaptcha`` ausente) propaga.
         """
         htmls: list[str | None] = []
@@ -139,7 +135,7 @@ class TRF6Scraper(BaseScraper):
 
     @staticmethod
     def _avisar(cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
-        """Um ``UserWarning`` com os CNJs cuja requisição falhou."""
+        """Um ``UserWarning`` com os CNJs cuja consulta falhou."""
         falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
         avisar_falhas(falhas, f"TRF6Scraper.{metodo}", "consulta(s) de processo")
 

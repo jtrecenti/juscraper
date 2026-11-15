@@ -31,6 +31,16 @@ POST_PARAMS = {
 FAKE_CAPTCHA = "abc1"
 
 
+def _form(sample: str = "cpopg/form_initial.html") -> None:
+    """Registra uma resposta ao GET do formulário."""
+    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", sample))
+
+
+def _busca(sample: str) -> None:
+    """Registra uma resposta ao POST da busca, a partir de um sample."""
+    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", sample))
+
+
 def _subset_form_matcher(expected: dict[str, str]):
     """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
 
@@ -209,10 +219,10 @@ def test_cpopg_retries_on_captcha_failure(monkeypatch):
 def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
     """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``resposta_inesperada``; o 2º CNJ é consultado."""
     for _ in range(3):
-        responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
-        responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", "cpopg/search_bad_captcha.html"))
-    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
-    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", "cpopg/detail_normal.html"))
+        _form()
+        _busca("cpopg/search_bad_captcha.html")
+    _form()
+    _busca("cpopg/detail_normal.html")
 
     from juscraper.courts.trf6 import download
 
@@ -230,8 +240,8 @@ def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
 @responses.activate
 def test_cpopg_nao_envia_user_agent_de_navegador(fake_captcha_solver):
     """O F5 do portal desafia user agents ``Mozilla/...``; a sessão usa o padrão do ``requests``."""
-    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
-    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", "cpopg/detail_normal.html"))
+    _form()
+    _busca("cpopg/detail_normal.html")
 
     scraper = jus.scraper("trf6", sleep_time=0)
     scraper.cpopg("10052295520234063801")
@@ -243,7 +253,7 @@ def test_cpopg_nao_envia_user_agent_de_navegador(fake_captcha_solver):
 @responses.activate
 def test_cpopg_desafio_f5_encerra_o_lote_com_bloqueio_anti_bot(fake_captcha_solver):
     """O desafio do F5 no lugar do formulário: o 1º CNJ e os seguintes saem ``bloqueio_anti_bot``, sem novos pedidos."""
-    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_desafio_f5.html"))
+    _form("cpopg/form_desafio_f5.html")
 
     scraper = jus.scraper("trf6", sleep_time=0)
     with pytest.warns(BloqueioAntiBotWarning, match="2 consulta.*bloqueio_anti_bot"):
@@ -251,6 +261,33 @@ def test_cpopg_desafio_f5_encerra_o_lote_com_bloqueio_anti_bot(fake_captcha_solv
 
     assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_desafio_f5_na_busca_tambem_encerra_o_lote(fake_captcha_solver):
+    """O desafio do F5 na resposta do POST não passa por processo ausente."""
+    _form()
+    _busca("cpopg/form_desafio_f5.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(BloqueioAntiBotWarning):
+        df = scraper.cpopg(["10052295520234063801", "00000000020994060000"])
+
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cpopg_pagina_desconhecida_na_busca_vira_resposta_inesperada(fake_captcha_solver):
+    """Uma página que não é detalhe nem formulário (manutenção, erro) não passa por processo ausente."""
+    _form()
+    responses.add(responses.POST, POST_URL, body="<html><body>Sistema em manutenção</body></html>")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="processo 10052295520234063801: resposta_inesperada"):
+        df = scraper.cpopg("10052295520234063801")
+
+    assert list(df["motivo_falha"]) == ["resposta_inesperada"]
 
 
 def test_desafio_f5_tem_mensagem_propria():
@@ -266,7 +303,7 @@ def test_desafio_f5_tem_mensagem_propria():
 @responses.activate
 def test_cpopg_txtcaptcha_ausente_propaga(monkeypatch):
     """Sem o ``txtcaptcha``, nenhum CNJ passaria: o ``ImportError`` sobe em vez de virar linha."""
-    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
+    _form()
     from juscraper.courts.trf6 import download
 
     def sem_txtcaptcha(b64):
