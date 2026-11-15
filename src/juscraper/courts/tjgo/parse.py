@@ -8,14 +8,10 @@ from typing import Any
 
 import pandas as pd
 
-_RESULT_RE = re.compile(
-    r'<div class="search-result">(.*?)</div>\s*<div class="search-result-',
-    re.DOTALL,
-)
-_RESULT_FALLBACK_RE = re.compile(
-    r'<div class="search-result">(.*?)(?=<div class="search-result">)',
-    re.DOTALL,
-)
+# Abertura de cada resultado. No HTML atual do portal a div traz atributos
+# (``data-realizador``, ``data-id-arquivo``) depois da classe; o literal
+# ``<div class="search-result">`` deixava de casar e o cjsg voltava vazio.
+_RESULT_OPEN_RE = re.compile(r'<div class="search-result"(?:\s[^>]*)?>')
 _PROC_RE = re.compile(r"(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _ID_ARQUIVO_RE = re.compile(
     r"abrirArquivo\('ConsultaJurisprudencia',\s*'(\d+)'\)"
@@ -49,12 +45,16 @@ def _parse_date(raw: Any):
     return None
 
 
+def has_results(html: str) -> bool:
+    """Indica se a pagina traz ao menos um bloco de resultado."""
+    return _RESULT_OPEN_RE.search(html) is not None
+
+
 def _split_blocks(html: str) -> list:
     # Split HTML into result blocks. Each result is a <div class="search-result">
     # followed by paragraphs; blocks end when the next search-result or the
     # pagination footer starts.
-    marker = '<div class="search-result">'
-    parts = html.split(marker)
+    parts = _RESULT_OPEN_RE.split(html)
     if len(parts) <= 1:
         return []
     blocks = []

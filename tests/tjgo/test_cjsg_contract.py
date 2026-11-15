@@ -26,11 +26,11 @@ def _add_get_prime() -> None:
     responses.add(responses.GET, SEARCH_URL, body=b"", status=200)
 
 
-def _add_post(pesquisa: str, page: int, sample_path: str) -> None:
+def _add_post(pesquisa: str, page: int, sample_path: str, body: bytes | None = None) -> None:
     responses.add(
         responses.POST,
         SEARCH_URL,
-        body=load_sample_bytes("tjgo", sample_path),
+        body=body if body is not None else load_sample_bytes("tjgo", sample_path),
         status=200,
         content_type="text/html; charset=iso-8859-1",
         match=[urlencoded_params_matcher(
@@ -109,6 +109,32 @@ def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
     df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
 
     assert not df.empty
+
+
+@responses.activate
+def test_cjsg_resultado_com_atributos_na_div(mocker):
+    """``<div class="search-result" data-...>`` still splits into result rows.
+
+    The current portal HTML gives each result div ``data-realizador`` and
+    ``data-id-arquivo`` after the class (issue #436). No recorded sample has
+    them yet, because capturing one needs the Turnstile token; the test adds
+    the attributes to the real page 1 sample.
+    """
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    original = load_sample_bytes("tjgo", "cjsg/results_normal_page_01.html")
+    com_atributos = original.replace(
+        b'<div class="search-result">',
+        b'<div class="search-result" data-realizador="1" data-id-arquivo="2">',
+    )
+    assert com_atributos != original
+    _add_post("dano moral", page=1, sample_path="", body=com_atributos)
+    esperado = jus.scraper("tjgo").cjsg_parse([original.decode("iso-8859-1")])
+    assert len(esperado) == 10
+
+    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
+
+    pd.testing.assert_frame_equal(df, esperado)
 
 
 @responses.activate
