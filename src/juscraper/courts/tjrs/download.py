@@ -9,6 +9,10 @@ from juscraper.core.http import RequestFn
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
 
+#: Nome do perfil HTTP da busca de jurisprudência. O client declara a política
+#: com a mesma chave em ``TJRSScraper.perfis_http``.
+PERFIL_CJSG = "cjsg"
+
 
 def build_cjsg_inner_payload(
     termo: str,
@@ -102,7 +106,7 @@ def cjsg_download_manager(
         request_fn: HTTP callable that handles retry + raise_for_status — em
             uso normal e ``TJRSScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
-            para 429/5xx.
+            para 429/5xx. Recebe ``perfil=PERFIL_CJSG`` em toda requisição.
         secao: 'civel', 'crime', or None.
     """
     def _fetch_page(pagina_1based):
@@ -127,7 +131,7 @@ def cjsg_download_manager(
             'metodo': 'buscar_resultados',
             'parametros': parametros_str,
         }
-        resp = request_fn("POST", BASE_URL, data=data, timeout=30)
+        resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG)
         return resp.json()
 
     if paginas is None:

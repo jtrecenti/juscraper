@@ -9,6 +9,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- TJRS `cjsg`/`cjsg_download`: timeout e erro de conexão passam a ganhar nova tentativa, em até 3 tentativas contando a primeira, com espera de 2 e 4 segundos, como os status 429 e 5xx. Antes, o primeiro timeout ou queda de conexão derrubava a coleta inteira, inclusive uma sem limite de `paginas`, que faz milhares de requisições em sequência. Persistindo, o `requests.Timeout` ou `requests.ConnectionError` original continua subindo. O prazo de leitura continua em 30 s, e o de conexão passa a 10 s, para o portal fora do ar falhar logo. `jus.scraper("tjrs", politica={"cjsg": {...}})` ajusta prazo, tentativas e espera, como no TRF3, no JusBR e na PDPJ.
+
 - TJMT: `TJMTScraper` reutiliza, na mesma instância, a URL da API e o token descobertos na primeira chamada a `cjsg`/`cjsg_download`, evitando consultar novamente a página e os scripts públicos do portal. Se a API responder HTTP 401 ou 403, redescobre a configuração uma única vez e repete a consulta com o token atualizado, sob a política de retry comum; se a recusa persistir, propaga `requests.HTTPError` ou `RetryExhaustedError`. Pedido na #492; a mudança é do PR #519, de vihumelo.
 - **BREAKING:** TJMT `cjsg` e `cjsg_download`: a interface acompanha a API nova do portal de jurisprudência, sem ciclo de deprecação. O portal trocou a API e a antiga deixou de responder JSON (#434), então não há como manter o comportamento anterior; as mudanças abaixo são as que a API nova impõe.
   - `data_publicacao_inicio`/`data_publicacao_fim` passa a ser o único filtro de data. O fim é inclusivo: `data_publicacao_fim="2025-03-10"` traz o que foi publicado em 10/03 inteiro e nada de 11/03.

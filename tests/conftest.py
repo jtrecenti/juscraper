@@ -19,6 +19,9 @@ from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DAT
 # ``tests/test_anti_bot_marker.py`` para exercitar o hook ``anti_bot`` abaixo.
 pytest_plugins = ["pytester"]
 
+#: Prazo, em segundos, de cada teste ``integration`` (ver ``pytest_collection_modifyitems``).
+PRAZO_INTEGRACAO = 600
+
 # Dentro de um hook, o git exporta GIT_DIR, GIT_INDEX_FILE e outras variáveis
 # que apontam para o repositório de quem commita. Os testes que criam
 # repositórios temporários (gates de lint e complexidade, passos do CI)
@@ -28,6 +31,21 @@ for _variavel in subprocess.run(
     ["git", "rev-parse", "--local-env-vars"], capture_output=True, text=True, check=True,
 ).stdout.split():
     os.environ.pop(_variavel, None)
+
+
+def pytest_collection_modifyitems(config, items):
+    """Dá a cada teste ``integration`` sem prazo próprio o prazo ``PRAZO_INTEGRACAO`` (pytest-timeout).
+
+    Uma conexão lenta prendia a integração por horas (#441); com o prazo, só o
+    teste que estoura reprova. Offline e notebooks do ``--nbmake`` ficam de
+    fora. ``--timeout=N`` na linha de comando vale no lugar deste prazo
+    (``0`` desliga); ``@pytest.mark.timeout(N)`` ajusta um teste.
+    """
+    if config.getoption("timeout") is not None:
+        return
+    for item in items:
+        if item.get_closest_marker("integration") and not item.get_closest_marker("timeout"):
+            item.add_marker(pytest.mark.timeout(PRAZO_INTEGRACAO))
 
 
 @pytest.hookimpl(wrapper=True)
