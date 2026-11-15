@@ -57,6 +57,15 @@ from .schemas import InputCpopgTRF
 logger = logging.getLogger("juscraper._trf")
 
 
+def _detalhe_em_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """DataFrame das linhas, com as colunas de :data:`COLUNAS_DETALHE` em ``None`` onde faltam.
+
+    A linha não lida traz só ``id_cnj`` (e ``motivo_falha``); sem o preenchimento,
+    um lote sem nenhuma linha lida sairia sem as colunas do detalhe (#442).
+    """
+    return pd.DataFrame([{**dict.fromkeys(COLUNAS_DETALHE), **row} for row in rows])
+
+
 class _Consulta(NamedTuple):
     """Resultado da consulta de um CNJ (peças só com ``download_pecas``)."""
 
@@ -263,7 +272,7 @@ class TRFConsultaScraper(HTTPScraper):
             )
         rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
-        return pd.DataFrame(rows, columns=[*COLUNAS_DETALHE, "id_cnj"])
+        return _detalhe_em_dataframe(rows)
 
     def cpopg(
         self,
@@ -348,7 +357,7 @@ class TRFConsultaScraper(HTTPScraper):
         motivos = [c.motivo for c in consultas]
         rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
-        df = pd.DataFrame(rows, columns=[*COLUNAS_DETALHE, "id_cnj", COLUNA_MOTIVO_FALHA])
+        df = _detalhe_em_dataframe(rows)
         if download_pecas:
             df["pecas"] = [c.pecas for c in consultas]
             df["pecas_falhas"] = [c.pecas_falhas for c in consultas]
