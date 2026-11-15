@@ -25,10 +25,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
                 page=1,
                 campo="I",
                 processo="00000000000000000000",
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
-                dt_publicacao_inicio="2024-02-01",
-                dt_publicacao_fim="2024-04-30",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
+                dt_publicacao_inicio="01/02/2024",
+                dt_publicacao_fim="30/04/2024",
             ),
             allow_blank=True,
         )],
@@ -51,10 +51,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         "txtPesquisa": "dano moral",
         "rdoCampo": "I",
         "txtProcesso": "00000000000000000000",
-        "dtDecisaoInicio": "2024-01-01",
-        "dtDecisaoFim": "2024-03-31",
-        "dtPublicacaoInicio": "2024-02-01",
-        "dtPublicacaoFim": "2024-04-30",
+        "dtDecisaoInicio": "01/01/2024",
+        "dtDecisaoFim": "31/03/2024",
+        "dtPublicacaoInicio": "01/02/2024",
+        "dtPublicacaoFim": "30/04/2024",
         "hdnPaginaAtual": "1",
         "numResultadosPorPagina": "10",
     }
@@ -119,8 +119,8 @@ def test_cjsg_data_inicio_alias_maps_to_dt_decisao(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
             ),
             allow_blank=True,
         )],
@@ -198,8 +198,8 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
             ),
             allow_blank=True,
         )],
@@ -221,15 +221,12 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
 
 @responses.activate
 def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
-    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam coercidas
-    em ISO ao form body do eproc.
+    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam ao form body
+    do eproc no mesmo formato.
 
-    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
-    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJSC`
-    e convertendo ambos os intervalos via ``coerce_brazilian_date``. Se o
-    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, o backend
-    recebe ``dtDecisaoInicio=01/01/2024`` em vez de ``2024-01-01`` e o
-    matcher dispara ``ConnectionError`` (refs #182, #173, #167)."""
+    O eproc do TJSC so filtra datas em ``DD/MM/YYYY``; em ISO a busca volta
+    vazia (#495). O teste anterior cobre a entrada em ISO; este, a entrada
+    ja no formato do backend (refs #182, #173, #167)."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
@@ -241,10 +238,10 @@ def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
-                dt_publicacao_inicio="2024-02-01",
-                dt_publicacao_fim="2024-04-30",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
+                dt_publicacao_inicio="01/02/2024",
+                dt_publicacao_fim="30/04/2024",
             ),
             allow_blank=True,
         )],

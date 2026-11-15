@@ -7,14 +7,12 @@ from tqdm import tqdm
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
-SEARCH_URL = (
-    "https://eproc1g.tjsc.jus.br/eproc/externo_controlador.php"
-    "?acao=jurisprudencia@jurisprudencia/listar_resultados"
-)
-AJAX_URL = (
-    "https://eproc1g.tjsc.jus.br/eproc/externo_controlador.php"
-    "?acao=jurisprudencia@jurisprudencia/ajax_paginar_resultado"
-)
+# O endereço antigo (eproc1g.tjsc.jus.br/eproc) responde 302 para este host. O
+# redirecionamento converte o POST em GET sem corpo, e o portal devolve a base
+# inteira, sem termo nem filtros (#495).
+CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlador.php"
+SEARCH_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/listar_resultados"
+AJAX_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/ajax_paginar_resultado"
 RESULTS_PER_PAGE = 10
 
 
@@ -93,7 +91,15 @@ def cjsg_download_manager(
     def _get_page(pagina_1based: int) -> str:
         data = build_cjsg_form_body(pesquisa=pesquisa, page=pagina_1based, **kwargs)
         url = cjsg_url_for_page(pagina_1based)
-        resp = request_fn("POST", url, data=data, timeout=60)
+        # Seguir um redirecionamento transformaria o POST em GET sem o
+        # formulário: a busca voltaria sem termo nem filtros, sem erro (#495).
+        resp = request_fn("POST", url, data=data, timeout=60, allow_redirects=False)
+        if resp.is_redirect:
+            raise RuntimeError(
+                f"TJSC: a busca de jurisprudência foi redirecionada para "
+                f"{resp.headers.get('Location')!r}. O portal mudou de endereço; "
+                "o raspador precisa ser atualizado."
+            )
         resp.encoding = resp.apparent_encoding
         return resp.text
 

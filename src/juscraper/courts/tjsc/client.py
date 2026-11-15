@@ -14,10 +14,10 @@ from .schemas import InputCJSGTJSC
 class TJSCScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Santa Catarina (TJSC).
 
-    Uses the eproc jurisprudence search at eproc1g.tjsc.jus.br.
+    Uses the eproc jurisprudence search at eprocwebcon.tjsc.jus.br.
     """
 
-    BASE_URL = "https://eproc1g.tjsc.jus.br"
+    BASE_URL = "https://eprocwebcon.tjsc.jus.br"
 
     def __init__(
         self,
@@ -63,9 +63,10 @@ class TJSCScraper(HTTPScraper):
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``. Mapeado para ``dt_decisao_*`` no backend.
+                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``. Mapeado para
+                  ``dt_decisao_*`` no backend, que recebe ``DD/MM/YYYY``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``YYYY-MM-DD``.
+                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
