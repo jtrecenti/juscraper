@@ -30,7 +30,7 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.courts.tjrr.download import _extract_cdata
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-from tests.tjrr._helpers import INDEX_URL, add_get_initial, add_page_2_ajax
+from tests.tjrr._helpers import INDEX_URL, add_get_initial, add_page_2_ajax, get_pesquisa_field_name
 
 CJSG_MIN_COLUMNS = {
     "processo", "classe", "relator", "orgao_julgador",
@@ -148,3 +148,64 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+def _get_que_lembra_a_busca(request):
+    """GET inicial como o portal responde.
+
+    Com o ``JSESSIONID`` de uma busca anterior, devolve a página de
+    resultados, sem o form ``menuinicial``.
+    """
+    if "JSESSIONID=" in request.headers.get("Cookie", ""):
+        return 200, {}, load_sample("tjrr", "cjsg/step_02_search.html")
+    return (
+        200,
+        {"Set-Cookie": "JSESSIONID=sessao-1; Path=/"},
+        load_sample("tjrr", "cjsg/step_01_consulta.html"),
+    )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_segunda_busca_na_mesma_instancia_comeca_sessao_nova(mocker):
+    """A segunda busca não herda a sessão JSF da primeira.
+
+    Com o ``JSESSIONID`` da busca anterior, o portal devolve a página de
+    resultados no GET inicial e ignora o POST da busca nova, trazendo os
+    resultados antigos em silêncio (reproduzido ao vivo).
+    """
+    mocker.patch("time.sleep")
+    for termo in ("dano moral", "usucapiao"):
+        responses.add_callback(
+            responses.GET, INDEX_URL, callback=_get_que_lembra_a_busca,
+            content_type="text/html; charset=UTF-8",
+        )
+        responses.add(
+            responses.POST, INDEX_URL,
+            body=load_sample("tjrr", "cjsg/step_02_search.html"),
+            content_type="text/html; charset=UTF-8",
+            match=[urlencoded_body_subset_matcher({get_pesquisa_field_name(): termo})],
+        )
+
+    scraper = jus.scraper("tjrr")
+    scraper.cjsg("dano moral", paginas=1)
+    scraper.cjsg("usucapiao", paginas=1)
+
+    gets = [c.request for c in responses.calls if c.request.method == "GET"]
+    assert "JSESSIONID=" not in (gets[1].headers.get("Cookie") or "")
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_get_sem_form_de_busca_falha_alto(mocker):
+    """Se o GET inicial vier sem o form ``menuinicial``, a busca falha.
+
+    Antes, o POST seguia com o form errado e o portal devolvia os
+    resultados da busca anterior, sem aviso.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET, INDEX_URL,
+        body=load_sample("tjrr", "cjsg/step_02_search.html"),
+        content_type="text/html; charset=UTF-8",
+    )
+    with pytest.raises(RuntimeError, match="menuinicial"):
+        jus.scraper("tjrr").cjsg("usucapiao", paginas=1)

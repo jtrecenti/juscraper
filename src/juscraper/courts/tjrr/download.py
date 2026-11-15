@@ -103,6 +103,14 @@ def _get_form_fields(request_fn: RequestFn) -> dict:
     """
     resp = request_fn("GET", BASE_URL, timeout=30)
     soup = BeautifulSoup(resp.text, "html.parser")
+    if not soup.find("form", {"id": "menuinicial"}):
+        # Com a sessão JSF de uma busca anterior, o portal devolve a página de
+        # resultados no lugar do form de busca, e o POST seguinte traria os
+        # resultados antigos em silêncio.
+        raise RuntimeError(
+            "TJRR page has no search form (menuinicial); the session may still "
+            "hold a previous search."
+        )
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
         raise RuntimeError("Could not find ViewState on TJRR page.")

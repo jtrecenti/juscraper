@@ -63,3 +63,21 @@ class TestCJSGTJRR:
         df_int = self.scraper.cjsg("direito", paginas=2)
         df_range = self.scraper.cjsg("direito", paginas=range(1, 3))
         assert len(df_int) == len(df_range)
+
+    def test_segunda_busca_na_mesma_instancia_respeita_os_filtros(self):
+        """A segunda busca não devolve os resultados da primeira.
+
+        Com o ``JSESSIONID`` da busca anterior, o portal ignorava a busca nova
+        e repetia os resultados antigos, sem aviso.
+        """
+        self.scraper.cjsg("dano moral", paginas=1)
+        df = self.scraper.cjsg(
+            "direito",
+            data_julgamento_inicio="01/01/2024",
+            data_julgamento_fim="30/06/2024",
+            paginas=1,
+        )
+        assert len(df) > 0
+        datas = pd.to_datetime(df["data_julgamento"]).dropna()
+        assert len(datas) > 0
+        assert datas.between("2024-01-01", "2024-06-30").all()

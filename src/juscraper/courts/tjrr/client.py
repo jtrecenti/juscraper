@@ -3,6 +3,7 @@
 from typing import Any
 
 import pandas as pd
+from requests.cookies import remove_cookie_by_name
 
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search
@@ -145,6 +146,7 @@ class TJRRScraper(HTTPScraper):
             orgao_julgador=orgao_julgador,
             especie=especie,
         )
+        self._descartar_sessao_jsf()
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
@@ -156,6 +158,16 @@ class TJRRScraper(HTTPScraper):
             orgao_julgador=inp.orgao_julgador,
             especie=inp.especie,
         )
+
+    def _descartar_sessao_jsf(self) -> None:
+        """Descarta o ``JSESSIONID`` para que a busca comece numa sessão JSF nova.
+
+        O portal guarda a última busca na sessão: com o ``JSESSIONID`` de uma
+        busca anterior, o GET inicial devolve a página de resultados, sem o
+        form ``menuinicial``, e o POST da busca nova é ignorado em silêncio,
+        trazendo os resultados da busca anterior (conferido ao vivo).
+        """
+        remove_cookie_by_name(self.session.cookies, "JSESSIONID")
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
         """Parse downloaded HTML pages.
