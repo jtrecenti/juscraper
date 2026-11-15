@@ -28,13 +28,12 @@ class _RecriaSemInit(Exception):
 
     def __reduce__(self) -> tuple[object, ...]:
         """Recria o erro com os mesmos ``args`` e atributos, sem o ``__init__``."""
-        return (_recriar_sem_init, (type(self), self.args), self.__dict__)
+        return (_recriar_sem_init, (type(self), *self.args), self.__dict__)
 
 
-def _recriar_sem_init(cls: type[BaseException], args: tuple[object, ...]) -> BaseException:
-    erro = cls.__new__(cls)
-    erro.args = args
-    return erro
+def _recriar_sem_init(cls: type[BaseException], *args: object) -> BaseException:
+    # ``BaseException.__new__`` já guarda ``args``; o ``__init__`` fica de fora.
+    return cls.__new__(cls, *args)
 
 
 class RetryExhaustedError(_RecriaSemInit):

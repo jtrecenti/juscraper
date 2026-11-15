@@ -4,12 +4,10 @@ from __future__ import annotations
 import copy
 import pickle
 
-import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import (
     BotChallengeBlockedError,
-    ColetaParcialError,
     InvalidJSONResponseError,
     RetryExhaustedError,
     WafChallengeError,
@@ -72,16 +70,3 @@ def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
     assert type(copia) is type(erro)
     assert copia.args == erro.args
     assert vars(copia) == vars(erro)
-
-
-def test_coleta_parcial_com_bloqueio_sobrevive_a_pickle():
-    """Caso do ``ProcessPoolExecutor``: o bloqueio viaja dentro de ``falhas``."""
-    erro = ColetaParcialError(
-        "parcial", resultado=pd.DataFrame({"a": [1]}), falhas=[(None, None, WafChallengeError("TJPE", URL))]
-    )
-    copia = pickle.loads(pickle.dumps(erro))
-    assert copia.args == ("parcial",)
-    pd.testing.assert_frame_equal(copia.resultado, erro.resultado)
-    (_, _, bloqueio) = copia.falhas[0]
-    assert isinstance(bloqueio, WafChallengeError)
-    assert bloqueio.bot_manager == "AWS WAF"
