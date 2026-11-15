@@ -305,17 +305,3 @@ def _verificar_data_frame_vazio(
         "A resposta continha hits, mas o parsing não produziu dados utilizáveis."
     )
     _falha_pagina(mensagem, causa)
-
-
-def _total_para_diagnostico(
-    api_response: dict[str, Any],
-    pagina: int,
-    total_info: dict[str, Any] | None,
-) -> dict[str, Any] | None:
-    """Guarda o total da primeira página para diagnosticar falhas posteriores."""
-    if pagina != 1:
-        return total_info
-    hits = api_response.get("hits")
-    if isinstance(hits, dict) and isinstance(hits.get("total"), dict):
-        return cast(dict[str, Any], hits["total"])
-    return total_info
