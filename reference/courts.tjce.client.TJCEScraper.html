@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -153,7 +153,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.courts.tjce.client.TJCEScraper" id="toc-juscraper.courts.tjce.client.TJCEScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper">courts.tjce.client.TJCEScraper</a></li>
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper" id="toc-juscraper.courts.tjce.client.TJCEScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper">courts.tjce.client.TJCEScraper</a>
+  <ul class="collapse">
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordao" id="toc-juscraper.courts.tjce.client.TJCEScraper.baixar_acordao" class="nav-link" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordao">baixar_acordao</a></li>
+  <li><a href="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos" id="toc-juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos" class="nav-link" data-scroll-target="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos">baixar_acordaos</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjce.client.TJCEScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -171,9 +178,175 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">1.0</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>TJCE uses the eSAJ platform with a TLS adapter (SECLEVEL=1).</p>
+<p>TJCE usa o eSAJ com adaptador TLS (SECLEVEL=1).</p>
+<p>O inteiro teor do acórdão sai direto do <code>cd_acordao</code> do cjsg (<code>cjsg/getArquivo.do</code>), sem login e sem captcha (sonda de 2026-11). A mesma rota pede reCAPTCHA no TJAC, TJAL e TJAM e login no TJSP.</p>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordao">baixar_acordao</a></td>
+<td>Baixa o PDF do inteiro teor do acórdão de uma linha do cjsg.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos">baixar_acordaos</a></td>
+<td>Baixa o PDF do acórdão de cada linha do cjsg; ver <a href="../reference/courts.tjce.client.TJCEScraper.html#juscraper.courts.tjce.client.TJCEScraper.baixar_acordao"><code>baixar_acordao</code></a>.</td>
+</tr>
+</tbody>
+</table>
+<section id="juscraper.courts.tjce.client.TJCEScraper.baixar_acordao" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjce.client.TJCEScraper.baixar_acordao">baixar_acordao</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper.baixar_acordao(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    cd_acordao,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    cd_foro,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa o PDF do inteiro teor do acórdão de uma linha do cjsg.</p>
+<p>Um pedido por acórdão, sem login e sem captcha. Devolve o PDF como o tribunal o publica; a extração de texto fica com quem usa a biblioteca.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cd_acordao</td>
+<td><code>str</code></td>
+<td>Coluna <code>cd_acordao</code> do cjsg.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>cd_foro</td>
+<td><code>str</code></td>
+<td>Coluna <code>cd_foro</code> do cjsg.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Pasta de destino. Default <code>download_path</code>. O PDF vai para <code>&lt;diretorio&gt;/acordaos/&lt;cd_acordao&gt;.pdf</code>.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>EntradaInvalidaError</code></td>
+<td>Código vazio ou que não é só dígitos. Herda de <code>ValueError</code>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>DocumentoNaoPdfError</code></td>
+<td><code>getArquivo.do</code> respondeu sem <code>%PDF</code> (página “Arquivo não localizado”, captcha ou login); nada é gravado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>str</code></td>
+<td>Caminho do PDF gravado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjce <span class="op">=</span> jus.scraper(<span class="st">"tjce"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjce.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> caminho <span class="op">=</span> tjce.baixar_acordao(df.cd_acordao[<span class="dv">0</span>], df.cd_foro[<span class="dv">0</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjce.client.TJCEScraper.baixar_acordaos">baixar_acordaos</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjce.client.TJCEScraper.baixar_acordaos(cjsg, diretorio<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa o PDF do acórdão de cada linha do cjsg; ver <a href="../reference/courts.tjce.client.TJCEScraper.html#juscraper.courts.tjce.client.TJCEScraper.baixar_acordao"><code>baixar_acordao</code></a>.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cjsg</td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Saída de <code>cjsg</code>, ou qualquer tabela com as colunas <code>cd_acordao</code> e <code>cd_foro</code>.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Pasta de destino. Default <code>download_path</code>.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>As linhas de entrada com <code>caminho_acordao</code> (<code>None</code> quando falhou) e <code>motivo_falha</code>. O motivo é <code>entrada_invalida</code>, <code>nao_pdf</code> ou um motivo de rede de <code>MOTIVOS_FALHA</code>; as falhas saem também num único <code>UserWarning</code> ao fim.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->
