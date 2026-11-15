@@ -117,11 +117,14 @@ df_2g[["id_cnj", "processo", "classe", "orgao_julgador", "orgao_julgador_colegia
 ## Handling processes the public portal cannot return
 
 When a CNJ does not surface in the public consultation (sealed or simply not
-found), the row carries only `id_cnj`. A lookup that fails (network or HTTP
-error on the search or on `/dados` after the retries, an unexpected response,
-a parser error) produces the same row, so the DataFrame alone does not tell
-"not found" from "failed": the failure is logged as a warning on the
-`juscraper.trf3` logger.
+found), the row carries only `id_cnj`, with `motivo_falha` set to `None`. A
+lookup that fails (network or HTTP error on the search or on `/dados` after
+the retries, an unexpected response, a parser error) also yields a row with
+only `id_cnj`, but `motivo_falha` names the reason (`timeout`, `conexao`,
+`retry_esgotado_<status>`, `resposta_inesperada`), and the failures come in a
+single `UserWarning` at the end. An Akamai block stops the batch: the blocked
+CNJ and the following ones come back as `bloqueio_anti_bot`, without new
+requests, under a `BloqueioAntiBotWarning`.
 """
         ),
         code(
@@ -135,7 +138,9 @@ df_missing
 ## Downloading the documents
 
 With `download_pecas=True`, each listed document is saved as a PDF under
-`<diretorio>/<cnj>/<id>.pdf`, and the `pecas` column lists the paths.
+`<diretorio>/<cnj>/<id>.pdf`, and the `pecas` column lists the paths. The
+documents that could not be downloaded go to `pecas_falhas`, as
+`{"id": ..., "motivo_falha": ...}`.
 """
         ),
         code(
@@ -153,8 +158,10 @@ for caminho in df_pecas.iloc[0]["pecas"]:
 ## Splitting download from parse
 
 `cpopg_download` returns, per CNJ, a dict with the raw JSON envelopes of each
-API route (or `None` when the process was not found or the lookup failed); `cpopg_parse` turns that
-list into the DataFrame. Useful to cache the raw responses before processing.
+API route (or `None` when the process was not found or the lookup failed,
+with the failures in a `UserWarning`); `cpopg_parse` turns that list into the
+DataFrame, without the `motivo_falha` column. Useful to cache the raw
+responses before processing.
 """
         ),
         code(
