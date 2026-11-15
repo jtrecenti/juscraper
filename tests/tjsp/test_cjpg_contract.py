@@ -24,6 +24,7 @@ from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjsp.cjpg_download import QueryTooLongError
 from tests._helpers import load_sample_bytes
@@ -276,6 +277,8 @@ def test_cjpg_pagina_que_falha_no_parse_levanta_coleta_parcial(tmp_path, mocker)
 
     assert len(erro.value.resultado) == 10
     assert set(erro.value.resultado.columns) >= CJPG_MIN_COLUMNS
+    # O parcial sai no formato do retorno completo, com ``None`` no texto ausente.
+    pd.testing.assert_frame_equal(erro.value.resultado, _texto_ausente_como_none(erro.value.resultado))
     assert len(erro.value.falhas) == 1
     assert not list(tmp_path.rglob("*.html"))
 

@@ -26,6 +26,7 @@ import pytest
 from juscraper import _SCRAPERS
 from juscraper.aggregators.pdpj.client import PdpjScraper
 from juscraper.core.base import BaseScraper
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.parse_utils import coerce_date_columns
 
 
@@ -337,3 +338,37 @@ def test_todo_metodo_publico_de_raspador_registrado_e_embrulhado(sigla):
             sem_embrulho.append(nome)
 
     assert sem_embrulho == []
+
+
+
+class _RaspadorParcial(BaseScraper):
+    def __init__(self, texto: pd.Series):
+        super().__init__("teste")
+        self.texto = texto
+
+    def cjsg(self) -> pd.DataFrame:
+        parcial = pd.DataFrame({"texto": self.texto, "numero": [np.nan, 1.0]})
+        raise ColetaParcialError("1 de 2 janelas falharam", resultado=parcial, falhas=[])
+
+
+def _parcial(texto: pd.Series) -> pd.DataFrame:
+    with pytest.raises(ColetaParcialError) as erro:
+        _RaspadorParcial(texto).cjsg()
+    return erro.value.resultado
+
+
+def test_resultado_de_coleta_parcial_sai_com_none_no_lugar_de_nan():
+    # ``concat`` de páginas em que a chave falta num registro deixa ``NaN`` na
+    # coluna ``object``, como no parcial do eSAJ, DataJud, TJSP e TJMG.
+    parcial = _parcial(pd.Series(["a", np.nan], dtype=object))
+
+    assert parcial["texto"].tolist() == ["a", None]
+    assert np.isnan(parcial.loc[0, "numero"])
+
+
+@pytest.mark.usefixtures("inferencia_do_pandas_3")
+def test_resultado_de_coleta_parcial_sai_como_object_no_pandas_3():
+    parcial = _parcial(pd.Series(["a", None]))
+
+    assert parcial["texto"].dtype == object
+    assert parcial["texto"].tolist() == ["a", None]

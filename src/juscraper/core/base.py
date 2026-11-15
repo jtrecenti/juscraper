@@ -15,6 +15,8 @@ from typing import Any, ClassVar, ParamSpec, TypeVar, cast
 
 import pandas as pd
 
+from juscraper.core.exceptions import ColetaParcialError
+
 logger = logging.getLogger("juscraper.core.base")
 
 # Serializa a criação sob demanda de ``download_path``: sem ela, threads que
@@ -110,6 +112,10 @@ def _com_saida_normalizada(metodo: Callable[_P, _R]) -> Callable[_P, _R]:
         token = _METODO_CHAMADO.set(metodo.__name__) if _METODO_CHAMADO.get() is None else None
         try:
             return cast("_R", _normalizar_saida(metodo(*args, **kwargs)))
+        except ColetaParcialError as erro:
+            # O parcial que sobe no erro sai no mesmo formato do retorno completo.
+            erro.resultado = _texto_ausente_como_none(erro.resultado)
+            raise
         finally:
             if token is not None:
                 _METODO_CHAMADO.reset(token)
@@ -146,6 +152,9 @@ class BaseScraper(ABC):
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Embrulha os métodos públicos para que texto ausente saia como ``None``.
+
+        Vale também para o ``resultado`` de um ``ColetaParcialError`` que o
+        método levante.
 
         O embrulho também registra o método público chamado pelo usuário, que
         :func:`rotulo_do_metodo_chamado` usa nas mensagens de erro.
