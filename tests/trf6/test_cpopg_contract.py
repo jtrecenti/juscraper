@@ -12,6 +12,7 @@ from urllib.parse import parse_qsl
 
 import pandas as pd
 import pytest
+import requests
 import responses
 
 import juscraper as jus
@@ -127,6 +128,37 @@ def test_cpopg_missing_process_returns_row_with_only_id_cnj(fake_captcha_solver)
     row = df.iloc[0]
     assert row["id_cnj"] == "00000000020994060000"
     assert pd.isna(row.get("processo")) or row.get("processo") is None
+    # Ausente da consulta pública não é falha da requisição.
+    assert row["motivo_falha"] is None
+
+
+@responses.activate
+def test_cpopg_falha_de_requisicao_vira_motivo_e_o_lote_segue(fake_captcha_solver):
+    """HTTP 500 na busca do 1º CNJ: a linha sai com ``http_500`` e aviso; o 2º é consultado."""
+    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
+    responses.add(responses.POST, POST_URL, status=500)
+    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"))
+    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", "cpopg/detail_normal.html"))
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="processo 00000000020994060000: http_500"):
+        df = scraper.cpopg(["00000000020994060000", "10052295520234063801"])
+
+    assert list(df["id_cnj"]) == ["00000000020994060000", "10052295520234063801"]
+    assert list(df["motivo_falha"]) == ["http_500", None]
+    assert pd.isna(df.iloc[0]["processo"])
+    assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
+
+
+@responses.activate
+def test_cpopg_download_avisa_falha_de_requisicao(fake_captcha_solver):
+    """``cpopg_download`` devolve ``None`` para a requisição que falhou e avisa o motivo."""
+    responses.add(responses.GET, GET_URL, body=requests.exceptions.ConnectionError("recusada"))
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="TRF6Scraper.cpopg_download: 1 consulta.*conexao"):
+        htmls = scraper.cpopg_download("10052295520234063801")
+    assert htmls == [None]
 
 
 @responses.activate

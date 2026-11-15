@@ -19,6 +19,7 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.base import BaseScraper
+from ...core.failures import COLUNA_MOTIVO_FALHA, avisar_falhas, motivo_falha_ou_inesperada
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import BROWSER_HEADERS, fetch_detail
 from .parse import parse_detail
@@ -75,6 +76,34 @@ class TRF6Scraper(BaseScraper):
             max_captcha_attempts=self.max_captcha_attempts,
         )
 
+    def _baixar(self, cnjs: list[str]) -> tuple[list[str | None], list[str | None]]:
+        """Detalhe HTML e motivo de falha de cada CNJ, na ordem da entrada.
+
+        Processo ausente da consulta pública sai ``None`` sem motivo. A
+        requisição que falha sai ``None`` com o motivo, e o lote segue.
+        """
+        htmls: list[str | None] = []
+        motivos: list[str | None] = []
+        for i, cnj in enumerate(tqdm(cnjs, desc="TRF6 cpopg")):
+            html: str | None = None
+            motivo: str | None = None
+            try:
+                html = self._fetch_one(cnj)
+            except requests.RequestException as exc:
+                logger.warning("Erro ao consultar %s: %s", cnj, exc)
+                motivo = motivo_falha_ou_inesperada(exc)
+            htmls.append(html)
+            motivos.append(motivo)
+            if i + 1 < len(cnjs) and self.sleep_time:
+                time.sleep(self.sleep_time)
+        return htmls, motivos
+
+    @staticmethod
+    def _avisar(cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
+        """Um ``UserWarning`` com os CNJs cuja requisição falhou."""
+        falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
+        avisar_falhas(falhas, f"TRF6Scraper.{metodo}", "consulta(s) de processo")
+
     # --- public API ------------------------------------------------------
 
     def cpopg_download(
@@ -82,23 +111,19 @@ class TRF6Scraper(BaseScraper):
         id_cnj: str | list[str],
         **kwargs: Any,
     ) -> list[str | None]:
-        """Download the detail HTML for each ``id_cnj``.
+        """Baixa o HTML do detalhe de cada ``id_cnj``.
 
-        Returns a list aligned with the input order. ``None`` entries indicate
-        processes the public consultation could not return — typically sigilo
-        or invalid CNJ. Captcha-solver failures (``RuntimeError``) propagate.
+        Devolve uma lista na ordem da entrada. ``None`` indica processo que a
+        consulta pública não devolveu: sigilo, CNJ inexistente ou falha da
+        requisição. Falhas de requisição não interrompem o lote e entram num
+        único ``UserWarning`` ao fim; :meth:`cpopg` traz o motivo de cada uma
+        em ``motivo_falha``. Falhas do resolvedor de captcha
+        (``RuntimeError``) propagam.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
-        results: list[str | None] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc="TRF6 cpopg")):
-            try:
-                results.append(self._fetch_one(cnj))
-            except requests.RequestException as exc:
-                logger.warning("Erro ao consultar %s: %s", cnj, exc)
-                results.append(None)
-            if i + 1 < len(cnjs) and self.sleep_time:
-                time.sleep(self.sleep_time)
-        return results
+        htmls, motivos = self._baixar(cnjs)
+        self._avisar(cnjs, motivos, "cpopg_download")
+        return htmls
 
     def cpopg_parse(
         self,
@@ -107,9 +132,11 @@ class TRF6Scraper(BaseScraper):
     ) -> pd.DataFrame:
         """Parse a list of detail HTMLs into a one-row-per-process DataFrame.
 
-        Rows for ``None`` entries (process not found) carry ``id_cnj`` plus
-        ``None`` in every other column, so callers can still distinguish
-        "looked up but missing" from "never tried".
+        Rows for ``None`` entries carry ``id_cnj`` plus ``None`` in every
+        other column, so callers can still distinguish "looked up but
+        missing" from "never tried". Sem a coluna ``motivo_falha``: um
+        ``None`` vindo de :meth:`cpopg_download` pode ser processo ausente
+        ou requisição que falhou, e só :meth:`cpopg` sabe qual.
         """
         if len(htmls) != len(id_cnj_list):
             raise ValueError(
@@ -136,9 +163,21 @@ class TRF6Scraper(BaseScraper):
         Accepts a single CNJ or a list. Returns a DataFrame with one row per
         process; columns include ``id_cnj``, ``processo``, ``classe``,
         ``data_autuacao``, ``situacao``, ``magistrado``, ``orgao_julgador``,
-        ``assuntos``, ``polo_ativo``, ``polo_passivo``, ``mpf``, ``perito``
-        and ``movimentacoes``.
+        ``assuntos``, ``polo_ativo``, ``polo_passivo``, ``mpf``, ``perito``,
+        ``movimentacoes`` and ``motivo_falha``.
+
+        ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
+        para processo ausente ou sob sigilo (linha só com ``id_cnj``).
+        Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj`` e
+        o motivo, no vocabulário de
+        :data:`juscraper.core.failures.MOTIVOS_FALHA` (``http_<status>``,
+        ``timeout``, ``conexao``; ``resposta_inesperada`` para outro erro de
+        requisição), e o lote segue. As falhas entram num único
+        ``UserWarning`` ao fim.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
-        htmls = self.cpopg_download(id_cnj, **kwargs)
-        return self.cpopg_parse(htmls, cnjs)
+        htmls, motivos = self._baixar(cnjs)
+        df = self.cpopg_parse(htmls, cnjs)
+        df[COLUNA_MOTIVO_FALHA] = motivos
+        self._avisar(cnjs, motivos, "cpopg")
+        return df
