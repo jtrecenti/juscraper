@@ -10,6 +10,7 @@ the session's ``PHPSESSID``.
 from __future__ import annotations
 
 import logging
+import numbers
 from typing import Any, NamedTuple
 
 import pandas as pd
@@ -52,10 +53,15 @@ class _Consulta(NamedTuple):
     motivo: str | None
 
 
-def _exigir_inteiro_positivo(nome: str, valor: object, *, ou_none: bool = False) -> None:
-    """Levanta ``TypeError`` se ``valor`` não é ``int`` (``bool`` não conta) e ``ValueError`` se é menor que 1."""
-    esperado = f"{nome} deve ser {'None ou ' if ou_none else ''}um inteiro maior que zero, não {valor!r}."
-    if isinstance(valor, bool) or not isinstance(valor, int):
+def _exigir_inteiro_positivo(nome: str, valor: object, *, aceita_none: bool = False) -> None:
+    """Levanta ``TypeError`` se ``valor`` não é inteiro (``bool`` não conta) e ``ValueError`` se é menor que 1.
+
+    Aceita inteiros do numpy, como ``RequestPolicy.max_retries``.
+    """
+    if aceita_none and valor is None:
+        return
+    esperado = f"{nome} deve ser {'None ou ' if aceita_none else ''}um inteiro maior que zero, não {valor!r}."
+    if isinstance(valor, bool) or not isinstance(valor, numbers.Integral):
         raise TypeError(esperado)
     if valor < 1:
         raise ValueError(esperado)
@@ -95,8 +101,7 @@ class TRF6Scraper(BaseScraper):
             ValueError: Um dos dois é menor que 1.
         """
         _exigir_inteiro_positivo("max_captcha_attempts", max_captcha_attempts)
-        if max_captcha_esgotado_seguidos is not None:
-            _exigir_inteiro_positivo("max_captcha_esgotado_seguidos", max_captcha_esgotado_seguidos, ou_none=True)
+        _exigir_inteiro_positivo("max_captcha_esgotado_seguidos", max_captcha_esgotado_seguidos, aceita_none=True)
         super().__init__("TRF6")
         self.session = requests.Session()
         self.session.headers.update(HEADERS)

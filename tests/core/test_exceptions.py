@@ -7,7 +7,13 @@ import pickle
 import pandas as pd
 import pytest
 
-from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError, WafChallengeError
+from juscraper.core.exceptions import (
+    BotChallengeBlockedError,
+    ColetaParcialError,
+    InvalidJSONResponseError,
+    RetryExhaustedError,
+    WafChallengeError,
+)
 from juscraper.courts.trf6.download import DesafioF5Error
 
 URL = "https://example.test/consulta"
@@ -54,11 +60,13 @@ def test_desafio_f5_passa_a_propria_mensagem():
         BotChallengeBlockedError("Falcao", URL, bot_manager="CloudFront", mensagem="bloqueio"),
         WafChallengeError("TJPE", URL, motivo="navegador ausente"),
         DesafioF5Error(URL),
+        InvalidJSONResponseError(URL, 200, 3, content_type="text/html", snippet="<html>"),
+        RetryExhaustedError(503, 3),
     ],
-    ids=["padrao", "mensagem", "waf", "f5"],
+    ids=["padrao", "mensagem", "waf", "f5", "json", "retry"],
 )
 @pytest.mark.parametrize("copiar", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
-def test_bloqueio_sobrevive_a_pickle_e_copy(erro, copiar):
+def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
     """``args`` só guarda a mensagem; o ``__init__`` pede outros argumentos."""
     copia = copiar(erro)
     assert type(copia) is type(erro)
@@ -72,6 +80,8 @@ def test_coleta_parcial_com_bloqueio_sobrevive_a_pickle():
         "parcial", resultado=pd.DataFrame({"a": [1]}), falhas=[(None, None, WafChallengeError("TJPE", URL))]
     )
     copia = pickle.loads(pickle.dumps(erro))
+    assert copia.args == ("parcial",)
+    pd.testing.assert_frame_equal(copia.resultado, erro.resultado)
     (_, _, bloqueio) = copia.falhas[0]
     assert isinstance(bloqueio, WafChallengeError)
     assert bloqueio.bot_manager == "AWS WAF"

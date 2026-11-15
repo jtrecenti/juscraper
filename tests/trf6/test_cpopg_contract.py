@@ -11,6 +11,7 @@ from __future__ import annotations
 import warnings
 from urllib.parse import parse_qsl
 
+import numpy as np
 import pandas as pd
 import pytest
 import requests
@@ -340,7 +341,7 @@ def test_limite_de_captcha_menor_que_um(parametro, limite):
 
 
 @pytest.mark.parametrize("parametro", ["max_captcha_attempts", "max_captcha_esgotado_seguidos"])
-@pytest.mark.parametrize("limite", ["3", 2.5, True])
+@pytest.mark.parametrize("limite", ["3", 2.5, 3.0, True])
 def test_limite_de_captcha_fora_de_int(parametro, limite):
     with pytest.raises(TypeError, match=parametro):
         jus.scraper("trf6", **{parametro: limite})
@@ -349,6 +350,11 @@ def test_limite_de_captcha_fora_de_int(parametro, limite):
 def test_max_captcha_attempts_nao_aceita_none():
     with pytest.raises(TypeError, match="max_captcha_attempts"):
         jus.scraper("trf6", max_captcha_attempts=None)
+
+
+def test_limite_de_captcha_aceita_inteiro_do_numpy():
+    scraper = jus.scraper("trf6", max_captcha_attempts=np.int64(2), max_captcha_esgotado_seguidos=np.int64(4))
+    assert (scraper.max_captcha_attempts, scraper.max_captcha_esgotado_seguidos) == (2, 4)
 
 
 def test_max_captcha_esgotado_seguidos_none_desliga():
