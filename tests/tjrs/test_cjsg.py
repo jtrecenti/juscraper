@@ -28,6 +28,9 @@ def test_cjsg_parametros_secao():
     assert not df_crime.empty
     assert "ementa" in df_crime.columns
     assert df_crime["ementa"].notnull().all()
+    # O filtro precisa restringir de fato a seção, não só devolver linhas.
+    assert (df_civel["secao"] == "CIVEL").all()
+    assert (df_crime["secao"] == "CRIME").all()
 
 
 @pytest.mark.integration

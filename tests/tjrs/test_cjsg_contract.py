@@ -68,7 +68,9 @@ def _inner_params(
         "facet_mes_ano_publicacao": "",
     }
     if secao:
-        payload["filtroSecao"] = {"civel": "C", "crime": "P"}[secao]
+        # Nomes das caixas de seção do formulário de busca do TJRS.
+        campo = {"civel": "filtroSecaoCivel", "crime": "filtroSecaoCrime"}[secao]
+        payload[campo] = secao
     return payload
 
 
