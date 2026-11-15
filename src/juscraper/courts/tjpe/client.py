@@ -213,6 +213,14 @@ class TJPEScraper(HTTPScraper):
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido (ex.: data
                 fora dos formatos aceitos, ``tipo_decisao`` fora do enum).
+            RuntimeError: Quando a busca devolve uma pagina fora dos formatos
+                conhecidos (nem resultados, nem escolha do tipo, nem "Nenhum
+                documento encontrado").
+
+        Warns:
+            UserWarning: Quando o portal responde "Nenhum documento
+                encontrado"; o resultado sai vazio. Com a pesquisa fora do ar,
+                o portal responde assim a qualquer termo.
 
         Returns:
             pd.DataFrame: Uma linha por decisao. Colunas canonicas:

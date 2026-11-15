@@ -17,6 +17,7 @@ import time
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
+from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade
 
@@ -90,6 +91,16 @@ def is_escolha_page(html: str) -> bool:
     """
     html_lower = html.lower()
     return "documentos encontrados" in html_lower and "documento 1" not in html_lower
+
+
+def is_sem_resultados_page(html: str) -> bool:
+    """Diz se o portal respondeu que nenhum tipo de decisão tem documento.
+
+    É a página de escolha em que cada tipo pedido traz ``Nenhum documento
+    encontrado`` no lugar de ``N documentos encontrados``.
+    """
+    html_lower = html.lower()
+    return "nenhum documento encontrado" in html_lower and "documentos encontrados" not in html_lower
 
 
 def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
@@ -349,15 +360,21 @@ def cjsg_download(
         # Step 3 - choose result type
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
-    elif is_results_page(response_html):
+    elif is_results_page(response_html) or is_sem_resultados_page(response_html):
         results_html = response_html
     else:
-        logger.warning("TJPE: unexpected response after search")
-        return []
+        raise RuntimeError(
+            "TJPE cjsg: a busca devolveu uma página fora dos formatos conhecidos "
+            "(nem resultados, nem escolha do tipo, nem 'Nenhum documento encontrado')."
+        )
 
     total_docs = extract_total_docs(results_html)
     if total_docs == 0:
-        logger.info("TJPE: no documents found for '%s'", pesquisa)
+        avisar(
+            f"TJPE cjsg: o portal respondeu 'Nenhum documento encontrado' para a busca {pesquisa!r}, "
+            "e o resultado sai vazio. Se a busca deveria trazer resultados, confira no portal "
+            f"({CONSULTA_URL}): com a pesquisa fora do ar, ele responde assim a qualquer termo."
+        )
         return []
 
     total_pages = math.ceil(total_docs / RESULTS_PER_PAGE)
