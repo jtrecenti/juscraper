@@ -51,15 +51,17 @@ def _pares_em_negrito(value_el: Tag) -> Iterator[tuple[str | None, str | None]]:
     O valor de cada ``<b>`` é o texto que vem depois dele, até o próximo
     ``<b>`` ou o fim do painel.
     """
-    for negrito in value_el.find_all("b"):
-        textos: list[str] = []
-        for texto in negrito.find_all_next(string=True):
-            if texto.parent is negrito:
-                continue
-            if texto.find_parent("b") is not None or not any(p is value_el for p in texto.parents):
-                break
+    rotulo: str | None = None
+    textos: list[str] = []
+    for texto in value_el.find_all(string=True):
+        if texto.parent is not None and texto.parent.name == "b":
+            if rotulo is not None:
+                yield rotulo, _norm_ws(" ".join(textos))
+            rotulo, textos = _norm_ws(texto), []
+        elif rotulo is not None:
             textos.append(str(texto))
-        yield _norm_ws(negrito.get_text()), _norm_ws(" ".join(textos))
+    if rotulo is not None:
+        yield rotulo, _norm_ws(" ".join(textos))
 
 
 def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
