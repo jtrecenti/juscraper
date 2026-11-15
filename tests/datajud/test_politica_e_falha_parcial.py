@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import warnings
 from typing import Any
@@ -681,21 +682,40 @@ def test_total_sem_relation_e_tratado_como_exato(monkeypatch):
     assert "10 registro(s) recebido(s) de 25 encontrado(s)" in str(erro)
 
 
-@pytest.mark.parametrize("total", [None, {}, {"relation": "eq"}])
-def test_total_ausente_nao_vira_interrogacao(monkeypatch, total):
+@pytest.mark.parametrize(
+    "total",
+    [
+        pytest.param(None, id="total-nulo"),
+        pytest.param({}, id="total-vazio"),
+        pytest.param({"relation": "eq"}, id="value-ausente"),
+        pytest.param({"value": None, "relation": "eq"}, id="value-nulo"),
+        pytest.param({"value": "25", "relation": "eq"}, id="value-texto"),
+        pytest.param({"value": True, "relation": "eq"}, id="value-bool"),
+        pytest.param({"value": 25, "relation": None}, id="relation-nula"),
+        pytest.param({"value": 25, "relation": "lte"}, id="relation-desconhecida"),
+    ],
+)
+def test_total_da_pagina_1_segue_a_regra_de_contar_processos(monkeypatch, total):
+    """O ``hits.total`` que a contagem marca ``json_invalido`` também interrompe a página 1.
+
+    Antes, ``listar_processos`` aceitava ``hits.total`` ausente ou sem
+    ``value`` inteiro e seguia sem o total, que ``contar_processos`` recusa.
+    """
     pagina = _pagina(1)
     pagina["hits"]["total"] = total
-    _instalar_paginas(monkeypatch, [pagina, None])
+    _instalar_paginas(monkeypatch, [pagina, copy.deepcopy(pagina)])
+    scraper = jus.scraper("datajud", verbose=0)
 
     with pytest.raises(ColetaParcialError) as exc_info:
-        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+        scraper.listar_processos(tribunal="TJSP", tamanho_pagina=10)
+    contagem = scraper.contar_processos(tribunal="TJSP")
 
     erro = exc_info.value
-    mensagem = str(erro)
-    assert "10 registro(s) recebido(s); a consulta não informou o total encontrado." in mensagem
-    assert "?" not in mensagem
-    assert "página 2" in mensagem
-    assert len(erro.resultado) == 10
+    assert "página 1" in str(erro)
+    assert "Resposta inválida: Campo 'hits.total' da resposta DataJud" in str(erro)
+    assert erro.resultado.empty
+    assert isinstance(erro.__cause__, TypeError)
+    assert contagem["error"].tolist() == ["json_invalido"]
 
 
 def test_pagina_com_hits_null_apos_pagina_valida_lanca_erro_parcial(monkeypatch):
