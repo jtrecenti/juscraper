@@ -96,8 +96,9 @@ do lote não descarte as linhas já processadas (#471).
 FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
 """Toda falha de transporte de ``HTTPScraper._request_with_retry``, com ou sem motivo no vocabulário.
 
-Mais larga que :data:`EXCECOES_DE_FALHA_POR_LINHA`: inclui ``TooManyRedirects``,
-``InvalidURL``, ``requests.JSONDecodeError`` e os demais ``RequestException``. Serve a
+Mais larga que :data:`EXCECOES_DE_FALHA_POR_LINHA` no transporte: inclui ``TooManyRedirects``,
+``InvalidURL``, ``requests.JSONDecodeError`` e os demais ``RequestException``, mas
+não ``BotChallengeBlockedError``, que não é falha de transporte. Serve a
 quem converte a falha de um item em resultado parcial mesmo quando
 :func:`motivo_falha` não tem motivo para ela. ``RetryExhaustedError`` entra à
 parte porque não herda de ``RequestException``.
