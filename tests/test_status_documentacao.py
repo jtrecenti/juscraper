@@ -265,12 +265,16 @@ def test_xfail_tjap_so_absorve_bloqueio_conhecido(pytester):
         import pytest
         from tests.tjap.test_tjap_cjsg import TestCJSGTJAP as ClasseOriginal
         from juscraper.courts.tjap.exceptions import TJAPSecurityCheckError
+        from juscraper.core.exceptions import RetryExhaustedError
 
         marcador = next(m for m in ClasseOriginal.pytestmark if m.name == "xfail")
         pytestmark = pytest.mark.xfail(*marcador.args, **marcador.kwargs)
 
         def test_bloqueio():
             raise TJAPSecurityCheckError("A verificação de segurança falhou", "")
+
+        def test_bloqueio_do_ip():
+            raise RetryExhaustedError(403, 3)
 
         def test_regressao():
             raise ValueError("parser quebrado")
@@ -279,4 +283,4 @@ def test_xfail_tjap_so_absorve_bloqueio_conhecido(pytester):
             assert True
     ''')
     resultado = pytester.runpytest("-p", "no:asyncio")
-    resultado.assert_outcomes(xfailed=1, failed=1, xpassed=1)
+    resultado.assert_outcomes(xfailed=2, failed=1, xpassed=1)

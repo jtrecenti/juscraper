@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.courts.tjap.exceptions import TJAPSecurityCheckError
 
 
@@ -11,9 +12,11 @@ from juscraper.courts.tjap.exceptions import TJAPSecurityCheckError
 @pytest.mark.xfail(
     reason="TJAP exige CAPTCHA Cloudflare Turnstile desde ~2026 — cjsg bloqueado "
     "via API pública (ref #279). Mantido como xfail não-strict: se o tribunal "
-    "remover o Turnstile, o XPASS sinaliza que a coleta voltou a funcionar.",
+    "remover o Turnstile, o XPASS sinaliza que a coleta voltou a funcionar. "
+    "De IP de datacenter (CI), o portal responde HTTP 403 antes do Turnstile "
+    "e o cliente esgota as tentativas.",
     strict=False,
-    raises=TJAPSecurityCheckError,
+    raises=(TJAPSecurityCheckError, RetryExhaustedError),
 )
 class TestCJSGTJAP:
     """Tests for cjsg of TJAP."""
