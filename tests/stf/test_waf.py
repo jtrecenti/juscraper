@@ -101,15 +101,14 @@ async def test_acquisition_and_renewal_with_running_loop(mocker, existing_token)
     stf = jus.scraper("stf", waf_token=existing_token)
     loop = asyncio.get_running_loop()
     with responses.RequestsMock() as mocked:
-        if existing_token is not None:
-            mocked.add(responses.POST, BASE_URL, status=202, headers={"x-amzn-waf-action": "challenge"})
+        mocked.add(responses.POST, BASE_URL, status=202, headers={"x-amzn-waf-action": "challenge"})
         mocked.add(
             responses.POST, BASE_URL,
             body=load_sample("stf", "listar_decisoes/no_results.json"), content_type="application/json",
         )
         df = stf.contar_decisoes("juscraper_probe_zero_hits_xyzqwe")
         assert mocked.calls[-1].request.headers["Cookie"] == "aws-waf-token=token-novo"
-        assert len(mocked.calls) == (2 if existing_token else 1)
+        assert len(mocked.calls) == 2
     assert df.iloc[0]["n"] == 0
     assert asyncio.get_running_loop() is loop
     assert browser.fechado

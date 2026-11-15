@@ -13,12 +13,9 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.tjpb.download import BASE_URL, SEARCH_URL, TOKEN_RE
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
-
-_HOME_HTML_BYTES = load_sample_bytes("tjpb", "cjsg/home.html")
-_TOKEN_MATCH = TOKEN_RE.search(_HOME_HTML_BYTES.decode("utf-8"))
-assert _TOKEN_MATCH is not None, "captured TJPB home.html lacks <meta name='_token' ...>"
+from juscraper.courts.tjpb.download import SEARCH_URL
+from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests.tjpb._helpers import add_get_classes
 
 # Sample has 10 hits with dt_ementa spanning 2022-2025:
 #   2022 → 1 row (20/10/2022)
@@ -29,13 +26,7 @@ _RESULTS_BODY = load_sample("tjpb", "cjsg/results_normal_page_01.json")
 
 
 def _stub_endpoints() -> None:
-    responses.add(
-        responses.GET,
-        BASE_URL,
-        body=_HOME_HTML_BYTES,
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
+    add_get_classes()
     responses.add(
         responses.POST,
         SEARCH_URL,

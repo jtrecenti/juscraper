@@ -20,9 +20,10 @@ logger = logging.getLogger("juscraper.tjgo")
 class TJGOScraper(HTTPScraper):
     """Scraper for the Court of Justice of Goiás.
 
-    The TJGO jurisprudence search (Projudi) renders a Cloudflare Turnstile
-    widget, but the backend does not validate the token — the flow works
-    with pure HTTP requests.
+    A busca de jurisprudencia do TJGO (Projudi) tem um widget Cloudflare
+    Turnstile. Desde 12/11/2026 (Projudi 3.194.1) o servidor valida o token, que
+    o raspador nao envia: toda busca volta vazia, e ``cjsg``/``cjsg_download``
+    emitem ``UserWarning`` explicando o bloqueio.
     """
 
     BASE_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"

@@ -145,6 +145,24 @@ scraper.cjsg(pesquisa="teste", paginas=1) # downloads page 1 only
 scraper.cjsg(pesquisa="teste", paginas=3) # downloads pages 1-3
 ```
 
+### TJSP `cpopg`/`cposg`: `method="api"` removed
+
+The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`
+even for processes that exist), so `method="api"` was removed without a
+deprecation cycle. Passing it raises `ValueError` before any request. Use
+`method="html"`, the default; the HTML pages carry the same data and more.
+
+```python
+# Before
+tjsp.cpopg("1000149-71.2024.8.26.0346", method="api")
+
+# After
+tjsp.cpopg("1000149-71.2024.8.26.0346")
+```
+
+`cpopg_parse` and `cposg_parse` no longer read the `.json` files the API
+download used to save.
+
 ### Date format flexibility
 
 Wired endpoints accept multiple input formats and coerce to the
@@ -231,6 +249,8 @@ except ColetaParcialError as erro:
     df = erro.resultado
     print(erro.falhas)
 ```
+
+DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
 
 Combining `auto_chunk=True` with `paginas` is rejected when
 the interval is long enough to actually trigger chunking: the multi-window
@@ -390,9 +410,8 @@ resultado["movimentacoes"][["data", "movimento", "cd_documento", "documento_publ
   end. A later `cpopg_download(..., download_pecas=True)` on the same
   folder downloads the process again only when a public PDF is missing, and
   requests only the missing PDFs.
-- `download_pecas=True` requires `method="html"` and
-  `baixar_movimentacoes=True`; otherwise it raises `ValueError` before any
-  request.
+- `download_pecas=True` requires `baixar_movimentacoes=True`; otherwise it
+  raises `ValueError` before any request.
 
 **Sentences from `cjpg`.** Each `cjpg` row has the four codes of the
 "Visualizar Inteiro Teor" link: `cd_processo`, `cd_foro`, `nm_alias` (often

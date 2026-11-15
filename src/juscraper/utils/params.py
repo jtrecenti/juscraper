@@ -2,12 +2,14 @@
 import difflib
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
+from numbers import Integral
 from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
+from ..core.base import rotulo_do_metodo_chamado
 from ..core.exceptions import ColetaParcialError
 from ..core.failures import resumir_falhas
 
@@ -69,27 +71,21 @@ def pop_normalize_aliases(kwargs: dict, *, include_canonical: bool = False) -> N
 
 
 def normalize_paginas(paginas) -> list | range | None:
-    """Normalize the ``paginas`` parameter to a consistent type.
+    """Normaliza ``paginas`` para ``None``, ``list`` ou ``range``.
 
-    Args:
-        paginas: ``None`` (all pages), ``int`` (shorthand for ``range(1, n+1)``),
-                 ``list`` or ``range`` (passthrough).
-
-    Returns:
-        ``None``, ``list``, or ``range``.
+    ``None`` (todas as páginas), ``list`` e ``range`` passam direto; um inteiro
+    ``n``, inclusive do numpy, vira ``range(1, n + 1)``.
 
     Raises:
-        TypeError: If *paginas* is not one of the accepted types.
+        TypeError: se *paginas* não é de um dos tipos aceitos, inclusive ``bool``.
     """
     if paginas is None:
         return None
-    if isinstance(paginas, int):
-        return range(1, paginas + 1)
     if isinstance(paginas, (list, range)):
         return paginas
-    raise TypeError(
-        f"paginas deve ser int, list, range ou None, não {type(paginas).__name__}"
-    )
+    if isinstance(paginas, bool) or not isinstance(paginas, Integral):  # ``True`` viraria a página 1
+        raise TypeError(f"paginas deve ser int (bool não vale), list, range ou None, não {type(paginas).__name__}")
+    return range(1, int(paginas) + 1)
 
 
 def normalize_pesquisa(pesquisa: str | None = None, **kwargs) -> str:
@@ -748,7 +744,7 @@ def _validate_pipeline_schema(
     try:
         return schema_cls(**values)
     except ValidationError as exc:
-        raise_on_extra_kwargs(exc, method_name, schema_cls=schema_cls)
+        raise_on_extra_kwargs(exc, rotulo_do_metodo_chamado(method_name), schema_cls=schema_cls)
         raise
 
 
@@ -812,8 +808,7 @@ def apply_input_pipeline_search(
     - Popping tribunal-specific deprecated aliases (``nr_processo``,
       ``magistrado``) **before** invoking this helper, otherwise pydantic
       rejects them as ``extra_forbidden``.
-    - Running tribunal-specific validators that should fire before pydantic
-      (e.g. ``validate_pesquisa_length`` in TJSP).
+    - Running tribunal-specific validators before pydantic (e.g. ``validate_pesquisa_length`` in TJSP).
     - Passing the window cap and ``origem_mensagem`` when the backend has a documented limit
       (eSAJ: ``max_anos=1, origem_mensagem="O eSAJ"``). The defaults disable it (audited under #128).
 
@@ -969,7 +964,7 @@ def resolve_deprecated_alias(
     new: str,
     current_value,
     *,
-    sentinel=None,
+    sentinel=None,  # pylint: disable=redefined-builtin
 ):
     """Pop ``old`` alias from ``kwargs`` and merge with ``current_value``.
 

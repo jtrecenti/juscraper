@@ -132,16 +132,32 @@ def test_desafio_repetido_depois_da_renovacao_levanta(stf, mocker):
 
 
 @responses.activate
-def test_sem_token_obtem_um_antes_da_primeira_busca(mocker):
-    """Sem ``waf_token``, o cookie e obtido antes do primeiro POST."""
+def test_sem_token_busca_sem_cookie_e_sem_navegador(mocker):
+    """Sem ``waf_token`` e sem desafio, o POST vai sem cookie e o Playwright nao abre."""
+    mocker.patch("time.sleep")
+    obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token")
+    _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
+
+    df = jus.scraper("stf").listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
+
+    assert df.empty
+    obter.assert_not_called()
+    assert all("Cookie" not in call.request.headers for call in responses.calls)
+
+
+@responses.activate
+def test_sem_token_obtem_um_quando_o_waf_desafia(mocker):
+    """Sem ``waf_token``, o cookie e obtido so depois do desafio, e a busca e repetida com ele."""
     mocker.patch("time.sleep")
     obter = mocker.patch("juscraper.courts.stf.client.obter_waf_token", return_value="token-obtido")
+    responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
     _add("no_results.json", integral=True, pesquisa="juscraper_probe_zero_hits_xyzqwe", pagina=1, tamanho_pagina=250)
 
     jus.scraper("stf").listar_decisoes("juscraper_probe_zero_hits_xyzqwe")
 
     obter.assert_called_once_with()
-    assert responses.calls[0].request.headers["Cookie"] == "aws-waf-token=token-obtido"
+    assert "Cookie" not in responses.calls[0].request.headers
+    assert responses.calls[1].request.headers["Cookie"] == "aws-waf-token=token-obtido"
 
 
 @responses.activate

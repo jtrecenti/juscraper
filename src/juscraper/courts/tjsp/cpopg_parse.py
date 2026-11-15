@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from .._esaj.pasta import documento_vinculado
-from .cpopg_download import caminho_do_documento
+from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
 _CANONICAL_KEYS = {
@@ -84,20 +84,16 @@ def cpopg_parse_manager(path: str):
     Raises
     ------
     ValueError
-        When ``path`` is a directory and no file in it could be parsed, either
-        because it holds no candidate ``.html``/``.json`` file or because every
-        candidate failed. Returning ``{}`` here would hide a download or read
-        failure behind an empty result.
+        Quando ``path`` é um diretório e nenhum arquivo dele pôde ser lido,
+        porque não há ``.html`` ou porque todos falharam. Devolver ``{}``
+        esconderia uma falha de download ou de leitura atrás de um resultado
+        vazio.
     """
     root = Path(path)
     if root.is_file():
         return cpopg_parse_single(str(root))
 
-    files = [
-        file
-        for file in root.rglob("*.[hj][st]*")
-        if file.is_file() and (file.suffix != '.json' or file.name[-6:-5].isnumeric())
-    ]
+    files = [file for file in root.rglob("*.html") if file.is_file()]
     parsed = []
     falhas = 0
     for file in tqdm(files, desc="Processando documentos"):
@@ -123,7 +119,7 @@ def _nothing_parsed_error(root: Path, candidatos: int, falhas: int) -> ValueErro
     if candidatos == 0:
         return ValueError(
             f"Nenhum arquivo do CPOPG lido em {root}: nenhum arquivo candidato "
-            "(.html ou .json de processo) encontrado no diretório."
+            "(.html de processo) encontrado no diretório."
         )
     return ValueError(
         f"Nenhum arquivo do CPOPG lido em {root}: {candidatos} arquivo(s) candidato(s), "
@@ -133,14 +129,9 @@ def _nothing_parsed_error(root: Path, candidatos: int, falhas: int) -> ValueErro
 
 def cpopg_parse_single(path: str):
     """Parse a downloaded file from the TJSP CPOPG consultation."""
-    # if file extension is html
-    if path.endswith('.html'):
-        result = cpopg_parse_single_html(path)
-    elif path.endswith('.json'):
-        result = cpopg_parse_single_json(path)
-    else:
+    if not path.endswith('.html'):
         raise ValueError(f"Unknown file extension for path: {path}")
-    return result
+    return cpopg_parse_single_html(path)
 
 
 def _extract_basic_data(soup: BeautifulSoup, path: str) -> dict:
@@ -180,14 +171,23 @@ def _fill_incident_header(soup: BeautifulSoup, data: dict) -> None:
     if not larger_tag:
         return
 
-    text = larger_tag.get_text(strip=True)
+    cnj, classe = _split_incident_header(larger_tag.get_text(strip=True))
+    if cnj:
+        data['id_processo'] = cnj
+    if data['classe'] is None and classe:
+        data['classe'] = classe
+
+
+def _split_incident_header(text: str) -> tuple[str | None, str | None]:
+    """Separa o cabeçalho de incidente do eSAJ, "Classe (CNJ)", em ``(cnj, classe)``.
+
+    Usado pelos parsers do cpopg e do cposg; a parte ausente vem ``None``. A
+    classe é o texto antes do CNJ, então um número sozinho não gera classe.
+    """
     match = _CNJ_PATTERN.search(text)
-    if match:
-        data['id_processo'] = match.group(0)
-    if data['classe'] is None:
-        classe_text = re.sub(r'\s*\(.*$', '', text).replace('\xa0', ' ').strip()
-        if classe_text:
-            data['classe'] = classe_text
+    head = text[:match.start()] if match else text
+    classe = re.sub(r'\s*\(.*$', '', head).replace('\xa0', ' ').strip()
+    return (match.group(0) if match else None), (classe or None)
 
 
 def _extract_labeled_value(label_span) -> tuple[str, str] | None:
@@ -380,51 +380,11 @@ def cpopg_parse_single_html(path: str):
     }
 
 
-def cpopg_parse_single_json(path: str):
-    """Parse a JSON file downloaded by cpopg_download."""
-    # primeiro, vamos listar todos os arquivos que estão na
-    # mesma pasta que o arquivo que está em path
-    lista_arquivos = [str(p) for p in Path(path).parent.glob("*.json")]
-    lista_processo = next(f for f in lista_arquivos if f[-6:-5].isnumeric())
-    lista_arquivos = [f for f in lista_arquivos if f not in lista_processo]
-    df_processo = pd.read_json(lista_processo, orient='records')
-    if df_processo.empty:
-        # A busca por número devolve [] sem baixar os demais JSONs; sem esta
-        # checagem, o merge abaixo levantava KeyError: 'basicos'.
-        raise ValueError(
-            f"A API do TJSP não devolveu nenhum processo para {Path(lista_processo).stem} "
-            "(resposta []). O processo pode existir mesmo assim: consulte com method='html'."
-        )
-
-    # agora, fazemos a leitura de cada arquivo e transformamos em um dataframe
-    dfs = {}
-    for arquivo in lista_arquivos:
-        nome = Path(arquivo).name
-        # split name in two variables separating by _
-        cd_processo, tipo = nome.split("_", 1)
-        tipo = tipo.split(".", 1)[0]
-        if 'basicos' in arquivo:
-            df = pd.read_json(arquivo, orient='index').transpose()
-        else:
-            df = pd.read_json(arquivo, orient='records')
-        df['cdProcesso'] = cd_processo
-        if tipo not in dfs:
-            dfs[tipo] = df
-        else:
-            dfs[tipo] = pd.concat([dfs[tipo], df], ignore_index=True)
-    # Com baixar_movimentacoes=False não há arquivo de movimentação; a chave fica,
-    # porque cpopg_parse_manager junta as tabelas pelas chaves do primeiro processo.
-    dfs.setdefault('movimentacao', pd.DataFrame(columns=['cdProcesso']))
-    df_processo = df_processo.merge(dfs['basicos'], how='left', on='cdProcesso')
-    dfs['basicos'] = df_processo
-    return dfs
-
-
 def get_cpopg_download_links(request):
     """Return the download links for the listed processes."""
     text = request.text
     bsoup = BeautifulSoup(text, 'html.parser')
-    lista = bsoup.find('div', {'id': 'listagemDeProcessos'})
+    lista = listagem_de_processos(bsoup)
     links: list = []
     if lista is None:
         id_tag = bsoup.find('form', {'id': 'popupSenha'})
@@ -434,5 +394,11 @@ def get_cpopg_download_links(request):
         if href is not None and 'show.do' in str(href):
             links.append(href)
     else:
-        links.extend(str(a['href']) for a in lista.find_all('a', href=True))
+        # A listagem também traz âncoras de interface, como o colapso
+        # "Incidentes e recursos" (href="#"); só os links para show.do
+        # são processos.
+        links.extend(
+            str(a['href']) for a in lista.find_all('a', href=True)
+            if 'show.do' in str(a['href'])
+        )
     return links

@@ -99,6 +99,8 @@ dados.head()
 
 > ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
 
+> ⚠️ **TJGO — `cjsg` sem resultados:** desde 12/11/2026 (Projudi 3.194.1) a busca de jurisprudência do TJGO valida no servidor o token [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), que o raspador não envia. Sem ele, o portal devolve a busca vazia, sem mensagem de erro, e `cjsg`/`cjsg_download` emitem `UserWarning` explicando o bloqueio. O portal responde do mesmo jeito a uma busca que de fato não tem resultados, por isso o aviso sai em toda busca vazia.
+
 <!-- status:inicio -->
 ## Implementações e status
 

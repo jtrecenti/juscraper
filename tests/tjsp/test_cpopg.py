@@ -9,12 +9,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts.tjsp.cpopg_parse import (
-    cpopg_parse_manager,
-    cpopg_parse_single_html,
-    cpopg_parse_single_json,
-    get_cpopg_download_links,
-)
+from juscraper.courts.tjsp.cpopg_parse import cpopg_parse_manager, cpopg_parse_single_html, get_cpopg_download_links
 from tests._helpers import load_sample
 
 from .test_utils import create_mock_response
@@ -107,6 +102,21 @@ class TestCPOPGUnit:
 
         assert isinstance(links, list)
         assert len(links) >= 0
+
+    def test_get_cpopg_download_links_lista_ignora_ancoras(self):
+        """Busca real com ação penal + execução da pena e o colapso "Incidentes e recursos" (href="#")."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_lista.html'))
+        links = get_cpopg_download_links(mock_response)
+
+        assert len(links) == 2
+        assert all(link.startswith('/cpopg/show.do?') for link in links)
+        assert 'processo.codigo=8L0002YR00000' in links[0]
+        assert 'processo.codigo=DY00007260000' in links[1]
+
+    def test_get_cpopg_download_links_bloqueio_sem_links(self):
+        """O aviso de consultas simultâneas não tem processos; quem trata é o download."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_consultas_simultaneas.html'))
+        assert get_cpopg_download_links(mock_response) == []
 
     def test_cpopg_parse_single_html(self):
         """Test parsing a single CPOPG HTML file."""
@@ -713,14 +723,6 @@ class TestCPOPGUnit:
         ]
         assert partes['advogados'].tolist() == [['Advogado do Banco'], ['PROCURADORIA DO MUNICÍPIO DE TANABI']]
         assert result['movimentacoes'].empty
-
-    def test_cpopg_parse_json_busca_vazia(self, tmp_path):
-        """A API devolve ``[]`` para o número: erro que diz isso, não ``KeyError: 'basicos'``."""
-        arquivo = tmp_path / '10001497120248260346.json'
-        arquivo.write_text('[]', encoding='utf-8')
-
-        with pytest.raises(ValueError, match=r'resposta \[\]'):
-            cpopg_parse_single_json(str(arquivo))
 
 
 if __name__ == "__main__":

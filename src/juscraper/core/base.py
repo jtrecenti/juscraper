@@ -9,6 +9,7 @@ import tempfile
 import threading
 from abc import ABC
 from collections.abc import Callable
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, ClassVar, ParamSpec, TypeVar, cast
 
@@ -85,10 +86,33 @@ def _normalizar_saida(resultado: object) -> object:
     return resultado
 
 
+# Método público que o usuário chamou, registrado pelo embrulho mais externo.
+_METODO_CHAMADO: ContextVar[str | None] = ContextVar("metodo_chamado", default=None)
+
+
+def rotulo_do_metodo_chamado(rotulo: str) -> str:
+    """Troca ``X.<metodo>_download()`` por ``X.<metodo>()`` quando o usuário chamou ``<metodo>``.
+
+    ``cjsg`` delega a ``cjsg_download``, onde os kwargs são validados; sem a
+    troca, o ``TypeError`` por kwarg desconhecido citaria um método que o
+    usuário não chamou (#263). Os demais rótulos voltam inalterados.
+    """
+    chamado = _METODO_CHAMADO.get()
+    sufixo = f".{chamado}_download()"
+    if chamado is not None and rotulo.endswith(sufixo):
+        return f"{rotulo.removesuffix(sufixo)}.{chamado}()"
+    return rotulo
+
+
 def _com_saida_normalizada(metodo: Callable[_P, _R]) -> Callable[_P, _R]:
     @functools.wraps(metodo)
     def embrulhado(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        return cast("_R", _normalizar_saida(metodo(*args, **kwargs)))
+        token = _METODO_CHAMADO.set(metodo.__name__) if _METODO_CHAMADO.get() is None else None
+        try:
+            return cast("_R", _normalizar_saida(metodo(*args, **kwargs)))
+        finally:
+            if token is not None:
+                _METODO_CHAMADO.reset(token)
 
     setattr(embrulhado, _MARCA_SAIDA_NORMALIZADA, True)
     return embrulhado
@@ -122,6 +146,9 @@ class BaseScraper(ABC):
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Embrulha os métodos públicos para que texto ausente saia como ``None``.
+
+        O embrulho também registra o método público chamado pelo usuário, que
+        :func:`rotulo_do_metodo_chamado` usa nas mensagens de erro.
 
         Vale para todo método público alcançável pela classe, inclusive
         ``staticmethod``, ``classmethod`` e os herdados de mixins que não

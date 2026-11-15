@@ -1,9 +1,11 @@
 """Avisos visíveis e validação de input no DataJud (refs #57)."""
 import pandas as pd
 import pytest
+import requests
 
 import juscraper as jus
 from juscraper.aggregators.datajud.parse import parse_datajud_api_response
+from juscraper.core.exceptions import ColetaParcialError
 
 
 @pytest.fixture()
@@ -43,24 +45,26 @@ class TestEmitsWarnings:
         assert df.empty
 
 
-class TestApiFailureEmitsWarning:
-    def test_http_error_emits_warning(self, datajud, mocker):
-        # Forca call_datajud_api a retornar None simulando uma falha HTTP
+class TestApiFailureRaisesPartialError:
+    def test_http_error_lanca_erro_parcial(self, datajud, mocker):
+        causa = requests.ConnectionError("falha simulada")
         mocker.patch(
             "juscraper.aggregators.datajud.client.call_datajud_api",
-            return_value=None,
+            side_effect=causa,
         )
-        with pytest.warns(UserWarning, match="falha ao consultar"):
-            df = datajud.listar_processos(tribunal="TJSP")
-        assert df.empty
+        with pytest.raises(ColetaParcialError, match="falha ao consultar") as exc_info:
+            datajud.listar_processos(tribunal="TJSP")
+
+        assert exc_info.value.resultado.empty
+        assert len(exc_info.value.falhas) == 1
+        assert exc_info.value.falhas[0][2] is causa
+        assert exc_info.value.__cause__ is causa
 
 
 class TestParseErrorEmitsWarning:
-    def test_malformed_hits_emits_warning(self):
+    def test_malformed_hits_lanca_excecao_de_parse(self):
         # hits deveria ser lista de dicts; passando string, o .get() sobre cada
-        # "hit" levanta AttributeError e dispara o handler de exceção do parse.
+        # "hit" propaga AttributeError no parser.
         malformed = {"hits": {"hits": ["not-a-dict"]}}
-        with pytest.warns(UserWarning, match="erro ao parsear"):
-            df = parse_datajud_api_response(malformed)
-        assert isinstance(df, pd.DataFrame)
-        assert df.empty
+        with pytest.raises(AttributeError, match="has no attribute 'get'"):
+            parse_datajud_api_response(malformed)

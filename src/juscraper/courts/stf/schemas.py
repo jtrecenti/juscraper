@@ -11,7 +11,7 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
 from ...schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
 from .download import MAX_TAMANHO_PAGINA
 
@@ -29,7 +29,7 @@ class InputListarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixi
     base: Literal["decisoes", "acordaos"] = "decisoes"
     classe: str | list[str] | None = None
     inteiro_teor: bool = False
-    tamanho_pagina: int = Field(default=MAX_TAMANHO_PAGINA, ge=1, le=MAX_TAMANHO_PAGINA)
+    tamanho_pagina: TamanhoPagina = Field(default=MAX_TAMANHO_PAGINA, le=MAX_TAMANHO_PAGINA)
     checkpoint_dir: str | Path | None = None
     resume: bool = False
 

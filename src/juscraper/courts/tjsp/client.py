@@ -23,9 +23,9 @@ from .._esaj.sentenca import EsajSentencaScraper
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
-from .cpopg_download import cpopg_download_api, cpopg_download_html, validar_download_pecas
+from .cpopg_download import cpopg_download_html, validar_download_pecas
 from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
-from .cposg_download import cposg_download_api, cposg_download_html
+from .cposg_download import cposg_download_html
 from .cposg_parse import cposg_parse_manager
 from .exceptions import QueryTooLongError, validate_pesquisa_length
 from .forms import build_tjsp_cjsg_body
@@ -111,7 +111,7 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
 
 
 class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
-    """Main scraper for TJSP — eSAJ web + api.tjsp.jus.br."""
+    """Raspador principal do TJSP, pelas páginas do eSAJ."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
     TRIBUNAL_NAME = "TJSP"
@@ -146,8 +146,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             **kwargs,
         )
         self.u_base = self.BASE_URL
-        self.api_base = "https://api.tjsp.jus.br/"
-        self.method: Literal["html", "api"] | None = None
+        self.method: Literal["html"] | None = None
 
     def listar_varas(self, *, grau: str = "1") -> pd.DataFrame:
         """Lista as varas de primeiro grau disponiveis para filtrar (cjpg).
@@ -172,13 +171,16 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
 
-    def set_method(self, method: Literal["html", "api"]):
-        """Validate and store the access method (``'html'`` or ``'api'``) for cpopg/cposg."""
-        if method not in ("html", "api"):
+    def set_method(self, method: str):
+        """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
+        if method == "api":
             raise ValueError(
-                f"Método {method} nao suportado. Os métodos suportados são 'html' e 'api'."
+                "method='api' foi removido: a API do TJSP (api.tjsp.jus.br) deixou de devolver "
+                "processos, inclusive os que existem. Use method='html', o default."
             )
-        self.method = method
+        if method != "html":
+            raise ValueError(f"Método {method} nao suportado. O único método suportado é 'html'.")
+        self.method = "html"
 
     # --- cjsg -----------------------------------------------------------
 
@@ -632,7 +634,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     def cpopg(
         self,
         id_cnj: str | list[str],
-        method: Literal["html", "api"] = "html",
+        method: Literal["html"] = "html",
         *,
         baixar_movimentacoes: bool = True,
         download_pecas: bool = False,
@@ -642,21 +644,19 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Args:
             id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
-            method (str): ``"html"`` (paginas do eSAJ) ou ``"api"``. Default
-                ``"html"``.
+            method (str): So ``"html"`` (paginas do eSAJ), o default. O
+                ``"api"`` foi removido e levanta ``ValueError``.
             baixar_movimentacoes (bool): Com ``False``, nao baixa as
-                movimentacoes, e a tabela delas sai vazia (no ``"html"``, a
-                pagina no formato antigo ja traz a lista e sai completa). No
-                ``"html"``, cada processo custa uma requisicao a mais por cinco
-                movimentacoes, mais uma; desligar poupa essas requisicoes.
-                Default ``True``.
+                movimentacoes, e a tabela delas sai vazia (a pagina no formato
+                antigo ja traz a lista e sai completa). Cada processo custa uma
+                requisicao a mais por cinco movimentacoes, mais uma; desligar
+                poupa essas requisicoes. Default ``True``.
             download_pecas (bool): Com ``True``, baixa tambem o PDF de cada
                 documento publico das movimentacoes, sem login: dois pedidos
                 por documento, feitos na sessao que acabou de listar as
                 movimentacoes, porque o eSAJ so libera documento ja listado.
-                Documento com senha do processo fica de fora. So no
-                ``"html"`` e com ``baixar_movimentacoes=True``. Default
-                ``False``.
+                Documento com senha do processo fica de fora. So com
+                ``baixar_movimentacoes=True``. Default ``False``.
             diretorio (str | None): Onde ficam os PDFs de ``download_pecas``,
                 que o exige: ``cpopg`` apaga a pasta de download ao terminar.
                 Os PDFs vao para
@@ -673,18 +673,17 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
-            ``movimentacoes`` e ``peticoes_diversas`` no metodo ``"html"``;
-            no metodo ``"api"``, uma tabela por tipo de JSON baixado. No
-            ``"html"``, ``basicos`` traz a ``situacao`` do cabecalho
-            ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz a lista
-            completa, que o download busca pagina a pagina. Na
-            ``movimentacoes`` do ``"html"``, ``cd_documento`` e
+            ``movimentacoes`` e ``peticoes_diversas``. ``basicos`` traz a
+            ``situacao`` do cabecalho ("Extinto", "Suspenso" etc.) e
+            ``movimentacoes`` traz a lista completa, que o download busca
+            pagina a pagina. Em ``movimentacoes``, ``cd_documento`` e
             ``documento_publico`` dizem se a linha tem documento e se ele
             abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
             ``None`` sem ``download_pecas``, para documento com senha e para
             o que falhou (as falhas saem num ``UserWarning``).
         """
-        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
+        self.set_method(method)
+        validar_download_pecas(baixar_movimentacoes, download_pecas)
         if download_pecas != (diretorio is not None):
             raise ValueError(
                 "download_pecas=True exige diretorio, e diretorio so vale com download_pecas=True: "
@@ -692,7 +691,6 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             )
         if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
             raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
-        self.set_method(method)
         self.cpopg_download(
             id_cnj, method, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
         )
@@ -705,22 +703,22 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     def cpopg_download(
         self,
         id_cnj: str | list[str],
-        method: Literal["html", "api"] = "html",
+        method: Literal["html"] = "html",
         diretorio: str | None = None,
         *,
         baixar_movimentacoes: bool = True,
         download_pecas: bool = False,
     ):
-        """Baixa arquivos brutos do CPOPG via ``'html'`` ou ``'api'``.
+        """Baixa as paginas HTML do CPOPG.
 
         Args:
             id_cnj: Numero CNJ ou lista de numeros CNJ.
-            method: Transporte usado no download. Default ``"html"``.
+            method: So ``"html"``, o default. Ver :meth:`cpopg`.
             diretorio: Sobrescreve :attr:`download_path` para esta chamada.
                 Default ``None``.
             baixar_movimentacoes: Com ``False``, nao baixa as movimentacoes.
-                Ver :meth:`cpopg`. No ``"html"``, um download com ``True`` no
-                mesmo diretorio baixa de novo o processo salvo sem elas.
+                Ver :meth:`cpopg`. Um download com ``True`` no mesmo diretorio
+                baixa de novo o processo salvo sem elas.
                 Default ``True``.
             download_pecas: Com ``True``, grava tambem o PDF de cada documento
                 publico das movimentacoes em
@@ -729,33 +727,20 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 baixa de novo o processo salvo com documento publico sem PDF,
                 e pede so os PDFs que faltam. Default ``False``.
         """
-        validar_download_pecas(method, baixar_movimentacoes, download_pecas)
         self.set_method(method)
+        validar_download_pecas(baixar_movimentacoes, download_pecas)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
-        if self.method == "html":
-            def get_links_callback(response):
-                return get_cpopg_download_links(response)
-            cpopg_download_html(
-                id_cnj_list=id_cnj,
-                session=self.session,
-                u_base=self.u_base,
-                download_path=diretorio or self.download_path,
-                sleep_time=self.sleep_time,
-                get_links_callback=get_links_callback,
-                baixar_movimentacoes=baixar_movimentacoes,
-                download_pecas=download_pecas,
-            )
-        elif self.method == "api":
-            cpopg_download_api(
-                id_cnj_list=id_cnj,
-                session=self.session,
-                api_base=self.api_base,
-                download_path=diretorio or self.download_path,
-                baixar_movimentacoes=baixar_movimentacoes,
-            )
-        else:
-            raise ValueError(f"Método '{method}' não é suportado.")
+        cpopg_download_html(
+            id_cnj_list=id_cnj,
+            session=self.session,
+            u_base=self.u_base,
+            download_path=diretorio or self.download_path,
+            sleep_time=self.sleep_time,
+            get_links_callback=get_cpopg_download_links,
+            baixar_movimentacoes=baixar_movimentacoes,
+            download_pecas=download_pecas,
+        )
 
     def cpopg_parse(self, path: str):
         """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
@@ -763,14 +748,18 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         Raises:
             ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
                 pode ser lido, ou quando ``path`` e um arquivo com extensao
-                diferente de ``.html``/``.json``. Ver :func:`cpopg_parse_manager`.
+                diferente de ``.html``. Ver :func:`cpopg_parse_manager`.
         """
         return cpopg_parse_manager(path)
 
     # --- cposg ----------------------------------------------------------
 
-    def cposg(self, id_cnj: str, method: Literal["html", "api"] = "html"):
-        """Fetch a second-degree process by CNJ and return a DataFrame."""
+    def cposg(self, id_cnj: str, method: Literal["html"] = "html"):
+        """Fetch a second-degree process by CNJ and return a DataFrame.
+
+        ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e
+        levanta ``ValueError``.
+        """
         self.set_method(method)
         path = self.download_path
         self.cposg_download(id_cnj, method)
@@ -784,38 +773,27 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
     def cposg_download(
         self,
         id_cnj: str | list,
-        method: Literal["html", "api"] = "html",
+        method: Literal["html"] = "html",
         diretorio: str | None = None,
     ):
-        """Baixa arquivos brutos do CPOSG via HTML ou API.
+        """Baixa as paginas HTML do CPOSG.
 
         Args:
             id_cnj: Numero CNJ ou lista de numeros CNJ.
-            method: Transporte usado no download. Default ``"html"``.
+            method: So ``"html"``, o default. Ver :meth:`cposg`.
             diretorio: Sobrescreve :attr:`download_path` para esta chamada.
                 Default ``None``.
         """
         self.set_method(method)
         if isinstance(id_cnj, str):
             id_cnj = [id_cnj]
-        if self.method == "html":
-            cposg_download_html(
-                id_cnj_list=id_cnj,
-                session=self.session,
-                u_base=self.u_base,
-                download_path=diretorio or self.download_path,
-                sleep_time=self.sleep_time,
-            )
-        elif self.method == "api":
-            cposg_download_api(
-                id_cnj_list=id_cnj,
-                session=self.session,
-                api_base=self.api_base,
-                download_path=diretorio or self.download_path,
-                sleep_time=self.sleep_time,
-            )
-        else:
-            raise ValueError(f"Método '{method}' não é suportado.")
+        cposg_download_html(
+            id_cnj_list=id_cnj,
+            session=self.session,
+            u_base=self.u_base,
+            download_path=diretorio or self.download_path,
+            sleep_time=self.sleep_time,
+        )
 
     def cposg_parse(self, path: str):
         """Parse downloaded CPOSG files into a DataFrame."""

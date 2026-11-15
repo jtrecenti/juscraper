@@ -7,6 +7,28 @@ juscraper é uma biblioteca Python para coletar dados de tribunais e agregadores
 - Usar `uv`. Para preparar o ambiente de desenvolvimento: `uv sync --extra dev` (inclui instalação editável). Testes devem importar o pacote instalado, sem alterar `sys.path`.
 - Versões suportadas e regras de lint ficam em `pyproject.toml`; as dispensas temporárias por arquivo ficam em `ruff.toml`; os hooks ficam em `.pre-commit-config.yaml`.
 - Antes de concluir uma alteração, executar os testes afetados e `uv run pre-commit run --files <arquivos alterados>`. Para mudanças de API/schema, incluir `tests/schemas/`.
+
+```bash
+uv sync --extra dev                          # ambiente + instalação editável
+uv run pre-commit install                    # hooks locais, inclusive a suíte offline
+uv run pytest -n auto                        # suíte offline em paralelo (~30 s)
+uv run ruff check --config ruff.toml src tests
+uv run pre-commit run mypy --all-files       # typecheck: o gate é o mypy do hook
+uv run pre-commit run --all-files            # todos os hooks, como no CI
+```
+
+- O typecheck que reprova é o hook `mypy` do pre-commit, com versão e dependências fixadas no `.pre-commit-config.yaml`. `uv run mypy src` usa outra versão e acusa centenas de erros que não são gate.
+- O hook `pytest` roda a suíte offline em todo commit. `SKIP=pytest git commit ...` o pula num commit pontual; o CI roda a suíte de qualquer forma.
+- CI (`.github/workflows/`): `Testes` (pytest em 3.11–3.15, cobertura mínima de 94% na perna 3.13), `Lint` (`uv.lock`, Ruff, política de dispensas e pre-commit), `Qualidade` (complexidade e Semgrep), `Changelog` e `Integração` (notebooks contra os tribunais; semanal e nos tribunais tocados pelo PR). Os passos de CI são testados em `tests/ci_workflows/`.
+
+## Estrutura
+
+- `src/juscraper/courts/<sigla>/`: um pacote por tribunal: `client.py` com a classe pública e módulos de parse/download por endpoint. Famílias compartilhadas ficam em pacotes com `_`: `_esaj/` (TJSP, TJAC, TJAL, TJAM, TJCE, TJMS) e `_trf/`.
+- `src/juscraper/aggregators/`: Datajud, JusBR, PDPJ, ComunicaCNJ e Falcão.
+- `src/juscraper/core/` (base, HTTP, WAF, avisos, exceções), `schemas/` (modelos pydantic `Input*`/`Output*`), `utils/` (normalização de parâmetros, paginação).
+- `tests/<sigla>/` com `samples/` de respostas reais; `tests/schemas/` para paridade de schemas; `tests/lint_policy/`, `tests/complexity_gate/` e `tests/ci_workflows/` testam o próprio tooling.
+- `scripts/`: gates de lint e complexidade, release e relatório de integração. `docs/`: site Quarto e notebooks por tribunal.
+- Commits e PRs em português, com a área no início (`TJMT: ...`, `CI: ...`, `fix(tjro): ...`).
 - Ao investigar complexidade, consultar `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**. Métricas complementares, com gate no pre-commit e no CI.
 
 ## Arquitetura
@@ -25,6 +47,7 @@ uv run pytest -m integration           # acessa serviços externos
 
 - Ao usar skills para criar ou alterar raspadores, seguir a política de testes deste repositório.
 - Mudança em parser HTML/JSON exige sample e teste para o formato afetado. Contratos verificam colunas do DataFrame e propagação de filtros no payload; samples vêm de respostas reais, não de campos inventados.
+- Testes ao vivo rodam localmente, de IP residencial: os tribunais bloqueiam com frequência os IPs do runner do GitHub, e uma falha da `Integração` no runner não prova quebra do raspador. Ao mexer num tribunal, rodar a integração dele antes do PR; os comandos estão em `CONTRIBUTING.md` > **Integração local**.
 - Marcar testes que acessam rede com `integration`. Ferramentas, estrutura de samples, helpers e tratamento de anti-bot estão em `CONTRIBUTING.md` > **Tests**; consultar antes de escrever contratos ou executar integração.
 - Antes de refatorar um tribunal, seus contratos devem passar. Wiring de schema entra na refatoração estrutural ou em PR dedicado posterior, separado do PR de contratos. Se a issue de contratos deixar wiring em aberto, abrir follow-up.
 
@@ -87,7 +110,7 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 ## Changelog
 
 - Registrar apenas efeitos para quem usa a API pública: funcionalidades, filtros, correções observáveis, breaking changes e deprecações. Deprecações incluem a tabela de aliases. Correção de docstring que orientava o usuário incorretamente também entra.
-- Refatorações internas, testes, tooling e documentação sem efeito público não precisam de entrada.
+- Refatorações internas, testes, tooling e documentação sem efeito público não precisam de entrada. O workflow `Changelog` (`.github/workflows/changelog.yml`) reprova o PR que muda `src/juscraper/` sem tocar o `CHANGELOG.md`; quando a mudança não tem efeito público, a etiqueta `sem-changelog` dispensa a entrada.
 - Seguir as categorias de Keep a Changelog já usadas no arquivo. Novas entradas ficam em `[Unreleased]`, acima das versões publicadas, que são imutáveis.
 - Consolidar o mesmo efeito em uma entrada com a lista de tribunais afetados, inclusive em PRs com vários commits. Separar apenas quando o efeito divergir entre tribunais.
 

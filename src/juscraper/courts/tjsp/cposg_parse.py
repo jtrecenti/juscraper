@@ -10,6 +10,9 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
+from ...core.avisos import avisar
+from .cpopg_parse import _split_incident_header
+
 logger = logging.getLogger('juscraper.cposg_parse')
 
 _FIELD_MAPPING = (
@@ -49,45 +52,65 @@ _DETAIL_TABLE_STYLE = 'margin-left:15px; margin-top:1px;'
 
 
 def cposg_parse(path: str):
-    """Parse all CPOSG HTML files under ``path``."""
+    """Interpreta os arquivos HTML do CPOSG em ``path``."""
     return cposg_parse_manager(path)
 
 
 def cposg_parse_manager(path: str):
-    """
-    Standalone parse manager for CPOSG HTML files. Returns a DataFrame with parsed data.
-    """
-    arquivos = list(Path(path).rglob('*.html'))
+    """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame."""
+    raiz = Path(path)
+    # O download grava em <path>/cposg/; o cpopg, no mesmo download_path, em
+    # <path>/cpopg/, com os mesmos nomes de arquivo. Só a pasta do cposg entra.
+    if (raiz / 'cposg').is_dir():
+        raiz = raiz / 'cposg'
+    arquivos = list(raiz.rglob('*.html'))
     dados = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
-            linhas = cposg_parse_single_html(arq)
-            dados.extend(linhas)
+            dados.extend(cposg_parse_single_html(arq))
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
             logger.error("Erro ao processar %s: %s", arq, e)
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)
 
 
-def cposg_parse_single_json(path: str):
-    """Stub to avoid import error."""
-    raise NotImplementedError("cposg_parse_single_json not implemented yet.")
-
-
 def _extract_header(soup: BeautifulSoup) -> dict:
     """Extract process identifiers and status tags."""
     result = {}
-    id_link = soup.select_one("a[href*='processo.codigo']")
-    if id_link:
-        result['id_original'] = id_link.get_text(strip=True)
-
-    processo_tag = soup.select_one('span.unj-larger')
-    if processo_tag:
-        result['processo'] = processo_tag.get_text(strip=True)
+    # No cabeçalho atual, o número fica em span#numeroProcesso.
+    numero = soup.find('span', id='numeroProcesso')
+    texto_numero = numero.get_text(strip=True) if numero else None
+    if texto_numero:
+        result['id_original'] = result['processo'] = texto_numero
+    else:
+        result.update(_extract_header_sem_numero(soup))
 
     status_tags = soup.select('span.unj-tag')
     if status_tags:
         result['status'] = ' / '.join(tag.get_text(strip=True) for tag in status_tags)
     return result
+
+
+def _extract_header_sem_numero(soup: BeautifulSoup) -> dict:
+    """Lê o cabeçalho de uma página sem ``span#numeroProcesso``.
+
+    Na página de incidente, span.unj-larger traz "Embargos de Declaração
+    Criminal (CNJ)". Sem CNJ ali, o primeiro link para processo.codigo pode ser
+    de um incidente ("Embargos de Declaração - 50000") ou do processo de 1ª
+    instância.
+    """
+    processo_tag = soup.select_one('span.unj-larger')
+    texto = processo_tag.get_text(strip=True) if processo_tag else ''
+    cnj, classe = _split_incident_header(texto)
+    if cnj:
+        return {'id_original': cnj, 'processo': cnj, 'classe': classe}
+
+    fields = {}
+    id_link = soup.select_one("a[href*='processo.codigo']")
+    if id_link:
+        fields['id_original'] = id_link.get_text(strip=True)
+    if processo_tag:
+        fields['processo'] = texto
+    return fields
 
 
 def _extract_labeled_fields(soup: BeautifulSoup) -> dict:
@@ -132,12 +155,8 @@ def _extract_movement_text(desc_cell) -> str:
     return str(temp_cell.get_text(separator=' ', strip=True)).split('\n')[0].strip()
 
 
-def _extract_movements(soup: BeautifulSoup) -> list[dict]:
+def _extract_movements(movs_table: Tag) -> list[dict]:
     """Extract the movement table in displayed order."""
-    movs_table = soup.find(id='tabelaTodasMovimentacoes')
-    if not movs_table:
-        return []
-
     movements = []
     for row in movs_table.find_all('tr', class_='movimentacaoProcesso'):
         cells = row.find_all('td')
@@ -316,12 +335,21 @@ def cposg_parse_single_html(html_path):
 
     if soup.select('.linkProcesso'):
         return []
-    if not soup.find(id='tabelaTodasMovimentacoes'):
-        return []
+    # Formato antigo: tabelaTodasMovimentacoes. Atual: o eSAJ carrega as
+    # movimentações à parte, e cposg_download as grava em tabelaMovimentacoesAjax.
+    movs_table = soup.find(id='tabelaTodasMovimentacoes') or soup.find(id='tabelaMovimentacoesAjax')
+    if movs_table is None:
+        if soup.find(id='containerMovimentacoesAjax') is None:
+            return []
+        avisar(
+            f"{html_path}: a página do processo não traz as movimentações, que o eSAJ "
+            "carrega à parte; a coluna 'movimentacoes' sai vazia para ele. Baixe o "
+            "processo de novo com cposg_download, que grava as movimentações no HTML."
+        )
 
     result = _extract_header(soup)
     result.update(_extract_labeled_fields(soup))
-    result['movimentacoes'] = _extract_movements(soup)
+    result['movimentacoes'] = _extract_movements(movs_table) if movs_table is not None else []
     result['partes'] = _extract_parties(soup)
     result['historico'] = _extract_history(soup)
 

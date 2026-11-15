@@ -6,7 +6,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,6 +27,30 @@ class _InvalidProcessCodeError(ValueError):
 _TENTATIVAS = 5
 
 
+# Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
+# sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
+_AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
+
+
+class _ConsultaBloqueadaError(RuntimeError):
+    """A busca voltou com o aviso de consultas simultâneas do e-SAJ."""
+
+
+def _verificar_bloqueio(texto):
+    """Levanta :class:`_ConsultaBloqueadaError` se a busca voltou com o aviso de consultas simultâneas."""
+    # Sem esta checagem, a página de aviso (que não tem links) faria o
+    # processo parecer inexistente.
+    if _AVISO_CONSULTAS_SIMULTANEAS in texto.lower():
+        raise _ConsultaBloqueadaError(
+            "e-SAJ bloqueou a busca por consultas simultâneas; aumente o sleep_time."
+        )
+
+
+def listagem_de_processos(soup):
+    """Contêiner da busca que lista processos; ``None`` quando a busca já é a página do processo."""
+    return soup.find('div', {'id': 'listagemDeProcessos'})
+
+
 # A página do processo traz o bloco de movimentações vazio e um botão "Exibir
 # movimentações"; o JavaScript do eSAJ busca a lista em
 # carregarMovimentacoesAjax.do, cinco linhas por página, e segue o cursor de
@@ -45,12 +69,10 @@ def caminho_do_documento(pasta_processo, cd_documento):
     return Path(pasta_processo) / PASTA_DOCUMENTOS / f"{safe_path_component(cd_documento, field='cdDocumento')}.pdf"
 
 
-def validar_download_pecas(method, baixar_movimentacoes, download_pecas):
+def validar_download_pecas(baixar_movimentacoes, download_pecas):
     """Recusa ``download_pecas`` onde não há links de documento para seguir."""
     if not download_pecas:
         return
-    if method != "html":
-        raise ValueError("download_pecas=True só funciona com method='html': a API não lista os documentos.")
     if not baixar_movimentacoes:
         raise ValueError(
             "download_pecas=True exige baixar_movimentacoes=True: os documentos vêm das movimentações."
@@ -189,13 +211,7 @@ def cpopg_download_html_single(
     logger.info("Salvando em %s", path)
     if not Path(path).is_dir():
         Path(path).mkdir(parents=True)
-    # Os documentos de um processo são gravados juntos no fim
-    # (_salvar_resultados_html), então um .html na pasta indica o processo
-    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
-    salvos = [
-        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
-    ]
-    if salvos and not _incompleto(salvos, baixar_movimentacoes, pecas is not None):
+    if _ja_baixado(path, baixar_movimentacoes, pecas is not None):
         logger.info("O processo %s ja foi baixado.", id_clean)
         return path
     time.sleep(sleep_time)
@@ -211,10 +227,11 @@ def cpopg_download_html_single(
         'dadosConsulta.valorConsulta': '',
         'dadosConsulta.tipoNuProcesso': 'UNIFICADO'
     }
-    ultimo_erro = None
-    for _ in range(_TENTATIVAS):
+    ultimo_erro: Exception | None = None
+    for tentativa in range(_TENTATIVAS):
         try:
             r = session.get(u, params=parms)
+            _verificar_bloqueio(r.text)
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -232,6 +249,9 @@ def cpopg_download_html_single(
             # nova tentativa; sai antes do except genérico, que capturaria o
             # ValueError e repetiria a busca quatro vezes à toa.
             raise
+        except _ConsultaBloqueadaError as e:
+            ultimo_erro = e
+            _esperar_desbloqueio(tentativa, sleep_time, id_clean)
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, requests.RequestException) as e:
             ultimo_erro = e
@@ -248,6 +268,31 @@ def cpopg_download_html_single(
             f"Processo {id_clean}: {_TENTATIVAS} tentativas sem sucesso; último erro: {ultimo_erro}"
         ) from ultimo_erro
     return path
+
+
+def _esperar_desbloqueio(tentativa, sleep_time, id_clean):
+    """Recuo exponencial (piso de 1 s) antes de repetir a busca bloqueada; nenhum depois da última."""
+    if tentativa == _TENTATIVAS - 1:
+        return
+    espera = max(sleep_time, 1) * 2 ** tentativa
+    logger.warning(
+        "e-SAJ bloqueou a busca do processo %s por consultas simultâneas. "
+        "Tentando novamente em %.1f segundos.",
+        id_clean,
+        espera,
+    )
+    time.sleep(espera)
+
+
+def _ja_baixado(path, baixar_movimentacoes, download_pecas):
+    """Indica se a pasta do processo já tem o download completo; ver :func:`_incompleto`."""
+    # Os documentos de um processo são gravados juntos no fim
+    # (_salvar_resultados_html), então um .html na pasta indica o processo
+    # inteiro. O de 0 byte vem de versão que gravava antes de ler a resposta.
+    salvos = [
+        file for file in Path(path).iterdir() if file.name.endswith('.html') and file.stat().st_size > 0
+    ]
+    return bool(salvos) and not _incompleto(salvos, baixar_movimentacoes, download_pecas)
 
 
 def _extrair_codigos_processo(links):
@@ -283,14 +328,17 @@ def _salvar_resultados_html(
         logger.error("Nenhum link encontrado para o processo %s.", id_limpo)
         raise RuntimeError(f"Nenhum link encontrado para o processo {id_limpo}.")
     documentos = {}
-    if len(links) == 1:
+    # Uma lista com um único processo (e o colapso "Incidentes e recursos")
+    # não é a página dele: o show.do ainda precisa ser pedido.
+    if len(links) == 1 and listagem_de_processos(BeautifulSoup(resposta.text, 'html.parser')) is None:
         documentos[codigos_processo[0]] = _completar_documento(
             resposta.text, sessao, url_base, codigos_processo[0], caminho, id_limpo,
             baixar_movimentacoes=baixar_movimentacoes, pecas=pecas,
         )
     else:
         for indice, link in enumerate(links):
-            resposta_documento = sessao.get(f"{url_base}{link}")
+            # urljoin junta base e href com barra simples; "//cpopg/show.do" dá 404.
+            resposta_documento = sessao.get(urljoin(url_base, link))
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."
@@ -396,9 +444,15 @@ def _incluir_movimentacoes(html, sessao, url_base, codigo_processo, *, baixar_mo
 
 
 def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
-    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``."""
+    """Segue o cursor e anexa as linhas de cada página em ``tabelaOutrasPaginasMovimentacoes``.
+
+    Cursor repetido, página sem linhas ou página igual à anterior levantam
+    ``RuntimeError``: o eSAJ já devolveu a mesma página com um cursor novo a
+    cada chamada (#474), e seguir o cursor não terminaria.
+    """
     outras_paginas = bloco.find('tbody', id='tabelaOutrasPaginasMovimentacoes')
     vistos = set()
+    anterior = [str(linha) for linha in bloco.find_all('tr', class_='containerMovimentacao')]
     while cursor:
         if outras_paginas is None or cursor in vistos:
             raise RuntimeError(
@@ -415,6 +469,12 @@ def _anexar_paginas_seguintes(bloco, sessao, url_base, codigo_processo, cursor):
             raise RuntimeError(
                 f"Movimentações do processo {codigo_processo}: página sem linhas no cursor {cursor!r}."
             )
+        atual = [str(linha) for linha in linhas]
+        if atual == anterior:
+            raise RuntimeError(
+                f"Movimentações do processo {codigo_processo}: o cursor {cursor!r} repetiu a página anterior."
+            )
+        anterior = atual
         outras_paginas.extend(linhas)
         linha_cursor = pagina.find('tr', id='trCursorMovimentacoes')
         cursor = linha_cursor.get('data-cursor') if linha_cursor else None
@@ -439,100 +499,3 @@ def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
             f"O eSAJ recusou as movimentações do processo {codigo_processo}."
         )
     return resposta.text
-
-
-def cpopg_download_api(
-    id_cnj_list,
-    session,
-    api_base,
-    download_path,
-    *,
-    baixar_movimentacoes=True,
-):
-    """
-    Downloads processes in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    id_cnj_list: list of CNJs
-    session: requests.Session authenticated
-    api_base: base URL of ESAJ API
-    download_path: base directory to save
-    baixar_movimentacoes: with False, skips the movimentacao endpoint
-    """
-    n_items = len(id_cnj_list)
-    for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
-        try:
-            cpopg_download_api_single(
-                idp, session, api_base, download_path, baixar_movimentacoes=baixar_movimentacoes,
-            )
-        except (OSError, UnicodeDecodeError, ValueError,
-                AttributeError, requests.RequestException) as e:
-            logger.error(
-                "Erro ao baixar o processo %s: %s",
-                idp,
-                e
-            )
-            continue
-
-
-def cpopg_download_api_single(
-    id_cnj,
-    session,
-    api_base,
-    download_path,
-    *,
-    baixar_movimentacoes=True,
-):
-    """
-    Downloads a process in JSON from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOPG).
-    id_cnj: CNJ of the process
-    session: requests.Session authenticated
-    api_base: base URL of ESAJ API
-    download_path: base directory to save
-    baixar_movimentacoes: with False, skips the movimentacao endpoint
-    """
-    endpoint = 'processo/cpopg/search/numproc/'
-    id_clean = clean_cnj(id_cnj)
-    u = f"{api_base}{endpoint}{id_clean}"
-    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
-    path = f"{download_path}/cpopg/{id_clean}"
-    if not Path(path).is_dir():
-        Path(path).mkdir(parents=True)
-    r = session.get(u)
-    if r.status_code != 200:
-        raise requests.HTTPError(
-            f"A consulta à API falhou."
-            f"Status code {r.status_code}."
-        )
-    with Path(f"{path}/{id_clean}.json").open('w', encoding='utf-8') as f:
-        f.write(r.text)
-    json_response = r.json()
-    if not json_response:
-        logger.error("Nenhum dado encontrado para o processo %s.", id_clean)
-        return ''
-    for processo in json_response:
-        cd_processo = processo['cdProcesso']
-        cd_processo_safe = safe_path_component(cd_processo, field="cdProcesso")
-        endpoint_basicos = 'processo/cpopg/dadosbasicos/'
-        u_basicos = f"{api_base}{endpoint_basicos}{cd_processo}"
-        r_basicos = session.post(u_basicos, json={'cdProcesso': cd_processo})
-        if r_basicos.status_code != 200:
-            raise requests.HTTPError(
-                f"A consulta à API falhou."
-                f"Status code {r_basicos.status_code}."
-            )
-        with (Path(path) / f"{cd_processo_safe}_basicos.json").open('w', encoding='utf-8') as f:
-            f.write(r_basicos.text)
-        componentes = ['partes', 'movimentacao', 'incidente', 'audiencia']
-        if not baixar_movimentacoes:
-            componentes.remove('movimentacao')
-        for comp in componentes:
-            endpoint_comp = f"processo/cpopg/{comp}/{cd_processo}"
-            r_comp = session.get(f"{api_base}{endpoint_comp}")
-            if r_comp.status_code == 200:
-                with (Path(path) / f"{cd_processo_safe}_{comp}.json").open('w', encoding='utf-8') as f:
-                    f.write(r_comp.text)
-            else:
-                raise requests.HTTPError(
-                    f"Erro ao buscar {comp} para o processo {cd_processo}."
-                    f"Status: {r_comp.status_code}"
-                )
-    return path

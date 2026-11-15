@@ -102,6 +102,7 @@ def assert_unknown_kwarg_raises(
     kwarg: str,
     *args,
     valor: str = "x",
+    rotulo: str | None = None,
     **extra_kwargs,
 ) -> None:
     """Confirma que ``kwarg`` dispara ``TypeError`` canonico no endpoint.
@@ -134,12 +135,17 @@ def assert_unknown_kwarg_raises(
             ``TypeError`` e emitido pelo pydantic *antes* de qualquer
             validacao de formato, entao qualquer string serve. Default
             ``"x"``.
+        rotulo (str | None): Rotulo do metodo que deve abrir a mensagem
+            (ex.: ``"TJPIScraper.cjsg()"``). Default ``None`` (confere so o
+            sufixo canonico).
         **extra_kwargs: Kwargs extras propagados para ``method`` — util
             para cenarios que precisam de filtros adicionais (ex.: TJSP
             auto_chunk exige uma janela longa de ``data_julgamento_*``
             para acionar o sniff; eSAJ exige ``paginas=1``).
     """
     pattern = rf"got unexpected keyword argument\(s\): '{re.escape(kwarg)}'"
+    if rotulo is not None:
+        pattern = rf"^{re.escape(rotulo)} {pattern}"
     with pytest.raises(TypeError, match=pattern):
         method(*args, **{kwarg: valor, **extra_kwargs})
 

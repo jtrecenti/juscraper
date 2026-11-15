@@ -11,6 +11,7 @@ from pydantic import ConfigDict, ValidationError
 from juscraper.schemas.cjsg import SearchBase
 from juscraper.schemas.mixins import DataJulgamentoMixin, DataPublicacaoMixin
 from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, validate_intervalo_datas
+from tests._helpers import assert_unknown_kwarg_raises
 
 
 class _SchemaSimples(SearchBase):
@@ -33,6 +34,17 @@ class _SchemaIsoBackend(SearchBase, DataJulgamentoMixin):
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+
+
+_ROTULO = "Test.cjsg()"
+
+
+def _pipeline_simples(**kwargs):
+    """Adapta o pipeline sobre ``_SchemaSimples`` a ``assert_unknown_kwarg_raises``."""
+    apply_input_pipeline_search(
+        _SchemaSimples, _ROTULO,
+        pesquisa="x", paginas=1, kwargs=kwargs,
+    )
 
 
 def test_apply_input_pipeline_returns_validated_model():
@@ -59,21 +71,16 @@ def test_apply_input_pipeline_int_paginas_normalized_to_range():
 
 
 def test_apply_input_pipeline_unknown_kwarg_raises_typeerror():
-    kwargs = {"kwarg_inventado": "x"}
-    with pytest.raises(TypeError, match=r"Test\.cjsg\(\) got unexpected keyword argument\(s\): 'kwarg_inventado'"):
-        apply_input_pipeline_search(
-            _SchemaSimples, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
-        )
+    assert_unknown_kwarg_raises(_pipeline_simples, "kwarg_inventado", rotulo=_ROTULO)
 
 
 def test_apply_input_pipeline_multiple_unknown_kwargs_listed():
-    kwargs = {"foo": "1", "bar": "2"}
-    with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\)"):
-        apply_input_pipeline_search(
-            _SchemaSimples, "Test.cjsg()",
-            pesquisa="x", paginas=1, kwargs=kwargs,
-        )
+    with pytest.raises(TypeError) as exc_info:
+        _pipeline_simples(foo="1", bar="2")
+
+    assert str(exc_info.value) == (
+        f"{_ROTULO} got unexpected keyword argument(s): 'foo', 'bar'"
+    )
 
 
 def test_apply_input_pipeline_data_inicio_alias_emits_deprecation_warning():
@@ -134,14 +141,12 @@ def test_apply_input_pipeline_data_filter_on_schema_without_mixin_raises_typeerr
     schemas sem ``DataJulgamentoMixin`` não disparam fill nem warning, deixam
     o ``extra_forbidden`` virar ``TypeError`` direto.
     """
-    kwargs = {"data_julgamento_inicio": "01/01/2024"}
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        with pytest.raises(TypeError, match=r"got unexpected keyword argument\(s\): 'data_julgamento_inicio'"):
-            apply_input_pipeline_search(
-                _SchemaSimples, "Test.cjsg()",
-                pesquisa="x", paginas=1, kwargs=kwargs,
-            )
+        assert_unknown_kwarg_raises(
+            _pipeline_simples, "data_julgamento_inicio",
+            valor="01/01/2024", rotulo=_ROTULO,
+        )
 
     assert not any(issubclass(warning.category, UserWarning) for warning in caught)
 
@@ -241,8 +246,9 @@ def test_raise_on_extra_kwargs_raises_typeerror_for_pure_extra_forbidden():
     try:
         _S(pesquisa="x", extra="y")
     except ValidationError as exc:
-        with pytest.raises(TypeError, match=r"got unexpected keyword argument"):
+        with pytest.raises(TypeError) as exc_info:
             raise_on_extra_kwargs(exc, "Test")
+        assert str(exc_info.value) == "Test got unexpected keyword argument(s): 'extra'"
     else:
         pytest.fail("Schema should have raised ValidationError")
 

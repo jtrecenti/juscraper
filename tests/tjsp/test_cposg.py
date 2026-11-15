@@ -196,26 +196,55 @@ class TestCPOSGUnit:
             },
         ]
 
+    def test_cposg_parse_cabecalho_com_incidentes(self):
+        """Com incidentes na página, ``id_original`` e ``processo`` vêm do cabeçalho, não do link do incidente.
+
+        Sample real do 0022175-24.2003.8.26.0344, com os nomes das partes e dos
+        advogados trocados por fictícios.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_com_incidentes.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '0022175-24.2003.8.26.0344'
+        assert row['processo'] == '0022175-24.2003.8.26.0344'
+        assert row['classe'] == 'Apelação Criminal'
+
+    def test_cposg_parse_pagina_de_incidente(self):
+        """Na página do incidente, o cabeçalho traz "Classe (CNJ)": ``processo`` é o CNJ e ``classe``, o resto.
+
+        Sample real do incidente 50000 do 0022175-24.2003.8.26.0344
+        (``show.do?processo.codigo=RI004MGQ412KW``), com os nomes das partes e
+        dos advogados trocados por fictícios. É a página que o download grava
+        para cada incidente quando a busca abre o modal de incidentes, como no
+        1502870-48.2020.8.26.0161.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_incidente.html')
+
+        assert len(result) == 1
+        row = result[0]
+        assert row['id_original'] == '0022175-24.2003.8.26.0344'
+        assert row['processo'] == '0022175-24.2003.8.26.0344'
+        assert row['classe'] == 'Embargos de Declaração Criminal'
+        assert row['status'] == 'Encerrado'
+
     def test_cposg_parse_real_sample_contract(self):
-        """Characterize the collection sizes and representative rows from the recorded page."""
-        result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
+        """Página como o eSAJ a serve, sem as movimentações: os demais campos saem, com aviso.
+
+        As movimentações vêm do ``carregarMovimentacoesAjax.do``; o contrato
+        ``test_cposg_html_simple_response`` cobre o arquivo que o download grava.
+        """
+        with pytest.warns(UserWarning, match="não traz as movimentações"):
+            result = cposg_parse_single_html(_SAMPLES / 'search_listagem.html')
 
         assert len(result) == 1
         row = result[0]
         assert row['id_original'] == '1000149-71.2024.8.26.0346'
         assert row['classe'] == 'Apelação Cível'
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
-        assert row['processo'] is None
+        assert row['processo'] == '1000149-71.2024.8.26.0346'
         assert row['volume_apenso'] is None
-        assert len(row['movimentacoes']) == 24
-        assert row['movimentacoes'][:2] == [
-            {
-                'data': '25/06/2025',
-                'movimento': 'Expedido Certidão de Baixa de Recurso',
-                'descricao': 'Certidão de Baixa de Recurso - [Digital]',
-            },
-            {'data': '25/06/2025', 'movimento': 'Baixa Definitiva', 'descricao': ''},
-        ]
+        assert row['movimentacoes'] == []
         assert len(row['partes']) == 13
         assert row['partes'][:2] == [
             {
@@ -302,6 +331,59 @@ class TestCPOSGUnit:
             'composicao',
             'primeira_inst',
         ]
+
+    def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):
+        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``."""
+        id_processo = '10001497120248260346'
+        html = load_sample('tjsp', 'cposg/results_complete.html')
+        conteudos = {'cposg': html, 'cpopg': html.replace('1234567-89.2025.8.26.0000', '7654321-98.2025.8.26.0000')}
+        for pasta, conteudo in conteudos.items():
+            destino = tmp_path / pasta / id_processo
+            destino.mkdir(parents=True)
+            (destino / f'{id_processo}_cd_processo_X.html').write_text(conteudo, encoding='utf-8')
+
+        result = cposg_parse_manager(str(tmp_path))
+
+        assert result['processo'].tolist() == ['1234567-89.2025.8.26.0000']
+
+    @pytest.mark.parametrize(
+        ('cabecalho', 'link', 'esperado'),
+        [
+            pytest.param(
+                'Agravo Interno Cível\n\t\t(1502870-48.2020.8.26.0161)&nbsp;',
+                'Embargos de Declaração - 50000',
+                {
+                    'id_original': '1502870-48.2020.8.26.0161',
+                    'processo': '1502870-48.2020.8.26.0161',
+                    'classe': 'Agravo Interno Cível',
+                },
+                id='incidente-com-quebra-de-linha',
+            ),
+            pytest.param(
+                'Processo sem número',
+                '1502870-48.2020.8.26.0161',
+                {'id_original': '1502870-48.2020.8.26.0161'},
+                id='sem-cnj-no-cabecalho',
+            ),
+        ],
+    )
+    def test_cabecalho_sem_numero_processo(self, tmp_path, cabecalho, link, esperado):
+        """Sem ``span#numeroProcesso``, o CNJ vem de ``span.unj-larger``; sem CNJ ali, do primeiro link."""
+        sample = tmp_path / 'cabecalho.html'
+        sample.write_text(
+            f'''
+            <html><body>
+                <span class="unj-larger">{cabecalho}</span>
+                <a href="/cposg/show.do?processo.codigo=RI0000000000">{link}</a>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+            </body></html>
+            ''',
+            encoding='utf-8',
+        )
+
+        row = cposg_parse_single_html(sample)[0]
+
+        assert {campo: row[campo] for campo in esperado} == esperado
 
     def test_empty_relator_row_does_not_block_nonempty_fallback(self, tmp_path):
         """Preserve the relator fallback past an empty composition row, as the previous parser did."""

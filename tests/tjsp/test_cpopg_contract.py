@@ -1,19 +1,13 @@
-"""Offline contract tests for TJSP cpopg (both ``method='html'`` and ``'api'``).
+"""Offline contract tests for TJSP cpopg (``method='html'``).
 
 Mocks the request flows against samples captured by
 ``tests/fixtures/capture/tjsp.py``. Validates that the public ``.cpopg()``
 call returns a dict of DataFrames with the expected keys and minimum
-schema, for both transports.
+schema.
 
 HTML flow: GET ``cpopg/search.do?…`` → scraper extracts one
 ``processo.codigo`` → saves the search response itself (the eSAJ returns
 the process details directly when the CNJ is unique).
-
-API flow: GET ``processo/cpopg/search/numproc/{id}`` → POST
-``processo/cpopg/dadosbasicos/{cd}`` → four GETs for partes/movimentacao/
-incidente/audiencia. Order is not enforced via ``OrderedRegistry`` because
-it's an implementation detail — ``responses`` matchers already pin each
-endpoint to its sample.
 """
 import pandas as pd
 import pytest
@@ -24,17 +18,10 @@ import juscraper as jus
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
-API = "https://api.tjsp.jus.br"
 
 CNJ = "1000149-71.2024.8.26.0346"
-CD_PROCESSO = "9M0002CYG0000"
-CNJ_DIGITS = "10001497120248260346"
 
-# Schema keys differ between HTML and API transports by design: the HTML
-# parse collapses 'movimentacao' into 'movimentacoes' and groups 'peticoes
-# diversas'; the API parse keeps the singular resource names from the JSON.
 CPOPG_HTML_KEYS = {"basicos", "partes", "movimentacoes", "peticoes_diversas"}
-CPOPG_API_KEYS = {"basicos", "partes", "movimentacao", "incidente", "audiencia"}
 CPOPG_BASICOS_MIN = {"id_processo", "classe", "assunto"}
 
 
@@ -73,43 +60,6 @@ def test_cpopg_html_single_match(tmp_path, mocker):
     assert basicos.iloc[0]["id_processo"] == CNJ
 
 
-# ---------- method='api' ------------------------------------------------
-
-@responses.activate
-def test_cpopg_api(tmp_path, mocker):
-    """API flow: search/numproc → dadosbasicos → 4 component GETs."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cpopg/api_search.json"),
-        status=200,
-        content_type="application/json",
-    )
-    responses.add(
-        responses.POST,
-        f"{API}/processo/cpopg/dadosbasicos/{CD_PROCESSO}",
-        body=load_sample("tjsp", "cpopg/api_dadosbasicos.json"),
-        status=200,
-        content_type="application/json",
-    )
-    for comp in ("partes", "movimentacao", "incidente", "audiencia"):
-        responses.add(
-            responses.GET,
-            f"{API}/processo/cpopg/{comp}/{CD_PROCESSO}",
-            body=load_sample("tjsp", f"cpopg/api_{comp}.json"),
-            status=200,
-            content_type="application/json",
-        )
-
-    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ, method="api")
-
-    assert isinstance(result, dict)
-    assert set(result.keys()) >= CPOPG_API_KEYS
-    basicos = result["basicos"]
-    assert isinstance(basicos, pd.DataFrame)
-
-
 @responses.activate
 def test_cpopg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
     """O destino alternativo do HTML não deve alterar o destino configurado."""
@@ -139,53 +89,6 @@ def test_cpopg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, m
 
     assert (alternativo / "cpopg").is_dir()
     assert not (caminho / "cpopg").exists()
-    assert scraper.download_path == str(caminho)
-
-
-@responses.activate
-def test_cpopg_download_api_usa_download_path_sem_diretorio(tmp_path, mocker):
-    """Sem destino alternativo, o CPOPG API usa ``self.download_path``."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cpopg/api_search.json"),
-        status=200,
-        content_type="application/json",
-    )
-    responses.add(
-        responses.POST,
-        f"{API}/processo/cpopg/dadosbasicos/{CD_PROCESSO}",
-        body=load_sample("tjsp", "cpopg/api_dadosbasicos.json"),
-        status=200,
-        content_type="application/json",
-    )
-    for comp in ("partes", "movimentacao", "incidente", "audiencia"):
-        responses.add(
-            responses.GET,
-            f"{API}/processo/cpopg/{comp}/{CD_PROCESSO}",
-            body=load_sample("tjsp", f"cpopg/api_{comp}.json"),
-            status=200,
-            content_type="application/json",
-        )
-    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-
-    scraper.cpopg_download(CNJ, method="api")
-
-    assert (tmp_path / "cpopg").is_dir()
-    assert scraper.download_path == str(tmp_path)
-
-
-def test_cpopg_download_api_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
-    """O destino alternativo do API deve ser encaminhado ao downloader."""
-    caminho = tmp_path / "padrao"
-    alternativo = tmp_path / "alternativo"
-    scraper = jus.scraper("tjsp", download_path=str(caminho))
-    download = mocker.patch("juscraper.courts.tjsp.client.cpopg_download_api")
-
-    scraper.cpopg_download(CNJ, method="api", diretorio=str(alternativo))
-
-    assert download.call_args.kwargs["download_path"] == str(alternativo)
     assert scraper.download_path == str(caminho)
 
 
@@ -310,6 +213,28 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
 
+@responses.activate
+def test_cpopg_html_para_quando_a_pagina_se_repete_com_cursor_novo(tmp_path, mocker):
+    """Página igual à anterior, com cursor novo, não avança a paginação: o processo fica de fora com erro no log.
+
+    Em 02/11/2026 o eSAJ chegou a devolver a mesma página com um cursor novo a
+    cada chamada (#474); sem a checagem, o download seguiria sem fim.
+    """
+    mocker.patch("time.sleep")
+    _registrar_busca_incidente()
+    _registrar_pagina_movimentacoes(1)
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_2)
+    pagina_2 = load_sample_bytes("tjsp", "cpopg/movimentacoes_pagina_2.html")
+    _registrar_pagina_movimentacoes(2, CURSOR_PAGINA_3, body=pagina_2.replace(CURSOR_PAGINA_3.encode(), b"cursor-novo"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    erro = mocker.patch("juscraper.courts.tjsp.cpopg_download.logger.error")
+
+    scraper.cpopg_download(CNJ_INCIDENTE, method="html")
+
+    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert "repetiu a página anterior" in str(erro.call_args.args[-1])
+    assert not list((tmp_path / "cpopg").rglob("*.html"))
+
 
 @responses.activate
 def test_cpopg_html_para_quando_a_pagina_seguinte_vem_sem_linhas(tmp_path, mocker):
@@ -400,58 +325,16 @@ def test_cpopg_download_pula_o_processo_ja_salvo(tmp_path, mocker, primeiro, seg
 
     assert len(_chamadas("search.do")) == 1
 
-# ---------- method='api': busca sem processo ------------------------------
 
+# ---------- method='api': removido ----------------------------------------
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download", "cposg", "cposg_download"])
 @responses.activate
-def test_cpopg_api_lista_vazia_levanta_erro_explicito(tmp_path, mocker, capsys):
-    """A API devolve ``[]`` para o número; o parse explica em vez de levantar KeyError."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body="[]",
-        status=200,
-        content_type="application/json; charset=utf-8",
-    )
+def test_method_api_removido_levanta_erro_sem_rede(tmp_path, metodo):
+    """``method='api'`` levanta ``ValueError`` explicando a remoção, antes de qualquer requisição."""
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
 
-    with pytest.raises(ValueError, match="Nenhum arquivo do CPOPG lido"):
-        jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ, method="api")
+    with pytest.raises(ValueError, match="method='api' foi removido"):
+        getattr(scraper, metodo)(CNJ, method="api")
 
-    assert "não devolveu nenhum processo" in capsys.readouterr().out
-    assert len(responses.calls) == 1
-
-
-
-@responses.activate
-def test_cpopg_api_sem_movimentacoes_pula_o_endpoint(tmp_path, mocker):
-    """Com ``baixar_movimentacoes=False`` a API não pede ``movimentacao``."""
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cpopg/api_search.json"),
-        status=200,
-        content_type="application/json",
-    )
-    responses.add(
-        responses.POST,
-        f"{API}/processo/cpopg/dadosbasicos/{CD_PROCESSO}",
-        body=load_sample("tjsp", "cpopg/api_dadosbasicos.json"),
-        status=200,
-        content_type="application/json",
-    )
-    for comp in ("partes", "incidente", "audiencia"):
-        responses.add(
-            responses.GET,
-            f"{API}/processo/cpopg/{comp}/{CD_PROCESSO}",
-            body=load_sample("tjsp", f"cpopg/api_{comp}.json"),
-            status=200,
-            content_type="application/json",
-        )
-
-    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(
-        CNJ, method="api", baixar_movimentacoes=False,
-    )
-
-    assert result["movimentacao"].empty
-    assert not _chamadas("movimentacao/" + CD_PROCESSO)
+    assert not responses.calls
