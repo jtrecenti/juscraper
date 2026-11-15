@@ -6,8 +6,8 @@ TJSP has a divergent public API from the 5 eSAJ-puros:
   drops ``numero_recurso`` and ``data_publicacao_*``.
 - ``cjpg``: entirely different filter set (``classes`` plural, ``assuntos``
   plural, ``varas``, ``id_processo``); no ementa/classe/etc.
-- ``cpopg`` / ``cposg``: consulta processual com chaveamento
-  ``method="html"|"api"``, unico no TJSP.
+- ``cpopg`` / ``cposg``: consulta processual com ``method="html"``, o
+  unico aceito (o ``"api"`` foi removido).
 
 ``cjsg`` e ``cjpg`` reforcam um limite de 120 caracteres em ``pesquisa``.
 A verificacao de tamanho acontece em ``client.py`` **antes** de construir
@@ -97,6 +97,9 @@ class OutputCJPGTJSP(BaseModel):
 
     id_processo: str
     cd_processo: str | None = None
+    cd_foro: str | None = None
+    nm_alias: str | None = None
+    cd_documento: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -104,12 +107,14 @@ class OutputCJPGTJSP(BaseModel):
 class InputCPOPGTJSP(CnjInputBase):
     """Accepted input for :meth:`TJSPScraper.cpopg`.
 
-    O TJSP oferece dois caminhos (``method='html'`` via eSAJ e
-    ``method='api'`` via ``api.tjsp.jus.br``). O schema documenta a
-    assinatura publica — ele ainda nao esta wired no client.
+    ``method`` aceita so ``'html'`` (eSAJ); o ``'api'`` foi removido. O
+    schema documenta a assinatura publica — ele ainda nao esta wired no
+    client.
     """
 
-    method: Literal["html", "api"] = "html"
+    method: Literal["html"] = "html"
+    baixar_movimentacoes: bool = True
+    download_pecas: bool = False
 
 
 class OutputCPOPGTJSP(OutputCnjConsultaBase):
@@ -125,10 +130,10 @@ class OutputCPOPGTJSP(OutputCnjConsultaBase):
 class InputCPOSGTJSP(CnjInputBase):
     """Accepted input for :meth:`TJSPScraper.cposg`.
 
-    Como em ``cpopg``, o TJSP aceita ``method='html'`` ou ``method='api'``.
+    Como em ``cpopg``, ``method`` aceita so ``'html'``.
     """
 
-    method: Literal["html", "api"] = "html"
+    method: Literal["html"] = "html"
 
 
 class OutputCPOSGTJSP(OutputCnjConsultaBase):

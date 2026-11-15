@@ -3,10 +3,12 @@
 The Projudi search endpoint requires a GET on the form URL first to prime
 session cookies; subsequent POSTs return ``iso-8859-1`` HTML. The contract
 mocks both calls and asserts the form body sent on each page, including
-the ``cf-turnstile-response=""`` literal (Cloudflare widget the backend
-ignores).
+the ``cf-turnstile-response=""`` literal. Since 12/11/2026 (Projudi 3.194.1)
+the backend validates the Cloudflare Turnstile token and answers every search
+without it with the empty form, so an empty search emits ``UserWarning``.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import urlencoded_params_matcher
 
@@ -70,22 +72,48 @@ def test_cjsg_single_page(mocker):
 
 
 @responses.activate
-def test_cjsg_no_results(mocker):
-    """Zero-hit query returns an empty DataFrame (not an error)."""
+@pytest.mark.parametrize(
+    ("pesquisa", "sample_path"),
+    [
+        ("juscraper_probe_zero_hits_xyzqwe", "cjsg/no_results.html"),
+        # Resposta real a "dano moral" sem o token (Projudi 3.194.1).
+        ("dano moral", "cjsg/blocked_turnstile.html"),
+    ],
+    ids=["sem_resultados", "bloqueada_pelo_turnstile"],
+)
+def test_cjsg_busca_vazia_avisa_do_turnstile(mocker, pesquisa, sample_path):
+    """Empty search returns an empty DataFrame and warns about Turnstile.
+
+    The portal answers a blocked search (no Turnstile token) the same way as
+    a genuine zero-hit search, so every empty search warns.
+    """
     mocker.patch("time.sleep")
     _add_get_prime()
-    _add_post("juscraper_probe_zero_hits_xyzqwe", page=1,
-              sample_path="cjsg/no_results.html")
+    _add_post(pesquisa, page=1, sample_path=sample_path)
 
-    df = jus.scraper("tjgo").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
+    with pytest.warns(UserWarning, match="Turnstile"):
+        df = jus.scraper("tjgo").cjsg(pesquisa, paginas=1)
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
 
 
 @responses.activate
+def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
+    """Results on page 1 with an unreadable count are not a Turnstile block."""
+    mocker.patch("time.sleep")
+    mocker.patch("juscraper.courts.tjgo.download._extract_total", return_value=0)
+    _add_get_prime()
+    _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")
+
+    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
+
+    assert not df.empty
+
+
+@responses.activate
 def test_cjsg_payload_carries_empty_turnstile_token(mocker):
-    """The body must carry ``cf-turnstile-response`` empty (backend ignores it)."""
+    """The body carries ``cf-turnstile-response`` empty (the scraper has no token)."""
     mocker.patch("time.sleep")
     _add_get_prime()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")

@@ -26,7 +26,7 @@ BASE = "https://api-publica.datajud.cnj.jus.br"
 def _captured_payloads(monkeypatch):
     payloads = []
 
-    def fake_call(*, base_url, alias, api_key, session, query_payload, verbose=False, timeout=60):
+    def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
         payloads.append(query_payload)
         return {"hits": {"total": {"value": 0, "relation": "eq"}, "hits": []}}
 

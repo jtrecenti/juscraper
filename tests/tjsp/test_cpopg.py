@@ -103,6 +103,21 @@ class TestCPOPGUnit:
         assert isinstance(links, list)
         assert len(links) >= 0
 
+    def test_get_cpopg_download_links_lista_ignora_ancoras(self):
+        """Busca real com ação penal + execução da pena e o colapso "Incidentes e recursos" (href="#")."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_lista.html'))
+        links = get_cpopg_download_links(mock_response)
+
+        assert len(links) == 2
+        assert all(link.startswith('/cpopg/show.do?') for link in links)
+        assert 'processo.codigo=8L0002YR00000' in links[0]
+        assert 'processo.codigo=DY00007260000' in links[1]
+
+    def test_get_cpopg_download_links_bloqueio_sem_links(self):
+        """O aviso de consultas simultâneas não tem processos; quem trata é o download."""
+        mock_response = create_mock_response(load_sample('tjsp', 'cpopg/search_consultas_simultaneas.html'))
+        assert get_cpopg_download_links(mock_response) == []
+
     def test_cpopg_parse_single_html(self):
         """Test parsing a single CPOPG HTML file."""
         html = '''
@@ -270,7 +285,15 @@ class TestCPOPGUnit:
             assert len(result['partes']) == 0
             assert len(result['movimentacoes']) == 0
             assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
-            assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+            assert list(result['movimentacoes'].columns) == [
+                'file_path',
+                'data',
+                'movimento',
+                'observacao',
+                'cd_documento',
+                'documento_publico',
+                'caminho_documento',
+            ]
             assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
         finally:
             Path(temp_path).unlink()
@@ -528,6 +551,7 @@ class TestCPOPGUnit:
                     'juiz',
                     'data_distribuicao',
                     'valor_acao',
+                    'situacao',
                     'controle',
                     'area',
                     'outros_assuntos',
@@ -541,12 +565,20 @@ class TestCPOPGUnit:
                     'juiz': 'WALMIR IDALENCIO DOS SANTOS CRUZ',
                     'data_distribuicao': '06/06/2017 às 09:08 - Livre',
                     'valor_acao': 'R$         10.000,00',
+                    'situacao': 'Extinto',
                     'controle': '2017/006364',
                     'area': 'Cível',
                     'outros_assuntos': 'ICMS/ Imposto sobre Circulação de Mercadorias',
                 },
                 {'tipo': 'Reqte', 'nome': 'João da Silva', 'advogados': ['Pedro Souza']},
-                {'data': '01/03/2025', 'movimento': 'Juntada de Petição', 'observacao': ''},
+                {
+                    'data': '01/03/2025',
+                    'movimento': 'Juntada de Petição',
+                    'observacao': '',
+                    'cd_documento': None,
+                    'documento_publico': None,
+                    'caminho_documento': None,
+                },
             ),
             (
                 'show_alternative.html',
@@ -560,6 +592,7 @@ class TestCPOPGUnit:
                     'juiz',
                     'data_distribuicao',
                     'valor_acao',
+                    'situacao',
                     'processo_principal',
                     'controle',
                     'area',
@@ -573,12 +606,20 @@ class TestCPOPGUnit:
                     'juiz': None,
                     'data_distribuicao': '28/02/2025 às 12:15',
                     'valor_acao': None,
+                    'situacao': 'Extinto',
                     'processo_principal': '1010658-13.2025.8.26.0577',
                     'controle': '2024/005678',
                     'area': 'Cível',
                 },
                 {'tipo': 'Exeqte', 'nome': 'Maria Santos', 'advogados': ['Ana Oliveira']},
-                {'data': '15/03/2025', 'movimento': 'Recebidos os autos', 'observacao': ''},
+                {
+                    'data': '15/03/2025',
+                    'movimento': 'Recebidos os autos',
+                    'observacao': '',
+                    'cd_documento': None,
+                    'documento_publico': None,
+                    'caminho_documento': None,
+                },
             ),
         ],
     )
@@ -599,10 +640,89 @@ class TestCPOPGUnit:
         assert result['basicos'].iloc[0].to_dict() == {'file_path': str(sample_path), **basic_values}
         assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
         assert result['partes'].iloc[0].to_dict() == {'file_path': str(sample_path), **party_values}
-        assert list(result['movimentacoes'].columns) == ['file_path', 'data', 'movimento', 'observacao']
+        assert list(result['movimentacoes'].columns) == [
+            'file_path',
+            'data',
+            'movimento',
+            'observacao',
+            'cd_documento',
+            'documento_publico',
+            'caminho_documento',
+        ]
         assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
         assert result['peticoes_diversas'].empty
         assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
+
+    def test_cpopg_parse_avisa_movimentacoes_nao_carregadas(self):
+        """Página salva sem a lista carregada avisa em vez de parecer processo sem movimentações."""
+        sample_path = _SAMPLES / 'show_principal.html'
+
+        with pytest.warns(UserWarning, match='não traz as movimentações'):
+            result = cpopg_parse_single_html(str(sample_path))
+
+        assert result['movimentacoes'].empty
+
+    @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
+    def test_cpopg_parse_principal_situacao_e_advogada(self):
+        """Situação vem do labelSituacaoProcesso, não da etiqueta de prioridade; "Advogada:" separa como "Advogado:"."""
+        sample_path = _SAMPLES / 'show_principal.html'
+
+        result = cpopg_parse_single_html(str(sample_path))
+
+        assert result['basicos'].iloc[0]['situacao'] == 'Extinto'
+        partes = result['partes']
+        assert partes.iloc[0][['tipo', 'nome']].tolist() == ['Reqte', 'Autor Um']
+        assert partes.iloc[0]['advogados'] == ['Advogado Ficticio', 'Advogada Ficticia']
+        assert partes.iloc[1][['tipo', 'nome']].tolist() == ['Reqda', 'AZUL LINHAS AÉREAS BRASILEIRAS']
+        assert partes.iloc[1]['advogados'] == ['Advogado da Re']
+        assert not partes['nome'].str.contains('Advogad').any()
+
+    @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
+    def test_cpopg_parse_processo_em_andamento_sem_situacao(self):
+        """Sem etiqueta de situação no cabeçalho, a coluna sai ``None``."""
+        html = load_sample('tjsp', 'cpopg/show_principal.html').replace(
+            '<span id="labelSituacaoProcesso" class="unj-tag">Extinto</span>', ''
+        )
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+            f.write(html)
+            temp_path = f.name
+        try:
+            result = cpopg_parse_single_html(temp_path)
+        finally:
+            Path(temp_path).unlink()
+
+        assert result['basicos'].iloc[0]['situacao'] is None
+
+    def test_cpopg_parse_movimento_com_documento_vinculado(self):
+        """Na tabela antiga, a descrição das linhas com documento fica dentro do link."""
+        sample_path = _SAMPLES / 'search.html'
+
+        movimentacoes = cpopg_parse_single_html(str(sample_path))['movimentacoes']
+
+        assert len(movimentacoes) == 118
+        assert movimentacoes['movimento'].ne('').all()
+        assert movimentacoes.iloc[1]['movimento'] == 'Certidão de Cartório Expedida'
+
+    @pytest.mark.parametrize('rotulo', ['Soc. Advogados:', 'Def. Púb:', 'Procurador:'])
+    def test_cpopg_parse_separa_representante_por_qualquer_rotulo(self, tmp_path, rotulo):
+        """Qualquer rótulo de representante separa o nome da parte, não só "Advogado:"/"Advogada:".
+
+        O sample traz "Soc. Advogados:" (baixado com ``baixar_movimentacoes=False``);
+        "Def. Púb:" e "Procurador:" aparecem em outros processos e trocam só o texto do rótulo.
+        """
+        html = load_sample('tjsp', 'cpopg/show_sociedade_advogados.html')
+        arquivo = tmp_path / 'processo.html'
+        arquivo.write_text(html.replace('Soc. Advogados:', rotulo), encoding='utf-8')
+
+        result = cpopg_parse_single_html(str(arquivo))
+
+        partes = result['partes']
+        assert partes[['tipo', 'nome']].values.tolist() == [
+            ['Embargte', 'Banco Bradesco S.A.'],
+            ['Embargdo', 'PREFEITURA MUNICIPAL DE TANABI'],
+        ]
+        assert partes['advogados'].tolist() == [['Advogado do Banco'], ['PROCURADORIA DO MUNICÍPIO DE TANABI']]
+        assert result['movimentacoes'].empty
 
 
 if __name__ == "__main__":

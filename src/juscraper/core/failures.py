@@ -15,10 +15,9 @@ dela; cada scraper documenta que sinal é esse.
 """
 from __future__ import annotations
 
-import warnings
-
 import requests
 
+from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 COLUNA_MOTIVO_FALHA = "motivo_falha"
@@ -32,6 +31,21 @@ dizer "não encontrado": uma lista de documentos vazia se confundiria com
 processo sem peças. Entra no aviso agregado como os demais motivos.
 """
 
+MOTIVO_SEM_ACORDAO = "sem_acordao"
+"""Processo encontrado, mas sem documento de acórdão acessível na data pedida.
+
+Usado pelo download do inteiro teor pela movimentação do eSAJ.
+"""
+
+MOTIVO_NAO_PDF = "nao_pdf"
+"""O servidor respondeu ao pedido de PDF com outra coisa; nada foi gravado."""
+
+MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
+"""Página HTML fora do formato conhecido, no lugar da que o fluxo espera."""
+
+MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
+"""A linha de entrada não traz um valor utilizável (número CNJ, data); nada foi pedido à fonte."""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -39,6 +53,10 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     "conexao",
     "json_invalido",
     MOTIVO_NAO_ENCONTRADO,
+    MOTIVO_SEM_ACORDAO,
+    MOTIVO_NAO_PDF,
+    MOTIVO_RESPOSTA_INESPERADA,
+    MOTIVO_ENTRADA_INVALIDA,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 
@@ -136,26 +154,23 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
     return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
 
 
-def avisar_falhas(falhas: list[str], metodo: str, descricao: str, *, stacklevel: int = 3) -> None:
+def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
     """Emite um único ``UserWarning`` ao fim de uma coleta concluída.
 
-    O ``stacklevel`` default aponta para quem chamou o método público quando o
-    método chama este helper diretamente; quem chama de um helper privado do
-    método soma um nível por chamada intermediária.
+    O aviso aponta para o código de quem chamou o método público, por
+    :func:`juscraper.core.avisos.avisar`.
 
     Args:
         falhas: Ver :func:`resumir_falhas`. Lista vazia não emite aviso.
         metodo: Nome qualificado do método público, que abre a mensagem.
         descricao: Ver :func:`resumir_falhas`.
-        stacklevel: Repassado a ``warnings.warn``.
     """
     if not falhas:
         return
-    warnings.warn(
+    avisar(
         f"{metodo}: {resumir_falhas(falhas, descricao)} "
         "As linhas correspondentes saem com o conteúdo None.",
         UserWarning,
-        stacklevel=stacklevel,
     )
 
 

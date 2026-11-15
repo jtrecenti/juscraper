@@ -69,6 +69,7 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "OutputCpopgTRF3"),
     ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "OutputCposgTRF3"),
+    ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "OutputCJSGTRF3"),
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
     # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
     ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),

@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <meta charset="utf-8" />
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/jurisprudencia/Content/Images/favicon.ico">
+
+    <link href="/jurisprudencia/Content/Css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/jurisprudencia/Content/Css/datepicker.min.css" rel="stylesheet" />
+
+
+    <script src="/jurisprudencia/Scripts/jquery-1.8.2.js" type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery.unobtrusive-ajax.js" type="text/javascript"></script>
+    
+    <script src="/jurisprudencia/Scripts/jquery-1.9.1.js" ) type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery-ui.js" ) type="text/javascript"></script>
+    
+
+    <script>
+        const plNextArrow = "»";
+        const plPrevArrow = "«";
+    </script>
+
+    <script src="/jurisprudencia/Scripts/datepicker-full.min.js" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/init-acessibilidade.js?t=14/10/2026 08:45:56"></script>
+    <script src="/jurisprudencia/Scripts/Toast.js"></script>
+
+    
+    <link href="/jurisprudencia/Content/Css/index.css?t=14/10/2026 08:45:56" rel="stylesheet" />
+
+    <script>
+        var urlSugestao = '/jurisprudencia/Home/BuscarSugestao';
+
+    </script>
+
+    <script src="/jurisprudencia/Scripts/index.js?t=14/10/2026 08:45:56"></script>
+    <script src="/jurisprudencia/Scripts/modal.js?t=14/10/2026 08:45:56"></script>
+
+
+
+
+
+    <script language="javascript" type="text/javascript">
+
+        var diretorioVirtual = '/jurisprudencia/';
+
+        function hideToolTip() {
+
+            //var valor = document.getElementById('chkAtivarExplicacao').value;
+
+
+            if (document.getElementById('chkAtivarExplicacao').checked) {
+
+                $(document).tooltip({
+                    show: {
+                        effect: "slideDown",
+                        delay: 250
+                    }
+                });
+            }
+            if (!document.getElementById('chkAtivarExplicacao').checked) {
+
+                $('[title]').attr('title', function (i, title) {
+                    $(this).data('title', title).removeAttr('title');
+                });
+            }
+        }
+
+        function mensagem()
+        {
+            alert("Sucesso.");
+        }
+
+        //function enviarPesquisa() {
+        //    var colecoes = "Acordao";
+        //    var criterios = obterCampos();
+        //    var tipoLista = "Resumida";
+        //    var sinonimos = "Nao";
+
+        //    var data = {
+        //        Pesquisa: {
+        //            'Colecoes': colecoes,
+        //            'Criterios': criterios,
+        //            'TipoLista': tipoLista,
+        //            'Sinonimos': sinonimos
+        //        }
+        //    };
+        //    if (criterios.length != 0) {
+        //        $.ajax({
+        //            type: "POST",
+        //            url: "/home/BuscaAtosNormativos",
+        //            data: JSON.stringify(data),
+        //            //data: "{colecao:'" + colecao + "',criterioPesquisa:'" + criterioPesquisa + "',tipoLista:'" + tipoLista + "',sinonimos:'" + sinominos + "'}",
+        //            contentType: "application/json; charset=utf-8",
+        //            datatype: "json",
+        //            success: function () {},
+        //            error: function () {}
+        //        });
+        //    }
+        //    else
+        //        alert("Não há critério de pesquisa!");
+        //}
+
+
+
+        function obterCriterios() {
+            var colecao = "Acordao";
+            var criterioPesquisa = obterCampos();
+            var quantidade = "Resumida*Não";
+            return (criterioPesquisa == "") ? null : {'Colecao': colecao, 'CriterioPesquisa': criterioPesquisa, 'Quantidade': quantidade};
+        }
+
+        function obterCampos() {
+
+            var pOuD = "";
+
+            if (document.getElementById('data-tipo').value == 3) pOuD = ".dtpb. ";
+            else pOuD = ".dtde. "
+
+            var pesquisa = "";
+
+
+            if (document.getElementById('txtPesqLivre').value != "")
+                pesquisa += "(" + document.getElementById('txtPesqLivre').value + ").pesq. ";
+            if(document.getElementById('numero').value != "")
+                pesquisa += "(" + document.getElementById('numero').value + ").reg. ";
+            if(document.getElementById('magistrado').value != "0")
+                pesquisa += "((" + document.getElementById("magistrado").options[document.getElementById("magistrado").selectedIndex].text + ")).rel. ";
+            if (document.getElementById('data-inicial').value != "" && document.getElementById('data-final').value != "")
+                pesquisa += "(" + document.getElementById('data-inicial').value + "," + document.getElementById('data-final').value + ")" + pOuD;
+            if (document.getElementById('classe').value != "0")
+                pesquisa += "(" + document.getElementById("classe").options[document.getElementById("classe").selectedIndex].text + ").dcla. ";
+            if (document.getElementById('orgao').value != "0")
+                pesquisa += "(" + document.getElementById("orgao").options[document.getElementById("orgao").selectedIndex].text + ").org. ";
+            if (document.getElementById('ementa').value != "")
+                pesquisa += "(" + document.getElementById('ementa').value + ").emen. ";
+
+            return pesquisa;
+
+        }
+
+        function limparCampos() {
+
+            document.getElementById('txtPesqLivre').value = "";
+            document.getElementById('data-inicial').value = "";
+            document.getElementById('data-final').value = "";
+
+            document.getElementById('numero').value = "";
+            document.getElementById('magistrado').value = "0";
+                
+            document.getElementById('classe').value = "0";
+            document.getElementById('orgao').value = "0";
+            document.getElementById('ementa').value = "";
+            document.getElementById('data-tipo').value = "0";
+            $('#tema').val('0')
+
+            //limparRefLeg();
+
+            $("#numclasse").val("");
+            $("#ementa").val("");
+            $("#indexacao").val("");
+            $("#legislacao").val("");
+            $("#hdnMagistrado").val("");
+            $("#hdnClasse").val("");
+            $("#hdnOrgao").val("");
+            $("#hdnLegislacao").val("");
+
+        }
+
+        function limparRefLeg() {
+            document.getElementById('norma').value = "0";
+            $("#legislacao-numero").val("Número");
+            document.getElementById('legislacao-tipo-nome-1').value = "ART";
+            $("#legislacao-tipo-valor-1").val("");
+            document.getElementById('legislacao-tipo-nome-2').value = "PAR";
+            $("#legislacao-tipo-valor-2").val("");
+            document.getElementById('legislacao-tipo-nome-3').value = "INC";
+            $("#legislacao-tipo-valor-3").val("");
+            document.getElementById('legislacao-tipo-nome-4').value = "LET";
+            $("#legislacao-tipo-valor-4").val("");
+        }
+
+        function addCampo(selectId, textId, divId) {
+            var idSelect = document.getElementById(selectId);
+            var valorText = $(textId).val();
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                $(divId).removeClass("ocultar").addClass("mostrar");
+                if (valorText.length < 1) {
+                    $(textId).val(idSelect.options[idSelect.selectedIndex].text);
+                } else {
+                    $(textId).val(valorText+" OU "+idSelect.options[idSelect.selectedIndex].text);
+                }
+                idSelect.options[0].selected = true;
+            }
+        }
+
+        function addConector(conector) {
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            //alert(valorTextPesqLivre);
+            //if (conector != "$") {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector + " ");
+            //} else {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector);
+            //}
+            $("#txtPesqLivre").val(valorTextPesqLivre + conector);
+            $("#txtPesqLivre").focus();
+        }
+
+        function concatCampos(textId, divId, identificador, hiddenId) {
+            var valorTextId = $(textId).val();
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHiddenId = $(hiddenId).val();
+            if (valorTextId.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val("(" + valorTextId+")"+identificador);
+                } else {
+                    $("#txtPesqLivre").val("("+valorTextPesqLivre+")"+" E (" + valorTextId + ")"+identificador);
+                }
+                if (valorHiddenId.length > 0) {
+                    $(hiddenId).val(valorHiddenId + " E (" + valorTextId + ")" + identificador);
+                } else {
+                    $(hiddenId).val("(" + valorTextId + ")" + identificador);
+                }
+                $(textId).val("");
+            } else alert("Informe o critério de pesquisa.");
+            $(divId).removeClass("mostrar").addClass("ocultar");
+        }
+
+        function addRefLeg(selectId) {
+            var criterioR = preencherRefLeg(selectId);
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHdnLegislacao = $("#hdnLegislacao").val();
+            if (criterioR.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val(criterioR);
+                } else {
+                    $("#txtPesqLivre").val("(" + valorTextPesqLivre + ")" + " E " + criterioR);
+                }
+                if (valorHdnLegislacao.length > 0) {
+                    $("#hdnLegislacao").val(valorHdnLegislacao + " E " + criterioR);
+                } else {
+                    $("#hdnLegislacao").val(criterioR);
+                }
+            }
+                limparRefLeg();
+        }
+
+        function preencherRefLeg(selectId) {
+            var idSelect = document.getElementById(selectId);
+            var idSelect1 = document.getElementById('legislacao-tipo-nome-1');
+            var idSelect2 = document.getElementById('legislacao-tipo-nome-2');
+            var idSelect3 = document.getElementById('legislacao-tipo-nome-3');
+            var idSelect4 = document.getElementById('legislacao-tipo-nome-4');
+
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                var norma = idSelect.options[idSelect.selectedIndex].text;
+                var numero = $("#legislacao-numero").val();
+                var nome1 = idSelect1.options[idSelect1.selectedIndex].value;
+                var valor1 = $("#legislacao-tipo-valor-1").val();
+                var nome2 = idSelect2.options[idSelect2.selectedIndex].value;
+                var valor2 = $("#legislacao-tipo-valor-2").val();
+                var nome3 = idSelect3.options[idSelect3.selectedIndex].value;
+                var valor3 = $("#legislacao-tipo-valor-3").val();
+                var nome4 = idSelect4.options[idSelect4.selectedIndex].value;
+                var valor4 = $("#legislacao-tipo-valor-4").val();
+                var criterio = "("+norma;
+                if (numero.length > 0) {
+                    if (numero != "Número") {
+                        criterio = criterio + "-" + numero;
+                    }
+
+                }
+                if (valor1.length > 0) {
+                    criterio = criterio + " " + nome1 + "-" + valor1;
+                }
+                if (valor2.length > 0) {
+                    criterio = criterio + " " + nome2 + "-" + valor2;
+                }
+                if (valor3.length > 0) {
+                    criterio = criterio + " " + nome3 + "-" + valor3;
+                }
+                if (valor4.length > 0) {
+                    criterio = criterio + " " + nome4 + "-" + valor4;
+                }
+                criterio = criterio + ").ref. "
+            } else {
+                alert("Preencha os campos referentes à Legislação.");
+                criterio = "";
+            }
+            return criterio;
+        }
+
+        function limparNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num = "Número") {
+                $("#legislacao-numero").val("");
+            }
+        }
+
+        function ShowModelDialog(numDocumento) {
+            var recurso = diretorioVirtual + 'Home/VisualizarImpressao/' + numDocumento;
+            //string s = "window.showModalDialog('PreImpressao.aspx?nm=" + e.CommandArgument.ToString().Replace("-", "").Replace(".", "") + "', null, 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;');";
+            window.showModalDialog(diretorioVirtual + 'Home/VisualizarImpressao/?nd=' + numDocumento, "null", 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;'); //"PopupWindow", 'width=400px,height=400px,top=150,left=250');
+            return false;
+        }
+
+        function colocarNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num.length < 1) {
+                $("#legislacao-numero").val("Número");
+            }
+        }
+
+        $(function () {
+            $("#data-inicial").datepicker({
+
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+        $(function () {
+            $("#data-final").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+
+        function preencherHDDN() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var temaComp = $('#tema').val()?.trim().length || 0;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } 
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } 
+            }
+
+            if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1) && (temaComp < 1)
+                && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+                && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+                && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Critério de pesquisa não informado.");
+                $("#hdnLegislacao").val("N");
+                return false;
+            }
+
+
+            if (!validaCampoData())
+                return false;
+
+            return true;
+        }
+
+        function validaCampoData() {
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                Toast.Show("Data inicial em branco");
+                return false;
+            }
+
+            
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Data final em branco");
+                return false;
+            }
+
+            
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+
+            if (document.getElementById('data-inicial').value == "" && document.getElementById('data-final').value == "") {
+                return true;
+            }
+
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            
+
+            if (Compara01 > Compara02) {
+                Toast.Show("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            
+
+            return true;
+            
+        }
+
+        function validaFormMonocratica() {
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            
+                        
+            
+            
+            
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            
+
+            let textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            let numeroComp = $("#numero").val().trim().length;
+            let dataInicialComp = document.getElementById('data-inicial').value.trim().length;
+            let dataFinalComp = document.getElementById('data-final').value.trim().length;
+            let magistradoComp = idSelectM.options[idSelectM.selectedIndex].value;
+            let classeComp = idSelectC.options[idSelectC.selectedIndex].value;
+
+            console.log(textoPesqLivreComp, dataFinalComp, dataFinalComp); console.log(magistradoComp, numeroComp, classeComp)
+
+
+            if (textoPesqLivreComp < 1 && dataInicialComp < 1 && dataFinalComp < 1
+                && magistradoComp < 1 && numeroComp < 1 && classeComp < 1) {
+                Toast.Show("Critério de pesquisa não informado.");
+                return false;
+            }
+
+
+            if (dataFinalComp > 1 && !validaCampoData())
+                return false;
+
+
+            return true;
+        }
+
+        function preencherHDDN02() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } else {
+                    $("#hdnOrgao").val(orgaoHDNText + " | " + "(" + idSelectO.options[idSelectO.selectedIndex].text + ").org.");
+                }
+            }
+
+            //if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1)
+            //    && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+            //    && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+            //    && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+            //    alert("Critério de pesquisa não informado.");
+            //    $("#hdnLegislacao").val("S");
+            //    return false;
+            //}
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                alert("Data inicial em branco");
+                return false;
+            }
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                alert("Data final em branco");
+                return false;
+            }
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            if (Compara01 > Compara02) {
+                alert("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            return true;
+        }
+
+        function resultadoSemFormatacao(semformatacao,textoarea) {
+            document.getElementById(semformatacao).style.visibility = 'visible';
+            document.getElementById(textoarea).focus();
+            document.getElementById(textoarea).select();
+        }
+
+        function buscaAcordao() {
+            window.open("https://web.trf3.jus.br/acordaos/Acordao/PesquisarDocumento?processo=" + processo, "blanck");
+        }
+
+        function buscaAndamento() {
+            window.open("https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/ProcessoIndex?numeroProcesso=" + processo, "blanck");
+        }
+
+        function mostrarListaResumida(valor) {
+            if (valor) {
+                $("#hdnMostrarListaResumida").val("S");
+            } else
+            {
+                $("#hdnMostrarListaResumida").val("N");
+            }
+            //alert("Mudou");
+            //var sValor = valor;
+            //if (valor) {
+               
+                //$("#hdnMostrarListaResumida").val("1");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(0);
+                //document.getElementById('chkMostrarLista').value = "0";
+                //document.getElementById('chkMostrarLista').setAttribute('checked', 'checked');
+                //$("chkMostrarLista").attr('checked', 'checked');
+            //} else {
+                
+                //$("#hdnMostrarListaResumida").val("0");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(1);
+                //$("chkMostrarLista").removeAttr('Checked');
+            //}
+            //alert(valor);
+        }
+
+        //function inicializar() {
+
+
+        //    if ($("#hdnMostrarListaResumida").val() == "") {
+        //        if (document.getElementById('chkMostrarLista').checked) {
+        //            $("#hdnMostrarListaResumida").val("S");
+        //            //alert("Checado");
+        //        } else {
+        //            $("#hdnMostrarListaResumida").val("N");
+        //            //alert("Não checado");
+        //        }
+        //    }
+            //alert("iniciou");
+            //var o = document.getElementById("chkMostrarLista");
+            //var sContentAttr = o.getAttribute("checked");
+            //alert(sContentAttr);
+            //if ($("#hdnMostrarListaResumida").val() == "") {
+            //    var o = document.getElementById("chkMostrarLista");
+            //    var sContentAttr = o.getAttribute("checked");
+            //    alert(sContentAttr);
+            //} else {
+            //    alert($("#hdnMostrarListaResumida").val());
+            //}
+
+
+                //var mostralLR = "S";
+                //var testeMostrarLR = Request["chkMostrarLista"];
+                //if (Session["MostrarListaResumida"] == null)
+                //{
+                    //Session["MostrarListaResumida"] = "S";
+                    //mostralLR = "S";
+                //}
+                //else
+                //{
+                    //mostralLR = Session["MostrarListaResumida"].ToString();
+                //}
+
+        //}
+
+        function selecionaNorma(indiceNorma) {
+            var siglaNorma = document.getElementById('sigla[' + indiceNorma + ']').innerHTML;
+            var descricaoNorma = document.getElementById('descricao[' + indiceNorma + ']').innerHTML;
+            var tipoLegislacao = document.getElementById('tipoLeg[' + indiceNorma + ']').innerHTML;
+            var tipoNorma = document.getElementById('tipoNor[' + indiceNorma + ']').innerHTML;
+            var numeroNorma = document.getElementById('numero[' + indiceNorma + ']').innerHTML;
+            var anoNorma = document.getElementById('ano[' + indiceNorma + ']').innerHTML;
+            var legislacao = "";
+
+            if ((siglaNorma != null) && (siglaNorma != "")) { legislacao = siglaNorma.trim(); }
+            if ((descricaoNorma != null) && (descricaoNorma != "")) { legislacao = legislacao + " " + descricaoNorma; }
+            if ((tipoLegislacao != null) && (tipoLegislacao != "")) { legislacao = legislacao + " LEG-" + tipoLegislacao; }
+            if ((tipoNorma != null) && (tipoNorma != "")) { legislacao = legislacao + " " + tipoNorma.trim(); }
+            if ((numeroNorma != null) && (numeroNorma != "")) { legislacao = legislacao + "-" + numeroNorma.trim(); }
+            if ((anoNorma != null) && (anoNorma != "")) { legislacao = legislacao + " ANO-" + anoNorma; }
+
+            var leg = $("#legislacao").val();
+
+            if (leg.length < 1) {
+                $("#legislacao").val(legislacao);
+            } else {
+                $("#legislacao").val(leg + " E " + legislacao);
+            }
+            document.getElementById('helpSiglaJud').style.visibility = 'hidden';
+        }
+
+        function mudarValor(sel) {
+            if (sel.name == 'magistrado') {
+                $("#hdnMagistrado").val("");
+            }
+            if (sel.name == 'classe') {
+                $("#hdnClasse").val("");
+            }
+            if (sel.name == 'orgao') {
+                $("#hdnOrgao").val("");
+            }
+        }
+
+        $(document).ready(function () {
+            //var kjk = document.getElementById('hdnUtxtPesqLivre').value;
+
+            if (document.getElementById('hdnUchkMostrarLista') != null) {
+                if (document.getElementById('hdnUchkMostrarLista').value != '') {
+                    if (document.getElementById('hdnUchkMostrarLista').value == 'on') {
+                        document.getElementById('chkMostrarLista').checked = true;
+                    } else {
+                        document.getElementById('chkMostrarLista').checked = false;
+                    }
+                } }
+            if (document.getElementById('hdnUtxtPesqLivre') != null) {
+                if (document.getElementById('hdnUtxtPesqLivre').value != '') {
+                    $("#txtPesqLivre").val(document.getElementById('hdnUtxtPesqLivre').value);
+                }
+            }
+            if (document.getElementById('hdnUnumero') != null) {
+                if (document.getElementById('hdnUnumero').value != '') {
+                    $("#numero").val(document.getElementById('hdnUnumero').value);
+                }
+            }
+            if (document.getElementById('hdnUmagistrado') != null) {
+                if (document.getElementById('hdnUmagistrado').value != '') {
+                    document.getElementById('magistrado').selectedIndex = document.getElementById('hdnUmagistrado').value;
+                }
+            }
+            if (document.getElementById('hdnUdata-inicial') != null) {
+                if (document.getElementById('hdnUdata-inicial').value != '') {
+                    $("#data-inicial").val(document.getElementById('hdnUdata-inicial').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-final') != null) {
+                if (document.getElementById('hdnUdata-final').value != '') {
+                    $("#data-final").val(document.getElementById('hdnUdata-final').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-tipo') != null) {
+                if (document.getElementById('hdnUdata-tipo').value != '') {
+                    document.getElementById('data-tipo').value = document.getElementById('hdnUdata-tipo').value;
+                }
+            }
+            if (document.getElementById('hdnUclasse') != null) {
+                if (document.getElementById('hdnUclasse').value != '') {
+                    document.getElementById('classe').selectedIndex = document.getElementById('hdnUclasse').value;
+                }
+            }
+            if (document.getElementById('hdnUorgao') != null) {
+                if (document.getElementById('hdnUorgao').value != '') {
+                    document.getElementById('orgao').selectedIndex = document.getElementById('hdnUorgao').value;
+                }
+            }
+            if (document.getElementById('hdnUementa') != null) {
+                if (document.getElementById('hdnUementa').value != '') {
+                    $("#ementa").val(document.getElementById('hdnUementa').value);
+                }
+            }
+            if (document.getElementById('hdnUnumclasse') != null) {
+                if (document.getElementById('hdnUnumclasse').value != '') {
+                    $("#numclasse").val(document.getElementById('hdnUnumclasse').value);
+                }
+            }
+            if (document.getElementById('hdnUindexacao') != null) {
+                if (document.getElementById('hdnUindexacao').value != '') {
+                    $("#indexacao").val(document.getElementById('hdnUindexacao').value);
+                }
+            }
+            if (document.getElementById('hdnUlegislacao') != null) {
+                if (document.getElementById('hdnUlegislacao').value != '') {
+                    $("#legislacao").val(document.getElementById('hdnUlegislacao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnClasse') != null) {
+                if (document.getElementById('hdnUhdnClasse').value != '') {
+                    $("#hdnClasse").val(document.getElementById('hdnUhdnClasse').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnOrgao') != null) {
+                if (document.getElementById('hdnUhdnOrgao').value != '') {
+                    $("#hdnOrgao").val(document.getElementById('hdnUhdnOrgao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnLegislacao') != null) {
+                if (document.getElementById('hdnUhdnLegislacao').value != '') {
+                    $("#hdnLegislacao").val(document.getElementById('hdnUhdnLegislacao').value);
+                }
+            }
+        });
+
+        //Incluída por causa das "  "
+        function concatenaExpressao() {
+            var inputE1 = document.getElementById('txtPesqLivre');
+            inputE1.value = inputE1.value + ' " "';
+            texto = new String(inputE1.value);
+            selStart = texto.length - 2;
+            selEnd = texto.length - 1;
+            if (inputE1.setSelectionRange) {
+                inputE1.focus();
+                inputE1.setSelectionRange(selStart, selEnd);
+            } else if (inputE1.createTextRange) {
+                var range = inputE1.createTextRange();
+                range.collapse(true);
+                range.moveEnd('character', selEnd);
+                range.moveStart('character', selStart);
+                range.select();
+            }
+            inputE1.focus();
+        }
+
+        //session end
+        var sessionTimeoutWarning = 300 -1; 
+        var sTimeout = parseInt(sessionTimeoutWarning) * 60 * 1000;
+        setTimeout('SessionEnd()', sTimeout);
+
+        function SessionEnd() {
+            window.location = diretorioVirtual + "Home/SessaoExpirada";
+        }
+
+    </script>
+
+    <title>Busca Jurisprudência</title>
+<script >bazadebezolkohpepadr="2025143399"</script><script type="text/javascript" src="https://web.trf3.jus.br/akam/13/78b53c35"  defer></script></head>
+<body>
+    
+
+    <div id="inline" data-date="01/05/2020" style="color: black"></div>
+    <a href="#conteudo" style="display: none;" id="a-conteudo"></a>
+
+    
+    
+    
+
+
+
+    
+    
+
+    
+
+<section class="menu">
+    <section class="secao-menu secao-acessibilidade">
+        <div class="container">
+            <section class="acessibilidade">
+                <span>Acessibilidade: </span>
+                <i class="bi bi-eye-fill" id="btn-modo-cor" title="Alternar entre modo claro e modo escuro"
+                   aria-label="Alternar entre modo claro e modo escuro" tabindex="0"></i>
+
+                <i class="bi bi bi-cast" id="btn-transparente" title="Alternar entre painel transparente e painel colorido" aria-label="Alternar entre painel transparente e painel colorido"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-in" id="btn-plus" title="Aumentar zoom" aria-label="Aumentar zoom"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-out" id="btn-minus" title="Diminuir zoom" aria-label="Diminuir zoom"
+                   tabindex="0"></i>
+                <i class="bi bi-aspect-ratio" id="btn-sem-zoom" title="Voltar ao tamanho normal"
+                   aria-label="Voltar ao tamanho normal" tabindex="0"></i>
+                <i class="bi bi-app-indicator" id="go-to-content" title="Ir para conteúdo"
+                   aria-label="Ir para conteúdo" tabindex="0"></i>
+            </section>
+            <section class="info" data-tooltip="Tamanho atual"></section>
+        </div>
+    </section>
+    <section class="secao-menu">
+        <div class="container">
+            <section class="logo">
+                <h1 class="logo-tribunal" title="Ir para o site do TRF3">
+                    <a href="https://www.trf3.jus.br/"
+                       target="_blank"><img src="/jurisprudencia/Content/Images/topo-site-logoTRF3.png" alt="Ir para o site do TRF3"></a>
+                </h1>
+            </section>
+        </div>
+    </section>
+</section>
+
+
+    <main id="conteudo">
+        
+
+
+<div class="container">
+    <section class="menu-opcoes base-de-dados">
+        <span class="opcao-menu opcao-bd">
+            <a href="/jurisprudencia/home/index/0" data-tooltip="Jurisprudência TRF3" aria-label="Jurisprudência TRF3">TRF3</a>
+        </span>
+
+        <span class="opcao-menu opcao-bd">
+            <a href="/jurisprudencia/home/index/2" data-tooltip="Decisões Monocráticas do TRF3 e Recursais (JEF)"
+               aria-label="Decisões Monocráticas do TRF3 e Recursais">Monocráticas</a>
+        </span>
+
+        <span class="opcao-menu opcao-bd selecionado">
+            <a data-tooltip="Jurisprudência das Turmas Recursais e da TRU3"
+               aria-label="Jurisprudência das Turmas Recursais e da TRU3">Turmas Recursais (JEF)</a>
+        </span>
+    </section>
+    <section class="pesquisa-livre">
+        <form class="caixa-pesquisa" id="frmPesquisa" action="/jurisprudencia/Home/ResultadoTotais" method="post">
+            <input id="acordaos" style="display: none" name="chkAcordaos" type="checkbox" checked="checked" hidden="hidden" />
+            
+
+
+
+<label for="txtPesqLivre" class="lbl-pesq-livre">
+    <div class="txt-label">
+        <span class="texto-pesquisa">
+            Pesquisa de Jurisprudência
+        </span>
+
+        <a href="https://web.trf3.jus.br/jurisprudencia-ajuda/" class="help-icon" data-tooltip="Ajuda: Preenchimento da Pesquisa" aria-label="Ajuda: Preenchimento da Pesquisa" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-question-circle-fill" viewBox="0 0 16 16">
+                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247m2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+            </svg>
+        </a>
+        </div>
+    <button type="button" class="btn-opcoes" id="opcoes-da-pesquisa" data-tooltip="Opções" aria-label="Opções"
+            onclick="event.preventDefault();">
+        <i class="bi bi-gear" style="color: white"></i>
+    </button>
+    <div class="opcoes-da-pesquisa ocultar">
+        
+            <div class="info-opcao">
+                <input type="checkbox" name="chkMostrarLista" id="chkMostrarLista" />
+                <label for="chkMostrarLista" class="lbl-chk">Mostrar Lista Resumida</label>
+            </div>
+        <div class="info-opcao">
+            <label for="cmbQtdePaginas">Resultados: </label>
+            <select id="cmbQtdePaginas" name="opcaoQtdePagina">
+                <option value="10">10</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <div class="info-opcao">
+            <label>Operador Padrão: <strong>e</strong></label>
+        </div>
+    </div>
+</label>
+<textarea title="Pesquisa Livre" name="txtPesquisaLivre" id="txtPesqLivre" required
+          class="caixa-pesquisa-livre" rows="1" placeholder="Digite sua Pesquisa" maxlength="255"
+          aria-placeholder="Digite sua pesquisa"></textarea>
+<button type="submit" class="botao-pesquisa botao-interno" title="Fazer Pesquisa" aria-label="Fazer Pesquisa"
+        onclick="if ($('#txtPesqLivre').val().trim() == '') { event.preventDefault(); Toast.Show('Preencha a pesquisa livre com um critério de pesquisa') }">
+    <i class="bi bi-search"></i>
+</button>
+    <button type="button" id="btn-abrir-pesquisa" class="botao-avancada botao-interno"
+            data-tooltip="Abrir pesquisa Avançada" aria-label="Abrir pesquisa Avançada">
+        <i class="bi bi-plus"></i>
+    </button>
+
+<div class="sugestoes ocultar">
+</div>
+
+<input type="hidden" name="magistrado" value="0" />
+<input type="hidden" name="classe" value="0" />
+<input type="hidden" name="orgao" value="0" />
+<input type="hidden" name="hdnOrgao" value="" />
+
+
+<div class="operadores ocultar">
+    <button type="button" class="mostrar-ocultar" aria-label="Mostrar Operadores"
+            data-tooltip="Mostrar Operadores">
+        >>
+    </button>
+    <a id="conectorAspas" class="btn-conector"
+       aria-label="Conector aspas: Localiza a expressão completa entre aspas no documento. Ex:  &quot;Imposto sobre produtos industrializados&quot;."
+       data-tooltip="Conector aspas: Localiza a expressão completa no documento. Ex:  &quot;Imposto sobre produtos industrializados&quot;.">"..."</a>
+    <a id="conectorE" class="btn-conector operador-padrao"
+       aria-label="Conector E: localiza todas as palavras conectadas no documento.  Ex.: aposentadoria E idade E carência."
+       data-tooltip="Conector E: localiza todas as palavras conectadas no documento.  Ex.: aposentadoria E idade E carência.">e</a>
+    <a id="conectorOu" class="btn-conector"
+       aria-label="Conector Ou: Localiza um e/ou outro termo digitado entre parênteses. Ex.: embargos E conhecimento E (declaração OU declaratórios OU aclaratórios)."
+       data-tooltip="Conector Ou: Localiza um e/ou outro termo digitado entre parênteses. Ex.: embargos E conhecimento E (declaração OU declaratórios OU aclaratórios).">ou</a>
+    <a id="conectorAdj" class="btn-conector"
+       aria-label="Conector Adj: Localiza uma palavra que esteja a uma quantidade x de palavras de outra palavra. Ex.: Furto adj5 estacionamento adj4 supermercado.
+        Nesse caso, 'estacionamento' será no máximo a quinta palavra após 'furto' e 'supermercado' será no máximo a quarta palavra após 'estacionamento'."
+       data-tooltip="Conector Adj: Localiza uma palavra que esteja a uma quantidade x de palavras de outra palavra. Ex.: Furto adj5 estacionamento adj4 supermercado.
+        Nesse caso, 'estacionamento' será no máximo a quinta palavra após 'furto' e 'supermercado' será no máximo a quarta palavra após 'estacionamento'.">adj</a>
+    <a id="conectorNao" class="btn-conector"
+       aria-label="Conector não: exclui a palavra seguinte da busca. Ex.: Furto e estacionamento não supermercado.
+        Nesse caso, localiza documentos que possuam as palavras 'furto' e 'estacionamento', excluindo documentos que contenham a palavra 'supermercado'."
+       data-tooltip="Conector não: exclui a palavra seguinte da busca. Ex.: Furto e estacionamento não supermercado.
+        Nesse caso, localiza documentos que possuam as palavras 'furto' e 'estacionamento', excluindo documentos que contenham a palavra 'supermercado'.">não</a>
+    <a id="conectorProximidade" class="btn-conector"
+       aria-label="Conector Proximidade: a palavra conectada estará no máximo a distância x da outra. Ex.: Furto prox6 estacionamento prox4 supermercado.
+        Nesse caso, 'estacionamento' será no máximo a sexta palavra antes ou após 'furto'; 'supermercado' será no máximo a quarta palavra antes ou após 'estacionamento'."
+       data-tooltip="Conector Proximidade: a palavra conectada estará no máximo a distância x da outra. Ex.: Furto prox6 estacionamento prox4 supermercado.
+        Nesse caso, 'estacionamento' será no máximo a sexta palavra antes ou após 'furto'; 'supermercado' será no máximo a quarta palavra antes ou após 'estacionamento'.">prox</a>
+    <a id="conectorMesmo" class="btn-conector"
+       aria-label="Conector mesmo: localiza termos conectados no mesmo campo do documento. Ex.: Furto mesmo estacionamento mesmo supermercado.
+        Nesse caso, localiza os termos caso estejam presente no mesmo campo do documento (as palavras 'Furto', 'Estacionamento' e 'supermercado' estarem todos na ementa)."
+       data-tooltip="Conector mesmo: localiza termos conectados no mesmo campo do documento. Ex.: Furto mesmo estacionamento mesmo supermercado.
+        Nesse caso, localiza os termos caso estejam presente no mesmo campo do documento (as palavras 'Furto', 'Estacionamento' e 'supermercado' estarem todos na ementa).">mesmo</a>
+    <a id="conectorCom" class="btn-conector"
+       aria-label="Conector Com: localiza os termos dentro de um mesmo parágrafo. Ex.: Furto com estacionamento com supermercado"
+       data-tooltip="Conector Com: localiza os termos dentro de um mesmo parágrafo. Ex.: Furto com estacionamento com supermercado">com</a>
+    <a id="conectorCifrao" class="btn-conector" aria-label="Conector $: Localiza as palavras que contenham a parte digitada e suas variações, que pode estar tanto antes quanto depois do conector. Ex: Furto e estacionamento e $mercado.
+        Nesse caso, localiza a palavra mercado e suas variações (supermercado, hipermercado, mercado)." data-tooltip="Conector $: Localiza as palavras que contenham a parte digitada e suas variações, que pode estar tanto antes quanto depois do conector. Ex: Furto e estacionamento e $mercado.
+        Nesse caso, localiza a palavra mercado e suas variações (supermercado, hipermercado, mercado).">$</a>
+    <!--<label> Operador padrão: <strong>e</strong> </label>
+    <input id="chkMostrarLista" name="chkMostrarLista" type="checkbox" checked="checked"><label
+        for="chkMostrarLista"> Mostrar lista resumida</label> -->
+</div>
+
+
+<div class="manual-conectores">
+    <a href="https://web.trf3.jus.br/jurisprudencia-ajuda/" class="help-icon" data-tooltip="Ajuda: conectores" aria-label="Ajuda: conectores" target="_blank">
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-question-circle-fill" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.496 6.033h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286a.237.237 0 0 0 .241.247m2.325 6.443c.61 0 1.029-.394 1.029-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94 0 .533.425.927 1.01.927z" />
+        </svg>
+    </a>
+</div>
+
+
+
+
+        </form>
+    </section>
+
+
+
+    <input type="checkbox" class="chk-pesquisa" id="chk-pesquisa" >
+
+    <section class="pesquisa-detalhada">
+        <!-- <a class="abrir-pesquisa" id="btn-abrir-pesquisa">
+            <span>Pesquisa avançada</span>
+            <i class="bi bi-caret-down btn-abrir-pesquisa"></i><i class="bi bi-caret-up btn-fechar-pesquisa"></i>
+        </a> -->
+        <form class="caixa-pesquisa" id="frm-pesquisa-avancada" action="/jurisprudencia/Home/ResultadoTotais" method="post"
+              onsubmit="$('#hdnPesqLivre').val($('#txtPesqLivre').val()); $('#hdnChkMostrarLista').val($('#chkMostrarLista').prop('checked') ? 'on' : 'off'); $('#hdnQtdePaginas').val($('#cmbQtdePaginas').val());  return preencherHDDN();">
+
+            <input id="acordaos" style="display: none" name="chkAcordaos" type="checkbox" checked="checked" hidden="hidden" />
+            <input id="hdnPesqLivre" name="txtPesquisaLivre" type="hidden" />
+            <input type="hidden" id="hdnChkMostrarLista" name="chkMostrarLista" />
+            <input type="hidden" id="hdnQtdePaginas" name="opcaoQtdePagina" />
+
+            <div class="campo-pesquisa">
+                <label for="numero">Número do Processo: </label>
+                <input type="text" id="numero" name="numero" value="" />
+            </div>
+
+            <div class="campo-pesquisa">
+                <label for="magistrado">Relator(a): </label>
+                <select id="magistrado" name="magistrado">
+
+
+                    <option selected value="0">Selecione...</option>
+
+                        <option value="1" title="Magistrado" >ADENIR SILVA</option>
+                        <option value="2" title="Magistrado" >ADRIANA DELBONI TARICCO</option>
+                        <option value="3" title="Magistrado" >ADRIANA GALVAO STARR</option>
+                        <option value="4" title="Magistrado" >ADRIANA PILEGGI</option>
+                        <option value="5" title="Magistrado" >ALESSANDRA PINHEIRO RODRIGUES D AQUINO DE JESUS</option>
+                        <option value="6" title="Magistrado" >ALESSANDRA REIS</option>
+                        <option value="7" title="Magistrado" >ALEXANDRE CASSETTARI</option>
+                        <option value="8" title="Magistrado" >ANA AGUIAR DOS SANTOS NEVES</option>
+                        <option value="9" title="Magistrado" >ANA CLAUDIA MANIKOWSKI ANNES</option>
+                        <option value="10" title="Magistrado" >ANA PAULA CARVALHO DE OLIVEIRA</option>
+                        <option value="11" title="Magistrado" >ANGELA CRISTINA MONTEIRO</option>
+                        <option value="12" title="Magistrado" >ANITA VILLANI</option>
+                        <option value="13" title="Magistrado" >AROLDO WASHINGTON</option>
+                        <option value="14" title="Magistrado" >BRUNO BARBOSA STAMM</option>
+                        <option value="15" title="Magistrado" >BRUNO CESAR LORENCINI</option>
+                        <option value="16" title="Magistrado" >BRUNO TAKAHASHI</option>
+                        <option value="17" title="Magistrado" >BRUNO VALENTIM BARBOSA</option>
+                        <option value="18" title="Magistrado" >CAIO JOSE BOVINO GREGGIO</option>
+                        <option value="19" title="Magistrado" >CAIO MOYSES DE LIMA</option>
+                        <option value="20" title="Magistrado" >CARLA CRISTINA DE OLIVEIRA MEIRA</option>
+                        <option value="21" title="Magistrado" >CARLOS DELGADO</option>
+                        <option value="22" title="Magistrado" >CAROLINA CASTRO COSTA</option>
+                        <option value="23" title="Magistrado" >CIRO BRANDANI</option>
+                        <option value="24" title="Magistrado" >CLAUDIA ARRUGA</option>
+                        <option value="25" title="Magistrado" >CLAUDIA HILST MENEZES</option>
+                        <option value="26" title="Magistrado" >CLAUDIO CANATA</option>
+                        <option value="27" title="Magistrado" >CL&#201;CIO BRASCHI</option>
+                        <option value="28" title="Magistrado" >CONSUELO YOSHIDA</option>
+                        <option value="29" title="Magistrado" >CRISTIANE FARIAS RODRIGUES DOS SANTOS</option>
+                        <option value="30" title="Magistrado" >DALDICE SANTANA</option>
+                        <option value="31" title="Magistrado" >DANILO ALMASI VIEIRA SANTOS</option>
+                        <option value="32" title="Magistrado" >DAVID ROCHA LIMA DE MAGALHAES E SILVA</option>
+                        <option value="33" title="Magistrado" >DIEGO PAES MOREIRA</option>
+                        <option value="34" title="Magistrado" >DIOGO DA MOTA SANTOS</option>
+                        <option value="35" title="Magistrado" >DIOGO NAVES MENDONCA</option>
+                        <option value="36" title="Magistrado" >DOUGLAS GONZALES</option>
+                        <option value="37" title="Magistrado" >EDEVALDO DE MEDEIROS</option>
+                        <option value="38" title="Magistrado" >EL&#205;DIA CORREA</option>
+                        <option value="39" title="Magistrado" >EMERSON JOSE DO COUTO</option>
+                        <option value="40" title="Magistrado" >ETIENE COELHO MARTINS</option>
+                        <option value="41" title="Magistrado" >EURICO MAIOLINO</option>
+                        <option value="42" title="Magistrado" >FABIANA ALVES RODRIGUES</option>
+                        <option value="43" title="Magistrado" >FABIO IVENS DE PAULI</option>
+                        <option value="44" title="Magistrado" >F&#193;BIO M&#220;ZEL</option>
+                        <option value="45" title="Magistrado" >FABIOLA QUEIROZ DE OLIVEIRA</option>
+                        <option value="46" title="Magistrado" >FELIPE BENICHIO TEIXEIRA</option>
+                        <option value="47" title="Magistrado" >FELIPE RAUL BORGES BENALI</option>
+                        <option value="48" title="Magistrado" >FERNANDA CARONE SBORGIA</option>
+                        <option value="49" title="Magistrado" >FERNANDA HUTZLER</option>
+                        <option value="50" title="Magistrado" >FERNANDA SORAIA PACHECO COSTA CLEMENTI</option>
+                        <option value="51" title="Magistrado" >FERNANDO HENRIQUE CORREA CUSTODIO</option>
+                        <option value="52" title="Magistrado" >FERNANDO MARCELO MENDES</option>
+                        <option value="53" title="Magistrado" >FERNANDO MOREIRA GONCALVES</option>
+                        <option value="54" title="Magistrado" >FERNANDO NARDON NIELSEN</option>
+                        <option value="55" title="Magistrado" >FERNANDO TOLEDO CARNEIRO</option>
+                        <option value="56" title="Magistrado" >FLAVIA DE TOLEDO CERA</option>
+                        <option value="57" title="Magistrado" >FLAVIA PELLEGRINO SOARES MILLANI</option>
+                        <option value="58" title="Magistrado" >FLAVIA SERIZAWA E SILVA</option>
+                        <option value="59" title="Magistrado" >GABRIEL HERRERA</option>
+                        <option value="60" title="Magistrado" >GABRIELA AZEVEDO CAMPOS SALES</option>
+                        <option value="61" title="Magistrado" >GABRIELLA NAVES BARBOSA</option>
+                        <option value="62" title="Magistrado" >GILBERTO MENDES SOBRINHO</option>
+                        <option value="63" title="Magistrado" >GISELE BUENO DA CRUZ DE LIMA</option>
+                        <option value="64" title="Magistrado" >GISELLE FRAN&#199;A</option>
+                        <option value="65" title="Magistrado" >GUILHERME MACHADO MATTAR</option>
+                        <option value="66" title="Magistrado" >GUSTAVO CATUNDA MENDES</option>
+                        <option value="67" title="Magistrado" >HELENA FURTADO DA FONSECA</option>
+                        <option value="68" title="Magistrado" >HERBERT CORNELIO PIETER DE BRUYN JUNIOR</option>
+                        <option value="69" title="Magistrado" >HERBERT DE BRUYN</option>
+                        <option value="70" title="Magistrado" >ISADORA SEGALLA AFANASIEFF</option>
+                        <option value="71" title="Magistrado" >ISRAEL ALMEIDA DA SILVA</option>
+                        <option value="72" title="Magistrado" >IVANA BARBA PACHECO</option>
+                        <option value="73" title="Magistrado" >JAIRO DA SILVA PINTO</option>
+                        <option value="74" title="Magistrado" >JAMILLE MORAIS SILVA FERRARETTO</option>
+                        <option value="75" title="Magistrado" >JANAINA RODRIGUES VALLE GOMES</option>
+                        <option value="76" title="Magistrado" >JANIO ROBERTO DOS SANTOS</option>
+                        <option value="77" title="Magistrado" >JEAN MARCOS FERREIRA</option>
+                        <option value="78" title="Magistrado" >JOAO CARLOS CABRELON DE OLIVEIRA</option>
+                        <option value="79" title="Magistrado" >JOAO FELIPE MENEZES LOPES</option>
+                        <option value="80" title="Magistrado" >JOSE FRANCISCO DA SILVA NETO</option>
+                        <option value="81" title="Magistrado" >JOSE LUIZ PALUDETTO</option>
+                        <option value="82" title="Magistrado" >JOSE RENATO RODRIGUES</option>
+                        <option value="83" title="Magistrado" >JULIA CAVALCANTE SILVA BARBOSA</option>
+                        <option value="84" title="Magistrado" >JULIANA MONTENEGRO CALADO</option>
+                        <option value="85" title="Magistrado" >KARINA LIZIE HOLLER</option>
+                        <option value="86" title="Magistrado" >KATIA CILENE BALUGAR FIRMINO</option>
+                        <option value="87" title="Magistrado" >KYU SOON LEE</option>
+                        <option value="88" title="Magistrado" >LEANDRO GONSALVES FERREIRA</option>
+                        <option value="89" title="Magistrado" >LEIDE POLO CARDOSO TRIVELATO</option>
+                        <option value="90" title="Magistrado" >LEONARDO ESTEVAM DE ASSIS ZANINI</option>
+                        <option value="91" title="Magistrado" >LEONARDO HENRIQUE SOARES</option>
+                        <option value="92" title="Magistrado" >LEONARDO JOSE CORREA GUARDA</option>
+                        <option value="93" title="Magistrado" >LEONARDO SAFI DE MELO</option>
+                        <option value="94" title="Magistrado" >LEONARDO VIETRI ALVES DE GODOI</option>
+                        <option value="95" title="Magistrado" >LEONORA RIGO GASPAR</option>
+                        <option value="96" title="Magistrado" >LETICIA DEA BANKS FERREIRA LOPES</option>
+                        <option value="97" title="Magistrado" >LIN PEI JENG</option>
+                        <option value="98" title="Magistrado" >LUCAS MEDEIROS GOMES</option>
+                        <option value="99" title="Magistrado" >LUCIANA DE SOUZA SANCHEZ</option>
+                        <option value="100" title="Magistrado" >LUCIANA JACO BRAGA</option>
+                        <option value="101" title="Magistrado" >LUCIANA MELCHIORI BEZERRA</option>
+                        <option value="102" title="Magistrado" >LUCIANA ORTIZ </option>
+                        <option value="103" title="Magistrado" >LUCIANE APARECIDA FERNANDES RAMOS</option>
+                        <option value="104" title="Magistrado" >LUCIANO SILVA</option>
+                        <option value="105" title="Magistrado" >LUIZ AUGUSTO IAMASSAKI FIORENTINI</option>
+                        <option value="106" title="Magistrado" >LUIZ RENATO PACHECO CHAVES DE OLIVEIRA</option>
+                        <option value="107" title="Magistrado" >MAIRA FELIPE LOUREN&#199;O</option>
+                        <option value="108" title="Magistrado" >MARCELLE RAGAZONI CARVALHO</option>
+                        <option value="109" title="Magistrado" >MARCELO COSTENARO CAVALI</option>
+                        <option value="110" title="Magistrado" >MARCELO GUERRA MARTINS</option>
+                        <option value="111" title="Magistrado" >MARCELO SOUZA AGUIAR</option>
+                        <option value="112" title="Magistrado" >M&#193;RCIA SOUZA E SILVA DE OLIVEIRA</option>
+                        <option value="113" title="Magistrado" >MARCIA UEMATSU FURUKAWA</option>
+                        <option value="114" title="Magistrado" >MARCIO AUGUSTO DE MELO MATOS</option>
+                        <option value="115" title="Magistrado" >MARCIO FERRO CATAPANI</option>
+                        <option value="116" title="Magistrado" >MARCIO RACHED MILLANI</option>
+                        <option value="117" title="Magistrado" >MARCO AUR&#201;LIO CHICHORRO FALAVINHA</option>
+                        <option value="118" title="Magistrado" >MARIA CAROLINA AKEL AYOUB</option>
+                        <option value="119" title="Magistrado" >MARIANA TAMMENHAIN</option>
+                        <option value="120" title="Magistrado" >MARILAINE ALMEIDA SANTOS</option>
+                        <option value="121" title="Magistrado" >MARISA CLAUDIA GONCALVES CUCIO</option>
+                        <option value="122" title="Magistrado" >MARISA REGINA AMOROSO QUEDINHO CASSETTARI</option>
+                        <option value="123" title="Magistrado" >MATEUS CASTELO BRANCO FIRMINO DA SILVA</option>
+                        <option value="124" title="Magistrado" >MAURICIO YUKIKAZU KATO</option>
+                        <option value="125" title="Magistrado" >MAURO SPALDING</option>
+                        <option value="126" title="Magistrado" >MICHELLE CAMINI MICKELBERG</option>
+                        <option value="127" title="Magistrado" >MONICA NOBRE</option>
+                        <option value="128" title="Magistrado" >MONIQUE MARCHIOLI LEITE</option>
+                        <option value="129" title="Magistrado" >NATALIA LUCHINI</option>
+                        <option value="130" title="Magistrado" >NEY GUSTAVO PAES DE ANDRADE</option>
+                        <option value="131" title="Magistrado" >NILCE CRISTINA PETRIS</option>
+                        <option value="132" title="Magistrado" >NILCE CRISTINA PETRIS DE PAIVA</option>
+                        <option value="133" title="Magistrado" >NINO OLIVEIRA TOLDO</option>
+                        <option value="134" title="Magistrado" >NINO TOLDO</option>
+                        <option value="135" title="Magistrado" >OMAR CHAMON</option>
+                        <option value="136" title="Magistrado" >OTAVIO HENRIQUE MARTINS PORT</option>
+                        <option value="137" title="Magistrado" >PABLO RODRIGO DIAZ NUNES</option>
+                        <option value="138" title="Magistrado" >PAULA LANGE CANHOS VIEIRA</option>
+                        <option value="139" title="Magistrado" >PAULO CEZAR DURAN</option>
+                        <option value="140" title="Magistrado" >PAULO CEZAR NEVES JUNIOR</option>
+                        <option value="141" title="Magistrado" >PAULO RICARDO ARENA FILHO</option>
+                        <option value="142" title="Magistrado" >PAULO RUI KUMAGAI DE AGUIAR PUPO</option>
+                        <option value="143" title="Magistrado" >PETER DE PAULA PIRES</option>
+                        <option value="144" title="Magistrado" >RAECLER BALDRESCA</option>
+                        <option value="145" title="Magistrado" >RAFAEL ANDRADE DE MARGALHO</option>
+                        <option value="146" title="Magistrado" >RAFAEL MINERVINO BISPO</option>
+                        <option value="147" title="Magistrado" >RAQUEL DOMINGUES DO AMARAL</option>
+                        <option value="148" title="Magistrado" >RENATA COELHO PADILHA</option>
+                        <option value="149" title="Magistrado" >RENATO ADOLFO TONELLI JUNIOR</option>
+                        <option value="150" title="Magistrado" >RENATO DE CARVALHO VIANA</option>
+                        <option value="151" title="Magistrado" >RENATO LU&#205;S BENUCCI</option>
+                        <option value="152" title="Magistrado" >RICARDO DAMASCENO DE ALMEIDA</option>
+                        <option value="153" title="Magistrado" >RICARDO GERALDO REZENDE SILVEIRA</option>
+                        <option value="154" title="Magistrado" >RICARDO MENDONCA CARDOSO</option>
+                        <option value="155" title="Magistrado" >RICARDO UBERTO RODRIGUES</option>
+                        <option value="156" title="Magistrado" >ROBERTO BRANDAO FEDERMAN SALDANHA</option>
+                        <option value="157" title="Magistrado" >ROBERTO DEL CONTE VIECELLI</option>
+                        <option value="158" title="Magistrado" >ROBERTO LEMOS DOS SANTOS FILHO</option>
+                        <option value="159" title="Magistrado" >ROBERTO POLINI</option>
+                        <option value="160" title="Magistrado" >ROBERTO SANTORO FACCHINI</option>
+                        <option value="161" title="Magistrado" >RODINER RONCADA</option>
+                        <option value="162" title="Magistrado" >RODRIGO BOAVENTURA MARTINS</option>
+                        <option value="163" title="Magistrado" >RODRIGO MASSUYAMA MARTINELLI</option>
+                        <option value="164" title="Magistrado" >RODRIGO OLIVA MONTEIRO</option>
+                        <option value="165" title="Magistrado" >RODRIGO ZACHARIAS</option>
+                        <option value="166" title="Magistrado" >ROGERIO VOLPATTI POLEZZE</option>
+                        <option value="167" title="Magistrado" >RONALD DE CARVALHO FILHO</option>
+                        <option value="168" title="Magistrado" >RONALDO JOSE DA SILVA</option>
+                        <option value="169" title="Magistrado" >ROSA MARIA PEDRASSI DE SOUZA</option>
+                        <option value="170" title="Magistrado" >SABRINA BONFIM DE ARRUDA PINTO</option>
+                        <option value="171" title="Magistrado" >SERGIO HENRIQUE BONACHELA</option>
+                        <option value="172" title="Magistrado" >SERGIO NASCIMENTO</option>
+                        <option value="173" title="Magistrado" >SILVIA FIGUEIREDO MARQUES</option>
+                        <option value="174" title="Magistrado" >SILVIO CESAR AROUCK GEMAQUE</option>
+                        <option value="175" title="Magistrado" >TA&#205;S FERRACINI</option>
+                        <option value="176" title="Magistrado" >TANIA LIKA TAKEUCHI</option>
+                        <option value="177" title="Magistrado" >TATHIANE MENEZES DA ROCHA PINTO</option>
+                        <option value="178" title="Magistrado" >TATIANA PATTARO PEREIRA</option>
+                        <option value="179" title="Magistrado" >UILTON REINA CECATO</option>
+                        <option value="180" title="Magistrado" >VALDIRENE RIBEIRO DE SOUZA FALCAO</option>
+                        <option value="181" title="Magistrado" >VALERIA CABAS FRANCO</option>
+                        <option value="182" title="Magistrado" >VALTER ANTONIASSI MACCARONE</option>
+                        <option value="183" title="Magistrado" >VANESSA VIEIRA DE MELLO</option>
+                        <option value="184" title="Magistrado" >WILSON PEREIRA JUNIOR</option>
+                        <option value="185" title="Magistrado" >YURI GUERZET TEIXEIRA</option>
+                </select>
+            </div>
+
+            <div class="campo-pesquisa">
+                <label for="data-inicial">Data: </label>
+                <div class="multi-campos">
+                    <input id="data-inicial" name="data_inicial" type="text" class="hasDatepicker" value="">
+                    <span> a </span>
+                    <input id="data-final" name="data_final" type="text" class="hasDatepicker" value="">
+                    <select id="data-tipo" name="data_tipo">
+                        <option value="0" selected>Publicação</option>
+                        <option value="1" >Julgamento</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="campo-pesquisa">
+                <label for="classe">Classe:</label>
+                <select id="classe" name="classe">
+
+
+
+                    <option selected value="0">Selecione...</option>
+
+                        <option value="1" >AR - A&#199;&#195;O RESCIS&#211;RIA</option>
+                        <option value="2" >AcN&#227;oPerPenal - ACORDO DE N&#195;O PERSECU&#199;&#195;O PENAL</option>
+                        <option value="3" >AI - AGRAVO DE INSTRUMENTO</option>
+                        <option value="4" >40 - AGRAVO DE INSTRUMENTO EM RECURSO EXTRAORDIN&#193;RIO</option>
+                        <option value="5" >AIRE - AGRAVO DE INSTRUMENTO EM RECURSO EXTRAORDIN&#193;RIO</option>
+                        <option value="6" >AgRE - AGRAVO EM RECURSO EXTRAORDIN&#193;RIO</option>
+                        <option value="7" >41 - APELA&#199;&#195;O</option>
+                        <option value="8" >ApelRemNec - APELA&#199;&#195;O / REMESSA NECESS&#193;RIA</option>
+                        <option value="9" >ApCiv - APELA&#199;&#195;O C&#205;VEL</option>
+                        <option value="10" >ApCrim - APELA&#199;&#195;O CRIMINAL</option>
+                        <option value="11" >42 - CARTA TESTEMUNH&#193;VEL</option>
+                        <option value="12" >CT - CARTA TESTEMUNH&#193;VEL</option>
+                        <option value="13" >CauInomCrim - CAUTELAR INOMINADA CRIMINAL</option>
+                        <option value="14" >CCP - CLASSIFICA&#199;&#195;O DE CR&#201;DITO P&#218;BLICO</option>
+                        <option value="15" >30 - CONFLITO DE COMPET&#202;NCIA</option>
+                        <option value="16" >CCCiv - CONFLITO DE COMPET&#202;NCIA C&#205;VEL</option>
+                        <option value="17" >43 - CONFLITO DE JURISDI&#199;&#195;O</option>
+                        <option value="18" >CJ - CONFLITO DE JURISDI&#199;&#195;O</option>
+                        <option value="19" >44 - CORREI&#199;&#195;O PARCIAL</option>
+                        <option value="20" >CorPar - CORREI&#199;&#195;O PARCIAL CRIMINAL</option>
+                        <option value="21" >CumSen - CUMPRIMENTO DE SENTEN&#199;A</option>
+                        <option value="22" >DestBemApre - DESTINA&#199;&#195;O DE BENS APREENDIDOS</option>
+                        <option value="23" >45 - EMBARGOS DE DECLARA&#199;&#195;O</option>
+                        <option value="24" >3 - EXCE&#199;&#195;O DE IMPEDIMENTO</option>
+                        <option value="25" >5 - EXCE&#199;&#195;O DE SUSPEI&#199;&#195;O</option>
+                        <option value="26" >46 - HABEAS CORPUS</option>
+                        <option value="27" >HCCrim - HABEAS CORPUS CRIMINAL</option>
+                        <option value="28" >HDCrim - HABEAS DATA CRIMINAL</option>
+                        <option value="29" >35 - INCIDENTE DE CONCILIA&#199;&#195;O (PROC CONCILIAT&#211;RIO)</option>
+                        <option value="30" >IncImp - INCIDENTE DE IMPEDIMENTO C&#205;VEL</option>
+                        <option value="31" >IncSus - INCIDENTE DE SUSPEI&#199;&#195;O C&#205;VEL</option>
+                        <option value="32" >20 - MANDADO DE SEGURAN&#199;A</option>
+                        <option value="33" >MSCiv - MANDADO DE SEGURAN&#199;A C&#205;VEL</option>
+                        <option value="34" >PCoop - PEDIDO DE COOPERA&#199;&#195;O JURISDICIONAL</option>
+                        <option value="35" >26 - PEDIDO DE UNIFORM DE INTERPRET DE LEI FEDERAL</option>
+                        <option value="36" >47 - PEDIDO DE UNIFORM DE INTERPRET LEI FED-CRIMINAL</option>
+                        <option value="37" >36 - PEDIDO DE UNIFORMIZA&#199;&#195;O DE INTERPRETA&#199;&#195;O DE LEI</option>
+                        <option value="38" >PUILCiv - PEDIDO DE UNIFORMIZA&#199;&#195;O DE INTERPRETA&#199;&#195;O DE LEI C&#205;VEL</option>
+                        <option value="39" >PUILCrim - PEDIDO DE UNIFORMIZA&#199;&#195;O DE INTERPRETA&#199;&#195;O DE LEI CRIMINAL</option>
+                        <option value="40" >23 - PETI&#199;&#195;O</option>
+                        <option value="41" >PetCiv - PETI&#199;&#195;O C&#205;VEL</option>
+                        <option value="42" >48 - PETI&#199;&#195;O CRIMINAL</option>
+                        <option value="43" >PetCrim - PETI&#199;&#195;O CRIMINAL</option>
+                        <option value="44" >38 - PETI&#199;&#195;O INICIAL PROPOSTA EM PLANT&#195;O ELETR&#212;NICO,</option>
+                        <option value="45" >PJEC - PROCEDIMENTO DO JUIZADO ESPECIAL C&#205;VEL</option>
+                        <option value="46" >ProcInstSupTR - PROCESSO AGUARDANDO JULGAMENTO DA INST&#194;NCIA SUPERIOR - TR</option>
+                        <option value="47" >ProcInstSupCrim - PROCESSO AGUARDANDO JULGAMENTO DA INST&#194;NCIA SUPERIOR - TRCRIM</option>
+                        <option value="48" >ProcInstSupTRU - PROCESSO AGUARDANDO JULGAMENTO DA INST&#194;NCIA SUPERIOR - TRU</option>
+                        <option value="49" >ProcArqTR - PROCESSO ARQUIVADO - TR</option>
+                        <option value="50" >ProcArqTRCrim - PROCESSO ARQUIVADO - TRCRIM</option>
+                        <option value="51" >ProcArqTRU - PROCESSO ARQUIVADO - TRU</option>
+                        <option value="52" >ProcBaixadoTR - PROCESSO BAIXADO - TR</option>
+                        <option value="53" >ProcBaixadoCrim - PROCESSO BAIXADO - TRCRIM</option>
+                        <option value="54" >ProcPrazoTR - PROCESSO COM PRAZO EM ANDAMENTO - TR</option>
+                        <option value="55" >ProcPrazoTRCrim - PROCESSO COM PRAZO EM ANDAMENTO - TRCRIM</option>
+                        <option value="56" >ProcPrazoTRU - PROCESSO COM PRAZO EM ANDAMENTO - TRU</option>
+                        <option value="57" >ProcSessTR - PROCESSO COM SESS&#195;O DE JULGAMENTO EM ANDAMENTO - TR</option>
+                        <option value="58" >ProcSessTRCrim - PROCESSO COM SESS&#195;O DE JULGAMENTO EM ANDAMENTO - TRCRIM</option>
+                        <option value="59" >ProcSessTRU - PROCESSO COM SESS&#195;O DE JULGAMENTO EM ANDAMENTO - TRU</option>
+                        <option value="60" >ProcConclTR - PROCESSO CONCLUSO - TR</option>
+                        <option value="61" >ProcConclTRCrim - PROCESSO CONCLUSO - TRCRIM</option>
+                        <option value="62" >ProcConclTRU - PROCESSO CONCLUSO - TRU</option>
+                        <option value="63" >ProcAndTR - PROCESSO EM ANDAMENTO - TR</option>
+                        <option value="64" >ProcAndTRCrim - PROCESSO EM ANDAMENTO - TRCRIM</option>
+                        <option value="65" >ProcAndTRU - PROCESSO EM ANDAMENTO - TRU</option>
+                        <option value="66" >ProcSobrestTR - PROCESSO SOBRESTADO - TR</option>
+                        <option value="67" >ProcSobrestCrim - PROCESSO SOBRESTADO - TRCRIM</option>
+                        <option value="68" >ProcSobrestTRU - PROCESSO SOBRESTADO - TRU</option>
+                        <option value="69" >ReclCrim - RECLAMA&#199;&#195;O CRIMINAL</option>
+                        <option value="70" >27 - RECURSO DE MEDIDA CAUTELAR</option>
+                        <option value="71" >49 - RECURSO DE MEDIDA CAUTELAR - CRIMINAL,</option>
+                        <option value="72" >ReMeCaCiv - RECURSO DE MEDIDA CAUTELAR C&#205;VEL</option>
+                        <option value="73" >RecMedCauCrim - RECURSO DE MEDIDA CAUTELAR CRIMINAL</option>
+                        <option value="74" >ReSe - RECURSO EM SENTIDO ESTRITO</option>
+                        <option value="75" >50 - RECURSO EM SENTIDO ESTRITO/RECURSO EX OFFICIO</option>
+                        <option value="76" >RSEExOf - RECURSO EM SENTIDO ESTRITO/RECURSO EX OFFICIO</option>
+                        <option value="77" >16 - RECURSO INOMINADO</option>
+                        <option value="78" >18 - RECURSO INOMINADO AUTOR E R&#201;U</option>
+                        <option value="79" >RecInoCiv - RECURSO INOMINADO C&#205;VEL</option>
+                        <option value="80" >51 - REEXAME NECESS&#193;RIO</option>
+                        <option value="81" >RemNecCiv - REMESSA NECESS&#193;RIA C&#205;VEL</option>
+                        <option value="82" >RemNecCrim - REMESSA NECESS&#193;RIA CRIMINAL</option>
+                        <option value="83" >9 - RESTAURA&#199;&#195;O DE AUTOS</option>
+                        <option value="84" >ResAutCiv - RESTAURA&#199;&#195;O DE AUTOS</option>
+                        <option value="85" >52 - RESTAURA&#199;&#195;O DE AUTOS - CRIMINAL</option>
+                        <option value="86" >ResAutCrim - RESTAURA&#199;&#195;O DE AUTOS CRIMINAL</option>
+                        <option value="87" >53 - REVIS&#195;O CRIMINAL</option>
+                        <option value="88" >RevCrim - REVIS&#195;O CRIMINAL</option>
+                        <option value="89" >39 - TR-PETI&#199;&#195;O INICIAL PROPOSTA EM PLANT&#195;O ELETR&#212;NICO</option>
+                        <option value="90" >TutAntAnt - TUTELA ANTECIPADA ANTECEDENTE</option>
+                        <option value="91" >TutCautAnt - TUTELA CAUTELAR ANTECEDENTE</option>
+                </select>
+            </div>
+
+            <div class="campo-pesquisa">
+                <label for="orgao">Órgão Julgador: </label>
+                <select id="orgao" name="orgao">
+
+
+                    <option selected value="0">Selecione...</option>
+
+                        <option value="1" data-val-jef="1&#170; TURMA RECURSAL DE CAMPO GRANDE" title="Corte Especial" >1&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de Mato Grosso do Sul</option>
+                        <option value="2" data-val-jef="1&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >1&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="3" data-val-jef="10&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >10&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="4" data-val-jef="11&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >11&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="5" data-val-jef="12&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >12&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="6" data-val-jef="13&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >13&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="7" data-val-jef="14&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >14&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="8" data-val-jef="15&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >15&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="9" data-val-jef="2&#170; TURMA RECURSAL DE CAMPO GRANDE" title="Corte Especial" >2&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de Mato Grosso do Sul</option>
+                        <option value="10" data-val-jef="2&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >2&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="11" data-val-jef="3&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >3&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="12" data-val-jef="4&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >4&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="13" data-val-jef="5&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >5&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="14" data-val-jef="6&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >6&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="15" data-val-jef="7&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >7&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="16" data-val-jef="8&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >8&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="17" data-val-jef="9&#170; TURMA RECURSAL DE S&#195;O PAULO" title="Corte Especial" >9&#170; Turma Recursal da Se&#231;&#227;o Judici&#225;ria de S&#227;o Paulo</option>
+                        <option value="18" data-val-jef="Turma Regional de Uniformiza&#231;&#227;o" title="Corte Especial" >Turma Regional de Uniformiza&#231;&#227;o</option>
+                </select>
+            </div>
+
+
+            <div class="campo-pesquisa">
+                <label for="ementa">Ementa: </label>
+                <input id="ementa" name="ementa" type="text" title="Não utilizar conectores neste campo" value="">
+            </div>
+
+
+            <div class="campo-pesquisa">
+                <label for="indexacao">Objeto do Processo: </label>
+                <input id="indexacao" name="indexacao" type="text" title="Não utilizar conectores neste campo" value="">
+            </div>
+
+            <div class="submits-pesquisa">
+                <button type="submit">
+                    Pesquisar
+                </button>
+                <button type="button" onclick="limparCampos()">Limpar</button>
+            </div>
+
+            <input id="hdnMagistrado" name="hdnMagistrado" type="hidden" />
+            <input id="hdnClasse" name="hdnClasse" type="hidden" />
+            <input id="hdnOrgao" name="hdnOrgao" type="hidden" />
+            <input id="hdnOrgaoJef" name="hdnOrgaoJef" type="hidden" />
+            <input id="hdnLegislacao" name="hdnLegislacao" type="hidden" />
+            <input id="numclasse" name="numclasse" type="hidden" value="">
+            <input id="legislacao" name="legislacao" type="hidden" value="">
+        </form>
+    </section>
+
+
+    <section class="painel-jurisprudencias">
+    <div class="itens-painel">
+        <button type="button" class="opcao">
+            <a href="https://www2.cjf.jus.br/jurisprudencia/unificada/" class="texto-opcao" target="_blank">
+                Jurisprudência Unificada do CJF
+            </a>
+
+        </button>
+        
+        <button type="button" class="opcao">
+            <a href="https://jurisprudencia.cjf.jus.br/tnu/index.xhtml" class="texto-opcao" target="_blank">
+                Jurisprudência Unificada da TNU (até Junho de 2017)
+            </a>
+        </button>
+        <button type="button" class="opcao">
+            <a href="https://eproctnu-jur.cjf.jus.br" class="texto-opcao" target="_blank">
+                Jurisprudência Unificada da TNU (a partir de Julho de 2017)
+            </a>
+        </button>
+        <button type="button" class="opcao">
+            <a href="https://www.trf3.jus.br/diretoria-geral/biblioteca/setor-de-apoio-a-jurisprudencia/sumulas-do-trf3" target="_blank" class="texto-opcao">
+                Súmulas do TRF3
+            </a>
+        </button>
+    </div>
+</section>
+
+    <section class="painel-legislacoes modal ocultar">
+
+        <section class="fechar">
+            <button type="button">
+                <i class="bi bi-x"></i>
+            </button>
+        </section>
+
+        <section class="busca">
+            <input type="text" id="texto-busca" placeholder="filtrar legislações" />
+        </section>
+
+
+    </section>
+</div>
+
+
+    </main>
+
+    
+
+<footer class="rodape-principal">
+    <div class="container">
+        <ul class="lista-servicos">
+            <li class="item-lista-servicos">
+                Sites da 3ª Região:
+                <span class="sites-lista">
+                    <a href="https://www.trf3.jus.br/">TRF3</a> |
+                    <a href="https://www.jfsp.jus.br/">São Paulo</a> |
+                    <a href="https://www.jfms.jus.br/">Mato Grosso do Sul</a>
+                </span>
+            </li>
+            <li class="item-lista-servicos">
+                Tribunais Superiores:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www.cjf.jus.br/">Conselho da Justiça Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.stj.jus.br/">Superior Tribunal de Justiça</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://portal.stf.jus.br/">Supremo Tribunal Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.cnj.jus.br/">Conselho Nacional de Justiça</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Outras Jurisprudências:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www2.cjf.jus.br/jurisprudencia/unificada/">Jurisprudência Unificada do CJF</a>
+                    </li>
+                    
+                    <li class="item-interno">
+                        <a href="https://jurisprudencia.cjf.jus.br/tnu/index.xhtml">Jurisprudência Unificada da TNU (até Junho de 2017)</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://eproctnu-jur.cjf.jus.br">Jurisprudência Unificada da TNU (a partir de Julho de 2017)</a>
+                    </li>
+
+                    <li class="item-interno">
+                        <a href="https://www.trf3.jus.br/diretoria-geral/biblioteca/setor-de-apoio-a-jurisprudencia/sumulas-do-trf3">Súmulas do TRF3</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Contato:
+                <span class="sites-lista">
+                    <a href="mailto:jurisprudencia@trf3.jus.br">jurisprudencia@trf3.jus.br</a>
+                </span>
+            </li>
+        </ul>
+    </div>
+</footer>
+
+
+<script type="text/javascript"  src="/oGX13krQLPgH8/Ia/8I22_rESb3sk/NLrEfkLJNzpJpz/VQEiUSU/RkhhD/g1qE3I"></script><link rel="stylesheet" type="text/css"  href="/oGX13krQLPgH8/Ia/8I22_rESb3sk/NL/HSUXUSU/Bw1jY/mMMRiRY"><script  src="/oGX13krQLPgH8/Ia/8I22_rESb3sk/NL/HSUXUSU/eQMSW/1o1I1Eo" async defer></script><div id="sec-overlay" style="display:none;"><div id="sec-container"></div></div><noscript><img src="https://web.trf3.jus.br/akam/13/pixel_78b53c35?a=dD1iYWZlNzZiOTNjNGUxNGU4NWZlNjY2YWZjNWZmN2E1MTYyOGEyYTg2JmpzPW9mZg==" style="visibility: hidden; position: absolute; left: -999px; top: -999px;" /></noscript></body>
+</html>

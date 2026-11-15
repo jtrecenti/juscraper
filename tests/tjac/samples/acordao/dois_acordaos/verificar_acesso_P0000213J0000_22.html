@@ -1,0 +1,119 @@
+
+
+
+
+
+
+
+
+
+
+
+<script language="javascript" type="text/JavaScript">
+	window.saj.cpo = window.saj.cpo || {};
+	window.saj.cpo.mensagemErroSenhaExpirada = 'Senha do processo expirada. Solicite outra no cartório de tramitação do processo.';
+	window.saj.cpo.mensagemErroSenha = 'Senha do processo inválida.';
+</script>
+
+<div id="popupSenhaProcesso" style="display: none;padding: 20px 20px 5px 20px;">
+	<div class="alert alert-warning" role="alert" id="spwTabelaMensagem" style="display: none;">
+		<span class="alert__icon" aria-hidden="true"><img src="/cposg5/imagens/spw/icoError.gif"></span>
+		<span class="alert__text" id="msgErroSenha"></span>
+	</div>
+	<table role="document">
+		<input type="hidden" name="" value="" />
+		<tr>
+			<td colspan="2" style="padding-bottom:20px" class="orientacao121" tabindex="2" aria-label="Atendendo a resolução 121 do CNJ.">
+				Atendendo a resolução 121 do CNJ.
+			</td>
+		<tr>
+		
+			<tr>
+				<td colspan="2" style="padding-bottom:20px" tabindex="3" class="orientacao-senha-advogado" aria-label="Se for advogado(a) nesse processo, é necessário identificar-se.">Se for advogado(a) nesse processo, é necessário <span id="identificacao"></span></td>
+				
+					
+					
+						<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/sajcas/conteudoIdentificacao?script="></script>
+					
+				
+			</tr>
+		
+		<tr align="center">
+			<td align="left" colspan="2" style="padding-bottom:20px" tabindex="4" aria-label="Se for uma parte ou interessado, digite a senha do processo">
+				<div style=" line-height:30px;" class="orientacao-senha-parte">Se for uma parte ou interessado, digite a senha do processo</div>
+				<div style="float:left;width: 140px; padding-left:15px">
+					<input type="password" name="senhaProcesso" maxlength="12" value="" rotulo="" class="form-control" id="senhaProcesso">
+					<input type="hidden" name="cdProcesso" value="" />
+				</div>
+				<div class="unj-form-control-group__icon">
+					<div class="dropdown show">
+						<a href="javascript:;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<span class="glyph glyph-info hint-orientacao-senha" aria-hidden="true"></span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-right tooltip-campos" aria-labelledby="dropdownMenuLink">
+							
+								É necessário informar uma senha para acessar processo em segredo de justiça, bem como para acessar autos dos demais processos.<br/><br/>
+								Se for parte do processo e ainda não possua uma senha, <b>solicite-a no cartório</b>.<br/><br/>
+							
+							
+						</div>
+					</div>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" align="center" style="text-align: center !important;padding-top: 10px;">
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	    
+	<input type="button" name="btFechar" value="Cancelar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotao " id="botaoFecharPopupSenha">
+
+
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	    
+	<input type="button" name="btEnviarSenha" value="Continuar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotaoDefault btn-space" id="botaoEnviarSenha">
+
+
+			</td>
+		</tr>
+	</table>
+</div>
+	
+

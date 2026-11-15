@@ -7,6 +7,7 @@ The TJRJ ASPX backend exposes only year-level granularity (``cmbAnoInicio``
 silent ``warn_unsupported`` behaviour now receives a :class:`TypeError`.
 """
 import json
+from urllib.parse import parse_qs
 
 import pandas as pd
 import pytest
@@ -16,6 +17,8 @@ from responses.matchers import json_params_matcher
 import juscraper as jus
 from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
+
+RESULTS_PAGE_URL = "https://www3.tjrj.jus.br/EJURIS/ProcessarConsJurisES.aspx"
 
 
 def _form_html() -> str:
@@ -41,11 +44,14 @@ def _add_form_get() -> None:
                   content_type="text/html; charset=utf-8")
 
 
-def _add_form_post(pesquisa: str, **overrides) -> None:
+def _add_form_post(pesquisa: str, page_seq: int = 0, **overrides) -> None:
+    """Form POST answered like the backend: 302 to the results page with ``PageSeq``."""
     responses.add(
-        responses.POST, FORM_URL, body=b"", status=200,
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": f"/EJURIS/ProcessarConsJurisES.aspx?PageSeq={page_seq}&Version=1.2.2.3"},
         match=[urlencoded_body_subset_matcher(_expected_body_subset(pesquisa, **overrides))],
     )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
 
 
 def _add_xhr_zero() -> None:
@@ -82,6 +88,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # Com chkEmentario marcado, o servidor ignorava o chkAcordao desmarcado.
+    busca = parse_qs(responses.calls[1].request.body)
+    assert "ctl00$ContentPlaceHolder1$chkAcordao" not in busca
+    assert "ctl00$ContentPlaceHolder1$chkEmentario" not in busca
 
 
 @responses.activate

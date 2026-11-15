@@ -6,6 +6,8 @@ module). Fixtures are kept here so pytest picks them up automatically.
 """
 from __future__ import annotations
 
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -16,6 +18,16 @@ from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DAT
 # Habilita a fixture ``pytester`` (sessões pytest isoladas) usada por
 # ``tests/test_anti_bot_marker.py`` para exercitar o hook ``anti_bot`` abaixo.
 pytest_plugins = ["pytester"]
+
+# Dentro de um hook, o git exporta GIT_DIR, GIT_INDEX_FILE e outras variáveis
+# que apontam para o repositório de quem commita. Os testes que criam
+# repositórios temporários (gates de lint e complexidade, passos do CI)
+# gravariam nele commits, refs e core.hooksPath. Limpar ao importar o conftest
+# cobre fixtures de qualquer escopo e cada worker do xdist.
+for _variavel in subprocess.run(
+    ["git", "rev-parse", "--local-env-vars"], capture_output=True, text=True, check=True,
+).stdout.split():
+    os.environ.pop(_variavel, None)
 
 
 @pytest.hookimpl(wrapper=True)

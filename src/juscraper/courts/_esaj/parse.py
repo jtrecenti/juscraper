@@ -1,8 +1,9 @@
 """HTML parsers for eSAJ cjsg results.
 
 Absorbs the 6 near-identical ``cjsg_parse.py`` modules from the courts.
-The TJSP version is the canonical reference for ``cjsg_n_pags`` (see
-CLAUDE.md) because its cascade of selectors/regex tolerates both the
+``cjsg_n_results`` le o total do ``input#totalResultadoAbaRetornoFiltro-*``
+quando ele existe. The TJSP version is the canonical reference for the
+fallback cascade of ``cjsg_n_pags`` (see CLAUDE.md) because its cascade of selectors/regex tolerates both the
 legacy ``bgcolor=#EEEEEE`` layout and the newer ``td Resultados…``
 wording. The parser treats latin-1 as the expected server encoding
 (falls back to utf-8 for test samples that were re-saved).
@@ -103,10 +104,9 @@ def _find_pagination_element(soup: BeautifulSoup) -> Tag | None:
     )
 
 
-def _count_result_rows_or_raise(soup: BeautifulSoup) -> int:
+def _count_result_rows_or_raise(soup: BeautifulSoup, n_rows: int) -> int:
     results_table = soup.find("table", class_=_RESULT_TABLE_CLASS_RE)
     if results_table is not None:
-        n_rows = len(soup.find_all("tr", class_="fundocinza1"))
         return max(n_rows, 1)
 
     if soup.find("form", id=_FORM_ID_RE):
@@ -134,6 +134,16 @@ def _extract_pagination_count(text: str) -> int | None:
     return None
 
 
+def _total_declarado(soup: BeautifulSoup) -> int | None:
+    # A página de ``trocaDePagina.do`` traz um único input, o da aba pedida
+    # em ``tipoDeDecisao``: ``-A`` (acórdãos) ou ``-D`` (monocráticas).
+    inputs = soup.select("input[id^=totalResultadoAbaRetornoFiltro-]")
+    if len(inputs) != 1:
+        return None
+    valor = str(inputs[0].get("value") or "").strip()
+    return int(valor) if re.fullmatch(r"[0-9]+", valor) else None
+
+
 def cjsg_n_results(html_source: str) -> int:
     """Extract the total number of results from a cjsg first-page HTML.
 
@@ -146,7 +156,12 @@ def cjsg_n_results(html_source: str) -> int:
     :func:`juscraper.courts._esaj.download.download_cjsg_pages` to size the
     pagination loop.
 
-    Uses a cascade of selectors and regex to survive layout changes. See the
+    Le primeiro o ``input#totalResultadoAbaRetornoFiltro-*`` oculto que o eSAJ
+    poe na pagina de resultados; o valor nao depende do texto da pagina, entao
+    uma ementa que cite "resultados" nao muda a contagem.
+
+    Sem esse input, ou com valor vazio ou nao numerico, cai numa cascata de
+    seletores e regex, que tolera mudancas de layout. See the
     "Extração de número de páginas/resultados em raspadores HTML" section of
     CLAUDE.md for the rationale.
 
@@ -166,12 +181,19 @@ def cjsg_n_results(html_source: str) -> int:
     soup = BeautifulSoup(html_source, "html.parser")
 
     _raise_page_error(soup)
+    total = _total_declarado(soup)
+    if total is not None:
+        return total
+    # As ementas ficam nas linhas de resultado e podem citar "resultados" ou
+    # "sem resultados" ("BONIFICAÇÃO POR RESULTADOS"); os marcadores de
+    # contagem ficam fora delas.
+    linhas_de_resultado = [linha.extract() for linha in soup.find_all("tr", class_="fundocinza1")]
     if _has_zero_results(soup):
         return 0
 
     pagination_element = _find_pagination_element(soup)
     if pagination_element is None:
-        return _count_result_rows_or_raise(soup)
+        return _count_result_rows_or_raise(soup, len(linhas_de_resultado))
 
     pagination_text = pagination_element.get_text()
     count = _extract_pagination_count(pagination_text)

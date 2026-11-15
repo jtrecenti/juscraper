@@ -44,13 +44,14 @@ and MS), through the JSON API behind the PJe public consultation apps:
 [pje1g-consultapublica.trf3.jus.br](https://pje1g-consultapublica.trf3.jus.br/)
 (first instance, `cpopg`) and
 [pje2g-consultapublica.trf3.jus.br](https://pje2g-consultapublica.trf3.jus.br/)
-(appeals, `cposg`).
+(appeals, `cposg`). Case-law search (`cjsg`) uses the separate portal at
+[web.trf3.jus.br/jurisprudencia](https://web.trf3.jus.br/jurisprudencia/).
 
 | Feature | Available |
 |---------|-----------|
 | cpopg   | Yes       |
 | cposg   | Yes       |
-| cjsg    | No        |
+| cjsg    | Yes       |
 | cjpg    | No        |
 """
         ),

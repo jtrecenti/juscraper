@@ -87,6 +87,14 @@ As seções a seguir são notas internas para quem contribui com novos raspadore
 
 `uv run pytest` exclui integração por padrão. Para executar todas as camadas, inclusive rede, usar `uv run pytest -m ""`.
 
+### CI da suíte offline
+
+O workflow `Testes` (`.github/workflows/tests.yml`) roda `uv run pytest` em todo PR e em pushes para `main`, com uma perna por versão de Python da matriz declarada no próprio arquivo. A integração fica de fora pelo `-m 'not integration'` de `addopts`, então nenhuma perna acessa tribunal. O job `Testes obrigatórios` reúne o resultado dessas pernas e é o nome a exigir na proteção da `main`.
+
+As dependências do CI vêm do `uv.lock` versionado. Os workflows que instalam o projeto usam `uv sync --frozen`, e os que rodam `uv run` definem `UV_FROZEN=1` para o workflow inteiro, porque sem isso um `uv run` refaz a resolução quando o `pyproject.toml` muda sem o lock e instala fora dele. O `Lint` reprova com `uv lock --check` quando o lock não acompanha o `pyproject.toml`. Depois de mudar uma dependência, rodar `uv lock` e commitar o `uv.lock` junto. O `publish.yml` só faz `uv build`. A versão do `uv` vem do `setup-uv` de cada workflow, e a imagem do runner é sempre a mais recente; como `filterwarnings = ["error"]` transforma aviso em falha, uma imagem nova ainda pode deixar o workflow vermelho sem mudança no repositório.
+
+A perna marcada com `cobertura` na matriz mede a cobertura, publica o total e a tabela por arquivo no resumo da execução e reprova abaixo do `fail_under` de `[tool.coverage.report]`, no `pyproject.toml`: 94%, um ponto abaixo dos 95% medidos quando o workflow chegou (#101). O resumo é publicado também quando o piso reprova. Para conferir localmente, rodar a suíte inteira com `uv run pytest --cov`; num subconjunto, a cobertura total fica baixa e o piso reprova, então ali vale `--cov-fail-under=0`.
+
 ### Pirâmide de testes
 
 | Camada | Sufixo do arquivo | Marker | Quando construir |
@@ -132,6 +140,7 @@ Comando padrão (rodar localmente antes de release ou após refactor amplo):
 ```bash
 pytest --nbmake docs/notebooks/ \
   --ignore=docs/notebooks/jusbr.ipynb \
+  --ignore=docs/notebooks/pdpj.ipynb \
   --ignore=docs/notebooks/tjmg.ipynb \
   --nbmake-timeout=300 \
   -n auto
@@ -139,11 +148,59 @@ pytest --nbmake docs/notebooks/ \
 
 Notas:
 
-- **Não rodar em `pre-commit` nem em CI por PR.** São 25 notebooks contra rede real (~10-30 min com `pytest-xdist`); flakiness de tribunal vai bloquear merge sem motivo. O lugar certo, se um dia entrar no CI, é o workflow nightly proposto em #101 com `continue-on-error`.
+- **Não rodar em `pre-commit`.** São dezenas de notebooks contra rede real (~10-30 min com `pytest-xdist`). No CI, o workflow `Integração` roda todos uma vez por semana e, em PR, só os dos tribunais que o PR toca (ver **Integração semanal no CI**).
 - Falhas de conexão no Google Colab ou em outro ambiente de nuvem devem ser reproduzidas localmente antes de motivar mudanças em timeout, retry ou no scraper. Um `ConnectTimeout` sem resposta HTTP pode indicar bloqueio de IP compartilhado ou problema de rota; isoladamente, não demonstra regressão do `juscraper` nem bloqueio intencional pelo tribunal.
-- `jusbr.ipynb` é excluído porque depende de token gov.br (`JUSBR_ACCESS_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Ambos rodam sob demanda quando as condições estão presentes.
+- `jusbr.ipynb` e `pdpj.ipynb` são excluídos porque dependem de credencial do gov.br (`JUSBR_ACCESS_TOKEN` e `PDPJ_TOKEN`); `tjmg.ipynb` depende do extra `[tjmg]` instalado (`txtcaptcha`). Os três rodam sob demanda quando as condições estão presentes. O workflow `Integração` instala o extra `[tjmg]` e roda o `tjmg.ipynb`.
+- O extra `[tjmg]` não instala no Python 3.15: o `txtcaptcha` depende do `torch`, que ainda não publica wheel para essa versão. Para rodar o TJMG localmente, recriar o `.venv` com o 3.14: `uv sync --python 3.14 --extra dev --extra docs --extra tjmg`. Para voltar ao 3.15, `uv sync --python 3.15 --extra dev`. O workflow `Integração` fixa a própria versão do Python e não é afetado.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
+
+### Integração local
+
+Os testes marcados `integration` e os notebooks rodam localmente, de IP residencial no Brasil, que é o ambiente de referência. Os tribunais bloqueiam com frequência os IPs dos runners do GitHub: a conexão não se completa, a leitura não termina, o portal devolve uma página de desafio no lugar do JSON ou responde HTTP 403. No #519, por exemplo, os testes do TJMT deram `ConnectTimeout` no runner e passaram localmente. Uma falha do workflow `Integração` (ver **Integração semanal no CI**) só conta como quebra do raspador depois de reproduzida localmente.
+
+Ao mexer num tribunal ou agregador, rodar antes do PR os testes de integração, o notebook e o teste `release` dele:
+
+```bash
+uv sync --extra dev --extra docs --extra waf     # TJMG: ver a nota do extra [tjmg] em Notebooks
+uv run playwright install chromium               # navegador do extra waf (STF, TJPE)
+uv run pytest tests/<nome> -m integration
+uv run pytest --nbmake docs/notebooks/<nome>.ipynb --nbmake-timeout=300
+uv run pytest tests/test_release_date_filter.py -m release -k <nome>
+```
+
+`<nome>` é o diretório do tribunal em `tests/`. Uma mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) vale para todo tribunal que a importa. O subcomando `alvo-pr` do script do relatório lista os tribunais que os commits de uma branch tocam, com a mesma regra do workflow (o que ainda não foi commitado fica de fora):
+
+```bash
+git fetch origin
+uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
+```
+
+Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
+
+De IP residencial os testes `anti_bot` também passam, então `-m integration` os inclui; um bloqueio Akamai ainda vira `xfail` (ver **Marker `anti_bot`**). Uma falha que já existia na `main` aparece também na branch: para saber se a quebra veio da mudança, rodar o mesmo comando na `main` e comparar.
+
+### Integração semanal no CI
+
+O workflow `Integração` (`.github/workflows/integration.yml`) roda uma vez por semana os testes marcados `integration`, sem os `anti_bot`, e em seguida os notebooks de `docs/notebooks/`, exceto os que exigem credencial do gov.br. O horário, os extras instalados e a lista de notebooks excluídos estão no próprio arquivo. A execução agendada não acontece no recesso forense, de 20/12 a 20/01. Os testes marcados `release` também ficam de fora, porque são a bateria cara reservada para antes de versão maior.
+
+Parte dos tribunais dá problema só no runner do GitHub: a conexão não se completa, a leitura não termina nos testes que paginam, o portal devolve uma página de desafio no lugar do JSON ou responde HTTP 403. Esses tribunais estão na variável `FORA_DO_CI` do workflow, e a execução completa ignora os testes e os notebooks deles, porque no CI eles mostrariam toda semana o problema do runner. A issue de acompanhamento lista quem ficou de fora. Eles rodam localmente ou num disparo manual com `tribunal`, que ignora a lista. A lista vem de uma medição comparada entre o runner e um IP residencial no Brasil; como os IPs dos runners mudam a cada execução, ela é revista quando um tribunal passa a responder ao runner ou deixa de responder.
+
+Na execução completa, teste que falha não derruba o workflow: tribunal fora do ar é esperado e não deve gerar alerta de execução quebrada. O workflow fica vermelho quando algo além de um teste quebra: o pytest sai com código 2 ou maior (erro de coleta, interrupção, nada coletado), um passo estoura o tempo, a instalação falha, o `tribunal` do disparo manual não existe ou uma chamada ao `gh` falha. Quando o job dos testes não termina bem, a issue não é tocada, porque o retrato daquela execução está incompleto.
+
+O resultado vai para uma única issue, com a label `tribunal-quebrado`, cujo corpo o workflow reescreve a cada execução agendada. Editar o corpo não notifica ninguém. O workflow comenta na issue, e portanto notifica, só quando a lista de testes que falham muda de uma execução para a outra. Essa lista fica gravada num comentário HTML no fim do corpo, e é contra ela que a execução seguinte compara; por isso o corpo não deve ser editado à mão. A montagem do corpo e a comparação ficam em `scripts/integration_report.py`, coberto por `tests/integration_report/`.
+
+Em PR, o workflow roda os testes de integração, o notebook e o teste `release` de cada tribunal ou agregador cujo diretório o PR tocou: `src/juscraper/courts/<nome>/`, `src/juscraper/aggregators/<nome>/`, `tests/<nome>/` ou `docs/notebooks/<nome>.ipynb`. Mudança no código de uma família (`_esaj`, `_trf`, `_pdpj_sso`) conta para todo tribunal que a importa. Código comum, como `core/` e `utils/`, não aponta tribunal e fica com a execução semanal. A escolha fica em `alvo-pr`, no script do relatório. Tribunal de `FORA_DO_CI` não roda: o PR recebe um aviso com o comando para rodá-lo localmente. Os notebooks que exigem credencial também ficam de fora. Para ver localmente os tribunais que os commits de uma branch tocam, `uv run python scripts/integration_report.py alvo-pr --base-ref origin/main` roda o `git diff` contra o ancestral comum com a base; sem `--fora`, a lista inclui os de `FORA_DO_CI`.
+
+Ao contrário da execução completa, a execução dirigida fica vermelha quando um teste falha, porque quem mexe num tribunal precisa ver que ele falha agora. Uma falha que já existia na `main` também deixa o PR vermelho. A issue semanal não basta para separar as duas, porque a execução completa não roda o teste `release`: para saber se a quebra veio do PR, rodar o mesmo tribunal na `main` com o disparo abaixo e comparar. Um PR que não toca tribunal nenhum e altera o workflow ou o script do relatório roda o autoteste com o TJMG, que exercita a instalação mais pesada.
+
+Para conferir um tribunal fora de PR, na `main` para comparar, ou um tribunal de `FORA_DO_CI` no runner:
+
+```bash
+gh workflow run integration.yml --ref <branch> -f tribunal=tjsp
+```
+
+O valor de `tribunal` é o nome do diretório em `tests/`, ou vários separados por espaço. A execução dirigida, em PR ou por disparo, nunca reescreve a issue; o resultado fica no resumo da execução. Um disparo manual sem `tribunal` só reescreve a issue com `-f atualizar_issue=true` e a partir da `main`.
 
 ## Política de lint e adoção gradual
 
@@ -170,7 +227,7 @@ uv run pytest tests/lint_policy -q
 uv run pre-commit install
 ```
 
-O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso.
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. No CI, o PR é comparado com a ponta atual da branch de destino (`origin/<branch>`), e não com o `pull_request.base.sha` do evento, que só muda quando o PR é aberto ou troca de destino e atribuiria ao PR as dispensas que o destino ganhou depois. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso. O hook `pytest` roda a suíte offline inteira com `pytest -n auto` em todo commit (cerca de 30 s); para pular só ele num commit, usar `SKIP=pytest git commit ...`.
 
 ### Retirada de dispensas
 
@@ -186,7 +243,7 @@ As correções automáticas desse comando exigem revisão antes de salvar; sem `
 
 ### CI e primeira adoção
 
-O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele executa Ruff, o controle de dispensas e os testes do próprio gate. Usa o SHA da base do PR ou o SHA anterior ao push, com histórico Git completo. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
+O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele confere o `uv.lock` e executa Ruff, o controle de dispensas e os testes do próprio gate, comparando o PR com a ponta da branch de destino e o push com o SHA anterior, com histórico Git completo. O job `pre-commit` do mesmo workflow roda todos os hooks em todos os arquivos (`pre-commit run --all-files`), o que leva mypy, pylint, flake8, isort e bandit ao PR; `lint-policy` e `complexity` ficam de fora dele porque têm passo próprio, com a base de cada evento. O hook `pytest` roda nesse job também, repetindo em Python 3.12 a suíte offline que o workflow `Testes` roda em todas as versões. Os hooks rodam nas versões fixadas no `.pre-commit-config.yaml`, em ambientes próprios, e não nas do `uv.lock`; as dependências adicionais deles também têm versão fixa. O `check-added-large-files` só olha arquivo acrescentado no commit, então não confere nada nesse job. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
 
 Na primeira adoção, a base ainda não contém `ruff.toml`. O script extrai os arquivos Python de `src/` e `tests/` daquela revisão em diretório temporário e mede esse código com a régua nova. Só os pares encontrados nesse código antigo podem receber dispensa. Nos PRs seguintes, a comparação usa diretamente a lista já versionada na base. Essa verificação impede incluir problemas criados no próprio PR como se fossem pendências antigas.
 
@@ -250,9 +307,9 @@ def advogados_do_polo(processos, polo):
 | (a) `extrair_total_resultados` | 16 | 2 | sequência plana, legível apesar do CCN; só o lizard pega |
 | (b) `advogados_do_polo` | 7 | 21 | aninhada, só o cognitivo pega |
 
-Números medidos com lizard 1.24.0 e complexipy 8.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
+Números medidos com as versões fixadas no extra `[dev]`, lizard 1.23.0 e complexipy 6.0.1. Em (a), o lizard soma +1 por `or` e +1 pelo `if`, enquanto o complexipy conta a sequência de `or` uma vez só. Em (b), cada estrutura paga +1 mais a profundidade em que está: o `if` mais interno custa 6 sozinho, embora a função tenha só seis pontos de decisão.
 
-### Diagnóstico sob demanda (não roda em pre-commit nem CI)
+### Diagnóstico sob demanda
 
 ```bash
 uv run lizard src               # ciclomático (CCN) + NLOC + tokens + nº de params, por função
@@ -261,14 +318,37 @@ uv run complexipy -i -s desc src  # cognitivo por função, ordenado do maior pa
 
 São as ferramentas a rodar antes de mexer num parser, para ver onde a dívida está concentrada — cada uma por uma lente.
 
-### Gate planejado (ainda não ativo)
+### Gate de complexidade
 
 ```bash
-uv run complexipy --snapshot-create src   # baseline; o CI compara e falha só em regressão (grandfather)
-uv run lizard -C 15 -w src                 # ciclomático: warning (e exit≠0) acima de CCN 15
+uv run python scripts/check_complexity.py                   # contra origin/main
+uv run python scripts/check_complexity.py --base-ref <ref>  # contra outra base
 ```
 
-Ligar um gate hoje deixaria o CI vermelho (várias funções acima do limiar). O gate entra no CI (job `quality`, #101) **depois** que as piores funções forem refatoradas — liderado pelo `complexipy --snapshot` (ratchet que congela o estado atual e só barra pioras), com o `lizard` como segunda lente. Refs #307, #101.
+O gate roda no pre-commit, nos commits que tocam `src/`, e no workflow `Qualidade`, em todo PR e em push para a `main`. Ele aplica duas regras, com teto 15:
+
+- **Ciclomática absoluta.** `lizard -C 15 -w src`: nenhuma função de `src/` passa de CCN 15. Não há lista de exceções: o gate passa ao Lizard uma lista branca vazia, para que um `whitelizard.txt` não valha, e reprova qualquer `#lizard forgive` em `src/`, porque o Lizard não tem opção que desligue essa diretiva.
+- **Cognitiva por catraca.** `complexipy src -mx 15 --diff <base> --ratchet --no-ignore`: falha a função nova acima de 15 e a que passa de 15 ao mudar; a que já estava acima de 15 pode ficar igual ou melhorar, mas não piorar. `--no-ignore` desconsidera `# noqa: complexipy`. A dívida anterior ao gate continua aceita; a lista dela está no fechamento da #307.
+
+A base é o ancestral comum de `HEAD` e da referência, como no gate de lint: num ramo atrás da `main`, comparar com a ponta dela atribuiria ao ramo, como piora, as melhorias que a `main` ganhou depois. No CI, o PR é comparado com `origin/<branch de destino>`, e o push para a `main`, com a ponta anterior. Arquivos de `src/` fora do Git ficam fora da medição, para que um rascunho local não reprove o pre-commit; um arquivo novo entra assim que vai para o índice.
+
+O que o gate não distingue ou não mede:
+
+- **Renomear ou mover função acima de 15 conta como função nova.** O Complexipy identifica a função pelo arquivo e pelo nome, então a renomeação aparece como remoção mais função nova com a mesma nota. A saída é trazê-la para até 15 no mesmo PR.
+- **Funções de mesmo nome no mesmo arquivo se confundem no diff**, como o getter e o setter de uma property. `BaseScraper::download_path` é um caso: a saída de toda falha traz a linha `REGRESSED src/juscraper/core/base.py::BaseScraper::download_path 0 → 6`, que não indica piora. Se o getter de uma property passar de 15, o gate pode reprovar um PR que não a tocou.
+- **Código fora de função não é medido** pelas duas ferramentas: o nível do módulo, o corpo de classe e um `lambda` no nível do módulo. O Complexipy 6.0.1 também não mede métodos de classe aninhada dentro de outra classe.
+
+As versões do Lizard e do Complexipy são fixas no extra `[dev]` e no hook do pre-commit, e `tests/complexity_gate` reprova se as duas divergirem. Refs #101, #307.
+
+### Semgrep
+
+O job `semgrep` do workflow `Qualidade` roda as regras `p/python` e `p/security-audit` com `--baseline-commit`, contra a mesma base do gate de complexidade. Ele analisa só os arquivos que mudaram desde a base e reprova o achado que não encontra nela. Os 8 achados que já estão em `src/` ficam aceitos: 2 `jwt-none-alg`, 2 `unverified-jwt-decode` e 4 `logger-credential-disclosure`. A triagem de junho, na #101, contou 6 desses tipos; os 2 de log a mais estão em `_pdpj_sso/mixin.py`, código de 30/09, e registram a exceção e o caminho do cache, e não o token.
+
+O Semgrep reconhece um achado da base pelo trecho de código, e não pelo que ele faz. Por isso mover para outro arquivo uma função que já tinha achado, ou só quebrar em várias linhas o trecho de um achado antigo, aparece como achado novo e reprova. No sentido contrário, uma mudança que passa a levar um segredo para dentro de uma linha de log antiga, sem alterar a linha, não aparece. A versão do Semgrep é fixa no workflow, e `--metrics=off` não manda métricas de uso. Para rodar localmente:
+
+```bash
+uvx --python 3.12 semgrep==1.180.0 scan --config p/python --config p/security-audit --metrics=off --error --baseline-commit "$(git merge-base HEAD origin/main)" src
+```
 
 ## Adding a new tribunal
 
@@ -296,16 +376,17 @@ Checklist obrigatória para o PR que adiciona o raspador:
 9. **Sem dependência de rede, relógio ou TLS real**. Adapter TLS custom: testar só montagem (`isinstance`).
 10. **Fluxos multi-step com ordem obrigatória** usam `responses.registries.OrderedRegistry`.
 11. **Captchas, tokens dinâmicos e libs externas** (`txtcaptcha`, `browser_cookie3`) são **mockados** — nunca invocados. Injetar fakes via `mocker.patch.dict(sys.modules, ...)` para lazy imports ausentes das deps.
-12. **Entry no CHANGELOG** em `[Unreleased]/Added`.
+12. **Entry no CHANGELOG** em `[Unreleased]/Added`. O workflow `Changelog` reprova o PR que muda `src/juscraper/` sem tocar o `CHANGELOG.md`. Mudança sem efeito público (refatoração interna, teste, tooling) passa com a etiqueta `sem-changelog`; em PR de fork, quem aplica a etiqueta é um mantenedor.
 13. **Payload builders públicos** em `courts/<xx>/download.py` sempre que o script de captura precisar reusar o dict/body enviado ao backend. Extrair como função de nome público (`build_<endpoint>_payload` — **sem underscore inicial**) + constante da URL base (`BASE_URL`, `RESULTS_PER_PAGE`, etc.). O script em `tests/fixtures/capture/<xx>.py` importa esses helpers em vez de redefinir o payload inline — qualquer mudança no scraper quebra a captura, evitando drift silencioso. Helpers privados (`_`) em módulos de download ficam reservados para lógica interna não reusada pelo capture script.
 14. **Base recomendada: `juscraper.core.http.HTTPScraper`** (em vez de `BaseScraper` direto) para raspadores **novos**. Ela cria `self.session = requests.Session()`, expõe o hook `_configure_session(session)` (mesmo contrato do `EsajSearchScraper`), oferece `_request_with_retry(method, url, *, session=None, max_retries=3)` com backoff exponencial para 429/5xx + respeito a `Retry-After` numérico, e centraliza a validação de `session=` (resolve #185). Tribunais existentes ainda em `BaseScraper` migram pelas Fases 1-4 do refactor #194 — tribunais novos já podem (e devem) herdar de `HTTPScraper`.
+15. **Tabela de cobertura** do `README.md` e de `docs/index.qmd`: rodar `uv run python scripts/tabela_cobertura.py`, que a deriva de `juscraper._SCRAPERS` e dos métodos de cada classe. Vale também quando um endpoint passa de stub a implementado, ou o contrário; `tests/test_tabela_cobertura.py` reprova enquanto a tabela divergir do código.
 
 ## Schemas pydantic
 
 ### Onde ficam os modelos
 
 - `src/juscraper/schemas/cjsg.py`: `SearchBase` para busca textual e `OutputCJSGBase` para o resultado. `SearchBase` herda paginação e não inclui filtros de data, pois nem todo tribunal os suporta.
-- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`.
+- `src/juscraper/schemas/mixins.py`: contratos compartilhados de paginação, datas e relatoria. Compor apenas os mixins aplicáveis ao endpoint; filtros não suportados devem ser rejeitados por `extra="forbid"`, e não por `NotImplementedError` no downloader, que `tests/test_notimplemented_so_em_stub.py` só aceita em stub.
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
@@ -361,9 +442,11 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 
 Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, pois `inspect.signature` não mostra os campos aceitos pelo schema. Escrever docstrings em português, no estilo Google (`Args:`, `Returns:`, `Raises:`), seguindo o método `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py`. Para override com schema próprio, usar `TJSPScraper.cjsg` como referência.
 
+O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção; `tests/test_docstring_secoes.py` reprova o nome traduzido, como `Argumentos:` ou `Retorno:`. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
+
 ### Filtros e aliases
 
-- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See also:`. Mudanças de campos e docstring devem entrar juntas.
+- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
 - Acrescentar a semântica que o modelo não expressa: interpretação do filtro, formato exigido pelo backend e exemplo de uso. Indicar nomes de campos do backend quando isso explicar por que um filtro exige IDs internos.
 - Documentar defaults não óbvios e o significado de `None` para cada filtro; não presumir que todo campo seja opcional.
 - Listar aliases deprecados em seção própria, conforme os que o endpoint realmente consome em `normalize_pesquisa`, `normalize_datas` e `pop_deprecated_alias`. As constantes em `src/juscraper/utils/params.py` são a fonte dos aliases compartilhados; conferir também a normalização específica do scraper. Informar o `DeprecationWarning` sem remover o campo canônico da documentação.
@@ -391,16 +474,27 @@ Raises:
     ValidationError: Para os demais erros de validação do schema.
     <ExcecaoEspecifica>: <Condição validada antes do pydantic.>
 
+Avisos:
+    ``<CategoriaDoAviso>``: <Condição em que o método emite o aviso.>
+
 Returns:
     pd.DataFrame: <Colunas principais e significado do resultado.>
 
-Exemplo:
-    <Chamada pública válida, usando nomes canônicos.>
+Examples: Exemplo
+    >>> <Chamada pública válida, usando nomes canônicos.>
 
-See also:
+See Also:
     :class:`<InputDoEndpoint>`: fonte dos filtros aceitos.
 """
 ```
+
+Avisos que o método emite com `warnings.warn` vão em `Avisos:`, em texto livre e só quando houver o que documentar. Não usar `Warns:`, a seção do estilo Google para isso: o quartodoc, até a 0.11.1, não a renderiza, o `quartodoc build` termina em `NotImplementedError: Unsupported type: ...DocstringSectionWarns` e o site deixa de ser publicado. `Avisos:` sai na referência como cabeçalho seguido do texto da seção, como `Aliases deprecados:`. Para conferir antes do PR: `uv sync --extra dev --extra docs` e `cd docs && uv run quartodoc build`. O build reescreve `docs/objects.json`, que é versionado; descartar essa alteração antes do commit.
+
+Em `See Also:`, o quartodoc transforma cada papel Sphinx, como `` :class:`InputCJSGTJMG` ``, em link Markdown, e quem resolve esse link é o filtro `interlinks`, guardado em `docs/_extensions/interlinks/` e declarado em `docs/_quarto.yml` depois de `quarto`. Com o nome curto, que é a convenção, o papel sai na referência como código, sem link, exceto `:meth:`, descrito abaixo. Um nome com dígito, como `InputCJSGTRF5`, fica fora da conversão do quartodoc e passa pelo `docs/sphinx_roles.lua`, descrito abaixo, com o mesmo resultado. O título `See Also:` ocupa a linha sozinho, com linha em branco acima e o conteúdo recuado logo abaixo; fora disso o griffe lê o bloco como texto e a seção não aparece na referência. `tests/test_docs_interlinks.py` reprova o título fora do formato e o `docs/_quarto.yml` sem o filtro; o CI roda esses testes no workflow `Testes`.
+
+Fora de `See Also:`, e dentro dela quando o nome tem dígito, o quartodoc deixa o papel como está, e o Markdown o publicaria cru, `:meth:` seguido do nome em código. É o caso da linha `**kwargs: Filtros aceitos por` do modelo acima, da referência ao método principal nos pares de download e do texto livre. Quem converte esses papéis é `docs/sphinx_roles.lua`, filtro do projeto declarado em `docs/_quarto.yml` entre `quarto` e `interlinks`: ele escreve o mesmo link que o quartodoc escreve em See Also, então as duas seções saem iguais, e aceita nome com dígito. O filtro reconhece só os papéis da tabela `ROLES` dele, sem letra ASCII, dígito ou sublinhado colado antes; fora disso o papel sai cru. O nome também não pode ter título explícito, como `` :meth:`texto <alvo>` ``, nem dois-pontos, porque o `interlinks` não os interpreta e a página mostra código com o texto errado ou vazio. `tests/test_docs_papeis_sphinx.py` reprova esses casos em qualquer docstring do pacote, de módulo, classe, função ou atributo, e o `docs/_quarto.yml` sem o filtro ou com ele fora de ordem. O CI roda esse gate sem o Quarto, e aí o teste que executa o filtro real é pulado; quem alterar `docs/sphinx_roles.lua` roda `uv run pytest tests/test_docs_papeis_sphinx.py` com o Quarto instalado antes do PR.
+
+O `:meth:` com nome curto, como `` :meth:`cjsg` ``, vira link para o método da classe que a página documenta, nas duas seções, porque o filtro qualifica o nome pela classe antes de o `interlinks` procurá-lo. Isso só funciona quando o método é público e definido na própria classe, que é o que o quartodoc documenta; herdado ou privado sai como código, sem aviso no build, e `tests/test_docs_papeis_sphinx.py` reprova esse caso nas classes publicadas. O nome curto é, então, a forma certa de citar outro método da mesma classe, inclusive o método principal num par `*_download`. Método de outra classe pede o caminho completo, `` :meth:`juscraper.courts.tjsp.client.TJSPScraper.cjsg` ``, e só vira link se a classe estiver na referência (com `~` na frente, o texto do link mostra só o nome do método); nome com ponto mas sem o caminho completo, como `` :meth:`EsajSearchScraper.cjsg` ``, sai como código.
 
 ### Métodos de download
 

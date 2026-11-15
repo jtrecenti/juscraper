@@ -114,13 +114,31 @@ def cjpg_n_pags(page_source) -> int:
     return (n_results + _CJPG_PAGE_SIZE - 1) // _CJPG_PAGE_SIZE
 
 
+def _codigos_inteiro_teor(nome) -> dict:
+    """Os códigos do ``name`` do link de inteiro teor, ``cdProcesso-cdForo-nmAlias-cdDocumento``.
+
+    São as colunas que :meth:`~juscraper.courts._esaj.sentenca.EsajSentencaScraper.baixar_sentencas`
+    lê. O ``nm_alias`` vazio, o comum no TJSP, vira ``None``. Um ``name`` com
+    outro número de partes só preenche ``cd_processo``, como antes das colunas
+    novas.
+    """
+    partes = str(nome).split('-') if nome else []
+    codigos = (partes if len(partes) == 4 else partes[:1]) + [None] * 4
+    cd_processo, cd_foro, nm_alias, cd_documento = codigos[:4]
+    return {
+        'cd_processo': cd_processo,
+        'cd_foro': cd_foro,
+        'nm_alias': nm_alias or None,
+        'cd_documento': cd_documento,
+    }
+
+
 def _extrair_dados_processo(tabela_dados):
     """Extrai identificadores, detalhes e decisão de uma tabela CJPG."""
     dados_processo: dict = {}
     link_inteiro_teor = tabela_dados.find('a', {'style': 'vertical-align: top'})
     if link_inteiro_teor:
-        nome = link_inteiro_teor.get('name')
-        dados_processo['cd_processo'] = str(nome).split('-')[0] if nome else None
+        dados_processo.update(_codigos_inteiro_teor(link_inteiro_teor.get('name')))
         span_negrito = link_inteiro_teor.find('span', class_='fonteNegrito')
         dados_processo['id_processo'] = span_negrito.text.strip() if span_negrito is not None else None
 
@@ -155,24 +173,55 @@ def cjpg_parse_single(path):
     return pd.DataFrame(processos)
 
 
+def _parse_diretorio(diretorio: Path) -> list[pd.DataFrame]:
+    """Processa cada HTML do diretório e descarta, com log, os que falham."""
+    arquivos = [f for f in diretorio.rglob("*.ht*") if f.is_file()]
+    resultados = []
+    primeira_falha: tuple[Path, Exception] | None = None
+    for arquivo in tqdm(arquivos, desc="Processando documentos"):
+        try:
+            resultados.append(cjpg_parse_single(arquivo))
+        except (ValueError, OSError) as e:
+            logger.error('Error processing %s: %s', arquivo, e)
+            primeira_falha = primeira_falha or (arquivo, e)
+    # Com falha parcial, o chamador recebe o que deu certo e o log diz o que
+    # faltou. Com falha total, devolver vazio confundiria "o layout mudou e
+    # nada foi lido" com "a busca não trouxe resultados", então o erro sobe.
+    if primeira_falha is not None and not resultados:
+        arquivo, erro = primeira_falha
+        raise ValueError(
+            f"Nenhum dos {len(arquivos)} arquivo(s) em {diretorio} pôde ser "
+            f"processado. Primeiro erro, em {arquivo.name}: {erro}"
+        ) from erro
+    return resultados
+
+
 def cjpg_parse_manager(path):
+    """Processa os arquivos baixados por ``cjpg_download``.
+
+    ``path`` pode ser um arquivo HTML ou um diretório, percorrido de forma
+    recursiva. Em diretório, o arquivo que falha é registrado no log e fica de
+    fora do resultado.
+
+    Returns:
+        pd.DataFrame: Uma linha por processo. Vazio quando o diretório não tem
+        arquivo HTML ou quando nenhuma página traz resultados.
+
+    Raises:
+        FileNotFoundError: Quando ``path`` não existe ou não é arquivo nem
+            diretório acessível.
+        ValueError: Quando o HTML de um arquivo passado diretamente não pôde
+            ser interpretado, ou quando todos os arquivos de um diretório
+            falharam.
+        OSError: Quando um arquivo passado diretamente não pôde ser lido.
     """
-    Parses the downloaded files from the cjpg_download function.
-    Returns a DataFrame with the information of the processes.
-    """
-    if Path(path).is_file():
-        result = [cjpg_parse_single(path)]
+    caminho = Path(path)
+    if caminho.is_file():
+        resultados = [cjpg_parse_single(caminho)]
+    elif caminho.is_dir():
+        resultados = _parse_diretorio(caminho)
     else:
-        result = []
-        arquivos = [f for f in Path(path).rglob("*.ht*") if f.is_file()]
-        for file in tqdm(arquivos, desc="Processando documentos"):
-            if file.is_file():
-                try:
-                    single_result = cjpg_parse_single(file)
-                except (ValueError, OSError) as e:
-                    logger.error('Error processing %s: %s', file, e)
-                    single_result = None
-                    continue
-                if single_result is not None:
-                    result.append(single_result)
-    return pd.concat(result, ignore_index=True)
+        raise FileNotFoundError(f"Caminho não encontrado ou inacessível: {caminho}")
+    if not resultados:
+        return pd.DataFrame()
+    return pd.concat(resultados, ignore_index=True)

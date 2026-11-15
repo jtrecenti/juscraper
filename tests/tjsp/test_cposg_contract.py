@@ -1,29 +1,24 @@
-"""Offline contract tests for TJSP cposg (``method='html'`` and ``'api'``).
+"""Offline contract tests for TJSP cposg (``method='html'``).
 
 HTML flow: GET ``cposg/open.do`` → GET ``cposg/search.do`` → Caso 3
 (resposta simples) or Caso 1/2 (listagem/modal). The CNJ used here lands
 in Caso 3 — the search response itself contains the process details and
-the scraper saves it under the ``cdProcesso`` value.
-
-API flow: a single GET ``processo/cposg/search/numproc/{id}``. The parse
-manager only globs ``**/*.html`` today (``cposg_parse_single_json`` is a
-stub — see the follow-up issue), so ``method='api'`` ends up returning
-an empty DataFrame. This contract captures that behaviour explicitly so a
-future fix trips the assertion instead of the test silently passing with
-a different payload.
+the scraper saves it under the ``cdProcesso`` value. The page leaves the
+movements to ``carregarMovimentacoesAjax.do`` (five rows per page, next page
+by ``cursor``), which the scraper follows and writes into the saved HTML.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
+from juscraper.courts._esaj.acordao import parse_cursor
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
-API = "https://api.tjsp.jus.br"
 
 CNJ = "1000149-71.2024.8.26.0346"
-CNJ_DIGITS = "10001497120248260346"
 
 CPOSG_BASICOS_MIN = {"id_original", "classe", "status"}
 
@@ -36,14 +31,12 @@ CPOSG_COLUNAS_ORDENADAS = [
     "composicao", "primeira_inst",
 ]
 
+CD_PROCESSO = "RI008L7SC0000"
+PAGINAS_MOVIMENTACOES = 5
 
-# ---------- method='html' -----------------------------------------------
 
-@responses.activate
-def test_cposg_html_simple_response(tmp_path, mocker):
-    """HTML flow — Caso 3 (resposta simples): search.do has the process details."""
-    mocker.patch("time.sleep")
-
+def _registrar_busca():
+    """``open.do`` e ``search.do`` gravados; a busca devolve a página do processo."""
     responses.add(
         responses.GET,
         f"{ESAJ}/cposg/open.do",
@@ -74,36 +67,186 @@ def test_cposg_html_simple_response(tmp_path, mocker):
         match=[query_param_matcher(search_params)],
     )
 
+
+def _registrar_movimentacoes():
+    """Páginas gravadas do ``carregarMovimentacoesAjax.do``; a ``n`` casa com o cursor da ``n - 1``."""
+    params = {"cdProcesso": CD_PROCESSO}
+    for numero in range(1, PAGINAS_MOVIMENTACOES + 1):
+        corpo = load_sample("tjsp", f"cposg/movimentacoes_pagina_{numero}.html")
+        responses.add(
+            responses.GET,
+            f"{ESAJ}/cposg/carregarMovimentacoesAjax.do",
+            body=corpo,
+            status=200,
+            content_type="text/html;charset=UTF-8",
+            match=[query_param_matcher(params)],
+        )
+        params = {"cdProcesso": CD_PROCESSO, "cursor": parse_cursor(corpo) or ""}
+
+
+CNJ_SEM_INFORMACOES = "0003941-71.2024.8.26.0048"
+
+
+def _registrar_busca_sem_informacoes():
+    """``search.do`` do número que o 2º grau não tem: "Não existem informações disponíveis"."""
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=load_sample_bytes("tjsp", "cposg/search_sem_informacoes.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"dePesquisaNuUnificado": CNJ_SEM_INFORMACOES}, strict_match=False)],
+    )
+
+
+# ---------- method='html' -----------------------------------------------
+
+@responses.activate
+def test_cposg_html_simple_response(tmp_path, mocker):
+    """HTML flow — Caso 3 (resposta simples), com as movimentações das cinco páginas AJAX."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="html")
 
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1
     assert set(df.columns) >= CPOSG_BASICOS_MIN
     assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
+    row = df.iloc[0]
+    assert row["classe"] == "Apelação Cível"
+    assert row["relator"] is not None
+    movimentacoes = row["movimentacoes"]
+    assert len(movimentacoes) == 24
+    assert movimentacoes[:2] == [
+        {
+            "data": "25/06/2025",
+            "movimento": "Expedido Certidão de Baixa de Recurso",
+            "descricao": "Certidão de Baixa de Recurso - [Digital]",
+        },
+        {"data": "25/06/2025", "movimento": "Baixa Definitiva", "descricao": ""},
+    ]
+    datas = [mov["data"] for mov in movimentacoes]
+    assert datas[-1] == "05/02/2025"
+    assert len(set(map(str, movimentacoes))) == len(movimentacoes)
 
-
-# ---------- method='api' ------------------------------------------------
 
 @responses.activate
-def test_cposg_api_returns_empty_dataframe(tmp_path, mocker):
-    """API flow fetches search/numproc then returns an empty DataFrame.
-
-    Contract documents the current behaviour: ``cposg_download_api`` saves
-    JSON but ``cposg_parse_manager`` only globs ``**/*.html`` (no JSON
-    branch), so no rows are parsed. When the stub
-    ``cposg_parse_single_json`` is implemented and ``cposg_parse_manager``
-    is widened to consume JSON, rewrite this test to assert the real schema.
-    """
+def test_cposg_html_movimentacoes_fora_do_formato_falha_alto(tmp_path, mocker, caplog):
+    """Sem a sessão do processo, o eSAJ devolve uma página inteira, sem a tabela: nada é gravado."""
     mocker.patch("time.sleep")
+    _registrar_busca()
     responses.add(
         responses.GET,
-        f"{API}/processo/cposg/search/numproc/{CNJ_DIGITS}",
-        body=load_sample("tjsp", "cposg/api_search.json"),
+        f"{ESAJ}/cposg/carregarMovimentacoesAjax.do",
+        body=load_sample_bytes("tjsp", "cposg/open.html"),
         status=200,
-        content_type="application/json",
+        content_type="text/html;charset=UTF-8",
     )
 
-    df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="api")
+    with pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="html")
 
-    assert isinstance(df, pd.DataFrame)
-    assert df.empty  # see docstring — follow-up issue pending
+    assert "a primeira página veio fora do formato conhecido" in caplog.text
+
+
+@responses.activate
+def test_cposg_html_pagina_seguinte_fora_do_formato_nao_corta_a_lista(tmp_path, mocker, caplog):
+    """Página 2 sem a linha de metadados (sessão perdida) não encerra a lista em silêncio."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    primeira = load_sample("tjsp", "cposg/movimentacoes_pagina_1.html")
+    url = f"{ESAJ}/cposg/carregarMovimentacoesAjax.do"
+    responses.add(responses.GET, url, body=primeira, match=[query_param_matcher({"cdProcesso": CD_PROCESSO})])
+    responses.add(
+        responses.GET, url, body=load_sample_bytes("tjsp", "cposg/open.html"),
+        match=[query_param_matcher({"cdProcesso": CD_PROCESSO, "cursor": parse_cursor(primeira) or ""})],
+    )
+
+    with pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ, method="html")
+
+    assert "a página 2 veio fora do formato conhecido" in caplog.text
+
+
+@responses.activate
+def test_cposg_download_html_usa_diretorio_sem_alterar_download_path(tmp_path, mocker):
+    """O destino alternativo do HTML não deve alterar o destino configurado."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    caminho = tmp_path / "padrao"
+    alternativo = tmp_path / "alternativo"
+    scraper = jus.scraper("tjsp", download_path=str(caminho))
+
+    scraper.cposg_download(CNJ, method="html", diretorio=str(alternativo))
+
+    assert (alternativo / "cposg").is_dir()
+    assert not (caminho / "cposg").exists()
+    assert scraper.download_path == str(caminho)
+
+
+@responses.activate
+def test_cposg_processo_sem_informacoes_sai_em_aviso(tmp_path, mocker):
+    """O número que o 2º grau não tem fica fora do DataFrame, mas o aviso o nomeia."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    _registrar_busca_sem_informacoes()
+
+    with pytest.warns(UserWarning, match=f"não mostra 1 processo.*{CNJ_SEM_INFORMACOES}"):
+        df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg([CNJ_SEM_INFORMACOES, CNJ])
+
+    assert df["processo"].tolist() == [CNJ]
+
+
+@responses.activate
+def test_cposg_so_processo_sem_informacoes_avisa_e_volta_vazio(tmp_path, mocker):
+    """Só o número sem informações: DataFrame vazio, como antes, mas com o aviso."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_busca_sem_informacoes()
+
+    with pytest.warns(UserWarning, match=CNJ_SEM_INFORMACOES):
+        df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ_SEM_INFORMACOES)
+
+    assert df.empty
+    assert list(df.columns) == CPOSG_COLUNAS_ORDENADAS
+
+
+@responses.activate
+def test_cposg_so_processo_sem_informacoes_nao_le_o_cpopg(tmp_path, mocker):
+    """Com o ``cpopg/`` no mesmo ``download_path``, o número sem informações não traz processo de 1º grau."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_busca_sem_informacoes()
+    cpopg = tmp_path / "cpopg" / "10001497120248260346"
+    cpopg.mkdir(parents=True)
+    (cpopg / "10001497120248260346.html").write_bytes(load_sample_bytes("tjsp", "cposg/show_com_incidentes.html"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+
+    with pytest.warns(UserWarning, match=CNJ_SEM_INFORMACOES):
+        scraper.cposg_download(CNJ_SEM_INFORMACOES)
+
+    assert scraper.cposg_parse(str(tmp_path)).empty
+
+
+@responses.activate
+def test_cposg_outra_mensagem_do_esaj_nao_vira_processo(tmp_path, mocker, caplog):
+    """Mensagem de erro do eSAJ na busca não é gravada como processo: o download falha e diz qual foi."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    responses.replace(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=load_sample_bytes("tjsp", "cposg/show.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="Nenhum processo foi baixado"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cposg_download(CNJ)
+
+    assert "Não foi possível executar esta operação" in caplog.text
+    assert not list(tmp_path.rglob("*.html"))

@@ -32,7 +32,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjpe.download import BASE_URL
-from tests._helpers import load_sample
+from tests._helpers import load_sample, urlencoded_body_subset_matcher
 
 CONSULTA_URL = f"{BASE_URL}/consulta.xhtml"
 ESCOLHA_URL = f"{BASE_URL}/escolhaResultado.xhtml"
@@ -76,7 +76,7 @@ def _add_post_consulta(sample_path: str) -> None:
     )
 
 
-def _add_post_escolha(sample_path: str) -> None:
+def _add_post_escolha(sample_path: str, *, match=None) -> None:
     """POST on escolhaResultado.xhtml — picks result type, returns results page 1."""
     responses.add(
         responses.POST,
@@ -84,6 +84,7 @@ def _add_post_escolha(sample_path: str) -> None:
         body=load_sample("tjpe", sample_path),
         status=200,
         content_type="text/html; charset=UTF-8",
+        match=match or [],
     )
 
 
@@ -109,7 +110,14 @@ def test_cjsg_escolha_typical(mocker):
     mocker.patch("time.sleep")
     _add_get_consulta()
     _add_post_consulta("cjsg/step_02_escolha.html")
-    _add_post_escolha("cjsg/step_03_resultado.html")
+    # Botão de acórdãos da página de escolha capturada: com
+    # ``tipo_decisao="todos"`` o scraper escolhe o rótulo padrão "Acórdãos".
+    # Sem o matcher, um identificador errado no POST passaria despercebido.
+    botao = "resultadoForm:j_id27"
+    _add_post_escolha(
+        "cjsg/step_03_resultado.html",
+        match=[urlencoded_body_subset_matcher({"resultadoForm": "resultadoForm", botao: botao})],
+    )
     _add_post_ajax("cjsg/step_04_pagina_02.xml")
 
     df = jus.scraper("tjpe").cjsg(

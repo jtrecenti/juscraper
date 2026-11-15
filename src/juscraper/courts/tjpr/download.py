@@ -6,17 +6,45 @@ import re
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
+from juscraper.core.exceptions import HTTPSemanticError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
-RESULTS_PER_PAGE = 10
+# O "Leia mais.." chama ``insereTextoCompleto`` (linhas do TJ) ou
+# ``insereTextoCompletoCidh`` (linhas da Corte IDH) em ``js/jurisprudencia.js``,
+# e os dois buscam o texto neste endpoint. O ``actionType=exibirTextoCompleto``
+# em ``pesquisa.do`` devolve a página do portal com o menu da intranet.
+VISUALIZAR_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/visualizarDecisao.do"
+# O portal devolve 50 linhas por página qualquer que seja o ``pageSize``
+# enviado, e usa o ``pageSize`` só para desenhar o rótulo "exibindo de X até
+# Y" e o link "Última Página". Com 10, o link apontava 5 vezes mais páginas
+# do que existem, e as excedentes voltavam vazias (sondagem ao vivo de
+# 2026-10, "comodato": 4795 registros, link 480, página 97 vazia).
+#
+# As 50 linhas somam duas fontes, a jurisprudência do TJ e os registros da
+# Corte IDH, e a contagem de ``.navLeft`` é a soma das duas (410507 + 107 =
+# 410614 no sample de várias páginas). Nos samples, cada página traz até 10
+# registros da Corte IDH e o TJ completa as 50: 40 + 10 nas páginas 1 e 2, e
+# 43 + 7 num sample anterior, de busca com só 7 registros da Corte IDH.
+# Depois que a Corte IDH acaba, o TJ continua do registro em que parou, e por
+# isso ``ceil(N / 50)`` cobre a busca inteira. Sondagem ao vivo de 2026-10,
+# "dano moral" (411844 do TJ + 107 da Corte IDH): página 11 com TJ 401 a 443
+# e Corte IDH 101 a 107, página 12 com TJ 444 a 493, página 8240 com só o
+# último registro e página 8241 vazia. Se o portal mudar essa divisão, o
+# sintoma é a última página calculada vir cheia. Por padrão o parser descarta
+# as linhas da Corte IDH (``parse._parse_row``), então a página rende menos de 50.
+RESULTS_PER_PAGE = 50
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("a.arrowLastOn",)
-_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\['pageNumber'\]\.value='(\d+)'"),
-)
+_PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
+# Cascata da contagem: o rótulo "394770 registro(s) encontrado(s)" fica em
+# ``#navigator .navLeft``. O HTML bruto só entra quando o seletor não casa
+# nenhum elemento com texto, e lá a expressão "registro(s) encontrado(s)"
+# continua específica. Se o seletor casar um elemento cujo texto a regex não
+# reconhece, a contagem vem ``None`` e ``resolve_total_pages`` levanta.
+_COUNT_SELECTORS = ("#navigator .navLeft",)
+_COUNT_PATTERNS = (re.compile(r"([\d.]+)\s*registro\(s\)\s*encontrado", re.IGNORECASE),)
 
 
 def populate_session(request_fn: RequestFn, home_url: str) -> None:
@@ -36,33 +64,48 @@ def populate_session(request_fn: RequestFn, home_url: str) -> None:
     request_fn("GET", home_url)
 
 
-def get_ementa_completa(
-    request_fn: RequestFn,
-    id_processo: str,
-    criterio: str,
-) -> str:
-    """Fetch the full minute (``actionType=exibirTextoCompleto``) for one decision.
+# Cabeçalhos do XHR do portal (``x-prototype-version``, ``x-requested-with``).
+# ``JSESSIONID`` vai no cookie jar preenchido por :func:`populate_session`.
+_XHR_HEADERS = {
+    'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
+    'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+    'cache-control': 'no-cache',
+    'pragma': 'no-cache',
+    'referer': f"{SEARCH_URL}?actionType=pesquisar",
+    'x-prototype-version': '1.5.1.1',
+    'x-requested-with': 'XMLHttpRequest',
+}
 
-    Headers replicate the portal's XHR (``x-prototype-version``,
-    ``x-requested-with``). ``JSESSIONID`` rides on the session cookie jar
-    populated by :func:`populate_session`.
+
+class TJPREmentaIndisponivelError(HTTPSemanticError):
+    """``visualizarDecisao.do`` respondeu 200 sem o texto da ementa completa."""
+
+
+# Marcação de página, que o texto da ementa não traz: só o ``<span>`` do destaque.
+_TAGS_DE_PAGINA = frozenset({"html", "head", "body", "title", "script", "form", "table", "div"})
+
+
+def get_ementa_completa(request_fn: RequestFn, action_type: str, id_registro: str, criterio: str) -> str:
+    """Busca o texto completo de uma ementa truncada em "Leia mais..".
+
+    ``action_type`` é ``"exibirTextoCompleto"`` nas linhas do TJ e
+    ``"exibirTextoCompletoCidh"`` nas da Corte IDH. A resposta é texto puro,
+    com quebras de linha próprias e o termo buscado em ``<span class='high'>``,
+    às vezes no meio da palavra ("<span>DANO</span>S MORAIS"); por isso o texto
+    sai sem separador entre os nós. O ``criterio`` só muda esse destaque.
+
+    Raises:
+        TJPREmentaIndisponivelError: Quando a resposta vem vazia (id que o
+            portal não conhece) ou traz marcação de página, como a do portal.
     """
-    url = (
-        f"{SEARCH_URL}?actionType=exibirTextoCompleto"
-        f"&idProcesso={id_processo}&criterio={criterio}"
-    )
-    headers = {
-        'accept': 'text/javascript, text/html, application/xml, text/xml, */*',
-        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'referer': f"{SEARCH_URL}?actionType=pesquisar",
-        'x-prototype-version': '1.5.1.1',
-        'x-requested-with': 'XMLHttpRequest',
-    }
-    resp = request_fn("GET", url, headers=headers)
-    text: str = BeautifulSoup(resp.text, 'html.parser').get_text("\n", strip=True)
-    return text
+    # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
+    params = {"actionType": action_type, "idProcesso": id_registro, "criterio": criterio}
+    resp = request_fn("GET", VISUALIZAR_URL, params=params, headers=_XHR_HEADERS)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    texto = str(soup.get_text()).strip()
+    if not texto or soup.find(_TAGS_DE_PAGINA) is not None:
+        raise TJPREmentaIndisponivelError(f"TJPR: {action_type} de {id_registro!r} não trouxe o texto da ementa.")
+    return texto
 
 
 def build_cjsg_form_body(
@@ -117,24 +160,56 @@ def build_cjsg_form_body(
     }
 
 
-def extract_total_pages(html: str) -> int:
-    """Extract total number of pages from TJPR pagination HTML.
+def _last_page_links(soup: BeautifulSoup) -> set[int]:
+    """Lê os totais dos links "Última Página" da página inteira.
 
-    O paginador do TJPR não exibe "Página X de Y"; o total vem do link
-    "Última Página" (``<a class="arrowLastOn">``), cujo href em JavaScript
-    carrega ``['pageNumber'].value='<total>'``. A cascata tenta primeiro
-    esse seletor estruturado e, se ausente, cai no HTML bruto pegando o
-    maior ``pageNumber`` entre os links de paginação numerados. Sem
-    paginador (página única, zero resultados) nada casa e assume-se 1.
+    Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
+    ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
+    âncora com classe ``arrowLastOff`` e sem href, o que na primeira página
+    quer dizer total 1. A busca cobre a página inteira, e não só o
+    ``#navigator .navRight``, para que um contêiner renomeado não esconda o
+    link da conferência.
     """
-    total = extract_count_with_cascade(
+    totais = set()
+    for link in soup.select("a.arrowLastOn"):
+        href = str(link.get("href", ""))
+        encontrado = _PAGE_NUMBER_RE.search(href)
+        totais.add(parse_page_number(
+            encontrado.group(1) if encontrado else "",
+            tribunal="TJPR",
+            origem=f"link de última página {href!r}",
+        ))
+    if soup.select_one("a.arrowLastOff") is not None:
+        totais.add(1)
+    return totais
+
+
+def extract_total_pages(html: str) -> int:
+    """Extrai o total de páginas da primeira página de resultados do TJPR.
+
+    O total sai da contagem "N registro(s) encontrado(s)" dividida por
+    ``RESULTS_PER_PAGE``, e os links "Última Página" (ativos e desativados)
+    são conferidos contra ele por
+    :func:`~juscraper.utils.pagination.resolve_total_pages`. O paginador não
+    exibe "Página X de Y", e o maior ``pageNumber`` visível é o fim da janela
+    de links (3 na página 1), não o total. Vale para a primeira página, a
+    única que :func:`cjsg_download` lê: na última, "Última" vem desativada.
+
+    Raises:
+        ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
+            e de :func:`~juscraper.utils.pagination.parse_page_number`.
+    """
+    n_resultados = extract_count_with_cascade(
         html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-        use_element_html=True,
-        aggregate="max",
+        css_selectors=_COUNT_SELECTORS,
+        regex_patterns=_COUNT_PATTERNS,
     )
-    return total if total else 1
+    return resolve_total_pages(
+        n_resultados,
+        resultados_por_pagina=RESULTS_PER_PAGE,
+        totais_links=_last_page_links(BeautifulSoup(html, "html.parser")),
+        tribunal="TJPR",
+    )
 
 
 def cjsg_download(

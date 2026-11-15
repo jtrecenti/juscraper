@@ -5,6 +5,7 @@ import logging
 import math
 import re
 import time
+from urllib.parse import parse_qs, urlparse
 
 from juscraper.core.http import RequestFn
 
@@ -32,6 +33,12 @@ _ANO_SELECT_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 _ANO_OPTION_RE = re.compile(r'<option[^>]*value="(?P<value>[^"]*)"', re.IGNORECASE)
+
+_ORIGEM_SELECTED_RE = re.compile(
+    r'<select[^>]*name="ctl00\$ContentPlaceHolder1\$cmbOrigem"(?:(?!</select>).)*?'
+    r'<option[^>]*selected="selected"[^>]*value="(?P<value>[^"]*)"',
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def extract_viewstate_fields(html: str) -> dict:
@@ -124,8 +131,11 @@ def build_cjsg_payload(
         f"{_FIELD_PREFIX}cmbOrgaoJulgador": "",
         f"{_FIELD_PREFIX}cmbTipNumeracao": "1",
         f"{_FIELD_PREFIX}txtNumeracao": "",
+        # chkEmentario fica de fora. Marcado junto com os outros, o servidor
+        # ignorava chkAcordao/chkDecMon desmarcados (tipo_acordao=False e
+        # tipo_monocratica=False sem efeito); depois do postback de origem,
+        # trocava a busca para o ementario e desmarcava acordao e monocratica.
         f"{_FIELD_PREFIX}chkIntTeor": "on",
-        f"{_FIELD_PREFIX}chkEmentario": "on",
         "g-recaptcha-response": "",
     }
     if tipo_acordao:
@@ -146,18 +156,23 @@ def _init_session(
     tipo_monocratica: bool,
     magistrado_codigo: str | None,
     orgao_codigo: str | None,
-) -> None:
-    """Submit the search form so the result XHR has a valid server session."""
+) -> str:
+    """Submete o form de busca e devolve o ``PageSeq`` que o servidor deu a ela.
+
+    O servidor numera as buscas de uma mesma sessao ASP.NET (0, 1, 2...) e
+    guarda os parametros de cada uma em separado; o XHR de resultados escolhe
+    a busca pelo ``pageSeq``. O numero vem na URL do redirect do POST.
+    """
     resp = request_fn("GET", FORM_URL, timeout=30)
-    hidden = extract_viewstate_fields(resp.text)
+    html = resp.text
     # O backend exige cmbAnoInicio/cmbAnoFim nao-vazios (refs #278); quando o
     # usuario nao filtra por ano, replicamos o padrao do site preenchendo ambos
     # com o ano corrente (a opcao default do dropdown). O preenchimento e por
     # campo: passar so um dos dois (ex.: ano_inicio=2020 sem ano_fim) faz o
     # outro virar o ano corrente, resultando num intervalo 2020..ano-corrente.
-    default_year = extract_default_year(resp.text)
+    default_year = extract_default_year(html)
     data = build_cjsg_payload(
-        hidden=hidden,
+        hidden=extract_viewstate_fields(html),
         pesquisa=pesquisa,
         ano_inicio=ano_inicio or default_year,
         ano_fim=ano_fim or default_year,
@@ -168,11 +183,28 @@ def _init_session(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)
+    selecionada = _ORIGEM_SELECTED_RE.search(html)
+    if selecionada is None or selecionada.group("value") != origem:
+        # Trocar a origem no mesmo POST da busca dispara o evento de troca de
+        # cmbOrigem no servidor, que recarrega os combos de ano no padrao (ano
+        # corrente) depois de ler os anos enviados: o filtro de ano se perdia
+        # sem erro. O navegador faz este postback ao mudar o combo; a busca
+        # vai em seguida com o estado devolvido por ele.
+        postback = dict(data, __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem")
+        html = request_fn("POST", FORM_URL, data=postback, timeout=30).text
+        data.update(extract_viewstate_fields(html))
+    resp = request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)
+    page_seq = parse_qs(urlparse(resp.url).query).get("PageSeq")
+    if not page_seq:
+        raise RuntimeError(
+            "TJRJ: o form de busca nao redirecionou para os resultados "
+            f"(URL final: {resp.url}); a busca nao foi registrada no servidor."
+        )
+    return page_seq[0]
 
 
-def _fetch_page(request_fn: RequestFn, num_pagina_0: int) -> dict:
-    payload = {"numPagina": num_pagina_0, "pageSeq": "0"}
+def _fetch_page(request_fn: RequestFn, num_pagina_0: int, page_seq: str) -> dict:
+    payload = {"numPagina": num_pagina_0, "pageSeq": page_seq}
     resp = request_fn(
         "POST",
         RESULT_URL,
@@ -210,7 +242,7 @@ def cjsg_download(
             Em uso normal e ``TJRJScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``).
     """
-    _init_session(
+    page_seq = _init_session(
         request_fn=request_fn,
         pesquisa=pesquisa,
         ano_inicio=ano_inicio,
@@ -222,7 +254,7 @@ def cjsg_download(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    first = _fetch_page(request_fn, 0)
+    first = _fetch_page(request_fn, 0, page_seq)
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
@@ -238,6 +270,6 @@ def cjsg_download(
             results.append(first)
             continue
         time.sleep(sleep_time)
-        data = _fetch_page(request_fn, pagina - 1)
+        data = _fetch_page(request_fn, pagina - 1, page_seq)
         results.append(data)
     return results

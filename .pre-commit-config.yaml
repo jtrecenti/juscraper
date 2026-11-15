@@ -28,6 +28,25 @@ repos:
         additional_dependencies: [ruff==0.15.12]
         pass_filenames: false
         always_run: true
+      - id: complexity
+        name: Conferir complexidade (Lizard e Complexipy)
+        entry: python scripts/check_complexity.py
+        language: python
+        additional_dependencies: [lizard==1.23.0, complexipy==6.0.1]
+        pass_filenames: false
+        files: ^src/.*\.py$
+      # Suíte offline inteira em paralelo (~30 s numa máquina de 6 núcleos). Roda
+      # em todo commit porque há testes de docs, workflows e CLAUDE.md, não só de
+      # código.
+      # Dentro do hook o git exporta GIT_DIR e GIT_INDEX_FILE; sem o unset, os
+      # testes que criam repositórios temporários (gates de lint, complexidade e
+      # CI) gravariam commits e refs no repositório de quem está commitando.
+      - id: pytest
+        name: Rodar a suíte offline (pytest em paralelo)
+        entry: bash -c 'unset $(git rev-parse --local-env-vars); exec uv run pytest -n auto'
+        language: system
+        pass_filenames: false
+        always_run: true
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
@@ -46,7 +65,7 @@ repos:
     rev: 7.4.1
     hooks:
       - id: flake8
-        additional_dependencies: [flake8-docstrings]
+        additional_dependencies: [flake8-docstrings==1.7.0]
         args:
           - '--max-line-length=120'
           - '--extend-ignore=E203,W503,D100,D104,D107,D200,D205,D209,D400,D401,D403,E231'
@@ -56,7 +75,7 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-requests==2.33.0.20261006, types-PyYAML==6.0.12.20260906]
         args: [--ignore-missing-imports]
 
   - repo: https://github.com/PyCQA/bandit

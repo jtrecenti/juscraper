@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <meta charset="utf-8" />
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/jurisprudencia/Content/Images/favicon.ico">
+
+    <link href="/jurisprudencia/Content/Css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/jurisprudencia/Content/Css/datepicker.min.css" rel="stylesheet" />
+
+
+    <script src="/jurisprudencia/Scripts/jquery-1.8.2.js" type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery.unobtrusive-ajax.js" type="text/javascript"></script>
+    
+    <script src="/jurisprudencia/Scripts/jquery-1.9.1.js" ) type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery-ui.js" ) type="text/javascript"></script>
+    
+
+    <script>
+        const plNextArrow = "»";
+        const plPrevArrow = "«";
+    </script>
+
+    <script src="/jurisprudencia/Scripts/datepicker-full.min.js" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/init-acessibilidade.js?t=07/10/2026 17:18:06"></script>
+    <script src="/jurisprudencia/Scripts/Toast.js"></script>
+
+    
+    <script>
+        const urlHome = '/jurisprudencia/Home';
+        const urlListaAtual = '/jurisprudencia/Home/ListaResumida';
+        const exprAcordao = /AC[OÓ]RD[AÃ]O/i;
+        const plPaginas = 'Páginas';
+        const plTRF3 = 'TRF 3ª Região';
+        const plAcordao = 'Acórdão';
+        const qtdePorPagina = 10;
+
+    </script>
+    <link href="/jurisprudencia/Content/Css/resultado.css?t=07/10/2026 17:18:06" rel="stylesheet" />
+    <script src="/jurisprudencia/Scripts/resultado.js?t=07/10/2026 17:18:06" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/utilidades-processo.js?t=07/10/2026 17:18:06" charset="utf-8"></script>
+
+
+
+
+    <script language="javascript" type="text/javascript">
+
+        var diretorioVirtual = '/jurisprudencia/';
+
+        function hideToolTip() {
+
+            //var valor = document.getElementById('chkAtivarExplicacao').value;
+
+
+            if (document.getElementById('chkAtivarExplicacao').checked) {
+
+                $(document).tooltip({
+                    show: {
+                        effect: "slideDown",
+                        delay: 250
+                    }
+                });
+            }
+            if (!document.getElementById('chkAtivarExplicacao').checked) {
+
+                $('[title]').attr('title', function (i, title) {
+                    $(this).data('title', title).removeAttr('title');
+                });
+            }
+        }
+
+        function mensagem()
+        {
+            alert("Sucesso.");
+        }
+
+        //function enviarPesquisa() {
+        //    var colecoes = "Acordao";
+        //    var criterios = obterCampos();
+        //    var tipoLista = "Resumida";
+        //    var sinonimos = "Nao";
+
+        //    var data = {
+        //        Pesquisa: {
+        //            'Colecoes': colecoes,
+        //            'Criterios': criterios,
+        //            'TipoLista': tipoLista,
+        //            'Sinonimos': sinonimos
+        //        }
+        //    };
+        //    if (criterios.length != 0) {
+        //        $.ajax({
+        //            type: "POST",
+        //            url: "/home/BuscaAtosNormativos",
+        //            data: JSON.stringify(data),
+        //            //data: "{colecao:'" + colecao + "',criterioPesquisa:'" + criterioPesquisa + "',tipoLista:'" + tipoLista + "',sinonimos:'" + sinominos + "'}",
+        //            contentType: "application/json; charset=utf-8",
+        //            datatype: "json",
+        //            success: function () {},
+        //            error: function () {}
+        //        });
+        //    }
+        //    else
+        //        alert("Não há critério de pesquisa!");
+        //}
+
+
+
+        function obterCriterios() {
+            var colecao = "Acordao";
+            var criterioPesquisa = obterCampos();
+            var quantidade = "Resumida*Não";
+            return (criterioPesquisa == "") ? null : {'Colecao': colecao, 'CriterioPesquisa': criterioPesquisa, 'Quantidade': quantidade};
+        }
+
+        function obterCampos() {
+
+            var pOuD = "";
+
+            if (document.getElementById('data-tipo').value == 3) pOuD = ".dtpb. ";
+            else pOuD = ".dtde. "
+
+            var pesquisa = "";
+
+
+            if (document.getElementById('txtPesqLivre').value != "")
+                pesquisa += "(" + document.getElementById('txtPesqLivre').value + ").pesq. ";
+            if(document.getElementById('numero').value != "")
+                pesquisa += "(" + document.getElementById('numero').value + ").reg. ";
+            if(document.getElementById('magistrado').value != "0")
+                pesquisa += "((" + document.getElementById("magistrado").options[document.getElementById("magistrado").selectedIndex].text + ")).rel. ";
+            if (document.getElementById('data-inicial').value != "" && document.getElementById('data-final').value != "")
+                pesquisa += "(" + document.getElementById('data-inicial').value + "," + document.getElementById('data-final').value + ")" + pOuD;
+            if (document.getElementById('classe').value != "0")
+                pesquisa += "(" + document.getElementById("classe").options[document.getElementById("classe").selectedIndex].text + ").dcla. ";
+            if (document.getElementById('orgao').value != "0")
+                pesquisa += "(" + document.getElementById("orgao").options[document.getElementById("orgao").selectedIndex].text + ").org. ";
+            if (document.getElementById('ementa').value != "")
+                pesquisa += "(" + document.getElementById('ementa').value + ").emen. ";
+
+            return pesquisa;
+
+        }
+
+        function limparCampos() {
+
+            document.getElementById('txtPesqLivre').value = "";
+            document.getElementById('data-inicial').value = "";
+            document.getElementById('data-final').value = "";
+
+            document.getElementById('numero').value = "";
+            document.getElementById('magistrado').value = "0";
+                
+            document.getElementById('classe').value = "0";
+            document.getElementById('orgao').value = "0";
+            document.getElementById('ementa').value = "";
+            document.getElementById('data-tipo').value = "0";
+            $('#tema').val('0')
+
+            //limparRefLeg();
+
+            $("#numclasse").val("");
+            $("#ementa").val("");
+            $("#indexacao").val("");
+            $("#legislacao").val("");
+            $("#hdnMagistrado").val("");
+            $("#hdnClasse").val("");
+            $("#hdnOrgao").val("");
+            $("#hdnLegislacao").val("");
+
+        }
+
+        function limparRefLeg() {
+            document.getElementById('norma').value = "0";
+            $("#legislacao-numero").val("Número");
+            document.getElementById('legislacao-tipo-nome-1').value = "ART";
+            $("#legislacao-tipo-valor-1").val("");
+            document.getElementById('legislacao-tipo-nome-2').value = "PAR";
+            $("#legislacao-tipo-valor-2").val("");
+            document.getElementById('legislacao-tipo-nome-3').value = "INC";
+            $("#legislacao-tipo-valor-3").val("");
+            document.getElementById('legislacao-tipo-nome-4').value = "LET";
+            $("#legislacao-tipo-valor-4").val("");
+        }
+
+        function addCampo(selectId, textId, divId) {
+            var idSelect = document.getElementById(selectId);
+            var valorText = $(textId).val();
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                $(divId).removeClass("ocultar").addClass("mostrar");
+                if (valorText.length < 1) {
+                    $(textId).val(idSelect.options[idSelect.selectedIndex].text);
+                } else {
+                    $(textId).val(valorText+" OU "+idSelect.options[idSelect.selectedIndex].text);
+                }
+                idSelect.options[0].selected = true;
+            }
+        }
+
+        function addConector(conector) {
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            //alert(valorTextPesqLivre);
+            //if (conector != "$") {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector + " ");
+            //} else {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector);
+            //}
+            $("#txtPesqLivre").val(valorTextPesqLivre + conector);
+            $("#txtPesqLivre").focus();
+        }
+
+        function concatCampos(textId, divId, identificador, hiddenId) {
+            var valorTextId = $(textId).val();
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHiddenId = $(hiddenId).val();
+            if (valorTextId.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val("(" + valorTextId+")"+identificador);
+                } else {
+                    $("#txtPesqLivre").val("("+valorTextPesqLivre+")"+" E (" + valorTextId + ")"+identificador);
+                }
+                if (valorHiddenId.length > 0) {
+                    $(hiddenId).val(valorHiddenId + " E (" + valorTextId + ")" + identificador);
+                } else {
+                    $(hiddenId).val("(" + valorTextId + ")" + identificador);
+                }
+                $(textId).val("");
+            } else alert("Informe o critério de pesquisa.");
+            $(divId).removeClass("mostrar").addClass("ocultar");
+        }
+
+        function addRefLeg(selectId) {
+            var criterioR = preencherRefLeg(selectId);
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHdnLegislacao = $("#hdnLegislacao").val();
+            if (criterioR.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val(criterioR);
+                } else {
+                    $("#txtPesqLivre").val("(" + valorTextPesqLivre + ")" + " E " + criterioR);
+                }
+                if (valorHdnLegislacao.length > 0) {
+                    $("#hdnLegislacao").val(valorHdnLegislacao + " E " + criterioR);
+                } else {
+                    $("#hdnLegislacao").val(criterioR);
+                }
+            }
+                limparRefLeg();
+        }
+
+        function preencherRefLeg(selectId) {
+            var idSelect = document.getElementById(selectId);
+            var idSelect1 = document.getElementById('legislacao-tipo-nome-1');
+            var idSelect2 = document.getElementById('legislacao-tipo-nome-2');
+            var idSelect3 = document.getElementById('legislacao-tipo-nome-3');
+            var idSelect4 = document.getElementById('legislacao-tipo-nome-4');
+
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                var norma = idSelect.options[idSelect.selectedIndex].text;
+                var numero = $("#legislacao-numero").val();
+                var nome1 = idSelect1.options[idSelect1.selectedIndex].value;
+                var valor1 = $("#legislacao-tipo-valor-1").val();
+                var nome2 = idSelect2.options[idSelect2.selectedIndex].value;
+                var valor2 = $("#legislacao-tipo-valor-2").val();
+                var nome3 = idSelect3.options[idSelect3.selectedIndex].value;
+                var valor3 = $("#legislacao-tipo-valor-3").val();
+                var nome4 = idSelect4.options[idSelect4.selectedIndex].value;
+                var valor4 = $("#legislacao-tipo-valor-4").val();
+                var criterio = "("+norma;
+                if (numero.length > 0) {
+                    if (numero != "Número") {
+                        criterio = criterio + "-" + numero;
+                    }
+
+                }
+                if (valor1.length > 0) {
+                    criterio = criterio + " " + nome1 + "-" + valor1;
+                }
+                if (valor2.length > 0) {
+                    criterio = criterio + " " + nome2 + "-" + valor2;
+                }
+                if (valor3.length > 0) {
+                    criterio = criterio + " " + nome3 + "-" + valor3;
+                }
+                if (valor4.length > 0) {
+                    criterio = criterio + " " + nome4 + "-" + valor4;
+                }
+                criterio = criterio + ").ref. "
+            } else {
+                alert("Preencha os campos referentes à Legislação.");
+                criterio = "";
+            }
+            return criterio;
+        }
+
+        function limparNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num = "Número") {
+                $("#legislacao-numero").val("");
+            }
+        }
+
+        function ShowModelDialog(numDocumento) {
+            var recurso = diretorioVirtual + 'Home/VisualizarImpressao/' + numDocumento;
+            //string s = "window.showModalDialog('PreImpressao.aspx?nm=" + e.CommandArgument.ToString().Replace("-", "").Replace(".", "") + "', null, 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;');";
+            window.showModalDialog(diretorioVirtual + 'Home/VisualizarImpressao/?nd=' + numDocumento, "null", 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;'); //"PopupWindow", 'width=400px,height=400px,top=150,left=250');
+            return false;
+        }
+
+        function colocarNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num.length < 1) {
+                $("#legislacao-numero").val("Número");
+            }
+        }
+
+        $(function () {
+            $("#data-inicial").datepicker({
+
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+        $(function () {
+            $("#data-final").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+
+        function preencherHDDN() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var temaComp = $('#tema').val()?.trim().length || 0;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } 
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } 
+            }
+
+            if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1) && (temaComp < 1)
+                && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+                && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+                && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Critério de pesquisa não informado.");
+                $("#hdnLegislacao").val("N");
+                return false;
+            }
+
+
+            if (!validaCampoData())
+                return false;
+
+            return true;
+        }
+
+        function validaCampoData() {
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                Toast.Show("Data inicial em branco");
+                return false;
+            }
+
+            
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Data final em branco");
+                return false;
+            }
+
+            
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+
+            if (document.getElementById('data-inicial').value == "" && document.getElementById('data-final').value == "") {
+                return true;
+            }
+
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            
+
+            if (Compara01 > Compara02) {
+                Toast.Show("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            
+
+            return true;
+            
+        }
+
+        function validaFormMonocratica() {
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            
+                        
+            
+            
+            
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            
+
+            let textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            let numeroComp = $("#numero").val().trim().length;
+            let dataInicialComp = document.getElementById('data-inicial').value.trim().length;
+            let dataFinalComp = document.getElementById('data-final').value.trim().length;
+            let magistradoComp = idSelectM.options[idSelectM.selectedIndex].value;
+            let classeComp = idSelectC.options[idSelectC.selectedIndex].value;
+
+            console.log(textoPesqLivreComp, dataFinalComp, dataFinalComp); console.log(magistradoComp, numeroComp, classeComp)
+
+
+            if (textoPesqLivreComp < 1 && dataInicialComp < 1 && dataFinalComp < 1
+                && magistradoComp < 1 && numeroComp < 1 && classeComp < 1) {
+                Toast.Show("Critério de pesquisa não informado.");
+                return false;
+            }
+
+
+            if (dataFinalComp > 1 && !validaCampoData())
+                return false;
+
+
+            return true;
+        }
+
+        function preencherHDDN02() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } else {
+                    $("#hdnOrgao").val(orgaoHDNText + " | " + "(" + idSelectO.options[idSelectO.selectedIndex].text + ").org.");
+                }
+            }
+
+            //if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1)
+            //    && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+            //    && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+            //    && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+            //    alert("Critério de pesquisa não informado.");
+            //    $("#hdnLegislacao").val("S");
+            //    return false;
+            //}
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                alert("Data inicial em branco");
+                return false;
+            }
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                alert("Data final em branco");
+                return false;
+            }
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            if (Compara01 > Compara02) {
+                alert("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            return true;
+        }
+
+        function resultadoSemFormatacao(semformatacao,textoarea) {
+            document.getElementById(semformatacao).style.visibility = 'visible';
+            document.getElementById(textoarea).focus();
+            document.getElementById(textoarea).select();
+        }
+
+        function buscaAcordao() {
+            window.open("https://web.trf3.jus.br/acordaos/Acordao/PesquisarDocumento?processo=" + processo, "blanck");
+        }
+
+        function buscaAndamento() {
+            window.open("https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/ProcessoIndex?numeroProcesso=" + processo, "blanck");
+        }
+
+        function mostrarListaResumida(valor) {
+            if (valor) {
+                $("#hdnMostrarListaResumida").val("S");
+            } else
+            {
+                $("#hdnMostrarListaResumida").val("N");
+            }
+            //alert("Mudou");
+            //var sValor = valor;
+            //if (valor) {
+               
+                //$("#hdnMostrarListaResumida").val("1");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(0);
+                //document.getElementById('chkMostrarLista').value = "0";
+                //document.getElementById('chkMostrarLista').setAttribute('checked', 'checked');
+                //$("chkMostrarLista").attr('checked', 'checked');
+            //} else {
+                
+                //$("#hdnMostrarListaResumida").val("0");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(1);
+                //$("chkMostrarLista").removeAttr('Checked');
+            //}
+            //alert(valor);
+        }
+
+        //function inicializar() {
+
+
+        //    if ($("#hdnMostrarListaResumida").val() == "") {
+        //        if (document.getElementById('chkMostrarLista').checked) {
+        //            $("#hdnMostrarListaResumida").val("S");
+        //            //alert("Checado");
+        //        } else {
+        //            $("#hdnMostrarListaResumida").val("N");
+        //            //alert("Não checado");
+        //        }
+        //    }
+            //alert("iniciou");
+            //var o = document.getElementById("chkMostrarLista");
+            //var sContentAttr = o.getAttribute("checked");
+            //alert(sContentAttr);
+            //if ($("#hdnMostrarListaResumida").val() == "") {
+            //    var o = document.getElementById("chkMostrarLista");
+            //    var sContentAttr = o.getAttribute("checked");
+            //    alert(sContentAttr);
+            //} else {
+            //    alert($("#hdnMostrarListaResumida").val());
+            //}
+
+
+                //var mostralLR = "S";
+                //var testeMostrarLR = Request["chkMostrarLista"];
+                //if (Session["MostrarListaResumida"] == null)
+                //{
+                    //Session["MostrarListaResumida"] = "S";
+                    //mostralLR = "S";
+                //}
+                //else
+                //{
+                    //mostralLR = Session["MostrarListaResumida"].ToString();
+                //}
+
+        //}
+
+        function selecionaNorma(indiceNorma) {
+            var siglaNorma = document.getElementById('sigla[' + indiceNorma + ']').innerHTML;
+            var descricaoNorma = document.getElementById('descricao[' + indiceNorma + ']').innerHTML;
+            var tipoLegislacao = document.getElementById('tipoLeg[' + indiceNorma + ']').innerHTML;
+            var tipoNorma = document.getElementById('tipoNor[' + indiceNorma + ']').innerHTML;
+            var numeroNorma = document.getElementById('numero[' + indiceNorma + ']').innerHTML;
+            var anoNorma = document.getElementById('ano[' + indiceNorma + ']').innerHTML;
+            var legislacao = "";
+
+            if ((siglaNorma != null) && (siglaNorma != "")) { legislacao = siglaNorma.trim(); }
+            if ((descricaoNorma != null) && (descricaoNorma != "")) { legislacao = legislacao + " " + descricaoNorma; }
+            if ((tipoLegislacao != null) && (tipoLegislacao != "")) { legislacao = legislacao + " LEG-" + tipoLegislacao; }
+            if ((tipoNorma != null) && (tipoNorma != "")) { legislacao = legislacao + " " + tipoNorma.trim(); }
+            if ((numeroNorma != null) && (numeroNorma != "")) { legislacao = legislacao + "-" + numeroNorma.trim(); }
+            if ((anoNorma != null) && (anoNorma != "")) { legislacao = legislacao + " ANO-" + anoNorma; }
+
+            var leg = $("#legislacao").val();
+
+            if (leg.length < 1) {
+                $("#legislacao").val(legislacao);
+            } else {
+                $("#legislacao").val(leg + " E " + legislacao);
+            }
+            document.getElementById('helpSiglaJud').style.visibility = 'hidden';
+        }
+
+        function mudarValor(sel) {
+            if (sel.name == 'magistrado') {
+                $("#hdnMagistrado").val("");
+            }
+            if (sel.name == 'classe') {
+                $("#hdnClasse").val("");
+            }
+            if (sel.name == 'orgao') {
+                $("#hdnOrgao").val("");
+            }
+        }
+
+        $(document).ready(function () {
+            //var kjk = document.getElementById('hdnUtxtPesqLivre').value;
+
+            if (document.getElementById('hdnUchkMostrarLista') != null) {
+                if (document.getElementById('hdnUchkMostrarLista').value != '') {
+                    if (document.getElementById('hdnUchkMostrarLista').value == 'on') {
+                        document.getElementById('chkMostrarLista').checked = true;
+                    } else {
+                        document.getElementById('chkMostrarLista').checked = false;
+                    }
+                } }
+            if (document.getElementById('hdnUtxtPesqLivre') != null) {
+                if (document.getElementById('hdnUtxtPesqLivre').value != '') {
+                    $("#txtPesqLivre").val(document.getElementById('hdnUtxtPesqLivre').value);
+                }
+            }
+            if (document.getElementById('hdnUnumero') != null) {
+                if (document.getElementById('hdnUnumero').value != '') {
+                    $("#numero").val(document.getElementById('hdnUnumero').value);
+                }
+            }
+            if (document.getElementById('hdnUmagistrado') != null) {
+                if (document.getElementById('hdnUmagistrado').value != '') {
+                    document.getElementById('magistrado').selectedIndex = document.getElementById('hdnUmagistrado').value;
+                }
+            }
+            if (document.getElementById('hdnUdata-inicial') != null) {
+                if (document.getElementById('hdnUdata-inicial').value != '') {
+                    $("#data-inicial").val(document.getElementById('hdnUdata-inicial').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-final') != null) {
+                if (document.getElementById('hdnUdata-final').value != '') {
+                    $("#data-final").val(document.getElementById('hdnUdata-final').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-tipo') != null) {
+                if (document.getElementById('hdnUdata-tipo').value != '') {
+                    document.getElementById('data-tipo').value = document.getElementById('hdnUdata-tipo').value;
+                }
+            }
+            if (document.getElementById('hdnUclasse') != null) {
+                if (document.getElementById('hdnUclasse').value != '') {
+                    document.getElementById('classe').selectedIndex = document.getElementById('hdnUclasse').value;
+                }
+            }
+            if (document.getElementById('hdnUorgao') != null) {
+                if (document.getElementById('hdnUorgao').value != '') {
+                    document.getElementById('orgao').selectedIndex = document.getElementById('hdnUorgao').value;
+                }
+            }
+            if (document.getElementById('hdnUementa') != null) {
+                if (document.getElementById('hdnUementa').value != '') {
+                    $("#ementa").val(document.getElementById('hdnUementa').value);
+                }
+            }
+            if (document.getElementById('hdnUnumclasse') != null) {
+                if (document.getElementById('hdnUnumclasse').value != '') {
+                    $("#numclasse").val(document.getElementById('hdnUnumclasse').value);
+                }
+            }
+            if (document.getElementById('hdnUindexacao') != null) {
+                if (document.getElementById('hdnUindexacao').value != '') {
+                    $("#indexacao").val(document.getElementById('hdnUindexacao').value);
+                }
+            }
+            if (document.getElementById('hdnUlegislacao') != null) {
+                if (document.getElementById('hdnUlegislacao').value != '') {
+                    $("#legislacao").val(document.getElementById('hdnUlegislacao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnClasse') != null) {
+                if (document.getElementById('hdnUhdnClasse').value != '') {
+                    $("#hdnClasse").val(document.getElementById('hdnUhdnClasse').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnOrgao') != null) {
+                if (document.getElementById('hdnUhdnOrgao').value != '') {
+                    $("#hdnOrgao").val(document.getElementById('hdnUhdnOrgao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnLegislacao') != null) {
+                if (document.getElementById('hdnUhdnLegislacao').value != '') {
+                    $("#hdnLegislacao").val(document.getElementById('hdnUhdnLegislacao').value);
+                }
+            }
+        });
+
+        //Incluída por causa das "  "
+        function concatenaExpressao() {
+            var inputE1 = document.getElementById('txtPesqLivre');
+            inputE1.value = inputE1.value + ' " "';
+            texto = new String(inputE1.value);
+            selStart = texto.length - 2;
+            selEnd = texto.length - 1;
+            if (inputE1.setSelectionRange) {
+                inputE1.focus();
+                inputE1.setSelectionRange(selStart, selEnd);
+            } else if (inputE1.createTextRange) {
+                var range = inputE1.createTextRange();
+                range.collapse(true);
+                range.moveEnd('character', selEnd);
+                range.moveStart('character', selStart);
+                range.select();
+            }
+            inputE1.focus();
+        }
+
+        //session end
+        var sessionTimeoutWarning = 300 -1; 
+        var sTimeout = parseInt(sessionTimeoutWarning) * 60 * 1000;
+        setTimeout('SessionEnd()', sTimeout);
+
+        function SessionEnd() {
+            window.location = diretorioVirtual + "Home/SessaoExpirada";
+        }
+
+    </script>
+
+    <title>Busca Jurisprudência</title>
+<script >bazadebezolkohpepadr="1360844508"</script><script type="text/javascript" src="https://web.trf3.jus.br/akam/13/511cd6bd"  defer></script></head>
+<body>
+    
+
+    <div id="inline" data-date="01/05/2020" style="color: black"></div>
+    <a href="#conteudo" style="display: none;" id="a-conteudo"></a>
+
+    
+    
+    
+
+
+
+    
+    
+
+    
+
+<section class="menu">
+    <section class="secao-menu secao-acessibilidade">
+        <div class="container">
+            <section class="acessibilidade">
+                <span>Acessibilidade: </span>
+                <i class="bi bi-eye-fill" id="btn-modo-cor" title="Alternar entre modo claro e modo escuro"
+                   aria-label="Alternar entre modo claro e modo escuro" tabindex="0"></i>
+
+                <i class="bi bi bi-cast" id="btn-transparente" title="Alternar entre painel transparente e painel colorido" aria-label="Alternar entre painel transparente e painel colorido"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-in" id="btn-plus" title="Aumentar zoom" aria-label="Aumentar zoom"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-out" id="btn-minus" title="Diminuir zoom" aria-label="Diminuir zoom"
+                   tabindex="0"></i>
+                <i class="bi bi-aspect-ratio" id="btn-sem-zoom" title="Voltar ao tamanho normal"
+                   aria-label="Voltar ao tamanho normal" tabindex="0"></i>
+                <i class="bi bi-app-indicator" id="go-to-content" title="Ir para conteúdo"
+                   aria-label="Ir para conteúdo" tabindex="0"></i>
+            </section>
+            <section class="info" data-tooltip="Tamanho atual"></section>
+        </div>
+    </section>
+    <section class="secao-menu">
+        <div class="container">
+            <section class="logo">
+                <h1 class="logo-tribunal" title="Ir para o site do TRF3">
+                    <a href="https://www.trf3.jus.br/"
+                       target="_blank"><img src="/jurisprudencia/Content/Images/topo-site-logoTRF3.png" alt="Ir para o site do TRF3"></a>
+                </h1>
+            </section>
+        </div>
+    </section>
+</section>
+
+
+    <main id="conteudo">
+        
+
+
+
+
+
+
+<div class="container">
+    <section class="menu-opcoes opcoes-pesquisa">
+        <nav class="nav-menu">
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/0">Nova Pesquisa</a></span>
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/1">Voltar</a></span>
+        </nav>
+        <section class="botoes-pg">
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/1?np=0" data-tooltip="Primeira página" id="lnk-primeira-pagina"
+                   aria-label="Primeira página"><i class="bi bi-chevron-double-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=1" data-tooltip="Página anterior"
+                   aria-label="Página anterior"><i class="bi bi-caret-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=1" data-tooltip="Próxima página"
+                   aria-label="Próxima página"><i class="bi bi-caret-right"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=1" data-tooltip="Última página"
+                   aria-label="Última página"><i class="bi bi-chevron-double-right"></i></a>
+            </span>
+        </section>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">1</span> ~ <span class="qtd-total">2</span>
+    </section>
+    <section class="secao-paginas">
+            Páginas: 
+                    <a class="muda-pagina atual" href="/jurisprudencia/Home/ListaResumida/2?np=1" data-pagina="1">1</a>
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">2</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+    <section class="resultados-pesquisa">
+        <div class="retorno-pesquisa">
+            <h2 class="titulo-retorno">
+                <span class="texto-titulo">Pesquisa de Jurisprudência - Base TRF3</span>
+
+                <button class="abre-filtros" aria-label="Abrir Filtros">
+                    <i class="bi bi-funnel"></i>
+                </button>
+
+                <span class="texto-subtitulo">Critério: (número: 50017432720264030000) </span>
+            </h2>
+            <ol class="lista-retorno">
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=1">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        1/2)
+                                    </span>
+                                    <span class="info">5001743-27.2026.4.03.0000</span>
+                                    <div class="dado info-publicacao" style="display:none">Intima&#231;&#227;o via sistema Data: 22/09/2026</div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=1"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=50017432720264030000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://pje2g.trf3.jus.br/pje/ConsultaPublica/listView.seam?numProcesso=50017432720264030000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=1"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">AI - AGRAVO DE INSTRUMENTO</span>
+                                    <span class="info">3ª Turma</span>
+                                    <span class="info">
+                                        Desembargadora Federal CONSUELO YATSUDA MOROMIZATO YOSHIDA
+                                    </span>
+                                    <span class="info">Intima&#231;&#227;o via sistema DATA: 22/09/2026</span>
+
+                                        <span class="info">Julgamento: 18/09/2026</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+PODER JUDICIÁRIO
+<br>Tribunal Regional Federal da 3ª Região
+<br>3ª Turma
+<br>Avenida Paulista, 1842, Bela Vista, São Paulo - SP - CEP: 01310-936
+<br>https://www.trf3.jus.br/balcao-virtual
+<br>AGRAVO DE INSTRUMENTO (202)  Nº 5001743-27.2026.4.03.0000
+<br>RELATOR(A): CONSUELO YATSUDA MOROMIZATO YOSHIDA
+<br>AGRAVANTE: B. B. B.
+<br>ADVOGADO do(a) AGRAVANTE: THIAGO MAGALHAES REIS ALBOK - SP246553-A
+<br>ADVOGADO do(a) AGRAVANTE: SANDRO MAGALHAES REIS ALBOK - SP224605-A
+<br>
+<br>AGRAVADO: UNIÃO FEDERAL
+<br>
+<br>FISCAL DA LEI: MINISTERIO PUBLICO FEDERAL - PR/SP
+<br>
+<br>
+<br>Ementa
+<br>
+<br>PROCESSO CIVIL. EMBARGOS DE DECLARAÇÃO. HIPÓTESES DO ART. 1.022, INCISOS I, II E III DO CPC/2015 NÃO CARACTERIZADAS. PREQUESTIONAMENTO. EFEITO INFRINGENTE. NÃO CABIMENTO.
+<br>1. Conforme assinado no v. acórdão embargado, a assistência judiciária é garantia constitucional prestada aos que comprovarem insuficiência de recursos, a teor do art. 5º, LXXIV, CF/88.
+<br>2. Consignou-se, ainda, que o art. 98 do Código de Processo Civil reconhece o direito à gratuidade da justiça à pessoa natural ou jurídica, brasileira ou estrangeira, com insuficiência de recursos para pagar as custas, despesas processuais e honorários advocatícios, nos termos em que preceitua.
+<br>3. Restou igualmente observado que em se tratando de pessoa física, presume-se verdadeira a alegação de hipossuficiência formulada (§ 3ª, art. 99, CPC), podendo o magistrado indeferir o pedido se encontrar elementos que infirmem a alegada hipossuficiência.
+<br>4. Ressaltou-se, de igual modo: Para a apreciação do pedido de gratuidade da justiça, foi analisada a declaração de IR de ambos genitores do menor, restando indeferidos os benefícios da justiça gratuita nos seguintes termos: Primeiramente, observo que os requisitos da justiça gratuita não se confundem com a "incapacidade financeira de arcar com o custeio do medicamento." Diante da declaração de IR dos genitores da parte autora – que, juntos, receberam mais de R$ 1 milhão no ano de 2025 e são titulares de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis - verifico que tem ela plenas condições de arcar com as custas do presente feito, sem prejuízo de seu sustento ou daquele de sua família. Tais declarações de imposto de renda, anexadas aos autos, demonstram não só que a família da autora não é pobre, na acepção jurídica do feito, como também que ela se encontra nas classes mais privilegiadas de nossa sociedade, conforme critérios do IBGE.
+<br>5. Como bem pondera o aresto recorrido, ainda que a agravante aponte que possui gastos mensais que diminuam consideravelmente a sua renda mensal, verifica-se que somente foi juntada aos autos a relação dos alegados gastos, sem qualquer comprovante de pagamento, notas fiscais ou comprovantes de depósitos.
+<br>6. Frisou-se, inclusive: Muito embora a 3ª Turma do Superior Tribunal Justiça possua entendimento no sentido do caráter personalíssimo do direito à gratuidade da justiça, a excepcionalidade do caso em questão recomenda o indeferimento do benefício pleiteado sob pena de se deturpar o instituto jurídico, devendo se levar em conta, sobretudo, os princípios da isonomia e da razoabilidade.
+<br>7. Por sua vez, em relação à aplicação da multa por litigância de má-fé, salientou-se no julgado impugnado que ao considerar as hipóteses ensejadoras da penalidade (art. 80 do CPC), deve o juiz ponderar se a parte, concretamente, agiu com dolo no sentido de incidir nas sanções cominadas pelo ordenamento processual. Não configura má-fé, por si só, o insucesso da narrativa e da pretensão do autor, requerendo-se prova inequívoca da intenção de causar danos ao processo. Assim, não vislumbra-se causa suficiente para aplicação da referida multa.
+<br>8. Portanto, não existe no v. acórdão embargado qualquer contradição, obscuridade, omissão ou erro material, nos moldes preceituados pelo art. 1.022, incisos I, II e III do CPC/2015.
+<br>9. Cumpre observar que o Superior Tribunal de Justiça consolidou o entendimento, reafirmado recentemente em julgamento realizado pela Corte Especial, de que a solução integral da controvérsia com base em fundamentação suficiente não caracteriza afronta ao art. 1.022 do CPC, sendo desnecessário rebater expressamente todos os argumentos aduzidos pelas partes (EDcl no AgInt nos EDcl nos EAREsp n. 2.258.321/SC, relator Ministro Og Fernandes, Corte Especial, julgado em 10/6/2025, DJEN de 16/6/2025).
+<br>10. Embargos de declaração rejeitados.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">          
+<br>PODER JUDICIÁRIO
+<br>Tribunal Regional Federal da 3ª Região
+<br>3ª Turma
+<br>Avenida Paulista, 1842, Bela Vista, São Paulo - SP - CEP: 01310-936
+<br>https://www.trf3.jus.br/balcao-virtual
+<br>AGRAVO DE INSTRUMENTO (202)  Nº 5001743-27.2026.4.03.0000
+<br>RELATOR: CONSUELO YATSUDA MOROMIZATO YOSHIDA
+<br>AGRAVANTE: B. B. B.
+<br>ADVOGADO do(a) AGRAVANTE: THIAGO MAGALHAES REIS ALBOK - SP246553-A
+<br>
+<br>ADVOGADO do(a) AGRAVANTE: SANDRO MAGALHAES REIS ALBOK - SP224605-A
+<br>
+<br>
+<br>AGRAVADO: UNIÃO FEDERAL
+<br>FISCAL DA LEI: MINISTERIO PUBLICO FEDERAL - PR/SP
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>RELATÓRIO
+<br>
+<br>Trata-se de embargos de declaração opostos por B. B. B., menor impúbere, representada por sua genitora e representante legal, DANIELLE SANTINHO BARBIZAN, ao v. acórdão que, por maioria, deu parcial provimento ao agravo de instrumento, interposto em face de decisão (Id 537179109) que, em sede de Ação de Obrigação de Fazer , visando o fornecimento do medicamento Dordaviprona (Modeyso), indeferiu o pedido de gratuidade da justiça, aplicou multa por litigância de má-fé e condicionou a análise do pedido de tutela de urgência ao prévio recolhimento de custas e da multa.
+<br>O v. acórdão foi assim ementado:
+<br>
+<br>
+<br>DIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUMENTO. GRATUIDADE DA JUSTIÇA. LITIGÂNCIA DE MÁ-FÉ. PARCIAL PROVIMENTO.
+<br>I. CASO EM EXAME
+<br>1. Agravo de instrumento interposto contra decisão que, em ação pelo procedimento comum ajuizada para obtenção do medicamento Dordaviprona (Modeyso), indeferiu o pedido de gratuidade da justiça, aplicou multa por litigância de má-fé à parte autora e ao patrono e condicionou a análise do pedido de tutela de urgência ao recolhimento das custas processuais e da multa.
+<br>II. QUESTÃO EM DISCUSSÃO
+<br>2. Verificar se estão presentes os requisitos para a concessão da gratuidade da justiça e se é cabível a aplicação de multa por litigância de má-fé à parte autora.
+<br>III. RAZÕES DE DECIDIR
+<br>3. A assistência judiciária gratuita constitui garantia constitucional destinada àqueles que comprovem insuficiência de recursos, sendo presumidamente verdadeira a declaração de hipossuficiência apresentada por pessoa natural, ressalvada a existência de elementos capazes de infirmá-la.
+<br>4. A análise das declarações de imposto de renda dos genitores da parte autora demonstra elevado padrão patrimonial e de rendimentos, inexistindo comprovação documental idônea das despesas alegadas pela agravante apta a evidenciar insuficiência financeira para o pagamento das custas processuais. A excepcionalidade do caso não autoriza a concessão da gratuidade, sob pena de desvirtuamento do instituto.
+<br>5. A aplicação da multa por litigância de má-fé exige demonstração de conduta dolosa enquadrável nas hipóteses do art. 80 do CPC. A mera improcedência da alegação de hipossuficiência ou o insucesso da pretensão não caracterizam, por si sós, alteração da verdade dos fatos ou comportamento processual malicioso, inexistindo prova suficiente do dolo para justificar a sanção.
+<br>IV. DISPOSITIVO E TESE
+<br>6. Agravo de instrumento parcialmente provido, apenas para afastar a multa por litigância de má-fé.
+<br>Legislação relevante citada: CF/1988, art. 5º, XXXV e LXXIV; CPC, arts. 6º, 80, 98, 99, § 3º.
+<br>Jurisprudência relevante citada: TRF 3ª Região, 3ª Turma, AI nº 5010033-12.2018.4.03.0000, Rel. Des. Fed. Antonio Carlos Cedenho, julgado em 06.02.2019.
+<br>
+<br>
+<br>Em suas razões, requer a embargante a) o recebimento e o conhecimento dos presentes Embargos de Declaração, com a intimação da União Federal para manifestação no prazo legal, nos termos do artigo 1.023, parágrafo 2º, do Código de Processo Civil; b) no mérito, o acolhimento dos embargos para sanar a omissão qualificada (artigo 1.022, parágrafo único, inciso II, c/c artigo 489, parágrafo 1º, inciso VI, do CPC) e a contradição interna do acórdão, com a aplicação do precedente do Superior Tribunal de Justiça (REsp 2.055.363/MG) reconhecido pelo próprio julgado; c) a atribuição de efeitos infringentes, reformando-se o venerando acórdão de ID 382157199 para deferir à menor B. B. B. os benefícios da assistência judiciária gratuita, com a isenção do adiantamento das despesas processuais; d) o pronunciamento expresso sobre os dispositivos constitucionais e legais indicados, tidos por prequestionados; (ID 385403040)
+<br>É o relatório.
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>VOTO
+<br>
+<br>Os presentes embargos não merecem prosperar.
+<br>Em que pese a triste notícia do falecimento da parte agravante, não há perda superveniente do objeto do presente agravo, visto tratar-se de discussão processual relativa à concessão dos benefícios da justiça gratuita.
+<br>Conforme assinado no v. acórdão embargado, a assistência judiciária é garantia constitucional prestada aos que comprovarem insuficiência de recursos, a teor do art. 5º, LXXIV, CF/88.
+<br>Consignou-se, ainda, que o art. 98 do Código de Processo Civil reconhece o direito à gratuidade da justiça à pessoa natural ou jurídica, brasileira ou estrangeira, com insuficiência de recursos para pagar as custas, despesas processuais e honorários advocatícios, nos termos em que preceitua.
+<br>Restou igualmente observado que em se tratando de pessoa física, presume-se verdadeira a alegação de hipossuficiência formulada (§ 3ª, art. 99, CPC), podendo o magistrado indeferir o pedido se encontrar elementos que infirmem a alegada hipossuficiência.
+<br>Ressaltou-se, de igual modo: Para a apreciação do pedido de gratuidade da justiça, foi analisada a declaração de IR de ambos genitores do menor, restando indeferidos os benefícios da justiça gratuita nos seguintes termos: Primeiramente, observo que os requisitos da justiça gratuita não se confundem com a "incapacidade financeira de arcar com o custeio do medicamento." Diante da declaração de IR dos genitores da parte autora – que, juntos, receberam mais de R$ 1 milhão no ano de 2025 e são titulares de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis - verifico que tem ela plenas condições de arcar com as custas do presente feito, sem prejuízo de seu sustento ou daquele de sua família. Tais declarações de imposto de renda, anexadas aos autos, demonstram não só que a família da autora não é pobre, na acepção jurídica do feito, como também que ela se encontra nas classes mais privilegiadas de nossa sociedade, conforme critérios do IBGE.
+<br>Como bem pondera o aresto recorrido, ainda que a agravante aponte que possui gastos mensais que diminuam consideravelmente a sua renda mensal, verifica-se que somente foi juntada aos autos a relação dos alegados gastos, sem qualquer comprovante de pagamento, notas fiscais ou comprovantes de depósitos.
+<br>Frisou-se, inclusive: Muito embora a 3ª Turma do Superior Tribunal Justiça possua entendimento no sentido do caráter personalíssimo do direito à gratuidade da justiça, a excepcionalidade do caso em questão recomenda o indeferimento do benefício pleiteado sob pena de se deturpar o instituto jurídico, devendo se levar em conta, sobretudo, os princípios da isonomia e da razoabilidade.
+<br>Por sua vez, em relação à aplicação da multa por litigância de má-fé, salientou-se no julgado impugnado que ao considerar as hipóteses ensejadoras da penalidade (art. 80 do CPC), deve o juiz ponderar se a parte, concretamente, agiu com dolo no sentido de incidir nas sanções cominadas pelo ordenamento processual. Não configura má-fé, por si só, o insucesso da narrativa e da pretensão do autor, requerendo-se prova inequívoca da intenção de causar danos ao processo. Assim, não vislumbra-se causa suficiente para aplicação da referida multa.
+<br>Portanto, não existe no v. acórdão embargado qualquer contradição, obscuridade, omissão ou erro material, nos moldes preceituados pelo art. 1.022, incisos I, II e III do CPC/2015.
+<br>Cumpre observar que o Superior Tribunal de Justiça consolidou o entendimento, reafirmado recentemente em julgamento realizado pela Corte Especial, de que a solução integral da controvérsia com base em fundamentação suficiente não caracteriza afronta ao art. 1.022 do CPC, sendo desnecessário rebater expressamente todos os argumentos aduzidos pelas partes (EDcl no AgInt nos EDcl nos EAREsp n. 2.258.321/SC, relator Ministro Og Fernandes, Corte Especial, julgado em 10/6/2025, DJEN de 16/6/2025).
+<br>Em face do exposto, rejeito os presentes embargos de declaração, com caráter nitidamente infringente.
+<br>É como voto.
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>EMENTA
+<br>
+<br>PROCESSO CIVIL. EMBARGOS DE DECLARAÇÃO. HIPÓTESES DO ART. 1.022, INCISOS I, II E III DO CPC/2015 NÃO CARACTERIZADAS. PREQUESTIONAMENTO. EFEITO INFRINGENTE. NÃO CABIMENTO.
+<br>1. Conforme assinado no v. acórdão embargado, a assistência judiciária é garantia constitucional prestada aos que comprovarem insuficiência de recursos, a teor do art. 5º, LXXIV, CF/88.
+<br>2. Consignou-se, ainda, que o art. 98 do Código de Processo Civil reconhece o direito à gratuidade da justiça à pessoa natural ou jurídica, brasileira ou estrangeira, com insuficiência de recursos para pagar as custas, despesas processuais e honorários advocatícios, nos termos em que preceitua.
+<br>3. Restou igualmente observado que em se tratando de pessoa física, presume-se verdadeira a alegação de hipossuficiência formulada (§ 3ª, art. 99, CPC), podendo o magistrado indeferir o pedido se encontrar elementos que infirmem a alegada hipossuficiência.
+<br>4. Ressaltou-se, de igual modo: Para a apreciação do pedido de gratuidade da justiça, foi analisada a declaração de IR de ambos genitores do menor, restando indeferidos os benefícios da justiça gratuita nos seguintes termos: Primeiramente, observo que os requisitos da justiça gratuita não se confundem com a "incapacidade financeira de arcar com o custeio do medicamento." Diante da declaração de IR dos genitores da parte autora – que, juntos, receberam mais de R$ 1 milhão no ano de 2025 e são titulares de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis - verifico que tem ela plenas condições de arcar com as custas do presente feito, sem prejuízo de seu sustento ou daquele de sua família. Tais declarações de imposto de renda, anexadas aos autos, demonstram não só que a família da autora não é pobre, na acepção jurídica do feito, como também que ela se encontra nas classes mais privilegiadas de nossa sociedade, conforme critérios do IBGE.
+<br>5. Como bem pondera o aresto recorrido, ainda que a agravante aponte que possui gastos mensais que diminuam consideravelmente a sua renda mensal, verifica-se que somente foi juntada aos autos a relação dos alegados gastos, sem qualquer comprovante de pagamento, notas fiscais ou comprovantes de depósitos.
+<br>6. Frisou-se, inclusive: Muito embora a 3ª Turma do Superior Tribunal Justiça possua entendimento no sentido do caráter personalíssimo do direito à gratuidade da justiça, a excepcionalidade do caso em questão recomenda o indeferimento do benefício pleiteado sob pena de se deturpar o instituto jurídico, devendo se levar em conta, sobretudo, os princípios da isonomia e da razoabilidade.
+<br>7. Por sua vez, em relação à aplicação da multa por litigância de má-fé, salientou-se no julgado impugnado que ao considerar as hipóteses ensejadoras da penalidade (art. 80 do CPC), deve o juiz ponderar se a parte, concretamente, agiu com dolo no sentido de incidir nas sanções cominadas pelo ordenamento processual. Não configura má-fé, por si só, o insucesso da narrativa e da pretensão do autor, requerendo-se prova inequívoca da intenção de causar danos ao processo. Assim, não vislumbra-se causa suficiente para aplicação da referida multa.
+<br>8. Portanto, não existe no v. acórdão embargado qualquer contradição, obscuridade, omissão ou erro material, nos moldes preceituados pelo art. 1.022, incisos I, II e III do CPC/2015.
+<br>9. Cumpre observar que o Superior Tribunal de Justiça consolidou o entendimento, reafirmado recentemente em julgamento realizado pela Corte Especial, de que a solução integral da controvérsia com base em fundamentação suficiente não caracteriza afronta ao art. 1.022 do CPC, sendo desnecessário rebater expressamente todos os argumentos aduzidos pelas partes (EDcl no AgInt nos EDcl nos EAREsp n. 2.258.321/SC, relator Ministro Og Fernandes, Corte Especial, julgado em 10/6/2025, DJEN de 16/6/2025).
+<br>10. Embargos de declaração rejeitados.
+<br>
+<br>
+<br>
+<br>ACÓRDÃO
+<br>Vistos e relatados estes autos em que são partes as acima indicadas, a Terceira Turma, por unanimidade, rejeitou os embargos de declaração, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br>
+<br>
+<br>CONSUELO YOSHIDA
+<br>Relatora do Acórdão          </span>
+                                    </div>
+                            </a>
+                        </li>
+                        <li class="acordao-retorno">
+                            <a class="link-acordao " href="/jurisprudencia/Home/ListaColecao/9?np=2">
+                                <div class="processo">
+                                    <span class="contagem">
+                                        2/2)
+                                    </span>
+                                    <span class="info">5001743-27.2026.4.03.0000</span>
+                                    <div class="dado info-publicacao" style="display:none">DJEN Data: 07/07/2026</div>
+                                    <span class="opcoes-processo">
+
+
+
+
+                                        <button class="btn-inteiro-teor" aria-label="Imprimir Inteiro Teor"
+                                                data-link="/jurisprudencia/Home/ImprimirDecisao/?nd=2"
+                                                data-tooltip="Imprimir Inteiro Teor" onclick="event.preventDefault()">
+                                            <i class="bi bi-file-earmark-font"></i>
+                                        </button>
+
+                                                    <button class="btn-integra-acordao" aria-label="Exibir a íntegra do acórdão"
+                                                            data-link="http://www.trf3.jus.br/trf3r/index.php?id=20&amp;op=resultado&amp;processo=50017432720264030000"
+                                                            data-tooltip="Exibir a íntegra do acórdão" onclick="event.preventDefault()">
+                                                        <i class="bi bi-file-earmark"></i>
+                                                    </button>
+                                            <button class="btn-consultar-processo" aria-label="Consultar Processo"
+                                                    data-link="https://pje2g.trf3.jus.br/pje/ConsultaPublica/listView.seam?numProcesso=50017432720264030000"
+                                                    data-tooltip="Consultar Processo" onclick="event.preventDefault()">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+
+
+
+                                            <button class="btn-area-transferencia" aria-label="Copiar ementa para a área de transferência"
+                                                    data-tooltip="Copiar ementa para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                            <button class="btn-area-transferencia-inteor" aria-label="Copiar inteiro teor para a área de transferência"
+                                                    data-tooltip="Copiar inteiro teor para a área de transferência" onclick="event.preventDefault()">
+                                                <i class="bi bi-clipboard-plus"></i>
+                                            </button>
+
+                                        <button class="btn-pdf-acordao" aria-label="Exibir o documento em formato PDF para imprimir ou salvar"
+                                                data-link="/jurisprudencia/Home/ImprimirPDF/?nd=2"
+                                                data-tooltip="Exibir o documento em formato PDF para imprimir ou salvar" onclick="event.preventDefault()">
+                                            <i class="bi bi-printer"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="informacoes-basicas">
+                                    <span class="info">AI - AGRAVO DE INSTRUMENTO</span>
+                                    <span class="info">3ª Turma</span>
+                                    <span class="info">
+                                        Desembargador Federal NERY DA COSTA JUNIOR
+                                    </span>
+                                        <span class="info">
+                                            Desembargadora Federal CONSUELO YATSUDA MOROMIZATO YOSHIDA
+                                        </span>
+                                    <span class="info">DJEN DATA: 07/07/2026</span>
+
+                                        <span class="info">Julgamento: 30/06/2026</span>
+
+
+                                </div>
+                                <div class="ementa">
+                                    <span class="info info-ementa">
+PODER JUDICIÁRIO
+<br>Tribunal Regional Federal da 3ª Região
+<br>3ª Turma
+<br>Avenida Paulista, 1842, Bela Vista, São Paulo - SP - CEP: 01310-936
+<br>https://www.trf3.jus.br/balcao-virtual
+<br>AGRAVO DE INSTRUMENTO (202)  Nº 5001743-27.2026.4.03.0000
+<br>RELATOR: NERY DA COSTA JUNIOR
+<br>AGRAVANTE: B. B. B.
+<br>REPRESENTANTE: DANIELLE SANTINHO BARBIZAN
+<br>REPRESENTANTE do(a) AGRAVANTE: DANIELLE SANTINHO BARBIZAN
+<br>ADVOGADO do(a) AGRAVANTE: THIAGO MAGALHAES REIS ALBOK - SP246553-A
+<br>
+<br>AGRAVADO: UNIÃO FEDERAL
+<br>
+<br>FISCAL DA LEI: MINISTERIO PUBLICO FEDERAL - PR/SP
+<br>
+<br>
+<br>EMENTA
+<br>
+<br>DIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUMENTO. GRATUIDADE DA JUSTIÇA. LITIGÂNCIA DE MÁ-FÉ.  PARCIAL PROVIMENTO.
+<br>I. CASO EM EXAME
+<br>Agravo de instrumento interposto contra decisão que, em ação pelo procedimento comum ajuizada para obtenção do medicamento Dordaviprona (Modeyso), indeferiu o pedido de gratuidade da justiça, aplicou multa por litigância de má-fé à parte autora e ao patrono e condicionou a análise do pedido de tutela de urgência ao recolhimento das custas processuais e da multa.
+<br>II. QUESTÃO EM DISCUSSÃO
+<br>Verificar se estão presentes os requisitos para a concessão da gratuidade da justiça e se é cabível a aplicação de multa por litigância de má-fé à parte autora.
+<br>III. RAZÕES DE DECIDIR
+<br>A assistência judiciária gratuita constitui garantia constitucional destinada àqueles que comprovem insuficiência de recursos, sendo presumidamente verdadeira a declaração de hipossuficiência apresentada por pessoa natural, ressalvada a existência de elementos capazes de infirmá-la.
+<br>A análise das declarações de imposto de renda dos genitores da parte autora demonstra elevado padrão patrimonial e de rendimentos, inexistindo comprovação documental idônea das despesas alegadas pela agravante apta a evidenciar insuficiência financeira para o pagamento das custas processuais. A excepcionalidade do caso não autoriza a concessão da gratuidade, sob pena de desvirtuamento do instituto.
+<br>A aplicação da multa por litigância de má-fé exige demonstração de conduta dolosa enquadrável nas hipóteses do art. 80 do CPC. A mera improcedência da alegação de hipossuficiência ou o insucesso da pretensão não caracterizam, por si sós, alteração da verdade dos fatos ou comportamento processual malicioso, inexistindo prova suficiente do dolo para justificar a sanção.
+<br>IV. DISPOSITIVO E TESE
+<br>Agravo de instrumento parcialmente provido, apenas para afastar a multa por litigância de má-fé.
+<br>
+<br>
+<br>Legislação relevante citada: CF/1988, art. 5º, XXXV e LXXIV; CPC, arts. 6º, 80, 98, 99, § 3º.
+<br>Jurisprudência relevante citada: TRF 3ª Região, 3ª Turma, AI nº 5010033-12.2018.4.03.0000, Rel. Des. Fed. Antonio Carlos Cedenho, julgado em 06.02.2019.                                                                            </span>
+                                </div>
+
+
+                                    <div class="acordao" style="display: none">
+                                        <span class="info info-acordao">          
+<br>PODER JUDICIÁRIO
+<br>Tribunal Regional Federal da 3ª Região
+<br>3ª Turma
+<br>Avenida Paulista, 1842, Bela Vista, São Paulo - SP - CEP: 01310-936
+<br>https://www.trf3.jus.br/balcao-virtual
+<br>AGRAVO DE INSTRUMENTO 202  Nº 5001743-27.2026.4.03.0000
+<br>RELATOR: NERY DA COSTA JUNIOR
+<br>AGRAVANTE: B. B. B.
+<br>
+<br>REPRESENTANTE: DANIELLE SANTINHO BARBIZAN
+<br>
+<br>REPRESENTANTE do(a) AGRAVANTE: DANIELLE SANTINHO BARBIZAN
+<br>
+<br>ADVOGADO do(a) AGRAVANTE: THIAGO MAGALHAES REIS ALBOK - SP246553-A
+<br>
+<br>
+<br>AGRAVADO: UNIÃO FEDERAL
+<br>FISCAL DA LEI: MINISTERIO PUBLICO FEDERAL - PR/SP
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>RELATÓRIO
+<br>
+<br>Trata-se de agravo de instrumento interposto em face de decisão (Id 537179109) que, em sede de Ação de Obrigação de Fazer , visando o fornecimento do medicamento Dordaviprona (Modeyso), indeferiu o pedido de gratuidade da justiça, aplicou multa por litigância de má-fé e condicionou a análise do pedido de tutela de urgência ao prévio recolhimento de custas e da multa.
+<br>A decisão agravada foi proferida nos seguintes termos:
+<br>
+<br>
+<br>Vistos.
+<br>Primeiramente, observo que os requisitos da justiça gratuita não se confundem com a "incapacidade financeira de arcar com o custeio do medicamento."
+<br>Diante da declaração de IR dos genitores da parte autora – que, juntos, receberam mais de R$ 1 milhão no ano de 2025 e são titulares de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis - verifico que tem ela plenas condições de arcar com as custas do presente feito, sem prejuízo de seu sustento ou daquele de sua família.
+<br>Tais declarações de imposto de renda, anexadas aos autos, demonstram não só que a família da autora não é pobre, na acepção jurídica do feito, como também que ela se encontra nas classes mais privilegiadas de nossa sociedade, conforme critérios do IBGE.
+<br>Assim, constato que a declaração de pobreza firmada e anexada aos autos configura alteração da verdade dos fatos, a ensejar a aplicação das penas da litigância de má-fé à parte autora e ao seu patrono.
+<br>Por conseguinte, de rigor a condenação da parte autora e seu advogado à multa de 1% sobre o valor da causa, cada um, nos termos do artigo 80, II, do CPC, eis que litigantes de má-fé.
+<br>Por conseguinte, indefiro o pedido de concessão dos benefícios da justiça gratuita, e concedo à parte autora e ao seu patrono o prazo de 15 dias para recolhimento das custas iniciais, sob pena de extinção, bem como da multa ora fixada.
+<br>Observo que as custas e a multa devem ser recolhidas com base no valor anual do tratamento – já que este é o valor da causa, conforme Temas 06 e 1234.
+<br>Após o recolhimento, tornem conclusos para apreciação dos demais itens da decisão anterior.
+<br>Int.
+<br>
+<br>
+<br>Sustenta a agravante, em síntese, que a decisão que indeferiu a gratuidade e impôs multa e condicionamento ao recolhimento revela análise superficial e equivocada da sua capacidade financeira, tendo sido desconsiderados elementos essenciais: (a) a efetiva insuficiência de liquidez da genitora, com renda líquida média de aproximadamente R$ 25.000,00 e saldo mensal disponível de R$ 3.974,27; (b) existência de financiamento imobiliário com saldo devedor, despesas fixas e gastos médicos que comprometem cerca de 84% da renda líquida; (c) imóveis gravados por alienação fiduciária, não constituindo riqueza líquida disponível; (d) incomunicabilidade patrimonial do ex‑cônjuge, em razão do divórcio; (e) ausência de má‑fé nas declarações de hipossuficiência e diligência do patrono, que juntou documentos quando solicitados. Sustenta, ainda, ser desproporcional e inconstitucional condicionar a análise da tutela de urgência ao recolhimento de custas/multa, ante o risco grave e iminente à vida da menor beneficiária (BEATRIZ), portadora de glioma difuso da linha média H3K27‑alterado, cuja terapêutica depende do medicamento pleiteado, conforme relatórios médicos e manifestações de centros especialistas (Hospital Albert Einstein e GRAACC).
+<br>Nesses termos, pede:
+<br>
+<br>
+<br>1.A CONCESSÃO DA TUTELA ANTECIPADA RECURSAL (LIMINAR), inaudita altera pars, para:
+<br>2. a) SUSPENDER IMEDIATAMENTE os efeitos da r. decisão agravada no que tange ao indeferimento da gratuidade de justiça e à aplicação da multa por litigância de má-fé.
+<br>3. b) DETERMINAR que o MM. Juízo de origem proceda à análise do pedido de tutela de urgência para fornecimento do medicamento no prazo máximo de 24 (vinte e quatro) horas, independentemente do prévio recolhimento de custas ou da multa imposta, sob pena de responsabilidade.
+<br>4. O CONHECIMENTO E PROVIMENTO INTEGRAL DO PRESENTE AGRAVO DE INSTRUMENTO para, no mérito, reformar a r. decisão agravada e: a) CONCEDER os benefícios da Gratuidade da Justiça à Agravante, ou, subsidiariamente, determinar o parcelamento das custas processuais ou o seu diferimento para o final do processo, nos termos do artigo 98, §6º do CPC.
+<br>b) AFASTAR a multa por litigância de má-fé imposta à Agravante e ao seu patrono, por absoluta ausência de dolo e ilegalidade da penalidade aplicada ao advogado.
+<br>c) CONFIRMAR a determinação de análise imediata do pedido de tutela de urgência para fornecimento do medicamento, conforme pleiteado liminarmente.
+<br>
+<br>
+<br>Deferida a medida postulada.
+<br>A agravada UNIÃO FEDERAL, em contraminuta, alegou que “há elementos que comprovam que os genitores da parte não apresentam situação de miserabilidade que justifique os benefícios de isenção de pagamento de custas/despesas processuais”.
+<br>No que diz respeito à imposição da multa por litigância de má-fé, a recorrida reproduziu a decisão agravada e afirmou que a parte silenciou “sobre os mais de R$ 1 milhão de reais recebidos no ano de 2025 e a titularidade de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis”.
+<br>Sobreveio informação de prolação de sentença de improcedência do pedido.
+<br>O MINISTÉRIO PÚBLICO FEDERAL manifestou-se pelo provimento do agravo, “a fim de que seja deferido o pedido de gratuidade da justiça formulado pelo agravante, sem prejuízo de posterior revogação, nos termos dos artigos 99, § 2º e 100, do CPC”.
+<br>É o relatório.
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>VOTO
+<br>A EXCELENTÍSSIMA DOUTORA DESEMBARGADORA CONSUELO YOSHIDA: 
+<br>Peço vênia para divergir parcialmente. 
+<br>A assistência judiciária é garantia constitucional prestada aos que comprovarem insuficiência de recursos, a teor do art. 5º, LXXIV, CF/88.
+<br>O art. 98 do Código de Processo Civil reconhece o direito à gratuidade da justiça à pessoa natural ou jurídica, brasileira ou estrangeira, com insuficiência de recursos para pagar as custas, despesas processuais e honorários advocatícios, nos termos em que preceitua.
+<br>Em se tratando de pessoa física, presume-se verdadeira a alegação de hipossuficiência formulada (§ 3ª, art. 99, CPC), podendo o magistrado indeferir o pedido se encontrar elementos que infirmem a alegada hipossuficiência.
+<br>No caso vertente, a ação originária foi ajuizada com o objetivo do autor, menor impúbere, obter da União o medicamento Dordaviprona (Modeyso).
+<br>Para a apreciação do pedido de gratuidade da justiça, foi analisada a declaração de IR de ambos genitores do menor, restando indeferidos os benefícios da justiça gratuita nos seguintes termos: 
+<br>Primeiramente, observo que os requisitos da justiça gratuita não se confundem com a "incapacidade financeira de arcar com o custeio do medicamento."
+<br>Diante da declaração de IR dos genitores da parte autora – que, juntos, receberam mais de R$ 1 milhão no ano de 2025 e são titulares de patrimônio superior a R$ 5 milhões, destacando-se vários imóveis - verifico que tem ela plenas condições de arcar com as custas do presente feito, sem prejuízo de seu sustento ou daquele de sua família.
+<br>Tais declarações de imposto de renda, anexadas aos autos, demonstram não só que a família da autora não é pobre, na acepção jurídica do feito, como também que ela se encontra nas classes mais privilegiadas de nossa sociedade, conforme critérios do IBGE.
+<br> 
+<br>Ainda que a agravante aponte que possui gastos mensais que diminuam consideravelmente a sua renda mensal, verifica-se que somente foi juntada aos autos a relação dos alegados gastos, sem qualquer comprovante de pagamento, notas fiscais ou comprovantes de depósitos. 
+<br>Muito embora a 3ª Turma do Superior Tribunal Justiça possua entendimento no sentido do caráter personalíssimo do direito à gratuidade da justiça, a excepcionalidade do caso em questão recomenda o indeferimento do benefício pleiteado sob pena de se deturpar o instituto jurídico, devendo se levar em conta, sobretudo, os princípios da isonomia e da razoabilidade.
+<br>No entanto, quanto à aplicação da multa por litigância de má-fé, ao considerar as hipóteses ensejadoras da penalidade (art. 80 do CPC), deve o juiz ponderar se a parte, concretamente, agiu com dolo no sentido de incidir nas sanções cominadas pelo ordenamento processual. Não configura má-fé, por si só, o insucesso da narrativa e da pretensão do autor, requerendo-se prova inequívoca da intenção de causar danos ao processo. Assim, não vislumbro causa suficiente para aplicação da referida multa.  
+<br>Nessa linha, já decidiu esta e. Terceira Turma:  
+<br>AGRAVO DE INSTRUMENTO. TRIBUTÁRIO. EXECUÇÃO FISCAL. MULTA POR LITIGÂNCIA DE MÁ-FÉ AFASTADA.  
+<br>1. Condenação em litigância de má-fé tem por escopo punir o sujeito que, desrespeitando o dever de cooperação entre as partes (art. 6º do CPC) em uma ação judicial, propositalmente altera a verdade dos fatos, opõe resistência injustificada ao andamento do processo, provoca incidente manifestamente infundado, entre outros.  
+<br>2. A presunção de boa-fé é princípio geral de direito universalmente aceito, sendo milenar a parêmia: a boa-fé se presume; a má-fé se prova. E nos autos nada há que comprove a má-fé da ora agravada.  
+<br>3. A prova robusta da existência do dolo para condenação em litigância de má-fé é fundamental para que não se viole a garantia fundamental da inafastabilidade da jurisdição (art. 5º, XXXV, da CF). A punição processual deverá, portanto, ser interpretada restritivamente, sob pena de criar temor na parte que exerce o seu direito de ação sem saber se logrará êxito em sua pretensão, mas sabendo que, na eventualidade de não lograr, poderá vir a ser condenada ao pagamento de multa vultosa.  
+<br>(...)  
+<br>5. Agravo provido.                                
+<br>(TRF 3ª Região, 3ª Turma, AI - AGRAVO DE INSTRUMENTO - 5010033-12.2018.4.03.0000, Rel. DESEMBARGADOR FEDERAL ANTONIO CARLOS CEDENHO, julgado em 06/02/2019, Intimação via sistema DATA: 12/02/2019) 
+<br> 
+<br>Em face do exposto, dou parcial provimento ao agravo de instrumento, apenas para afastar a multa por litigância de má-fé. 
+<br>É como voto. 
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>VOTO
+<br>
+<br>De início, embora tenha ocorrido a prolação da sentença, o presente recurso não restou prejudicado, considerando a matéria tratada nos autos, não impugnada nas razões de apelação da parte.
+<br>A assistência judiciária é garantia constitucional, prevista no art. 5.º, LXXIV, da Magna Carta, no qual se confere o dever do Estado de proporcionar a o acesso ao Judiciário todos, até mesmo aos que comprovarem insuficiência de recursos.
+<br>O novo estatuto processual (Lei nº 13.105/15) prevê que "presume-se verdadeira a alegação de insuficiência deduzida exclusivamente por pessoa natural " (art. 99, § 3º). Prevê também a possibilidade do juiz indeferir o pedido “se houver nos autos elementos que evidenciem a falta dos pressupostos legais para a concessão de gratuidade” (art. 99, § 2º), 
+<br>No caso, o Juízo a quo indeferiu a gratuidade de justiça ao entendimento de que, em suma, o grupo familiar aufere renda não condizente com a alegada hipossuficiência financeira.
+<br>Contudo, o direito à justiça gratuita é pessoal (art. 99, § 6º, CPC) e, considerando que o autor, embora maior de idade, é estudante, e aufere renda própria, mas isenta do imposto de renda. Destarte, entendo que mantida a presunção de hipossuficiência financeira.
+<br>Cumpre ressaltar que, no caso concreto, há nos autos elementos aptos a desconstituir a presunção de insuficiência dos genitores da autora.
+<br>Contudo, trata-se de direito personalíssimo (ao benefício) e , portanto, não estendendo a capacidade financeira dos pais ao requerente, menor.
+<br>Nesse sentido:
+<br>
+<br>
+<br>PROCESSUAL CIVIL. AÇÃO DE COMPENSAÇÃO POR DANOS MORAIS. GRATUIDADE DE JUSTIÇA. AÇÃO PROPOSTA POR MENOR. EXAME DO DIREITO AO BENEFÍCIO DA GRATUIDADE À LUZ DA SITUAÇÃO ECONÔMICA DOS GENITORES. IMPOSSIBILIDADE. NATUREZA JURÍDICA PERSONALÍSSIMA. PRESSUPOSTOS QUE DEVEM SER PREENCHIDOS PELA PARTE REQUERENTE. 1. Ação de compensação por danos morais ajuizada em 31/12/2021, da qual foi extraído o presente recurso especial interposto em 03/10/2022 e concluso ao gabinete em 09/03/2023. 2. O propósito recursal consiste em definir se é admissível condicionar a concessão da gratuidade de justiça a menor à demonstração de insuficiência de recursos de seu representante legal. 3. O direito ao benefício da gratuidade de justiça possui natureza individual e personalíssima, não podendo ser automaticamente estendido a quem não preencha os pressupostos legais para a sua concessão e, por idêntica razão, não se pode exigir que os pressupostos legais que autorizam a concessão do benefício sejam preenchidos por pessoa distinta da parte, como o seu representante legal. 4. Em se tratando de menores representados pelos seus pais, haverá sempre um forte vínculo entre a situação desses dois diferentes sujeitos de direitos e obrigações, sobretudo em razão da incapacidade civil e econômica do próprio menor, o que não significa dizer, todavia, que se deva automaticamente examinar o direito à gratuidade a que poderia fazer jus o menor à luz da situação financeira de seus pais. 5. Em se tratando de direito à gratuidade de justiça pleiteado por menor, é apropriado que, inicialmente, incida a regra do art. 99, § 3º, do CPC/2015, deferindo-se o benefício ao menor em razão da presunção de insuficiência de recursos decorrente de sua alegação. Fica ressalvada, entretanto, a possibilidade de o réu demonstrar, com base no art. 99, § 2º, do CPC/2015, a ausência dos pressupostos legais que justificam a concessão gratuidade, pleiteando, em razão disso, a revogação do benefício. 6. Na hipótese dos autos, a Corte de origem indeferiu o benefício pleiteado pelo recorrente (menor), consoante o fundamento de que não foi comprovada a hipossuficiência financeira de seus genitores, o que não se releva cabível. 7. Recurso especial conhecido e provido. (REsp n. 2.055.363/MG, relatora Ministra Nancy Andrighi, Terceira Turma, julgado em 13/6/2023, DJe de 23/6/2023.)
+<br>
+<br>
+<br>Destarte, importante destacar que, na origem, pleiteia-se medicamento de alto custo, em ação cujo o valor da causa é R$ 3.716.864,00, o que, caso analisada a capacidade patrimonial dos genitores, inviabilizaria o sustento da família.
+<br>Considerando a natureza personalíssima do benefício e o risco associado à demora na análise de tutela de urgência para fornecimento de medicamento de alto custo, não se justifica condicionar a apreciação imediata da medida de urgência ao prévio recolhimento de custas e da multa fixada, máxime quando há alegação de risco grave à saúde da beneficiária.
+<br>Resta, por consequência, afastada a multa por litigância de má-fé.
+<br>Ante o exposto, dou provimento ao agravo de instrumento.
+<br>É o voto.
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>EMENTA
+<br>
+<br>DIREITO PROCESSUAL CIVIL. AGRAVO DE INSTRUMENTO. GRATUIDADE DA JUSTIÇA. LITIGÂNCIA DE MÁ-FÉ. PARCIAL PROVIMENTO.
+<br>I. CASO EM EXAME
+<br>Agravo de instrumento interposto contra decisão que, em ação pelo procedimento comum ajuizada para obtenção do medicamento Dordaviprona (Modeyso), indeferiu o pedido de gratuidade da justiça, aplicou multa por litigância de má-fé à parte autora e ao patrono e condicionou a análise do pedido de tutela de urgência ao recolhimento das custas processuais e da multa.
+<br>II. QUESTÃO EM DISCUSSÃO
+<br>Verificar se estão presentes os requisitos para a concessão da gratuidade da justiça e se é cabível a aplicação de multa por litigância de má-fé à parte autora.
+<br>III. RAZÕES DE DECIDIR
+<br>A assistência judiciária gratuita constitui garantia constitucional destinada àqueles que comprovem insuficiência de recursos, sendo presumidamente verdadeira a declaração de hipossuficiência apresentada por pessoa natural, ressalvada a existência de elementos capazes de infirmá-la.
+<br>A análise das declarações de imposto de renda dos genitores da parte autora demonstra elevado padrão patrimonial e de rendimentos, inexistindo comprovação documental idônea das despesas alegadas pela agravante apta a evidenciar insuficiência financeira para o pagamento das custas processuais. A excepcionalidade do caso não autoriza a concessão da gratuidade, sob pena de desvirtuamento do instituto.
+<br>A aplicação da multa por litigância de má-fé exige demonstração de conduta dolosa enquadrável nas hipóteses do art. 80 do CPC. A mera improcedência da alegação de hipossuficiência ou o insucesso da pretensão não caracterizam, por si sós, alteração da verdade dos fatos ou comportamento processual malicioso, inexistindo prova suficiente do dolo para justificar a sanção.
+<br>IV. DISPOSITIVO E TESE
+<br>Agravo de instrumento parcialmente provido, apenas para afastar a multa por litigância de má-fé.
+<br>
+<br>
+<br>Legislação relevante citada: CF/1988, art. 5º, XXXV e LXXIV; CPC, arts. 6º, 80, 98, 99, § 3º.
+<br>Jurisprudência relevante citada: TRF 3ª Região, 3ª Turma, AI nº 5010033-12.2018.4.03.0000, Rel. Des. Fed. Antonio Carlos Cedenho, julgado em 06.02.2019.
+<br>
+<br>ACÓRDÃO
+<br>Vistos e relatados estes autos em que são partes as acima indicadas, A Turma, por maioria, deu parcial provimento ao agravo de instrumento, nos termos do voto da Des. Fed. CONSUELO YOSHIDA, vencido o Relator que lhe dava provimento. Lavrará o acórdão a Des. Fed. CONSUELO YOSHIDA, nos termos do relatório e voto que ficam fazendo parte integrante do presente julgado.
+<br>
+<br>
+<br>CONSUELO YOSHIDA
+<br>Relatora do Acórdão          </span>
+                                    </div>
+                            </a>
+                        </li>
+            </ol>
+        </div>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">1</span> ~ <span class="qtd-total">2</span>
+    </section>
+    <section class="secao-paginas">
+            Páginas: 
+                    <a class="muda-pagina atual" href="/jurisprudencia/Home/ListaResumida/2?np=1" data-pagina="1">1</a>
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">2</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+</div>
+
+    </main>
+
+    
+
+<footer class="rodape-principal">
+    <div class="container">
+        <ul class="lista-servicos">
+            <li class="item-lista-servicos">
+                Sites da 3ª Região:
+                <span class="sites-lista">
+                    <a href="https://www.trf3.jus.br/">TRF3</a> |
+                    <a href="https://www.jfsp.jus.br/">São Paulo</a> |
+                    <a href="https://www.jfms.jus.br/">Mato Grosso do Sul</a>
+                </span>
+            </li>
+            <li class="item-lista-servicos">
+                Tribunais Superiores:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www.cjf.jus.br/">Conselho da Justiça Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.stj.jus.br/">Superior Tribunal de Justiça</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://portal.stf.jus.br/">Supremo Tribunal Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.cnj.jus.br/">Conselho Nacional de Justiça</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Outras Jurisprudências:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www2.cjf.jus.br/jurisprudencia/unificada/">Jurisprudência Unificada do CJF</a>
+                    </li>
+                    
+                    <li class="item-interno">
+                        <a href="https://jurisprudencia.cjf.jus.br/tnu/index.xhtml">Jurisprudência Unificada da TNU (até Junho de 2017)</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://eproctnu-jur.cjf.jus.br">Jurisprudência Unificada da TNU (a partir de Julho de 2017)</a>
+                    </li>
+
+                    <li class="item-interno">
+                        <a href="https://www.trf3.jus.br/diretoria-geral/biblioteca/setor-de-apoio-a-jurisprudencia/sumulas-do-trf3">Súmulas do TRF3</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Contato:
+                <span class="sites-lista">
+                    <a href="mailto:jurisprudencia@trf3.jus.br">jurisprudencia@trf3.jus.br</a>
+                </span>
+            </li>
+        </ul>
+    </div>
+</footer>
+
+
+<script type="text/javascript"  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEiXXfV0VbfSzc1/Z0xzNEUp/QScpDi/laNjU"></script><link rel="stylesheet" type="text/css"  href="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/CEkXXx/YVHnBX"><script  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/OwQUNH/AaSWEo" async defer></script><div id="sec-overlay" style="display:none;"><div id="sec-container"></div></div><noscript><img src="https://web.trf3.jus.br/akam/13/pixel_511cd6bd?a=dD03MGQyZDE0MTEwOGI4Y2Q5M2ZiZmFiZjE2YzA5MGIyZDdkMWY4Y2IwJmpzPW9mZg==" style="visibility: hidden; position: absolute; left: -999px; top: -999px;" /></noscript></body>
+</html>

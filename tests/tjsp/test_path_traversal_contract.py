@@ -1,7 +1,7 @@
 """Contratos de seguranca: path traversal via identificadores upstream (refs #269).
 
-Os tres downloaders do TJSP interpolavam um identificador vindo da resposta do
-tribunal (``cdProcesso``, ``processo.codigo``, ``cdAcordao``) direto no caminho
+Os downloaders do TJSP interpolavam um identificador vindo da resposta do
+tribunal (``cdProcesso``, ``processo.codigo``, ``cdDocumento``) direto no caminho
 de escrita. Estes testes alimentam um identificador malicioso (``../../evil``) e
 afirmam que o downloader levanta ``ValueError`` antes de gravar fora do diretorio
 de download — em vez de permitir escrita arbitraria de arquivo.
@@ -9,64 +9,135 @@ de download — em vez de permitir escrita arbitraria de arquivo.
 Os corpos de resposta sao construidos inline (entrada adversarial), nao como
 samples versionados, porque nao representam markup/JSON real do TJSP.
 """
-import json
+from unittest.mock import Mock
 
 import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.tjsp.acordao_download import download_acordao
-from juscraper.courts.tjsp.cpopg_download import cpopg_download_api, cpopg_download_api_single
+from juscraper.courts.tjsp.cpopg_download import cpopg_download_html, cpopg_download_html_single
 from juscraper.courts.tjsp.cposg_download import _cposg_download_html_single
 
 ESAJ = "https://esaj.tjsp.jus.br"
-API = "https://api.tjsp.jus.br"
 
 CNJ = "1000149-71.2024.8.26.0346"
 CNJ_DIGITS = "10001497120248260346"
 EVIL = "../../evil"
 
 
-# ---------- cpopg (API) -------------------------------------------------
+# ---------- cpopg (HTML) -----------------------------------------------
 
-@responses.activate
-def test_cpopg_api_rejeita_cdprocesso_malicioso(tmp_path, mocker):
-    """cdProcesso com '..' levanta ValueError antes do POST dadosbasicos."""
-    mocker.patch("time.sleep")
-    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body=json.dumps([{"cdProcesso": EVIL}]),
-        status=200,
-        content_type="application/json",
+@pytest.mark.parametrize("codigo_invalido", ["..%2F..%2Fevil", "..", "a%2Fb", "a%5Cb"])
+def test_cpopg_html_rejeita_codigo_malicioso_no_link_unico(
+    tmp_path, mocker, codigo_invalido,
+):
+    """``processo.codigo`` inválido deve falhar antes de gravar o HTML."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(return_value=[f"/cpopg/show.do?processo.codigo={codigo_invalido}"])
+
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        cpopg_download_html_single(
+            CNJ,
+            sessao,
+            ESAJ + "/",
+            str(tmp_path),
+            0,
+            extrair,
+        )
+
+    assert sessao.get.call_count == 1
+    assert not list(tmp_path.rglob("*.html"))
+
+
+def test_cpopg_html_rejeita_codigo_malicioso_antes_de_baixar_documentos(
+    tmp_path, mocker,
+):
+    """Todos os códigos devem ser validados antes de qualquer GET de documento."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    links = [
+        "/cpopg/show.do?processo.codigo=PROCESSO_VALIDO",
+        "/cpopg/show.do?processo.codigo=..%2F..%2Fevil",
+    ]
+    extrair = Mock(return_value=links)
+
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        cpopg_download_html_single(
+            CNJ,
+            sessao,
+            ESAJ + "/",
+            str(tmp_path),
+            0,
+            extrair,
+        )
+
+    assert sessao.get.call_count == 1
+    assert not list(tmp_path.rglob("*.html"))
+
+
+def test_cpopg_html_lote_continua_apos_codigo_malicioso(tmp_path, mocker):
+    """Um processo inválido não interrompe o lote nem causa cinco retries."""
+    mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(side_effect=[
+        ["/cpopg/show.do?processo.codigo=PROCESSO_PRIMEIRO"],
+        ["/cpopg/show.do?processo.codigo=..%2F..%2Fevil"],
+        ["/cpopg/show.do?processo.codigo=PROCESSO_TERCEIRO"],
+    ])
+    cnjs = [
+        CNJ,
+        "1000000-00.2024.8.26.0001",
+        "1000000-00.2024.8.26.0002",
+    ]
+
+    cpopg_download_html(
+        cnjs,
+        sessao,
+        ESAJ + "/",
+        str(tmp_path),
+        0,
+        extrair,
     )
 
-    with pytest.raises(ValueError, match="cdProcesso"):
-        cpopg_download_api_single(CNJ, scraper.session, scraper.api_base, str(tmp_path))
+    primeiro = tmp_path / "cpopg" / CNJ_DIGITS
+    terceiro = tmp_path / "cpopg" / "10000000020248260002"
+    assert (primeiro / f"{CNJ_DIGITS}_PROCESSO_PRIMEIRO.html").exists()
+    assert (terceiro / "10000000020248260002_PROCESSO_TERCEIRO.html").exists()
+    assert not (tmp_path / "evil.html").exists()
+    assert sessao.get.call_count == 3
+    assert extrair.call_count == 3
 
-    # nenhum *_basicos.json gravado (nem dentro nem fora do diretorio cpopg/<id>)
-    assert not list(tmp_path.rglob("*_basicos.json"))
-    assert not (tmp_path / "evil_basicos.json").exists()
 
-
-@responses.activate
-def test_cpopg_api_caller_captura_e_continua(tmp_path, mocker):
-    """O caller cpopg_download_api captura o ValueError e nao propaga."""
-    mocker.patch("time.sleep")
-    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(
-        responses.GET,
-        f"{API}/processo/cpopg/search/numproc/{CNJ_DIGITS}",
-        body=json.dumps([{"cdProcesso": EVIL}]),
-        status=200,
-        content_type="application/json",
+def test_cpopg_html_repete_value_error_durante_gravacao(tmp_path, mocker):
+    """ValueError de gravação mantém o retry anterior à sanitização."""
+    pausa = mocker.patch("juscraper.courts.tjsp.cpopg_download.time.sleep")
+    sessao = Mock()
+    sessao.get.return_value = Mock(text="<html>Busca</html>", status_code=200)
+    extrair = Mock(return_value=[
+        "/cpopg/show.do?processo.codigo=PROCESSO_VALIDO",
+    ])
+    salvar = mocker.patch(
+        "juscraper.courts.tjsp.cpopg_download._salvar_resultados_html",
+        side_effect=[ValueError("erro de gravação"), None],
     )
 
-    # nao deve levantar — loga o erro e segue para o proximo id
-    cpopg_download_api([CNJ], scraper.session, scraper.api_base, str(tmp_path))
+    cpopg_download_html_single(
+        CNJ,
+        sessao,
+        ESAJ + "/",
+        str(tmp_path),
+        0,
+        extrair,
+    )
 
-    assert not list(tmp_path.rglob("*_basicos.json"))
+    assert sessao.get.call_count == 2
+    assert extrair.call_count == 2
+    assert salvar.call_count == 2
+    assert pausa.call_count == 2
 
 
 # ---------- cposg (HTML) ------------------------------------------------
@@ -151,26 +222,45 @@ def test_cposg_html_simples_rejeita_codigo_malicioso(tmp_path, mocker):
     assert not list(tmp_path.rglob("*.html"))
 
 
-# ---------- acordao -----------------------------------------------------
+# ---------- acordao (movimentacao) ------------------------------------
+
+_MODAL_ACORDAO_MALICIOSO = (
+    '<html><body><div id="modalIncidentes">'
+    f'<input id="processoSelecionado" value="{EVIL}"/>'
+    "</div></body></html>"
+)
+
+_MOVIMENTACAO_MALICIOSA = (
+    '<table><tbody><tr class="fundoClaro movimentacaoProcesso">'
+    '<td class="dataMovimentacaoProcesso">30/10/2026</td><td></td>'
+    '<td class="descricaoMovimentacaoProcesso">'
+    f'<a class="linkMovVincProc" href="#?cdDocumento=1" cdDocumento="{EVIL}">Julgado virtualmente</a>'
+    "</td></tr></tbody></table>"
+)
+
 
 @responses.activate
-def test_acordao_rejeita_cd_acordao_malicioso(tmp_path):
-    """cdAcordao com '..' levanta ValueError (codigo morto, mas o defeito e real)."""
+def test_acordao_rejeita_cd_processo_malicioso_antes_do_show(tmp_path):
+    """cdProcesso do modal com '..' levanta ValueError antes de abrir o processo."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(responses.GET, f"{ESAJ}/cjsg/getArquivo.do", body=b"%PDF-fake", status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/search.do", body=_MODAL_ACORDAO_MALICIOSO, status=200)
 
-    with pytest.raises(ValueError, match="cdAcordao"):
-        download_acordao(EVIL, scraper.session, ESAJ, str(tmp_path))
+    with pytest.raises(ValueError, match=r"processo.codigo"):
+        scraper.baixar_acordao(CNJ, "01/10/2026")
 
+    assert len(responses.calls) == 1
     assert not list(tmp_path.rglob("*.pdf"))
 
 
 @responses.activate
-def test_acordao_happy_path(tmp_path):
-    """cdAcordao numerico legitimo grava em cjsg/<id>.pdf normalmente."""
+def test_acordao_rejeita_cd_documento_malicioso(tmp_path):
+    """cdDocumento com '..' levanta ValueError antes de verificar o acesso."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    responses.add(responses.GET, f"{ESAJ}/cjsg/getArquivo.do", body=b"%PDF-fake", status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/search.do", body=_SIMPLES_MALICIOSO.replace(EVIL, "RI0001"), status=200)
+    responses.add(responses.GET, f"{ESAJ}/cposg/carregarMovimentacoesAjax.do", body=_MOVIMENTACAO_MALICIOSA, status=200)
 
-    download_acordao("12345", scraper.session, ESAJ, str(tmp_path))
+    with pytest.raises(ValueError, match="cdDocumento"):
+        scraper.baixar_acordao(CNJ, "01/10/2026")
 
-    assert (tmp_path / "cjsg" / "12345.pdf").exists()
+    assert not any("verificarAcesso" in c.request.url for c in responses.calls)
+    assert not list(tmp_path.rglob("*.pdf"))

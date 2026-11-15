@@ -75,7 +75,7 @@ class TJPEScraper(HTTPScraper):
                 cookie, ou o cookie não pôde ser obtido (Chromium do Playwright
                 ausente, cookie não emitido no prazo). Interrompe o lote.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjpe = jus.scraper("tjpe")
             >>> df = tjpe.cpopg("0000000-00.0000.8.17.0000")
@@ -216,7 +216,7 @@ class TJPEScraper(HTTPScraper):
                 ``ementa``, ``acordao``, ``meio_tramitacao``,
                 ``url_inteiro_teor``.
 
-        Exemplo:
+        Examples: Exemplo
             >>> import juscraper as jus
             >>> tjpe = jus.scraper("tjpe")
             >>> df = tjpe.cjsg("dano moral", paginas=range(1, 3),

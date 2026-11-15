@@ -7,7 +7,13 @@ Samples capturados de ``www4.tjmg.jus.br/juridico/sf`` em 26/09/2026:
 * ``resultado_segredo`` — todos os recursos em segredo de justica.
 * ``resultado_baixado`` — processo fisico antigo (2010), sem "NUMERO TJMG".
 * ``resultado_not_found`` — "Nenhum processo encontrado".
-* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso.
+* ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso
+  (``partes_baixado`` e o recurso ``/002``; ``partes_baixado_1``, o agravo
+  ``/001``, capturado em 14/11/2026 pelo script abaixo).
+
+Recaptura: ``python -m tests.fixtures.capture.tjmg_cposg``. Os processos
+evoluem no tribunal (baixa, novos recursos, anonimizacao de nomes), entao
+uma recaptura pode exigir ajustar os valores esperados abaixo.
 """
 from __future__ import annotations
 
@@ -20,7 +26,7 @@ from responses import matchers
 import juscraper as jus
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
 RESULTADO_URL = f"{BASE}/proc_resultado2.jsp"
@@ -117,13 +123,16 @@ def test_cposg_accepts_numero_tjmg(scraper):
 @responses.activate
 def test_cposg_baixado_without_numero_tjmg_header(scraper):
     _add(RESULTADO_URL, "00370502120108130439", "resultado_baixado")
-    _add(PARTES_URL, "10439100037050001", "partes_baixado")
+    _add(PARTES_URL, "10439100037050001", "partes_baixado_1")
     _add(PARTES_URL, "10439100037050002", "partes_baixado")
 
     df = scraper.cposg("0037050-21.2010.8.13.0439")
 
     assert list(df["processo_interno"]) == ["1.0439.10.003705-0/001", "1.0439.10.003705-0/002"]
     assert list(df["situacao"]) == ["BAIXADO", "BAIXADO"]
+    agravante = df.iloc[0]["partes"][0]
+    assert (agravante["tipo"], agravante["nome"]) == ("Agravante", "MUNICIPIO DE MURIAE")
+    assert agravante["baixa"] == "30/07/2010 - REMETIDOS à COMARCA DE ORIGEM"
     apelado = df.iloc[1]["partes"][1]
     assert apelado["baixa"] == "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM"
     assert apelado["nome"] == "MUNICIPIO DE MURIAE"
@@ -245,6 +254,93 @@ def test_cposg_mantem_advogado_com_oab_fora_do_padrao(scraper):
     assert df.iloc[0]["partes"][0]["advogados"] == [{"oab": "12.345-A/MG", "nome": "LUIS FERNANDO BATISTA"}]
 
 
+@pytest.mark.parametrize(
+    ("sample", "esperado"),
+    [
+        pytest.param(
+            "partes_single",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "LEANDRO SERGIO DIAS",
+                    "baixa": None,
+                    "advogados": [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}],
+                },
+                {"tipo": "Apelado", "nome": "MINISTÉRIO PÚBLICO - MPMG", "baixa": None, "advogados": []},
+                {"tipo": "Vítima", "nome": "M.F.S.", "baixa": None, "advogados": []},
+            ],
+            id="single",
+        ),
+        pytest.param(
+            "partes_multi_1",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "RAFAELA LUCIA MARCELINO",
+                    "baixa": None,
+                    "advogados": [
+                        {"oab": "159502N/MG", "nome": "VICTOR SANTANA LINS CERQUEIRA"},
+                        {"oab": "164867N/MG", "nome": "GABRIEL SANTOS DURAES"},
+                        {"oab": "182853N/MG", "nome": "WELLINGTON VICENTE DE BARROS"},
+                    ],
+                },
+                {
+                    "tipo": "Apelado",
+                    "nome": "VALE S/A",
+                    "baixa": None,
+                    "advogados": [{"oab": "74175N/MG", "nome": "DANILO FERNANDEZ MIRANDA"}],
+                },
+            ],
+            id="multi-1",
+        ),
+        pytest.param(
+            "partes_multi_2",
+            [
+                {
+                    "tipo": "Embargante",
+                    "nome": "RAFAELA LUCIA MARCELINO",
+                    "baixa": None,
+                    "advogados": [{"oab": "164867N/MG", "nome": "GABRIEL SANTOS DURAES"}],
+                },
+                {
+                    "tipo": "Embargado",
+                    "nome": "VALE S/A",
+                    "baixa": None,
+                    "advogados": [{"oab": "74175N/MG", "nome": "DANILO FERNANDEZ MIRANDA"}],
+                },
+            ],
+            id="multi-2",
+        ),
+        pytest.param(
+            "partes_baixado",
+            [
+                {
+                    "tipo": "Apelante",
+                    "nome": "DEFENSORIA PÚBLICA ESTADO MINAS GERAIS",
+                    "baixa": "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM",
+                    "advogados": [{"oab": "606D/MG", "nome": "MARCUS TARCÍSIO SILVA DE CASTRO"}],
+                },
+                {
+                    "tipo": "Apelado",
+                    "nome": "MUNICIPIO DE MURIAE",
+                    "baixa": "04/05/2012 - REMETIDOS à COMARCA DE ORIGEM",
+                    "advogados": [
+                        {"oab": "63583N/MG", "nome": "GRACE QUELE DA SILVA TOLEDO LINARES"},
+                        {"oab": "79267N/MG", "nome": "FILIPE DE ALMEIDA CASTRO"},
+                    ],
+                },
+            ],
+            id="baixado",
+        ),
+    ],
+)
+def test_parse_partes_preserva_campos_dos_samples_reais(sample, esperado):
+    """Os samples capturados preservam tipo, nome, baixa e advogados."""
+    html = load_sample("tjmg", f"cposg/{sample}.html", encoding="iso-8859-1")
+
+    assert parse_partes(html) == esperado
+
+
 @pytest.mark.parametrize("metodo", ["cposg", "cposg_download"])
 @responses.activate
 def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
@@ -259,13 +355,27 @@ def test_cposg_aviso_de_falha_aponta_para_quem_chamou(scraper, mocker, metodo):
     assert avisos[0].filename == __file__
 
 
-def test_parse_partes_ignora_linha_de_advogado_vazia():
-    """Linha com as duas celulas vazias nao vira advogado."""
-    html = load_sample_bytes("tjmg", "cposg/partes_single.html").replace(
-        b"<td>165085N/MG</td>",
-        b"<td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>165085N/MG</td>",
-    ).decode("iso-8859-1")
+@pytest.mark.parametrize(
+    ("substituto", "esperado"),
+    [
+        pytest.param(
+            b"<td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>165085N/MG</td>",
+            [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}],
+            id="linha-vazia-ignorada",
+        ),
+        pytest.param(
+            b"<td></td>",
+            [{"oab": None, "nome": "LUIS FERNANDO BATISTA"}],
+            id="sem-oab-mantido",
+        ),
+    ],
+)
+def test_parse_partes_linhas_de_advogado_incompletas(substituto, esperado):
+    """Linha com as duas celulas vazias nao vira advogado; OAB vazia com nome vira."""
+    html = (
+        load_sample_bytes("tjmg", "cposg/partes_single.html")
+        .replace(b"<td>165085N/MG</td>", substituto)
+        .decode("iso-8859-1")
+    )
 
-    advogados = parse_partes(html)[0]["advogados"]
-
-    assert advogados == [{"oab": "165085N/MG", "nome": "LUIS FERNANDO BATISTA"}]
+    assert parse_partes(html)[0]["advogados"] == esperado

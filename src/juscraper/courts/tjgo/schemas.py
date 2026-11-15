@@ -9,9 +9,7 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
-from pydantic import Field
-
-from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
 
 
 class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
@@ -37,7 +35,7 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
     # TODO (#212): apertar com Literal[...] após captura do dropdown do site.
     id_serventia_subtipo: str | int = 0
     numero_processo: str | None = None
-    tamanho_pagina: int = Field(default=10, ge=1)
+    tamanho_pagina: TamanhoPagina = 10
 
 
 class OutputCJSGTJGO(OutputCJSGBase):

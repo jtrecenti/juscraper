@@ -7,6 +7,12 @@ pydantic v2).
 
 Tipos disponiveis:
 
+- :data:`InteiroSemBool` — inteiro que rejeita ``bool`` (inclusive
+  ``numpy.bool_``) antes da coercao do pydantic, mantendo a coercao de strings
+  numericas. Base de :data:`TamanhoPagina`; use direto quando o endpoint tem
+  dominio proprio que o ``ge=1`` atropelaria na mensagem (Falcao: 5 ou 10).
+- :data:`TamanhoPagina` — :data:`InteiroSemBool` positivo. Limites proprios do
+  endpoint entram como ``Field(...)`` no campo.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
   ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
@@ -19,7 +25,8 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import BeforeValidator
+import numpy as np
+from pydantic import BeforeValidator, Field
 
 
 def _coerce_id_filtro(value):
@@ -48,6 +55,17 @@ def _coerce_id_filtro(value):
     )
 
 
+def _reject_bool(value: object) -> object:
+    """Rejeita ``bool`` sem impedir a coercao de strings numericas para int.
+
+    ``numpy.bool_`` nao herda de ``bool``, mas o pydantic o coage para ``int``
+    do mesmo jeito; por isso entra na checagem.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError("esperado um inteiro, não bool.")
+    return value
+
+
 def _coerce_id_filtro_unico(value):
     """Igual a :func:`_coerce_id_filtro` mas rejeita ``list``/``tuple``.
 
@@ -67,3 +85,5 @@ IdFiltro = Annotated[
     int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
 ]
 IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
+InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
+TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]

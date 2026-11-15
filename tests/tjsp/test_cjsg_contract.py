@@ -85,6 +85,27 @@ def test_cjsg_single_page(tmp_path, mocker):
 
 
 @responses.activate
+def test_cjsg_baixar_sg_false_com_ementa_que_cita_resultados(tmp_path, mocker):
+    """Com ``baixar_sg=False`` (origem ``R``), a 1a página traz ementa curta com "resultados"."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=load_sample_bytes("tjsp", "cjsg/post_initial.html"),
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[urlencoded_params_matcher(make_tjsp_cjsg_body("direito", baixar_sg=False), allow_blank=True)],
+    )
+    _add_get(1, "cjsg/ementa_com_resultados.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg("direito", baixar_sg=False, paginas=1)
+
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+    assert len(df) == 20
+    assert df["ementa"].str.contains("RESULTADOS").any()
+
+
+@responses.activate
 def test_cjsg_no_results(tmp_path, mocker):
     """Zero-result query returns an empty DataFrame instead of raising."""
     mocker.patch("time.sleep")
@@ -286,7 +307,7 @@ def test_cjsg_count_only_auto_chunk_false_raises_on_long_window(tmp_path):
     ``ValueError`` canonico.
     """
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    with pytest.raises(ValueError, match="366"):
+    with pytest.raises(ValueError, match="no máximo 1 ano"):
         scraper.cjsg(
             "dano moral",
             data_julgamento_inicio="01/01/2020",
@@ -308,10 +329,10 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     """
     mocker.patch("time.sleep")
 
-    # Janela 1: 02/01/2020 -> 02/01/2021 (HTML retorna 2_571_077)
-    # Janela 2: 03/01/2021 -> 02/01/2022 (HTML retorna 78)
+    # Janela 1: 02/01/2020 -> 01/01/2021 (HTML retorna 2_571_077)
+    # Janela 2: 02/01/2021 -> 01/01/2022 (HTML retorna 78)
     body_w1 = make_tjsp_cjsg_body(
-        "dano moral", data_inicio="02/01/2020", data_fim="02/01/2021",
+        "dano moral", data_inicio="02/01/2020", data_fim="01/01/2021",
     )
     responses.add(
         responses.POST,
@@ -331,7 +352,7 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     body_w2 = make_tjsp_cjsg_body(
-        "dano moral", data_inicio="03/01/2021", data_fim="02/01/2022",
+        "dano moral", data_inicio="02/01/2021", data_fim="01/01/2022",
     )
     responses.add(
         responses.POST,
@@ -353,7 +374,7 @@ def test_cjsg_count_only_sums_across_chunks(tmp_path, mocker):
     n = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
         "dano moral",
         data_julgamento_inicio="02/01/2020",
-        data_julgamento_fim="02/01/2022",
+        data_julgamento_fim="01/01/2022",
         count_only=True,
     )
 

@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <meta charset="utf-8" />
+    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+          rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="/jurisprudencia/Content/Images/favicon.ico">
+
+    <link href="/jurisprudencia/Content/Css/bootstrap-icons.css" rel="stylesheet" />
+    <link href="/jurisprudencia/Content/Css/datepicker.min.css" rel="stylesheet" />
+
+
+    <script src="/jurisprudencia/Scripts/jquery-1.8.2.js" type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery.unobtrusive-ajax.js" type="text/javascript"></script>
+    
+    <script src="/jurisprudencia/Scripts/jquery-1.9.1.js" ) type="text/javascript"></script>
+    <script src="/jurisprudencia/Scripts/jquery-ui.js" ) type="text/javascript"></script>
+    
+
+    <script>
+        const plNextArrow = "»";
+        const plPrevArrow = "«";
+    </script>
+
+    <script src="/jurisprudencia/Scripts/datepicker-full.min.js" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/init-acessibilidade.js?t=07/10/2026 17:18:07"></script>
+    <script src="/jurisprudencia/Scripts/Toast.js"></script>
+
+    
+    <script>
+        const urlHome = '/jurisprudencia/Home';
+        const urlListaAtual = '/jurisprudencia/Home/ListaResumida';
+        const exprAcordao = /AC[OÓ]RD[AÃ]O/i;
+        const plPaginas = 'Páginas';
+        const plTRF3 = 'TRF 3ª Região';
+        const plAcordao = 'Acórdão';
+        const qtdePorPagina = 10;
+
+    </script>
+    <link href="/jurisprudencia/Content/Css/resultado.css?t=07/10/2026 17:18:07" rel="stylesheet" />
+    <script src="/jurisprudencia/Scripts/resultado.js?t=07/10/2026 17:18:07" charset="utf-8"></script>
+    <script src="/jurisprudencia/Scripts/utilidades-processo.js?t=07/10/2026 17:18:07" charset="utf-8"></script>
+
+
+
+
+    <script language="javascript" type="text/javascript">
+
+        var diretorioVirtual = '/jurisprudencia/';
+
+        function hideToolTip() {
+
+            //var valor = document.getElementById('chkAtivarExplicacao').value;
+
+
+            if (document.getElementById('chkAtivarExplicacao').checked) {
+
+                $(document).tooltip({
+                    show: {
+                        effect: "slideDown",
+                        delay: 250
+                    }
+                });
+            }
+            if (!document.getElementById('chkAtivarExplicacao').checked) {
+
+                $('[title]').attr('title', function (i, title) {
+                    $(this).data('title', title).removeAttr('title');
+                });
+            }
+        }
+
+        function mensagem()
+        {
+            alert("Sucesso.");
+        }
+
+        //function enviarPesquisa() {
+        //    var colecoes = "Acordao";
+        //    var criterios = obterCampos();
+        //    var tipoLista = "Resumida";
+        //    var sinonimos = "Nao";
+
+        //    var data = {
+        //        Pesquisa: {
+        //            'Colecoes': colecoes,
+        //            'Criterios': criterios,
+        //            'TipoLista': tipoLista,
+        //            'Sinonimos': sinonimos
+        //        }
+        //    };
+        //    if (criterios.length != 0) {
+        //        $.ajax({
+        //            type: "POST",
+        //            url: "/home/BuscaAtosNormativos",
+        //            data: JSON.stringify(data),
+        //            //data: "{colecao:'" + colecao + "',criterioPesquisa:'" + criterioPesquisa + "',tipoLista:'" + tipoLista + "',sinonimos:'" + sinominos + "'}",
+        //            contentType: "application/json; charset=utf-8",
+        //            datatype: "json",
+        //            success: function () {},
+        //            error: function () {}
+        //        });
+        //    }
+        //    else
+        //        alert("Não há critério de pesquisa!");
+        //}
+
+
+
+        function obterCriterios() {
+            var colecao = "Acordao";
+            var criterioPesquisa = obterCampos();
+            var quantidade = "Resumida*Não";
+            return (criterioPesquisa == "") ? null : {'Colecao': colecao, 'CriterioPesquisa': criterioPesquisa, 'Quantidade': quantidade};
+        }
+
+        function obterCampos() {
+
+            var pOuD = "";
+
+            if (document.getElementById('data-tipo').value == 3) pOuD = ".dtpb. ";
+            else pOuD = ".dtde. "
+
+            var pesquisa = "";
+
+
+            if (document.getElementById('txtPesqLivre').value != "")
+                pesquisa += "(" + document.getElementById('txtPesqLivre').value + ").pesq. ";
+            if(document.getElementById('numero').value != "")
+                pesquisa += "(" + document.getElementById('numero').value + ").reg. ";
+            if(document.getElementById('magistrado').value != "0")
+                pesquisa += "((" + document.getElementById("magistrado").options[document.getElementById("magistrado").selectedIndex].text + ")).rel. ";
+            if (document.getElementById('data-inicial').value != "" && document.getElementById('data-final').value != "")
+                pesquisa += "(" + document.getElementById('data-inicial').value + "," + document.getElementById('data-final').value + ")" + pOuD;
+            if (document.getElementById('classe').value != "0")
+                pesquisa += "(" + document.getElementById("classe").options[document.getElementById("classe").selectedIndex].text + ").dcla. ";
+            if (document.getElementById('orgao').value != "0")
+                pesquisa += "(" + document.getElementById("orgao").options[document.getElementById("orgao").selectedIndex].text + ").org. ";
+            if (document.getElementById('ementa').value != "")
+                pesquisa += "(" + document.getElementById('ementa').value + ").emen. ";
+
+            return pesquisa;
+
+        }
+
+        function limparCampos() {
+
+            document.getElementById('txtPesqLivre').value = "";
+            document.getElementById('data-inicial').value = "";
+            document.getElementById('data-final').value = "";
+
+            document.getElementById('numero').value = "";
+            document.getElementById('magistrado').value = "0";
+                
+            document.getElementById('classe').value = "0";
+            document.getElementById('orgao').value = "0";
+            document.getElementById('ementa').value = "";
+            document.getElementById('data-tipo').value = "0";
+            $('#tema').val('0')
+
+            //limparRefLeg();
+
+            $("#numclasse").val("");
+            $("#ementa").val("");
+            $("#indexacao").val("");
+            $("#legislacao").val("");
+            $("#hdnMagistrado").val("");
+            $("#hdnClasse").val("");
+            $("#hdnOrgao").val("");
+            $("#hdnLegislacao").val("");
+
+        }
+
+        function limparRefLeg() {
+            document.getElementById('norma').value = "0";
+            $("#legislacao-numero").val("Número");
+            document.getElementById('legislacao-tipo-nome-1').value = "ART";
+            $("#legislacao-tipo-valor-1").val("");
+            document.getElementById('legislacao-tipo-nome-2').value = "PAR";
+            $("#legislacao-tipo-valor-2").val("");
+            document.getElementById('legislacao-tipo-nome-3').value = "INC";
+            $("#legislacao-tipo-valor-3").val("");
+            document.getElementById('legislacao-tipo-nome-4').value = "LET";
+            $("#legislacao-tipo-valor-4").val("");
+        }
+
+        function addCampo(selectId, textId, divId) {
+            var idSelect = document.getElementById(selectId);
+            var valorText = $(textId).val();
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                $(divId).removeClass("ocultar").addClass("mostrar");
+                if (valorText.length < 1) {
+                    $(textId).val(idSelect.options[idSelect.selectedIndex].text);
+                } else {
+                    $(textId).val(valorText+" OU "+idSelect.options[idSelect.selectedIndex].text);
+                }
+                idSelect.options[0].selected = true;
+            }
+        }
+
+        function addConector(conector) {
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            //alert(valorTextPesqLivre);
+            //if (conector != "$") {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector + " ");
+            //} else {
+            //    $("#txtPesqLivre").val(valorTextPesqLivre + " " + conector);
+            //}
+            $("#txtPesqLivre").val(valorTextPesqLivre + conector);
+            $("#txtPesqLivre").focus();
+        }
+
+        function concatCampos(textId, divId, identificador, hiddenId) {
+            var valorTextId = $(textId).val();
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHiddenId = $(hiddenId).val();
+            if (valorTextId.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val("(" + valorTextId+")"+identificador);
+                } else {
+                    $("#txtPesqLivre").val("("+valorTextPesqLivre+")"+" E (" + valorTextId + ")"+identificador);
+                }
+                if (valorHiddenId.length > 0) {
+                    $(hiddenId).val(valorHiddenId + " E (" + valorTextId + ")" + identificador);
+                } else {
+                    $(hiddenId).val("(" + valorTextId + ")" + identificador);
+                }
+                $(textId).val("");
+            } else alert("Informe o critério de pesquisa.");
+            $(divId).removeClass("mostrar").addClass("ocultar");
+        }
+
+        function addRefLeg(selectId) {
+            var criterioR = preencherRefLeg(selectId);
+            var valorTextPesqLivre = $("#txtPesqLivre").val();
+            var valorHdnLegislacao = $("#hdnLegislacao").val();
+            if (criterioR.length > 0) {
+                if (valorTextPesqLivre.length < 1) {
+                    $("#txtPesqLivre").val(criterioR);
+                } else {
+                    $("#txtPesqLivre").val("(" + valorTextPesqLivre + ")" + " E " + criterioR);
+                }
+                if (valorHdnLegislacao.length > 0) {
+                    $("#hdnLegislacao").val(valorHdnLegislacao + " E " + criterioR);
+                } else {
+                    $("#hdnLegislacao").val(criterioR);
+                }
+            }
+                limparRefLeg();
+        }
+
+        function preencherRefLeg(selectId) {
+            var idSelect = document.getElementById(selectId);
+            var idSelect1 = document.getElementById('legislacao-tipo-nome-1');
+            var idSelect2 = document.getElementById('legislacao-tipo-nome-2');
+            var idSelect3 = document.getElementById('legislacao-tipo-nome-3');
+            var idSelect4 = document.getElementById('legislacao-tipo-nome-4');
+
+            if (idSelect.options[idSelect.selectedIndex].value != 0) {
+                var norma = idSelect.options[idSelect.selectedIndex].text;
+                var numero = $("#legislacao-numero").val();
+                var nome1 = idSelect1.options[idSelect1.selectedIndex].value;
+                var valor1 = $("#legislacao-tipo-valor-1").val();
+                var nome2 = idSelect2.options[idSelect2.selectedIndex].value;
+                var valor2 = $("#legislacao-tipo-valor-2").val();
+                var nome3 = idSelect3.options[idSelect3.selectedIndex].value;
+                var valor3 = $("#legislacao-tipo-valor-3").val();
+                var nome4 = idSelect4.options[idSelect4.selectedIndex].value;
+                var valor4 = $("#legislacao-tipo-valor-4").val();
+                var criterio = "("+norma;
+                if (numero.length > 0) {
+                    if (numero != "Número") {
+                        criterio = criterio + "-" + numero;
+                    }
+
+                }
+                if (valor1.length > 0) {
+                    criterio = criterio + " " + nome1 + "-" + valor1;
+                }
+                if (valor2.length > 0) {
+                    criterio = criterio + " " + nome2 + "-" + valor2;
+                }
+                if (valor3.length > 0) {
+                    criterio = criterio + " " + nome3 + "-" + valor3;
+                }
+                if (valor4.length > 0) {
+                    criterio = criterio + " " + nome4 + "-" + valor4;
+                }
+                criterio = criterio + ").ref. "
+            } else {
+                alert("Preencha os campos referentes à Legislação.");
+                criterio = "";
+            }
+            return criterio;
+        }
+
+        function limparNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num = "Número") {
+                $("#legislacao-numero").val("");
+            }
+        }
+
+        function ShowModelDialog(numDocumento) {
+            var recurso = diretorioVirtual + 'Home/VisualizarImpressao/' + numDocumento;
+            //string s = "window.showModalDialog('PreImpressao.aspx?nm=" + e.CommandArgument.ToString().Replace("-", "").Replace(".", "") + "', null, 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;');";
+            window.showModalDialog(diretorioVirtual + 'Home/VisualizarImpressao/?nd=' + numDocumento, "null", 'dialogHeight:660px; dialogWidth:870px; status:no; resizable:yes; scroll:yes;'); //"PopupWindow", 'width=400px,height=400px,top=150,left=250');
+            return false;
+        }
+
+        function colocarNumero() {
+            var num = $("#legislacao-numero").val();
+            if (num.length < 1) {
+                $("#legislacao-numero").val("Número");
+            }
+        }
+
+        $(function () {
+            $("#data-inicial").datepicker({
+
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+        $(function () {
+            $("#data-final").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: 'dd/mm/yy', dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'], dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'], dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'], monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            });
+        });
+
+        function preencherHDDN() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var temaComp = $('#tema').val()?.trim().length || 0;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } 
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } 
+            }
+
+            if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1) && (temaComp < 1)
+                && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+                && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+                && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Critério de pesquisa não informado.");
+                $("#hdnLegislacao").val("N");
+                return false;
+            }
+
+
+            if (!validaCampoData())
+                return false;
+
+            return true;
+        }
+
+        function validaCampoData() {
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                Toast.Show("Data inicial em branco");
+                return false;
+            }
+
+            
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                Toast.Show("Data final em branco");
+                return false;
+            }
+
+            
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+
+            if (document.getElementById('data-inicial').value == "" && document.getElementById('data-final').value == "") {
+                return true;
+            }
+
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            
+
+            if (Compara01 > Compara02) {
+                Toast.Show("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            
+
+            return true;
+            
+        }
+
+        function validaFormMonocratica() {
+
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            
+                        
+            
+            
+            
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            
+
+            let textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            let numeroComp = $("#numero").val().trim().length;
+            let dataInicialComp = document.getElementById('data-inicial').value.trim().length;
+            let dataFinalComp = document.getElementById('data-final').value.trim().length;
+            let magistradoComp = idSelectM.options[idSelectM.selectedIndex].value;
+            let classeComp = idSelectC.options[idSelectC.selectedIndex].value;
+
+            console.log(textoPesqLivreComp, dataFinalComp, dataFinalComp); console.log(magistradoComp, numeroComp, classeComp)
+
+
+            if (textoPesqLivreComp < 1 && dataInicialComp < 1 && dataFinalComp < 1
+                && magistradoComp < 1 && numeroComp < 1 && classeComp < 1) {
+                Toast.Show("Critério de pesquisa não informado.");
+                return false;
+            }
+
+
+            if (dataFinalComp > 1 && !validaCampoData())
+                return false;
+
+
+            return true;
+        }
+
+        function preencherHDDN02() {
+            //var vv = $("#carregando").id;
+            ////$("#carregando").removeClass("oculto").addClass("visivel");  CARREGANDO..
+            //alert(vv);
+            var magistradoHDNText = $("#hdnMagistrado").val();
+            var classeHDNText = $("#hdnClasse").val();
+            var orgaoHDNText = $("#hdnOrgao").val();
+            //var legislacaoHDNText = $("#hdnLegislacao").val();
+            var idSelectM = document.getElementById('magistrado');
+            var idSelectC = document.getElementById('classe');
+            var idSelectO = document.getElementById('orgao');
+
+            var textoPesqLivreComp = $("#txtPesqLivre").val().trim().length;
+            var numeroComp = $("#numero").val().trim().length;
+            //var data_inicialComp = $("#data_inicial").val().trim().length;
+            //var data_finalComp = $("#data_final").val().trim().length;
+            var numClasseComp = $("#numclasse").val().trim().length;
+            var ementaComp = $("#ementa").val().trim().length;
+            var indexacaoComp = $("#indexacao").val().trim().length;
+            var legislacaoComp = $("#legislacao").val().trim().length;
+
+            if (idSelectM.options[idSelectM.selectedIndex].value != 0) {
+                if (magistradoHDNText.length < 1) {
+                    $("#hdnMagistrado").val("((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                } else {
+                    $("#hdnMagistrado").val(magistradoHDNText + " | " + "((" + idSelectM.options[idSelectM.selectedIndex].text + ")).rel.");
+                }
+            }
+
+            if (idSelectC.options[idSelectC.selectedIndex].value != 0) {
+                if (classeHDNText.length < 1) {
+                    $("#hdnClasse").val("(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                } else {
+                    $("#hdnClasse").val(classeHDNText + " | " + "(" + idSelectC.options[idSelectC.selectedIndex].text + ").dclas.");
+                }
+            }
+
+            if (idSelectO.options[idSelectO.selectedIndex].value != 0) {
+                if (orgaoHDNText.length < 1) {
+                    $("#hdnOrgao").val("(" + idSelectO.options[idSelectO.selectedIndex].text.replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                    $('#hdnOrgaoJef').val("(" + $('#orgao :selected').attr('data-val-jef').replace(/1a\.\s+se[cç][aã]o/gi, '1A') + ").org.");
+                } else {
+                    $("#hdnOrgao").val(orgaoHDNText + " | " + "(" + idSelectO.options[idSelectO.selectedIndex].text + ").org.");
+                }
+            }
+
+            //if ((textoPesqLivreComp < 1) && (numeroComp < 1) && (numClasseComp < 1) && (ementaComp < 1)
+            //    && (indexacaoComp < 1) && (legislacaoComp < 1) && (idSelectM.options[idSelectM.selectedIndex].value == 0)
+            //    && (idSelectC.options[idSelectC.selectedIndex].value == 0) && (idSelectO.options[idSelectO.selectedIndex].value == 0)
+            //    && (document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value == "")) {
+            //    alert("Critério de pesquisa não informado.");
+            //    $("#hdnLegislacao").val("S");
+            //    return false;
+            //}
+
+            if ((document.getElementById('data-inicial').value == "") && (document.getElementById('data-final').value != "")) {
+                alert("Data inicial em branco");
+                return false;
+            }
+
+            if ((document.getElementById('data-inicial').value != "") && (document.getElementById('data-final').value == "")) {
+                alert("Data final em branco");
+                return false;
+            }
+
+            var dataInicial = document.getElementById('data-inicial').value;
+            var dataFinal = document.getElementById('data-final').value;
+            var Compara01 = parseInt(dataInicial.split("/")[2].toString() + dataInicial.split("/")[1].toString() + dataInicial.split("/")[0].toString());
+            var Compara02 = parseInt(dataFinal.split("/")[2].toString() + dataFinal.split("/")[1].toString() + dataFinal.split("/")[0].toString());
+
+            if (Compara01 > Compara02) {
+                alert("Data inicial não pode ser maior que a data final");
+                return false;
+            }
+
+            return true;
+        }
+
+        function resultadoSemFormatacao(semformatacao,textoarea) {
+            document.getElementById(semformatacao).style.visibility = 'visible';
+            document.getElementById(textoarea).focus();
+            document.getElementById(textoarea).select();
+        }
+
+        function buscaAcordao() {
+            window.open("https://web.trf3.jus.br/acordaos/Acordao/PesquisarDocumento?processo=" + processo, "blanck");
+        }
+
+        function buscaAndamento() {
+            window.open("https://web.trf3.jus.br/consultas/Internet/ConsultaProcessual/ProcessoIndex?numeroProcesso=" + processo, "blanck");
+        }
+
+        function mostrarListaResumida(valor) {
+            if (valor) {
+                $("#hdnMostrarListaResumida").val("S");
+            } else
+            {
+                $("#hdnMostrarListaResumida").val("N");
+            }
+            //alert("Mudou");
+            //var sValor = valor;
+            //if (valor) {
+               
+                //$("#hdnMostrarListaResumida").val("1");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(0);
+                //document.getElementById('chkMostrarLista').value = "0";
+                //document.getElementById('chkMostrarLista').setAttribute('checked', 'checked');
+                //$("chkMostrarLista").attr('checked', 'checked');
+            //} else {
+                
+                //$("#hdnMostrarListaResumida").val("0");
+                //alert($("#hdnMostrarListaResumida").val());
+                //$("chkMostrarLista").val(1);
+                //$("chkMostrarLista").removeAttr('Checked');
+            //}
+            //alert(valor);
+        }
+
+        //function inicializar() {
+
+
+        //    if ($("#hdnMostrarListaResumida").val() == "") {
+        //        if (document.getElementById('chkMostrarLista').checked) {
+        //            $("#hdnMostrarListaResumida").val("S");
+        //            //alert("Checado");
+        //        } else {
+        //            $("#hdnMostrarListaResumida").val("N");
+        //            //alert("Não checado");
+        //        }
+        //    }
+            //alert("iniciou");
+            //var o = document.getElementById("chkMostrarLista");
+            //var sContentAttr = o.getAttribute("checked");
+            //alert(sContentAttr);
+            //if ($("#hdnMostrarListaResumida").val() == "") {
+            //    var o = document.getElementById("chkMostrarLista");
+            //    var sContentAttr = o.getAttribute("checked");
+            //    alert(sContentAttr);
+            //} else {
+            //    alert($("#hdnMostrarListaResumida").val());
+            //}
+
+
+                //var mostralLR = "S";
+                //var testeMostrarLR = Request["chkMostrarLista"];
+                //if (Session["MostrarListaResumida"] == null)
+                //{
+                    //Session["MostrarListaResumida"] = "S";
+                    //mostralLR = "S";
+                //}
+                //else
+                //{
+                    //mostralLR = Session["MostrarListaResumida"].ToString();
+                //}
+
+        //}
+
+        function selecionaNorma(indiceNorma) {
+            var siglaNorma = document.getElementById('sigla[' + indiceNorma + ']').innerHTML;
+            var descricaoNorma = document.getElementById('descricao[' + indiceNorma + ']').innerHTML;
+            var tipoLegislacao = document.getElementById('tipoLeg[' + indiceNorma + ']').innerHTML;
+            var tipoNorma = document.getElementById('tipoNor[' + indiceNorma + ']').innerHTML;
+            var numeroNorma = document.getElementById('numero[' + indiceNorma + ']').innerHTML;
+            var anoNorma = document.getElementById('ano[' + indiceNorma + ']').innerHTML;
+            var legislacao = "";
+
+            if ((siglaNorma != null) && (siglaNorma != "")) { legislacao = siglaNorma.trim(); }
+            if ((descricaoNorma != null) && (descricaoNorma != "")) { legislacao = legislacao + " " + descricaoNorma; }
+            if ((tipoLegislacao != null) && (tipoLegislacao != "")) { legislacao = legislacao + " LEG-" + tipoLegislacao; }
+            if ((tipoNorma != null) && (tipoNorma != "")) { legislacao = legislacao + " " + tipoNorma.trim(); }
+            if ((numeroNorma != null) && (numeroNorma != "")) { legislacao = legislacao + "-" + numeroNorma.trim(); }
+            if ((anoNorma != null) && (anoNorma != "")) { legislacao = legislacao + " ANO-" + anoNorma; }
+
+            var leg = $("#legislacao").val();
+
+            if (leg.length < 1) {
+                $("#legislacao").val(legislacao);
+            } else {
+                $("#legislacao").val(leg + " E " + legislacao);
+            }
+            document.getElementById('helpSiglaJud').style.visibility = 'hidden';
+        }
+
+        function mudarValor(sel) {
+            if (sel.name == 'magistrado') {
+                $("#hdnMagistrado").val("");
+            }
+            if (sel.name == 'classe') {
+                $("#hdnClasse").val("");
+            }
+            if (sel.name == 'orgao') {
+                $("#hdnOrgao").val("");
+            }
+        }
+
+        $(document).ready(function () {
+            //var kjk = document.getElementById('hdnUtxtPesqLivre').value;
+
+            if (document.getElementById('hdnUchkMostrarLista') != null) {
+                if (document.getElementById('hdnUchkMostrarLista').value != '') {
+                    if (document.getElementById('hdnUchkMostrarLista').value == 'on') {
+                        document.getElementById('chkMostrarLista').checked = true;
+                    } else {
+                        document.getElementById('chkMostrarLista').checked = false;
+                    }
+                } }
+            if (document.getElementById('hdnUtxtPesqLivre') != null) {
+                if (document.getElementById('hdnUtxtPesqLivre').value != '') {
+                    $("#txtPesqLivre").val(document.getElementById('hdnUtxtPesqLivre').value);
+                }
+            }
+            if (document.getElementById('hdnUnumero') != null) {
+                if (document.getElementById('hdnUnumero').value != '') {
+                    $("#numero").val(document.getElementById('hdnUnumero').value);
+                }
+            }
+            if (document.getElementById('hdnUmagistrado') != null) {
+                if (document.getElementById('hdnUmagistrado').value != '') {
+                    document.getElementById('magistrado').selectedIndex = document.getElementById('hdnUmagistrado').value;
+                }
+            }
+            if (document.getElementById('hdnUdata-inicial') != null) {
+                if (document.getElementById('hdnUdata-inicial').value != '') {
+                    $("#data-inicial").val(document.getElementById('hdnUdata-inicial').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-final') != null) {
+                if (document.getElementById('hdnUdata-final').value != '') {
+                    $("#data-final").val(document.getElementById('hdnUdata-final').value);
+                }
+            }
+            if (document.getElementById('hdnUdata-tipo') != null) {
+                if (document.getElementById('hdnUdata-tipo').value != '') {
+                    document.getElementById('data-tipo').value = document.getElementById('hdnUdata-tipo').value;
+                }
+            }
+            if (document.getElementById('hdnUclasse') != null) {
+                if (document.getElementById('hdnUclasse').value != '') {
+                    document.getElementById('classe').selectedIndex = document.getElementById('hdnUclasse').value;
+                }
+            }
+            if (document.getElementById('hdnUorgao') != null) {
+                if (document.getElementById('hdnUorgao').value != '') {
+                    document.getElementById('orgao').selectedIndex = document.getElementById('hdnUorgao').value;
+                }
+            }
+            if (document.getElementById('hdnUementa') != null) {
+                if (document.getElementById('hdnUementa').value != '') {
+                    $("#ementa").val(document.getElementById('hdnUementa').value);
+                }
+            }
+            if (document.getElementById('hdnUnumclasse') != null) {
+                if (document.getElementById('hdnUnumclasse').value != '') {
+                    $("#numclasse").val(document.getElementById('hdnUnumclasse').value);
+                }
+            }
+            if (document.getElementById('hdnUindexacao') != null) {
+                if (document.getElementById('hdnUindexacao').value != '') {
+                    $("#indexacao").val(document.getElementById('hdnUindexacao').value);
+                }
+            }
+            if (document.getElementById('hdnUlegislacao') != null) {
+                if (document.getElementById('hdnUlegislacao').value != '') {
+                    $("#legislacao").val(document.getElementById('hdnUlegislacao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnClasse') != null) {
+                if (document.getElementById('hdnUhdnClasse').value != '') {
+                    $("#hdnClasse").val(document.getElementById('hdnUhdnClasse').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnOrgao') != null) {
+                if (document.getElementById('hdnUhdnOrgao').value != '') {
+                    $("#hdnOrgao").val(document.getElementById('hdnUhdnOrgao').value);
+                }
+            }
+            if (document.getElementById('hdnUhdnLegislacao') != null) {
+                if (document.getElementById('hdnUhdnLegislacao').value != '') {
+                    $("#hdnLegislacao").val(document.getElementById('hdnUhdnLegislacao').value);
+                }
+            }
+        });
+
+        //Incluída por causa das "  "
+        function concatenaExpressao() {
+            var inputE1 = document.getElementById('txtPesqLivre');
+            inputE1.value = inputE1.value + ' " "';
+            texto = new String(inputE1.value);
+            selStart = texto.length - 2;
+            selEnd = texto.length - 1;
+            if (inputE1.setSelectionRange) {
+                inputE1.focus();
+                inputE1.setSelectionRange(selStart, selEnd);
+            } else if (inputE1.createTextRange) {
+                var range = inputE1.createTextRange();
+                range.collapse(true);
+                range.moveEnd('character', selEnd);
+                range.moveStart('character', selStart);
+                range.select();
+            }
+            inputE1.focus();
+        }
+
+        //session end
+        var sessionTimeoutWarning = 300 -1; 
+        var sTimeout = parseInt(sessionTimeoutWarning) * 60 * 1000;
+        setTimeout('SessionEnd()', sTimeout);
+
+        function SessionEnd() {
+            window.location = diretorioVirtual + "Home/SessaoExpirada";
+        }
+
+    </script>
+
+    <title>Busca Jurisprudência</title>
+<script >bazadebezolkohpepadr="1360844508"</script><script type="text/javascript" src="https://web.trf3.jus.br/akam/13/511cd6bd"  defer></script></head>
+<body>
+    
+
+    <div id="inline" data-date="01/05/2020" style="color: black"></div>
+    <a href="#conteudo" style="display: none;" id="a-conteudo"></a>
+
+    
+    
+    
+
+
+
+    
+    
+
+    
+
+<section class="menu">
+    <section class="secao-menu secao-acessibilidade">
+        <div class="container">
+            <section class="acessibilidade">
+                <span>Acessibilidade: </span>
+                <i class="bi bi-eye-fill" id="btn-modo-cor" title="Alternar entre modo claro e modo escuro"
+                   aria-label="Alternar entre modo claro e modo escuro" tabindex="0"></i>
+
+                <i class="bi bi bi-cast" id="btn-transparente" title="Alternar entre painel transparente e painel colorido" aria-label="Alternar entre painel transparente e painel colorido"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-in" id="btn-plus" title="Aumentar zoom" aria-label="Aumentar zoom"
+                   tabindex="0"></i>
+
+                <i class="bi bi-zoom-out" id="btn-minus" title="Diminuir zoom" aria-label="Diminuir zoom"
+                   tabindex="0"></i>
+                <i class="bi bi-aspect-ratio" id="btn-sem-zoom" title="Voltar ao tamanho normal"
+                   aria-label="Voltar ao tamanho normal" tabindex="0"></i>
+                <i class="bi bi-app-indicator" id="go-to-content" title="Ir para conteúdo"
+                   aria-label="Ir para conteúdo" tabindex="0"></i>
+            </section>
+            <section class="info" data-tooltip="Tamanho atual"></section>
+        </div>
+    </section>
+    <section class="secao-menu">
+        <div class="container">
+            <section class="logo">
+                <h1 class="logo-tribunal" title="Ir para o site do TRF3">
+                    <a href="https://www.trf3.jus.br/"
+                       target="_blank"><img src="/jurisprudencia/Content/Images/topo-site-logoTRF3.png" alt="Ir para o site do TRF3"></a>
+                </h1>
+            </section>
+        </div>
+    </section>
+</section>
+
+
+    <main id="conteudo">
+        
+
+
+
+
+
+
+<div class="container">
+    <section class="menu-opcoes opcoes-pesquisa">
+        <nav class="nav-menu">
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/0">Nova Pesquisa</a></span>
+            <span class="opcao-menu opcao-pesquisa"><a href="/jurisprudencia/Home/BuscaAcordaos/1">Voltar</a></span>
+        </nav>
+        <section class="botoes-pg">
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/1?np=0" data-tooltip="Primeira página" id="lnk-primeira-pagina"
+                   aria-label="Primeira página"><i class="bi bi-chevron-double-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=1" data-tooltip="Página anterior"
+                   aria-label="Página anterior"><i class="bi bi-caret-left"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=0" data-tooltip="Próxima página"
+                   aria-label="Próxima página"><i class="bi bi-caret-right"></i></a>
+            </span>
+            <span class="opcao-menu opcao-pesquisa opcao-pg">
+                <a href="/jurisprudencia/Home/ListaResumida/2?np=0" data-tooltip="Última página"
+                   aria-label="Última página"><i class="bi bi-chevron-double-right"></i></a>
+            </span>
+        </section>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">0</span> ~ <span class="qtd-total">0</span>
+    </section>
+    <section class="secao-paginas">
+            Nenhum Resultado Encontrado
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">0</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+    <section class="resultados-pesquisa">
+        <div class="retorno-pesquisa">
+            <h2 class="titulo-retorno">
+                <span class="texto-titulo">Pesquisa de Jurisprudência - Base TRF3</span>
+
+                <button class="abre-filtros" aria-label="Abrir Filtros">
+                    <i class="bi bi-funnel"></i>
+                </button>
+
+                <span class="texto-subtitulo">Critério: (pesquisa livre: juscraper_probe_zero_hits_xyzqwe) E ((data: 01/01/2026 a 30/06/2026 - Julgamento))) </span>
+            </h2>
+            <ol class="lista-retorno">
+            </ol>
+        </div>
+    </section>
+
+    
+
+
+
+
+
+<section class="dados-resultados">
+    <section class="secao-total">
+        <span class="qtd-pagina">0</span> ~ <span class="qtd-total">0</span>
+    </section>
+    <section class="secao-paginas">
+            Nenhum Resultado Encontrado
+    </section>
+    <section class="secao-por-pagina">
+        <span class="qtd-pagina">
+            <select class="cmb-qtde-por-pagina">
+                <option value="10" selected>10</option>
+                <option value="30" >30</option>
+                <option value="50" >50</option>
+            </select>
+        </span> resultados por página.
+        Mostrando <span class="qtd-total">0</span> resultado(s).
+        <span class="carregando-mudanca-paginas"></span>
+    </section>
+</section>
+
+</div>
+
+    </main>
+
+    
+
+<footer class="rodape-principal">
+    <div class="container">
+        <ul class="lista-servicos">
+            <li class="item-lista-servicos">
+                Sites da 3ª Região:
+                <span class="sites-lista">
+                    <a href="https://www.trf3.jus.br/">TRF3</a> |
+                    <a href="https://www.jfsp.jus.br/">São Paulo</a> |
+                    <a href="https://www.jfms.jus.br/">Mato Grosso do Sul</a>
+                </span>
+            </li>
+            <li class="item-lista-servicos">
+                Tribunais Superiores:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www.cjf.jus.br/">Conselho da Justiça Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.stj.jus.br/">Superior Tribunal de Justiça</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://portal.stf.jus.br/">Supremo Tribunal Federal</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://www.cnj.jus.br/">Conselho Nacional de Justiça</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Outras Jurisprudências:
+                <ul class="lista-interna">
+                    <li class="item-interno">
+                        <a href="https://www2.cjf.jus.br/jurisprudencia/unificada/">Jurisprudência Unificada do CJF</a>
+                    </li>
+                    
+                    <li class="item-interno">
+                        <a href="https://jurisprudencia.cjf.jus.br/tnu/index.xhtml">Jurisprudência Unificada da TNU (até Junho de 2017)</a>
+                    </li>
+                    <li class="item-interno">
+                        <a href="https://eproctnu-jur.cjf.jus.br">Jurisprudência Unificada da TNU (a partir de Julho de 2017)</a>
+                    </li>
+
+                    <li class="item-interno">
+                        <a href="https://www.trf3.jus.br/diretoria-geral/biblioteca/setor-de-apoio-a-jurisprudencia/sumulas-do-trf3">Súmulas do TRF3</a>
+                    </li>
+                </ul>
+            </li>
+            <li class="item-lista-servicos">
+                Contato:
+                <span class="sites-lista">
+                    <a href="mailto:jurisprudencia@trf3.jus.br">jurisprudencia@trf3.jus.br</a>
+                </span>
+            </li>
+        </ul>
+    </div>
+</footer>
+
+
+<script type="text/javascript"  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEiXXfV0VbfSzc1/Z0xzNEUp/QScpDi/laNjU"></script><link rel="stylesheet" type="text/css"  href="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/CEkXXx/YVHnBX"><script  src="/WEDDgh/Q/4/ahLoPBfHacd1/JhEi/SltoNEUp/OwQUNH/AaSWEo" async defer></script><div id="sec-overlay" style="display:none;"><div id="sec-container"></div></div><noscript><img src="https://web.trf3.jus.br/akam/13/pixel_511cd6bd?a=dD03MGQyZDE0MTEwOGI4Y2Q5M2ZiZmFiZjE2YzA5MGIyZDdkMWY4Y2IwJmpzPW9mZg==" style="visibility: hidden; position: absolute; left: -999px; top: -999px;" /></noscript></body>
+</html>

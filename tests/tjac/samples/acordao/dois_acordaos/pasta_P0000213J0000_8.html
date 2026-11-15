@@ -1,0 +1,669 @@
+
+
+
+
+
+
+
+
+
+<html style="overflow: hidden">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" >
+<title>
+	Pasta Digital :: 0700021-98.2018.8.01.0001
+</title>
+<link href="css/pastaDigital.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="js/jQuery/plugins/cluetip-1.2.5/jquery.cluetip.css" />
+<link rel="stylesheet" type="text/css" href="css/showSignature.css" />
+<link rel="stylesheet" type="text/css" href="css/divs.css"/>
+<link rel="stylesheet" type="text/css" href="css/jquery.contextMenu.css"/>
+<link rel="stylesheet" type="text/css" href="css/menu_buttom.css"/>
+<link rel="stylesheet" type="text/css" href="css/menu.css"/>
+<link rel="stylesheet" type="text/css" href="css/saj/saj-popup-modal.css"/>
+<link rel="stylesheet" href="/pastadigital/webjars/jstree/3.3.8/themes/default/style.css"/>
+
+
+
+
+<script type="text/javascript">
+	window.saj = window.saj || {};
+	window.saj.pasta = window.saj.pasta || {};
+	window.saj.env = window.saj.env || {};
+
+	var requestScope = [{"data":{"cdProcessoMaster":null,"cdDocumento":"6308471","nuSeqProcessoMv":null,"cdClasseProcessoPrincipal":null,"icon":false,"title":"Acórdão","cdProcessoPrinc":null,"nuControleProcessoPrincipal":null,"deSituacaoProcesso":null,"deSituacaoProcessoMaster":null,"deClasseProcessoPrincipal":null,"cdProcessoPrincipal":null,"cdProcessoOrigem":null,"cdAssuntoProcessoPrincipal":null,"cdUsuCadastrante":null,"dtInclusao":"","nuControle":null,"deAssuntoProcessoPrincipal":null,"cdTipoDocDigital":"null","nuProcessoMaster":null,"flPeticaoInicial":false,"cdFormatoDoc":5,"sigiloAbsoluto":false,"flProtocolado":false,"nuProcessoPrincipal":null},"children":[{"data":{"nuPaginas":1,"id_paginacao":0,"icon":false,"iconesAss":[{"imagem":"logo_cliente.png","alt":"assinado.PNG"}],"indicePagina":303,"title":"Página 303","parametros":"nuSeqRecurso=00000&nuProcesso=0700021-98.2018.8.01.0001&cdDocumento=6308471&conferenciaDocEdigOriginal=false&origemDocumento=M&numInicial=303&documentoTornadoSemEfeito=false&tpOrigem=2&flOrigem=S&deTipoDocDigital=Ac%F3rd%E3o&cdForo=900&numFinal=303&sigiloExterno=N&nmAlias=SG5TJ&nuPagina=0&cdProcesso=P0000213J0000&cdFormatoDoc=5&idDocumento=6308471-303-0&flProtocolado=false","contexto":[],"tramitacao":null,"urlMidiaDigital":null,"possuiDocumentoOriginal":false,"materializar":false,"flProcVirtual":false,"documentoSigiloso":false,"paginaInicial":true,"flAssinado":false},"attributes":{"id":null}}],"id_paginacao":1,"materializar":false,"attributes":{"ID":"ignorarRaiz"}}];
+	var requestScopeArvoreSigilosos = [];
+	var contexto = 'false';
+	var materializar = 'false';
+	var paginacao = 'true';
+	var isIpad = false;
+
+	// variaveis utilizadas no JS
+	var rootAplicacao = '/pastadigital';
+	var deUrlAcesso = 'https://esaj.tjac.jus.br/pastadigital';
+	var appConfigCliente = 'AC';
+
+	window.saj.pasta.urlCpoPg = 'https://esaj.tjac.jus.br/cpopg';
+	window.saj.pasta.urlCpoSg = 'https://esaj.tjac.jus.br/cposg5';
+	window.saj.pasta.urlCpoCr = 'https://esaj.tjac.jus.br/cposg5';
+	window.saj.pasta.urlPasta = 'https://esaj.tjac.jus.br/pastadigital';
+
+	window.saj.traducoes = window.saj.traducoes || {};
+	window.saj.traducoes.documentoReservado = 'Documento Reservado';
+	window.saj.env.imagens = '/pastadigital/imagens';
+</script>
+
+
+
+
+<script>
+    var dict = {
+        'locale': 'pt-BR',
+
+        'pastadigital.acessibilidade.orientacao.documento.atalho.estrutura': 'Você está no documento. A qualquer momento você pode pressionar as teclas CTRL+ALT+Y para retornar a estrutura de documentos.',
+        'pastadigital.acessibilidade.orientacao.navegador': 'Você deve utilizar os navegadores Mozilla Firefox ou Google Chrome para ter acesso aos recursos de acessibilidade.',
+
+        'pastadigital.arvore.alert.pagina.invalida': 'Número da página inválido',
+        'pastadigital.arvore.titulo.digite.senha.processo': 'Digite a senha do processo',
+        'pastadigital.arvore.label.senha.processo': 'Senha do processo',
+        'pastadigital.arvore.label.autos.processo': 'Autos do processo',
+        'pastadigital.arvore.msg.nao.ha': 'Não há',
+        'pastadigital.arvore.msg.com.pasta.digital': 'com pasta digital',
+
+        'pastadigital.arvore.msg.senha.processo.expirada': 'Senha do processo expirada. Solicite outra na vara de tramitação do processo.',
+        'pastadigital.arvore.msg.senha.processo.invalida': 'Senha do processo inválida.',
+
+        'pastadigital.titulo.abrir.pasta.processo': 'Abrir a Pasta Digital deste processo',
+        'pastadigital.titulo.gerando.documento.impressao': 'Gerando o documento para impressão',
+
+        'pastadigital.msg.documento.nao.legivel': 'Caso o documento visualizado não esteja legível',
+        'pastadigital.msg.clique.aqui': 'Clique aqui',
+        'pastadigital.msg.download.arquivo': 'para fazer o download do arquivo.',
+        'pastadigital.msg.funcionamento.importacao.popup': 'Para o funcionamento correto da importação de documentos é necessário desabilitar o bloqueador de pop-up.',
+
+        'pastadigital.msg.nao.foi.possivel.operacao.requisitada': 'Não foi possível realizar a operação requisitada, tente novamente mais tarde.',
+        'pastadigital.msg.nao.foi.possivel.determinar.servidor.recebeu': 'Não foi possível determinar se o servidor recebeu a sua requisição, tente novamente mais tarde.',
+        'pastadigital.msg.nao.foi.possivel.sessao.expirou': 'Não foi possível realizar a operação, sua sessão expirou.',
+        'pastadigital.msg.selecione.item.arvore': 'Selecione pelo menos um item da árvore.',
+
+        'pastadigital.conferir.documento.titulo.abre.pasta.nova.janela': 'Abre a pasta digital em uma nova janela',
+
+        'pastadigital.erro.desconhecido.nao.foi.possivel.apresentar.documento': 'Não foi possível apresentar o documento na Pasta Digital.',
+
+        'pastadigital.intimacao.tituloPopupRecebimentoIntimacao': 'Aviso de intimação',
+        'pastadigital.intimacao.tituloPopupRecebimentoIntimacaoPendente': 'Aviso de intimação/citação pendente',
+        'pastadigital.intimacao.mensagem.pendentes.omitidos': 'Existem documentos de intimação/citação pendentes de recebimento que serão omitidos do download.',
+        'pastadigital.intimacao.input.value.cancelar': 'Cancelar',
+        'pastadigital.intimacao.input.value.ok': 'Ok'
+    }
+</script>
+
+
+<script language="javascript" type="text/JavaScript" src="/pastadigital/webjars/lodash/4.17.21/lodash.min.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="/pastadigital/js/jquery/jquery.browser.min.js"></script>
+<script type="text/javascript" src="js/jquery/jquery.blockUI.min.js"></script>
+<script type="text/javascript" src="js/saj/saj-popup-modal-1.0.0-1.js"></script>
+
+<script type="text/javascript" src="js/jQuery/plugins/cluetip-1.2.5/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src="js/jQuery/plugins/cluetip-1.2.5/jquery.cluetip.js"></script>
+<script type="text/JavaScript" src="/pastadigital/webjars/jstree/3.3.8/jstree.js"></script>
+<script type="text/javascript" src="js/jQuery/plugins/jquery.contextMenu.js"></script>
+<script type="text/javascript" src="js/utilAssinatura.js"></script>
+<script type="text/javascript" src="js/arvore-1.1.28-8.js"></script>
+<script type="text/JavaScript" src="js/saj/saj-web-2.2.41-4.js"></script>
+<script type="text/javascript" src="js/pastaDigital-1.1.27-0.js"></script>
+<script type="text/JavaScript" src="/pastadigital/js/jquery/jquery.shortcuts.js"></script>
+<script type="text/javascript" src="js/acessibilidade/teclasDeAtalhoPasta.js"></script>
+<script type="text/javascript" src="js/acessibilidade/acessibilidade.js"></script>
+
+
+
+
+
+<script>
+	(function($){
+		$(function(){
+			var intervalo = 3595000;
+			$.saj.manterSessao('/pastadigital/manterSessao.do', intervalo);
+		});
+				
+	})(jQuery);
+</script>
+
+
+
+
+</head>
+<body>
+	 <div id="div-conteudo" aria-hidden="false">
+		
+
+
+
+<script type="text/javascript">
+	$.saj = $.saj || {};
+	$.saj.pasta = $.saj.pasta || {};
+
+	var requestScope = [{"data":{"cdProcessoMaster":null,"cdDocumento":"6308471","nuSeqProcessoMv":null,"cdClasseProcessoPrincipal":null,"icon":false,"title":"Acórdão","cdProcessoPrinc":null,"nuControleProcessoPrincipal":null,"deSituacaoProcesso":null,"deSituacaoProcessoMaster":null,"deClasseProcessoPrincipal":null,"cdProcessoPrincipal":null,"cdProcessoOrigem":null,"cdAssuntoProcessoPrincipal":null,"cdUsuCadastrante":null,"dtInclusao":"","nuControle":null,"deAssuntoProcessoPrincipal":null,"cdTipoDocDigital":"null","nuProcessoMaster":null,"flPeticaoInicial":false,"cdFormatoDoc":5,"sigiloAbsoluto":false,"flProtocolado":false,"nuProcessoPrincipal":null},"children":[{"data":{"nuPaginas":1,"id_paginacao":0,"icon":false,"iconesAss":[{"imagem":"logo_cliente.png","alt":"assinado.PNG"}],"indicePagina":303,"title":"Página 303","parametros":"nuSeqRecurso=00000&nuProcesso=0700021-98.2018.8.01.0001&cdDocumento=6308471&conferenciaDocEdigOriginal=false&origemDocumento=M&numInicial=303&documentoTornadoSemEfeito=false&tpOrigem=2&flOrigem=S&deTipoDocDigital=Ac%F3rd%E3o&cdForo=900&numFinal=303&sigiloExterno=N&nmAlias=SG5TJ&nuPagina=0&cdProcesso=P0000213J0000&cdFormatoDoc=5&idDocumento=6308471-303-0&flProtocolado=false","contexto":[],"tramitacao":null,"urlMidiaDigital":null,"possuiDocumentoOriginal":false,"materializar":false,"flProcVirtual":false,"documentoSigiloso":false,"paginaInicial":true,"flAssinado":false},"attributes":{"id":null}}],"id_paginacao":1,"materializar":false,"attributes":{"ID":"ignorarRaiz"}}];
+	var requestScopeSigilosos = [];
+
+	var impressaoServidor = '';
+	var contexto = 'false';
+
+	var numeroPaginasArvore = 1;
+	var numeroPaginasArvoreSigilosos = 0
+
+	var numeroTotalPaginas = 303;
+	var encolherPastaDigital = true;
+
+	$.saj.pasta.acessoPeloPetsg = '';
+	$.saj.pasta.descricaoApenso = 'Apensos';
+	$.saj.pasta.docSemTarjaEQrcode = 'false'  === 'true';
+	$.saj.pasta.usarUrlDocComTarjaEQrcode = true;
+</script>
+
+<form name="formImpr" action="getPopUpApplet.action" target="popup" method="post" id="formImpr">
+	<input id="cdProcessoPai" type="hidden" name="cdProcesso" value="P0000213J0000"/>
+	<input id="localizador" type="hidden" />
+	<input id="cdDocumento" type="hidden" name="cdDocumento" value="6308471"/>
+	<input id="itensPdfSelecionados" type="hidden" name="itensPdfSelecionados" value="" />
+</form>
+
+<div id="divArvore" style="overflow: hidden">
+
+	<ul id="myMenu" class="contextMenu" style="z-index: 10">
+	    <li class="quit separator">
+	        <a href="#quit">Sair</a>
+	    </li>
+	</ul>
+	<div class="orientacoesAcessibilidade" tabindex="0" style="display:block;font-size:0;">Para imprimir intervalos de documentos específicos, selecione os documentos desejados utilizando espaço ou utilize enter para visualizar.</div>
+	<table class="pastaDigitalTitulo" border="0" width="100%" cellpadding="0" cellspacing="0"
+		style="background-image: url('imagens/pasta/pastaDigital_v2.png');background-repeat: no-repeat;background-color: #005a9e;height: 38px;padding: 0px;margin: 0px;">
+		<tr>
+			<td>
+				&nbsp;
+            </td>
+            <td align="right" valign="bottom" style="vertical-align: middle">
+                <img src="imagens/pasta/compress.svg" style="height: 14px; margin-right: 17px; cursor: pointer" id="toggleArvoreButton"/>
+            </td>
+
+			<td align="right" style="padding-right: 0px; padding-bottom: 0px; width:22px;" valign="bottom">
+				<input type="button" id="encolher" title="Esconder pasta digital"
+				style="cursor: pointer;margin-right: 17px;
+				margin-bottom: 5px; background: none; background-image: url('imagens/pasta/encolherParaEsquerda_v2.png');
+				border: 0px; width:17px; height: 30px;" tabindex="-1"/>
+			</td>
+		</tr>
+	</table>
+	
+		<div style="background-color:#d8d8d8;margin: 0px;height: 27px;line-height: 32px;padding: 9px 0px 6px 10px;">
+			<center><table border="0" width="100%" cellpadding="0" cellspacing="0" >
+				<tr>
+					<td>
+						<input type="button" id="primeiraPaginaButton" title="Primeira página"
+						style="background: none; background-image: url('imagens/pasta/botoes/bt_pag_primeira_v2.png'); border: 0px; height: 22px; width: 24px; cursor: pointer;">
+					</td>
+					<td>
+						<img src="imagens/pasta/botoes/bt_pag_primeira_des_v2.png" id="primeiraPaginaButtonDes" style="border: 0px; height: 22px; width: 24px; display:none;">
+					</td>
+					<td>
+						<input type="button" id="paginaAnteriorButton" title="Página anterior" tabindex="-1"
+						style="background: none; background-image: url('imagens/pasta/botoes/bt_pag_anterior_v2.png'); border: 0px; height: 22px; width: 24px; cursor: pointer;">
+					</td>
+					<td>
+						<img src="imagens/pasta/botoes/bt_pag_anterior_des_v2.png" id="paginaAnteriorButtonDes" style="border: 0px; height: 22px; width: 24px; display:none;">
+					</td>
+					<td style="width:45px;">
+						<label for="campoPaginaAtual"><span style="color:#686868">Página: </span></label>
+					</td>
+					<td style="width:45px;">
+						<input type="text" style="width:35px;" value="303" id="campoPaginaAtual" >
+					</td>
+					<td>
+						<span style="color:#686868">de</span>
+					</td>
+					<td style="width:35px;">
+					    <span style="color:#686868" id="numTotalPaginas">303</span>
+					</td>
+					<td>
+						<input type="button" id="paginaPosteriorButton" title="Próxima página"
+						style="background: none; background-image: url('imagens/pasta/botoes/bt_pag_proxima_v2.png'); border: 0px; height: 22px; width: 24px; cursor: pointer;" tabindex="-1">
+					</td>
+					<td>
+						<img src="imagens/pasta/botoes/bt_pag_proxima_des_v2.png" id="paginaPosteriorButtonDes" style="border: 0px; height: 22px; width: 24px; display:none;">
+					</td>
+					<td>
+						<input type="button" id="ultimaPaginaButton" title="Última página"
+						style="background: none; background-image: url('imagens/pasta/botoes/bt_pag_ultima_v2.png'); border: 0px; height: 22px; width: 24px; cursor: pointer;">
+					</td>
+					<td>
+						<img src="imagens/pasta/botoes/bt_pag_ultima_des_v2.png" id="ultimaPaginaButtonDes" style="border: 0px; height: 22px; width: 24px; display:none;">
+					</td>
+				</tr>
+			</table></center>
+		</div>
+	
+
+	<div id="divScroll" class="comSigilosos">
+		<div id="proc_principal"></div>
+		<div id="arvore_principal" aria-label="Proceso principal"></div>
+		<div id="arvore_dependentes" aria-label="Dependientes"></div>
+		<div id="arvore_apensos" aria-label="Procesos vinculados"></div>
+
+		
+	</div>
+	<div id="divTarjaSigilosos">
+		<span>PEÇAS SIGILOSAS</span>
+	</div>
+	<div id="divSigilosos">
+		<div id="arvore_sigilosos">
+			<ul>
+				<li id="raizSigilosos"></li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+<div id="divBotoes">
+	
+	
+		<div id="divBotoesInterna" style="border: 0px solid rgb(187, 187, 187); margin: 0px; margin-left: 0px;
+			padding: 0px; overflow: auto; background-color: #d8d8d8; display: block;
+			visibility: visible;  position: absolute; z-index: 2; left: 0px;
+			right:auto; bottom: 00px; height: 50px; width: 317px;">
+			<div style="margin-left: 5px;">
+				<input type="button" id="selecionarButton" aria-label="Selecionar todas"/>
+				<input type="button" id="desmarcarButton" aria-label="Desmarcar selecionados"/>
+				
+				
+					<input type="button" id="salvarButton" aria-label="Versão para impressão"/>
+				
+				
+				
+			</div>
+		</div>
+	
+</div>
+
+<div id="divPastaEncolhida" style="border: 0px solid rgb(187, 187, 187); margin: 0px; padding: 0px;
+ background: #262626 none repeat scroll 0% 0%; height: 100%;
+  display: none; position: absolute; z-index: 0; left: 0px; right: 0px; top: 0px; bottom: 0px;
+    width: 0px; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial;
+    -moz-background-inline-policy: -moz-initial;">
+	<table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout: fixed; height: 100%">
+		<tr>
+			<td  valign="middle" style="padding-top:0px; height: 38px; background-color: #005a9e; text-align: right; padding-right: 7px;" >
+				<img src="imagens/pasta/esticar2_v2.png" title="Exibir pasta digital" style="cursor: pointer" id="esticarButton" class="esticar"/>
+			</td>
+		</tr>
+		<tr>
+			<td style="height:56px; background-color: #d8d8d8;">
+				<table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout: fixed; height: 56px">
+					<tr>
+						<td style="height: 30px; text-align: center;" colspan="2">
+							<input type="text" style="width:35px; " id="campoPaginaAtual_enc" value="303" size="5" />
+						</td>
+					</tr>
+					<tr style="height: 26px;">
+						<td>
+							<input type="button" id="paginaAnteriorButton_enc"
+								style="background: none; background-image: url('imagens/pasta/botoes/bt_prev_v2.gif');
+								border: 0px; height: 15px; width: 15px; cursor: pointer; margin: 0px 2px 2px 6px;" title="P&aacute;gina anterior">
+						</td>
+						<td>
+							<input type="button" id="paginaPosteriorButton_enc"
+								style="background: none; background-image: url('imagens/pasta/botoes/bt_next_v2.gif');
+								border: 0px; height: 15px; width: 15px; cursor: pointer; margin: 0px 2px 2px;" title="Pr&oacute;xima p&aacute;gina">
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr style="height: 100%">
+			<td style="background-color: #f2f2f2;"></td>
+		</tr>
+	</table>
+</div>
+
+	<form id="popupGerarDocumento" style="display: none;" >
+		<input id="urlAcessoArquivo" type="hidden" name="urlAcessoArquivo" />
+		<div class="div-agrupadora" role="alert" aria-live="assertive" tabindex="0">
+			<div id="mensagemErro" style="display: none; color:red;"></div>
+			<div id="divMsgGerandoDocumento" style="text-align: left; margin: 10px;"><p id="msgGerandoDocumento">O documento está sendo gerado. Você pode aguardar até que ele fique pronto, ou então, pode escolher para ser notificado por e-mail, com o link para download, em até 24 hs.</p></div>
+			<div style="text-align: left; margin: 10px;" id="popupGerarDocumentoOpcoes">
+				<p id="msgAguarde">O documento está sendo gerado. Isso pode levar alguns minutos...</p>
+				<p align="center"><img src="imagens/pasta/processandoNovo.gif"/></p>
+				<p><input type=radio value="aguardar" name="radio" id="radioAguardar" checked/>Desejo aguardar o documento ficar pronto.</p>
+				<p><input type=radio value="email" name="radio" id="radioEmail"/>Notifique-me por e-mail quando estiver pronto.</p>
+				<input id="emailUsuario" type="hidden" name="emailUsuario" value="" />
+				<input id="emailAlternativo" type="hidden" name="emailAlternativo" value="" />
+				
+					<p id="email" style="padding-left: 5px;"><input type="text" id="inputEmail" value="" size="80" style="width:270px;"/></p>
+				
+			</div>
+
+			<p id="msgInfoEnvioPorEmailHidden" hidden="true" style="display: none;">O documento está sendo gerado. Você será notificado no e-mail <b>##</b> em até 24 hs com o link para fazer o download.</p>
+			<p id="msgInfoAguardeEnvioPorEmail" hidden="true" style="display: none;">Aguarde até o processamento obter um localizador de impressão...</p>
+			<p id="msgErroAguardeEnvioPorEmail" hidden="true" style="display: none;">Não foi possível concluir a sua solicitação. Tente novamente mais tarde.</p>
+			<p id="msgInfoEnvioPorEmail"></p>
+
+			<div style="display: none; text-align: left; margin: 0px; padding-left: 10px; background:#FFFACD;" id="popupGerarDocumentoFinalizadoComSucesso" role="alert" aria-live="assertive">
+				<table border="0" role="alert" aria-live="assertive" tabindex="0">
+					<tr>
+						<td>
+							<img id="imgSuccess" src="imagens/pasta/success.png" />
+						</td>
+						<td align="left" valign="middle">O documento foi gerado. Você já pode salvá-lo.</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<input id="btnAguardarProcessamento" class="botaoPopupGeracaoDocumento spwBotao btSalvar" type="button" value="Salvar o documento" disabled="disabled"/>
+		<input id="btnConfirmarEnvioEmail" class="botaoPopupGeracaoDocumento spwBotao btConfirmar" type="button" value="Confirmar"/>
+		<input id="btnDownloadDocumento" class="botaoPopupGeracaoDocumento spwBotao btBaixarDocumento" type="button" value="Salvar o documento" />
+		<input id="btnInfoEnvioPorEmail" class="botaoPopupGeracaoDocumento spwBotao btInfoEnvioPorEmail" type="button" value="Ok" />
+		<input id="btnCancelarProcessamento" class="botaoPopupGeracaoDocumento spwBotaoDefault btCancelar" type="button" value="Cancelar"/>
+	</form>
+
+	<div role="alert" aria-live="assertive">
+		<form id="popupDividirDocumentos" style="display: none; text-align: left;" >
+
+			<div class="radiosOpcoes" style="padding-left:35px;">
+				<fieldset class="grupoRadio" style="margin:0;padding:0;border:none" >
+					<legend style="display:block;font-size:0;">
+						Deseja salvar todos em um arquivo único ou um arquivo para cada documento?
+					</legend>
+					<p>
+						<label for="opcao1">
+							<input id="opcao1" type="radio" value="1" name="dividirDocumento" checked/>
+				    		Arquivo único
+						</label>
+				    </p>
+				    <p>
+				    	<label for="opcao2">
+					      	<input id="opcao2" type="radio" value="2" name="dividirDocumento"/>
+					    	Um arquivo para cada documento
+				    	</label>
+			    	</p>
+				</fieldset>
+		    </div>
+			<div class="botoes">
+				<p id="pConfirmar"><input id="botaoContinuar" class="spwBotao" style="margin: 2px;" type="button" value="Continuar"/></p>
+				<p id="pFechar"><input id="botaoCancelar" class="spwBotaoDefault" style="margin: 2px;" type="button" value="Cancelar"/></p>
+			</div>
+		</form>
+	</div>
+
+	<div role="alert" aria-live="assertive">
+		<form id="mensagemIntimacaoPendente" style="display: none;" >
+			<div id="divMensagemIntimacaoPendente" class="mensagem-download-documento-intimacao-nao-recebida">
+				Existem documentos de intimação/citação pendentes de recebimento que serão omitidos do download.
+			</div>
+			<input id="buttonOk" class="spwBotao" type="button" value="Ok"/>
+		</form>
+	</div>
+	<div role="alert" aria-live="assertive">
+		<form id="mensagemIntimacaoSomentePendente" style="display: none;" >
+			<div id="divMensagemIntimacaoSomentePendente" class="mensagem-download-documento-intimacao-nao-recebida">
+				Foram selecionados apenas documentos de intimação/citação pendentes de recebimento, não sendo possível realizar o download.
+			</div>
+			<input id="buttonSomentePendenteOk" class="spwBotao" type="button" value="Ok"/>
+		</form>
+	</div>
+
+
+		
+
+
+
+
+
+
+
+
+	<div  id="popupSenha" style="display: none;" role="dialog">
+		<table id="conteudoAvisoSenhaIncorreta" width="100%" cellspacing="0" cellpadding="0" border="0" height="30" class="tabelaMensagem" style="padding-bottom: 10px; display:none;">
+			<tbody>
+				<tr>
+					<td width="35" valign="top" class="alert"><img src="/pastadigital/imagens/spw/icoError.gif">
+					</td>
+					<td class="tituloMensagem"><b>Atenção </b>
+					</td>
+				</tr>
+				<tr>
+					<td class="alert">&nbsp;</td>
+					<td>
+						<ul>
+							<li id="mensagemErroSenha"></li>
+						</ul>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<div>
+			<table>
+				
+					
+						<tr>
+							<td colspan="2" style="padding-left: 20px" tabindex="0">
+								Atendendo o que está exposto na Res. 121 do CNJ.
+							</td>
+						<tr>
+						<tr>
+							<td colspan="2"><img src="/pastadigital/imagens/pasta/setaTopico.gif" tabindex="0">
+							Será necessário informar uma senha para acessar processos em segredo de justiça, bem como para acessar autos dos demais processos. Caso não a possua e seja parte do processo, dirija-se ao cartório para solicitá-la.</td>
+						</tr>
+						<tr>
+							<td colspan="2"><img src="/pastadigital/imagens/pasta/setaTopico.gif" tabindex="0">
+							Se for advogado (a) neste processo habilite-se no Portal ou efetue login pelo link "Identificar-se". O número de sua OAB no cadastro do Portal deverá ser igual ao número nos dados do processo.  </td>
+						</tr>
+					
+					
+				
+				<tr align="center">
+					<td align="right" width="47%"><b style="margin: 10px 0;">Senha do Processo:</b></td>
+					<td align="left">
+						<input type="password" name="senhaProcesso" maxlength="12" value="" rotulo="Senha do Processo" style="margin: 10px 0;" id="senhaProcesso">
+						<input type="hidden" name="idRecursoQueProvocouLiberacaoPorSenha" value="">
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="center">
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	    
+	<input type="button" name="btFechar" value="Cancelar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotao " id="botaoFecharPopupSenha">
+
+
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	<input type="submit" name="btEnviarSenha" value="Continuar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotaoDefault " id="botaoEnviarSenha">
+
+&nbsp;
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+
+
+		
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+	
+		
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+</td>
+</tr>
+</table>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" class="esajTabelaRodape" summary=" " role="presentation">
+    <tr>
+        <td class="esajCelulaRodapeCentro">
+            Desenvolvido pela Softplan em parceria com o Tribunal de Justiça do Acre
+            
+        </td>
+    </tr>
+</table>
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/saj-popup-modal.css" rel="stylesheet" type="text/css">
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/popup-beta.css" rel="stylesheet" type="text/css">
+
+
+<script>
+    var appEsajLayout = appEsajLayout || {};
+    appEsajLayout.tituloCertificadoDigital = 'Certificado digital';
+    appEsajLayout.cliente = 'AC';
+    appEsajLayout.emailParaContato = '';
+    appEsajLayout.utilizarBotaoContato = 'false';
+    appEsajLayout.contexto = 'https://esaj.tjac.jus.br/esaj-layout';
+    appEsajLayout.webSignerParametro = '';
+
+    if(window.jQuery) {
+        jQuery.saj = jQuery.saj || {};
+        jQuery.saj.certificado = jQuery.saj.certificado || {};
+        jQuery.saj.certificado.cliente = 'AC';
+        jQuery.saj.certificado.urlConteudoAjudaWebSigner = appEsajLayout.contexto + '/ajudaWebSigner.do';
+        jQuery.saj.certificado.licenca = 'AqYAKi5zYWphZG0udGpzcC5qdXMuYnIsKi5zZWEuc2MuZ292LmJyLCouc29mdHBsYW4uY29tLmJyLCoudGphYy5qdXMuYnIsKi50amFsLmp1cy5iciwqLnRqYW0uanVzLmJyLCoudGpjZS5qdXMuYnIsKi50am1zLmp1cy5iciwqLnRqcHIuanVzLmJyLCoudGpzYy5qdXMuYnIsKi50anNwLmp1cy5ickMAaXA0OjEwLjAuMC4wLzgsaXA0OjEyNy4wLjAuMC84LGlwNDoxNzIuMTYuMC4wLzEyLGlwNDoxOTIuMTY4LjAuMC8xNggAU3RhbmRhcmQAAAABcfpZUu/QD3s2bqedB8v9T7MiMQxcHNu0pUzGzO+7Ta++o+BbAVgPau7lzj6IUFI7RPFkPSnm0ZbCFAVBnKrqinyvE8MwEvmQhFcjlhGK+FfVV5mhVkkxSC3khDEUR8gsAPVvFncyyW2vTU2ODkyGdU0S/g62wHFtSwfGP6OFqlWpZTqbxbEGd1vfe9yHHulTYI7RcsGxaTMD6XgtPlStbOn9DxSYhN3S+4oTtIq7pUR6ETavPqYlXh5hwkxIpTe3Sf4awQucSigQ95sS9g7QpcGyVUVscm0J/rah9YwPCnHShzsttWA9aCmKrNdgFSTTo8TUOmESEP93TH6Z3dss+A==';
+        jQuery.saj.certificado.webSignerParametro = '';
+        jQuery.saj.certificado.cofreDigital = jQuery.saj.certificado.cofreDigital || {};
+        jQuery.saj.certificado.cofreDigital.habilitado = 'false' === 'true';
+        jQuery.saj.certificado.cofreDigital.enderecoBase = 'https://esaj.tjac.jus.br/esaj-layout';
+    }
+
+</script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/js/app-bundle.js?n=2978165087"></script>
+<script src="https://esaj.tjac.jus.br/esaj-layout/seletorVersaoBeta.js?n=32db3647-04d8-4058-8c7b-79513d6c2143&versao=1"></script>
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/esaj-layout/js/softplan-websigner-2.5.1.js?n=736057767"></script>
+<script language="javascript" type="text/JavaScript" src=""></script>
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/esaj-layout/js/saj-certificado.js?n=47741893"></script>
+
+
+
+<div id="webSignerNaoInstalado" style="display: none;">
+    <p>Para utilização do certificado digital no Portal e-SAJ é necessário a instalação do plug-in Web Signer. Por favor, realize a instalação antes de continuar.</p>
+    <div class="footer_certificado">
+        <button id="redirecionarParaPaginaInstalacao" class="actionPrincipal spwBotaoDefault">Instalar</button>
+        <button class="fecharModalInstalacao spwBotao">Cancelar</button>
+        <button class="spwBotao" onclick="window.open('https://esaj.tjac.jus.br/WebHelp//#id_instalacao_lacuna.htm','_blank')">Ajuda</button>
+    </div>
+</div>
+
+<div id="webSignerNaoSuportado" style="display: none;">
+    <p>O navegador utilizado não é compatível com a tecnologia (Web Signer) necessária para utilização do certificado digital. Por favor, utilize um dos navegadores homologados. Em caso de dúvidas, efetue a validação de requisitos <a href="https://esaj.tjac.jus.br/petpg/abrirVerificacaoRequisitosPet.do" target="_blank">aqui</a>.</p>
+    <div class="footer_certificado">
+        <button class="fecharModalInstalacao spwBotaoDefault actionPrincipal">OK</button>
+    </div>
+</div>
+
+
+	
+
+
+
+	
+	
+
+
+		
+
+
+
+
+<div id="divAssinaturas">
+</div>
+
+<div id="divAssinaturasEncolhido" style="border: 0px solid rgb(187, 187, 187); margin: 0px; padding: 0px;
+  overflow: auto;
+  display: none; position: absolute; z-index: 5; top: 0px; bottom: auto; left: 317px; right: 0px;
+   width: auto; height: 38px;">
+	<table id="linhaAssinaturasEncolhido" border="0" cellspacing="0" cellpadding="0"  background="#373737">
+		<tr align="right" valign="bottom">
+			<td align="right" valign="bottom">
+				<input type="button" id="estenderAssinaturas" title="Estender assinaturas" style="cursor: pointer;
+						background-image: url('imagens/pasta/encolherParaBaixo_v2.png');
+						border: 0px; width: 23px; height: 15px;"/>
+			</td>
+		</tr>
+	</table>
+</div>
+
+		
+<div id="divDocumento" style="margin: 0px; padding: 0px;
+ background: #474747 none repeat scroll 0% 0%; visibility: visible;
+  display: block; position: absolute; z-index: 1; left: 317px; right: 0px; top: 80px; bottom: 0px;
+    width: auto; -moz-background-clip: -moz-initial; -moz-background-origin: -moz-initial;
+    -moz-background-inline-policy: -moz-initial;">
+	<div id="textoRodape" style="height: 22px; background-color: #E9E9E9;">
+	</div>
+	<iframe src="processando.html"  width="100%" height="0" id="documento" name="documento"/>
+</div>
+
+	 </div>
+</body>
+</html>

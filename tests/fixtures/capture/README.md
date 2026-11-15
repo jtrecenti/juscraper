@@ -86,6 +86,12 @@ Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 `config.json` antes da API; TJES tambem salva samples em `cjpg/` porque expoe
 `cjpg` alem de `cjsg`.
 
+## TJMG cposg
+
+`python -m tests.fixtures.capture.tjmg_cposg [--dest <dir>]` recaptura os
+samples `cposg/resultado_*.html` e `cposg/partes_*.html`; as particularidades
+(LF, campos voláteis, processos que evoluem) estão no docstring do script.
+
 ## Agregadores
 
 ### JusBR (PDPJ-CNJ)

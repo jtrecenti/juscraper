@@ -7,6 +7,7 @@ derivada do aninhamento ``<ul>/<li>``. Refs #228.
 """
 import pandas as pd
 
+from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts._esaj.parse import parse_arvore
 from tests._helpers import load_sample
 
@@ -14,7 +15,10 @@ ARVORE_COLUNAS = {"id", "nome", "id_pai", "nivel", "selecionavel", "caminho"}
 
 
 def _df() -> pd.DataFrame:
-    return parse_arvore(load_sample("tjsp", "arvore/classes_min.html"))
+    # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
+    # saida por ``_texto_ausente_como_none``, que mantem texto ausente como
+    # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
+    return _texto_ausente_como_none(parse_arvore(load_sample("tjsp", "arvore/classes_min.html")))
 
 
 def test_colunas_exatas():

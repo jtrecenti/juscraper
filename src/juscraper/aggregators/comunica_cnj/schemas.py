@@ -11,7 +11,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import PaginasMixin
+from ...schemas import PaginasMixin, TamanhoPagina
 
 
 class InputListarComunicacoesComunicaCNJ(PaginasMixin):
@@ -50,7 +50,7 @@ class InputListarComunicacoesComunicaCNJ(PaginasMixin):
     numero_processo: str | None = None
     data_disponibilizacao_inicio: str | None = None
     data_disponibilizacao_fim: str | None = None
-    itens_por_pagina: int = Field(default=100, ge=1, le=100)
+    itens_por_pagina: TamanhoPagina = Field(default=100, le=100)
 
     model_config = ConfigDict(
         extra="forbid",

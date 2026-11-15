@@ -87,6 +87,8 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     # TRF3: consulta pública do PJe pela API JSON, fora da família ``_trf``.
     ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
     ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "InputCposgTRF3"),
+    # Busca de jurisprudência do TRF3 (portal próprio, fora do PJe).
+    ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "InputCJSGTRF3"),
     # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
     ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
     # eproc consulta pública (TRF6) — captcha-gated.
