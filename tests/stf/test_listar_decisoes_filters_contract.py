@@ -1,5 +1,6 @@
 """Filter propagation, deprecated aliases and payload shape for STF listar_decisoes."""
 import json
+from datetime import date, datetime, timezone
 
 import pytest
 import responses
@@ -53,6 +54,32 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
     for chamada in responses.calls:
         assert_filtros_no_corpo(json.loads(chamada.request.body), PESQUISA, ["ARE", "Rcl"])
+
+
+@responses.activate
+def test_date_e_datetime_geram_o_mesmo_corpo_que_a_string(stf, mocker):
+    """``date`` e ``datetime`` geram o mesmo corpo que as strings ``DD/MM/AAAA`` equivalentes."""
+    mocker.patch("time.sleep")
+    _add_no_results(
+        pesquisa=PESQUISA,
+        pagina=1,
+        tamanho_pagina=250,
+        data_julgamento_inicio="01012024",
+        data_julgamento_fim="31122024",
+        data_publicacao_inicio="01022024",
+        data_publicacao_fim="30112024",
+    )
+
+    stf.listar_decisoes(
+        PESQUISA,
+        paginas=1,
+        data_julgamento_inicio=date(2024, 1, 1),
+        data_julgamento_fim=datetime(2024, 12, 31, 15, 30, tzinfo=timezone.utc),
+        data_publicacao_inicio=date(2024, 2, 1),
+        data_publicacao_fim=datetime(2024, 11, 30, tzinfo=timezone.utc),
+    )
+
+    assert len(responses.calls) == 3
 
 
 @responses.activate

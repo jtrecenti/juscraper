@@ -1,16 +1,23 @@
 """Filter-propagation contract for TJRS cjsg."""
+from datetime import date, datetime, timezone
+
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
+from juscraper.courts.tjrs.schemas import InputCJSGTJRS
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjrs.test_cjsg_contract import _add_page
 
 
 @responses.activate
 def test_cjsg_all_filters_land_in_form_body(mocker):
-    """All TJRS public filters must reach the nested Solr params form body."""
+    """All TJRS public filters must reach the nested Solr params form body.
+
+    Entrada ISO, datas em ``DD/MM/AAAA`` no body (#496).
+    """
     mocker.patch("time.sleep")
     _add_page(
         "dano moral",
@@ -20,10 +27,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         assunto="Dano moral",
         orgao_julgador="Primeira Camara",
         relator="FULANO DE TAL",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        data_publicacao_inicio="2024-02-01",
-        data_publicacao_fim="2024-04-30",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="01/02/2024",
+        data_publicacao_fim="30/04/2024",
         tipo_processo="Civel",
         secao="crime",
     )
@@ -44,6 +51,56 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_aceita_date_e_datetime_nos_filtros_de_data(mocker):
+    """``date`` e ``datetime`` chegam ao body no formato do backend, como a string equivalente."""
+    mocker.patch("time.sleep")
+    datas = {
+        "data_julgamento_inicio": date(2024, 1, 1),
+        "data_julgamento_fim": datetime(2024, 3, 31, 15, 30, tzinfo=timezone.utc),
+        "data_publicacao_inicio": date(2024, 2, 1),
+        "data_publicacao_fim": datetime(2024, 4, 30, tzinfo=timezone.utc),
+    }
+    formato = InputCJSGTJRS.BACKEND_DATE_FORMAT
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        **{campo: valor.strftime(formato) for campo, valor in datas.items()},
+    )
+
+    df = jus.scraper("tjrs").cjsg("dano moral", paginas=1, **datas)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    ("secao", "no_body"),
+    [("CIVEL", "civel"), ("Cível", "civel"), (" crime ", "crime"), ("", None)],
+)
+@responses.activate
+def test_cjsg_secao_ignora_caixa_e_acento_e_vazio_nao_filtra(mocker, metodo, secao, no_body):
+    """``secao`` ignora caixa, acento e espaços nas pontas; ``""`` não filtra."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", secao=no_body)
+
+    getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, secao=secao)
+
+    assert len(responses.calls) == 1
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize("secao", ["familia", "civil", "todas"])
+@responses.activate
+def test_cjsg_secao_fora_de_civel_e_crime_levanta(metodo, secao):
+    """Seção desconhecida falha antes da busca, em vez de cobrir as duas em silêncio."""
+    with pytest.raises(ValidationError, match="secao"):
+        getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, secao=secao)
+
+    assert not responses.calls
 
 
 @responses.activate
@@ -81,8 +138,8 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
         "dano moral",
         1,
         "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
     )
 
     with pytest.warns(DeprecationWarning) as warning_list:

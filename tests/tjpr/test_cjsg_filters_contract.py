@@ -5,6 +5,8 @@ TJPR's ``cjsg`` exposes ``data_julgamento_inicio/fim`` and
 ride ``normalize_datas`` to ``data_julgamento_*`` with a
 ``DeprecationWarning``. Search-term aliases are ``query`` and ``termo``.
 """
+from datetime import date, datetime, timezone
+
 import pandas as pd
 import pytest
 import responses
@@ -95,6 +97,32 @@ def test_cjsg_all_filters_land_in_body(mocker):
         "page": "0",
         "iniciar": "Pesquisar",
     }
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_date_e_datetime_geram_o_mesmo_body_que_a_string(mocker, metodo):
+    """``date`` e ``datetime`` chegam ao formulário como a string ``DD/MM/AAAA`` equivalente."""
+    mocker.patch("time.sleep")
+    add_home()
+    _add_search(
+        "dano moral",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="02/01/2024",
+        data_publicacao_fim="01/04/2024",
+    )
+
+    getattr(jus.scraper("tjpr"), metodo)(
+        "dano moral",
+        paginas=1,
+        data_julgamento_inicio=date(2024, 1, 1),
+        data_julgamento_fim=datetime(2024, 3, 31, 15, 30, tzinfo=timezone.utc),
+        data_publicacao_inicio=date(2024, 1, 2),
+        data_publicacao_fim=datetime(2024, 4, 1, tzinfo=timezone.utc),
+    )
+
+    assert sum(c.request.method == "POST" for c in responses.calls) == 1
 
 
 @responses.activate

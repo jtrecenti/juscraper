@@ -30,10 +30,19 @@ from ...core.failures import (
 )
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import HEADERS, fetch_detail
-from .parse import parse_detail
+from .parse import COLUNAS_DETALHE, parse_detail
 from .schemas import InputCpopgTRF6
 
 logger = logging.getLogger("juscraper.trf6")
+
+
+def _detalhe_em_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """DataFrame das linhas, com as colunas de :data:`COLUNAS_DETALHE` em ``None`` onde faltam.
+
+    A linha não lida traz só ``id_cnj`` (e ``motivo_falha``); sem o preenchimento,
+    um lote sem nenhuma linha lida sairia sem as colunas do detalhe.
+    """
+    return pd.DataFrame([{**dict.fromkeys(COLUNAS_DETALHE), **row} for row in rows])
 
 
 class _Consulta(NamedTuple):
@@ -178,7 +187,8 @@ class TRF6Scraper(BaseScraper):
         Rows for ``None`` entries carry ``id_cnj`` plus ``None`` in every
         other column, so callers can still distinguish "looked up but
         missing" from "never tried". Um HTML que o parser recusa vira linha
-        só com ``id_cnj``, com ``UserWarning``, e o lote continua. Sem a
+        só com ``id_cnj`` preenchido, com ``UserWarning``, e o lote continua.
+        As colunas do detalhe existem mesmo quando nenhum HTML foi lido. Sem a
         coluna ``motivo_falha``: um ``None`` vindo de :meth:`cpopg_download`
         pode ser processo ausente ou consulta que falhou, e só :meth:`cpopg`
         sabe qual.
@@ -191,7 +201,7 @@ class TRF6Scraper(BaseScraper):
         rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
         _avisar_sem_polos(rows, "cpopg_parse")
-        return pd.DataFrame(rows)
+        return _detalhe_em_dataframe(rows)
 
     def cpopg(
         self,
@@ -204,12 +214,14 @@ class TRF6Scraper(BaseScraper):
         process; columns include ``id_cnj``, ``processo``, ``classe``,
         ``data_autuacao``, ``situacao``, ``magistrado``, ``orgao_julgador``,
         ``assuntos``, ``polo_ativo``, ``polo_passivo``, ``mpf``, ``perito``,
-        ``movimentacoes`` and ``motivo_falha``.
+        ``movimentacoes`` and ``motivo_falha``. As colunas do detalhe existem
+        mesmo quando nenhum CNJ do lote foi lido, com ``None`` nas linhas não
+        lidas.
 
         ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
-        para processo ausente ou sob sigilo (linha só com ``id_cnj``).
-        Quando a consulta de um CNJ falha, a linha sai só com ``id_cnj`` e
-        o motivo, no vocabulário de
+        para processo ausente ou sob sigilo (linha só com ``id_cnj``
+        preenchido). Quando a consulta de um CNJ falha, a linha sai só com
+        ``id_cnj`` e o motivo preenchidos, no vocabulário de
         :data:`juscraper.core.failures.MOTIVOS_FALHA` (``http_<status>``,
         ``timeout``, ``conexao``; ``captcha_esgotado`` para captcha recusado
         nas ``max_captcha_attempts`` tentativas; ``resposta_inesperada`` para
@@ -232,7 +244,7 @@ class TRF6Scraper(BaseScraper):
         rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
         _avisar_sem_polos(rows, "cpopg")
-        return pd.DataFrame(rows)
+        return _detalhe_em_dataframe(rows)
 
 
 def _avisar_sem_polos(rows: list[dict[str, Any]], metodo: str) -> None:
