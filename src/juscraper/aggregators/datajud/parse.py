@@ -9,6 +9,23 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+def contagem_da_resposta(api_response: object) -> tuple[int, str]:
+    """``count`` e ``relation`` de ``hits.total`` na resposta de ``contar_processos``.
+
+    Raises:
+        TypeError: Quando a resposta não é objeto JSON ou não traz o objeto
+            ``hits.total``. A contagem a converte em linha de falha, em vez
+            de levantar ``AttributeError`` ou inventar ``count=0``.
+    """
+    if not isinstance(api_response, dict):
+        raise TypeError("Resposta DataJud deve ser um objeto JSON.")
+    hits = api_response.get("hits")
+    total = hits.get("total") if isinstance(hits, dict) else None
+    if not isinstance(total, dict):
+        raise TypeError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
+    return int(total.get("value") or 0), total.get("relation", "eq")
+
+
 def parse_datajud_api_response(
     api_response_json: dict[str, Any] | None,
     mostrar_movs: bool = True

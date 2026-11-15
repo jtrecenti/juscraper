@@ -368,6 +368,7 @@ def test_campo_hits_hits_ausente_apos_pagina_valida_gera_erro_parcial():
 @pytest.mark.parametrize(
     "resposta",
     [
+        pytest.param([], id="resposta-lista"),
         pytest.param({}, id="hits-ausente"),
         pytest.param({"hits": "not-an-object"}, id="hits-nao-objeto"),
         pytest.param({"hits": {}}, id="hits-hits-ausente"),
