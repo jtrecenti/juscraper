@@ -137,7 +137,12 @@ class TJPAScraper(HTTPScraper):
             tipo (list | None): Lista de tipos de decisao (default backend:
                 ``["acordao", "decisao monocratica"]``).
             sort_by (str): ``"datajulgamento"`` (default), ``"datapublicacao"``
-                ou ``"relevancia"``.
+                ou ``"relevancia"``. O indice do portal tem decisoes com data
+                de julgamento impossivel, como o ano 8201 ou 2106 (observado
+                em 15/11/2026), e, com o default (``"datajulgamento"`` em
+                ordem ``"desc"``), elas vem primeiro. O juscraper repassa a
+                data como a fonte a entrega; para exclui-las, filtre
+                ``data_julgamento_fim``. Outra ordenacao so as tira do topo.
             sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
             query_type (str): ``"free"`` (default) ou ``"anywords"``.
             query_scope (str): ``"ementa"`` (default) ou ``"inteiroTeor"``.

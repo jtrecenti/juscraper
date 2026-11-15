@@ -39,19 +39,23 @@ class TJDFTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         **kwargs,
     ) -> list:
-        """
-        Downloads raw search results from the TJDFT jurisprudence search (using requests).
-        Returns a list of raw results (JSON).
+        """Baixa as respostas cruas da pesquisa de jurisprudência do TJDFT.
+
+        Aceita os mesmos filtros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
         Args:
-            pesquisa: Search term. ``query`` is accepted as deprecated alias.
-            paginas (int, list, range, or None): Pages to download (1-based).
-                int: paginas=3 downloads pages 1-3.
-                range: range(1, 4) downloads pages 1-3.
-                None: downloads all available pages.
-            tamanho_pagina (int): Resultados por página (padrão 10, máximo 40:
-                acima disso a API responde HTTP 400). Aceita
-                ``quantidade_por_pagina`` como alias deprecado.
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Páginas 1-based; ``None``
+                busca todas.
+            sinonimos (bool): Inclui sinônimos do termo na busca.
+            espelho (bool): Pesquisa no espelho do acórdão.
+            inteiro_teor (bool): Pesquisa também no inteiro teor.
+            tamanho_pagina (int): Resultados por página, de 1 a 40 (acima
+                disso a API responde HTTP 400).
+
+        Returns:
+            Os registros do JSON da API, um por acórdão.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -98,12 +102,75 @@ class TJDFTScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Searches for TJDFT jurisprudence in a simplified way (download + parse).
-        Returns a ready-to-analyze DataFrame.
+        """Pesquisa jurisprudência do TJDFT (download + parse).
+
+        Consulta a API REST do portal ``jurisdf.tjdft.jus.br``. Os filtros de
+        data viram entradas de ``termosAcessorios`` no JSON enviado à API.
+
+        Args:
+            pesquisa (str): Termo de busca livre.
+            paginas (int | list | range | None): Páginas 1-based; ``None``
+                busca todas. ``paginas=3`` baixa as páginas 1 a 3.
+            **kwargs: Filtros aceitos por :class:`InputCJSGTJDFT`:
+
+                * ``sinonimos`` (bool): Inclui sinônimos do termo na busca.
+                  Default ``True``. Backend: ``sinonimos``.
+                * ``espelho`` (bool): Pesquisa no espelho do acórdão.
+                  Default ``True``. Backend: ``espelho``.
+                * ``inteiro_teor`` (bool): Pesquisa também no inteiro teor,
+                  o que amplia o resultado. Default ``False``. Backend:
+                  ``inteiroTeor``.
+                * ``tamanho_pagina`` (int): Resultados por página, de 1 a 40;
+                  acima de 40 a API responde HTTP 400, e o schema recusa
+                  antes da requisição. Default ``10``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): Intervalo de julgamento. Aceita
+                  ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  ``AAAA/MM/DD``, ``date`` ou ``datetime``. ``None`` não
+                  filtra. Backend: ``dataJulgamento``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): Intervalo de publicação, nos mesmos
+                  formatos. ``None`` não filtra. Backend: ``dataPublicacao``.
 
         Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
             * ``quantidade_por_pagina`` -> ``tamanho_pagina``
+
+        Raises:
+            TypeError: Quando ``pesquisa`` falta ou quando todos os erros são
+                kwargs desconhecidos.
+            ValueError: Quando uma data é inválida, o início é posterior ao
+                fim, ou uma data e seu alias deprecado são passados juntos.
+            ValidationError: Para os demais erros de validação do schema,
+                como ``tamanho_pagina`` acima de 40.
+
+        Avisos:
+            ``UserWarning``: Quando um intervalo de datas vem só com o início
+                ou só com o fim. O fim que falta vira a data atual; o início
+                que falta vira 01/01/1990.
+            ``DeprecationWarning``: Quando um alias deprecado é usado.
+
+        Returns:
+            Uma linha por acórdão, com as chaves do JSON da API como estão,
+                entre elas ``processo``, ``ementa``, ``nomeRelator``,
+                ``descricaoOrgaoJulgador``, ``dataJulgamento`` e
+                ``dataPublicacao`` (texto ISO, como ``2026-10-28T03:00:00.000Z``).
+
+        Examples: Exemplo
+            >>> import juscraper as jus
+            >>> tjdft = jus.scraper("tjdft")
+            >>> df = tjdft.cjsg(
+            ...     "lucros cessantes",
+            ...     paginas=1,
+            ...     data_julgamento_inicio="01/01/2024",
+            ...     data_julgamento_fim="31/03/2024",
+            ... )
+
+        See Also:
+            :class:`InputCJSGTJDFT`: fonte dos filtros aceitos.
         """
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
