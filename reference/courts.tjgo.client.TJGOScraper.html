@@ -250,7 +250,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>id_instancia</td>
 <td><code>int</code> | <code>str</code></td>
-<td><code>0</code> todas / <code>1</code> 1o grau / <code>2</code> recursal / <code>3</code> tribunal.</td>
+<td><code>0</code> todas / <code>15</code> Tribunal / <code>151</code> Turma de Uniformizacao e Turmas Recursais, as opcoes do seletor “Instancia” do site. <code>1</code>, <code>2</code> e <code>3</code> sao deprecados (ver abaixo); o 1o grau nao esta no seletor, e <code>1</code> vai ao portal como esta.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
@@ -285,7 +285,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>qtde_itens_pagina</code> -&gt; <code>tamanho_pagina</code></p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>qtde_itens_pagina</code> -&gt; <code>tamanho_pagina</code> * <code>id_instancia=2</code> -&gt; <code>id_instancia=151</code>; <code>id_instancia=3</code> -&gt; <code>id_instancia=15</code>; <code>id_instancia=1</code> sem substituto</p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -353,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Aceita os mesmos filtros de <a href="../reference/courts.tjgo.client.TJGOScraper.html#juscraper.courts.tjgo.client.TJGOScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<p>pesquisa : str Free-text search term (aliases <code>query</code> / <code>termo</code> accepted). paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page. id_instancia : int or str <code>0</code> all / <code>1</code> 1st degree / <code>2</code> recursal / <code>3</code> tribunal. id_area : int or str <code>0</code> all / <code>1</code> civil / <code>2</code> criminal. id_serventia_subtipo : int or str Code from the website’s “Orgao” dropdown (e.g.&nbsp;<code>14</code> civil chambers, <code>20</code> criminal chambers). <code>0</code> = all. numero_processo : str Filter by specific CNJ process number. tamanho_pagina : int Items per page (default 10). Aceita <code>qtde_itens_pagina</code> como alias deprecado. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range in <code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>.</p>
+<p>pesquisa : str Free-text search term (aliases <code>query</code> / <code>termo</code> accepted). paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page. id_instancia : int or str <code>0</code> all / <code>15</code> tribunal / <code>151</code> turmas recursais. <code>2</code> and <code>3</code> are deprecated aliases of <code>151</code> and <code>15</code>; <code>1</code> is deprecated with no replacement. id_area : int or str <code>0</code> all / <code>1</code> civil / <code>2</code> criminal. id_serventia_subtipo : int or str Code from the website’s “Orgao” dropdown (e.g.&nbsp;<code>14</code> civil chambers, <code>20</code> criminal chambers). <code>0</code> = all. numero_processo : str Filter by specific CNJ process number. tamanho_pagina : int Items per page (default 10). Aceita <code>qtde_itens_pagina</code> como alias deprecado. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range in <code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjgo.client.TJGOScraper.cjsg_parse" class="level3">

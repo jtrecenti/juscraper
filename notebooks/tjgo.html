@@ -443,7 +443,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p>Scraper for the TJGO jurisprudence search hosted on Projudi (<code>ConsultaJurisprudencia</code>). The page renders a Cloudflare Turnstile widget. Since 12 November 2026 (Projudi 3.194.1) the backend validates its token, which juscraper does not send: every search comes back empty, without an error from the portal, and <code>cjsg</code> emits a <code>UserWarning</code> explaining the block. The cells below keep the usual workflow and handle the empty result.</p>
-<div id="36edeb0f" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:13.255047Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:13.254737Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:15.585001Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:15.584665Z&quot;}" data-execution_count="1">
+<div id="36edeb0f" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:20.270710Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:20.270497Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:20.569090Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:20.568659Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjgo <span class="op">=</span> jus.scraper(<span class="st">'tjgo'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -451,14 +451,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
 <p>Download two pages of results so we can verify pagination works.</p>
-<div id="013ecb45" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:15.586444Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:15.586333Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:15.929480Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:15.928919Z&quot;}" data-execution_count="2">
+<div id="013ecb45" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:20.571933Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:20.571641Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:21.948795Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:21.948260Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjgo.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>UserWarning: TJGO: a busca voltou sem resultados. Desde 12/11/2026 (Projudi 3.194.1) o portal exige o token Cloudflare Turnstile, que o juscraper não envia, e sem ele toda busca volta vazia, sem mensagem de erro. Se a busca deveria trazer resultados, o cjsg do TJGO está bloqueado por esse token.
   df = tjgo.cjsg('dano moral', paginas=range(1, 3))
-TJGO: pagina 2 fora do intervalo 1-1</code></pre>
+TJGO: página 2 fora do intervalo 1-1</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(0, 0)</code></pre>
@@ -483,7 +483,7 @@ TJGO: pagina 2 fora do intervalo 1-1</code></pre>
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="e041d0bd" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:15.930805Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:15.930713Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:15.932961Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:15.932457Z&quot;}" data-execution_count="3">
+<div id="e041d0bd" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:21.954457Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:21.954251Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:21.961719Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:21.957956Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>[]</code></pre>
@@ -492,7 +492,7 @@ TJGO: pagina 2 fora do intervalo 1-1</code></pre>
 </section>
 <section id="text-preview" class="level2">
 <h2 class="anchored" data-anchor-id="text-preview">Text preview</h2>
-<div id="06e8e60d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:15.934151Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:15.934065Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:15.935975Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:15.935625Z&quot;}" data-execution_count="4">
+<div id="06e8e60d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:21.966001Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:21.965854Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:21.973382Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:21.971711Z&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> df.empty:</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'No results: the portal requires the Turnstile token.'</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
@@ -506,15 +506,15 @@ TJGO: pagina 2 fora do intervalo 1-1</code></pre>
 <h2 class="anchored" data-anchor-id="filtering-by-instance-and-area">Filtering by instance and area</h2>
 <p>The search form exposes dropdowns that we can map directly:</p>
 <ul>
-<li><code>id_instancia</code>: <code>0</code> all / <code>1</code> 1st degree / <code>2</code> recursal / <code>3</code> tribunal</li>
+<li><code>id_instancia</code>: <code>0</code> all / <code>15</code> tribunal / <code>151</code> appellate panels (turmas recursais)</li>
 <li><code>id_area</code>: <code>0</code> all / <code>1</code> civil / <code>2</code> criminal</li>
 </ul>
-<div id="d0ef70bc" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:15.937120Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:15.937046Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:16.095195Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:16.094488Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_civel <span class="op">=</span> tjgo.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>, id_instancia<span class="op">=</span><span class="dv">3</span>, id_area<span class="op">=</span><span class="dv">1</span>)</span>
+<div id="d0ef70bc" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:21.975239Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:21.975098Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:22.488554Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:22.488246Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_civel <span class="op">=</span> tjgo.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>, id_instancia<span class="op">=</span><span class="dv">15</span>, id_area<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_civel[[<span class="st">'processo'</span>, <span class="st">'serventia'</span>, <span class="st">'tipo_ato'</span>]].head() <span class="cf">if</span> <span class="kw">not</span> df_civel.empty <span class="cf">else</span> df_civel</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>UserWarning: TJGO: a busca voltou sem resultados. Desde 12/11/2026 (Projudi 3.194.1) o portal exige o token Cloudflare Turnstile, que o juscraper não envia, e sem ele toda busca volta vazia, sem mensagem de erro. Se a busca deveria trazer resultados, o cjsg do TJGO está bloqueado por esse token.
-  df_civel = tjgo.cjsg('dano moral', paginas=1, id_instancia=3, id_area=1)</code></pre>
+  df_civel = tjgo.cjsg('dano moral', paginas=1, id_instancia=15, id_area=1)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -537,7 +537,7 @@ TJGO: pagina 2 fora do intervalo 1-1</code></pre>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p><code>cjsg_download</code> returns the raw HTML responses, which is useful when you want to keep the original payloads.</p>
-<div id="76414407" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T21:55:16.097497Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T21:55:16.097371Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T21:55:16.318779Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T21:55:16.317987Z&quot;}" data-execution_count="6">
+<div id="76414407" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T23:27:22.489934Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T23:27:22.489753Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T23:27:23.042800Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T23:27:23.042364Z&quot;}" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjgo.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">type</span>(raw), <span class="bu">len</span>(raw), <span class="st">'chars in page 1:'</span>, <span class="bu">len</span>(raw[<span class="dv">0</span>]))</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>df_raw <span class="op">=</span> tjgo.cjsg_parse(raw)</span>
