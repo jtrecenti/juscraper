@@ -13,9 +13,10 @@ def contagem_da_resposta(api_response: object) -> tuple[int, str]:
     """``count`` e ``relation`` de ``hits.total`` na resposta de ``contar_processos``.
 
     Raises:
-        TypeError: Quando a resposta não é objeto JSON ou não traz o objeto
-            ``hits.total``. A contagem a converte em linha de falha, em vez
-            de levantar ``AttributeError`` ou inventar ``count=0``.
+        TypeError: JSON na forma errada: resposta que não é objeto, sem o
+            objeto ``hits.total``, com ``value`` que não é inteiro ou
+            ``relation`` fora de ``"eq"``/``"gte"``. A contagem a converte em
+            linha ``json_invalido``, em vez de levantar ou inventar ``count=0``.
     """
     if not isinstance(api_response, dict):
         raise TypeError("Resposta DataJud deve ser um objeto JSON.")
@@ -23,7 +24,11 @@ def contagem_da_resposta(api_response: object) -> tuple[int, str]:
     total = hits.get("total") if isinstance(hits, dict) else None
     if not isinstance(total, dict):
         raise TypeError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
-    return int(total.get("value") or 0), total.get("relation", "eq")
+    value, relation = total.get("value"), total.get("relation", "eq")
+    # ``bool`` herda de ``int``: ``True`` não é contagem.
+    if not isinstance(value, int) or isinstance(value, bool) or relation not in ("eq", "gte"):
+        raise TypeError(f"Campo 'hits.total' da resposta DataJud fora do formato: {total!r}.")
+    return value, relation
 
 
 def parse_datajud_api_response(

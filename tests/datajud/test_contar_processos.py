@@ -22,7 +22,6 @@ CNJ_TJSP = "0000001-02.2024.8.26.0100"
 CNJ_TJRS = "0000001-02.2024.8.21.0001"
 CNJ_TJRJ = "0000001-02.2024.8.19.0001"
 URL_API = "https://api-publica.datajud.cnj.jus.br"
-TOTAL_TJSP = {"hits": {"total": {"value": 12345, "relation": "eq"}, "hits": []}}
 
 
 @pytest.fixture(autouse=True)
@@ -213,27 +212,23 @@ class TestReturnShape:
 
     @responses.activate
     @pytest.mark.parametrize(
-        ("corpo", "esperado"),
+        "corpo",
         [
-            pytest.param([], "TypeError: Resposta DataJud deve ser um objeto JSON.", id="lista"),
-            pytest.param(
-                {"hits": []},
-                "TypeError: Campo 'hits.total' da resposta DataJud deve ser um objeto.",
-                id="hits-lista",
-            ),
-            pytest.param(
-                {"hits": {"total": 5}},
-                "TypeError: Campo 'hits.total' da resposta DataJud deve ser um objeto.",
-                id="total-inteiro",
-            ),
-            pytest.param(
-                {}, "TypeError: Campo 'hits.total' da resposta DataJud deve ser um objeto.", id="hits-ausente"
-            ),
+            pytest.param([], id="lista"),
+            pytest.param({}, id="hits-ausente"),
+            pytest.param({"hits": []}, id="hits-lista"),
+            pytest.param({"hits": {"total": 5}}, id="total-inteiro"),
+            pytest.param({"hits": {"total": {}}}, id="total-vazio"),
+            pytest.param({"hits": {"total": {"value": None, "relation": "eq"}}}, id="value-nulo"),
+            pytest.param({"hits": {"total": {"value": "n/a", "relation": "eq"}}}, id="value-texto"),
+            pytest.param({"hits": {"total": {"value": True, "relation": "eq"}}}, id="value-bool"),
+            pytest.param({"hits": {"total": {"value": 7, "relation": None}}}, id="relation-nula"),
         ],
     )
-    def test_resposta_200_fora_do_formato_vira_erro_na_linha(self, corpo, esperado):
-        """Antes levantava ``AttributeError`` (ou contava 0, sem ``hits``) e perdia a contagem do TJSP (#511)."""
-        responses.add(responses.POST, f"{URL_API}/api_publica_tjsp/_search", json=TOTAL_TJSP)
+    def test_resposta_200_fora_do_formato_vira_json_invalido_na_linha(self, corpo):
+        """Antes levantava ``AttributeError`` (ou contava 0) e perdia a contagem do TJSP (#511)."""
+        total_tjsp = {"hits": {"total": {"value": 12345, "relation": "eq"}}}
+        responses.add(responses.POST, f"{URL_API}/api_publica_tjsp/_search", json=total_tjsp)
         responses.add(responses.POST, f"{URL_API}/api_publica_tjrs/_search", json=corpo)
 
         df = jus.scraper("datajud").contar_processos(numero_processo=[CNJ_TJSP, CNJ_TJRS])
@@ -241,7 +236,7 @@ class TestReturnShape:
         assert df["alias"].tolist() == ["api_publica_tjsp", "api_publica_tjrs"]
         assert df["count"].tolist() == [12345, pd.NA]
         assert df["relation"].tolist() == ["eq", None]
-        assert df["error"].tolist() == [None, esperado]
+        assert df["error"].tolist() == [None, "json_invalido"]
 
     def test_relation_gte_quando_truncado(self, monkeypatch):
         def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
