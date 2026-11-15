@@ -292,6 +292,27 @@ def test_401_interrompe_a_coleta_nos_aliases_seguintes():
 
 @responses.activate
 @pytest.mark.usefixtures("esperas")
+def test_401_depois_de_outra_falha_e_a_causa_do_erro():
+    """A causa do erro é o 401 que encerrou a coleta, não a falha do alias anterior.
+
+    No último alias, nenhum fica sem consulta, e a mensagem não lista nenhum.
+    """
+    url = f"{DatajudScraper.BASE_API_URL}/api_publica_{{}}/_search"
+    responses.add(responses.POST, url.format("tjac"), body=requests.ConnectionError("recusada"))
+    responses.add(responses.POST, url.format("tjal"), json={"error": "chave inválida"}, status=401)
+    cnjs = [f"0000001-23.2024.8.{codigo}.0001" for codigo in ("01", "02")]
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        _scraper().listar_processos(numero_processo=cnjs, tamanho_pagina=10)
+
+    erro = exc_info.value
+    assert [type(causa) for *_, causa in erro.falhas] == [requests.ConnectionError, requests.HTTPError]
+    assert erro.__cause__ is erro.falhas[1][2]
+    assert str(erro).endswith("Causa: HTTP 401.")
+
+
+@responses.activate
+@pytest.mark.usefixtures("esperas")
 def test_timeout_chega_ao_erro_parcial_como_causa():
     responses.add(responses.POST, URL_TJAC, body=requests.ReadTimeout("lento"))
 

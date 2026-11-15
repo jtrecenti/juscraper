@@ -156,12 +156,10 @@ def _relancar_se_token_invalido(exc: Exception, linhas: list[dict[str, Any]]) ->
         raise exc
 
 
-def _aliases_nao_consultados(restantes: list[AliasSelection]) -> list[str]:
+def _aliases_nao_consultados(restantes: list[AliasSelection]) -> str:
     """Diagnóstico dos aliases que :meth:`DatajudScraper.listar_processos` deixa de consultar depois do 401."""
-    if not restantes:
-        return []
     nomes = ", ".join(repr(alias) for alias, _ in restantes)
-    return [f"HTTP 401 (chave da API recusada): alias(es) não consultado(s): {nomes}"]
+    return f"HTTP 401 (chave da API recusada): alias(es) não consultado(s): {nomes}"
 
 
 def _linha_de_falha(tribunal: str, alias: str, exc: Exception) -> dict[str, Any]:
@@ -679,35 +677,45 @@ class DatajudScraper(HTTPScraper):
             tribunal=inp.tribunal,
             numero_processo=inp.numero_processo,
         )
-        movimentos_codigo = _resolve_movimentos_codigo(inp)
+        return self._listar_aliases(aliases, inp, _resolve_movimentos_codigo(inp), paginas_datajud)
+
+    def _listar_aliases(
+        self,
+        aliases: list[AliasSelection],
+        inp: InputListarProcessosDataJud,
+        movimentos_codigo: list[int] | None,
+        paginas: range | None,
+    ) -> pd.DataFrame:
+        """Coleta cada alias; as falhas saem juntas num ``ColetaParcialError``, e o 401 encerra a coleta."""
         frames = []
         falhas = []
         diagnosticos = []
-        for indice, (alias, cnjs) in enumerate(aliases):
+        token_recusado: Exception | None = None
+        for alias, cnjs in aliases:
             try:
                 frame = self._listar_processos_por_alias(
                     alias=alias,
                     numero_processo=cnjs,
                     inp=inp,
                     movimentos_codigo=movimentos_codigo,
-                    paginas=paginas_datajud,
+                    paginas=paginas,
                 )
             except ColetaParcialError as exc:
                 frame = exc.resultado
                 falhas.extend(exc.falhas)
                 diagnosticos.append(str(exc))
-                # A chave inválida recusa todos os aliases: os seguintes ficam sem consulta.
-                if any(e_token_invalido(causa) for *_, causa in exc.falhas):
-                    frames.append(frame)
-                    diagnosticos.extend(_aliases_nao_consultados(aliases[indice + 1:]))
-                    break
+                token_recusado = next((causa for *_, causa in exc.falhas if e_token_invalido(causa)), None)
             frames.append(frame)
+            if token_recusado is not None:  # A chave inválida recusa todos os aliases.
+                break
+        if nao_consultados := aliases[len(frames):]:
+            diagnosticos.append(_aliases_nao_consultados(nao_consultados))
 
         non_empty = [frame for frame in frames if not frame.empty]
         resultado = pd.concat(non_empty, ignore_index=True) if non_empty else pd.DataFrame()
         if falhas:
             mensagem = "DataJud: coleta parcial. " + "; ".join(diagnosticos)
-            raise ColetaParcialError(mensagem, resultado=resultado, falhas=falhas) from falhas[0][2]
+            raise ColetaParcialError(mensagem, resultado=resultado, falhas=falhas) from token_recusado or falhas[0][2]
         return resultado
 
     def _listar_processos_por_alias(
@@ -785,7 +793,8 @@ class DatajudScraper(HTTPScraper):
 
         Entrega cada busca com o número da página de ``tamanho_pagina`` a que
         ela pertence, o ``hits.total`` da página 1 já validado e quantos hits
-        das páginas pedidas vieram antes dela. Depois do
+        das páginas pedidas vieram antes desta busca (depois do fallback,
+        inclusive os pedaços anteriores da mesma página). Depois do
         fallback de 504/timeout, uma página chega em vários pedaços do
         ``size`` reduzido, cortados na fronteira dela, para que ``paginas``
         continue contando páginas do tamanho pedido (#513).
