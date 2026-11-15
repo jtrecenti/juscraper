@@ -18,6 +18,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
+from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, parse_parametros_pasta
 from juscraper.courts.tjsp.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
@@ -206,6 +207,24 @@ def test_baixar_sentencas_erro_de_rede_vira_motivo(tmp_path, mocker):
         resultado = jus.scraper("tjsp", download_path=str(tmp_path)).baixar_sentencas(cjpg)
 
     assert resultado["motivo_falha"].tolist() == ["http_404"]
+
+
+@responses.activate
+def test_baixar_sentencas_desafio_anti_bot_no_meio_do_lote_nao_perde_as_linhas(tmp_path, mocker):
+    """Bloqueio na linha 2 de 3: a linha sai ``bloqueio_anti_bot`` e as outras ficam (#471)."""
+    mocker.patch("time.sleep")
+    cjpg = pd.concat([_cjpg().head(1)] * 3, ignore_index=True)
+    _registrar_sentenca()
+    responses.add(
+        responses.GET, f"{ESAJ}/cjpg/obterArquivo.do", body=BotChallengeBlockedError("TJSP", f"{ESAJ}/cjpg")
+    )
+    _registrar_sentenca()
+
+    with pytest.warns(UserWarning, match="1 download\\(s\\) de sentença falharam.*bloqueio_anti_bot"):
+        resultado = jus.scraper("tjsp", download_path=str(tmp_path)).baixar_sentencas(cjpg)
+
+    assert resultado["caminho_sentenca"].isna().tolist() == [False, True, False]
+    assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", None]
 
 
 def test_baixar_sentencas_exige_as_colunas_dos_codigos(tmp_path):

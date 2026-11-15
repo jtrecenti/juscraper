@@ -14,13 +14,15 @@ JSON (``InvalidJSONResponseError`` e o ``requests.JSONDecodeError`` de
 contagem sem inteiro).
 ``nao_encontrado`` é o processo que a fonte declara ausente por um sinal medido
 dela; cada scraper documenta que sinal é esse.
+``bloqueio_anti_bot`` é o desafio ou bloqueio de um bot manager (Akamai,
+CloudFront, AWS WAF) que derrubou a requisição da linha.
 """
 from __future__ import annotations
 
 import requests
 
 from juscraper.core.avisos import avisar
-from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core.exceptions import BotChallengeBlockedError, InvalidJSONResponseError, RetryExhaustedError
 
 COLUNA_MOTIVO_FALHA = "motivo_falha"
 """Nome da coluna de motivo de falha nos DataFrames com uma linha por item."""
@@ -48,6 +50,14 @@ MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
 MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
 """A linha de entrada não traz um valor utilizável (número CNJ, data); nada foi pedido à fonte."""
 
+MOTIVO_BLOQUEIO_ANTI_BOT = "bloqueio_anti_bot"
+"""Um bot manager desafiou ou bloqueou a requisição (:class:`BotChallengeBlockedError`).
+
+O bloqueio costuma valer para a sessão inteira, então as linhas seguintes do
+mesmo lote tendem a sair com este motivo também: aguardar alguns minutos ou
+trocar de IP antes de pedir de novo só as linhas que falharam.
+"""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -59,6 +69,7 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     MOTIVO_NAO_PDF,
     MOTIVO_RESPOSTA_INESPERADA,
     MOTIVO_ENTRADA_INVALIDA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 
@@ -68,6 +79,7 @@ EXCECOES_DE_FALHA_POR_LINHA: tuple[type[BaseException], ...] = (
     requests.HTTPError,
     requests.ConnectionError,
     requests.Timeout,
+    BotChallengeBlockedError,
 )
 """Exceções que o scraper captura e converte em linha de falha.
 
@@ -76,7 +88,9 @@ Todas têm motivo em :func:`motivo_falha`. Qualquer outra (``TooManyRedirects``,
 vocabulário para ela. ``requests.JSONDecodeError`` tem motivo
 (``json_invalido``) e mesmo assim fica de fora, para não mudar o que os
 scrapers que usam esta tupla capturam. O 401 é ``HTTPError`` mas propaga antes
-de virar linha: ver :func:`e_token_invalido`.
+de virar linha: ver :func:`e_token_invalido`. ``BotChallengeBlockedError``
+(e a subclasse ``WafChallengeError``) vira linha para que um desafio no meio
+do lote não descarte as linhas já processadas (#471).
 """
 
 FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
@@ -143,6 +157,8 @@ def motivo_falha(exc: BaseException) -> str:
         return "conexao"
     if isinstance(exc, requests.Timeout):
         return "timeout"
+    if isinstance(exc, BotChallengeBlockedError):
+        return MOTIVO_BLOQUEIO_ANTI_BOT
     raise TypeError(f"Exceção sem motivo de falha no vocabulário: {type(exc).__name__}.") from exc
 
 
