@@ -13,7 +13,8 @@ servindo TRF1 e TRF5. Detalhes do protocolo em
 ``cjsg`` pesquisa jurisprudência em ``web.trf3.jus.br/jurisprudencia``, uma
 aplicação ASP.NET separada do PJe, também atrás do Akamai. Não usa a sessão
 da consulta processual: cada busca abre a sua ``requests.Session`` com
-cabeçalhos próprios. Do raspador usa o retry de ``HTTPScraper``, o
+cabeçalhos próprios e, com o extra ``juscraper[tls]`` instalado, o mesmo
+transporte com TLS do Chrome. Do raspador usa o retry de ``HTTPScraper``, o
 ``sleep_time`` do construtor e o perfil HTTP ``perfis_http["cjsg"]``. O código
 fica em :mod:`.cjsg_download`, :mod:`.cjsg_parse` e :mod:`.cjsg_schemas`.
 """
@@ -584,6 +585,12 @@ class TRF3Scraper(HTTPScraper):
         ``GET`` do redirect que traz a página 1) e uma por página adicional,
         com ``sleep_time`` entre páginas.
 
+        Com o extra ``juscraper[tls]`` instalado, as requisições saem com o
+        TLS do Chrome, como no :meth:`cpopg`. O extra é opcional aqui: sem
+        ele, a busca usa o ``requests``, que o Akamai do portal atende de IP
+        residencial, mas deixa sem resposta até o timeout de IP de
+        datacenter (medido em 15/11/2026).
+
         Args:
             pesquisa (str | None): Texto da pesquisa livre, com os operadores do
                 portal (operador padrão ``e``). Pode ficar vazio quando outro
@@ -633,11 +640,16 @@ class TRF3Scraper(HTTPScraper):
                   acórdãos antigos (``"1708075"`` em
                   ``"Ap - APELAÇÃO CÍVEL - 1708075"``). Só na base
                   ``"acordaos"``.
-                * ``sistema_interamericano`` (int): ID da opção do dropdown
-                  "Sistema Interamericano" do formulário, um caso da Corte IDH
-                  (em 15/11/2026, ``1`` era o caso Trabalhadores da Fazenda
-                  Brasil Verde e ``2``, o caso Gomes Lund, "Guerrilha do
-                  Araguaia"). Só na base ``"acordaos"``.
+                * ``sistema_interamericano`` (int | str): Caso da Corte IDH
+                  do dropdown "Sistema Interamericano" do formulário, pelo ID
+                  da opção ou por um trecho do nome (em 15/11/2026, ``1`` era
+                  o caso Trabalhadores da Fazenda Brasil Verde e ``2``, o caso
+                  Gomes Lund, "Guerrilha do Araguaia"; ``"Gomes Lund"`` acha o
+                  ``2``). O nome é comparado sem acento, aspas e travessões
+                  tipográficos, caixa ou espaços extras com as opções lidas
+                  da aba e tem que corresponder a uma só; senão,
+                  ``ValueError`` lista as opções. Texto só de dígitos vale
+                  como ID. Só na base ``"acordaos"``.
                 * ``legislacao`` (str): Texto pesquisado nas referências
                   legislativas dos documentos (ex.: ``"LEI-8080"``, ou
                   ``"LEI PELÉ FED LEI 9615 1998"``, o texto que o painel de
@@ -725,12 +737,13 @@ class TRF3Scraper(HTTPScraper):
             nullable_pesquisa=True,
         )
         validar_combinacoes(inp)
-        return cjsg_download_manager(
-            inp,
-            request_fn=self._request_with_retry,
-            session=build_cjsg_session(),
-            sleep_time=self.sleep_time,
-        )
+        with build_cjsg_session() as session:
+            return cjsg_download_manager(
+                inp,
+                request_fn=self._request_with_retry,
+                session=session,
+                sleep_time=self.sleep_time,
+            )
 
     def cjsg_parse(self, resultados_brutos: list[str]) -> pd.DataFrame:
         """Converte as páginas de :meth:`cjsg_download` em DataFrame.

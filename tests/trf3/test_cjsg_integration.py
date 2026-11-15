@@ -76,6 +76,8 @@ def test_cjsg_filtros_so_de_acordaos_restringem() -> None:
     total = cjsg_n_results(trf3.cjsg_download(sistema_interamericano=1, paginas=1)[0])
     assert total is not None
     assert 0 < total < 1000
+    # By name, the case resolves to the same option ID through the tab's dropdown.
+    assert cjsg_n_results(trf3.cjsg_download(sistema_interamericano="fazenda brasil verde", paginas=1)[0]) == total
 
     df = trf3.cjsg(legislacao="LEI PELÉ FED LEI 9615 1998", paginas=1)
     assert len(df) > 0

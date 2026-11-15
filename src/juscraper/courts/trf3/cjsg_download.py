@@ -30,13 +30,15 @@ from collections.abc import Callable, Iterable
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from unidecode import unidecode
 
-from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import RequestFn
 from ...utils.pagination import extract_count_with_cascade
 from ...utils.params import normalize_paginas
+from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
 from .cjsg_schemas import InputCJSGTRF3
+from .download import guarda_akamai
 
 logger = logging.getLogger("juscraper.trf3.cjsg")
 
@@ -84,15 +86,19 @@ CJSG_HEADERS: dict[str, str] = {
     "Sec-Fetch-User": "?1",
 }
 
-_AKAMAI_REF_RE = re.compile(
-    rb"Reference(?:&#32;|\s)(?:&#35;|#)([0-9a-f]+(?:(?:&#46;|\.)[0-9a-f]+)*)"
-)
-
 
 def build_cjsg_session() -> requests.Session:
-    """Cria a sessão isolada de uma busca, com os cabeçalhos de navegador."""
+    """Cria a sessão isolada de uma busca, com os cabeçalhos de navegador.
+
+    Com o extra ``juscraper[tls]`` instalado, monta o transporte com TLS do
+    Chrome (:mod:`._tls`). Sem ele, a sessão fica com o ``requests``, que o
+    Akamai do portal atende de IP residencial, mas deixa sem resposta até o
+    timeout de IP de datacenter (medido em 15/11/2026).
+    """
     session = requests.Session()
     session.headers.update(CJSG_HEADERS)
+    if tls_navegador_disponivel():
+        montar_tls_navegador(session, [BASE_URL])
     return session
 
 
@@ -221,6 +227,65 @@ def _campos_orgao(orgao: str | None, opcoes: list[tuple[str, str]]) -> dict[str,
     }
 
 
+def _opcoes_sistema_interamericano(html: str) -> list[tuple[str, str]]:
+    """Lê as opções do dropdown ``select#tema`` da aba: (nome do caso, ID).
+
+    A opção "Selecione:", de valor vazio, fica de fora. Só a aba de acórdãos
+    tem esse dropdown.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    opcoes: list[tuple[str, str]] = []
+    for opcao in soup.select("select#tema option"):
+        valor = str(opcao.get("value") or "").strip()
+        if valor:
+            opcoes.append((opcao.get_text(" ", strip=True), valor))
+    return opcoes
+
+
+def _chave_caso(texto: str) -> str:
+    """Forma de comparação do nome do caso: em ASCII, sem diferença de caixa e de espaços.
+
+    Os rótulos do portal têm espaço duplo (``"CORTE  IDH"``), acento
+    (``"BRASÍLIA"``) e aspas e travessões tipográficos (``“GUERRILHA DO
+    ARAGUAIA”``, ``CASOS BRASILEIROS – PROVIDÊNCIAS``) que quem digita o nome
+    não reproduz; o ``unidecode`` os leva à forma digitada.
+    """
+    return " ".join(unidecode(texto).split()).casefold()
+
+
+def _id_sistema_interamericano(nome: str, opcoes: list[tuple[str, str]]) -> str:
+    """ID da opção do dropdown "Sistema Interamericano" cujo nome contém ``nome``.
+
+    O nome completo de uma opção vale mesmo quando ele é trecho de outra; fora
+    disso, o trecho tem que aparecer em uma opção só (:func:`_chave_caso`).
+
+    Raises:
+        RuntimeError: A aba não trouxe o dropdown (layout mudado); o ID
+            numérico continua aceito.
+        ValueError: O trecho não aparece em nenhuma opção ou aparece em mais
+            de uma. A mensagem lista as opções candidatas com o ID.
+    """
+    if not opcoes:
+        raise RuntimeError(
+            "TRF3 cjsg: o formulário da aba não trouxe o dropdown \"Sistema "
+            f"Interamericano\"; não há como achar o ID de {nome!r}. Passe o ID "
+            "numérico da opção."
+        )
+    chave = _chave_caso(nome)
+    exatas = [op for op in opcoes if _chave_caso(op[0]) == chave]
+    casadas = exatas or [op for op in opcoes if chave in _chave_caso(op[0])]
+    if len(casadas) == 1:
+        return casadas[0][1]
+    candidatas = casadas or opcoes
+    lista = "; ".join(f"{valor}: {rotulo!r}" for rotulo, valor in candidatas)
+    problema = "é ambíguo: aparece em" if casadas else "não aparece em nenhuma das"
+    raise ValueError(
+        f"TRF3 cjsg: o caso {nome!r} {problema} {len(candidatas)} opções do "
+        f"dropdown \"Sistema Interamericano\". Passe o ID ou um trecho do nome "
+        f"de uma só delas: {lista}."
+    )
+
+
 def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     """Monta o corpo form-urlencoded do ``POST Home/ResultadoTotais``.
 
@@ -260,9 +325,11 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
             converte, e um modelo montado à mão (script de captura, testes)
             precisa trazê-las já nesse formato, porque esta função as copia
             sem converter. ``relator``, ``classe`` e ``orgao_julgador`` são o
-            texto que o portal indexa, e não o ID do dropdown. ``base`` só
-            decide as caixas de origem das monocráticas, porque a aba é
-            escolhida pelo ``GET`` anterior. ``paginas`` não entra no corpo.
+            texto que o portal indexa, e não o ID do dropdown. O nome do caso
+            em ``sistema_interamericano`` fica fora do corpo: só o
+            formulário da aba dá o ID, e :func:`cjsg_download_manager` o
+            acrescenta. ``base`` só decide as caixas de origem das
+            monocráticas, porque a aba é escolhida pelo ``GET`` anterior. ``paginas`` não entra no corpo.
 
     Returns:
         Dicionário pronto para ``data=`` do ``requests``.
@@ -293,29 +360,13 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     # Só os acórdãos têm estes campos (``FILTROS_SO_ACORDAOS``).
     filtros_acordaos = {
         "numclasse": _texto_campo(inp.numero_classe, "{}"),
-        "tema": str(inp.sistema_interamericano or ""),
+        # O nome do caso só vira ID com o formulário da aba, no manager.
+        "tema": str(inp.sistema_interamericano) if isinstance(inp.sistema_interamericano, int) else "",
         "legislacao": _texto_campo(inp.legislacao, "{}"),
     }
     payload.update({campo: valor for campo, valor in filtros_acordaos.items() if valor})
     payload.update(BASES[inp.base][1])
     return payload
-
-
-def _check_bot_challenge(resp: requests.Response) -> None:
-    """Levanta :class:`BotChallengeBlockedError` no 403 ``Access Denied`` da Akamai.
-
-    Só esse formato: um 403 com outro corpo segue para o retry do
-    ``HTTPScraper``. O bloqueio vale para o IP inteiro, então retentar com a
-    mesma sessão só gastaria tempo.
-    """
-    if resp.status_code != 403:
-        return
-    head = resp.content[:600]
-    if b"Access Denied" not in head:
-        return
-    match = _AKAMAI_REF_RE.search(head)
-    reference = match.group(1).decode("ascii").replace("&#46;", ".") if match else None
-    raise BotChallengeBlockedError("TRF3", resp.url, reference=reference)
 
 
 def _check_sessao(resp: requests.Response) -> None:
@@ -444,7 +495,9 @@ def cjsg_download_manager(
     de páginas. Assim o tamanho enviado ao portal e o usado na conta não têm
     como divergir. Com ``orgao_julgador``, o formulário devolvido pelo ``GET``
     da aba dá o par de rótulo e nome indexado que o navegador mandaria
-    (:func:`_campos_orgao`), sem requisição a mais.
+    (:func:`_campos_orgao`), sem requisição a mais; com o nome do caso em
+    ``sistema_interamericano``, o mesmo formulário dá o ID da opção
+    (:func:`_id_sistema_interamericano`).
 
     Args:
         inp: Filtros da busca, como saem de ``apply_input_pipeline_search``.
@@ -461,25 +514,31 @@ def cjsg_download_manager(
             descartada.
 
     Raises:
-        BotChallengeBlockedError: 403 ``Access Denied`` da Akamai.
+        BotChallengeBlockedError: 403 do Akamai (``Access Denied`` ou sensor
+            de bot); sem retry, porque o bloqueio vale para o IP inteiro.
         RuntimeError: O portal redirecionou para a página de sessão expirada,
             ou respondeu 200 com uma página que não é a lista de resultados
             (formulário de busca, manutenção); vale para a primeira página e
-            para as seguintes. Da página 2 em diante, também quando a página
+            para as seguintes. Também quando ``sistema_interamericano`` traz
+            o nome do caso e a aba não tem o dropdown. Da página 2 em diante, também quando a página
             traz o aviso de nenhum resultado e o total lido na primeira é
             maior que zero.
         ValueError: ``orgao_julgador`` corresponde a mais de uma opção do
-            dropdown da aba; ou ``paginas=None`` e a primeira página traz
+            dropdown da aba; o nome do caso em ``sistema_interamericano``
+            não corresponde a uma opção só; ou ``paginas=None`` e a primeira página traz
             documentos, mas o total de resultados não pôde ser lido.
     """
     payload = build_cjsg_payload(inp)
     index_url = INDEX_URL.format(indice=BASES[inp.base][0])
-    comum = {"session": session, "perfil": PERFIL_CJSG, "on_response": _check_bot_challenge}
+    comum = {"session": session, "perfil": PERFIL_CJSG, "on_response": guarda_akamai}
 
     aba = request_fn("GET", index_url, **comum)
+    aba.encoding = "utf-8"
     if inp.orgao_julgador:
-        aba.encoding = "utf-8"
         payload.update(_campos_orgao(inp.orgao_julgador, _opcoes_orgao(aba.text)))
+    caso = inp.sistema_interamericano
+    if isinstance(caso, str) and caso.strip():
+        payload["tema"] = _id_sistema_interamericano(caso, _opcoes_sistema_interamericano(aba.text))
     resp = request_fn(
         "POST",
         SEARCH_URL,

@@ -72,3 +72,28 @@ def add_page(pagina: int, nome: str) -> None:
         content_type=HTML,
         match=[query_param_matcher({"np": str(pagina)})],
     )
+
+
+def corpo_busca(**campos: str) -> dict[str, str]:
+    """POST body of the portal with every field empty or at its default."""
+    body = {
+        "txtPesquisaLivre": "",
+        "chkAcordaos": "on",
+        "chkMostrarLista": "on",
+        "opcaoQtdePagina": "10",
+        "numero": "",
+        "magistrado": "0",
+        "data_inicial": "",
+        "data_final": "",
+        "data_tipo": "1",
+        "classe": "0",
+        "orgao": "0",
+        "ementa": "",
+        "indexacao": "",
+        "hdnMagistrado": "",
+        "hdnClasse": "",
+        "hdnOrgao": "",
+        "hdnOrgaoJef": "",
+    }
+    body.update(campos)
+    return body

@@ -25,7 +25,7 @@ from juscraper.courts.trf3.cjsg_download import (
     build_cjsg_payload,
 )
 from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3
-from tests._helpers import assert_no_mojibake
+from tests._helpers import assert_no_mojibake, load_sample_bytes
 from tests.trf3._cjsg_mock import FIRST_PAGE_URL, HTML, add_page, add_search, sample
 
 CJSG_MIN_COLUMNS = {
@@ -277,23 +277,33 @@ def test_cjsg_sessao_expirada_na_pagina_2_levanta(mocker):
     assert len(responses.calls) == 5
 
 
+_ACCESS_DENIED = (
+    b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
+    b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>"
+)
+
+
+@pytest.mark.parametrize(
+    ("corpo", "referencia"),
+    [
+        (_ACCESS_DENIED, "18.27f62917.1779623119.a59b1f4c"),
+        # 403 do sensor de bot, sem "Access Denied", capturado na consulta processual
+        # (pje1g-consultapublica). O do portal de jurisprudência não foi observado;
+        # a guarda é a mesma, e a página do portal traz o mesmo ``sec-overlay``.
+        (load_sample_bytes("trf3", "cpopg/akamai_403.html"), None),
+    ],
+    ids=["access_denied", "sensor"],
+)
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_bloqueio_akamai_levanta_bot_challenge(mocker):
-    """The Akamai 403 ``Access Denied`` stops at the first request, without retry."""
+def test_cjsg_bloqueio_akamai_levanta_bot_challenge(mocker, corpo, referencia):
+    """The Akamai 403 (``Access Denied`` or the bot-sensor page) stops at the first request, without retry."""
     mocker.patch("time.sleep")
-    responses.add(
-        responses.GET,
-        INDEX_URL.format(indice=0),
-        status=403,
-        body=b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
-             b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>",
-        content_type=HTML,
-    )
+    responses.add(responses.GET, INDEX_URL.format(indice=0), status=403, body=corpo, content_type=HTML)
 
     with pytest.raises(BotChallengeBlockedError) as exc_info:
         jus.scraper("trf3").cjsg("medicamento", paginas=1)
 
-    assert exc_info.value.reference == "18.27f62917.1779623119.a59b1f4c"
+    assert exc_info.value.reference == referencia
     assert len(responses.calls) == 1
 
 

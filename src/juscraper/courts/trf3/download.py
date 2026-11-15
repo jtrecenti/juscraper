@@ -137,7 +137,12 @@ def documento_download_url(base_url: str, id_documento: str) -> str:
 _MARCA_SENSOR_AKAMAI = b'id="sec-overlay"'
 
 
-def _guarda_bot(resp: requests.Response) -> None:
+def guarda_akamai(resp: requests.Response) -> None:
+    """Levanta :class:`BotChallengeBlockedError` no 403 do Akamai, na consulta e no ``cjsg``.
+
+    Reconhece o ``Access Denied`` e a página do sensor de bot. Um 403 com
+    outro corpo segue para o retry do ``HTTPScraper``.
+    """
     _check_bot_challenge(resp, TRIBUNAL)
     if resp.status_code == 403 and _MARCA_SENSOR_AKAMAI in resp.content:
         raise BotChallengeBlockedError(TRIBUNAL, resp.url)
@@ -164,7 +169,7 @@ def _get_json(
         headers=build_pagina_origem_headers(base_url, rota),
         perfil="api",
         expect_json=True,
-        on_response=_guarda_bot,
+        on_response=guarda_akamai,
     )
     data: dict[str, Any] = resp.json()
     if data.get("status") != "ok":
@@ -304,7 +309,7 @@ def baixar_documento(
         "Content-Type": "application/json",
         "Accept": "application/pdf",
     }
-    resp = request_fn("GET", url, headers=headers, perfil="documento", on_response=_guarda_bot)
+    resp = request_fn("GET", url, headers=headers, perfil="documento", on_response=guarda_akamai)
     content_type = resp.headers.get("Content-Type", "")
     if "application/pdf" not in content_type:
         raise ValueError(f"{TRIBUNAL}: documento {id_documento} veio como {content_type!r}, não PDF")
