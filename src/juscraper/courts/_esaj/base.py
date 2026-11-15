@@ -478,7 +478,7 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame | int: Resultados parseados (colunas conforme
+            (pd.DataFrame | int): Resultados parseados (colunas conforme
                 :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
                 via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
                 ``cd_foro``); ``int`` com o total de resultados quando
@@ -642,7 +642,7 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            str: Caminho do diretorio onde os HTMLs foram salvos.
+            Caminho do diretorio onde os HTMLs foram salvos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
@@ -694,7 +694,7 @@ class EsajSearchScraper(HTTPScraper):
                 de 1o grau num tribunal que so tem cjsg).
 
         Returns:
-            pd.DataFrame: Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
+            Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
                 ``selecionavel``, ``caminho``.
         """
         rel = self.TREE_ENDPOINTS.get(tree_key)
@@ -726,7 +726,7 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de classes (colunas ``id``, ``nome``,
+            Arvore de classes (colunas ``id``, ``nome``,
                 ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
                 linhas com ``selecionavel=True`` valem como filtro.
 
@@ -752,7 +752,7 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de assuntos (mesmas colunas de
+            Arvore de assuntos (mesmas colunas de
                 :meth:`listar_classes`). So as linhas com ``selecionavel=True``
                 valem como filtro.
         """
@@ -771,7 +771,7 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de orgaos julgadores (mesmas colunas de
+            Arvore de orgaos julgadores (mesmas colunas de
                 :meth:`listar_classes`).
         """
         return self._listar_arvore(f"orgaos_{grau}")

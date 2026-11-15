@@ -371,7 +371,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
                 conhecido; a busca para em vez de cair no acórdão seguinte.
 
         Returns:
-            str: Caminho do PDF gravado.
+            Caminho do PDF gravado.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -434,7 +434,7 @@ class EsajAcordaoScraper(EsajSearchScraper):
             diretorio (str | None): Pasta de destino. Default :attr:`download_path`.
 
         Returns:
-            pd.DataFrame: As linhas de entrada com ``caminho_acordao`` (``None``
+            As linhas de entrada com ``caminho_acordao`` (``None``
                 quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
                 ``nao_encontrado``, ``sem_acordao``, ``nao_pdf``,
                 ``resposta_inesperada`` ou um motivo de rede de

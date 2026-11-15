@@ -84,7 +84,7 @@ class TJTOScraper(HTTPScraper):
         Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
         Returns:
-            list: Lista de paginas HTML cruas.
+            Lista de paginas HTML cruas.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJTO,
@@ -156,7 +156,7 @@ class TJTOScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJTO` — schema pydantic e a fonte da verdade dos
@@ -195,7 +195,7 @@ class TJTOScraper(HTTPScraper):
         Aceita os mesmos filtros de :meth:`cjpg`; veja la a lista completa.
 
         Returns:
-            list: Lista de paginas HTML cruas.
+            Lista de paginas HTML cruas.
         """
         inp = apply_input_pipeline_search(
             InputCJPGTJTO,

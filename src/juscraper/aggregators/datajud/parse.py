@@ -49,7 +49,7 @@ def parse_datajud_api_response(
         mostrar_movs (bool): Inclui movimentações no DataFrame quando verdadeiro.
 
     Returns:
-        pd.DataFrame: Processos encontrados. Retorna um DataFrame vazio quando
+        Processos encontrados. Retorna um DataFrame vazio quando
             a resposta é ``None`` ou ``hits.hits`` é uma lista vazia.
 
     Raises:

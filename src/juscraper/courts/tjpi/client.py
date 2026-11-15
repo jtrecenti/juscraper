@@ -87,7 +87,7 @@ class TJPIScraper(HTTPScraper):
                 scraper levanta em vez de estimar.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisões.
+            DataFrame com as decisões.
 
         See also:
             :class:`InputCJSGTJPI` — schema pydantic é a fonte da verdade dos

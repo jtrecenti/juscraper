@@ -696,7 +696,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             chamada, emitido quando a coleta termina.
 
         Returns:
-            pd.DataFrame: Uma linha por documento, com metadados, texto limpo,
+            Uma linha por documento, com metadados, texto limpo,
                 respostas brutas disponíveis e ``motivo_falha``.
 
         See Also:

@@ -174,7 +174,7 @@ def cpopg_download_html(
     download_pecas: with True, also saves the PDF of each public document of the movements
 
     Returns:
-        dict[str, str]: ``{CNJ formatado: motivo}`` dos processos que ficaram
+        (dict[str, str]): ``{CNJ formatado: motivo}`` dos processos que ficaram
             sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
             número que a busca diz não ter sai ``nao_encontrado``, e o que não
             tem 20 dígitos, ``entrada_invalida``. Vazio quando

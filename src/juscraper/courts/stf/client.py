@@ -158,7 +158,7 @@ class STFScraper(HTTPScraper):
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
         Returns:
-            pd.DataFrame: Uma linha por documento, com ``processo``, ``classe``,
+            Uma linha por documento, com ``processo``, ``classe``,
                 ``relator``, ``data_julgamento``, ``data_publicacao``, ``ementa``
                 (acordaos), ``decisao_texto`` (monocraticas), ``inteiro_teor_url`` e o
                 restante do ``_source`` da API.
@@ -199,7 +199,7 @@ class STFScraper(HTTPScraper):
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
         Returns:
-            pd.DataFrame: Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e
+            Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e
                 ``faceta="total"``; as demais vem das agregacoes do portal (``base``,
                 ``ministro_facet``, ``processo_classe_processual_unificada_classe_sigla``,
                 ``procedencia_geografica_uf_sigla``, ``orgao_julgador`` e indicadores).
