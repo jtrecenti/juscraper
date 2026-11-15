@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+from juscraper.core.avisos import avisar
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
@@ -72,6 +73,7 @@ class TJAPScraper(HTTPScraper):
             Procedural class.
         votacao : str
             ``"0"`` for all (default), ``"Unânime"``, ``"Maioria"``.
+            ``"Unanime"`` (sem acento) e alias deprecado de ``"Unânime"``.
         origem : str, optional
             Origin (comarca).
 
@@ -125,7 +127,8 @@ class TJAPScraper(HTTPScraper):
         """Download raw CJSG JSON responses from TJAP.
 
         Parameters are the same as :meth:`cjsg`. ``numero_cnj`` is accepted
-        as a deprecated alias for ``numero_processo``.
+        as a deprecated alias for ``numero_processo``, and ``votacao="Unanime"``
+        as a deprecated alias for ``votacao="Unânime"``.
 
         Returns
         -------
@@ -144,6 +147,14 @@ class TJAPScraper(HTTPScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
         )
+        if votacao == "Unanime":
+            # Sem acento, o portal devolve os acordaos por maioria (15/11/2026).
+            avisar(
+                'votacao="Unanime" esta deprecado: o portal trata esse valor como '
+                '"Maioria". O juscraper passa a enviar "Unânime"; use votacao="Unânime".',
+                DeprecationWarning,
+            )
+            votacao = "Unânime"
         inp = apply_input_pipeline_search(
             InputCJSGTJAP,
             "TJAPScraper.cjsg_download()",

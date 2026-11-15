@@ -31,9 +31,10 @@ class InputCJSGTJAP(SearchBase):
     relator: str | None = None
     secretaria: str | None = None
     classe: str | None = None
-    # O formulario envia ``"Unânime"``, como vem no campo ``votacao`` dos acordaos;
-    # ``"Unanime"``, a grafia que a docstring indicava, segue aceito.
-    votacao: Literal["0", "Unânime", "Unanime", "Maioria"] = "0"
+    # Opcoes do formulario, como vem no campo ``votacao`` dos acordaos. ``"Unanime"``
+    # e alias deprecado, resolvido pelo client antes deste modelo: o portal o trata
+    # como ``"Maioria"``.
+    votacao: Literal["0", "Unânime", "Maioria"] = "0"
     origem: str | None = None
 
 

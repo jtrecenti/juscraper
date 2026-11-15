@@ -10,7 +10,49 @@ from __future__ import annotations
 from datetime import date
 from typing import ClassVar, Literal
 
+from pydantic import model_validator
+
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase, TamanhoPagina
+
+# Opcoes do seletor "Ordenacao" do portal para cada core, capturadas em
+# 15/11/2026 de ``assets/ConsultasPublicas-*.js``. Fora delas, a API responde
+# HTTP 500 (campo inexistente no core) ou aceita sem ordenar (campo vazio no core).
+_ORDENACAO_PJE = ("dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc")
+ORDENACOES_POR_CORE: dict[str, tuple[str, ...]] = {
+    "pje1g": _ORDENACAO_PJE,
+    "pje2g": _ORDENACAO_PJE,
+    "pje2g_mono": _ORDENACAO_PJE,
+    "legado": (
+        "data_julgamento desc",
+        "data_julgamento asc",
+        "data_publicacao desc",
+        "data_publicacao asc",
+        "numero_processo_legado asc",
+        "numero_processo_legado desc",
+    ),
+    "turma_recursal_legado": (
+        "data_julgamento desc",
+        "data_julgamento asc",
+        "num_processo asc",
+        "num_processo desc",
+    ),
+}
+
+OrdenacaoCJSG = Literal[
+    "dt_juntada desc",
+    "dt_juntada asc",
+    "nr_processo asc",
+    "nr_processo desc",
+    "data_julgamento desc",
+    "data_julgamento asc",
+    "data_publicacao desc",
+    "data_publicacao asc",
+    "numero_processo_legado asc",
+    "numero_processo_legado desc",
+    "num_processo asc",
+    "num_processo desc",
+]
+OrdenacaoCJPG = Literal["dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"]
 
 
 class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
@@ -34,9 +76,9 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     ``classe_judicial`` (chaves brutas do Solr) sao aceitos com
     ``DeprecationWarning`` e resolvidos pelo client.
 
-    ``ordenacao`` fica ``str``, sem ``Literal``: vai como o parametro ``sort``
-    da API, uma expressao de campo e direcao (``"dt_juntada desc"``), e os
-    valores aceitos pelo portal nao foram capturados (#207).
+    ``ordenacao`` aceita as opcoes do seletor "Ordenacao" do portal, que
+    dependem do ``core`` (:data:`ORDENACOES_POR_CORE`); ``None`` ordena por
+    relevancia.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
@@ -48,9 +90,18 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # Expressao ``sort`` livre; sem Literal (ver InputCJSGTJES).
-    ordenacao: str | None = None
+    ordenacao: OrdenacaoCJSG | None = None
     tamanho_pagina: TamanhoPagina = 20
+
+    @model_validator(mode="after")
+    def _ordenacao_do_core(self) -> InputCJSGTJES:
+        aceitas = ORDENACOES_POR_CORE[self.core]
+        if self.ordenacao is not None and self.ordenacao not in aceitas:
+            raise ValueError(
+                f"ordenacao={self.ordenacao!r} nao existe no core {self.core!r}. "
+                f"Use uma de: {', '.join(aceitas)}."
+            )
+        return self
 
 
 class _OutputCJSGTJESBase(OutputCJSGBase, OutputRelatoriaMixin):
@@ -98,8 +149,8 @@ class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # Expressao ``sort`` livre; sem Literal (ver InputCJSGTJES).
-    ordenacao: str | None = None
+    # Opcoes do core ``pje1g`` (ver ORDENACOES_POR_CORE).
+    ordenacao: OrdenacaoCJPG | None = None
     tamanho_pagina: TamanhoPagina = 20
 
 

@@ -159,6 +159,18 @@ brutos = trf3.cpopg_download(cnjs)
 df = trf3.cpopg_parse(brutos, cnjs)
 ```
 
+### TJAP `cjsg`: from `votacao="Unanime"` to `votacao="Unânime"`
+
+The Tucujuris portal only recognizes `"Unânime"`, with the accent. On 15 Nov 2026, `votacao="Unanime"`, the spelling the docstring suggested up to 0.5.0, returned the same decisions as `"Maioria"`. It is now sent as `"Unânime"` with a `DeprecationWarning`, and will be removed in 0.7.0.
+
+```python
+# Before
+tjap.cjsg("dano", votacao="Unanime")
+
+# After
+tjap.cjsg("dano", votacao="Unânime")
+```
+
 ### TJSP `cpopg`/`cposg`: `method="api"` removed
 
 The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`
