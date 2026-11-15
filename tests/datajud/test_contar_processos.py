@@ -15,6 +15,15 @@ import requests
 
 import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
+from juscraper.core.exceptions import RetryExhaustedError
+
+
+@pytest.fixture(autouse=True)
+def pausas(monkeypatch) -> list[float]:
+    """Registra o ``sleep_time`` entre tribunais, sem dormir."""
+    registradas: list[float] = []
+    monkeypatch.setattr(datajud_client.time, "sleep", registradas.append)
+    return registradas
 
 
 @pytest.fixture
@@ -111,8 +120,29 @@ class TestReturnShape:
         assert len(df) == 1
         row = df.iloc[0]
         assert row["count"] is None
-        assert row["error"] == "HTTP 401"
+        assert row["error"] == "http_401"
         assert row["relation"] is None
+
+    @pytest.mark.parametrize(
+        ("erro", "esperado"),
+        [
+            (RetryExhaustedError(status_code=429, attempts=3), "retry_esgotado_429"),
+            (requests.ReadTimeout("lento"), "timeout"),
+            (requests.ConnectTimeout("sem rota"), "conexao"),
+            (requests.ConnectionError("recusada"), "conexao"),
+            # Fora do vocabulário de ``motivo_falha``: classe e mensagem.
+            (requests.TooManyRedirects("laço"), "TooManyRedirects: laço"),
+        ],
+    )
+    def test_coluna_error_usa_o_vocabulario_de_motivo_falha(self, monkeypatch, erro, esperado):
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
+            raise erro
+
+        monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
+
+        row = jus.scraper("datajud").contar_processos(tribunal="TJSP").iloc[0]
+
+        assert (row["count"], row["error"]) == (None, esperado)
 
     def test_relation_gte_quando_truncado(self, monkeypatch):
         def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
@@ -276,3 +306,23 @@ class TestMultiplosTribunais:
         assert len(df) == 2
         # Cada linha deve referir-se ao tribunal certo
         assert set(df["alias"].tolist()) == {"api_publica_tjac", "api_publica_tjsp"}
+
+    def test_pausa_entre_tribunais_inclusive_depois_de_falha(self, monkeypatch):
+        eventos: list[str] = []
+
+        def fake_call(*, base_url, alias, api_key, requisitar, query_payload, verbose=False):
+            eventos.append(alias)
+            if alias == "api_publica_tjac":
+                raise requests.ConnectionError("recusada")
+            return {"hits": {"total": {"value": 1, "relation": "eq"}, "hits": []}}
+
+        monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
+        monkeypatch.setattr(datajud_client.time, "sleep", lambda segundos: eventos.append(f"pausa {segundos}"))
+
+        jus.scraper("datajud", sleep_time=0.7).contar_processos(
+            numero_processo=["00033258820148010001", "01234567820238260001"],
+        )
+
+        # A pausa vem antes do tribunal seguinte, também depois do que falhou,
+        # e não há pausa depois do último.
+        assert eventos == ["api_publica_tjac", "pausa 0.7", "api_publica_tjsp"]

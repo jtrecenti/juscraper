@@ -19,7 +19,7 @@ import requests
 from tqdm.auto import tqdm
 
 from juscraper.core.avisos import avisar
-from juscraper.core.exceptions import RetryExhaustedError
+from juscraper.core.failures import FALHAS_DE_TRANSPORTE
 from juscraper.core.http import RequestFn
 
 logger = logging.getLogger("juscraper.tjmg")
@@ -35,14 +35,12 @@ ENCODING = "iso-8859-1"
 TIMEOUT = 30
 TRANSPORT_ATTEMPTS = 3
 
-# Falhas que viram "sem dados" para o numero, sem abortar o lote. O
-# ``request_fn`` sinaliza status retryable esgotado (403, 429 e 5xx, ver
-# ``RETRYABLE_STATUSES``) com ``RetryExhaustedError``, que nao herda de
-# ``requests.RequestException``; sem ela aqui, um unico recurso com 500
-# descartaria tudo o que o lote ja tinha baixado. Efeito colateral: um
-# bloqueio de IP via 403/429 tambem nao interrompe o lote, que segue
-# tentando cada numero e so avisa no fim.
-FALHAS_RECUPERAVEIS = (requests.RequestException, RetryExhaustedError)
+# ``FALHAS_DE_TRANSPORTE`` viram "sem dados" para o numero, sem abortar o
+# lote. Ela inclui o ``RetryExhaustedError`` (403, 429 e 5xx esgotados, ver
+# ``RETRYABLE_STATUSES``), que nao herda de ``requests.RequestException``;
+# sem ele, um unico recurso com 500 descartaria tudo o que o lote ja tinha
+# baixado. Efeito colateral: um bloqueio de IP via 403/429 tambem nao
+# interrompe o lote, que segue tentando cada numero e so avisa no fim.
 
 
 def _get(request_fn: RequestFn, url: str, numero: str) -> str:
@@ -80,7 +78,7 @@ def fetch_partes(request_fn: RequestFn, numero_tjmg: str) -> str | None:
     """
     try:
         return _get(request_fn, PARTES_URL, numero_tjmg)
-    except FALHAS_RECUPERAVEIS as exc:
+    except FALHAS_DE_TRANSPORTE as exc:
         logger.warning("TJMG cposg: falha ao baixar partes de %s: %s", numero_tjmg, exc)
         return None
 
@@ -108,7 +106,7 @@ def cposg_download(
         item: dict = {"id_cnj": numero, "resultado": None, "partes": {}}
         try:
             resultado = fetch_resultado(request_fn, numero)
-        except FALHAS_RECUPERAVEIS as exc:
+        except FALHAS_DE_TRANSPORTE as exc:
             logger.warning("TJMG cposg: falha ao consultar %s: %s", numero, exc)
             falhas.append(numero)
             out.append(item)

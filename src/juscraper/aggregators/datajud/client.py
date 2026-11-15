@@ -3,7 +3,6 @@ Orchestrates the flow for DATAJUD (user entry point) - API BASED
 """
 import functools
 import logging
-import math
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Mapping
@@ -16,7 +15,8 @@ from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
 from ...core.exceptions import ColetaParcialError, RetryExhaustedError
-from ...core.http import HTTPScraper, RequestPolicy
+from ...core.failures import FALHAS_DE_TRANSPORTE, motivo_falha
+from ...core.http import HTTPScraper, RequestPolicy, max_retries_valido, numero_positivo
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
@@ -140,23 +140,6 @@ def _next_search_after(
     return search_after
 
 
-def _numero_positivo(valor: Any) -> bool:
-    if isinstance(valor, bool) or not isinstance(valor, (int, float)):
-        return False
-    # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
-    # levantar ``OverflowError`` só na hora da requisição. O próprio
-    # ``isfinite`` levanta ``OverflowError`` para inteiro que não cabe em
-    # ``float``, e esse valor é recusado do mesmo jeito.
-    try:
-        return math.isfinite(valor) and valor > 0
-    except OverflowError:
-        return False
-
-
-def _max_retries_valido(valor: Any) -> bool:
-    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 1
-
-
 def _timeout_valido(timeout: Any) -> bool:
     """Número positivo e finito, ou par ``(conexão, leitura)`` deles, como o ``requests`` aceita.
 
@@ -164,8 +147,8 @@ def _timeout_valido(timeout: Any) -> bool:
     pesada ao DataJud ficaria esperando indefinidamente.
     """
     if isinstance(timeout, (list, tuple)):
-        return len(timeout) == 2 and all(_numero_positivo(v) for v in timeout)
-    return _numero_positivo(timeout)
+        return len(timeout) == 2 and all(numero_positivo(v) for v in timeout)
+    return numero_positivo(timeout)
 
 
 def _mensagem_falha_parcial(
@@ -195,10 +178,6 @@ def _mensagem_falha_parcial(
     return f"{recebidos_txt} de {total_txt} encontrado(s) pela consulta."
 
 
-FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
-"""Exceções de :func:`call_datajud_api` que viram falha da consulta, e não erro de programação."""
-
-
 def _e_timeout_de_leitura(exc: Exception) -> bool:
     """``Timeout`` que não é de conexão: ``ConnectTimeout`` também herda de ``ConnectionError``."""
     return isinstance(exc, requests.Timeout) and not isinstance(exc, requests.ConnectionError)
@@ -214,6 +193,18 @@ def _descrever_causa(exc: Exception) -> str:
     if _e_timeout_de_leitura(exc):
         return "timeout"
     return f"{type(exc).__name__}: {exc}"
+
+
+def _motivo_da_contagem(exc: Exception) -> str:
+    """Coluna ``error`` de :meth:`DatajudScraper.contar_processos`, no vocabulário de ``motivo_falha``.
+
+    Falha de transporte sem motivo no vocabulário (``TooManyRedirects``,
+    ``InvalidURL``, ...) sai como ``"<Classe>: <mensagem>"``, como antes.
+    """
+    try:
+        return motivo_falha(exc)
+    except TypeError:
+        return f"{type(exc).__name__}: {exc}"
 
 
 DICA_TIMEOUT = (
@@ -434,8 +425,8 @@ class DatajudScraper(HTTPScraper):
             _timeout_valido,
             "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
         ),
-        "max_retries": (_max_retries_valido, "Use um inteiro >= 1, contando a primeira tentativa."),
-        "base_backoff": (_numero_positivo, "Use um número positivo e finito de segundos."),
+        "max_retries": (max_retries_valido, "Use um inteiro >= 1, contando a primeira tentativa."),
+        "base_backoff": (numero_positivo, "Use um número positivo e finito de segundos."),
     }
     CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(VALIDADORES_POLITICA)
 
@@ -454,7 +445,8 @@ class DatajudScraper(HTTPScraper):
             verbose: Nível de log; acima de 1, loga cada requisição.
             download_path: Diretório temporário. Default: ``mkdtemp``, criado
                 só se ``download_path`` for lido; o DataJud não grava nele.
-            sleep_time: Pausa, em segundos, entre páginas.
+            sleep_time: Pausa, em segundos, entre páginas e, em
+                :meth:`contar_processos`, entre tribunais.
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
                 :meth:`listar_processos` e :meth:`contar_processos`, como em
                 ``politica={"busca": {"timeout": 180, "max_retries": 5}}``.
@@ -548,7 +540,10 @@ class DatajudScraper(HTTPScraper):
             ``relation`` (``"eq"`` exato ou ``"gte"`` truncado pelo cap
             interno do Elasticsearch). Quando a chamada falha para um
             tribunal, ``count`` é ``None`` e a coluna ``error`` traz o
-            motivo, com o status HTTP quando houver (``"HTTP 401"``).
+            motivo no vocabulário de ``juscraper.core.failures.motivo_falha``
+            (``"http_401"``, ``"retry_esgotado_429"``, ``"timeout"``,
+            ``"conexao"``, ``"json_invalido"``). Falha sem motivo no
+            vocabulário sai como ``"<Classe>: <mensagem>"``.
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
@@ -597,7 +592,11 @@ class DatajudScraper(HTTPScraper):
         # — segue o mesmo padrão do ``listar_processos`` para que ``numero_processo``
         # cruzando vários tribunais funcione (cada tribunal recebe só os seus CNJs).
         rows: list[dict[str, Any]] = []
-        for alias, cnjs in target_aliases:
+        for indice, (alias, cnjs) in enumerate(target_aliases):
+            # Pausa entre tribunais, também depois de um que falhou; nenhuma
+            # depois do último, como entre as páginas de ``listar_processos``.
+            if indice:
+                time.sleep(self.sleep_time)
             payload = build_contar_processos_payload(
                 numero_processo=cnjs,
                 ano_ajuizamento=inp.ano_ajuizamento,
@@ -619,7 +618,7 @@ class DatajudScraper(HTTPScraper):
                     "alias": alias,
                     "count": None,
                     "relation": None,
-                    "error": _descrever_causa(exc),
+                    "error": _motivo_da_contagem(exc),
                 })
                 continue
             total = api_response.get("hits", {}).get("total", {}) or {}
@@ -630,7 +629,6 @@ class DatajudScraper(HTTPScraper):
                 "relation": total.get("relation", "eq"),
                 "error": None,
             })
-            time.sleep(self.sleep_time)
         return pd.DataFrame(rows)
 
     def _buscar(self, alias: str, query_payload: dict[str, Any]) -> dict[str, Any]:

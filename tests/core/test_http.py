@@ -4,6 +4,7 @@ Inclui os casos canônicos da issue #185 (validação de ``session=`` na frontei
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from typing import ClassVar
 
@@ -229,7 +230,7 @@ def test_request_with_retry_negative_retry_after_clamped(probe, mocker):
 
 
 def test_request_with_retry_invalid_max_retries(probe):
-    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+    with pytest.raises(ValueError, match=r"max_retries deve ser um inteiro >= 1, recebido 0"):
         probe._request_with_retry("GET", URL, max_retries=0)
 
 
@@ -411,8 +412,34 @@ def test_politica_unknown_field_raises():
 
 
 def test_politica_invalid_max_retries_raises():
-    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+    with pytest.raises(ValueError, match=r"max_retries deve ser um inteiro >= 1, recebido 0"):
         _ProbeComPerfis(politica={"documento": {"max_retries": 0}})
+
+
+@pytest.mark.parametrize(
+    ("campo", "valor"),
+    # Sem a validação, todos passavam no construtor e só estouravam no primeiro
+    # status retentável: ``range(True)`` dá uma tentativa só, ``range(2.5)`` e
+    # ``"2" ** 1`` levantam ``TypeError`` no meio da coleta.
+    [
+        ("max_retries", True), ("max_retries", 2.5), ("max_retries", "3"), ("max_retries", -1),
+        ("base_backoff", True), ("base_backoff", "2"), ("base_backoff", 0), ("base_backoff", -1.0),
+        ("base_backoff", float("inf")), ("base_backoff", float("nan")),
+    ],
+)
+def test_request_policy_recusa_tentativas_ou_backoff_invalido(campo, valor):
+    with pytest.raises(ValueError, match=rf"{campo} deve ser .*recebido {re.escape(repr(valor))}"):
+        RequestPolicy(**{campo: valor})
+    # O mesmo vale para o ajuste por ``politica=`` e para o kwarg por chamada.
+    with pytest.raises(ValueError, match=rf"{campo} deve ser"):
+        _ProbeComPerfis(politica={"documento": {campo: valor}})
+    with pytest.raises(ValueError, match=rf"{campo} deve ser"):
+        _ProbeComPerfis()._request_with_retry("GET", URL, **{campo: valor})
+
+
+def test_request_policy_aceita_backoff_inteiro_e_fracionario():
+    assert RequestPolicy(max_retries=1, base_backoff=1).base_backoff == 1
+    assert RequestPolicy(base_backoff=2.5).base_backoff == 2.5
 
 
 def test_request_unknown_profile_raises(probe_perfis):

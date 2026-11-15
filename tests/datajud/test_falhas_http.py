@@ -314,4 +314,4 @@ def test_contar_processos_informa_o_status_que_sobra():
     linha = _scraper().contar_processos(tribunal="TJAC").iloc[0]
 
     assert linha["count"] is None
-    assert linha["error"] == "HTTP 429 em todas as 3 tentativas"
+    assert linha["error"] == "retry_esgotado_429"
