@@ -202,7 +202,9 @@ def _verificar_shards(
         return
     total = cast(dict[str, Any], shards).get("total")
     de_total = f" de {total}" if isinstance(total, int) and not isinstance(total, bool) else ""
-    causa = RuntimeError(f"{falhos}{de_total} shard(s) falharam no Elasticsearch; a página pode estar incompleta.")
+    causa = RuntimeError(
+        f"{falhos}{de_total} shard(s) falharam no Elasticsearch; a página e o total podem estar incompletos."
+    )
     diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
     _falha_pagina(f"{diagnostico} Resposta parcial: {causa}", causa)
 

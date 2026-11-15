@@ -6,6 +6,7 @@ com ``hits.hits`` vazio. ``listar_processos`` a trata como coleta parcial.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
@@ -13,6 +14,7 @@ import pytest
 import juscraper as jus
 from juscraper.aggregators.datajud import client as datajud_client
 from juscraper.core.exceptions import ColetaParcialError
+from tests._helpers import load_sample
 
 
 def _shards(failed: int, total: int = 5) -> dict[str, int]:
@@ -163,3 +165,16 @@ def test_shards_ausente_ou_sem_falha_nao_levanta(monkeypatch, shards):
     df = jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
 
     assert df["numeroProcesso"].tolist() == _numeros(1, 3)
+
+
+def test_sample_real_com_shards_falhos_preserva_os_hits(monkeypatch):
+    """Sample real (20 shards, ``failed: 0``) com a falha que a issue relata aplicada."""
+    sample = json.loads(load_sample("datajud", "listar_processos/results_normal_page_01.json"))
+    sample["_shards"].update(successful=16, failed=4)
+    _instalar_paginas(monkeypatch, [sample])
+
+    with pytest.raises(ColetaParcialError, match="4 de 20 shard") as exc_info:
+        jus.scraper("datajud", verbose=0).listar_processos(tribunal="TJSP", tamanho_pagina=10)
+
+    esperados = [hit["_source"]["numeroProcesso"] for hit in sample["hits"]["hits"]]
+    assert exc_info.value.resultado["numeroProcesso"].tolist() == esperados
