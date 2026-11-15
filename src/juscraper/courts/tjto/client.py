@@ -4,8 +4,11 @@ Scraper for the Tribunal de Justica do Tocantins (TJTO).
 from typing import Any, Literal
 
 import pandas as pd
+import requests
 
+from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import HTTPScraper
+from juscraper.core.waf import USER_AGENT, eh_desafio_waf
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
@@ -32,6 +35,35 @@ class TJTOScraper(HTTPScraper):
             sleep_time=sleep_time,
             **kwargs,
         )
+
+    def _configure_session(self, session: requests.Session) -> None:
+        super()._configure_session(session)
+        # O AWS WAF do portal responde 403 ao user agent que não é de navegador.
+        session.headers["User-Agent"] = USER_AGENT
+
+    def _levantar_bloqueio_waf(self, resp: requests.Response) -> None:
+        """Levanta quando o AWS WAF desafia (HTTP 202 vazio) ou pede CAPTCHA (HTTP 405).
+
+        Do mesmo IP, passam cerca de 7 buscas antes do desafio. O cookie
+        ``aws-waf-token`` obtido por um navegador não adianta: com ele, a busca
+        seguinte vira CAPTCHA (prova ao vivo de 15/11/2026, também de IP
+        residencial). Sem esta checagem, o 202 vazio sairia como busca sem
+        resultados.
+        """
+        # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
+        if resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
+            raise BotChallengeBlockedError(
+                self.tribunal_name, resp.url, bot_manager="AWS WAF",
+                mensagem=(
+                    f"O AWS WAF do {self.tribunal_name} bloqueou a requisição a {resp.url} (desafio ou CAPTCHA), "
+                    "o que acontece depois de algumas buscas seguidas do mesmo IP e o raspador não resolve. "
+                    "Aguarde pelo menos 10 minutos antes de tentar de novo."
+                ),
+            )
+
+    def _request_with_retry(self, method: str, url: str, **kwargs: Any) -> requests.Response:
+        kwargs.setdefault("on_response", self._levantar_bloqueio_waf)
+        return super()._request_with_retry(method, url, **kwargs)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJTO."""
@@ -154,6 +186,9 @@ class TJTOScraper(HTTPScraper):
             ValueError: Quando um canonico e seu alias deprecado sao passados
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
+            BotChallengeBlockedError: Quando o AWS WAF do portal desafia ou pede
+                CAPTCHA, o que acontece depois de algumas buscas seguidas do
+                mesmo IP.
 
         Returns:
             DataFrame com as decisoes.
