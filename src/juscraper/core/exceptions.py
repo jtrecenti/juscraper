@@ -83,6 +83,19 @@ class BotChallengeBlockedError(Exception):
         super().__init__(msg)
 
 
+class BloqueioAntiBotWarning(UserWarning):
+    """Aviso agregado de um lote em que alguma linha saiu com ``bloqueio_anti_bot``.
+
+    Os métodos com ``motivo_falha`` por linha registram o
+    :class:`BotChallengeBlockedError` na linha e emitem um único aviso ao fim
+    (:func:`juscraper.core.failures.avisar_falhas`). Quando alguma das falhas é
+    um bloqueio anti-bot, o aviso sai nesta categoria, mesmo que a mensagem não
+    cite essa linha entre os exemplos. Por herdar de ``UserWarning``, os filtros
+    existentes continuam valendo; para tratar só o bloqueio, filtre por esta
+    classe (``warnings.simplefilter("error", BloqueioAntiBotWarning)``).
+    """
+
+
 class WafChallengeError(BotChallengeBlockedError):
     """Levantada quando o AWS WAF desafia de novo logo depois de o cookie ser renovado.
 

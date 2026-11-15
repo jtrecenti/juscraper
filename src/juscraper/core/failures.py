@@ -22,7 +22,12 @@ from __future__ import annotations
 import requests
 
 from juscraper.core.avisos import avisar
-from juscraper.core.exceptions import BotChallengeBlockedError, InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core.exceptions import (
+    BloqueioAntiBotWarning,
+    BotChallengeBlockedError,
+    InvalidJSONResponseError,
+    RetryExhaustedError,
+)
 
 COLUNA_MOTIVO_FALHA = "motivo_falha"
 """Nome da coluna de motivo de falha nos DataFrames com uma linha por item."""
@@ -194,19 +199,23 @@ def avisar_falhas(falhas: list[str], metodo: str, descricao: str) -> None:
     """Emite um único ``UserWarning`` ao fim de uma coleta concluída.
 
     O aviso aponta para o código de quem chamou o método público, por
-    :func:`juscraper.core.avisos.avisar`.
+    :func:`juscraper.core.avisos.avisar`. Se alguma falha é
+    ``bloqueio_anti_bot``, sai como :class:`BloqueioAntiBotWarning`, subclasse
+    de ``UserWarning``.
 
     Args:
-        falhas: Ver :func:`resumir_falhas`. Lista vazia não emite aviso.
+        falhas: Ver :func:`resumir_falhas`; cada entrada termina em
+            ``": <motivo>"``. Lista vazia não emite aviso.
         metodo: Nome qualificado do método público, que abre a mensagem.
         descricao: Ver :func:`resumir_falhas`.
     """
     if not falhas:
         return
+    bloqueio = any(falha.endswith(f": {MOTIVO_BLOQUEIO_ANTI_BOT}") for falha in falhas)
     avisar(
         f"{metodo}: {resumir_falhas(falhas, descricao)} "
         "As linhas correspondentes saem com o conteúdo None.",
-        UserWarning,
+        BloqueioAntiBotWarning if bloqueio else UserWarning,
     )
 
 

@@ -14,6 +14,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.core.exceptions import BloqueioAntiBotWarning
 from tests._helpers import load_sample, load_sample_bytes
 from tests.trf3.test_cpopg_contract import _AKAMAI_403, _processo_encontrado
 
@@ -248,9 +249,16 @@ def test_cpopg_bloqueio_nas_pecas_preserva_o_detalhe(tmp_path) -> None:
 
 
 @responses.activate
-def test_cpopg_bloqueio_no_detalhe_nao_pede_pecas(tmp_path) -> None:
-    """Bloqueio na busca do 2º CNJ: nenhuma peça é pedida depois, e o 1º sai com o detalhe e ``bloqueio_anti_bot``."""
+def test_cpopg_bloqueio_no_detalhe_preserva_as_pecas_dos_anteriores(tmp_path) -> None:
+    """Bloqueio na busca do 2º CNJ: o 1º sai com detalhe e peças, sem motivo; o 2º, ``bloqueio_anti_bot``.
+
+    Detalhe e peças são baixados por CNJ, então as peças do 1º já foram
+    pedidas quando o 2º é bloqueado.
+    """
     _processo_encontrado()
+    doc_body = load_sample_bytes("trf3", "cpopg_pecas/documento_html.html")
+    responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+    responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
     responses.add(
         responses.POST,
         LIST_URL,
@@ -259,12 +267,11 @@ def test_cpopg_bloqueio_no_detalhe_nao_pede_pecas(tmp_path) -> None:
     )
 
     scraper = jus.scraper("trf3", sleep_time=0)
-    with pytest.warns(UserWarning, match="bloqueio_anti_bot"):
+    with pytest.warns(BloqueioAntiBotWarning, match="processo 50059460920254036325: bloqueio_anti_bot"):
         df = scraper.cpopg(
             ["50059460920254036324", "50059460920254036325"], download_pecas=True, diretorio=str(tmp_path)
         )
 
     assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
-    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
-    assert list(df["pecas"]) == [[], []]
-    assert not any(c.request.url.startswith(DOC_URL) for c in responses.calls)
+    assert list(df["motivo_falha"]) == [None, "bloqueio_anti_bot"]
+    assert len(df.iloc[0]["pecas"]) == 2 and df.iloc[1]["pecas"] == []

@@ -1,7 +1,8 @@
 """Testa o hook ``anti_bot`` definido em ``tests/conftest.py`` (issue #292).
 
 O hook (`pytest_runtest_makereport`) converte ``BotChallengeBlockedError``, e o
-``UserWarning`` de linha com ``bloqueio_anti_bot`` que o ``cpopg`` em lote emite, em
+``BloqueioAntiBotWarning`` que os métodos em lote emitem quando uma linha sai com
+``bloqueio_anti_bot``, em
 xfail **apenas** para testes marcados ``anti_bot`` — o bloqueio Akamai dos TRFs
 é falha ambiental (depende do IP), não regressão. Qualquer outra exceção, ou a
 mesma exceção num teste sem o marker, continua falhando vermelho.
@@ -24,6 +25,7 @@ _CONFTEST = "from tests.conftest import pytest_runtest_makereport  # noqa: F401\
 _TEST_MODULE = '''
 import pytest
 from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.failures import avisar_falhas
 
 
 @pytest.mark.anti_bot
@@ -42,13 +44,15 @@ def test_block_without_marker_still_fails():
 
 @pytest.mark.anti_bot
 def test_block_as_row_warning_becomes_xfail():
-    # cpopg em lote: o bloqueio vira linha e UserWarning, promovido a erro.
-    raise UserWarning("TRF3Scraper.cpopg: 1 consulta(s) de processo falharam. Falhas: processo 1: bloqueio_anti_bot.")
+    # cpopg em lote: o bloqueio vira linha e aviso, promovido a erro. O
+    # bloqueio é a 4ª falha, fora dos exemplos que a mensagem cita.
+    falhas = [f"processo {i}: http_500" for i in range(3)] + ["processo 3: bloqueio_anti_bot"]
+    avisar_falhas(falhas, "TRF3Scraper.cpopg", "consulta(s) de processo")
 
 
 @pytest.mark.anti_bot
 def test_other_row_warning_still_fails():
-    raise UserWarning("TRF3Scraper.cpopg: 1 consulta(s) de processo falharam. Falhas: processo 1: http_500.")
+    avisar_falhas(["processo 1: http_500"], "TRF3Scraper.cpopg", "consulta(s) de processo")
 '''
 
 # Espelha o uso real nos TRFs: o marker aplicado a nível de módulo via
@@ -67,6 +71,7 @@ def test_module_level_block_becomes_xfail():
 
 _INI = """
 [pytest]
+filterwarnings = error
 markers =
     anti_bot: anti-bot block becomes xfail
 """

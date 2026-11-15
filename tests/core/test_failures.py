@@ -5,6 +5,7 @@ import pytest
 import requests
 
 from juscraper.core.exceptions import (
+    BloqueioAntiBotWarning,
     BotChallengeBlockedError,
     InvalidJSONResponseError,
     RetryExhaustedError,
@@ -103,6 +104,15 @@ def test_avisar_falhas_emite_um_aviso_com_o_metodo():
     with pytest.warns(UserWarning, match=r"^Scraper\.metodo: 1 download\(s\) de documento falharam") as avisos:
         avisar_falhas(["doc 1: timeout"], "Scraper.metodo", "download(s) de documento")
     assert len(avisos) == 1
+    assert avisos[0].category is UserWarning
+
+
+def test_avisar_falhas_com_bloqueio_usa_categoria_propria_mesmo_fora_dos_exemplos():
+    falhas = [f"doc {i}: timeout" for i in range(EXEMPLOS_NO_AVISO)] + ["doc 9: bloqueio_anti_bot"]
+    with pytest.warns(BloqueioAntiBotWarning) as avisos:
+        avisar_falhas(falhas, "Scraper.metodo", "download(s) de documento")
+    assert len(avisos) == 1
+    assert "bloqueio_anti_bot" not in str(avisos[0].message)
 
 
 def test_avisar_falhas_sem_falha_nao_avisa(recwarn):
