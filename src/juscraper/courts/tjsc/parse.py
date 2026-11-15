@@ -50,6 +50,7 @@ def _resolve_field(label: str) -> str | None:
 
 
 _CLASS_LINE = re.compile(r"^(?:[A-Z][A-Za-z]*|\d+) - (.+)")
+_UPPERCASE_PREFIX = re.compile(r"^[A-Z]{2,}")
 
 
 def _extract_class(value) -> str | None:
@@ -67,7 +68,7 @@ def _extract_class(value) -> str | None:
         match = _CLASS_LINE.match(line)
         if match:
             return match.group(1).strip()
-        if re.match(r"^[A-Z]{2,}", line) and "-" in line:
+        if "-" in line and _UPPERCASE_PREFIX.match(line):
             break
     return None
 
