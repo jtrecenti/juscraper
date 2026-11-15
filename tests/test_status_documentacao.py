@@ -1,13 +1,11 @@
 """Contratos offline do registro editorial e das duas tabelas geradas."""
 
-import ast
 import copy
 import inspect
 import re
 import runpy
 import subprocess
 import sys
-import textwrap
 import tomllib
 from datetime import date
 from importlib import import_module
@@ -21,6 +19,8 @@ from juscraper import _SCRAPERS
 RAIZ = Path(__file__).resolve().parents[1]
 GERADOR = RAIZ / "scripts/gerar_status.py"
 MODULO = runpy.run_path(str(GERADOR))
+# Mesmo critério de stub da tabela de cobertura, para os dois inventários não divergirem nisso.
+e_stub = runpy.run_path(str(RAIZ / "scripts/tabela_cobertura.py"))["e_stub"]
 # Métodos públicos que o registro deixa de fora por desenho: configuração, autenticação,
 # descoberta de filtros e detalhe de um documento já listado.
 AUXILIARES = re.compile(r"set_.+|auth(_.+)?|listar_(assuntos|classes|orgaos|varas)|cjsg_ementa")
@@ -46,16 +46,6 @@ def dados():
 def registro_versionado():
     with (RAIZ / "status.toml").open("rb") as arquivo:
         return MODULO["Registro"].model_validate(tomllib.load(arquivo))
-
-
-def e_stub(funcao):
-    """Stub é o método cujo corpo, fora a docstring, só levanta NotImplementedError."""
-    definicao = ast.parse(textwrap.dedent(inspect.getsource(funcao))).body[0]
-    assert isinstance(definicao, (ast.FunctionDef, ast.AsyncFunctionDef))
-    corpo = definicao.body
-    if isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
-        corpo = corpo[1:]
-    return len(corpo) == 1 and isinstance(corpo[0], ast.Raise) and "NotImplementedError" in ast.unparse(corpo[0])
 
 
 def test_inventario_cobre_factory_e_metodos_reais():

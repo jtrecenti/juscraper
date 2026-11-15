@@ -125,16 +125,14 @@ def vencidas(registro: Registro, hoje: date) -> set[str]:
 
 def renderizar(registro: Registro, hoje: date) -> str:
     """Preserva a observação original quando o prazo de verificação vence."""
-    textos = TEXTOS
     linhas = [
-        INICIO, f"## {textos['titulo']}", "",
-        textos["aviso"].format(dias=registro.validade_dias), "",
-        textos["gerado"].format(data=hoje.isoformat()), "", textos["politica"], "",
+        INICIO, f"## {TEXTOS['titulo']}", "",
+        TEXTOS["aviso"].format(dias=registro.validade_dias), "",
+        TEXTOS["gerado"].format(data=hoje.isoformat()), "", TEXTOS["politica"], "",
     ]
-    fora_do_prazo = vencidas(registro, hoje)
     detalhes = []
     for tipo in ("tribunal", "agregador"):
-        linhas.extend([f"### {textos[tipo]}", "", f"| {textos['cabecalho']} |", "|---|---|---|---|---|"])
+        linhas.extend([f"### {TEXTOS[tipo]}", "", f"| {TEXTOS['cabecalho']} |", "|---|---|---|---|---|"])
         for fonte in sorted(registro.fontes, key=lambda item: item.sigla):
             if fonte.tipo != tipo:
                 continue
@@ -152,24 +150,23 @@ def renderizar(registro: Registro, hoje: date) -> str:
                     ultimo = ESTADOS[observacao.estado]
                     if limite := prazo(observacao, registro):
                         validade = limite.isoformat()
-                        vencida = f"{fonte.sigla}.{endpoint}" in fora_do_prazo
-                        estado = f"{estado} ({textos['ultimo']}: {ultimo})" if vencida else ultimo
+                        estado = f"{estado} ({TEXTOS['ultimo']}: {ultimo})" if hoje > limite else ultimo
                     detalhes.extend([
                         f"#### {escapar(fonte.nome)}: `{endpoint}`", "",
                         escapar(observacao.motivo), "",
-                        f"{textos['contexto']}: {escapar(observacao.cenario)}. "
-                        f"{textos['versao']}: {escapar(observacao.versao)}.", "",
+                        f"{TEXTOS['contexto']}: {escapar(observacao.cenario)}. "
+                        f"{TEXTOS['versao']}: {escapar(observacao.versao)}.", "",
                         " · ".join(
-                            f"[{textos['evidencia']} {indice}]({url})"
+                            f"[{TEXTOS['evidencia']} {indice}]({url})"
                             for indice, url in enumerate(observacao.evidencias, 1)
                         ), "",
                     ])
                     if observacao.excecao:
-                        detalhes.extend([f"{textos['excecao']}: {escapar(observacao.excecao)}.", ""])
+                        detalhes.extend([f"{TEXTOS['excecao']}: {escapar(observacao.excecao)}.", ""])
                 linhas.append(f"| {escapar(fonte.nome)} | `{endpoint}` | {estado} | {verificado} | {validade} |")
         linhas.append("")
     if detalhes:
-        linhas.extend([f"### {textos['detalhes']}", "", *detalhes])
+        linhas.extend([f"### {TEXTOS['detalhes']}", "", *detalhes])
     linhas.append(FIM)
     return "\n".join(linhas)
 
