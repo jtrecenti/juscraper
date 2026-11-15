@@ -72,8 +72,10 @@ def build_cjsg_inner_payload(
         "facet_mes_ano_publicacao": "",
     }
     if secao:
-        # Validada em ``InputCJSGTJRS``: valor fora do mapa falha, não some.
-        payload["filtroSecao"] = {"civel": "C", "crime": "P"}[secao]
+        # O formulário do site tem uma caixa por seção; o backend ignora
+        # ``filtroSecao``. Validada em ``InputCJSGTJRS``: valor fora do mapa falha.
+        campo = {"civel": "filtroSecaoCivel", "crime": "filtroSecaoCrime"}[secao]
+        payload[campo] = secao
     return payload
 
 
