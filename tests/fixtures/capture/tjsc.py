@@ -8,6 +8,8 @@ Saves raw HTML responses (eproc) under ``tests/tjsc/samples/cjsg/``.
 TJSC is dual-URL: page 1 hits ``listar_resultados``; page 2+ hit
 ``ajax_paginar_resultado``. The script exercises both.
 """
+from typing import Any
+
 import requests
 
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
@@ -15,11 +17,15 @@ from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_pa
 from ._util import dump, samples_dir_for
 
 
-def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int, filename: str) -> None:
-    body = build_cjsg_form_body(pesquisa, page=pagina_1based)
+def _capture(
+    session: requests.Session, dest, pesquisa: str, pagina_1based: int, filename: str, **filtros: Any,
+) -> None:
+    body = build_cjsg_form_body(pesquisa, page=pagina_1based, **filtros)
     url = cjsg_url_for_page(pagina_1based)
-    response = session.post(url, data=body, timeout=60)
+    response = session.post(url, data=body, timeout=60, allow_redirects=False)
     response.raise_for_status()
+    if 300 <= response.status_code < 400:
+        raise RuntimeError(f"[tjsc] busca redirecionada para {response.headers.get('Location')!r}")
     # eproc serves latin-1 pages — persist raw bytes so tests can load via
     # ``load_sample_bytes`` and the parser decodes with its own encoding rule.
     dump(dest / filename, response.content)
@@ -38,6 +44,10 @@ def main() -> None:
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.html")
     _capture(session, dest, "plano saude paciente doenca rara", 1, "single_page.html")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.html")
+    _capture(
+        session, dest, "direito", 1, "filtro_data_julgamento.html",
+        dt_decisao_inicio="10/03/2025", dt_decisao_fim="13/03/2025",
+    )
 
 
 if __name__ == "__main__":
