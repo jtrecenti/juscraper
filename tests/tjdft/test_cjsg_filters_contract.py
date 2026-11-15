@@ -8,7 +8,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from tests._helpers import assert_unknown_kwarg_raises, load_sample
-from tests.tjdft.test_cjsg_contract import BASE, _payload
+from tests.tjdft.test_cjsg_contract import BASE, _add_page, _payload
 
 
 @responses.activate
@@ -170,6 +170,25 @@ def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
         paginas=1,
         data_julgamento_inicio="01/01/2024",
         data_julgamento_fim="31/03/2024",
+    )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_data_publicacao_vai_em_termos_acessorios(mocker):
+    """``data_publicacao_inicio``/``_fim`` chegam ao corpo como termo ``dataPublicacao``."""
+    mocker.patch("time.sleep")
+    expected_termos = [
+        {"campo": "dataPublicacao", "valor": "entre 2024-01-01 e 2024-03-31"},
+    ]
+    _add_page("dano moral", 1, "cjsg/no_results.json", termos_acessorios=expected_termos)
+
+    df = jus.scraper("tjdft").cjsg(
+        "dano moral",
+        paginas=1,
+        data_publicacao_inicio="2024-01-01",
+        data_publicacao_fim="2024-03-31",
     )
 
     assert isinstance(df, pd.DataFrame)

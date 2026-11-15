@@ -107,7 +107,6 @@ extend = "pyproject.toml"
 "src/juscraper/courts/trf6/client.py" = ["ANN204"]
 "src/juscraper/courts/trf6/download.py" = ["PLC0415"]
 "src/juscraper/schemas/types.py" = ["ANN001", "ANN202", "TRY004"]
-"src/juscraper/tribunal_manager.py" = ["ANN003", "ANN201", "D200", "D212"]
 "src/juscraper/utils/__init__.py" = ["ANN001"]
 "src/juscraper/utils/cnj.py" = ["FBT001", "FBT002"]
 "src/juscraper/utils/pagination.py" = ["D205"]

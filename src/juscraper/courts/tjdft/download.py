@@ -1,9 +1,8 @@
 """
 Functions for downloading specific to TJDFT
 """
-import math
-
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import resolve_total_pages
 
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
@@ -19,6 +18,10 @@ def build_cjsg_payload(
     termos_acessorios: list | None = None,
 ) -> dict:
     """Build the JSON payload sent to the TJDFT jurisprudence search API.
+
+    ``pagina`` vai como está no campo ``pagina`` da API, que conta a partir de
+    0: a primeira página de resultados é ``pagina=0``. ``cjsg_download`` recebe
+    páginas 1-based e subtrai 1.
 
     Shared between the scraper and the offline capture script so both stay
     in sync with the API contract.
@@ -79,7 +82,7 @@ def cjsg_download(
     def _fetch_page(pagina):
         payload = build_cjsg_payload(
             query,
-            pagina,
+            pagina - 1,
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,
@@ -89,20 +92,16 @@ def cjsg_download(
         resp = request_fn("POST", base_url, json=payload, headers=headers, timeout=10)
         return resp.json()
 
-    if paginas is None:
-        resultados = []
-        data = _fetch_page(1)
-        registros = data.get("registros", [])
-        resultados.extend(registros)
-        total = data.get("total", len(registros))
-        n_pags = math.ceil(total / quantidade_por_pagina) if total else 1
-        for pagina in range(2, n_pags + 1):
-            data = _fetch_page(pagina)
-            resultados.extend(data.get("registros", []))
-        return resultados
-
     resultados = []
-    for pagina in paginas:
-        data = _fetch_page(pagina)
+    if paginas is None:
+        data = _fetch_page(1)
         resultados.extend(data.get("registros", []))
+        n_pags = resolve_total_pages(
+            (data.get("hits") or {}).get("value"),
+            resultados_por_pagina=quantidade_por_pagina,
+            tribunal="TJDFT",
+        )
+        paginas = range(2, n_pags + 1)
+    for pagina in paginas:
+        resultados.extend(_fetch_page(pagina).get("registros", []))
     return resultados
