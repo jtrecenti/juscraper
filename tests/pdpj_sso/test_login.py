@@ -481,7 +481,26 @@ def ctrl_c_ativo():
     signal.signal(signal.SIGINT, anterior)
 
 
-@pytest.mark.usefixtures("ctrl_c_ativo")
+@pytest.fixture
+def ctrl_c_no_join(mocker):
+    """Manda o SIGINT do Ctrl-C 0,2 s depois que o chamador entra no ``join`` do worker.
+
+    O prazo conta a partir do ``join``, dentro do ``obter_credencial_govbr``: o
+    ``KeyboardInterrupt`` nao tem como sair do ``pytest.raises`` do teste.
+    """
+    join_original = threading.Thread.join
+
+    def join(self, *args, **kwargs):
+        if threading.current_thread() is threading.main_thread():
+            # SIGINT real, como o do Ctrl-C: ``interrupt_main`` so marca o sinal, sem interromper a
+            # espera, e o ``worker.join()`` bloqueado seguiria ate o worker terminar.
+            threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
+        return join_original(self, *args, **kwargs)
+
+    mocker.patch.object(threading.Thread, "join", join)
+
+
+@pytest.mark.usefixtures("ctrl_c_ativo", "ctrl_c_no_join")
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
     cancelado = threading.Event()
@@ -492,9 +511,6 @@ def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
         raise RuntimeError("Login no gov.br cancelado.")
 
     mocker.patch.object(login, "_obter_credencial", side_effect=worker)
-    # SIGINT real, como o do Ctrl-C: ``interrupt_main`` so marca o sinal, sem interromper a espera,
-    # e o ``worker.join()`` bloqueado seguiria ate o worker terminar.
-    threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
     inicio = time.monotonic()
 
     with pytest.raises(KeyboardInterrupt):
@@ -515,12 +531,11 @@ def test_abrir_navegador_sem_porta_no_prazo_encerra_o_processo(mocker, tmp_path)
     assert processo.encerrado
 
 
-@pytest.mark.usefixtures("ctrl_c_ativo")
+@pytest.mark.usefixtures("ctrl_c_ativo", "ctrl_c_no_join")
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_nao_espera_worker_preso(mocker):
     """Worker preso num passo que nao confere o cancelamento (``goto`` longo, por exemplo)."""
     mocker.patch.object(login, "_obter_credencial", side_effect=lambda *_a: time.sleep(3))
-    threading.Timer(0.2, os.kill, args=(os.getpid(), signal.SIGINT)).start()
     inicio = time.monotonic()
 
     with pytest.raises(KeyboardInterrupt):
