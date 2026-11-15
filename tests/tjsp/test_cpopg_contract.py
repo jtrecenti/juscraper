@@ -11,6 +11,7 @@ the process details directly when the CNJ is unique).
 """
 import warnings
 
+import numpy as np
 import pandas as pd
 import pytest
 import requests
@@ -186,8 +187,8 @@ def test_cpopg_html_busca_com_status_de_erro_sai_com_o_status(tmp_path, mocker):
     assert len(responses.calls) == 5
 
 
-def test_cpopg_lote_so_com_entrada_invalida_nao_cria_nem_apaga_pasta(tmp_path):
-    """Sem nenhuma requisição, a pasta de download não existe, e ``cpopg`` devolve a linha sem erro."""
+def test_cpopg_lote_so_com_entrada_invalida_nao_deixa_pasta(tmp_path):
+    """Sem nenhuma requisição, ``cpopg`` devolve as linhas sem erro e não deixa a pasta de download."""
     pasta = tmp_path / "nao_criada"
 
     with pytest.warns(UserWarning, match="123: entrada_invalida"):
@@ -531,3 +532,22 @@ def test_cpopg_download_que_passa_depois_tira_a_falha_anterior(tmp_path, mocker)
     basicos = scraper.cpopg_parse(str(tmp_path))["basicos"]
     assert basicos[["id_processo", "motivo_falha"]].to_dict("records") == [{"id_processo": CNJ, "motivo_falha": None}]
     assert not (tmp_path / "cpopg" / "falhas_download.json").exists()
+
+
+def test_cpopg_lote_vazio_devolve_as_tabelas_vazias(tmp_path):
+    """``cpopg([])`` devolve as quatro tabelas vazias, com ``motivo_falha`` em ``basicos``, sem erro de leitura."""
+    result = jus.scraper("tjsp", download_path=str(tmp_path / "x")).cpopg([])
+
+    assert all(tabela.empty for tabela in result.values())
+    assert "motivo_falha" in result["basicos"].columns
+
+
+def test_cpopg_entrada_que_nao_e_texto_vira_linha_de_falha(tmp_path):
+    """Número de uma coluna numérica (``numpy.int64``) e ``None`` saem ``entrada_invalida``, sem quebrar o registro."""
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg([np.int64(123), None])
+
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": "123", "motivo_falha": "entrada_invalida"},
+        {"id_processo": "None", "motivo_falha": "entrada_invalida"},
+    ]

@@ -88,23 +88,36 @@ def registrar_falhas(pasta: Path, pedidos: list, falhas: dict) -> None:
 
     Os ``pedidos`` saem do registro antes de as ``falhas`` entrarem: o
     processo baixado agora não guarda a falha de um download anterior na
-    mesma pasta. Registro vazio apaga o arquivo.
+    mesma pasta. A entrada que não é texto (``None``, número) entra como
+    ``str``, a única chave que o JSON guarda. Registro vazio apaga o arquivo;
+    o arquivo é trocado de uma vez, e um download interrompido não o deixa
+    pela metade.
     """
-    registro = falhas_registradas(pasta)
-    for cnj in pedidos:
-        registro.pop(cnj, None)
-    registro.update(falhas)
     arquivo = pasta / ARQUIVO_FALHAS
+    registro = _ler_registro(arquivo)
+    for cnj in pedidos:
+        registro.pop(str(cnj), None)
+    registro.update({str(cnj): motivo for cnj, motivo in falhas.items()})
     if not registro:
         arquivo.unlink(missing_ok=True)
         return
     pasta.mkdir(parents=True, exist_ok=True)
-    arquivo.write_text(json.dumps(registro, ensure_ascii=False, indent=1), encoding="utf-8")
+    temporario = arquivo.with_suffix(".tmp")
+    temporario.write_text(json.dumps(registro, ensure_ascii=False, indent=1), encoding="utf-8")
+    temporario.replace(arquivo)
 
 
-def falhas_registradas(pasta: Path) -> dict[str, str]:
-    """As falhas que :func:`registrar_falhas` gravou em ``pasta``; vazio sem o arquivo."""
-    arquivo = pasta / ARQUIVO_FALHAS
+def processos_sem_arquivo(pasta: Path, arquivos: list[Path]) -> dict[str, str]:
+    """As falhas registradas em ``pasta``, menos as dos CNJs que têm arquivo em ``arquivos``.
+
+    O processo baixado antes e que falhou num download seguinte na mesma
+    pasta sai pelo arquivo que já estava lá, e não numa segunda linha, de falha.
+    """
+    com_arquivo = {cnj_da_pasta(arquivo) for arquivo in arquivos}
+    return {cnj: motivo for cnj, motivo in _ler_registro(pasta / ARQUIVO_FALHAS).items() if cnj not in com_arquivo}
+
+
+def _ler_registro(arquivo: Path) -> dict[str, str]:
     if not arquivo.is_file():
         return {}
     registro: dict[str, str] = json.loads(arquivo.read_text(encoding="utf-8"))

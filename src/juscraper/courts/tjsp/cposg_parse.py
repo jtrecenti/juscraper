@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, falhas_registradas
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, processos_sem_arquivo
 from .cpopg_parse import _split_incident_header
 
 _FIELD_MAPPING = (
@@ -88,7 +88,7 @@ def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse"):
             continue
         dados.append({'processo': cnj_da_pasta(arq), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA})
         falhas.append(f"{arq}: {MOTIVO_RESPOSTA_INESPERADA} ({erro})")
-    sem_arquivo = falhas_registradas(raiz)
+    sem_arquivo = processos_sem_arquivo(raiz, arquivos)
     dados.extend({'processo': cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in sem_arquivo.items())
     avisar_falhas_de_processo(sem_arquivo, falhas, metodo, "Eles saem no DataFrame")
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)

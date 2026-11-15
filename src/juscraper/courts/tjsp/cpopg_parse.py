@@ -10,7 +10,7 @@ from tqdm import tqdm
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
 from .._esaj.pasta import documento_vinculado
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, falhas_registradas
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, processos_sem_arquivo
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -104,7 +104,7 @@ def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse"):
         return cpopg_parse_single(str(root))
 
     files = arquivos_candidatos(root)
-    sem_arquivo = falhas_registradas(root / 'cpopg' if (root / 'cpopg').is_dir() else root)
+    sem_arquivo = processos_sem_arquivo(root / 'cpopg' if (root / 'cpopg').is_dir() else root, files)
     parsed, falhas = _ler_arquivos(files)
     if parsed:
         result = {
@@ -153,7 +153,7 @@ def arquivos_candidatos(root: Path) -> list[Path]:
 def tabelas_vazias() -> dict[str, pd.DataFrame]:
     """As quatro tabelas do ``cpopg`` sem linhas, para o lote em que nenhum processo foi baixado."""
     return {
-        'basicos': pd.DataFrame(columns=list(_BASIC_COLUMNS)),
+        'basicos': pd.DataFrame(columns=[*_BASIC_COLUMNS, COLUNA_MOTIVO_FALHA]),
         'partes': pd.DataFrame(columns=list(_PARTY_COLUMNS)),
         'movimentacoes': pd.DataFrame(columns=list(_MOVEMENT_COLUMNS)),
         'peticoes_diversas': pd.DataFrame(columns=list(_MISC_PETITION_COLUMNS)),

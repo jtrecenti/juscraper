@@ -492,3 +492,24 @@ def test_cposg_parse_devolve_o_processo_que_o_download_nao_baixou(tmp_path, mock
         {"processo": CNJ, "motivo_falha": None},
         {"processo": sem_conexao, "motivo_falha": "conexao"},
     ]
+
+
+@responses.activate
+def test_cposg_processo_baixado_antes_nao_sai_tambem_como_falha(tmp_path, mocker):
+    """O CNJ já baixado na pasta que falha num download seguinte sai uma vez, pelo arquivo, sem linha de falha."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    scraper.cposg_download(CNJ)
+    responses.replace(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=requests.ConnectionError("recusada"),
+    )
+    with pytest.warns(UserWarning, match=f"{CNJ}: conexao"):
+        scraper.cposg_download(CNJ)
+
+    df = scraper.cposg_parse(str(tmp_path))
+
+    assert df[["processo", "motivo_falha"]].to_dict("records") == [{"processo": CNJ, "motivo_falha": None}]

@@ -25,7 +25,7 @@ from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
 from .cpopg_download import cpopg_download_html, validar_download_pecas
-from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links
+from .cpopg_parse import cpopg_parse_manager, get_cpopg_download_links, tabelas_vazias
 from .cposg_download import cposg_download_html
 from .cposg_parse import cposg_parse_manager
 from .exceptions import QueryTooLongError, validate_pesquisa_length
@@ -707,10 +707,11 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             )
         if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
             raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
+        ids = [id_cnj] if isinstance(id_cnj, str) else id_cnj
         # A função de download não avisa: o parse lê as falhas que ela gravou
         # na pasta e avisa uma vez só, junto com as de leitura.
         cpopg_download_html(
-            id_cnj_list=[id_cnj] if isinstance(id_cnj, str) else id_cnj,
+            id_cnj_list=ids,
             session=self.session,
             u_base=self.u_base,
             download_path=self.download_path,
@@ -719,10 +720,11 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             baixar_movimentacoes=baixar_movimentacoes,
             download_pecas=download_pecas,
         )
-        result = cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg")
+        # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
+        result = cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg") if ids else tabelas_vazias()
         if diretorio is not None:
             result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
-        # Lote só com entrada inválida não cria a pasta de download.
+        # O lote vazio não cria a pasta de download.
         if Path(self.download_path).exists():
             shutil.rmtree(self.download_path)
         return result
