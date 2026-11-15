@@ -118,13 +118,66 @@ def test_busca_categorizada_com_pagina_que_falha_guarda_as_listas_anteriores(moc
             match=[query_param_subset_matcher({"excluirRepetitivos": "true", "numeroRegistro": "11"})],
         )
 
-    with pytest.raises(
-        ColetaParcialError, match=r"página 2 da lista 'Acórdãos' falhou.*faltam as páginas \[2, 3\] da lista 'Acórdãos'"
-    ) as erro:
+    falha = r"página 2 da lista 'Acórdãos' falhou.*da lista 'Acórdãos', faltam as páginas \[2, 3\]\.$"
+    with pytest.raises(ColetaParcialError, match=falha) as erro:
         jus.scraper("tjmg").cjsg_download("usucapiao", paginas=range(1, 4), **_DATAS)
 
     assert len(erro.value.resultado) == 11
     assert isinstance(erro.value.__cause__, requests.ConnectionError)
+
+
+@pytest.mark.usefixtures("mock_txtcaptcha")
+@responses.activate(registry=OrderedRegistry)
+def test_busca_categorizada_com_lista_seguinte_que_falha_na_pagina_1(mocker):
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_busca("categorizada.html", {"numeroRegistro": "1"})
+    _add_busca("categorizada_repetitivos.html", {"listaClasse": "600"})
+    for _ in range(TJMGScraper.perfis_http["cjsg"].max_retries):
+        responses.add(
+            responses.GET,
+            SEARCH_URL,
+            body=requests.ConnectionError("reset"),
+            match=[query_param_subset_matcher({"excluirRepetitivos": "true"})],
+        )
+
+    with pytest.raises(ColetaParcialError, match=r"página 1 da lista 'Acórdãos'.*faltam a lista inteira\.$") as erro:
+        jus.scraper("tjmg").cjsg_download("usucapiao", paginas=[1, 3], **_DATAS)
+
+    assert len(erro.value.resultado) == 1
+
+
+@pytest.mark.usefixtures("mock_txtcaptcha")
+@responses.activate(registry=OrderedRegistry)
+def test_lista_da_busca_categorizada_com_erro_do_banco_levanta(mocker):
+    """A página 1 de cada lista passa pela mesma checagem da página 1 da busca."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_busca("categorizada.html", {"numeroRegistro": "1"})
+    _add_busca("erro_ora.html", {"listaClasse": "600"})
+
+    with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000"):
+        jus.scraper("tjmg").cjsg_download("usucapiao", paginas=1, **_DATAS)
+
+
+@pytest.mark.usefixtures("mock_txtcaptcha")
+@responses.activate(registry=OrderedRegistry)
+def test_busca_categorizada_com_link_sem_parametro_proprio_levanta(mocker):
+    """Sem o parâmetro que distingue a lista, segui-la repetiria a busca categorizada."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    pagina = load_sample_bytes("tjmg", "cjsg/categorizada.html").replace(b"&amp;&amp;listaClasse=600", b"")
+    responses.add(responses.GET, SEARCH_URL, body=pagina, content_type="text/html; charset=ISO-8859-1")
+
+    with pytest.raises(TJMGBuscaSemListaError, match="categorizada"):
+        jus.scraper("tjmg").cjsg_download("usucapiao", paginas=1, **_DATAS)
+    assert len(_consultas_da_busca()) == 1
 
 
 def test_parse_busca_categorizada_levanta_com_as_contagens():

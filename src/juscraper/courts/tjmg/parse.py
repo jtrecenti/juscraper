@@ -37,9 +37,10 @@ _ERRO_DE_BUSCA_RE = re.compile(
 # por categoria, com um link para cada lista, e nenhum resultado.
 _CATEGORIZADA_RE = re.compile(r"<h1>\s*Resultado da busca \(Categorizada\)", re.IGNORECASE)
 _CATEGORIA_RE = re.compile(
-    r"<td>([^<]+?):</td>\s*<td><a [^>]*?href=\"([^\"]*)\"[^>]*>(\d+) documento\(s\) encontrado\(s\)</a>",
+    r"<td>([^<]+?):</td>\s*<td><a ([^>]*)>(\d+) documento\(s\) encontrado\(s\)</a>",
     re.IGNORECASE,
 )
+_HREF_RE = re.compile(r"""href=["']([^"']*)["']""", re.IGNORECASE)
 _PROC_ID_RE = re.compile(
     r"procAno=(\d+)&procCodigo=(\d+)&procCodigoOrigem=(\d+)"
     r"&procNumero=(\d+)&procSequencial=(\d+)&procSeqAcordao=(\d+)"
@@ -69,10 +70,12 @@ def listas_da_busca_categorizada(html: str) -> list[tuple[str, dict[str, str]]]:
     """
     if not _CATEGORIZADA_RE.search(html):
         return []
-    return [
-        (clean_html(nome) or nome, dict(parse_qsl(urlsplit(unescape(href)).query)))
-        for nome, href, _ in _CATEGORIA_RE.findall(html)
-    ]
+    listas = []
+    for nome, atributos, _ in _CATEGORIA_RE.findall(html):
+        href = _HREF_RE.search(atributos)
+        link = href.group(1) if href else ""
+        listas.append((clean_html(nome) or nome, dict(parse_qsl(urlsplit(unescape(link)).query))))
+    return listas
 
 
 def busca_sem_lista(html: str) -> str | None:
@@ -91,7 +94,8 @@ def busca_sem_lista(html: str) -> str | None:
         return (
             f"TJMG devolveu a busca categorizada ({categorias}), que separa os "
             "acórdãos de repetitivos e não lista resultados. O cjsg_download segue "
-            "as listas de cada categoria; baixe a busca de novo com ele."
+            "a lista de cada categoria; se esta página veio dele, o formato dos "
+            "links das categorias mudou."
         )
     return None
 

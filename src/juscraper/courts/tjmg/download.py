@@ -287,16 +287,20 @@ def _listas(first_html: str, base: dict) -> list[tuple[str | None, dict[str, str
     à busca (``excluirRepetitivos=true``, ``listaClasse=600``). A página com o
     erro do banco (``ORA-20000``) levanta :class:`TJMGBuscaSemListaError`.
     """
-    categorias = listas_da_busca_categorizada(first_html)
-    if categorias:
-        return [
-            (nome, {chave: valor for chave, valor in link.items() if chave not in base})
-            for nome, link in categorias
-        ]
-    motivo = busca_sem_lista(first_html)
+    listas: list[tuple[str | None, dict[str, str]]] = [
+        (nome, {chave: valor for chave, valor in link.items() if chave not in base})
+        for nome, link in listas_da_busca_categorizada(first_html)
+    ]
+    if listas and all(extra for _, extra in listas):
+        return listas
+    _levantar_se_sem_lista(first_html)
+    return [(None, {})]
+
+
+def _levantar_se_sem_lista(html: str) -> None:
+    motivo = busca_sem_lista(html)
     if motivo:
         raise TJMGBuscaSemListaError(motivo)
-    return [(None, {})]
 
 
 def _baixar_lista(
@@ -328,21 +332,32 @@ def _baixar_lista(
 
     if primeira is None:
         time.sleep(sleep_time)
-        primeira = baixar(1, 1, None if paginas is None else list(paginas))
+        primeira = baixar(1, 1, None)
+        _levantar_se_sem_lista(primeira)
     total = _extract_total(primeira) or 0
     if total == 0:
         logger.info("TJMG: nenhum resultado para a pesquisa.")
         results.append(primeira)
         return
 
-    n_pags = max(1, math.ceil(total / linhas_por_pagina))
-    validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJMG")
+    validas = _paginas_da_lista(paginas, max(1, math.ceil(total / linhas_por_pagina)), lista)
     for posicao, pagina in enumerate(validas):
         if pagina == 1:
             results.append(primeira)
             continue
         time.sleep(sleep_time)
         results.append(baixar(pagina, total, validas[posicao:]))
+
+
+def _paginas_da_lista(paginas, n_pags: int, lista: str | None) -> list[int]:
+    """As ``paginas`` que a lista tem; só a busca comum avisa das que ficam de fora.
+
+    Na busca categorizada, ``paginas`` vale para cada lista, e a mais curta (a
+    de repetitivos costuma ter uma página) não precisa avisar das que não tem.
+    """
+    if lista is None:
+        return paginas_no_intervalo(paginas, n_pags, tribunal="TJMG")
+    return [pagina for pagina in (paginas or range(1, n_pags + 1)) if pagina <= n_pags]
 
 
 def _coleta_parcial(
@@ -359,17 +374,20 @@ def _coleta_parcial(
     eSAJ, que tenta as janelas seguintes: depois das tentativas do perfil
     ``"cjsg"``, o portal costuma seguir fora do ar, e as paginas seguintes
     custariam as mesmas tentativas. Por isso ``falhas`` tem um item so, e a
-    mensagem lista todas as paginas que faltam (``faltando``; ``None`` quando
-    faltam todas). Na busca categorizada, a mensagem nomeia a lista da pagina
-    e as listas seguintes, nao baixadas.
+    mensagem lista todas as paginas que faltam. Na busca categorizada, a
+    mensagem nomeia a lista da pagina (``faltando`` ``None`` quando falhou a
+    pagina 1 dela) e as listas seguintes, nao baixadas; ``paginas=`` vale para
+    todas as listas, entao a mensagem nao sugere pedir de novo so as que faltam.
     """
-    da_lista = f" da lista {lista!r}" if lista else ""
-    paginas_que_faltam = "todas as páginas" if faltando is None else f"as páginas {faltando}"
     mensagem = (
-        f"TJMG cjsg: a página {pagina}{da_lista} falhou ({exc!r}), e a busca parou. "
-        f"As {len(results)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
-        f"faltam {paginas_que_faltam}{da_lista}, que podem ser pedidas de novo com paginas=."
+        f"TJMG cjsg: a página {pagina}{f' da lista {lista!r}' if lista else ''} falhou ({exc!r}), "
+        f"e a busca parou. As {len(results)} página(s) baixadas antes estão, já lidas, no "
+        "atributo .resultado do erro; "
     )
-    if seguintes:
-        mensagem += f" As listas seguintes da busca categorizada, {seguintes}, também não foram baixadas."
+    if lista is None:
+        mensagem += f"faltam as páginas {faltando}, que podem ser pedidas de novo com paginas=."
+    else:
+        faltam = "a lista inteira" if faltando is None else f"as páginas {faltando}"
+        mensagem += f"da lista {lista!r}, faltam {faltam}"
+        mensagem += f", e as listas seguintes, {seguintes}, não foram baixadas." if seguintes else "."
     return ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)])
