@@ -65,15 +65,20 @@ class TJPEScraper(HTTPScraper):
                 ``classe``, ``assunto``, ``data_distribuicao``,
                 ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``,
                 ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
-                ``documentos``; com ``download_pecas=True``, também ``pecas``.
+                ``documentos`` e ``motivo_falha``; com ``download_pecas=True``,
+                também ``pecas``. ``motivo_falha`` segue a regra de
+                :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg`.
+                Quando o WAF desafia de novo logo após a renovação do cookie,
+                ou o cookie não pôde ser obtido (Chromium do Playwright
+                ausente, cookie não emitido no prazo), o lote para ali: as
+                linhas anteriores são preservadas, e a bloqueada e as seguintes
+                saem com ``motivo_falha`` igual a ``bloqueio_anti_bot``, com um
+                ``UserWarning``.
 
         Raises:
             TypeError: Kwarg desconhecido.
             ImportError: O WAF desafiou e o Playwright não está instalado,
                 inclusive durante o download das peças.
-            WafChallengeError: O WAF desafiou de novo logo após a renovação do
-                cookie, ou o cookie não pôde ser obtido (Chromium do Playwright
-                ausente, cookie não emitido no prazo). Interrompe o lote.
 
         Examples: Exemplo
             >>> import juscraper as jus

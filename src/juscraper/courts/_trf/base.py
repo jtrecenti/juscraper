@@ -22,6 +22,14 @@ from pydantic import BaseModel, ValidationError
 from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_RESPOSTA_INESPERADA,
+    avisar_falhas,
+    motivo_falha,
+)
 from ...core.http import HTTPScraper
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import (
@@ -168,6 +176,65 @@ class TRFConsultaScraper(HTTPScraper):
             detail = merge_docs_pages(detail, extras_docs)
         return detail
 
+    def _baixar(self, cnjs: list[str]) -> tuple[list[str | None], list[str | None]]:
+        """Detalhe HTML e motivo de falha de cada CNJ, na ordem da entrada.
+
+        Um CNJ que falha vira ``None`` com o motivo, e o lote segue. O
+        bloqueio anti-bot vale para a sessão inteira: ele encerra o lote, e o
+        CNJ bloqueado e os seguintes saem com ``bloqueio_anti_bot`` sem novos
+        pedidos. Processo ausente da consulta pública sai ``None`` sem motivo.
+        ``ImportError`` (extra ``juscraper[waf]`` ausente) propaga.
+        """
+        htmls: list[str | None] = []
+        motivos: list[str | None] = []
+        for i, cnj in enumerate(tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} cpopg")):
+            html: str | None = None
+            motivo: str | None = None
+            try:
+                html = self._fetch_one(cnj)
+            except BotChallengeBlockedError as exc:
+                logger.warning("%s: bloqueio anti-bot em %s; o lote para aqui: %s", self.TRIBUNAL_NAME, cnj, exc)
+                restantes = len(cnjs) - i
+                htmls.extend([None] * restantes)
+                motivos.extend([MOTIVO_BLOQUEIO_ANTI_BOT] * restantes)
+                break
+            except ImportError:
+                raise
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
+                logger.warning("Erro ao consultar %s: %s", cnj, exc)
+                no_vocabulario = isinstance(exc, EXCECOES_DE_FALHA_POR_LINHA)
+                motivo = motivo_falha(exc) if no_vocabulario else MOTIVO_RESPOSTA_INESPERADA
+            htmls.append(html)
+            motivos.append(motivo)
+            if i + 1 < len(cnjs) and self.sleep_time:
+                time.sleep(self.sleep_time)
+        return htmls, motivos
+
+    def _linhas(
+        self,
+        htmls: list[str | None],
+        cnjs: list[str],
+        motivos: list[str | None],
+    ) -> list[dict[str, Any]]:
+        """Uma linha por CNJ, com ``motivo_falha``; HTML que o parser recusa sai ``resposta_inesperada``."""
+        rows: list[dict[str, Any]] = []
+        for cnj, html, motivo_download in zip(cnjs, htmls, motivos, strict=True):
+            record: dict[str, Any] = {}
+            motivo = motivo_download
+            if html is not None:
+                try:
+                    record = parse_detail(html)
+                except Exception as exc:  # noqa: BLE001 — resiliência por item
+                    logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
+                    motivo = motivo or MOTIVO_RESPOSTA_INESPERADA
+            rows.append({**record, "id_cnj": cnj, COLUNA_MOTIVO_FALHA: motivo})
+        return rows
+
+    def _avisar(self, cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
+        """Um ``UserWarning`` com os CNJs que falharam, atribuído ao método público ``metodo``."""
+        falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
+        avisar_falhas(falhas, f"{self.TRIBUNAL_NAME}Scraper.{metodo}", "consulta(s) de processo")
+
     # --- public API ------------------------------------------------------
 
     def cpopg_download(
@@ -178,27 +245,16 @@ class TRFConsultaScraper(HTTPScraper):
         """Download the detail HTML for each ``id_cnj``.
 
         Returns a list aligned with the input order. ``None`` entries indicate
-        processes the public consultation could not return — typically sigilo,
-        invalid CNJ, ou qualquer erro transiente (rede, payload inesperado do
-        PJe, falha de extração de token). Falhas individuais não interrompem o
-        batch: o CNJ problemático vira ``None`` e o loop segue para o próximo,
-        igual ao padrão do TJSP.
+        processes the public consultation could not return — sigilo, CNJ
+        inexistente ou falha da requisição. Falhas individuais não
+        interrompem o batch; um bloqueio anti-bot encerra o batch e os CNJs
+        restantes saem ``None``. As falhas entram num único ``UserWarning``
+        ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
-        results: list[str | None] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} cpopg")):
-            try:
-                results.append(self._fetch_one(cnj))
-            except (BotChallengeBlockedError, ImportError):
-                # Bloqueio e dependência ausente valem para a sessão inteira:
-                # nenhum item do batch passaria, e engolir viraria "não encontrado".
-                raise
-            except Exception as exc:  # noqa: BLE001 — resiliência por item
-                logger.warning("Erro ao consultar %s: %s", cnj, exc)
-                results.append(None)
-            if i + 1 < len(cnjs) and self.sleep_time:
-                time.sleep(self.sleep_time)
-        return results
+        htmls, motivos = self._baixar(cnjs)
+        self._avisar(cnjs, motivos, "cpopg_download")
+        return htmls
 
     def cpopg_parse(
         self,
@@ -207,33 +263,21 @@ class TRFConsultaScraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Parse a list of detail HTMLs into a one-row-per-process DataFrame.
 
-        Rows for ``None`` entries (process not found) carry ``id_cnj`` plus
-        ``None`` in every other column, so callers can still distinguish
-        "looked up but missing" from "never tried". Um HTML que sobreviveu ao
-        download mas falhou no parse vira o mesmo formato (linha só com
-        ``id_cnj``) e o batch continua — assim um erro pontual não derruba
-        a coleta inteira.
+        Rows for ``None`` entries carry ``id_cnj`` plus ``None`` in every
+        other column, so callers can still distinguish "looked up but
+        missing" from "never tried". Um HTML que sobreviveu ao download mas
+        falhou no parse vira linha só com ``id_cnj``, com ``UserWarning``, e o
+        batch continua. Sem a coluna ``motivo_falha``: um ``None`` vindo de
+        :meth:`cpopg_download` pode ser processo ausente ou requisição que
+        falhou, e só :meth:`cpopg` sabe qual.
         """
         if len(htmls) != len(id_cnj_list):
             raise ValueError(
                 "htmls and id_cnj_list must have the same length "
                 f"({len(htmls)} != {len(id_cnj_list)})"
             )
-        rows: list[dict[str, Any]] = []
-        for cnj, html in zip(id_cnj_list, htmls, strict=False):
-            if html is None:
-                rows.append({"id_cnj": cnj})
-                continue
-            try:
-                record = parse_detail(html)
-            except BotChallengeBlockedError:
-                raise  # session-wide; nenhum item do batch passaria
-            except Exception as exc:  # noqa: BLE001 — resiliência por item
-                logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
-                rows.append({"id_cnj": cnj})
-                continue
-            record["id_cnj"] = cnj
-            rows.append(record)
+        rows = self._linhas(htmls, id_cnj_list, [None] * len(htmls))
+        self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
         return pd.DataFrame(rows)
 
     def cpopg(
@@ -269,14 +313,29 @@ class TRFConsultaScraper(HTTPScraper):
             DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
             ``classe``, ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
             ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``, ``polo_passivo``,
-            ``movimentacoes``, ``documentos`` (metadados). Quando
-            ``download_pecas=True``, ganha ainda a coluna ``pecas`` com a lista
-            de caminhos salvos.
+            ``movimentacoes``, ``documentos`` (metadados) e ``motivo_falha``.
+            Quando ``download_pecas=True``, ganha ainda a coluna ``pecas`` com
+            a lista de caminhos salvos.
+
+            ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
+            para processo ausente ou sob sigilo (linha só com ``id_cnj``).
+            Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj``
+            e o motivo, no vocabulário de
+            :data:`juscraper.core.failures.MOTIVOS_FALHA`, e o lote segue; o
+            HTML fora do formato conhecido sai ``resposta_inesperada``. As
+            falhas entram num único ``UserWarning`` ao fim.
+
+            Um bloqueio anti-bot vale para a sessão inteira: o lote para no
+            CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem com
+            ``bloqueio_anti_bot``. As linhas anteriores são preservadas. Com
+            ``download_pecas=True``, o bloqueio, no detalhe ou nas peças,
+            também encerra as peças: os processos cujas peças ficaram por
+            baixar saem com ``bloqueio_anti_bot``, com o detalhe e as peças já
+            salvas. Aguarde alguns minutos ou troque de IP e peça de novo só as
+            linhas com ``motivo_falha``.
 
         Raises:
             TypeError: Kwarg desconhecido.
-            BotChallengeBlockedError: Akamai bloqueou o IP (HTTP 403 "Access
-                Denied"). Aguarde alguns minutos ou troque de IP.
         """
         cnjs = self._coerce_id_cnj(
             id_cnj,
@@ -284,13 +343,15 @@ class TRFConsultaScraper(HTTPScraper):
             diretorio=diretorio,
             **kwargs,
         )
-        htmls = self.cpopg_download(id_cnj, **kwargs)
+        htmls, motivos = self._baixar(cnjs)
         pecas_paths: list[list[str]] | None = None
         if download_pecas:
             base_dir = diretorio if diretorio is not None else self.download_path
             Path(base_dir).mkdir(parents=True, exist_ok=True)
-            pecas_paths = self._download_pecas(htmls, cnjs, base_dir)
-        df = self.cpopg_parse(htmls, cnjs)
+            pecas_paths, motivos = self._download_pecas(htmls, cnjs, base_dir, motivos)
+        rows = self._linhas(htmls, cnjs, motivos)
+        self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
+        df = pd.DataFrame(rows)
         if pecas_paths is not None:
             df["pecas"] = pecas_paths
         return df
@@ -300,39 +361,56 @@ class TRFConsultaScraper(HTTPScraper):
         htmls: list[str | None],
         cnjs: list[str],
         base_dir: str,
-    ) -> list[list[str]]:
+        motivos: list[str | None],
+    ) -> tuple[list[list[str]], list[str | None]]:
         """Baixa as peças de cada detalhe HTML usando a sessão atual.
 
         Cada peça vira ``<base_dir>/<cnj>/<id_processo_doc>.html``. Erros por
-        peça viram warning e seguem; um :class:`BotChallengeBlockedError`
-        propaga (session-wide).
+        peça viram warning e seguem. Um :class:`BotChallengeBlockedError` vale
+        para a sessão inteira: as peças param ali, e nada é pedido se o
+        detalhe já foi bloqueado.
+
+        Returns:
+            Os caminhos salvos por processo e ``motivos`` com
+            ``bloqueio_anti_bot`` nos processos com detalhe cujas peças o
+            bloqueio impediu.
         """
         results: list[list[str]] = []
-        for i, (cnj, html) in enumerate(zip(cnjs, htmls, strict=False)):
-            if html is None:
-                results.append([])
-                continue
-            urls = extract_documento_urls(html)
-            proc_dir = str(Path(base_dir) / cnj)
-            Path(proc_dir).mkdir(parents=True, exist_ok=True)
+        novos = list(motivos)
+        bloqueado = MOTIVO_BLOQUEIO_ANTI_BOT in motivos
+        for i, (cnj, html) in enumerate(zip(cnjs, htmls, strict=True)):
             paths: list[str] = []
-            for ca, doc_id in urls:
-                try:
-                    content = fetch_documento(self, self.BASE_URL, ca, doc_id)
-                except (BotChallengeBlockedError, ImportError):
-                    raise  # session-wide; nenhuma peça passaria
-                except Exception as exc:  # noqa: BLE001 — resiliência por peça
-                    logger.warning(
-                        "Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc
-                    )
-                    continue
-                path = str(Path(proc_dir) / f"{doc_id}.html")
-                with Path(path).open("wb") as fh:
-                    fh.write(content)
-                paths.append(path)
-                if self.sleep_time:
+            if html is not None and not bloqueado:
+                paths, bloqueado = self._pecas_do_processo(cnj, html, base_dir)
+                if not bloqueado and i + 1 < len(cnjs) and self.sleep_time:
                     time.sleep(self.sleep_time)
+            if html is not None and bloqueado:
+                novos[i] = MOTIVO_BLOQUEIO_ANTI_BOT
             results.append(paths)
-            if i + 1 < len(cnjs) and self.sleep_time:
+        return results, novos
+
+    def _pecas_do_processo(self, cnj: str, html: str, base_dir: str) -> tuple[list[str], bool]:
+        """Caminhos das peças salvas de um processo e se o download parou num bloqueio anti-bot."""
+        proc_dir = Path(base_dir) / cnj
+        proc_dir.mkdir(parents=True, exist_ok=True)
+        paths: list[str] = []
+        for ca, doc_id in extract_documento_urls(html):
+            try:
+                content = fetch_documento(self, self.BASE_URL, ca, doc_id)
+            except BotChallengeBlockedError as exc:
+                logger.warning(
+                    "%s: bloqueio anti-bot na peça %s do %s; as peças param aqui: %s",
+                    self.TRIBUNAL_NAME, doc_id, cnj, exc,
+                )
+                return paths, True
+            except ImportError:
+                raise
+            except Exception as exc:  # noqa: BLE001 — resiliência por peça
+                logger.warning("Erro ao baixar peça %s do %s: %s", doc_id, cnj, exc)
+                continue
+            path = proc_dir / f"{doc_id}.html"
+            path.write_bytes(content)
+            paths.append(str(path))
+            if self.sleep_time:
                 time.sleep(self.sleep_time)
-        return results
+        return paths, False

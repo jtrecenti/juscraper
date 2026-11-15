@@ -4,8 +4,8 @@ Marcado ``integration`` e fora do default; rode com ``pytest -m integration``.
 O AWS WAF do TJPE desafia de forma intermitente: sem o Playwright instalado
 (extra ``juscraper[waf]``), o teste passa enquanto o WAF deixa a sessão
 passar e levanta ``ImportError`` quando desafia. Desafio repetido depois da
-renovação do cookie vira ``WafChallengeError``, que o marker ``anti_bot``
-converte em xfail.
+renovação do cookie vira linha ``bloqueio_anti_bot`` com ``UserWarning``,
+que o marker ``anti_bot`` converte em xfail.
 """
 from __future__ import annotations
 

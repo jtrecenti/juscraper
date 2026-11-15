@@ -1,6 +1,7 @@
 """Testa o hook ``anti_bot`` definido em ``tests/conftest.py`` (issue #292).
 
-O hook (`pytest_runtest_makereport`) converte ``BotChallengeBlockedError`` em
+O hook (`pytest_runtest_makereport`) converte ``BotChallengeBlockedError``, e o
+``UserWarning`` de linha com ``bloqueio_anti_bot`` que o ``cpopg`` em lote emite, em
 xfail **apenas** para testes marcados ``anti_bot`` — o bloqueio Akamai dos TRFs
 é falha ambiental (depende do IP), não regressão. Qualquer outra exceção, ou a
 mesma exceção num teste sem o marker, continua falhando vermelho.
@@ -37,6 +38,17 @@ def test_real_regression_still_fails():
 
 def test_block_without_marker_still_fails():
     raise BotChallengeBlockedError("TRF3", "https://pje1g.trf3.jus.br")
+
+
+@pytest.mark.anti_bot
+def test_block_as_row_warning_becomes_xfail():
+    # cpopg em lote: o bloqueio vira linha e UserWarning, promovido a erro.
+    raise UserWarning("TRF3Scraper.cpopg: 1 consulta(s) de processo falharam. Falhas: processo 1: bloqueio_anti_bot.")
+
+
+@pytest.mark.anti_bot
+def test_other_row_warning_still_fails():
+    raise UserWarning("TRF3Scraper.cpopg: 1 consulta(s) de processo falharam. Falhas: processo 1: http_500.")
 '''
 
 # Espelha o uso real nos TRFs: o marker aplicado a nível de módulo via
@@ -80,6 +92,8 @@ def test_anti_bot_hook_distinguishes_block_from_regression(pytester):
     # o teste desse ruído de terceiros.
     result = pytester.runpytest("-p", "no:asyncio")
 
-    # xfailed: bloqueio+marker-de-função e bloqueio+pytestmark-de-módulo.
-    # failed: regressão real (AssertionError) e bloqueio sem marker.
-    result.assert_outcomes(xfailed=2, failed=2)
+    # xfailed: bloqueio+marker-de-função, bloqueio+pytestmark-de-módulo e o
+    # aviso de linha com bloqueio_anti_bot.
+    # failed: regressão real (AssertionError), bloqueio sem marker e aviso de
+    # linha com outro motivo.
+    result.assert_outcomes(xfailed=3, failed=3)

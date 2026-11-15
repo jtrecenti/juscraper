@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.failures import MOTIVO_BLOQUEIO_ANTI_BOT
 from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DATA_ALVO_ISO
 
 # Habilita a fixture ``pytester`` (sessões pytest isoladas) usada por
@@ -54,7 +55,10 @@ def pytest_runtest_makereport(item, call):
 
     Portais protegidos por Akamai (TRF1/TRF3/TRF5 ``cpopg``) devolvem HTTP 403
     ``Access Denied`` a partir de IPs de datacenter/CI; o código levanta
-    ``BotChallengeBlockedError`` de propósito (bloqueio session-wide). Isso é
+    ``BotChallengeBlockedError`` de propósito (bloqueio session-wide); o
+    ``cpopg`` em lote registra o bloqueio na linha (``bloqueio_anti_bot``) e
+    emite um ``UserWarning``, que o ``filterwarnings = error`` da suíte
+    transforma em exceção, e o hook reconhece pelo motivo na mensagem. Isso é
     falha *ambiental* — depende do IP do cliente, não é regressão —, então vira
     xfail em vez de vermelho. Qualquer outra exceção continua falhando
     normalmente, preservando o sinal de regressão real (parser quebrado, schema
@@ -66,7 +70,13 @@ def pytest_runtest_makereport(item, call):
         report.when == "call"
         and call.excinfo is not None
         and item.get_closest_marker("anti_bot") is not None
-        and call.excinfo.errisinstance(BotChallengeBlockedError)
+        and (
+            call.excinfo.errisinstance(BotChallengeBlockedError)
+            or (
+                call.excinfo.errisinstance(UserWarning)
+                and MOTIVO_BLOQUEIO_ANTI_BOT in str(call.excinfo.value)
+            )
+        )
     ):
         report.outcome = "skipped"
         report.wasxfail = "bloqueio anti-bot (Akamai) — falha ambiental, não regressão"

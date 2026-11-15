@@ -45,7 +45,12 @@ MOTIVO_NAO_PDF = "nao_pdf"
 """O servidor respondeu ao pedido de PDF com outra coisa; nada foi gravado."""
 
 MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
-"""Página HTML fora do formato conhecido, no lugar da que o fluxo espera."""
+"""Página HTML fora do formato conhecido, no lugar da que o fluxo espera.
+
+Também é o motivo que o TJSP (documentos públicos do ``cpopg``) e os ``cpopg``
+dos TRFs e do TJPE dão a erro do item sem motivo próprio no vocabulário, para
+que a linha siga no lote em vez de derrubá-lo.
+"""
 
 MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
 """A linha de entrada não traz um valor utilizável (número CNJ, data); nada foi pedido à fonte."""

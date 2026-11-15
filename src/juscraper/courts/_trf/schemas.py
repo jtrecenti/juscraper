@@ -33,8 +33,9 @@ class OutputCpopgTRF(OutputCnjConsultaBase):
     rich detail fields populated by :func:`juscraper.courts._trf.parse.parse_detail`
     (``processo``, ``classe``, ``assunto``, ``data_distribuicao``,
     ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao`` and the list-typed
-    ``polo_ativo``, ``polo_passivo``, ``movimentacoes``, ``documentos``) flow
-    through ``extra='allow'``.
+    ``polo_ativo``, ``polo_passivo``, ``movimentacoes``, ``documentos``) and
+    ``motivo_falha`` (``None``, or the failure reason of the row) flow through
+    ``extra='allow'``.
     """
 
     model_config = ConfigDict(extra="allow")

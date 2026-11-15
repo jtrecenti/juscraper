@@ -191,7 +191,10 @@ def test_cpopg_batch_continues_after_download_error() -> None:
     )
 
     scraper = jus.scraper("trf5", sleep_time=0)
-    df = scraper.cpopg(["00000000020994050000", "00584573120254058000"])
+    # ConnectionError nativo, e não o do requests: fora do vocabulário de motivos.
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = scraper.cpopg(["00000000020994050000", "00584573120254058000"])
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
     assert list(df["id_cnj"]) == ["00000000020994050000", "00584573120254058000"]
     assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
     assert df.iloc[1]["processo"] == "0058457-31.2025.4.05.8000"
@@ -242,7 +245,9 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     monkeypatch.setattr(trf_base, "parse_detail", flaky_parse)
 
     scraper = jus.scraper("trf5", sleep_time=0)
-    df = scraper.cpopg(["00584573120254058000", "00584573120254058001"])
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = scraper.cpopg(["00584573120254058000", "00584573120254058001"])
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
     assert list(df["id_cnj"]) == ["00584573120254058000", "00584573120254058001"]
     assert pd.isna(df.iloc[0].get("processo")) or df.iloc[0].get("processo") is None
     assert df.iloc[1]["processo"] == "0058457-31.2025.4.05.8000"
