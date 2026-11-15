@@ -60,7 +60,7 @@ dados.head()
 | TJAM     | cjsg |
 | TJAP     | cjsg ⚠️ |
 | TJBA     | cjsg |
-| TJCE     | cjsg |
+| TJCE     | cjsg, baixar_acordao, baixar_acordaos |
 | TJDFT    | cjsg |
 | TJES     | cjsg, cjpg |
 | TJGO     | cjsg |
