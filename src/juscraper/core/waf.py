@@ -10,8 +10,7 @@ oferecer o desafio, ao ``HeadlessChrome`` que o Playwright anuncia por padrao. A
 sessao ``requests`` usa o mesmo :data:`USER_AGENT` do navegador que obteve o
 token, porque o WAF amarra o cookie ao user agent.
 
-Usado pelo STF (jurisprudencia), pelo TJPE (consulta publica do PJe) e pelo TJTO
-(jurisprudencia).
+Usado pelo STF (jurisprudencia) e pelo TJPE (consulta publica do PJe).
 """
 from __future__ import annotations
 

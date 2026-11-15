@@ -2,14 +2,13 @@
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
 from typing import Any, Literal
-from urllib.parse import urlparse
 
 import pandas as pd
 import requests
 
-from juscraper.core.exceptions import BotChallengeBlockedError, WafChallengeError
+from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import HTTPScraper
-from juscraper.core.waf import USER_AGENT, WAF_COOKIE, eh_desafio_waf, obter_waf_token
+from juscraper.core.waf import USER_AGENT, eh_desafio_waf
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
@@ -39,49 +38,31 @@ class TJTOScraper(HTTPScraper):
 
     def _configure_session(self, session: requests.Session) -> None:
         super()._configure_session(session)
-        # O AWS WAF do portal responde 403 ao user agent que não é de navegador e
-        # amarra o cookie aws-waf-token ao user agent do navegador que o obteve.
+        # O AWS WAF do portal responde 403 ao user agent que não é de navegador.
         session.headers["User-Agent"] = USER_AGENT
 
-    def _renovar_cookie_waf(self, url: str) -> None:
-        try:
-            token = obter_waf_token(self.BASE_URL, tribunal=self.tribunal_name)
-        except ImportError:
-            raise  # a mensagem já ensina a instalar o extra
-        except Exception as exc:
-            # Navegador não instalado ou cookie não emitido valem para a sessão
-            # inteira; tentar de novo a cada página relançaria o navegador.
-            raise WafChallengeError(self.tribunal_name, url, motivo=str(exc)) from exc
-        self.session.cookies.set(WAF_COOKIE, token, domain=urlparse(self.BASE_URL).hostname)
+    def _levantar_bloqueio_waf(self, resp: requests.Response) -> None:
+        """Levanta quando o AWS WAF desafia (HTTP 202 vazio) ou pede CAPTCHA (HTTP 405).
 
-    def _levantar_captcha_waf(self, resp: requests.Response) -> None:
-        if resp.headers.get("x-amzn-waf-action") == "captcha":
+        Do mesmo IP, passam cerca de 7 buscas antes do desafio. O cookie
+        ``aws-waf-token`` obtido por um navegador não adianta: com ele, a busca
+        seguinte vira CAPTCHA (prova ao vivo de 15/11/2026, também de IP
+        residencial). Sem esta checagem, o 202 vazio sairia como busca sem
+        resultados.
+        """
+        if eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
             raise BotChallengeBlockedError(
                 self.tribunal_name, resp.url, bot_manager="AWS WAF",
                 mensagem=(
-                    f"O AWS WAF do {self.tribunal_name} pediu um CAPTCHA em {resp.url}, que o raspador "
-                    "não resolve. Ele apareceu depois de várias buscas seguidas do mesmo IP; aguarde "
-                    "antes de tentar de novo ou aumente sleep_time."
+                    f"O AWS WAF do {self.tribunal_name} bloqueou a busca em {resp.url} (desafio ou CAPTCHA), "
+                    "o que acontece depois de algumas buscas seguidas do mesmo IP e o raspador não resolve. "
+                    "Aguarde pelo menos 10 minutos antes de tentar de novo."
                 ),
             )
 
     def _request_with_retry(self, method: str, url: str, **kwargs: Any) -> requests.Response:
-        """Repete a requisição uma vez com cookie novo quando o AWS WAF desafia.
-
-        O desafio chega como HTTP 202 de corpo vazio, que o parse leria como
-        busca sem resultados; obtê-lo só quando aparece dispensa o Playwright
-        enquanto o WAF deixa passar. O CAPTCHA (HTTP 405) levanta
-        :class:`BotChallengeBlockedError`.
-        """
-        kwargs.setdefault("on_response", self._levantar_captcha_waf)
-        resp = super()._request_with_retry(method, url, **kwargs)
-        if not eh_desafio_waf(resp):
-            return resp
-        self._renovar_cookie_waf(url)
-        resp = super()._request_with_retry(method, url, **kwargs)
-        if eh_desafio_waf(resp):
-            raise WafChallengeError(self.tribunal_name, url)
-        return resp
+        kwargs.setdefault("on_response", self._levantar_bloqueio_waf)
+        return super()._request_with_retry(method, url, **kwargs)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJTO."""
@@ -204,13 +185,9 @@ class TJTOScraper(HTTPScraper):
             ValueError: Quando um canonico e seu alias deprecado sao passados
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
-            BotChallengeBlockedError: Quando o AWS WAF do portal pede CAPTCHA,
-                o que acontece depois de varias buscas seguidas do mesmo IP.
-            WafChallengeError: Quando o WAF desafia de novo depois de o cookie
-                ``aws-waf-token`` ser renovado, ou quando o cookie nao pode ser
-                obtido.
-            ImportError: Quando o WAF desafia e o Playwright nao esta
-                instalado (extra ``juscraper[waf]``).
+            BotChallengeBlockedError: Quando o AWS WAF do portal desafia ou pede
+                CAPTCHA, o que acontece depois de algumas buscas seguidas do
+                mesmo IP.
 
         Returns:
             DataFrame com as decisoes.
