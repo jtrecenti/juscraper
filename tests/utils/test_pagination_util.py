@@ -256,15 +256,20 @@ def test_parse_page_number_rejeita(valor):
 
 
 def test_paginas_no_intervalo_mantem_a_ordem_e_avisa_as_de_fora(caplog):
-    with caplog.at_level("WARNING", logger="juscraper.utils.pagination"):
+    with caplog.at_level("WARNING", logger="juscraper.tjxx"):
         assert paginas_no_intervalo([3, 0, 1, 5, 2], 3, tribunal="TJXX") == [3, 1, 2]
 
-    assert [r.getMessage() for r in caplog.records] == [
-        "TJXX: página 0 fora do intervalo 1-3",
-        "TJXX: página 5 fora do intervalo 1-3",
+    # O aviso sai no logger do tribunal, como antes do helper.
+    assert [(r.name, r.getMessage()) for r in caplog.records] == [
+        ("juscraper.tjxx", "TJXX: página 0 fora do intervalo 1-3"),
+        ("juscraper.tjxx", "TJXX: página 5 fora do intervalo 1-3"),
     ]
 
 
 def test_paginas_no_intervalo_aceita_range_e_devolve_lista_vazia_sem_validas():
     assert paginas_no_intervalo(range(1, 4), 3, tribunal="TJXX") == [1, 2, 3]
     assert paginas_no_intervalo(range(4, 6), 3, tribunal="TJXX") == []
+
+
+def test_paginas_no_intervalo_sem_paginas_pedidas_devolve_todas():
+    assert paginas_no_intervalo(None, 3, tribunal="TJXX") == [1, 2, 3]

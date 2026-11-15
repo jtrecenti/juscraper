@@ -263,9 +263,6 @@ def cjsg_download(
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
-    if paginas is None:
-        paginas = range(1, n_pags + 1)
-
     results: list = []
     for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJRJ"):
         if pagina == 1:

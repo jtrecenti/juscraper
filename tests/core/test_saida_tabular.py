@@ -340,20 +340,18 @@ def test_todo_metodo_publico_de_raspador_registrado_e_embrulhado(sigla):
     assert sem_embrulho == []
 
 
-
 class _RaspadorParcial(BaseScraper):
-    def __init__(self, texto: pd.Series):
+    def __init__(self, parcial):
         super().__init__("teste")
-        self.texto = texto
+        self.parcial = parcial
 
     def cjsg(self) -> pd.DataFrame:
-        parcial = pd.DataFrame({"texto": self.texto, "numero": [np.nan, 1.0]})
-        raise ColetaParcialError("1 de 2 janelas falharam", resultado=parcial, falhas=[])
+        raise ColetaParcialError("1 de 2 janelas falharam", resultado=self.parcial, falhas=[])
 
 
-def _parcial(texto: pd.Series) -> pd.DataFrame:
+def _parcial(texto: pd.Series):
     with pytest.raises(ColetaParcialError) as erro:
-        _RaspadorParcial(texto).cjsg()
+        _RaspadorParcial(pd.DataFrame({"texto": texto, "numero": [np.nan, 1.0]})).cjsg()
     return erro.value.resultado
 
 
@@ -372,3 +370,12 @@ def test_resultado_de_coleta_parcial_sai_como_object_no_pandas_3():
 
     assert parcial["texto"].dtype == object
     assert parcial["texto"].tolist() == ["a", None]
+
+
+def test_resultado_de_coleta_parcial_que_nao_e_tabela_passa_intacto():
+    paginas = ["<html>1</html>"]
+
+    with pytest.raises(ColetaParcialError) as erro:
+        _RaspadorParcial(paginas).cjsg()
+
+    assert erro.value.resultado is paginas

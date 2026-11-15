@@ -260,9 +260,6 @@ def cjsg_download(
 
     n_pags = max(1, math.ceil(total / linhas_por_pagina))
 
-    if paginas is None:
-        paginas = range(1, n_pags + 1)
-
     validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJMG")
     results: list = []
     for posicao, pagina in enumerate(validas):

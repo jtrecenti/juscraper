@@ -114,7 +114,7 @@ def _com_saida_normalizada(metodo: Callable[_P, _R]) -> Callable[_P, _R]:
             return cast("_R", _normalizar_saida(metodo(*args, **kwargs)))
         except ColetaParcialError as erro:
             # O parcial que sobe no erro sai no mesmo formato do retorno completo.
-            erro.resultado = _texto_ausente_como_none(erro.resultado)
+            erro.resultado = _normalizar_saida(erro.resultado)
             raise
         finally:
             if token is not None:

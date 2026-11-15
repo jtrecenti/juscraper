@@ -18,8 +18,6 @@ from collections.abc import Iterable, Sequence
 
 from bs4 import BeautifulSoup
 
-logger = logging.getLogger(__name__)
-
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 
@@ -198,8 +196,17 @@ def resolve_total_pages(
     return total
 
 
-def paginas_no_intervalo(paginas: Iterable[int], n_pags: int, *, tribunal: str) -> list[int]:
-    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida, com aviso no log para as demais."""
+def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
+    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida, com aviso no log para as demais.
+
+    ``paginas=None`` vale todas, de 1 a ``n_pags``.
+
+    O aviso sai no logger do tribunal (``juscraper.<sigla>``), onde já saía
+    antes de o filtro virar helper.
+    """
+    logger = logging.getLogger(f"juscraper.{tribunal.lower()}")
+    if paginas is None:
+        return list(range(1, n_pags + 1))
     validas = []
     for pagina in paginas:
         if 1 <= pagina <= n_pags:

@@ -22,12 +22,10 @@ import warnings
 from datetime import date
 from urllib.parse import parse_qs
 
-import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
-from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from tests._helpers import load_sample_bytes
 
@@ -144,8 +142,6 @@ def test_cjsg_auto_chunk_janela_que_falha_levanta_com_o_parcial(tribunal, tmp_pa
     erro = exc_info.value
     assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2013", "31/12/2013")]
     assert len(erro.resultado) == 6 * _acordaos_por_janela(tribunal)
-    # O parcial sai no formato do retorno completo, com ``None`` no texto ausente.
-    pd.testing.assert_frame_equal(erro.resultado, _texto_ausente_como_none(erro.resultado))
 
 
 @pytest.mark.parametrize("tribunal", ESAJ_PUROS)
