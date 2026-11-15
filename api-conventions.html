@@ -623,8 +623,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>Backoff</td>
-<td><code>base_backoff ** attempt</code> → <code>2s</code> then <code>4s</code> (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises <code>RetryExhaustedError</code> without sleeping, so the default <code>8s</code> from <code>2 ** 3</code> only kicks in with <code>max_retries &gt;= 4</code>)</td>
-<td><code>base_backoff=</code> per call</td>
+<td><code>base_backoff ** attempt</code> → <code>2s</code> then <code>4s</code> (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises <code>RetryExhaustedError</code> without sleeping, so the default <code>8s</code> from <code>2 ** 3</code> only kicks in with <code>max_retries &gt;= 4</code>); each wait is capped at <code>max_backoff</code> (300 s)</td>
+<td><code>base_backoff=</code> per call; <code>max_backoff</code> in <code>politica=</code> (DataJud, JusBR, PDPJ)</td>
 </tr>
 <tr class="even">
 <td><code>Retry-After</code> (numeric seconds)</td>
