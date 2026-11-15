@@ -1,4 +1,6 @@
 """Integration tests for the TJMS CJSG scraper."""
+from pathlib import Path
+
 import pandas as pd
 import pytest
 
@@ -56,3 +58,17 @@ class TestCJSGTJMS:
         df_int = self.scraper.cjsg("direito", paginas=2)
         df_range = self.scraper.cjsg("direito", paginas=range(1, 3))
         assert len(df_int) == len(df_range)
+
+
+@pytest.mark.integration
+def test_baixar_acordaos_da_primeira_linha_do_cjsg(tmp_path):
+    """O ``cd_acordao`` do cjsg leva ao PDF do acórdão, sem login nem captcha (#466)."""
+    scraper = jus.scraper("tjms", download_path=str(tmp_path))
+    df = scraper.cjsg("dano moral", paginas=1).head(1)
+
+    resultado = scraper.baixar_acordaos(df)
+
+    assert resultado["motivo_falha"].tolist() == [None]
+    caminho = Path(resultado["caminho_acordao"].iloc[0])
+    assert caminho.name == f"{df['cd_acordao'].iloc[0]}.pdf"
+    assert caminho.read_bytes().startswith(b"%PDF")
