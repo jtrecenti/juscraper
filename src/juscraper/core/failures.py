@@ -75,6 +75,16 @@ vocabulário para ela. O 401 é ``HTTPError`` mas propaga antes de virar linha:
 ver :func:`e_token_invalido`.
 """
 
+FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
+"""Toda falha de transporte de ``HTTPScraper._request_with_retry``, com ou sem motivo no vocabulário.
+
+Mais larga que :data:`EXCECOES_DE_FALHA_POR_LINHA`: inclui ``TooManyRedirects``,
+``InvalidURL``, ``JSONDecodeError`` e os demais ``RequestException``. Serve a
+quem converte a falha de um item em resultado parcial mesmo quando
+:func:`motivo_falha` não tem motivo para ela. ``RetryExhaustedError`` entra à
+parte porque não herda de ``RequestException``.
+"""
+
 STATUS_TOKEN_INVALIDO = 401
 """Status que interrompe o lote em vez de virar linha de falha.
 

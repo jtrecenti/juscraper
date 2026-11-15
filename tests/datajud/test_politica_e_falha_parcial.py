@@ -547,8 +547,8 @@ def test_politica_aceita_tentativas_e_backoff():
 
 @pytest.mark.parametrize(
     "ajuste",
-    # Valores que a ``RequestPolicy`` aceitaria e que só estourariam no primeiro
-    # 429, no meio da coleta, com ``TypeError`` em vez de ``ColetaParcialError``.
+    # Recusados pela ``RequestPolicy``: aceitos, só estourariam no primeiro 429,
+    # no meio da coleta, com ``TypeError`` em vez de ``ColetaParcialError``.
     [
         {"max_retries": 0}, {"max_retries": 2.5}, {"max_retries": True}, {"max_retries": "3"},
         {"base_backoff": "2"}, {"base_backoff": -1}, {"base_backoff": 0}, {"base_backoff": True},
@@ -557,7 +557,7 @@ def test_politica_aceita_tentativas_e_backoff():
 )
 def test_politica_com_tentativas_ou_backoff_invalido_levanta(ajuste):
     campo = next(iter(ajuste))
-    with pytest.raises(ValueError, match=f"{campo} inválido"):
+    with pytest.raises(ValueError, match=f"{campo} deve ser"):
         jus.scraper("datajud", politica={"busca": ajuste})
 
 
