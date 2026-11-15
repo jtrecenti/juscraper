@@ -171,6 +171,18 @@ tjap.cjsg("dano", votacao="Unanime")
 tjap.cjsg("dano", votacao="Unânime")
 ```
 
+### TJGO `cjsg`: `id_instancia` takes the Projudi form values
+
+The "Instância" dropdown of the Projudi search form offers `0` (all), `15` (Tribunal) and `151` (Turma de Uniformização / Turmas Recursais). The docstring suggested `1`, `2` and `3`, which the form never offered. `2` and `3` are now sent as `151` and `15` with a `DeprecationWarning`, and will be removed in 0.7.0. `1` (first degree) has no replacement, because the current form has no first-degree option: it is still sent as is, with a `DeprecationWarning`, until 0.7.0.
+
+```python
+# Before
+tjgo.cjsg("dano moral", id_instancia=3)
+
+# After
+tjgo.cjsg("dano moral", id_instancia=15)
+```
+
 ### TJSP `cpopg`/`cposg`: `method="api"` removed
 
 The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`

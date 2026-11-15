@@ -7,6 +7,7 @@ from typing import Literal
 import pandas as pd
 import requests
 
+from juscraper.core.avisos import avisar
 from juscraper.core.http import HTTPScraper
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
@@ -15,6 +16,9 @@ from .parse import cjsg_parse as _cjsg_parse
 from .schemas import InputCJSGTJGO
 
 logger = logging.getLogger("juscraper.tjgo")
+
+# Opcoes do seletor "Instancia" e, ate a 0.7.0, os valores deprecados 1, 2 e 3.
+IdInstancia = Literal[0, 15, 151, 1, 2, 3, "0", "15", "151", "1", "2", "3"]
 
 
 class TJGOScraper(HTTPScraper):
@@ -42,7 +46,7 @@ class TJGOScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_instancia: IdInstancia = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
         numero_processo: str | None = None,
@@ -62,7 +66,9 @@ class TJGOScraper(HTTPScraper):
         paginas : int, list, range or None
             Pages to download (1-based). ``None`` downloads every page.
         id_instancia : int or str
-            ``0`` all / ``1`` 1st degree / ``2`` recursal / ``3`` tribunal.
+            ``0`` all / ``15`` tribunal / ``151`` turmas recursais. ``2`` and
+            ``3`` are deprecated aliases of ``151`` and ``15``; ``1`` is
+            deprecated with no replacement.
         id_area : int or str
             ``0`` all / ``1`` civil / ``2`` criminal.
         id_serventia_subtipo : int or str
@@ -88,7 +94,7 @@ class TJGOScraper(HTTPScraper):
             consume_pesquisa_aliases=True,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
-            id_instancia=id_instancia,
+            id_instancia=_resolver_id_instancia(id_instancia),
             id_area=id_area,
             id_serventia_subtipo=id_serventia_subtipo,
             numero_processo=numero_processo,
@@ -117,7 +123,7 @@ class TJGOScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0,
+        id_instancia: IdInstancia = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
         id_serventia_subtipo: str | int = 0,
         numero_processo: str | None = None,
@@ -130,8 +136,11 @@ class TJGOScraper(HTTPScraper):
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            id_instancia (int | str): ``0`` todas / ``1`` 1o grau / ``2`` recursal /
-                ``3`` tribunal.
+            id_instancia (int | str): ``0`` todas / ``15`` Tribunal / ``151``
+                Turma de Uniformizacao e Turmas Recursais, as opcoes do
+                seletor "Instancia" do site. ``1``, ``2`` e ``3`` sao
+                deprecados (ver abaixo); o 1o grau nao esta no seletor, e
+                ``1`` vai ao portal como esta.
             id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
             id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
                 site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
@@ -150,6 +159,8 @@ class TJGOScraper(HTTPScraper):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
             * ``qtde_itens_pagina`` -> ``tamanho_pagina``
+            * ``id_instancia=2`` -> ``id_instancia=151``; ``id_instancia=3`` ->
+              ``id_instancia=15``; ``id_instancia=1`` sem substituto
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado, **incluindo**
@@ -184,6 +195,30 @@ class TJGOScraper(HTTPScraper):
     def cposg(self, id_cnj: str | list[str]):
         """Stub: second degree case search not implemented for TJGO."""
         raise NotImplementedError("TJGO does not implement cposg.")
+
+
+# Valores que a docstring indicava ate a 0.5.0 ("1 1o grau", "2 recursal",
+# "3 tribunal"), fora das opcoes do seletor "Instancia" do Projudi, e a opcao
+# equivalente. O formulario atual nao tem o 1o grau: ``1`` vai como esta.
+_ID_INSTANCIA_DEPRECADO = {"2": 151, "3": 15}
+
+
+def _resolver_id_instancia(id_instancia: int | str) -> int | str:
+    """Troca ``2``/``3`` pela opcao do formulario e avisa de ``1``, com ``DeprecationWarning``."""
+    chave = str(id_instancia)
+    if chave not in {"1", *_ID_INSTANCIA_DEPRECADO}:
+        return id_instancia
+    novo = _ID_INSTANCIA_DEPRECADO.get(chave, id_instancia)
+    if chave == "1":
+        destino = "O valor (1o grau) vai ao portal como esta, sem garantia de filtro."
+    else:
+        destino = f"O juscraper passa a enviar {novo}; use id_instancia={novo}."
+    avisar(
+        f"id_instancia={id_instancia!r} esta deprecado: o formulario do Projudi so "
+        f"oferece 0 (todas), 15 (Tribunal) e 151 (Turmas Recursais). {destino}",
+        DeprecationWarning,
+    )
+    return novo
 
 
 def _br_date(value) -> str:

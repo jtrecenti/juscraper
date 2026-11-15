@@ -33,7 +33,10 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0
+    # Opcoes do seletor "Instancia" do formulario do Projudi (nov/2026): ``15``
+    # Tribunal, ``151`` Turma de Uniformizacao / Turmas Recursais, ``0`` todas.
+    # Mais ``1``, deprecado (ver ``_resolver_id_instancia`` no client).
+    id_instancia: Literal[0, 15, 151, 1, "0", "15", "151", "1"] = 0
     id_area: Literal[0, 1, 2, "0", "1", "2"] = 0
     # Codigos do seletor "Orgao" (lista ``tipos`` de ``js/ConsultaJurisprudencia.js``
     # do Projudi, nov/2026). ``"0"`` = todos. Inteiros sao aceitos e viram string.
