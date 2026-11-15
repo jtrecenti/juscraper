@@ -1,12 +1,13 @@
 """Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
-from typing import ClassVar
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import cjsg_download_manager
+from .download import PERFIL_CJSG, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRS
 
@@ -35,8 +36,26 @@ class TJRSScraper(HTTPScraper):
         "sort": "date:D:L:d1"
     }
 
-    def __init__(self):
-        super().__init__("TJRS")
+    #: Perfil HTTP da busca de jurisprudência. Uma coleta sem ``paginas`` faz
+    #: milhares de requisições em sequência; sem nova tentativa em timeout e
+    #: erro de conexão, uma falha transitória no meio dela perderia tudo.
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        PERFIL_CJSG: RequestPolicy(
+            timeout=30,
+            retry_on_timeout=True,
+            retry_on_connection_error=True,
+        ),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        """Cria o raspador.
+
+        Args:
+            politica: Ajustes por campo do perfil HTTP ``"cjsg"`` (ver
+                :class:`~juscraper.core.http.RequestPolicy`), por exemplo
+                ``{"cjsg": {"timeout": 60, "max_retries": 5}}``.
+        """
+        super().__init__("TJRS", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJRS."""

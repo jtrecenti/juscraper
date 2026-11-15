@@ -31,25 +31,12 @@ def test_cjsg_parametros_secao():
 
 
 @pytest.mark.integration
-def test_cjsg_dataframe():
-    scraper = TJRSScraper()
-    df = scraper.cjsg("acórdão", paginas=1)
-    print("DataFrame columns:", df.columns)
-    print("First rows:\n", df.head())
-    assert isinstance(df, pd.DataFrame)
-    assert not df.empty
-    assert {"ementa", "url"}.issubset(set(df.columns))
-    assert df["ementa"].notnull().all()
-    assert df["url"].notnull().sum() > 0
-
-
-@pytest.mark.integration
 def test_cjsg_paginas_range():
     scraper = TJRSScraper()
     df = scraper.cjsg("acórdão", paginas=range(1, 4))
     assert isinstance(df, pd.DataFrame)
-    assert not df.empty
-    assert len(df) > 10
+    assert len(df) == 30, f"Esperado 30 linhas (3 páginas), mas retornou {len(df)}"
+    assert df.duplicated().sum() == 0
     assert {"ementa", "url"}.issubset(set(df.columns))
     assert df["ementa"].notnull().all()
     assert df["url"].notnull().sum() > 0
@@ -65,17 +52,6 @@ def test_cjsg_paginas_int():
     assert {"ementa", "url"}.issubset(set(df.columns))
     assert df["ementa"].notnull().all()
     assert df["url"].notnull().sum() > 0
-
-
-@pytest.mark.integration
-def test_cjsg_paginas_range_exact_count():
-    scraper = TJRSScraper()
-    df = scraper.cjsg("acórdão", paginas=range(1, 4))
-    print(f"Número de linhas retornadas: {len(df)}")
-    duplicados = df.duplicated().sum()
-    print(f"Duplicatas: {duplicados}")
-    assert len(df) == 30, f"Esperado 30 linhas (3 páginas), mas retornou {len(df)}"
-    assert duplicados == 0, f"Há duplicatas nos resultados: {duplicados}"
 
 
 if __name__ == "__main__":

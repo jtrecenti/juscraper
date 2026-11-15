@@ -83,6 +83,7 @@ dev = [
     "pre-commit>=3.0.0",
     "nbmake>=1.5.0",
     "pytest-xdist>=3.0.0",
+    "pytest-timeout>=2.3.0",
     "lizard==1.23.0",
     "complexipy==6.0.1",
     # Parser de docstring do quartodoc; aqui para os testes de docstring que
@@ -358,6 +359,11 @@ markers = [
     "anti_bot: integration test prone to anti-bot blocking (e.g. Akamai on TRF PJe); a BotChallengeBlockedError is reported as xfail (env-dependent on the client IP), so a real regression still fails loudly",
 ]
 filterwarnings = ["error"]
+# Prazo por teste (pytest-timeout). Uma conexão lenta, ou uma coleta sem limite
+# de páginas, prendia a integração por horas (#441); estourar o prazo reprova só
+# aquele teste. O teste ao vivo mais lento leva ~90 s. Ajustar com
+# `--timeout=N` (0 desliga) ou `@pytest.mark.timeout(N)` no teste.
+timeout = 600
 
 [tool.coverage.run]
 source = ["src"]
