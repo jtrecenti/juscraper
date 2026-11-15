@@ -63,7 +63,6 @@ def capture_cjpg() -> None:
     time.sleep(1.5)
     dump(dest / f"pasta_{cd_documento}.html", session.get(local, timeout=60).content)
     dump(dest / "redirecionamentos.json", json.dumps({f"sentenca_{cd_documento}": local}, indent=1).encode())
-    print(f"[tjms] cjpg: 2 páginas, sem resultados e a pasta da sentença {cd_documento} em {dest}")
 
 
 def main() -> None:
