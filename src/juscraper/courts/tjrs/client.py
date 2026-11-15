@@ -167,7 +167,8 @@ class TJRSScraper(HTTPScraper):
                 publicação, nos mesmos formatos.
             tipo_processo (str | None): Tipo de processo.
             secao (str | None): ``"civel"``, ``"crime"`` ou ``None`` (as
-                duas). Outro valor é ignorado, e a busca cobre as duas.
+                duas), sem distinção de caixa nem de acento (``"Cível"``
+                vale). Outro valor levanta ``ValidationError``.
             **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são
                 os parâmetros explícitos, campos de :class:`InputCJSGTJRS`.
 
