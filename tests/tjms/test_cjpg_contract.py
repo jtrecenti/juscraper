@@ -1,9 +1,9 @@
 """Contratos offline do ``cjpg`` e de ``baixar_sentencas`` do TJMS (#487).
 
 O TJMS herda o cjpg do TJSP (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`).
-O ``esaj.tjms.jus.br`` não responde a IP de datacenter, então as respostas
-são as capturas reais do cjpg e da pasta digital do TJSP, servidas no host
-do TJMS. A prova contra o portal está em ``tests/tjms/test_cjpg_integration.py``.
+As respostas são capturas reais do cjpg e da pasta digital do TJMS
+(``python -m tests.fixtures.capture.tjms``, de IP residencial). A prova
+contra o portal está em ``tests/tjms/test_cjpg_integration.py``.
 """
 
 import json
@@ -20,10 +20,9 @@ from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 ESAJ = "https://esaj.tjms.jus.br"
-CD_PROCESSO, CD_FORO, CD_DOCUMENTO = "3I0006RUY0000", "126", "167379827"
-_PASTA = json.loads(load_sample("tjsp", "documentos/redirecionamentos.json"))[f"sentenca_{CD_DOCUMENTO}"].replace(
-    "https://esaj.tjsp.jus.br", ESAJ
-)
+# O primeiro resultado de cjpg/results_normal_page_01.html. No TJMS o nm_alias vem preenchido.
+CD_PROCESSO, CD_FORO, NM_ALIAS, CD_DOCUMENTO = "0I0008KCG0000", "18", "PG5MS", "158709214"
+_PASTA = json.loads(load_sample("tjms", "cjpg/redirecionamentos.json"))[f"sentenca_{CD_DOCUMENTO}"]
 
 
 def _add_pesquisar(pesquisa: str, sample: str) -> None:
@@ -31,7 +30,7 @@ def _add_pesquisar(pesquisa: str, sample: str) -> None:
     responses.add(
         responses.GET,
         f"{ESAJ}/cjpg/pesquisar.do",
-        body=load_sample_bytes("tjsp", sample),
+        body=load_sample_bytes("tjms", sample),
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(esperado)],
     )
@@ -41,7 +40,7 @@ def _add_trocar_de_pagina(pagina: int, sample: str) -> None:
     responses.add(
         responses.GET,
         f"{ESAJ}/cjpg/trocarDePagina.do",
-        body=load_sample_bytes("tjsp", sample),
+        body=load_sample_bytes("tjms", sample),
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher({"pagina": str(pagina), "conversationId": ""})],
     )
@@ -58,10 +57,10 @@ def _registrar_sentenca() -> None:
     responses.add(
         responses.GET,
         _PASTA.split("?")[0],
-        body=load_sample_bytes("tjsp", f"documentos/pasta_{CD_DOCUMENTO}.html"),
+        body=load_sample_bytes("tjms", f"cjpg/pasta_{CD_DOCUMENTO}.html"),
         content_type="text/html;charset=UTF-8",
     )
-    parametros = parse_parametros_pasta(load_sample("tjsp", f"documentos/pasta_{CD_DOCUMENTO}.html"))
+    parametros = parse_parametros_pasta(load_sample("tjms", f"cjpg/pasta_{CD_DOCUMENTO}.html"))
     responses.add(
         responses.GET,
         f"{ESAJ}/pastadigital/getPDF.do",
@@ -85,7 +84,7 @@ def test_cjpg_pagina_no_host_do_tjms_e_traz_os_codigos_da_sentenca(tmp_path, moc
     assert (linha.cd_processo, linha.cd_foro, linha.nm_alias, linha.cd_documento) == (
         CD_PROCESSO,
         CD_FORO,
-        None,
+        NM_ALIAS,
         CD_DOCUMENTO,
     )
     assert all(c.request.url.startswith(f"{ESAJ}/cjpg/") for c in responses.calls)
@@ -118,7 +117,7 @@ def test_cjpg_filtros_chegam_a_consulta_do_tjms(tmp_path, mocker):
     responses.add(
         responses.GET,
         f"{ESAJ}/cjpg/pesquisar.do",
-        body=load_sample_bytes("tjsp", "cjpg/no_results.html"),
+        body=load_sample_bytes("tjms", "cjpg/no_results.html"),
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(esperado)],
     )
@@ -170,7 +169,7 @@ def test_baixar_sentencas_do_cjpg_pede_ao_tjms(tmp_path, mocker):
     assert dict(parse_qsl(urlsplit(pedido.url).query, keep_blank_values=True)) == {
         "cdProcesso": CD_PROCESSO,
         "cdForo": CD_FORO,
-        "nmAlias": "",
+        "nmAlias": NM_ALIAS,
         "cdDocumento": CD_DOCUMENTO,
     }
     pd.testing.assert_frame_equal(resultado[cjpg.columns], cjpg)
