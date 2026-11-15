@@ -3,10 +3,12 @@
 Consulta processual pública do PJe do TRF3, pela API JSON que a aplicação
 ``pje1g-consultapublica.trf3.jus.br`` (1º grau) e
 ``pje2g-consultapublica.trf3.jus.br`` (2º grau) consome. O endereço JSF antigo
-(``pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam``) passou a redirecionar
+(``pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam``) chegou a redirecionar
 para essa aplicação, por isso o TRF3 deixou a família ``_trf``, que segue
 servindo TRF1 e TRF5. Detalhes do protocolo em
-:mod:`juscraper.courts.trf3.download`.
+:mod:`juscraper.courts.trf3.download`. As requisições à consulta passam pelo
+``curl_cffi`` com TLS do Chrome (extra ``juscraper[tls]``,
+:mod:`juscraper.courts.trf3.transporte`).
 
 ``cjsg`` pesquisa jurisprudência em ``web.trf3.jus.br/jurisprudencia``, uma
 aplicação ASP.NET separada do PJe, também atrás do Akamai. Não usa a sessão
@@ -50,6 +52,7 @@ from .cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo, token_valido
 from .parse import _itens, parse_processo
 from .schemas import InputCpopgTRF3, InputCposgTRF3
+from .transporte import montar_tls_navegador
 
 logger = logging.getLogger("juscraper.trf3")
 
@@ -134,8 +137,12 @@ class TRF3Scraper(HTTPScraper):
         )
 
     def _configure_session(self, session: requests.Session) -> None:
-        """Usa os cabeçalhos de uma chamada XHR do Chrome no lugar do User-Agent do juscraper."""
+        """Cabeçalhos de uma chamada XHR do Chrome e TLS de navegador nas duas aplicações da consulta.
+
+        O ``cjsg`` usa sessão própria e não passa por aqui.
+        """
         session.headers.update(API_HEADERS)
+        montar_tls_navegador(session, [self.BASE_URL, self.BASE_URL_2G])
 
     # --- internos -------------------------------------------------------
 
@@ -441,6 +448,11 @@ class TRF3Scraper(HTTPScraper):
     ) -> pd.DataFrame:
         """Consulta processos de 1º grau na consulta pública do PJe do TRF3.
 
+        Exige o extra ``juscraper[tls]``. Limitação conhecida: em 15/11/2026 a
+        API do 1º grau respondia 403 do Akamai a qualquer cliente, inclusive
+        navegadores, e o ``cpopg`` saía ``bloqueio_anti_bot`` no primeiro
+        pedido. O :meth:`cposg` não tinha esse bloqueio.
+
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
             download_pecas: Se ``True``, baixa o PDF de cada documento listado
@@ -489,6 +501,8 @@ class TRF3Scraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
+            ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
+                instalado.
 
         See Also:
             :class:`InputCpopgTRF3`: schema dos argumentos aceitos.
@@ -527,7 +541,8 @@ class TRF3Scraper(HTTPScraper):
         no tribunal com esse número. Se a busca devolver mais de um processo
         com o número pedido, só o primeiro é consultado, e o logger
         ``juscraper.trf3`` avisa quantos a busca devolveu; nas consultas
-        observadas a busca devolveu no máximo um.
+        observadas a busca devolveu no máximo um. Exige o extra
+        ``juscraper[tls]``.
 
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
@@ -547,6 +562,8 @@ class TRF3Scraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
+            ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
+                instalado.
 
         See Also:
             :class:`InputCposgTRF3`: schema dos argumentos aceitos.

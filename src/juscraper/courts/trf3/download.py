@@ -1,9 +1,12 @@
 """Camada HTTP da consulta pública do PJe do TRF3 (API JSON).
 
-O endereço antigo da consulta (``pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam``)
-redireciona para uma aplicação Angular em ``pje1g-consultapublica.trf3.jus.br``,
-que consome uma API JSON sob ``/v1``. O 2º grau mudou da mesma forma
-(``pje2g-consultapublica.trf3.jus.br``), com a mesma API. Todas as rotas são
+A consulta pública do TRF3 é uma aplicação Angular em
+``pje1g-consultapublica.trf3.jus.br`` (1º grau) e
+``pje2g-consultapublica.trf3.jus.br`` (2º grau), que consome uma API JSON sob
+``/v1``. O endereço antigo do 2º grau redireciona para ela. O do 1º grau
+(``pje1g.trf3.jus.br/pje/ConsultaPublica/listView.seam``) chegou a redirecionar,
+mas em 15/11/2026 voltava a servir o formulário JSF, e a API do 1º grau
+respondia 403 do Akamai a qualquer cliente, inclusive navegadores. Todas as rotas são
 ``GET`` e respondem no envelope
 ``{"status", "code", "messages", "result", "pageInfo"}``.
 
@@ -23,8 +26,9 @@ download das peças não precisa repetir a busca.
 
 A aplicação envia em toda chamada o cabeçalho ``x-pagina-origem`` com a URL da
 tela que fez a chamada; :func:`build_pagina_origem_headers` o reproduz. O
-Akamai na frente do portal segura sem resposta parte das requisições que não
-parecem vir de navegador, por isso a sessão usa :data:`API_HEADERS`.
+Akamai na frente do portal segura sem resposta as requisições sem TLS de
+navegador, por isso a sessão usa :data:`API_HEADERS` e o transporte de
+:mod:`.transporte`.
 """
 # pylint: disable=protected-access
 from __future__ import annotations
