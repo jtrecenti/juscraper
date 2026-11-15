@@ -33,6 +33,10 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     ``relator`` e ``classe`` sao os nomes canonicos; ``magistrado`` e
     ``classe_judicial`` (chaves brutas do Solr) sao aceitos com
     ``DeprecationWarning`` e resolvidos pelo client.
+
+    ``ordenacao`` fica ``str``, sem ``Literal``: vai como o parametro ``sort``
+    da API, uma expressao de campo e direcao (``"dt_juntada desc"``), e os
+    valores aceitos pelo portal nao foram capturados (#207).
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
@@ -44,7 +48,7 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # TODO (#212): apertar com Literal[...] após captura do Solr.
+    # Expressao ``sort`` livre; sem Literal (ver InputCJSGTJES).
     ordenacao: str | None = None
     tamanho_pagina: TamanhoPagina = 20
 
@@ -94,7 +98,7 @@ class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     jurisdicao: str | None = None
     assunto: str | None = None
-    # TODO (#212): apertar com Literal[...] após captura do Solr.
+    # Expressao ``sort`` livre; sem Literal (ver InputCJSGTJES).
     ordenacao: str | None = None
     tamanho_pagina: TamanhoPagina = 20
 

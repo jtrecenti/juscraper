@@ -6,7 +6,7 @@ com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import (
     DataPublicacaoMixin,
@@ -46,8 +46,7 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    # TODO (#212): apertar com Literal[...] após captura do Hellsgate.
-    tipo_consulta: str = "Acordao"
+    tipo_consulta: Literal["Acordao", "DecisaoMonocratica"] = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
     tipo_processo: str | None = None

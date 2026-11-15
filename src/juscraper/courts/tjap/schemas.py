@@ -8,6 +8,7 @@ ficando coberto transitivamente.
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal
 
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
@@ -22,8 +23,7 @@ class InputCJSGTJAP(SearchBase):
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     """
 
-    # TODO (#212): apertar com Literal[...] após captura do form Tucujuris.
-    orgao: str = "0"
+    orgao: Literal["0", "tj", "recursal"] = "0"
     numero_processo: str | None = None
     numero_acordao: str | None = None
     numero_ano: str | None = None
@@ -31,8 +31,9 @@ class InputCJSGTJAP(SearchBase):
     relator: str | None = None
     secretaria: str | None = None
     classe: str | None = None
-    # TODO (#212): apertar com Literal[...] após captura do form Tucujuris.
-    votacao: str = "0"
+    # O formulario envia ``"Unânime"``, como vem no campo ``votacao`` dos acordaos;
+    # ``"Unanime"``, a grafia que a docstring indicava, segue aceito.
+    votacao: Literal["0", "Unânime", "Unanime", "Maioria"] = "0"
     origem: str | None = None
 
 

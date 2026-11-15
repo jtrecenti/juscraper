@@ -187,11 +187,12 @@ class TJMTScraper(HTTPScraper):
             TypeError: Kwarg desconhecido ou sem suporte na API
                 (``data_julgamento_*``, ``classe``).
             ValidationError: Para os demais erros de validação do schema,
-                como ``relator`` ou ``orgao_julgador`` passados como número e
-                ``tamanho_pagina`` menor que 1 ou booleano.
+                como ``relator`` ou ``orgao_julgador`` passados como número,
+                ``tipo_consulta`` desconhecido e ``tamanho_pagina`` menor que 1
+                ou booleano.
             ValueError: Data inválida ou início depois do fim; ``relator``
-                ou ``orgao_julgador`` só com dígitos; ``tipo_consulta`` ou
-                ``tipo_processo`` desconhecido; ``tamanho_pagina`` acima de
+                ou ``orgao_julgador`` só com dígitos; ``tipo_processo``
+                desconhecido; ``tamanho_pagina`` acima de
                 10.000; página além do teto de 10.000 resultados.
             TJMTConfigError: A configuração pública do portal não foi
                 encontrada ou aponta para outra API.

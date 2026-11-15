@@ -190,7 +190,14 @@ def _init_session(
         # corrente) depois de ler os anos enviados: o filtro de ano se perdia
         # sem erro. O navegador faz este postback ao mudar o combo; a busca
         # vai em seguida com o estado devolvido por ele.
-        postback = dict(data, __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem")
+        # O postback leva a competencia padrao do form inicial (``"1"``): a
+        # ``"3"`` (Fazendaria) so existe depois que a Turma Recursal carrega, e
+        # com ela o servidor respondia HTTP 500. A busca leva a pedida.
+        postback = dict(
+            data,
+            __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem",
+            **{f"{_FIELD_PREFIX}cmbCompetencia": "1"},
+        )
         html = request_fn("POST", FORM_URL, data=postback, timeout=30).text
         data.update(extract_viewstate_fields(html))
     resp = request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)

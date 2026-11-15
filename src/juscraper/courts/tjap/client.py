@@ -71,7 +71,7 @@ class TJAPScraper(HTTPScraper):
         classe : str, optional
             Procedural class.
         votacao : str
-            ``"0"`` for all (default), ``"Unanime"``, ``"Maioria"``.
+            ``"0"`` for all (default), ``"Unânime"``, ``"Maioria"``.
         origem : str, optional
             Origin (comarca).
 

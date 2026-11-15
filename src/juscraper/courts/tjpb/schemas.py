@@ -1,7 +1,7 @@
 """Pydantic schemas for TJPB scraper endpoints."""
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
 
@@ -32,8 +32,10 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     id_classe: str | None = None
     id_orgao_julgador: str | None = None
     id_relator: str | None = None
-    # TODO (#212): investigar formato real (provavelmente list[str]).
-    id_origem: str = "8,2"
+    # Valores de ``ids_jurisdicoes`` em ``/api/pje/origens/list``: ``"8"`` Turmas
+    # Recursais, ``"2"`` Tribunal Pleno/Camaras/Secoes e ``"8,2"`` todas. A lista
+    # separada por virgula e o formato do proprio backend, nao uma lista do usuario.
+    id_origem: Literal["8", "2", "8,2"] = "8,2"
     decisoes: bool = False
 
 

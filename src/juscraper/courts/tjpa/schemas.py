@@ -38,10 +38,11 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     origem: list | None = None
     tipo: list | None = None
     sort_order: Literal["asc", "desc"] = "desc"
-    # TODO (#212): apertar `sort_by`, `query_type` e `query_scope` com Literal[...] após captura do BFF.
-    sort_by: str = "datajulgamento"
-    query_type: str = "free"
-    query_scope: str = "ementa"
+    # Valores do front do portal; ``"inteiroteor"`` (grafia da docstring antiga)
+    # segue aceito por compatibilidade.
+    sort_by: Literal["datajulgamento", "datapublicacao", "relevancia"] = "datajulgamento"
+    query_type: Literal["free", "anywords"] = "free"
+    query_scope: Literal["ementa", "inteiroTeor", "inteiroteor"] = "ementa"
 
 
 class OutputCJSGTJPA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

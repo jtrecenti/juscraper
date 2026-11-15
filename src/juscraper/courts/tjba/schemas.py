@@ -6,7 +6,7 @@ com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import (
     DataPublicacaoMixin,
@@ -43,8 +43,9 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
     turmas_recursais: bool = True
     tipo_acordaos: bool = True
     tipo_decisoes_monocraticas: bool = True
-    # TODO (#212): apertar com Literal[...] após captura do GraphQL.
-    ordenado_por: str = "dataPublicacao"
+    # Valores do seletor "Ordenar por" do portal; o GraphQL tipa ``ordenadoPor``
+    # como ``String`` e responde erro interno para qualquer outro valor.
+    ordenado_por: Literal["dataPublicacao", "relevancia"] = "dataPublicacao"
     tamanho_pagina: TamanhoPagina = 10
 
 

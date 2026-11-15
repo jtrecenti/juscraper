@@ -14,6 +14,9 @@ acompanhado de um caso aqui.
 """
 from __future__ import annotations
 
+import re
+from typing import get_args
+
 import numpy as np
 import pytest
 from pydantic import ValidationError
@@ -23,6 +26,7 @@ from juscraper.aggregators.datajud.schemas import InputListarProcessosDataJud
 from juscraper.aggregators.falcao.schemas import InputListarDecisoesFalcao
 from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
 from juscraper.courts.stf.schemas import InputListarDecisoesSTF
+from juscraper.courts.tjap.schemas import InputCJSGTJAP
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
 from juscraper.courts.tjdft.schemas import InputCJSGTJDFT
 from juscraper.courts.tjes.schemas import InputCJPGTJES, InputCJSGTJES
@@ -32,10 +36,12 @@ from juscraper.courts.tjmt.schemas import InputCJSGTJMT
 from juscraper.courts.tjpa.schemas import InputCJSGTJPA
 from juscraper.courts.tjpb.schemas import InputCJSGTJPB
 from juscraper.courts.tjpi.schemas import InputCJSGTJPI
+from juscraper.courts.tjrj.schemas import InputCJSGTJRJ
 from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
 from juscraper.courts.tjsc.schemas import InputCJSGTJSC
 from juscraper.courts.tjto.schemas import InputCJPGTJTO, InputCJSGTJTO
+from tests._helpers import load_sample
 
 
 class TestLiteralRejection:
@@ -90,6 +96,42 @@ class TestLiteralRejection:
             InputCJPGTJTO(pesquisa="x", ordenacao="random")
         with pytest.raises(ValidationError):
             InputCJPGTJTO(pesquisa="x", tipo_documento="liminares")
+
+
+# (Schema, campo, valores aceitos, valores recusados) — campos apertados na #207
+# com os valores dos formulários e APIs de cada tribunal. Os recusados incluem a
+# grafia que a docstring antiga indicava, quando ela não era a do backend.
+_LITERAL_207_CASES = [
+    (InputCJSGTJBA, "ordenado_por", ["dataPublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
+    (InputCJSGTJMT, "tipo_consulta", ["Acordao", "DecisaoMonocratica"], ["Decisao", "acordao"]),
+    (InputCJSGTJAP, "orgao", ["0", "tj", "recursal"], ["1", "turma"]),
+    (InputCJSGTJAP, "votacao", ["0", "Unânime", "Unanime", "Maioria"], ["unanime", "Empate"]),
+    (InputCJSGTJRJ, "competencia", ["1", "2", "3", 1, 3], ["4", 9]),
+    (InputCJSGTJRJ, "origem", ["1", "5", 4], ["6", 0]),
+    (InputCJSGTJPA, "sort_by", ["datajulgamento", "datapublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
+    (InputCJSGTJPA, "query_type", ["free", "anywords"], ["any", "anyWords"]),
+    (InputCJSGTJPA, "query_scope", ["ementa", "inteiroTeor", "inteiroteor"], ["integra", "xyz"]),
+    (InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
+    (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
+]
+
+
+@pytest.mark.parametrize(
+    "schema_cls, campo, aceitos, recusados",
+    _LITERAL_207_CASES,
+    ids=[f"{c[0].__name__}.{c[1]}" for c in _LITERAL_207_CASES],
+)
+def test_literal_207_aceita_dominio_e_recusa_o_resto(schema_cls, campo, aceitos, recusados):
+    for valor in aceitos:
+        schema_cls(pesquisa="x", **{campo: valor})
+    for valor in recusados:
+        with pytest.raises(ValidationError):
+            schema_cls(pesquisa="x", **{campo: valor})
+
+
+def test_tjgo_id_serventia_subtipo_int_vira_string():
+    assert InputCJSGTJGO(pesquisa="x", id_serventia_subtipo=14).id_serventia_subtipo == "14"
+    assert InputCJSGTJGO(pesquisa="x").id_serventia_subtipo == "0"
 
 
 class TestNumericFieldRejection:
@@ -288,3 +330,28 @@ class TestTJROOrgaoJulgadorIntZero:
         inp = InputCJSGTJRO(pesquisa="x", orgao_julgador_colegiado=0)
         assert inp.orgao_julgador_colegiado == 0
         assert inp.orgao_julgador_colegiado is not None
+
+
+def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
+    """A lista do ``Literal`` vem do array ``tipos`` do script do formulário (#207)."""
+    script = load_sample("tjgo", "cjsg/consulta_jurisprudencia.js", encoding="latin-1")
+    tipos = script.split("const tipos", 1)[1].split("];", 1)[0]
+    codigos = {"0"} | set(re.findall(r'"codigo": "(\d+)"', tipos))
+    campo = InputCJSGTJGO.model_fields["id_serventia_subtipo"].annotation
+    assert set(get_args(campo)) == codigos
+
+
+def test_tjrj_competencia_e_origem_batem_com_os_seletores_do_ejuris():
+    """Origens do form inicial; competências da origem padrão e da Turma Recursal (#207)."""
+    def opcoes(html: str, campo: str) -> set[str]:
+        select = re.search(rf'name="ctl00\$ContentPlaceHolder1\${campo}".*?</select>', html, re.S)
+        assert select is not None, campo
+        return set(re.findall(r'<option[^>]*value="([^"]*)"', select.group(0)))
+
+    inicial = load_sample("tjrj", "cjsg/post_initial.html")
+    turma_recursal = load_sample("tjrj", "cjsg/postback_origem_turma_recursal.html")
+    campos = InputCJSGTJRJ.model_fields
+    assert set(get_args(campos["origem"].annotation)) == opcoes(inicial, "cmbOrigem")
+    assert set(get_args(campos["competencia"].annotation)) == (
+        opcoes(inicial, "cmbCompetencia") | opcoes(turma_recursal, "cmbCompetencia")
+    )

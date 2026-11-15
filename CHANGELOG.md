@@ -44,6 +44,24 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **BREAKING:** TRF3 `cpopg`, `cposg` e os pares `*_download`: passam a exigir o extra opcional `juscraper[tls]` (`curl_cffi`), que faz as requisições à consulta pública com a impressão digital TLS do Chrome. O Akamai do portal deixa sem resposta, até o timeout, as requisições do `requests`, inclusive de IP residencial. Sem o extra, a primeira consulta levanta `ImportError` com a instrução `pip install 'juscraper[tls]'`. O `cjsg` não precisa do extra, mas o usa quando instalado (ver `Fixed`).
 - **BREAKING:** TRF3 `cpopg`: `download_pecas` e `diretorio` passam a ser aceitos só por nome (`cpopg(cnj, download_pecas=True)`); a forma posicional `cpopg(cnj, True)` levanta `TypeError`. O `cposg`, novo, já nasce assim. A mudança entra sem ciclo de aviso porque o `cpopg` do TRF3 não devolvia dados desde a troca do portal e as demais quebras desta versão já obrigam a rever a chamada.
 - **BREAKING:** TRF3 `cpopg`: mudanças de formato nas colunas que já existiam. `assunto` com mais de um assunto mantém a quebra de linha (`\n`) entre eles; antes os espaços eram colapsados num só. `participante`, em `polo_ativo` e `polo_passivo`, deixa de trazer a procuradoria no fim do texto, que passa a ficar na chave `procuradoria`. A ordem das colunas muda: `id_cnj` passa a ser a primeira (antes ficava por último quando o primeiro CNJ do lote era encontrado), as colunas de texto saem como `processo`, `classe`, `assunto`, `data_distribuicao`, `orgao_julgador`, `orgao_julgador_colegiado`, `jurisdicao`, `endereco_orgao` (antes `processo`, `data_distribuicao`, `classe`, `assunto`, `jurisdicao`, `orgao_julgador`, `endereco_orgao`), e `outros_interessados` entra entre `polo_passivo` e `movimentacoes`; quem lê as colunas por posição precisa passar a ler por nome.
+- TJBA, TJMT, TJAP, TJRJ, TJPA, TJPB e TJGO `cjsg`/`cjsg_download`: filtros de domínio fechado passam a aceitar só os valores que o portal oferece, e um valor fora da lista levanta `ValidationError` antes de qualquer requisição. Antes, ele ia ao backend, que respondia com erro genérico (TJBA, TJPA `sort_by`, TJRJ `competencia`) ou ignorava o valor sem avisar (TJPA `query_type`); no TJMT, `tipo_consulta` desconhecido já era recusado, com `ValueError`. Os valores vêm dos formulários e das APIs de cada portal, capturados em 15/11/2026 (#207):
+
+  | Tribunal | Parâmetro | Valores aceitos |
+  | --- | --- | --- |
+  | TJBA | `ordenado_por` | `"dataPublicacao"`, `"relevancia"` |
+  | TJMT | `tipo_consulta` | `"Acordao"`, `"DecisaoMonocratica"` |
+  | TJAP | `orgao` | `"0"`, `"tj"`, `"recursal"` |
+  | TJAP | `votacao` | `"0"`, `"Unânime"`, `"Unanime"`, `"Maioria"` |
+  | TJRJ | `competencia` | `"1"` a `"3"` (ou o inteiro) |
+  | TJRJ | `origem` | `"1"` a `"5"` (ou o inteiro) |
+  | TJPA | `sort_by` | `"datajulgamento"`, `"datapublicacao"`, `"relevancia"` |
+  | TJPA | `query_type` | `"free"`, `"anywords"` |
+  | TJPA | `query_scope` | `"ementa"`, `"inteiroTeor"`, `"inteiroteor"` |
+  | TJPB | `id_origem` | `"8"`, `"2"`, `"8,2"` |
+  | TJGO | `id_serventia_subtipo` | `0` e os códigos do seletor "Órgão" do Projudi, como string ou inteiro |
+
+  Sem ciclo de deprecação: os valores recusados não estão entre as opções do portal. A grafia que a documentação indicava continua aceita quando não se provou errada (TJAP `"Unanime"`, TJPA `"inteiroteor"`). A exceção é `query_type="any"`, que a docstring do TJPA indicava e que o portal tratava como `"free"` sem aviso em 15/11/2026; passa a levantar `ValidationError`, e o valor certo é `"anywords"`. A docstring do TJRJ descrevia `competencia="3"` como "ambos"; no formulário, `"3"` é a competência fazendária, que só existe na Turma Recursal (`origem="4"`). O TJES `ordenacao` continua texto livre: é a expressão de ordenação repassada à API, e o portal recusou o acesso na captura.
+- TJRJ `cjsg`/`cjsg_download` com `origem="4"` (Turma Recursal) e `competencia="3"` (fazendária) passa a trazer os acórdãos das turmas fazendárias. Antes, o postback que troca a origem levava a competência 3, que o formulário da origem padrão não oferece, e o portal respondia HTTP 500 até esgotar as tentativas.
 
 ### Added
 
