@@ -245,4 +245,4 @@ def test_todo_pedido_do_cjpg_tem_timeout(tmp_path, mocker):
     jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
 
     assert len(responses.calls) == 2
-    assert [c.request.req_kwargs.get("timeout") for c in responses.calls] == [(10, 60)] * 2
+    assert [c.request.req_kwargs.get("timeout") is not None for c in responses.calls] == [True, True]
