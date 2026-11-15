@@ -586,9 +586,12 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     # (tratamento do bpo-45274). O interpretador então sai sem esperar o
     # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
     # Por isso o worker falso também informa se a própria thread é daemon, o
-    # que vale em toda versão.
+    # que vale em toda versão. O filho reinstala o tratamento do Ctrl-C: o
+    # pytest rodado em segundo plano herda o SIGINT ignorado, o Python não
+    # instala o default_int_handler nesse caso, e o sinal se perderia.
     codigo = (
         "import atexit, os, signal, sys, threading, time\n"
+        "signal.signal(signal.SIGINT, signal.default_int_handler)\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
         "worker_preso = threading.Event()\n"
         "def credencial_presa(*_a):\n"
