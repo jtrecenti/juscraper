@@ -388,7 +388,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         token = payload.get("access_token") if isinstance(payload, dict) else None
         if not isinstance(token, str) or not token:
             raise RuntimeError(
-                f"JusBR: 'access_token' ausente na resposta do SSO (HTTP {resp.status_code})."
+                f"JusBR: 'access_token' ausente na resposta do SSO (HTTP {resp.status_code}). "
+                "Tente novamente ou use auth_govbr()."
             )
         return self.auth(token)
 

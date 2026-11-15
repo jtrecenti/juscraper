@@ -33,8 +33,9 @@ class InputAuthJusBR(BaseModel):
 class InputAuthFirefoxJusBR(BaseModel):
     """Accepted input for :meth:`JusbrScraper.auth_firefox`.
 
-    O metodo ``auth_firefox()`` nao aceita parametros — usa
-    ``browser_cookie3`` para extrair os cookies da sessao do Firefox e
+    O metodo ``auth_firefox()`` esta depreciado em favor de ``auth_govbr()``.
+    Nao aceita parametros: usa ``browser_cookie3``, do extra
+    ``juscraper[firefox]``, para extrair os cookies da sessao do Firefox e
     completa o fluxo OAuth sozinho. Este schema existe so para manter a
     simetria com os demais endpoints (documentacao + ``extra='forbid'``).
     """

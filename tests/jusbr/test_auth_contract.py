@@ -206,20 +206,19 @@ def test_auth_firefox_usa_timeout_da_politica(preparar_sso):
     assert sessao_sso.get.call_args.kwargs["timeout"] == 4
 
 
-def test_auth_firefox_sem_location_levanta_runtime_error(preparar_sso):
+@pytest.mark.parametrize(
+    ("resposta_sso", "trecho"),
+    [
+        pytest.param(_resposta(200), "Location", id="sem-location"),
+        pytest.param(
+            _resposta(302, {"Location": "https://x.test/home#error=login_required"}), "code", id="sem-code"
+        ),
+    ],
+)
+def test_auth_firefox_sem_sessao_orienta_login(preparar_sso, resposta_sso, trecho):
     scraper, sessao_sso = preparar_sso()
-    sessao_sso.get.return_value = _resposta(200)
-    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="Location") as erro:
-        scraper.auth_firefox()
-    assert "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox" in str(erro.value)
-    assert "auth_govbr()" in str(erro.value)
-    sessao_sso.post.assert_not_called()
-
-
-def test_auth_firefox_sem_code_levanta_runtime_error(preparar_sso):
-    scraper, sessao_sso = preparar_sso()
-    sessao_sso.get.return_value = _resposta(302, {"Location": "https://x.test/home#error=login_required"})
-    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="code") as erro:
+    sessao_sso.get.return_value = resposta_sso
+    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match=trecho) as erro:
         scraper.auth_firefox()
     assert "Faça login em https://portaldeservicos.pdpj.jus.br pelo Firefox" in str(erro.value)
     assert "auth_govbr()" in str(erro.value)
@@ -240,8 +239,12 @@ def test_auth_firefox_sem_access_token_levanta_runtime_error(preparar_sso, respo
     sessao_sso.get.return_value = _resposta(302, {"Location": _LOCATION_COM_CODE})
     sessao_sso.post.return_value = resposta
 
-    with pytest.warns(DeprecationWarning, match="auth_govbr"), pytest.raises(RuntimeError, match="access_token"):
+    with (
+        pytest.warns(DeprecationWarning, match="auth_govbr"),
+        pytest.raises(RuntimeError, match="access_token") as erro,
+    ):
         scraper.auth_firefox()
+    assert "auth_govbr()" in str(erro.value)
     assert scraper.token is None
 
 
