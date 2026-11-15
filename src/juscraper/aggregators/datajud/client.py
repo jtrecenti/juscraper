@@ -35,6 +35,8 @@ from .paginacao import (
     _hits_da_pagina,
     _mensagem_falha_parcial,
     _next_search_after,
+    _size_do_pedaco,
+    _teto_apos_busca,
     _total_primeira_pagina,
     _verificar_data_frame_vazio,
     _verificar_fim_pagina,
@@ -577,7 +579,9 @@ class DatajudScraper(HTTPScraper):
                   5000, range 10-10000 conforme cap da API publica). Em
                   caso de ``HTTP 504``/``Timeout``, o client refaz a
                   chamada com ``size // 4`` automaticamente (1 retry,
-                  ``UserWarning``); ainda assim, valores proximos de
+                  ``UserWarning``) e passa a buscar cada pagina em pedacos
+                  desse tamanho; ``paginas`` continua contando paginas de
+                  ``tamanho_pagina``. Ainda assim, valores proximos de
                   10000 sao instaveis na pratica.
 
         Aliases deprecados:
@@ -709,6 +713,7 @@ class DatajudScraper(HTTPScraper):
             disable=total == 0,
         )
         recebidos = 0
+        ultima_pagina_contada = 0
         try:
             # ``total_info`` vem do iterador, já validado na página 1: com ``paginas``
             # que pula a página 1, o total dela ainda alimenta o diagnóstico de falha.
@@ -740,7 +745,9 @@ class DatajudScraper(HTTPScraper):
                     break
                 frames.append(frame)
                 recebidos += len(frame)
-                pbar.update(1)
+                # Depois do fallback, a página chega em pedaços: a barra avança no primeiro.
+                pbar.update(int(current_page != ultima_pagina_contada))
+                ultima_pagina_contada = current_page
         except ColetaParcialError as exc:
             exc.resultado = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
             raise
@@ -760,10 +767,16 @@ class DatajudScraper(HTTPScraper):
     ) -> Iterator[tuple[int, dict[str, Any], dict[str, Any] | None]]:
         """Percorre o cursor físico até a última página necessária.
 
-        Entrega, com cada página, o ``hits.total`` da página 1 já validado.
+        Entrega cada busca com o número da página de ``tamanho_pagina`` a que
+        ela pertence e o ``hits.total`` da página 1 já validado. Depois do
+        fallback de 504/timeout, uma página chega em vários pedaços do
+        ``size`` reduzido, cortados na fronteira dela, para que ``paginas``
+        continue contando páginas do tamanho pedido (#513).
         """
         current_page = 1
         tamanho_pagina = inp.tamanho_pagina
+        # Teto de cada busca: começa em ``tamanho_pagina`` e só cai com o fallback.
+        size_maximo = tamanho_pagina
         search_after: list[Any] | None = None
         last_page = None if paginas is None else paginas[-1]
         # Alimentam o diagnóstico do ColetaParcialError: quanto já veio das páginas pedidas e
@@ -773,6 +786,7 @@ class DatajudScraper(HTTPScraper):
         total_info: dict[str, Any] | None = None
         while last_page is None or current_page <= last_page:
             logger.info("Fetching page %d for alias %s...", current_page, alias)
+            size_pedido = _size_do_pedaco(size_maximo, tamanho_pagina - percorridos % tamanho_pagina)
             query_payload = build_listar_processos_payload(
                 numero_processo=numero_processo,
                 ano_ajuizamento=inp.ano_ajuizamento,
@@ -784,7 +798,7 @@ class DatajudScraper(HTTPScraper):
                 orgao_julgador=inp.orgao_julgador,
                 query=inp.query,
                 mostrar_movs=inp.mostrar_movs,
-                tamanho_pagina=tamanho_pagina,
+                tamanho_pagina=size_pedido,
                 search_after=search_after,
             )
             try:
@@ -793,12 +807,10 @@ class DatajudScraper(HTTPScraper):
                 mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
                 _falha_pagina(mensagem + _sufixo_causa(exc), exc)
             hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
-            if current_page == 1:
+            if total_info is None:  # primeira busca; depois do fallback, a página 1 vem em pedaços
                 total_info = _total_primeira_pagina(api_response, alias, current_page)
-            effective_size = min(
-                tamanho_pagina,
-                query_payload.get("size", tamanho_pagina),
-            )
+            effective_size = query_payload["size"]
+            size_maximo = _teto_apos_busca(size_maximo, size_pedido, effective_size)
             percorridos += len(hits)
             next_search_after = _next_search_after(
                 api_response,
@@ -807,7 +819,8 @@ class DatajudScraper(HTTPScraper):
             )
             if paginas is None or current_page in paginas:
                 recebidos += len(hits)
-            contexto = _FimPagina(alias, current_page, recebidos, last_page)
+            proxima_pagina = percorridos // tamanho_pagina + 1
+            contexto = _FimPagina(alias, current_page, recebidos, last_page, proxima_pagina)
             _verificar_pagina_vazia(api_response, effective_size, total_info, percorridos, contexto)
             yield current_page, api_response, total_info
             # Depois do ``yield``: o consumidor já guardou os hits válidos da página.
@@ -816,7 +829,6 @@ class DatajudScraper(HTTPScraper):
                 _verificar_fim_pagina(hits, effective_size, total_info, percorridos, contexto)
                 return
             search_after = next_search_after
-            tamanho_pagina = effective_size
-            current_page += 1
+            current_page = proxima_pagina
             if last_page is None or current_page <= last_page:
                 time.sleep(self.sleep_time)

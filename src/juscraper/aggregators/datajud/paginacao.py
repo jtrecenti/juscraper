@@ -5,6 +5,7 @@ de alias, página e registros recebidos; ``client.py`` preenche
 ``erro.resultado`` com as páginas já guardadas.
 """
 import logging
+import math
 from typing import Any, NamedTuple, NoReturn, cast
 
 import pandas as pd
@@ -23,6 +24,8 @@ class _FimPagina(NamedTuple):
     pagina: int
     recebidos: int
     last_page: int | None
+    # Página da busca seguinte; é a mesma ``pagina`` quando ela vem em pedaços após o fallback.
+    proxima_pagina: int
 
 
 def _next_search_after(
@@ -47,6 +50,27 @@ def _next_search_after(
         )
         return None
     return search_after
+
+
+def _size_do_pedaco(teto: int, restante: int) -> int:
+    """``size`` da próxima busca: o que falta da página, dividido em pedaços iguais de até ``teto``.
+
+    Sem fallback, ``teto`` é ``tamanho_pagina`` e a página vem numa busca só.
+    Pedaços iguais evitam um último pedaço minúsculo, que ficaria abaixo do
+    mínimo do fallback se levasse 504.
+    """
+    pedacos = math.ceil(restante / teto)
+    return math.ceil(restante / pedacos)
+
+
+def _teto_apos_busca(teto: int, pedido: int, efetivo: int) -> int:
+    """Teto de ``size`` das buscas seguintes.
+
+    ``call_datajud_api`` reduz ``size`` no payload quando faz o fallback de
+    504/timeout; o tamanho reduzido vira o teto. Um pedido menor que o teto,
+    o pedaço que fecha a página, não o rebaixa.
+    """
+    return efetivo if efetivo < pedido else teto
 
 
 def _mensagem_falha_parcial(
@@ -169,7 +193,7 @@ def _verificar_fim_pagina(
     """Verifica cursor pendente e término prematuro após consumir a página."""
     total_exato = _total_exato(total_info)
     cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
-    pagina_pendente = contexto.last_page is None or contexto.pagina < contexto.last_page
+    pagina_pendente = contexto.last_page is None or contexto.proxima_pagina <= contexto.last_page
     total_esgotado = total_exato is not None and percorridos >= total_exato
     if cursor_ausente and pagina_pendente and not total_esgotado:
         mensagem = (
