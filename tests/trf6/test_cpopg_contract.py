@@ -19,7 +19,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts.trf6.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
 GET_PARAMS = {"acao": "processo_consulta_publica"}
@@ -145,7 +145,7 @@ def test_cpopg_missing_process_keeps_detail_columns_empty(fake_captcha_solver):
     row = df.iloc[0]
     assert row["id_cnj"] == "00000000020994060000"
     assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj", "motivo_falha"]
-    assert all(row[col] is None for col in COLUNAS_DETALHE)
+    assert all(v is None for v in df[list(COLUNAS_DETALHE)].to_numpy().ravel())
     # Ausente da consulta pública não é falha da requisição.
     assert row["motivo_falha"] is None
 
@@ -162,7 +162,7 @@ def test_cpopg_lote_sem_nenhuma_resposta_mantem_colunas_do_detalhe(fake_captcha_
 
     assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj", "motivo_falha"]
     assert list(df["motivo_falha"]) == ["conexao", "conexao"]
-    assert df[list(COLUNAS_DETALHE)].map(lambda v: v is None).all().all()
+    assert all(v is None for v in df[list(COLUNAS_DETALHE)].to_numpy().ravel())
 
 
 def test_cpopg_parse_sem_html_mantem_colunas_do_detalhe():
@@ -170,13 +170,13 @@ def test_cpopg_parse_sem_html_mantem_colunas_do_detalhe():
     scraper = jus.scraper("trf6", sleep_time=0)
     df = scraper.cpopg_parse([None], ["00000000020994060000"])
     assert list(df.columns) == [*COLUNAS_DETALHE, "id_cnj"]
-    assert all(df.iloc[0][col] is None for col in COLUNAS_DETALHE)
+    assert all(v is None for v in df[list(COLUNAS_DETALHE)].to_numpy().ravel())
 
 
 @pytest.mark.parametrize("sample", ["cpopg/detail_normal.html", "cpopg/detail_cumprimento_sentenca.html"])
 def test_colunas_detalhe_sao_as_chaves_de_parse_detail(sample):
     """``COLUNAS_DETALHE`` acompanha o registro de ``parse_detail``, na mesma ordem."""
-    record = parse_detail(load_sample_bytes("trf6", sample).decode("latin-1"))
+    record = parse_detail(load_sample("trf6", sample, encoding="latin-1"))
     assert tuple(record) == COLUNAS_DETALHE
 
 
