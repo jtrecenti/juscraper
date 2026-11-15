@@ -249,6 +249,25 @@ def test_cpopg_bloqueio_nas_pecas_preserva_o_detalhe(tmp_path) -> None:
 
 
 @responses.activate
+def test_cpopg_bloqueio_nas_pecas_encerra_o_lote(tmp_path) -> None:
+    """Bloqueio numa peça do 1º CNJ: o 2º não é pedido e sai ``bloqueio_anti_bot``."""
+    _processo_encontrado()
+    responses.add(responses.GET, DOC_URL, body=_AKAMAI_403, status=403)
+
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.warns(BloqueioAntiBotWarning):
+        df = scraper.cpopg(
+            ["50059460920254036324", "50059460920254036325"], download_pecas=True, diretorio=str(tmp_path)
+        )
+
+    assert df.iloc[0]["processo"] == "5005946-09.2025.4.03.6324"
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert list(df["pecas"]) == [[], []]
+    # Uma busca só: o 2º CNJ não foi pedido depois do bloqueio.
+    assert sum(c.request.method == "POST" for c in responses.calls) == 1
+
+
+@responses.activate
 def test_cpopg_bloqueio_no_detalhe_preserva_as_pecas_dos_anteriores(tmp_path) -> None:
     """Bloqueio na busca do 2º CNJ: o 1º sai com detalhe e peças, sem motivo; o 2º, ``bloqueio_anti_bot``.
 

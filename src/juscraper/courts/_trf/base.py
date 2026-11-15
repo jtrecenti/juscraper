@@ -380,6 +380,9 @@ class TRFConsultaScraper(HTTPScraper):
         proc_dir.mkdir(parents=True, exist_ok=True)
         paths: list[str] = []
         for ca, doc_id in extract_documento_urls(html):
+            # Pausa também antes da 1ª peça, que vem logo depois do detalhe.
+            if self.sleep_time:
+                time.sleep(self.sleep_time)
             try:
                 content = fetch_documento(self, self.BASE_URL, ca, doc_id)
             except BotChallengeBlockedError as exc:
@@ -396,6 +399,4 @@ class TRFConsultaScraper(HTTPScraper):
             path = proc_dir / f"{doc_id}.html"
             path.write_bytes(content)
             paths.append(str(path))
-            if self.sleep_time:
-                time.sleep(self.sleep_time)
         return paths, False
