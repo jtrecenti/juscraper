@@ -33,9 +33,8 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ``scraper.session`` apos ``__init__`` (dependencia de runtime, nao da API).
     """
 
-    #: O formulário do portal valida as datas com
-    #: ``jQuery.datepicker.parseDate("d/m/yy", ...)`` e as envia sem conversão;
-    #: em ISO, a busca volta vazia (#496).
+    #: Explícito: o portal valida as datas com ``parseDate("d/m/yy")`` e as
+    #: envia sem conversão; em ISO, a busca volta vazia (#496).
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
     classe: str | None = None

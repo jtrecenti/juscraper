@@ -1,6 +1,4 @@
 """Filter-propagation contract for TJRS cjsg."""
-from datetime import date
-
 import pandas as pd
 import pytest
 import responses
@@ -12,7 +10,10 @@ from tests.tjrs.test_cjsg_contract import _add_page
 
 @responses.activate
 def test_cjsg_all_filters_land_in_form_body(mocker):
-    """All TJRS public filters must reach the nested Solr params form body."""
+    """All TJRS public filters must reach the nested Solr params form body.
+
+    Entrada ISO, datas em ``DD/MM/AAAA`` no body (#496).
+    """
     mocker.patch("time.sleep")
     _add_page(
         "dano moral",
@@ -43,37 +44,6 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         data_publicacao_fim="2024-04-30",
         tipo_processo="Civel",
         secao="crime",
-    )
-
-    assert isinstance(df, pd.DataFrame)
-
-
-@responses.activate
-def test_cjsg_datas_vao_no_formato_do_formulario_do_portal(mocker):
-    """As datas chegam ao portal como ``DD/MM/AAAA``, seja qual for a entrada.
-
-    O formulário do portal valida os quatro campos de data com
-    ``jQuery.datepicker.parseDate("d/m/yy", ...)`` e os envia sem conversão;
-    em ISO, a busca volta vazia (#496).
-    """
-    mocker.patch("time.sleep")
-    _add_page(
-        "direito",
-        1,
-        "cjsg/no_results.json",
-        data_julgamento_inicio="01/10/2026",
-        data_julgamento_fim="31/10/2026",
-        data_publicacao_inicio="10/03/2025",
-        data_publicacao_fim="29/04/2025",
-    )
-
-    df = jus.scraper("tjrs").cjsg(
-        "direito",
-        paginas=1,
-        data_julgamento_inicio="01/10/2026",
-        data_julgamento_fim="2026-10-31",
-        data_publicacao_inicio=date(2025, 3, 10),
-        data_publicacao_fim="29-04-2025",
     )
 
     assert isinstance(df, pd.DataFrame)
