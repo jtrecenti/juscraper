@@ -86,7 +86,7 @@ ARQUIVO_FALHAS = "falhas_download.json"
 def registrar_falhas(pasta: Path, pedidos: list, falhas: dict) -> None:
     """Grava em ``pasta`` as falhas do lote, para o parse as devolver como linhas.
 
-    Os ``pedidos`` saem do registro antes de as ``falhas`` entrarem: o
+    Os CNJs ``pedidos``, como vieram do usuário, saem do registro antes de as ``falhas`` entrarem: o
     processo baixado agora não guarda a falha de um download anterior na
     mesma pasta. A entrada que não é texto (``None``, número) entra como
     ``str``, a única chave que o JSON guarda. Registro vazio apaga o arquivo;
@@ -96,7 +96,7 @@ def registrar_falhas(pasta: Path, pedidos: list, falhas: dict) -> None:
     arquivo = pasta / ARQUIVO_FALHAS
     registro = _ler_registro(arquivo)
     for cnj in pedidos:
-        registro.pop(str(cnj), None)
+        registro.pop(str(format_cnj(cnj, strict=False)), None)
     registro.update({str(cnj): motivo for cnj, motivo in falhas.items()})
     if not registro:
         arquivo.unlink(missing_ok=True)

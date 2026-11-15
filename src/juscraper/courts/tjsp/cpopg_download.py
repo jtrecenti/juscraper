@@ -217,8 +217,7 @@ def cpopg_download_html(
             "TJSPScraper.cpopg_download",
             "download(s) de documento público",
         )
-    pedidos = [format_cnj(idp, strict=False) for idp in id_cnj_list]
-    registrar_falhas(Path(download_path, 'cpopg'), pedidos, falhas)
+    registrar_falhas(Path(download_path, 'cpopg'), id_cnj_list, falhas)
     return falhas
 
 

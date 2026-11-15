@@ -55,18 +55,15 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue
         try:
-            path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
+            if _cposg_download_html_single(id_cnj, session, u_base, download_path) is None:
+                falhas[cnj] = MOTIVO_NAO_ENCONTRADO
         except (OSError, UnicodeDecodeError, ValueError, AttributeError,
                 RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
             falhas[cnj] = motivo_do_processo(e)
-        else:
-            if path is None:
-                falhas[cnj] = MOTIVO_NAO_ENCONTRADO
         # Também depois de um erro: o eSAJ bloqueia buscas em sequência rápida.
         time.sleep(sleep_time)
-    pedidos = [format_cnj(id_cnj, strict=False) for id_cnj in id_cnj_list]
-    registrar_falhas(Path(download_path, 'cposg'), pedidos, falhas)
+    registrar_falhas(Path(download_path, 'cposg'), id_cnj_list, falhas)
     return falhas
 
 
