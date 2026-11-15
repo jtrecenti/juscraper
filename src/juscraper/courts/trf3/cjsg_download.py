@@ -228,8 +228,13 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     reproduz tudo o que o JavaScript dele faz. ``magistrado``, ``classe`` e
     ``orgao`` vão como ``"0"`` (sem seleção no dropdown); o filtro de verdade
     viaja nos campos ocultos ``hdnMagistrado``, ``hdnClasse``, ``hdnOrgao`` e
-    ``hdnOrgaoJef``. ``chkMostrarLista=on`` pede a lista resumida, que já traz
-    ementa e inteiro teor de cada documento.
+    ``hdnOrgaoJef``. ``numclasse``, ``tema`` e ``legislacao`` só entram no
+    corpo quando informados. A legislação vai só em ``legislacao``: medido em
+    15/11/2026, o servidor ignora ``hdnLegislacao``, e o molde
+    ``(NORMA-NÚMERO ART-x).ref.`` que o JavaScript antigo do formulário
+    acrescentava à pesquisa livre não encontra nada. ``chkMostrarLista=on``
+    pede a lista resumida, que já traz ementa e inteiro teor de cada
+    documento.
 
     No órgão julgador, esta função põe o texto de ``inp`` nos dois campos,
     ``hdnOrgao`` e ``hdnOrgaoJef``, depois da mesma troca de "1a. seção" por
@@ -285,6 +290,13 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
         "hdnOrgao": orgao,
         "hdnOrgaoJef": orgao,
     }
+    # Só os acórdãos têm estes campos (``FILTROS_SO_ACORDAOS``).
+    filtros_acordaos = {
+        "numclasse": _texto_campo(inp.numero_classe, "{}"),
+        "tema": str(inp.sistema_interamericano or ""),
+        "legislacao": _texto_campo(inp.legislacao, "{}"),
+    }
+    payload.update({campo: valor for campo, valor in filtros_acordaos.items() if valor})
     payload.update(BASES[inp.base][1])
     return payload
 

@@ -26,6 +26,9 @@ from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3, validar_combinacoe
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.trf3._cjsg_mock import add_page, add_search
 
+#: Bases cujo formulário não tem os filtros só de acórdãos.
+BASES_SEM_ACORDAOS = ["turmas_recursais", "monocraticas", "monocraticas_turmas_recursais"]
+
 
 def _body(**campos: str) -> dict[str, str]:
     """POST body of the portal with every field empty or at its default."""
@@ -70,6 +73,9 @@ def test_cjsg_all_filters_land_in_post_body(mocker):
             hdnClasse="(AI - AGRAVO DE INSTRUMENTO).dclas.",
             hdnOrgao="(3ª Turma).org.",
             hdnOrgaoJef="(TERCEIRA TURMA).org.",
+            numclasse="1708075",
+            tema="1",
+            legislacao="LEI-8080",
         ),
         "no_results.html",
     )
@@ -84,12 +90,59 @@ def test_cjsg_all_filters_land_in_post_body(mocker):
         orgao_julgador="3ª Turma",
         ementa="fornecimento",
         indexacao="saude",
+        numero_classe="1708075",
+        sistema_interamericano=1,
+        legislacao="LEI-8080",
         data_julgamento_inicio="2026-01-01",
         data_julgamento_fim="2026-06-30",
         tamanho_pagina=50,
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(
+    ("filtro", "valor", "campo"),
+    [
+        ("numero_classe", " 1708075 ", {"numclasse": "1708075"}),
+        ("sistema_interamericano", 2, {"tema": "2"}),
+        ("legislacao", "LEI PELÉ FED LEI 9615 1998", {"legislacao": "LEI PELÉ FED LEI 9615 1998"}),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_filtros_so_de_acordaos_sozinhos_sao_criterio(mocker, filtro, valor, campo):
+    """Each of these fields alone is a search criterion, as in the form.
+
+    Measured on the portal on 2026-11-15, with no free text: ``numclasse``
+    1708075 finds 2 documents, ``tema`` 2 finds 24 and ``legislacao`` with the
+    text the form's legislation panel writes finds 4. Only ``legislacao`` is
+    read: ``hdnLegislacao`` changes nothing, and the old ``(...).ref.`` mold in
+    the free text finds 0, so neither is sent.
+    """
+    mocker.patch("time.sleep")
+    add_search(_body(**campo), "no_results.html")
+
+    jus.scraper("trf3").cjsg(paginas=1, **{filtro: valor})
+
+
+@pytest.mark.parametrize(
+    ("filtro", "valor"),
+    [("numero_classe", "1708075"), ("sistema_interamericano", 1), ("legislacao", "LEI-8080")],
+)
+@pytest.mark.parametrize("base", BASES_SEM_ACORDAOS)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_filtros_so_de_acordaos_recusados_nas_outras_bases(filtro, valor, base):
+    """Only the acórdãos form has these fields; elsewhere the portal fails or drops them.
+
+    Measured on 2026-11-15 with "medicamento": in the Turmas Recursais,
+    ``numclasse`` and ``tema`` answer "Pesquisa Incorreta" and ``legislacao``
+    turns 7,921 documents into 0; in the monocráticas all three answer
+    "Pesquisa Incorreta".
+    """
+    with pytest.raises(ValueError, match=filtro):
+        jus.scraper("trf3").cjsg("medicamento", paginas=1, base=base, **{filtro: valor})
+
+    assert len(responses.calls) == 0
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -157,6 +210,8 @@ def test_cjsg_sem_criterio_levanta():
         ("numero_processo", "   "),
         ("ementa", "   "),
         ("indexacao", "   "),
+        ("numero_classe", "   "),
+        ("legislacao", "   "),
     ],
 )
 @responses.activate(registry=OrderedRegistry)
@@ -173,6 +228,23 @@ def test_cjsg_filtro_so_com_espacos_nao_conta_como_criterio(filtro, valor):
 def test_cjsg_monocraticas_nao_recusam_filtro_so_com_espacos(filtro, base):
     """A whitespace-only filter counts as absent, so the monocráticas do not refuse it."""
     validar_combinacoes(InputCJSGTRF3(pesquisa="medicamento", base=base, **{filtro: "   "}))
+
+
+@pytest.mark.parametrize("filtro", ["numero_classe", "legislacao"])
+@pytest.mark.parametrize("base", BASES_SEM_ACORDAOS)
+def test_cjsg_outras_bases_nao_recusam_filtro_de_acordaos_so_com_espacos(filtro, base):
+    """A whitespace-only acórdãos filter counts as absent, so the other bases do not refuse it."""
+    validar_combinacoes(InputCJSGTRF3(pesquisa="medicamento", base=base, **{filtro: "   "}))
+
+
+@pytest.mark.parametrize("valor", [0, -3, True])
+def test_cjsg_sistema_interamericano_nao_positivo_levanta_validation_error(valor):
+    """Dropdown IDs start at 1; the portal answers 0 documents to any other ID, without error.
+
+    ``True`` is refused too, instead of being coerced to case 1.
+    """
+    with pytest.raises(ValidationError, match="sistema_interamericano"):
+        jus.scraper("trf3").cjsg("medicamento", sistema_interamericano=valor)
 
 
 def test_cjsg_base_invalida_levanta_validation_error():

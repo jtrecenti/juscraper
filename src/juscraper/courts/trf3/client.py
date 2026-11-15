@@ -628,6 +628,21 @@ class TRF3Scraper(HTTPScraper):
                 * ``indexacao`` (str): Texto pesquisado na indexação ("Objeto
                   do Processo" nas Turmas Recursais). Não existe nas bases de
                   monocráticas.
+                * ``numero_classe`` (str): Número do processo dentro da
+                  classe, o que vem depois da classe na coluna ``classe`` dos
+                  acórdãos antigos (``"1708075"`` em
+                  ``"Ap - APELAÇÃO CÍVEL - 1708075"``). Só na base
+                  ``"acordaos"``.
+                * ``sistema_interamericano`` (int): ID da opção do dropdown
+                  "Sistema Interamericano" do formulário, um caso da Corte IDH
+                  (em 15/11/2026, ``1`` era o caso Trabalhadores da Fazenda
+                  Brasil Verde e ``2``, o caso Gomes Lund, "Guerrilha do
+                  Araguaia"). Só na base ``"acordaos"``.
+                * ``legislacao`` (str): Texto pesquisado nas referências
+                  legislativas dos documentos (ex.: ``"LEI-8080"``, ou
+                  ``"LEI PELÉ FED LEI 9615 1998"``, o texto que o painel de
+                  legislações do formulário escreve). Só na base
+                  ``"acordaos"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
                   Data de julgamento; nas monocráticas, data da decisão.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
@@ -645,8 +660,8 @@ class TRF3Scraper(HTTPScraper):
             TypeError: Quando todos os erros são kwargs desconhecidos.
             ValidationError: Para os demais erros do schema (base ou
                 ``tamanho_pagina`` fora do domínio, data inválida).
-            ValueError: Datas de julgamento e de publicação juntas; filtro que a
-                base de monocráticas não tem; nenhum critério;
+            ValueError: Datas de julgamento e de publicação juntas; filtro que o
+                formulário da base não tem; nenhum critério;
                 ``orgao_julgador`` que corresponde a mais de uma opção do
                 formulário (a mensagem lista os nomes indexados que
                 desfazem a ambiguidade); com ``paginas=None``, primeira
