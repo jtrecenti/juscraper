@@ -1,5 +1,7 @@
 """Scraper for the Court of Justice of Paraná (TJPR)."""
 
+from datetime import date
+
 import pandas as pd
 import requests
 
@@ -39,10 +41,10 @@ class TJPRScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """Downloads raw results from the TJPR jurisprudence search (multiple pages).
@@ -55,6 +57,14 @@ class TJPRScraper(HTTPScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
+            data_julgamento_inicio (str | date | None): Início do intervalo
+                de julgamento, nos formatos aceitos por :meth:`cjsg`.
+            data_julgamento_fim (str | date | None): Fim do intervalo de
+                julgamento.
+            data_publicacao_inicio (str | date | None): Início do intervalo
+                de publicação.
+            data_publicacao_fim (str | date | None): Fim do intervalo de
+                publicação.
             **kwargs: Aliases deprecados de :meth:`cjsg`.
 
         Raises:
@@ -131,10 +141,10 @@ class TJPRScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         *,
         incluir_corte_idh: bool = False,
         **kwargs,
@@ -152,12 +162,15 @@ class TJPRScraper(HTTPScraper):
             pesquisa (str | None): Termo de busca livre.
             paginas (int | list | range | None): Páginas 1-based; None busca
                 todas.
-            data_julgamento_inicio (str | None): Início do intervalo de
-                julgamento.
-            data_julgamento_fim (str | None): Fim do intervalo de julgamento.
-            data_publicacao_inicio (str | None): Início do intervalo de
-                publicação.
-            data_publicacao_fim (str | None): Fim do intervalo de publicação.
+            data_julgamento_inicio (str | date | None): Início do intervalo
+                de julgamento. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+            data_julgamento_fim (str | date | None): Fim do intervalo de
+                julgamento, nos mesmos formatos.
+            data_publicacao_inicio (str | date | None): Início do intervalo
+                de publicação, nos mesmos formatos.
+            data_publicacao_fim (str | date | None): Fim do intervalo de
+                publicação, nos mesmos formatos.
             incluir_corte_idh (bool): Mantém os precedentes da Corte IDH no
                 resultado. Default ``False``. Ligado, o DataFrame ganha as
                 colunas ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do
