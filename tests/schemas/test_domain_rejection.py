@@ -95,9 +95,9 @@ class TestLiteralRejection:
 class TestNumericFieldRejection:
     """Categoria B — lower bound numérico via ``Field(ge=1)``.
 
-    Apenas o lower bound é fiscalizado (zero/negativo nunca faz sentido em
-    paginação). Upper bound não é apertado neste PR — exige captura ao vivo
-    do backend para definir o teto real, encaminhada em issue follow-up.
+    O lower bound vale para todos (zero/negativo nunca faz sentido em
+    paginação). Upper bound só onde o teto real do backend foi medido ao vivo
+    (TJDFT: 40, acima disso a API responde HTTP 400).
     """
 
     def test_tjba_tamanho_pagina_rejects_below_ge(self):
@@ -111,6 +111,11 @@ class TestNumericFieldRejection:
     def test_tjdft_tamanho_pagina_rejects_below_ge(self):
         with pytest.raises(ValidationError):
             InputCJSGTJDFT(pesquisa="x", tamanho_pagina=0)
+
+    def test_tjdft_tamanho_pagina_rejects_above_le(self):
+        InputCJSGTJDFT(pesquisa="x", tamanho_pagina=40)
+        with pytest.raises(ValidationError):
+            InputCJSGTJDFT(pesquisa="x", tamanho_pagina=41)
 
     def test_tjes_tamanho_pagina_rejects_below_ge_in_cjsg_and_cjpg(self):
         with pytest.raises(ValidationError):

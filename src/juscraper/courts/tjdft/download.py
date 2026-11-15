@@ -5,6 +5,8 @@ from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import resolve_total_pages
 
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
+# Maior ``tamanho`` que a API aceita; acima disso ela responde HTTP 400.
+MAX_TAMANHO_PAGINA = 40
 
 
 def build_cjsg_payload(

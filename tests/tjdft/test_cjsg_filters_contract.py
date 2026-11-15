@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
@@ -139,6 +140,30 @@ def test_cjsg_tamanho_pagina_collision_raises():
         jus.scraper("tjdft").cjsg(
             "dano moral", paginas=1, tamanho_pagina=25, quantidade_por_pagina=50
         )
+
+
+@responses.activate
+def test_cjsg_tamanho_pagina_40_e_o_maximo_aceito(mocker):
+    """40 é o maior ``tamanho`` que a API aceita; vai ao payload sem ajuste."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", tamanho_pagina=40)
+
+    df = jus.scraper("tjdft").cjsg("dano moral", paginas=1, tamanho_pagina=40)
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_tamanho_pagina_acima_de_40_falha_antes_da_rede():
+    """Acima de 40 a API responde HTTP 400; o schema recusa antes da requisição,
+    também quando o valor vem pelo alias deprecado ``quantidade_por_pagina``."""
+    with (
+        pytest.warns(DeprecationWarning, match="quantidade_por_pagina"),
+        pytest.raises(ValidationError, match="less than or equal to 40"),
+    ):
+        jus.scraper("tjdft").cjsg("dano moral", paginas=1, quantidade_por_pagina=41)
+
+    assert len(responses.calls) == 0
 
 
 @responses.activate
