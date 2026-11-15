@@ -5,6 +5,8 @@ TJPR's ``cjsg`` exposes ``data_julgamento_inicio/fim`` and
 ride ``normalize_datas`` to ``data_julgamento_*`` with a
 ``DeprecationWarning``. Search-term aliases are ``query`` and ``termo``.
 """
+from urllib.parse import parse_qsl
+
 import pandas as pd
 import pytest
 import responses
@@ -57,6 +59,16 @@ def test_cjsg_all_filters_land_in_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+    # O matcher deriva do builder; os nomes de campo do formulário ficam pinados aqui.
+    enviado = dict(parse_qsl(responses.calls[1].request.body))
+    filtros = {
+        "criterioPesquisa": "dano moral",
+        "dataJulgamentoInicio": "01/01/2024",
+        "dataJulgamentoFim": "31/03/2024",
+        "dataPublicacaoInicio": "02/01/2024",
+        "dataPublicacaoFim": "01/04/2024",
+    }
+    assert {campo: enviado.get(campo) for campo in filtros} == filtros
 
 
 @responses.activate

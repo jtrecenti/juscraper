@@ -1,4 +1,6 @@
 """Filter-propagation contract for TJSC cjsg."""
+from urllib.parse import parse_qsl
+
 import pandas as pd
 import pytest
 import responses
@@ -46,6 +48,18 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do eproc ficam pinados aqui.
+    assert dict(parse_qsl(responses.calls[0].request.body, keep_blank_values=True)) == {
+        "txtPesquisa": "dano moral",
+        "rdoCampo": "I",
+        "txtProcesso": "00000000000000000000",
+        "dtDecisaoInicio": "2024-01-01",
+        "dtDecisaoFim": "2024-03-31",
+        "dtPublicacaoInicio": "2024-02-01",
+        "dtPublicacaoFim": "2024-04-30",
+        "hdnPaginaAtual": "1",
+        "numResultadosPorPagina": "10",
+    }
 
 
 @responses.activate

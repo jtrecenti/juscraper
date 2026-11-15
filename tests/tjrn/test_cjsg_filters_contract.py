@@ -6,6 +6,8 @@ The legacy ``id_classe_judicial`` alias is still accepted and emits
 the original field name (``id_classe_judicial``) — that is an internal
 detail of the PJe API and not exposed in the public signature.
 """
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -70,6 +72,29 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do PJe ficam pinados aqui.
+    assert json.loads(responses.calls[0].request.body) == {
+        "jurisprudencia": {
+            "ementa": "dano moral",
+            "inteiro_teor": "",
+            "nr_processo": "00000000000000000000",
+            "id_classe_judicial": "123",
+            "id_orgao_julgador": "456",
+            "id_relator": "789",
+            "id_colegiado": "10",
+            "id_juiz": "",
+            "id_vara": "",
+            "dt_inicio": "01-01-2024",
+            "dt_fim": "31-03-2024",
+            "origem": "",
+            "sistema": "PJE",
+            "decisoes": "Colegiadas",
+            "jurisdicoes": "Tribunal de Justica",
+            "grau": "2",
+        },
+        "page": 1,
+        "usuario": {"matricula": "", "token": ""},  # nosec
+    }
 
 
 @responses.activate
