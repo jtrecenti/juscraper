@@ -1,0 +1,91 @@
+"""Linhas de falha da consulta processual do TJSP (``cpopg`` e ``cposg``).
+
+O processo que não foi baixado, ou cujo arquivo não pôde ser lido, fica no
+resultado numa linha com ``motivo_falha`` (#460). Os helpers aqui servem aos
+dois graus.
+"""
+from __future__ import annotations
+
+from contextlib import suppress
+from pathlib import Path
+
+import pandas as pd
+
+from ...core.avisos import avisar
+from ...core.exceptions import BloqueioAntiBotWarning
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    EXCECOES_DE_FALHA_POR_LINHA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_NAO_ENCONTRADO,
+    MOTIVO_RESPOSTA_INESPERADA,
+    motivo_falha,
+    resumir_falhas,
+)
+from ...utils.cnj import clean_cnj, format_cnj
+
+
+def cnj_invalido(id_cnj: object) -> bool:
+    """Entrada que não é texto com 20 dígitos: sai ``entrada_invalida`` sem requisição."""
+    return not isinstance(id_cnj, str) or len(clean_cnj(id_cnj)) != 20
+
+
+def motivo_do_processo(erro: BaseException) -> str:
+    """Motivo de falha do processo cujo download falhou.
+
+    O ``RuntimeError`` das tentativas esgotadas traz o último erro em
+    ``__cause__``, e é dele que sai o motivo. Erro sem motivo no vocabulário
+    (página fora do formato, código de processo inválido) vira
+    ``resposta_inesperada``.
+    """
+    for candidato in (erro, erro.__cause__):
+        if candidato is not None and isinstance(candidato, EXCECOES_DE_FALHA_POR_LINHA):
+            with suppress(TypeError):
+                return motivo_falha(candidato)
+    return MOTIVO_RESPOSTA_INESPERADA
+
+
+def avisar_processos_sem_arquivo(falhas: dict, metodo: str, linha: str) -> None:
+    """Um ``UserWarning`` com os processos que ficaram sem arquivo, se houver.
+
+    Sai como :class:`BloqueioAntiBotWarning` quando algum motivo é
+    ``bloqueio_anti_bot``, como em :func:`juscraper.core.failures.avisar_falhas`.
+
+    Args:
+        falhas: ``{CNJ formatado: motivo}``, como devolvem os downloads.
+        metodo: Método público que abre a mensagem.
+        linha: Onde o processo sai com ``motivo_falha``, como
+            ``"cpopg os devolve na tabela basicos"``.
+    """
+    if not falhas:
+        return
+    resumo = resumir_falhas([f"{cnj}: {motivo}" for cnj, motivo in falhas.items()], "consulta(s) de processo")
+    mensagem = f"{metodo}: {resumo} Esses processos ficam sem arquivo; {linha}, com o motivo em motivo_falha."
+    if MOTIVO_NAO_ENCONTRADO in falhas.values():
+        mensagem += (
+            f" {MOTIVO_NAO_ENCONTRADO}: a consulta pública não mostra o número, que pode não existir "
+            "ou estar em segredo de justiça."
+        )
+    avisar(mensagem, BloqueioAntiBotWarning if MOTIVO_BLOQUEIO_ANTI_BOT in falhas.values() else UserWarning)
+
+
+def cnj_da_pasta(arquivo: Path) -> str | None:
+    """CNJ formatado da pasta do processo (``<download>/<cnj limpo>/<arquivo>.html``); ``None`` fora dela."""
+    nome = arquivo.parent.name
+    return format_cnj(nome) if nome.isdigit() and len(nome) == 20 else None
+
+
+def com_linhas_de_falha(tabela: pd.DataFrame, falhas: list[dict]) -> pd.DataFrame:
+    """Acrescenta a ``tabela`` as linhas de falha e, se faltar, a coluna ``motivo_falha``, ``None`` nas linhas lidas.
+
+    Cada falha é um ``dict`` com ``motivo_falha`` e as colunas que a
+    identificam (o CNJ, o arquivo); as demais colunas saem ``None``.
+    """
+    if COLUNA_MOTIVO_FALHA not in tabela.columns:
+        tabela = tabela.assign(**{COLUNA_MOTIVO_FALHA: None})
+    if not falhas:
+        return tabela
+    linhas = pd.DataFrame(falhas, columns=tabela.columns, dtype=object)
+    if tabela.empty:
+        return linhas
+    return pd.concat([tabela, linhas], ignore_index=True)

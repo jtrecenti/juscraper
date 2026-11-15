@@ -140,6 +140,10 @@ class ColetaParcialError(RuntimeError):
     ``falhas`` vem como ``(None, None, excecao)``; o alias e a página estão
     na mensagem.
 
+    O ``cjpg`` do TJSP também o levanta quando parte das páginas baixadas não
+    pode ser lida: ``resultado`` traz as páginas lidas, e cada item de
+    ``falhas`` vem como ``(None, None, excecao)``, com o arquivo na mensagem.
+
     O ``__cause__`` é a exceção da primeira falha.
     """
 

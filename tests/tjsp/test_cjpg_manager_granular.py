@@ -9,6 +9,7 @@ import logging
 import pandas as pd
 import pytest
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjsp.cjpg_parse import cjpg_parse_manager
 
 _COM_RESULTADO = (
@@ -45,17 +46,26 @@ def test_arquivo_unico_com_erro_propaga_o_erro_do_parser(tmp_path):
         cjpg_parse_manager(arquivo)
 
 
-def test_diretorio_descarta_arquivo_com_erro_e_registra_no_log(tmp_path, caplog):
-    """Percorre subdiretórios, aceita ``.htm``, junta o que deu certo e renumera o índice."""
+def test_diretorio_com_arquivo_com_erro_levanta_coleta_parcial(tmp_path, caplog):
+    """Página perdida não some do resultado: o erro sobe com as lidas em ``.resultado``.
+
+    Percorre subdiretórios, aceita ``.htm``, junta o que deu certo e renumera o índice.
+    """
     _gravar(tmp_path / "pagina_1.html", _COM_RESULTADO.format(classe="A"))
     _gravar(tmp_path / "lote" / "pagina_2.htm", _COM_RESULTADO.format(classe="B"))
     _gravar(tmp_path / "lote" / "ruim.html", _COM_ERRO)
 
-    with caplog.at_level(logging.ERROR, logger="juscraper.cjpg_parse"):
-        resultado = cjpg_parse_manager(tmp_path)
+    with (
+        caplog.at_level(logging.ERROR, logger="juscraper.cjpg_parse"),
+        pytest.raises(ColetaParcialError, match=r"cjpg: 1 de 3 página\(s\) falharam: ruim\.html\.") as excecao,
+    ):
+        cjpg_parse_manager(tmp_path)
 
+    resultado = excecao.value.resultado
     assert sorted(resultado["classe"]) == ["A", "B"]
     assert list(resultado.index) == [0, 1]
+    assert [(inicio, fim, type(erro)) for inicio, fim, erro in excecao.value.falhas] == [(None, None, ValueError)]
+    assert excecao.value.__cause__ is excecao.value.falhas[0][2]
     assert [r.getMessage() for r in caplog.records if "ruim.html" in r.getMessage()]
 
 
@@ -74,12 +84,15 @@ def test_diretorio_so_com_paginas_sem_resultado_devolve_vazio(tmp_path):
     assert cjpg_parse_manager(tmp_path).empty
 
 
-def test_diretorio_so_com_pagina_vazia_e_arquivo_com_erro_devolve_vazio(tmp_path):
-    """Uma página lida sem resultados basta para a falha não ser total."""
+def test_diretorio_so_com_pagina_vazia_e_arquivo_com_erro_levanta_coleta_parcial(tmp_path):
+    """Uma página lida sem resultados basta para a falha não ser total, mas a perdida não some."""
     _gravar(tmp_path / "pagina_1.html", _SEM_RESULTADO)
     _gravar(tmp_path / "ruim.html", _COM_ERRO)
 
-    assert cjpg_parse_manager(tmp_path).empty
+    with pytest.raises(ColetaParcialError, match=r"ruim\.html") as excecao:
+        cjpg_parse_manager(tmp_path)
+
+    assert excecao.value.resultado.empty
 
 
 def test_diretorio_em_que_todos_os_arquivos_falham_levanta_erro(tmp_path):

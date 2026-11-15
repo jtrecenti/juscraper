@@ -1,7 +1,6 @@
 """
 Parses downloaded files from the TJSP Consulta de Processos Originarios do Primeiro Grau (CPOSG).
 """
-import logging
 import re
 from pathlib import Path
 
@@ -11,9 +10,9 @@ from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas
+from ._falhas import cnj_da_pasta
 from .cpopg_parse import _split_incident_header
-
-logger = logging.getLogger('juscraper.cposg_parse')
 
 _FIELD_MAPPING = (
     ('classe', 'classe'),
@@ -46,6 +45,7 @@ _OUTPUT_COLUMNS = (
     'decisoes',
     'composicao',
     'primeira_inst',
+    COLUNA_MOTIVO_FALHA,
 )
 
 _DETAIL_TABLE_STYLE = 'margin-left:15px; margin-top:1px;'
@@ -57,7 +57,13 @@ def cposg_parse(path: str):
 
 
 def cposg_parse_manager(path: str):
-    """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame."""
+    """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame.
+
+    A coluna ``motivo_falha`` é ``None`` em cada processo lido. O arquivo que
+    não pode ser lido, ou que não é a página de um processo, vira uma linha com ``processo`` (o CNJ da pasta),
+    ``motivo_falha`` igual a ``resposta_inesperada`` e as demais colunas
+    ``None``; as falhas também saem num ``UserWarning``.
+    """
     raiz = Path(path)
     # O download grava em <path>/cposg/; o cpopg, no mesmo download_path, em
     # <path>/cpopg/, com os mesmos nomes de arquivo. Só a pasta do cposg entra.
@@ -65,11 +71,22 @@ def cposg_parse_manager(path: str):
         raiz = raiz / 'cposg'
     arquivos = list(raiz.rglob('*.html'))
     dados = []
+    falhas = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
         try:
-            dados.extend(cposg_parse_single_html(arq))
+            linhas = cposg_parse_single_html(arq)
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as e:
-            logger.error("Erro ao processar %s: %s", arq, e)
+            linhas, erro = [], str(e)
+        else:
+            # Todo arquivo do download é a página de um processo; a que não
+            # rende linha (página de erro do eSAJ gravada como processo) é falha.
+            erro = "não é a página de um processo"
+        if linhas:
+            dados.extend(linhas)
+            continue
+        dados.append({'processo': cnj_da_pasta(arq), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA})
+        falhas.append(f"{arq}: {MOTIVO_RESPOSTA_INESPERADA} ({erro})")
+    avisar_falhas(falhas, "TJSPScraper.cposg_parse", "leitura(s) de arquivo")
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)
 
 

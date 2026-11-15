@@ -8,7 +8,9 @@ from bs4.element import PreformattedString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas
 from .._esaj.pasta import documento_vinculado
+from ._falhas import cnj_da_pasta, com_linhas_de_falha
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -78,8 +80,12 @@ def cpopg_parse_manager(path: str):
     -------
     dict
         A dictionary where the keys are table names and the values are DataFrames
-        with the parsed data from the case files. When ``path`` is a directory,
-        files that fail to parse are reported with ``print`` and skipped.
+        with the parsed data from the case files. Quando ``path`` é um
+        diretório, ``basicos`` ganha a coluna ``motivo_falha``: ``None`` em
+        cada arquivo lido e ``resposta_inesperada`` no arquivo que o parser
+        recusa, que fica numa linha com ``file_path``, ``id_processo`` (o CNJ
+        da pasta do processo) e as demais colunas ``None``. As falhas também
+        saem num ``UserWarning``.
 
     Raises
     ------
@@ -93,37 +99,62 @@ def cpopg_parse_manager(path: str):
     if root.is_file():
         return cpopg_parse_single(str(root))
 
-    files = [file for file in root.rglob("*.html") if file.is_file()]
+    files = arquivos_candidatos(root)
     parsed = []
-    falhas = 0
+    falhas: list[tuple[Path, Exception]] = []
     for file in tqdm(files, desc="Processando documentos"):
         try:
             single_result = cpopg_parse_single(str(file))
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as error:
-            print(f"Erro ao processar o arquivo {file}: {error}")
-            falhas += 1
+            falhas.append((file, error))
             continue
         if single_result:
             parsed.append(single_result)
 
     if not parsed:
         raise _nothing_parsed_error(root, len(files), falhas)
-    return {
+    result = {
         key: pd.concat([result[key] for result in parsed], ignore_index=True)
         for key in parsed[0]
     }
+    result['basicos'] = com_linhas_de_falha(result['basicos'], [
+        {'file_path': str(file), 'id_processo': cnj_da_pasta(file), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA}
+        for file, _ in falhas
+    ])
+    avisar_falhas(
+        [f"{file}: {MOTIVO_RESPOSTA_INESPERADA} ({error})" for file, error in falhas],
+        "TJSPScraper.cpopg_parse",
+        "leitura(s) de arquivo",
+    )
+    return result
 
 
-def _nothing_parsed_error(root: Path, candidatos: int, falhas: int) -> ValueError:
+def arquivos_candidatos(root: Path) -> list[Path]:
+    """Os ``.html`` de processo sob ``root``, que :func:`cpopg_parse_manager` lê."""
+    return [file for file in root.rglob("*.html") if file.is_file()]
+
+
+def tabelas_vazias() -> dict[str, pd.DataFrame]:
+    """As quatro tabelas do ``cpopg`` sem linhas, para o lote em que nenhum processo foi baixado."""
+    return {
+        'basicos': pd.DataFrame(columns=list(_BASIC_COLUMNS)),
+        'partes': pd.DataFrame(columns=list(_PARTY_COLUMNS)),
+        'movimentacoes': pd.DataFrame(columns=list(_MOVEMENT_COLUMNS)),
+        'peticoes_diversas': pd.DataFrame(columns=list(_MISC_PETITION_COLUMNS)),
+    }
+
+
+def _nothing_parsed_error(root: Path, candidatos: int, falhas: list[tuple[Path, Exception]]) -> ValueError:
     """Build the error for a directory where no CPOPG file could be parsed."""
     if candidatos == 0:
         return ValueError(
             f"Nenhum arquivo do CPOPG lido em {root}: nenhum arquivo candidato "
             "(.html de processo) encontrado no diretório."
         )
+    arquivo, erro = falhas[0]
     return ValueError(
         f"Nenhum arquivo do CPOPG lido em {root}: {candidatos} arquivo(s) candidato(s), "
-        f"{falhas} com erro. Os erros de cada arquivo foram impressos acima."
+        f"{len(falhas)} com erro. Primeiro erro, em {arquivo.name}: {erro}"
     )
 
 

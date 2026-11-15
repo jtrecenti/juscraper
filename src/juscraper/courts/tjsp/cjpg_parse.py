@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts._esaj.parse import (
     _extract_pagination_count,
     _find_page_summary_cell,
@@ -163,6 +164,9 @@ def cjpg_parse_single(path):
     """
     with Path(path).open('r', encoding='utf-8') as f:
         soup = BeautifulSoup(f, 'html.parser')
+    # Página de erro do eSAJ (captcha, por exemplo) não traz resultados, mas
+    # não é página sem resultados: levanta, para não sair como página lida.
+    _raise_page_error(soup)
     processos = []
     div_dados_resultado = soup.find('div', {'id': 'divDadosResultado'})
     if div_dados_resultado:
@@ -173,35 +177,51 @@ def cjpg_parse_single(path):
     return pd.DataFrame(processos)
 
 
-def _parse_diretorio(diretorio: Path) -> list[pd.DataFrame]:
-    """Processa cada HTML do diretório e descarta, com log, os que falham."""
+def _parse_diretorio(diretorio: Path) -> pd.DataFrame:
+    """Processa cada HTML do diretório; arquivo que falha impede devolver o resto como completo.
+
+    Uma página do CJPG traz até 20 decisões, e a perdida não tem linha onde
+    ser marcada. Por isso a falha parcial levanta
+    :class:`~juscraper.core.exceptions.ColetaParcialError`, com as páginas
+    lidas em ``.resultado``, como no auto-chunk do eSAJ (#459).
+    """
     arquivos = [f for f in diretorio.rglob("*.ht*") if f.is_file()]
     resultados = []
-    primeira_falha: tuple[Path, Exception] | None = None
+    falhas: list[tuple[Path, Exception]] = []
     for arquivo in tqdm(arquivos, desc="Processando documentos"):
         try:
             resultados.append(cjpg_parse_single(arquivo))
         except (ValueError, OSError) as e:
             logger.error('Error processing %s: %s', arquivo, e)
-            primeira_falha = primeira_falha or (arquivo, e)
-    # Com falha parcial, o chamador recebe o que deu certo e o log diz o que
-    # faltou. Com falha total, devolver vazio confundiria "o layout mudou e
-    # nada foi lido" com "a busca não trouxe resultados", então o erro sobe.
-    if primeira_falha is not None and not resultados:
-        arquivo, erro = primeira_falha
+            falhas.append((arquivo, e))
+    resultado = pd.concat(resultados, ignore_index=True) if resultados else pd.DataFrame()
+    if not falhas:
+        return resultado
+    arquivo, erro = falhas[0]
+    # Com falha total, devolver vazio confundiria "o layout mudou e nada foi
+    # lido" com "a busca não trouxe resultados".
+    if not resultados:
         raise ValueError(
             f"Nenhum dos {len(arquivos)} arquivo(s) em {diretorio} pôde ser "
             f"processado. Primeiro erro, em {arquivo.name}: {erro}"
         ) from erro
-    return resultados
+    # Todas as páginas perdidas vão na mensagem, e não só os exemplos de
+    # resumir_falhas: é por ela que se sabe quais baixar de novo.
+    raise ColetaParcialError(
+        f"cjpg: {len(falhas)} de {len(arquivos)} página(s) falharam: "
+        f"{', '.join(arquivo.name for arquivo, _ in falhas)}. Primeiro erro, em {arquivo.name}: {erro}. "
+        f"As {len(resultados)} página(s) lidas estão no atributo .resultado do erro; "
+        ".falhas traz a exceção de cada página que falhou, na ordem da mensagem.",
+        resultado=resultado,
+        falhas=[(None, None, falha) for _, falha in falhas],
+    ) from erro
 
 
 def cjpg_parse_manager(path):
     """Processa os arquivos baixados por ``cjpg_download``.
 
     ``path`` pode ser um arquivo HTML ou um diretório, percorrido de forma
-    recursiva. Em diretório, o arquivo que falha é registrado no log e fica de
-    fora do resultado.
+    recursiva.
 
     Returns:
         pd.DataFrame: Uma linha por processo. Vazio quando o diretório não tem
@@ -213,15 +233,14 @@ def cjpg_parse_manager(path):
         ValueError: Quando o HTML de um arquivo passado diretamente não pôde
             ser interpretado, ou quando todos os arquivos de um diretório
             falharam.
+        ColetaParcialError: Quando parte dos arquivos de um diretório falha;
+            ``.resultado`` traz as páginas lidas e ``.falhas`` uma tupla
+            ``(None, None, excecao)`` por página perdida, nomeada na mensagem.
         OSError: Quando um arquivo passado diretamente não pôde ser lido.
     """
     caminho = Path(path)
     if caminho.is_file():
-        resultados = [cjpg_parse_single(caminho)]
-    elif caminho.is_dir():
-        resultados = _parse_diretorio(caminho)
-    else:
-        raise FileNotFoundError(f"Caminho não encontrado ou inacessível: {caminho}")
-    if not resultados:
-        return pd.DataFrame()
-    return pd.concat(resultados, ignore_index=True)
+        return cjpg_parse_single(caminho)
+    if caminho.is_dir():
+        return _parse_diretorio(caminho)
+    raise FileNotFoundError(f"Caminho não encontrado ou inacessível: {caminho}")
