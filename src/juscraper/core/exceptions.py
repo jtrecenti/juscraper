@@ -156,6 +156,11 @@ class ColetaParcialError(RuntimeError):
     pode ser lida: ``resultado`` traz as páginas lidas, e cada item de
     ``falhas`` vem como ``(None, None, excecao)``, com o arquivo na mensagem.
 
+    O ``cjsg`` do TJMG o levanta quando uma página falha depois das
+    tentativas: a busca para ali, ``resultado`` traz as páginas anteriores, e
+    ``falhas`` tem um item ``(None, None, excecao)``; as páginas que faltam
+    estão na mensagem.
+
     O ``__cause__`` é a exceção da primeira falha.
     """
 

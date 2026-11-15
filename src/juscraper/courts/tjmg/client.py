@@ -97,6 +97,7 @@ class TJMGScraper(HTTPScraper):
         """Run a TJMG acórdão search and return the raw HTML of each page.
 
         Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai como DataFrame).
 
         Parameters
         ----------
@@ -197,6 +198,11 @@ class TJMGScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            ColetaParcialError: Uma pagina falhou depois das tentativas do
+                perfil ``"cjsg"``, com outra ja baixada antes dela. A busca
+                para nessa pagina; ``.resultado`` traz as anteriores, e a
+                mensagem lista as que faltam. Sem pagina baixada antes, sobe
+                a excecao original (``requests.ConnectionError``, por exemplo).
 
         Returns:
             DataFrame com os acordaos.

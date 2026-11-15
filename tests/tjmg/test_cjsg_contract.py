@@ -36,7 +36,9 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjmg.client import TJMGScraper
+from juscraper.courts.tjmg.parse import cjsg_parse
 from tests._helpers import load_sample_bytes, query_param_subset_matcher
 from tests.tjmg._helpers import FALHAS_DE_REDE, FORM_URL, SEARCH_URL, add_captcha, add_dwr, add_form
 
@@ -206,6 +208,54 @@ def test_cjsg_falha_de_rede_persistente_sobe_a_excecao_original(mock_txtcaptcha,
 
     with pytest.raises(requests.ConnectionError, match="reset"):
         jus.scraper("tjmg").cjsg("dano moral", paginas=1)
+
+
+def _falha_persistente_na_pagina(numero_registro: str) -> None:
+    for _ in range(TJMGScraper.perfis_http["cjsg"].max_retries):
+        responses.add(
+            responses.GET,
+            SEARCH_URL,
+            body=requests.ConnectionError("reset"),
+            match=[query_param_subset_matcher({"numeroRegistro": numero_registro})],
+        )
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_falha_persistente_numa_pagina_guarda_as_anteriores(mock_txtcaptcha, mocker, metodo):
+    """Pagina 3 falha de vez: as paginas 1 e 2 vem lidas em ``.resultado``, e a busca para."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/results_normal_page_01.html", {"numeroRegistro": "1"})
+    _add_search("cjsg/results_normal_page_02.html", {"numeroRegistro": "11"})
+    _falha_persistente_na_pagina("21")
+
+    with pytest.raises(ColetaParcialError, match=r"página 3 falhou.*faltam as páginas \[3, 4, 5\]") as erro:
+        getattr(jus.scraper("tjmg"), metodo)("dano moral", paginas=range(1, 6))
+
+    esperado = cjsg_parse(
+        [load_sample_bytes("tjmg", f"cjsg/results_normal_page_0{n}.html").decode("iso-8859-1") for n in (1, 2)]
+    )
+    pd.testing.assert_frame_equal(erro.value.resultado, esperado)
+    assert isinstance(erro.value.__cause__, requests.ConnectionError)
+    assert [type(f[2]) for f in erro.value.falhas] == [requests.ConnectionError]
+    assert not [c for c in responses.calls if "numeroRegistro=31" in c.request.url]
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_falha_persistente_sem_pagina_baixada_sobe_a_excecao_original(mock_txtcaptcha, mocker):
+    """Sem pagina pedida ja baixada, nao ha parcial a guardar: a excecao de rede sobe."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/results_normal_page_01.html", {"numeroRegistro": "1"})
+    _falha_persistente_na_pagina("11")
+
+    with pytest.raises(requests.ConnectionError, match="reset"):
+        jus.scraper("tjmg").cjsg("dano moral", paginas=[2, 3])
 
 
 @pytest.mark.parametrize(

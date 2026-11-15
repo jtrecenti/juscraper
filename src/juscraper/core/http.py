@@ -114,6 +114,12 @@ class RequestPolicy:
     e nenhuma nova tentativa em timeout ou erro de conexão. O teto
     ``max_backoff`` só age com mais tentativas ou base maior que os defaults.
 
+    ``retry_on_timeout`` e ``retry_on_connection_error`` ficam desligados no
+    padrão e se ligam por perfil (``perfis_http``) no raspador cujo portal
+    derruba conexões: o pedido que estourou o prazo pode ter chegado ao
+    servidor, e repetir às cegas um POST de captcha ou de formulário que
+    guarda estado na sessão pode duplicar o efeito (decisão sobre #440).
+
     Os nomes dos campos são os mesmos dos kwargs aceitos por chamada
     (``timeout=``, ``max_retries=``, ``base_backoff=``), e o kwarg explícito
     vence o campo da política.

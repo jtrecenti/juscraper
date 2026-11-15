@@ -10,7 +10,10 @@ from pathlib import Path
 
 import requests
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.http import RequestFn
+
+from .parse import cjsg_parse
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -259,13 +262,9 @@ def cjsg_download(
     if paginas is None:
         paginas = range(1, n_pags + 1)
 
+    validas = _paginas_validas(paginas, n_pags)
     results: list = []
-    for pagina in paginas:
-        if pagina < 1 or pagina > n_pags:
-            logger.warning(
-                "TJMG: página %s fora do intervalo 1-%s", pagina, n_pags
-            )
-            continue
+    for posicao, pagina in enumerate(validas):
         if pagina == 1:
             results.append(first_html)
             continue
@@ -282,5 +281,39 @@ def cjsg_download(
             data_publicacao_final=data_publicacao_final,
             linhas_por_pagina=linhas_por_pagina,
         )
-        results.append(_fetch_page_revalidating(request_fn, session, params))
+        try:
+            results.append(_fetch_page_revalidating(request_fn, session, params))
+        except Exception as exc:  # noqa: BLE001 - vai para ColetaParcialError, como no auto-chunk
+            if not results:
+                raise
+            raise _coleta_parcial(results, validas[posicao:], exc) from exc
     return results
+
+
+def _paginas_validas(paginas, n_pags: int) -> list[int]:
+    """As paginas pedidas dentro de ``1..n_pags``, com aviso no log para as demais."""
+    validas = []
+    for pagina in paginas:
+        if 1 <= pagina <= n_pags:
+            validas.append(pagina)
+        else:
+            logger.warning("TJMG: página %s fora do intervalo 1-%s", pagina, n_pags)
+    return validas
+
+
+def _coleta_parcial(results: list, faltando: list, exc: Exception) -> ColetaParcialError:
+    """``ColetaParcialError`` com as paginas baixadas antes de ``faltando[0]`` falhar.
+
+    A pagina que falha encerra a paginacao, ao contrario do auto-chunk do
+    eSAJ, que tenta as janelas seguintes: depois das tentativas do perfil
+    ``"cjsg"``, o portal costuma seguir fora do ar, e as paginas seguintes
+    custariam as mesmas tentativas. Por isso ``falhas`` tem um item so, e a
+    mensagem lista todas as paginas que faltam.
+    """
+    return ColetaParcialError(
+        f"TJMG cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
+        f"As {len(results)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
+        f"faltam as páginas {faltando}, que podem ser pedidas de novo com paginas=.",
+        resultado=cjsg_parse(results),
+        falhas=[(None, None, exc)],
+    )
