@@ -22,8 +22,10 @@ _ID_ARQUIVO_RE = re.compile(
 # (<b>foo</b>, -> "foo ,"). Mesma decisao registrada em TJMT no batch 3.
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
-_PUBL_RE = re.compile(
-    r"Publicado em\s*(\d{2}/\d{2}/\d{4}(?:\s*\d{2}:\d{2}:\d{2})?)"
+# Paragrafo de data: "Publicado em ..." no formato antigo; no HTML atual
+# (nov/2026) vem "Julgado em ..." e o paragrafo do tipo de ato deixou de existir.
+_DATA_RE = re.compile(
+    r"(Publicado|Julgado) em\s*(\d{2}/\d{2}/\d{4}(?:\s*\d{2}:\d{2}:\d{2})?)?"
 )
 
 
@@ -79,11 +81,12 @@ def _parse_block(block: str) -> dict:
     # <p><b>tipo</b></p>
     # <p><b><i>Publicado em ...</i></b></p>
     # <p class="conteudoTexto">texto</p>
+    # No HTML atual nao ha o <p> do tipo e a data vem como "Julgado em ...".
     paragraphs = re.findall(r"<p([^>]*)>(.*?)</p>", block, re.DOTALL)
     serventia: str | None = None
     relator: str | None = None
     tipo: str | None = None
-    publicacao_raw: str | None = None
+    datas: dict[str, str | None] = {}
     texto: str | None = None
     for attrs, content in paragraphs:
         cleaned = _clean(content)
@@ -92,9 +95,9 @@ def _parse_block(block: str) -> dict:
             continue
         if not cleaned:
             continue
-        if cleaned.startswith("Publicado em"):
-            publ_match = _PUBL_RE.search(cleaned)
-            publicacao_raw = publ_match.group(1) if publ_match else None
+        data_match = _DATA_RE.match(cleaned)
+        if data_match:
+            datas[data_match.group(1)] = data_match.group(2)
             continue
         if serventia is None:
             serventia = cleaned
@@ -109,7 +112,8 @@ def _parse_block(block: str) -> dict:
         "serventia": serventia,
         "relator": relator,
         "tipo_ato": tipo,
-        "data_publicacao": _parse_date(publicacao_raw),
+        "data_publicacao": _parse_date(datas.get("Publicado")),
+        "data_julgamento": _parse_date(datas.get("Julgado")),
         "texto": texto,
     }
 

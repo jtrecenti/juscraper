@@ -7,13 +7,15 @@ the ``cf-turnstile-response=""`` literal. Since 12/11/2026 (Projudi 3.194.1)
 the backend validates the Cloudflare Turnstile token and answers every search
 without it with the empty form, so an empty search emits ``UserWarning``.
 """
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
+from juscraper.courts.tjgo.download import SEARCH_URL, _extract_total, build_cjsg_payload
 from tests._helpers import load_sample_bytes
 
 CJSG_FIELDS = {
@@ -112,29 +114,38 @@ def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
 
 
 @responses.activate
-def test_cjsg_resultado_com_atributos_na_div(mocker):
-    """``<div class="search-result" data-...>`` still splits into result rows.
+def test_cjsg_resultado_formato_atual(mocker):
+    """Pagina real de 15/11/2026, capturada com o token Turnstile (issue #436).
 
-    The current portal HTML gives each result div ``data-realizador`` and
-    ``data-id-arquivo`` after the class (issue #436). No recorded sample has
-    them yet, because capturing one needs the Turnstile token; the test adds
-    the attributes to the real page 1 sample.
+    No HTML atual a ``<div class="search-result">`` traz atributos depois da
+    classe (``data-realizador``, ``data-id-arquivo``...), a data vem como
+    "Julgado em ..." e nao ha mais o paragrafo do tipo de ato.
     """
     mocker.patch("time.sleep")
     _add_get_prime()
-    original = load_sample_bytes("tjgo", "cjsg/results_normal_page_01.html")
-    com_atributos = original.replace(
-        b'<div class="search-result">',
-        b'<div class="search-result" data-realizador="1" data-id-arquivo="2">',
-    )
-    assert com_atributos != original
-    _add_post("dano moral", page=1, sample_path="", body=com_atributos)
-    esperado = jus.scraper("tjgo").cjsg_parse([original.decode("iso-8859-1")])
-    assert len(esperado) == 10
+    _add_post("dano moral", page=1, sample_path="cjsg/results_julgado_em_page_01.html")
 
     df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
 
-    pd.testing.assert_frame_equal(df, esperado)
+    assert len(df) == 10
+    assert set(df.columns) >= CJSG_FIELDS | {"data_julgamento"}
+    for col in ("processo", "id_arquivo", "serventia", "relator", "texto", "data_julgamento"):
+        assert df[col].notna().all(), col
+    assert df["tipo_ato"].isna().all()
+    assert df["data_publicacao"].isna().all()
+    primeira = df.iloc[0]
+    assert primeira["processo"] == "5323172-88.2023.8.09.0029"
+    # id do inteiro teor (abrirArquivo), nao o data-id-arquivo da div (580585407)
+    assert primeira["id_arquivo"] == "580585406"
+    assert primeira["relator"] == "RICARDO PRATA - (DESEMBARGADOR)"
+    assert primeira["data_julgamento"] == date(2026, 11, 15)
+    assert primeira["texto"].startswith("EMENTA:DIREITO CIVIL")
+
+
+def test_cjsg_formato_atual_contagem():
+    """A contagem do HTML atual continua na ``legend.formLocalizarLegenda``."""
+    html = load_sample_bytes("tjgo", "cjsg/results_julgado_em_page_01.html").decode("iso-8859-1")
+    assert _extract_total(html) == 20255
 
 
 @responses.activate
