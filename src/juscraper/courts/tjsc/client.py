@@ -77,6 +77,9 @@ class TJSCScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            RuntimeError: Quando o portal redireciona a busca, o que indica
+                mudanca de endereco: seguir o redirecionamento devolveria o
+                resultado sem termo nem filtros.
 
         Returns:
             pd.DataFrame: DataFrame com as decisoes.

@@ -13,7 +13,7 @@ import responses
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjsc.download import SEARCH_URL, build_cjsg_form_body
+from juscraper.courts.tjsc.download import SEARCH_URL, build_cjsg_form_body, cjsg_url_for_page
 from tests._helpers import load_sample_bytes
 
 
@@ -30,7 +30,7 @@ def test_cjsg_data_julgamento_chega_em_formato_brasileiro_e_filtra(mocker):
         SEARCH_URL,
         body=load_sample_bytes("tjsc", "cjsg/filtro_data_julgamento.html"),
         status=200,
-        content_type="text/html; charset=utf-8",
+        content_type="text/html; charset=iso-8859-1",
         match=[urlencoded_params_matcher(
             build_cjsg_form_body(
                 "direito",
@@ -56,26 +56,22 @@ def test_cjsg_data_julgamento_chega_em_formato_brasileiro_e_filtra(mocker):
     ).all()
 
 
-def test_cjsg_busca_vai_ao_host_novo():
-    """A busca vai direto ao host para onde o endereço antigo redireciona."""
-    assert SEARCH_URL.startswith("https://eprocwebcon.tjsc.jus.br/consulta1g/")
-
-
+@pytest.mark.parametrize("pagina", [1, 2])
 @responses.activate
-def test_cjsg_redirecionamento_da_busca_falha_alto(mocker):
-    """Redirecionamento da busca levanta erro.
+def test_cjsg_redirecionamento_da_busca_falha_alto(mocker, pagina):
+    """Redirecionamento da busca levanta erro, na primeira página e na AJAX.
 
     Seguir o redirecionamento devolveria a base sem filtros.
     """
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
-        SEARCH_URL,
+        cjsg_url_for_page(pagina),
         status=302,
         headers={"Location": "https://outro.tjsc.jus.br/listar_resultados"},
     )
 
     with pytest.raises(RuntimeError, match="redirecionada"):
-        jus.scraper("tjsc").cjsg_download("direito", paginas=1)
+        jus.scraper("tjsc").cjsg_download("direito", paginas=[pagina])
 
     assert len(responses.calls) == 1

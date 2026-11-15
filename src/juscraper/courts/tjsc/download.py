@@ -94,9 +94,10 @@ def cjsg_download_manager(
         # Seguir um redirecionamento transformaria o POST em GET sem o
         # formulário: a busca voltaria sem termo nem filtros, sem erro (#495).
         resp = request_fn("POST", url, data=data, timeout=60, allow_redirects=False)
-        if resp.is_redirect:
+        if 300 <= resp.status_code < 400:
             raise RuntimeError(
-                f"TJSC: a busca de jurisprudência foi redirecionada para "
+                f"TJSC: a busca de jurisprudência respondeu HTTP {resp.status_code}, "
+                f"redirecionada para "
                 f"{resp.headers.get('Location')!r}. O portal mudou de endereço; "
                 "o raspador precisa ser atualizado."
             )

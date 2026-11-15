@@ -15,11 +15,14 @@ from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_pa
 from ._util import dump, samples_dir_for
 
 
-def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int, filename: str) -> None:
-    body = build_cjsg_form_body(pesquisa, page=pagina_1based)
+def _capture(session: requests.Session, dest, body: dict, filename: str) -> None:
+    pagina_1based = int(body["hdnPaginaAtual"])
     url = cjsg_url_for_page(pagina_1based)
-    response = session.post(url, data=body, timeout=60)
+    # Seguir um redirecionamento gravaria a base sem filtros como sample (#495).
+    response = session.post(url, data=body, timeout=60, allow_redirects=False)
     response.raise_for_status()
+    if 300 <= response.status_code < 400:
+        raise RuntimeError(f"[tjsc] busca redirecionada para {response.headers.get('Location')!r}")
     # eproc serves latin-1 pages — persist raw bytes so tests can load via
     # ``load_sample_bytes`` and the parser decodes with its own encoding rule.
     dump(dest / filename, response.content)
@@ -34,10 +37,16 @@ def main() -> None:
         "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
     })
 
-    _capture(session, dest, "dano moral", 1, "results_normal_page_01.html")
-    _capture(session, dest, "dano moral", 2, "results_normal_page_02.html")
-    _capture(session, dest, "plano saude paciente doenca rara", 1, "single_page.html")
-    _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.html")
+    _capture(session, dest, build_cjsg_form_body("dano moral", page=1), "results_normal_page_01.html")
+    _capture(session, dest, build_cjsg_form_body("dano moral", page=2), "results_normal_page_02.html")
+    _capture(session, dest, build_cjsg_form_body("plano saude paciente doenca rara"), "single_page.html")
+    _capture(session, dest, build_cjsg_form_body("juscraper_probe_zero_hits_xyzqwe"), "no_results.html")
+    _capture(
+        session,
+        dest,
+        build_cjsg_form_body("direito", dt_decisao_inicio="10/03/2025", dt_decisao_fim="13/03/2025"),
+        "filtro_data_julgamento.html",
+    )
 
 
 if __name__ == "__main__":
