@@ -265,14 +265,13 @@ def _extract_datatable_id(html: str, nome: str = _ACORDAOS) -> str:
     )
 
 
-def _pagination_form(html: str) -> dict:
+def _pagination_form(soup: BeautifulSoup) -> dict:
     """Lê da página 1 o form de resultados que cada POST de paginação ecoa.
 
     Devolve os campos de ``formPesquisa`` com o ``javax.faces.ViewState``.
     O ViewState do TJRR é reaproveitável (veja :func:`_paginate`), então o
-    HTML da página 1 é parseado uma vez só para todas as requisições.
+    form da página 1 é lido uma vez só para todas as requisições.
     """
-    soup = BeautifulSoup(html, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
     if not vs_input:
         raise RuntimeError("Could not find ViewState for pagination.")
@@ -342,16 +341,16 @@ def _paginate(
     return _extract_cdata(resp.text)
 
 
-def _datatables_with_pages(html: str) -> list[tuple[str, int]]:
+def _datatables_with_pages(html: str, soup: BeautifulSoup) -> list[tuple[str, int]]:
     """Lista as tabelas de resultados da página 1 com o número de páginas de cada.
 
     A de acórdãos (``dataTablePesquisa``) vem primeiro; a de decisões
     monocráticas (``dataTablePesquisa2``), quando a página a mostra. Cada
     tabela tem paginador próprio, lido dentro do ``div`` dela; se o ``div``
     de acórdãos não aparece, a contagem vem da página inteira, como antes
-    da #319. Página sem tabela de resultados devolve ``[]``.
+    da #319. Página sem tabela de resultados devolve ``[]``. ``soup`` é o
+    próprio ``html`` já parseado.
     """
-    soup = BeautifulSoup(html, "html.parser")
     tables = []
     for nome in (_ACORDAOS, _MONOCRATICAS):
         try:
@@ -391,6 +390,28 @@ def _download_page(
     return "".join(partes)
 
 
+def _plano_de_paginacao(
+    first_html: str, paginas
+) -> tuple[list[int], list[tuple[str, int]], dict]:
+    """Páginas a baixar, tabelas de resultados e form da paginação.
+
+    O HTML da página 1 é parseado uma vez, para a contagem e para o form, e
+    só quando há o que contar: com ``paginas`` explícito, só se houver
+    página além da 1. Sem tabela, o form fica vazio e ``_download_page``
+    levanta antes de qualquer requisição.
+    """
+    paginas_iter = [] if paginas is None else list(paginas)
+    if paginas is not None and all(p == 1 for p in paginas_iter):
+        return paginas_iter, [], {}
+    soup = BeautifulSoup(first_html, "html.parser")
+    tables = _datatables_with_pages(first_html, soup)
+    if paginas is None:
+        paginas_iter = list(range(1, max([1, *(n for _, n in tables)]) + 1))
+    paginar = any(p != 1 for p in paginas_iter)
+    form = _pagination_form(soup) if tables and paginar else {}
+    return paginas_iter, tables, form
+
+
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
@@ -423,17 +444,7 @@ def cjsg_download_manager(
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
 
-    if paginas is None:
-        tables = _datatables_with_pages(first_html)
-        n_pags = max([1, *(n for _, n in tables)])
-        paginas_iter = list(range(1, n_pags + 1))
-    else:
-        paginas_iter = list(paginas)
-        # Contagem só quando há página além da 1 a pedir.
-        tables = _datatables_with_pages(first_html) if set(paginas_iter) - {1} else []
-    # Form da página 1 lido uma vez, para todas as requisições de paginação.
-    # Sem tabela, ``_download_page`` levanta antes de qualquer requisição.
-    form = _pagination_form(first_html) if tables and set(paginas_iter) - {1} else {}
+    paginas_iter, tables, form = _plano_de_paginacao(first_html, paginas)
 
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRR"):
