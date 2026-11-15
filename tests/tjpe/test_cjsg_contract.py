@@ -188,7 +188,7 @@ def test_cjsg_sem_resultados_em_todos_os_tipos_avisa(mocker):
     _add_get_consulta()
     _add_post_consulta("cjsg/no_results_todos.html")
 
-    with pytest.warns(UserWarning, match="'dano moral'.*Nenhum documento|Nenhum documento.*'dano moral'"):
+    with pytest.warns(UserWarning, match="Nenhum documento.*'dano moral'"):
         df = jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")
 
     assert df.empty

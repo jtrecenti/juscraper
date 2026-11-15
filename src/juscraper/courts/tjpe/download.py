@@ -100,7 +100,8 @@ def is_sem_resultados_page(html: str) -> bool:
     encontrado`` no lugar de ``N documentos encontrados``.
     """
     html_lower = html.lower()
-    return "nenhum documento encontrado" in html_lower and "documentos encontrados" not in html_lower
+    sem_documento = any(marcador in html_lower for marcador in _ZERO_MARKERS)
+    return sem_documento and "documentos encontrados" not in html_lower
 
 
 def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
