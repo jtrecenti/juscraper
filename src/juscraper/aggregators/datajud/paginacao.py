@@ -104,7 +104,7 @@ def _total_primeira_pagina(api_response: dict[str, Any], alias: str, pagina: int
 
 
 def _hits_da_pagina(
-    api_response: dict[str, Any],
+    api_response: object,
     alias: str,
     pagina: int,
     recebidos: int,
@@ -112,7 +112,7 @@ def _hits_da_pagina(
 ) -> list[dict[str, Any]]:
     """Valida a estrutura dos resultados antes do uso do cursor."""
     diagnostico = _mensagem_falha_parcial(alias, pagina, recebidos, total_info)
-    hits_obj = api_response.get("hits")
+    hits_obj = api_response.get("hits") if isinstance(api_response, dict) else None
     if not isinstance(hits_obj, dict):
         causa: Exception = TypeError("Campo 'hits' da resposta DataJud deve ser um objeto.")
         _falha_pagina(f"{diagnostico} Resposta inválida: campo 'hits' deve ser um objeto.", causa)

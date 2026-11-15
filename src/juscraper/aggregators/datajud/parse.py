@@ -9,6 +9,28 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+def contagem_da_resposta(api_response: object) -> tuple[int, str]:
+    """``count`` e ``relation`` de ``hits.total`` na resposta de ``contar_processos``.
+
+    Raises:
+        TypeError: JSON na forma errada: resposta que não é objeto, sem o
+            objeto ``hits.total``, com ``value`` que não é inteiro ou
+            ``relation`` fora de ``"eq"``/``"gte"``. A contagem a converte em
+            linha ``json_invalido``, em vez de levantar ou inventar ``count=0``.
+    """
+    if not isinstance(api_response, dict):
+        raise TypeError("Resposta DataJud deve ser um objeto JSON.")
+    hits = api_response.get("hits")
+    total = hits.get("total") if isinstance(hits, dict) else None
+    if not isinstance(total, dict):
+        raise TypeError("Campo 'hits.total' da resposta DataJud deve ser um objeto.")
+    value, relation = total.get("value"), total.get("relation", "eq")
+    # ``bool`` herda de ``int``: ``True`` não é contagem.
+    if not isinstance(value, int) or isinstance(value, bool) or relation not in ("eq", "gte"):
+        raise TypeError(f"Campo 'hits.total' da resposta DataJud fora do formato: {total!r}.")
+    return value, relation
+
+
 def parse_datajud_api_response(
     api_response_json: dict[str, Any] | None,
     mostrar_movs: bool = True

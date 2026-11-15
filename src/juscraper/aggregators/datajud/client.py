@@ -42,7 +42,7 @@ from .paginacao import (
     _verificar_pagina_vazia,
     _verificar_shards,
 )
-from .parse import parse_datajud_api_response  # To be created for API response parsing
+from .parse import contagem_da_resposta, parse_datajud_api_response
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
 
 # Mapping inverso pra rotular o DataFrame devolvido por ``contar_processos``
@@ -349,7 +349,9 @@ class DatajudScraper(HTTPScraper):
             ``error`` traz o motivo no vocabulário de
             ``juscraper.core.failures.motivo_falha`` (``"http_500"``,
             ``"retry_esgotado_429"``, ``"timeout"``, ``"conexao"``,
-            ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele.
+            ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele. A resposta
+            200 sem a contagem em ``hits.total`` (uma lista, por exemplo) sai
+            ``"json_invalido"``.
 
         Raises:
             requests.HTTPError: No 401 (chave inválida), que interrompe a
@@ -423,12 +425,16 @@ class DatajudScraper(HTTPScraper):
                 _relancar_se_token_invalido(exc, rows)
                 rows.append(_linha_de_falha(tribunal_sigla, alias, exc))
                 continue
-            total = api_response.get("hits", {}).get("total", {}) or {}
+            try:
+                count, relation = contagem_da_resposta(api_response)
+            except TypeError as exc:  # JSON na forma errada: ``json_invalido``, como no JusBR e na PDPJ
+                rows.append(_linha_de_falha(tribunal_sigla, alias, exc) | {"error": "json_invalido"})
+                continue
             rows.append({
                 "tribunal": tribunal_sigla,
                 "alias": alias,
-                "count": int(total.get("value") or 0),
-                "relation": total.get("relation", "eq"),
+                "count": count,
+                "relation": relation,
                 "error": None,
             })
         colunas = ["tribunal", "alias", "count", "relation", "error"]  # Int64: com None de falha, viraria float
