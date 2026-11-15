@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.courts.trf3.cjsg_download import cjsg_n_results
 from tests._helpers import assert_no_mojibake
 
 pytestmark = [pytest.mark.integration, pytest.mark.anti_bot]
@@ -56,3 +57,25 @@ def test_cjsg_filtro_orgao_primeira_secao() -> None:
     assert len(df) > 0
     assert df["orgao_julgador"].isin({"5ª Turma", "QUINTA TURMA - 1A. SEÇÃO"}).all()
     assert (df["orgao_julgador"] == "5ª Turma").any()
+
+
+def test_cjsg_filtros_so_de_acordaos_restringem() -> None:
+    """``numero_classe``, ``sistema_interamericano`` and ``legislacao`` reach the server.
+
+    Measured on 2026-11-15: ``numclasse`` 1708075 finds ``Ap - APELAÇÃO CÍVEL
+    - 1708075``; Corte IDH case 1 alone finds 7 documents (a search with no
+    criterion is refused); the legislation panel's text for the Lei Pelé
+    finds 4 documents.
+    """
+    trf3 = jus.scraper("trf3", sleep_time=1.0)
+
+    df = trf3.cjsg(numero_classe="1708075", paginas=1)
+    assert df["classe"].str.endswith(" - 1708075").any()
+
+    # The case is the only criterion: had the server ignored it, the search would be refused.
+    total = cjsg_n_results(trf3.cjsg_download(sistema_interamericano=1, paginas=1)[0])
+    assert total is not None and 0 < total < 1000
+
+    df = trf3.cjsg(legislacao="LEI PELÉ FED LEI 9615 1998", paginas=1)
+    assert len(df) > 0
+    assert (df["ementa"].fillna("") + df["inteiro_teor"].fillna("")).str.contains("9615").any()

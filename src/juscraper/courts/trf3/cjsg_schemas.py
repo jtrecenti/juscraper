@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase
+from pydantic import Field
+
+from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, InteiroSemBool, OutputCJSGBase, SearchBase
 from ...schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
 
 BaseCJSGTRF3 = Literal[
@@ -34,6 +36,21 @@ origem é uma base, e não um filtro combinável.
 #: o campo e devolveria resultado sem o filtro pedido.
 FILTROS_SEM_MONOCRATICAS: tuple[str, ...] = ("orgao_julgador", "ementa", "indexacao")
 
+#: Filtros que só o formulário da aba de acórdãos do TRF3 tem. Medido em
+#: 15/11/2026, com "medicamento": nas Turmas Recursais, ``numclasse`` e
+#: ``tema`` dão "Pesquisa Incorreta" e ``legislacao`` zera o resultado; nas
+#: monocráticas, os três dão "Pesquisa Incorreta".
+FILTROS_SO_ACORDAOS: tuple[str, ...] = ("numero_classe", "sistema_interamericano", "legislacao")
+
+#: Filtros que o formulário de cada base não tem, recusados por
+#: :func:`validar_combinacoes`.
+_FILTROS_AUSENTES: dict[str, tuple[str, ...]] = {
+    "acordaos": (),
+    "turmas_recursais": FILTROS_SO_ACORDAOS,
+    "monocraticas": FILTROS_SEM_MONOCRATICAS + FILTROS_SO_ACORDAOS,
+    "monocraticas_turmas_recursais": FILTROS_SEM_MONOCRATICAS + FILTROS_SO_ACORDAOS,
+}
+
 #: Filtros que, sozinhos, já contam como critério de pesquisa no formulário.
 _CRITERIOS = (
     "numero_processo",
@@ -42,6 +59,7 @@ _CRITERIOS = (
     "orgao_julgador",
     "ementa",
     "indexacao",
+    *FILTROS_SO_ACORDAOS,
     "data_julgamento_inicio",
     "data_publicacao_inicio",
 )
@@ -59,6 +77,16 @@ class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ignora o ID do dropdown e pesquisa o texto nos campos indexados
     (``relator_t``/``relator_acordao_t``, ``classe_t`` e o órgão julgador).
 
+    ``numero_classe``, ``sistema_interamericano`` e ``legislacao`` só existem
+    no formulário da base ``acordaos``. ``numero_classe`` é o número do
+    processo dentro da classe, o que vem depois da classe na coluna
+    ``classe`` dos acórdãos antigos (``1708075`` em
+    ``"Ap - APELAÇÃO CÍVEL - 1708075"``). ``sistema_interamericano`` é o ID
+    da opção do dropdown "Sistema Interamericano", que o portal pesquisa
+    pelo ID. ``legislacao`` é texto livre, pesquisado nas referências
+    legislativas dos documentos; o painel de legislações do formulário
+    escreve nele textos como ``"LEI PELÉ FED LEI 9615 1998"``.
+
     ``pesquisa`` pode ser vazia quando outro critério (número, filtro ou datas)
     for informado; sem nenhum critério o portal recusa a busca. Essas regras de
     combinação ficam em :func:`validar_combinacoes`, chamada pelo client depois
@@ -74,6 +102,9 @@ class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     orgao_julgador: str | None = None
     ementa: str | None = None
     indexacao: str | None = None
+    numero_classe: str | None = None
+    sistema_interamericano: InteiroSemBool | None = Field(default=None, ge=1)
+    legislacao: str | None = None
     tamanho_pagina: Literal[10, 30, 50] = 10
 
 
@@ -100,11 +131,11 @@ def validar_combinacoes(inp: InputCJSGTRF3) -> None:
     ``ValidationError``, porque o problema é a combinação de campos válidos.
 
     Filtro de texto só com espaços conta como não informado (:func:`_informado`),
-    tanto na recusa das monocráticas quanto na exigência de critério.
+    tanto na recusa de filtro que a base não tem quanto na exigência de critério.
 
     Raises:
-        ValueError: Datas de julgamento e de publicação juntas; filtro que a
-            base de monocráticas não tem; nenhum critério de pesquisa.
+        ValueError: Datas de julgamento e de publicação juntas; filtro que o
+            formulário da base não tem; nenhum critério de pesquisa.
     """
     tem_julgamento = bool(inp.data_julgamento_inicio or inp.data_julgamento_fim)
     tem_publicacao = bool(inp.data_publicacao_inicio or inp.data_publicacao_fim)
@@ -113,18 +144,15 @@ def validar_combinacoes(inp: InputCJSGTRF3) -> None:
             "TRF3 cjsg: o formulário filtra por um só tipo de data. Passe "
             "data_julgamento_* ou data_publicacao_*, não os dois."
         )
-    if inp.base.startswith("monocraticas"):
-        recusados = [nome for nome in FILTROS_SEM_MONOCRATICAS if _informado(getattr(inp, nome))]
-        if recusados:
-            raise ValueError(
-                f"TRF3 cjsg: a base {inp.base!r} não aceita o(s) filtro(s) "
-                f"{', '.join(recusados)}; o formulário de monocráticas não tem esses campos."
-            )
-    if not _informado(inp.pesquisa) and not any(_informado(getattr(inp, nome)) for nome in _CRITERIOS):
+    recusados = [nome for nome in _FILTROS_AUSENTES[inp.base] if _informado(getattr(inp, nome))]
+    if recusados:
         raise ValueError(
-            "TRF3 cjsg: informe pesquisa ou ao menos um filtro "
-            "(numero_processo, relator, classe, orgao_julgador, ementa, indexacao ou datas)."
+            f"TRF3 cjsg: a base {inp.base!r} não aceita o(s) filtro(s) "
+            f"{', '.join(recusados)}; o formulário dessa base não tem esses campos."
         )
+    if not _informado(inp.pesquisa) and not any(_informado(getattr(inp, nome)) for nome in _CRITERIOS):
+        filtros = ", ".join(nome for nome in _CRITERIOS if not nome.startswith("data_"))
+        raise ValueError(f"TRF3 cjsg: informe pesquisa ou ao menos um filtro ({filtros} ou datas).")
 
 
 class OutputCJSGTRF3(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
