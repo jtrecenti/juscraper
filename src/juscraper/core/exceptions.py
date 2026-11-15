@@ -49,9 +49,11 @@ class BotChallengeBlockedError(Exception):
     rate-limited — não adianta retentar com a mesma sessão.
 
     Mensagem orienta o usuário a aguardar alguns minutos antes de tentar de
-    novo, ou trocar de IP (VPN, hotspot). É propagada (em vez de engolida
-    pelos try/except por-item) porque um bloqueio nesse nível é session-wide:
-    nenhum CNJ do batch vai conseguir passar.
+    novo, ou trocar de IP (VPN, hotspot). O bloqueio é session-wide: nenhum
+    item do batch vai conseguir passar. Os métodos com ``motivo_falha`` por
+    linha a registram como linha (ver
+    :data:`juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`); os demais a
+    propagam.
 
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
@@ -88,7 +90,7 @@ class WafChallengeError(BotChallengeBlockedError):
     (ver :mod:`juscraper.core.waf`). Se a requisição repetida com o cookie novo
     volta a receber o desafio, o WAF está recusando a sessão inteira, e nenhum
     item do batch passaria. Herda de :class:`BotChallengeBlockedError` para ser
-    propagada pelos mesmos ``try/except`` por item.
+    tratada pelos mesmos ``try/except`` por item.
 
     Também sai quando o cookie não pôde ser obtido (navegador ausente, cookie
     não emitido no prazo): sem ele, nenhuma requisição desafiada passaria, e

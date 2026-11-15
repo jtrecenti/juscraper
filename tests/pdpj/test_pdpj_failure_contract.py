@@ -26,7 +26,7 @@ import juscraper as jus
 from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.pdpj.client import PdpjScraper
 from juscraper.aggregators.pdpj.download import BASE_URL, USER_AGENT, fetch_documento_binario_url
-from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError, WafChallengeError
 from juscraper.core.failures import STATUS_CONSULTA_FALHA
 from juscraper.core.http import RequestPolicy
 from tests._helpers import load_sample
@@ -276,6 +276,22 @@ def test_conexao_caida_vira_motivo_sem_retry():
 
     assert len(responses.calls) == 1
     assert df.iloc[0]["motivo_falha"] == "conexao"
+
+
+@pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
+@responses.activate
+def test_desafio_anti_bot_no_meio_do_lote_vira_linha(metodo):
+    """Desafio na consulta 2 de 3: a linha sai ``bloqueio_anti_bot`` e as outras ficam (#471)."""
+    sufixo, sample = METODOS_DE_LISTA[metodo]
+    _mock(f"/processos/{OUTRO}{sufixo}", body=WafChallengeError("PDPJ", f"{BASE_URL}/processos/{OUTRO}"))
+    _mock_sample(f"/processos/{PROC}{sufixo}", sample)
+
+    with pytest.warns(UserWarning, match=f"processo {OUTRO}: bloqueio_anti_bot"):
+        df = getattr(_mk_scraper(), metodo)([PROC, OUTRO, PROC])
+
+    assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["bloqueio_anti_bot"]
+    assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
+    assert len(_urls()) == 3
 
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))

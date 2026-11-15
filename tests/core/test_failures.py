@@ -4,7 +4,12 @@ from __future__ import annotations
 import pytest
 import requests
 
-from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core.exceptions import (
+    BotChallengeBlockedError,
+    InvalidJSONResponseError,
+    RetryExhaustedError,
+    WafChallengeError,
+)
 from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
@@ -37,6 +42,8 @@ def _http_error(status: int) -> requests.HTTPError:
         (requests.ConnectionError(), "conexao"),
         (InvalidJSONResponseError("https://example.test", 200, 3), "json_invalido"),
         (requests.JSONDecodeError("Expecting value", "<html>", 0), "json_invalido"),
+        (BotChallengeBlockedError("TRF3", "https://example.test"), "bloqueio_anti_bot"),
+        (WafChallengeError("TJPE", "https://example.test"), "bloqueio_anti_bot"),
     ],
 )
 def test_motivo_falha_por_excecao(exc, esperado):
@@ -69,7 +76,7 @@ def test_vocabulario_publicado():
     assert COLUNA_MOTIVO_FALHA == "motivo_falha"
     assert set(MOTIVOS_FALHA) == {
         "http_<status>", "retry_esgotado_<status>", "timeout", "conexao", "json_invalido", "nao_encontrado",
-        "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida",
+        "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida", "bloqueio_anti_bot",
     }
 
 
@@ -139,6 +146,8 @@ def test_e_token_invalido(exc, esperado):
         requests.ConnectTimeout(),
         requests.ConnectionError(),
         InvalidJSONResponseError("https://example.test", 200, 3),
+        BotChallengeBlockedError("TRF3", "https://example.test"),
+        WafChallengeError("TJPE", "https://example.test"),
     ],
 )
 def test_excecoes_de_falha_por_linha_tem_motivo(exc):
