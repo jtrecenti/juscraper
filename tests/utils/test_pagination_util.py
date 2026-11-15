@@ -56,6 +56,12 @@ def test_tag_restringe_a_cascata_ao_trecho():
     assert extract_count_with_cascade(soup.find(id="b"), regex_patterns=regex, zero_markers=("nenhum documento",)) == 0
 
 
+def test_bytes_continuam_parseados():
+    """Só ``Tag`` pula o parse; ``bytes`` (``resp.content``) segue para o BeautifulSoup, como antes."""
+    html = b"<table><td class='total'>45</td></table>"
+    assert extract_count_with_cascade(html, css_selectors=("td.total",), regex_patterns=(re.compile(r"\d+"),)) == 45
+
+
 def test_fallback_max_int_picks_largest():
     html = "<html><body>pagina 1 de 12, mostrando 10 itens</body></html>"
     assert extract_count_with_cascade(

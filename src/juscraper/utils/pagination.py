@@ -46,7 +46,7 @@ def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
 
 def _collect_candidates(
     soup: Tag,
-    html: str,
+    html: str | None,
     css_selectors: Sequence[str],
 ) -> list[str]:
     candidates: list[str] = []
@@ -55,7 +55,8 @@ def _collect_candidates(
             content = element.get_text(" ", strip=True)
             if content:
                 candidates.append(content)
-    return candidates or [html]
+    # Sem seletor que case, o HTML bruto; o de uma ``Tag`` só é serializado aqui.
+    return candidates or [str(soup) if html is None else html]
 
 
 def _extract_first(
@@ -100,7 +101,9 @@ def extract_count_with_cascade(
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
-            tabela, sem serializar e parsear de novo.
+            tabela, sem serializar e parsear de novo. Com uma ``Tag``, a
+            cascata inteira (seletores, regex no HTML bruto e
+            ``zero_markers``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
             candidato.
@@ -130,14 +133,14 @@ def extract_count_with_cascade(
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
             nao salvar. ``0`` quando ``zero_markers`` casarem.
     """
-    if isinstance(html, str):
-        soup: Tag = BeautifulSoup(html, "html.parser")
+    if isinstance(html, Tag):
+        soup, bruto = html, None
     else:
-        soup, html = html, str(html)
+        soup, bruto = BeautifulSoup(html, "html.parser"), html
     if _has_zero_marker(soup, zero_markers):
         return 0
 
-    candidates = _collect_candidates(soup, html, css_selectors)
+    candidates = _collect_candidates(soup, bruto, css_selectors)
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
