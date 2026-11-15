@@ -95,6 +95,16 @@ def _max_retries_valido(valor: object) -> bool:
     return not isinstance(valor, bool) and isinstance(valor, numbers.Integral) and int(valor) >= 1
 
 
+_ERROS_DE_CONEXAO: tuple[type[requests.RequestException], ...] = (
+    requests.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
+)
+"""Falhas que ``RequestPolicy.retry_on_connection_error`` retenta."""
+
+_ERROS_DE_REDE: tuple[type[requests.RequestException], ...] = (*_ERROS_DE_CONEXAO, requests.Timeout)
+"""Falhas de rede que ``HTTPScraper._send_once`` submete à política."""
+
+
 @dataclass(frozen=True)
 class RequestPolicy:
     """Política de requisição usada por ``HTTPScraper._request_with_retry``.
@@ -120,10 +130,11 @@ class RequestPolicy:
             limita o ``Retry-After`` que o servidor manda.
         retryable_statuses: Status HTTP que disparam nova tentativa.
         retry_on_timeout: Retenta ``requests.Timeout`` de leitura.
-        retry_on_connection_error: Retenta ``requests.ConnectionError``. Inclui
-            ``requests.ConnectTimeout``, que herda das duas classes e é tratado
-            como falha de conexão: estourar o prazo de conexão indica host
-            inalcançável, não resposta lenta.
+        retry_on_connection_error: Retenta ``requests.ConnectionError`` e
+            ``requests.exceptions.ChunkedEncodingError`` (conexão que cai no
+            meio do corpo). Inclui ``requests.ConnectTimeout``, que herda das
+            duas classes e é tratado como falha de conexão: estourar o prazo de
+            conexão indica host inalcançável, não resposta lenta.
     """
 
     timeout: float | tuple[float, float] | None = None
@@ -177,11 +188,11 @@ class RequestPolicy:
     def retries_network_error(self, exc: requests.RequestException) -> bool:
         """Diz se ``exc`` (timeout ou erro de conexão) merece nova tentativa.
 
-        ``ConnectionError`` é testado antes de ``Timeout`` porque
-        ``ConnectTimeout`` herda dos dois e deve seguir a opção de conexão, na
-        mesma regra de ``juscraper.core.failures.motivo_falha``.
+        A conexão é testada antes de ``Timeout`` porque ``ConnectTimeout``
+        herda dos dois e deve seguir a opção de conexão, na mesma ordem de
+        ``juscraper.core.failures.motivo_falha``.
         """
-        if isinstance(exc, requests.ConnectionError):
+        if isinstance(exc, _ERROS_DE_CONEXAO):
             return self.retry_on_connection_error
         return self.retry_on_timeout
 
@@ -337,7 +348,7 @@ class HTTPScraper(BaseScraper):
             kwargs = {**kwargs, "timeout": policy.timeout}
         try:
             return sess.request(method, url, **kwargs)
-        except (requests.ConnectionError, requests.Timeout) as exc:
+        except _ERROS_DE_REDE as exc:
             if not policy.retries_network_error(exc) or attempt == policy.max_retries:
                 raise
             wait = policy.espera(attempt)
@@ -411,8 +422,9 @@ class HTTPScraper(BaseScraper):
                 ``base_backoff`` não for número positivo e finito ou se
                 ``perfil`` não estiver declarado.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
-            requests.Timeout, requests.ConnectionError: Na primeira ocorrência,
-                ou na última tentativa quando a política retenta esse erro.
+            requests.Timeout, requests.ConnectionError, requests.exceptions.ChunkedEncodingError:
+                Na primeira ocorrência, ou na última tentativa quando a política
+                retenta esse erro.
             InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
