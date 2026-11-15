@@ -149,7 +149,7 @@ class TJRSScraper(HTTPScraper):
         """Pesquisa jurisprudência do TJRS (download + parse).
 
         Args:
-            pesquisa (str | None): Termo de busca livre.
+            pesquisa (str): Termo de busca livre; obrigatório.
             paginas (int | list | range | None): Páginas 1-based; ``None``
                 busca todas. ``paginas=3`` baixa as páginas 1 a 3.
             classe (str | None): Classe processual.
@@ -164,31 +164,47 @@ class TJRSScraper(HTTPScraper):
             data_publicacao_inicio (str | date | None): Início do intervalo
                 de publicação, nos mesmos formatos.
             data_publicacao_fim (str | date | None): Fim do intervalo de
-                publicação, nos mesmos formatos. Num intervalo com só o
-                início, o fim vira a data atual; com só o fim, o início vira
-                o piso de busca aberta. Nos dois casos sai ``UserWarning``.
+                publicação, nos mesmos formatos.
             tipo_processo (str | None): Tipo de processo.
             secao (str | None): ``"civel"``, ``"crime"`` ou ``None`` (as
-                duas).
+                duas). Outro valor é ignorado, e a busca cobre as duas.
             **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são
                 os parâmetros explícitos, campos de :class:`InputCJSGTJRS`.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
-
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
 
         Raises:
-            TypeError: Quando todos os erros são kwargs desconhecidos.
+            TypeError: Quando ``pesquisa`` falta ou quando todos os erros são
+                kwargs desconhecidos.
             ValueError: Quando uma data é inválida, o início é posterior ao
                 fim, ou um parâmetro e seu alias deprecado são passados juntos.
             ValidationError: Para os demais erros de validação do schema.
 
+        Avisos:
+            ``UserWarning``: Quando um intervalo de datas vem só com o início
+                ou só com o fim. O fim que falta vira a data atual; o início
+                que falta vira 01/01/1990.
+            ``DeprecationWarning``: Quando um alias deprecado é usado.
+
         Returns:
-            Uma linha por decisão.
+            Uma linha por decisão, com ``processo``, ``relator``,
+                ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
+                ``classe``, ``assunto`` e ``ementa``, entre outras colunas.
+
+        Examples: Exemplo
+            >>> from datetime import date
+            >>> import juscraper as jus
+            >>> tjrs = jus.scraper("tjrs")
+            >>> df = tjrs.cjsg(
+            ...     "dano moral",
+            ...     paginas=1,
+            ...     data_julgamento_inicio=date(2024, 1, 1),
+            ...     data_julgamento_fim="31/03/2024",
+            ... )
 
         See Also:
             :class:`InputCJSGTJRS`: fonte dos filtros aceitos.
