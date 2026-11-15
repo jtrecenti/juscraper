@@ -127,16 +127,16 @@ def documento_download_url(base_url: str, id_documento: str) -> str:
     return f"{base_url}{DOCUMENTOS_PATH}/{id_documento}/download"
 
 
-# Marcas do 403 que o Akamai devolve no lugar da API quando o sensor de bot
-# não liberou o cliente: o nginx genérico com os scripts do sensor
-# (``/akam/...`` na raiz, ``sec-overlay`` na API). Não traz ``Access Denied``,
-# então :func:`_check_bot_challenge` não o reconhece.
-_MARCAS_SENSOR_AKAMAI = (b"/akam/", b'id="sec-overlay"')
+# Marca do 403 que o Akamai devolveu à API em 15/11/2026, quando o sensor de
+# bot não liberou o cliente: a página ``403 Forbidden`` do nginx com os scripts
+# do sensor e o contêiner do desafio. Não traz ``Access Denied``, então
+# :func:`_check_bot_challenge` não a reconhece.
+_MARCA_SENSOR_AKAMAI = b'id="sec-overlay"'
 
 
 def _guarda_bot(resp: requests.Response) -> None:
     _check_bot_challenge(resp, TRIBUNAL)
-    if resp.status_code == 403 and any(marca in resp.content for marca in _MARCAS_SENSOR_AKAMAI):
+    if resp.status_code == 403 and _MARCA_SENSOR_AKAMAI in resp.content:
         raise BotChallengeBlockedError(TRIBUNAL, resp.url)
 
 

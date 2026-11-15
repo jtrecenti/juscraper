@@ -181,6 +181,9 @@ def test_cpopg_lote_segue_apos_erro_de_rede() -> None:
         df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_SEM_RESULTADO, CNJ_PAGINADO])
 
     assert _row_sem_dados(df.iloc[0])
+    # A linha que falha vem antes e mesmo assim motivo_falha fica por último.
+    assert df.columns[0] == "id_cnj"
+    assert df.columns[-1] == "motivo_falha"
     assert list(df["motivo_falha"]) == ["conexao", None]
     assert df.iloc[1]["processo"] == "5003536-21.2025.4.03.6342"
 

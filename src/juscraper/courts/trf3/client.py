@@ -260,6 +260,8 @@ class TRF3Scraper(HTTPScraper):
         rows = self._linhas([c.bruto for c in consultas], cnjs, [c.motivo for c in consultas])
         self._avisar(cnjs, [row[COLUNA_MOTIVO_FALHA] for row in rows], endpoint)
         df = pd.DataFrame(rows)
+        # Sem isto, o primeiro CNJ que falha põe motivo_falha logo depois de id_cnj.
+        df[COLUNA_MOTIVO_FALHA] = df.pop(COLUNA_MOTIVO_FALHA)
         if download_pecas:
             df["pecas"] = [c.pecas for c in consultas]
             df["pecas_falhas"] = [c.pecas_falhas for c in consultas]
@@ -460,7 +462,8 @@ class TRF3Scraper(HTTPScraper):
                 ``pecas_falhas``, as peças que não puderam ser baixadas, cada
                 uma como ``{"id": <id da peça>, "motivo_falha": <motivo>}``; as
                 falhas de peça saem num ``UserWarning`` próprio ao fim e não
-                mudam ``motivo_falha`` do processo.
+                mudam ``motivo_falha`` do processo, salvo o bloqueio anti-bot
+                (abaixo).
 
                 ``motivo_falha`` é ``None`` quando a consulta respondeu,
                 inclusive para o CNJ que a consulta pública não devolve
@@ -478,9 +481,11 @@ class TRF3Scraper(HTTPScraper):
                 Um bloqueio do Akamai vale para a sessão inteira: o lote para
                 no CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem
                 com ``bloqueio_anti_bot``. As linhas anteriores são
-                preservadas, com as peças já gravadas. Aguarde alguns minutos
-                ou troque de IP e peça de novo só as linhas com
-                ``motivo_falha``.
+                preservadas, com as peças já gravadas. O processo bloqueado
+                nas peças sai com os dados lidos, as peças já gravadas e
+                ``bloqueio_anti_bot``; a bloqueada e as seguintes entram em
+                ``pecas_falhas``. Aguarde alguns minutos ou troque de IP e peça
+                de novo só as linhas com ``motivo_falha``.
 
         Raises:
             TypeError: Kwarg desconhecido.

@@ -40,8 +40,9 @@ class _CamposProcessoTRF3(BaseModel):
     ``pecas_falhas`` só existem com ``download_pecas=True``: os caminhos dos
     PDFs gravados e ``[{"id", "motivo_falha"}]`` das peças que faltam. Recurso
     que a API não entregou (erro HTTP depois das tentativas) sai ``None``.
-    ``motivo_falha`` é ``None`` no processo lido; a linha de CNJ que falhou ou
-    que a consulta não devolveu fica fora deste contrato.
+    ``motivo_falha`` é ``None`` no processo lido, salvo o bloqueado pelo
+    Akamai durante as peças (``bloqueio_anti_bot``); a linha de CNJ que falhou
+    ou que a consulta não devolveu fica fora deste contrato.
     """
 
     processo: str
