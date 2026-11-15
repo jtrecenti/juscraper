@@ -28,6 +28,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.courts.tjrr.download import _extract_cdata
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
 from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_datatable_id
 
@@ -61,7 +62,7 @@ def _add_post_initial(sample_path: str):
     )
 
 
-def _add_post_ajax(sample_path: str, first_offset: str):
+def _add_post_ajax(sample_path: str, first_offset: str, dtid: str):
     """Pagination POST (``javax.faces.partial.ajax=true``) returning XML.
 
     Pins the issue #287 layer-2 fix: the body must carry the full
@@ -70,8 +71,9 @@ def _add_post_ajax(sample_path: str, first_offset: str):
     The minimal payload that omitted them was silently ignored by the
     backend (always returned page 1). The datatable id is derived from the
     sample (never hardcoded), since the JSF number drifts between deploys.
+    ``dtid`` picks the table being paged: acórdãos or, with the ``2``
+    suffix, decisões monocráticas (issue #319).
     """
-    dtid = get_datatable_id()
     responses.add(
         responses.POST,
         INDEX_URL,
@@ -82,9 +84,17 @@ def _add_post_ajax(sample_path: str, first_offset: str):
             "javax.faces.partial.ajax": "true",
             "javax.faces.behavior.event": "page",
             "formPesquisa:consultaAtual": "dano moral",
+            "javax.faces.source": dtid,
             f"{dtid}_first": first_offset,
         })],
     )
+
+
+def _add_page_2_ajax():
+    """Page 2 pages both result tables: acórdãos, then monocráticas."""
+    dtid = get_datatable_id()
+    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10", dtid)
+    _add_post_ajax("cjsg/step_04_pagina_02_monocraticas.xml", "10", f"{dtid}2")
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -102,7 +112,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     _add_post_initial("cjsg/step_02_search.html")
     add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
-    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10")
+    _add_page_2_ajax()
 
     df_p1 = jus.scraper("tjrr").cjsg("dano moral", paginas=1)
     df_p2 = jus.scraper("tjrr").cjsg("dano moral", paginas=range(1, 3))
@@ -116,6 +126,31 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(df_p2) > len(df_p1), "página 2 não acrescentou linhas"
     novos = set(df_p2["processo"]) - set(df_p1["processo"])
     assert novos, "página 2 não trouxe processos novos (paginação presa)"
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_2_traz_decisoes_monocraticas(mocker):
+    """Page 2 also pages the monocráticas table (issue #319).
+
+    The results page renders two tables with their own paginators. Before
+    #319 only the acórdãos table was paged, so pages 2+ brought 10 rows
+    instead of 20 and no monocráticas. ``OrderedRegistry`` fails the test
+    if the second AJAX POST (``dataTablePesquisa2``) is not sent.
+    """
+    mocker.patch("time.sleep")
+    add_get_initial()
+    _add_post_initial("cjsg/step_02_search.html")
+    _add_page_2_ajax()
+
+    df = jus.scraper("tjrr").cjsg("dano moral", paginas=range(1, 3))
+
+    monocraticas_p2 = jus.scraper("tjrr").cjsg_parse(
+        [_extract_cdata(load_sample("tjrr", "cjsg/step_04_pagina_02_monocraticas.xml"))]
+    )
+    assert len(monocraticas_p2) == 10
+    assert set(monocraticas_p2["processo"]) <= set(df["processo"])
+    # 10 acórdãos + 10 monocráticas em cada uma das duas páginas.
+    assert len(df) == 40
 
 
 @responses.activate(registry=OrderedRegistry)

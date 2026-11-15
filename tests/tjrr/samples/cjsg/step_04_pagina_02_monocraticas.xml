@@ -1,0 +1,626 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<partial-response><changes><update id="formPesquisa:j_idt155:dataTablePesquisa2"><![CDATA[<tr data-ri="10" class="ui-widget-content ui-datatable-even" role="row"><td role="gridcell" class="">
+            <div id="resultados11" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC11"><span style="font-weight: bold">DOCUMENTO 11</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=90041357520268230000')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_10_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_10_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_10_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:10:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC10" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC12" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">HC - Habeas Corpus
+                  <br /><br />90041357520268230000
+                  <br /><br /><span class="segredoJustica">Segredo de justiça</span>
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">ALESSANDRO TRAMUJAS
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Criminal
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">09/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">09/11/2026
+                  </div>
+                </div>
+              </div>
+            </div></td></tr><tr data-ri="11" class="ui-widget-content ui-datatable-odd" role="row"><td role="gridcell" class="">
+            <div id="resultados12" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC12"><span style="font-weight: bold">DOCUMENTO 12</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08146243820248230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_11_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_11_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_11_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_11_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC11" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC13" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08146243820248230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">07/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">07/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar11"><div id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao11" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar11",{id:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:11:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao11');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao11', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="12" class="ui-widget-content ui-datatable-even" role="row"><td role="gridcell" class="">
+            <div id="resultados13" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC13"><span style="font-weight: bold">DOCUMENTO 13</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08295854720258230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_12_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_12_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_12_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:12:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC12" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC14" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">ACr - Apelação Criminal
+                  <br /><br />08295854720258230010
+                  <br /><br /><span class="segredoJustica">Segredo de justiça</span>
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATORA
+                  </div>
+                  <div class="docTexto">TÂNIA VASCONCELOS
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Vice-Presidência
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">06/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">06/11/2026
+                  </div>
+                </div>
+              </div>
+            </div></td></tr><tr data-ri="13" class="ui-widget-content ui-datatable-odd" role="row"><td role="gridcell" class="">
+            <div id="resultados14" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC14"><span style="font-weight: bold">DOCUMENTO 14</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=90041062520268230000')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_13_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_13_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_13_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_13_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC13" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC15" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AgInst - Agravo de Instrumento
+                  <br /><br />90041062520268230000
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATORA
+                  </div>
+                  <div class="docTexto">ELAINE BIANCHI
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">05/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">05/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar13"><div id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao13" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar13",{id:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:13:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao13');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao13', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="14" class="ui-widget-content ui-datatable-even" role="row"><td role="gridcell" class="">
+            <div id="resultados15" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC15"><span style="font-weight: bold">DOCUMENTO 15</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08344219720248230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_14_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_14_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_14_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_14_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC14" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC16" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08344219720248230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">03/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">03/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar14"><div id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao14" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar14",{id:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:14:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao14');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao14', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="15" class="ui-widget-content ui-datatable-odd" role="row"><td role="gridcell" class="">
+            <div id="resultados16" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC16"><span style="font-weight: bold">DOCUMENTO 16</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08507176320258230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_15_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_15_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_15_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_15_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC15" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC17" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08507176320258230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar15"><div id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao15" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar15",{id:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:15:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao15');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao15', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="16" class="ui-widget-content ui-datatable-even" role="row"><td role="gridcell" class="">
+            <div id="resultados17" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC17"><span style="font-weight: bold">DOCUMENTO 17</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08020389520268230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_16_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_16_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_16_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_16_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC16" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC18" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08020389520268230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar16"><div id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao16" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar16",{id:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:16:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao16');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao16', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="17" class="ui-widget-content ui-datatable-odd" role="row"><td role="gridcell" class="">
+            <div id="resultados18" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC18"><span style="font-weight: bold">DOCUMENTO 18</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08473832120258230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_17_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_17_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_17_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_17_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC17" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC19" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08473832120258230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar17"><div id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao17" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar17",{id:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:17:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao17');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao17', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="18" class="ui-widget-content ui-datatable-even" role="row"><td role="gridcell" class="">
+            <div id="resultados19" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC19"><span style="font-weight: bold">DOCUMENTO 19</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08031137220268230010')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_18_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_18_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_18_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_18_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC18" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC20" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08031137220268230010
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar18"><div id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao18" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar18",{id:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:18:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao18');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao18', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr><tr data-ri="19" class="ui-widget-content ui-datatable-odd" role="row"><td role="gridcell" class="">
+            <div id="resultados20" class="row">
+              <div class="tituloDocumento">
+                <a name="2DOC20"><span style="font-weight: bold">DOCUMENTO 20</span>
+                </a>
+                <div style="float: right;"><button id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt222" name="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt222" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){abrirJanela('https://estatistica.tjrr.jus.br/estatistica/extrato-processo?p=08010953020258230005')},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt222&quot;,f:&quot;formPesquisa&quot;});return false;}]);" title="Consulta Processual" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-book"></span><span class="ui-button-text ui-c">Consulta Processual</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt222_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_19_j_idt222",{id:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt222"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223" name="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o inteiro teor." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-file-pdf-o"></span><span class="ui-button-text ui-c">Exibir o inteiro teor.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_19_j_idt223",{id:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt223"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt224" name="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt224" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt224&quot;,f:&quot;formPesquisa&quot;,u:&quot;formPesquisa:arquivoDetalhe formPesquisa:inputTextEmenta&quot;,onco:function(xhr,status,args,data){PF('copyDialog').show();}});return false;" title="Copia a ementa para a área de transferência" type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-clipboard"></span><span class="ui-button-text ui-c">Copia a ementa para a área de transferência</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt224_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_19_j_idt224",{id:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt224"});</script><button id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225" name="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only" onclick="PrimeFaces.bcn(this,event,[function(event){jurisDocumento.abrir();},function(event){PrimeFaces.ab({s:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225&quot;,f:&quot;formPesquisa&quot;,p:&quot;formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225&quot;,u:&quot;@none&quot;,g:false,onco:function(xhr,status,args,data){jurisDocumento.carregar(xhr, status, args);;}});return false;}]);" title="Exibir o documento em formato PDF para imprimir ou salvar." type="submit"><span class="ui-button-icon-left ui-icon ui-c fa fa-print"></span><span class="ui-button-text ui-c">Exibir o documento em formato PDF para imprimir ou salvar.</span></button><script id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225_s" type="text/javascript">PrimeFaces.cw("CommandButton","widget_formPesquisa_j_idt155_dataTablePesquisa2_19_j_idt225",{id:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt225"});</script>
+                </div>
+              </div>
+
+              <div class="acoesdocumento">
+                <div class="divLinha">
+                  <div class="divCell icones"><a href="#2DOC19" title="Documento Anterior" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-up fa-2x"></i></a><a href="#2DOC21" title="Próximo documento" class="iconeParaBaixo nav">
+                      <i style="color: #2465a4;" class="fa fa-chevron-down fa-2x"></i></a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="docParagrafo">
+                <div class="docTitulo">PROCESSO
+                </div>
+                <div class="docTexto">AC - Apelação Cível
+                  <br /><br />08010953020258230005
+                  <br /><br />
+                </div>
+              </div>
+
+              <div class="row text-start">
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">RELATOR
+                  </div>
+                  <div class="docTexto">CRISTÓVÃO SUTER
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">ÓRGÃO JULGADOR:
+                  </div>
+                  <div class="docTexto">Câmara Cível
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DO JULGAMENTO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+
+                <div class="docParagrafo col-md-6 col-sm-12">
+                  <div class="docTitulo">DATA DA PUBLICAÇÃO:
+                  </div>
+                  <div class="docTexto">02/11/2026
+                  </div>
+                </div>
+              </div><div class="docParagrafo">
+                <div title="Mostrar o Inteiro Teor"><div id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260" class="ui-accordion ui-widget ui-helper-reset ui-hidden-container" role="tablist" data-widget="accordionDecisaoWidgetVar19"><div id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260:j_idt262_header" class="ui-accordion-header ui-helper-reset ui-state-default ui-corner-all docTitulo" role="tab" aria-expanded="false" aria-selected="false" tabindex="0" style="border-radius:0;color:#414f55;padding-left:5px;                         border-width:0 0 1px 0;outline:none;"><span class="ui-icon ui-icon-triangle-1-e"></span>
+                        <span style="display:flex;align-items:center;cursor:pointer;">INTEIRO TEOR
+                            <i class="fa fa-angle-down" style="padding-left:5px;font-size:20px"></i>
+                        </span></div><div id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260:j_idt262" class="ui-accordion-content ui-helper-reset ui-widget-content ui-helper-hidden" role="tabpanel" aria-hidden="true">
+                      <div style="padding:9px;text-align:justify">
+                        <iframe id="pdfViewerDecisao19" style="width:100%;height:600px;" frameborder="0"></iframe>
+                      </div></div><input type="hidden" id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260_active" name="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260_active" value="" autocomplete="off" /></div><script id="formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260_s" type="text/javascript">PrimeFaces.cw("AccordionPanel","accordionDecisaoWidgetVar19",{id:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260",behaviors:{tabChange:function(ext,event) {PrimeFaces.ab({s:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260",e:"tabChange",f:"formPesquisa",p:"formPesquisa:j_idt155:dataTablePesquisa2:19:j_idt260",u:"@none",g:false,onst:function(cfg){return jurisDocumento.precisaCarregarFrame('pdfViewerDecisao19');;},onco:function(xhr,status,args,data){jurisDocumento.carregarFrame('pdfViewerDecisao19', args);;}},ext);}}});</script>
+                </div></div>
+            </div></td></tr>]]></update><update id="j_id1:javax.faces.ViewState:0"><![CDATA[PL8KqAclT3ue+y9nNHkdPtsjRAzJHlHmlFmgSmVCTlFmfSGvgjvAJkYDYSaMO5fIps6RT533wX1N0LI99djIjQSbhhDltfhj2Qbi1Tob0XMFGbyEnqiahxiOu9F+wJyj50PqyriJpCnslLHO3evLnJYxziHIEmriu5P/gopVRzWTu2NVljil9Q6mAAF+3UH+JTWhz41CzH1xwo2u3qGlXrVAu8bhpvcwBiyanN+zmRzp6fYy87SR30GQxe0Oj2sLI5h8DpqWCthHpUnBkq75zZCYqTVJ2gk6Oev7pmVKdyR8U0Jm9C6F08S5ZXyz8CcZA5BWTN0F4eU5EGbLtwCxoWN7s10ww++u3AxFqBZOUBiSyWoEahtulJQmTSKAsxXEmu4vgAtBGBPDs9wOOtQP0hykmcu+PwMCkpuLLN1cG1Ar7ab5V9XN7PccanWGWFwBmKF52dPHIHFgqLYjUlIMNZnb3sZj2qbJ/nkhNz8NpKU12CLeW3gLnZC+2R6rax17YgtH/I0A2JM6kXve5GIOmozjT4+oapjO2Ub8WQ6gLyQHUJmacqlZ16pxWoVKwXYnGUr9QzpLMygYGybv+NdKeEU9nGKV90hY0wckamOwPelGTEdheqZmCYjMjO5BmYJmXrhtXqOS/W+PBcqd/yTA/aBOqGkEbGnaFPTMhFUgSnB1Y4mpFjHvKHcE+IMHD9X7d2Ysz1Y9P5E/ceWsjl5MV2SpJv0aAX95YpQluARNFdg+Iy2NxfrxcWMcGg/8ih49AA2h8JdBLVjDkViIwCJu3L2HWS8i3Gmd3UVG9WZ9OgVvR474Uzy4ZBxM25frCfC0caCq++RX3VWSRUTaukktP88qs0dDpEuP0tmoZsV1jdH3Wqy8dQxpfUt18NbaKrvRepzkIeDZ0sig27KDqH+Fd43v6KqFFNqxTdxJrqAd4h7fFGgNpMxgGMHkoXh9rYIRby/U4SZcF2UI6IWgjJaexr1O5VIRZHHFE/NtKrFXpMd45MwfMXdd2JaXTDqQ0swtP0RZoIjXKL8gtRovWVAoJ8iNUzbkHGkp8BXg4ZJLOf8L7NChph/qAiX63SP09whAQ/6CixK//iTjThyrJO/+uDnSsCn1cvV7GLcbL4l6atViXBt0D5i+RLcwwFr2Mn5MTGTaIVgfTBE5VYAhGheHSOlbkzO7kE5j8ncioHHILl28MJsl4s74C5yfzXjO8R+89h+daSTN2iQZb76wITVy3pnWMts4UEMTzlSxBnFFY+WEKhl6vHHBjefAeQzov57vB3r+ibruhy9IQOjb8Bj4SPrGzTe+Xi6IWlfzcMPwAXQhXwSqUqPp3e3Qstze+t2f2lxboJf4yxWiZ9je9iTRfni09b7Z7LU7Lp17tvRHwJayFrhVjRm4XT0Unh0qr7gfIf+jWISWJpMiWCAlfrEn/FKH0UpaPD9aJEdxEMp8D80FYvR7UqKvh6vOXQLoOp2TRta1qgaGBi5oLJ+8x0oaqLsLv77PzgpbqHDpfKBh5qLLUIt+vTCVdmfDCIPAmszd3mK+9VPsr+EcANA2dtw7/M6eRbM+d2iXZZVUOfPbjtTkf6ufoeFeScgu8z/TpW5aCJw0YSUN2hA4DK/crm62BgxzVPzUU6yx1VsOafZMNwFje9G/atqxg9/bz8Z9QKMR8uF94UeOHtZRTAFNIiW5Yov+lA49bPWpexgA2dCIz34kppyYpTIBYXU1IzhVWlbnCl0tBha1nvcwh/14o3ZUidwyEaYgAXFljL1r0zzHJws+mDxDwOWtoOT6frQoSY0UaPfOVQTYthhzRrTCPpA57Zohoz17iINn4mjlbI9CdF0J8pSVrDAeoUsRLsiE/3EDB863+rraAB317MqfqsAz+ibNteDC6Cjej/ed8EygkIBGbeWDdYq31766qj+Im04kACoqSEwnrvJettbkLOib1f6SNFgPEkjyJoEtr3HcyG20hBsAYFuBS8g3l6jrw0q1J9/ygsDzl3lurXH2xMqAKx5GvCDfg4t8FzTkqHtHn6tv7N7ioIU2coGZrSPP/2+j21O3PhpYC6Zwd2s1QkOdpw9D7T607IPJfaMGFjxK9oQQd3E5BI5deeshuAZ3zFUSi9vIcodrvWUlAhZdzy0yASNuZeyTo1yVeomb9fhVp8JvGMrARh0AeHvL4HHmFq1CmsUBVU+6sBtUkQ2px1wm/jpF/cr6oQAY338NPiObBTq4DvsXNQOm7pWlVcyxxvwd]]></update><extension ln="primefaces" type="args">{&#34;totalRecords&#34;:3296}</extension></changes></partial-response>

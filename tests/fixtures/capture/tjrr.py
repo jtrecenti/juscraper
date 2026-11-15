@@ -15,8 +15,12 @@ shape:
   carries the search ``pesquisa`` and ``ViewState`` (returns HTML with
   page 1 results inline).
 - ``step_03_pagina_02.xml`` — partial-response POST with
-  ``javax.faces.partial.ajax=true`` that pages forward; the response is
-  XML wrapping the result HTML inside a ``<![CDATA[...]]>`` block.
+  ``javax.faces.partial.ajax=true`` that pages the acórdãos table
+  (``dataTablePesquisa``) forward; the response is XML wrapping the
+  result HTML inside a ``<![CDATA[...]]>`` block.
+- ``step_04_pagina_02_monocraticas.xml`` — the same AJAX POST for the
+  decisões monocráticas table (``dataTablePesquisa2``), which has its own
+  paginator and is paged alongside the first (issue #319).
 - ``single_page.html`` — POST whose hits fit on one page (no AJAX
   follow-up).
 - ``no_results.html`` — POST that yields zero hits.
@@ -27,7 +31,10 @@ Samples are byte-identical to what the live backend served.
 """
 from __future__ import annotations
 
+import re
+
 import juscraper as jus
+from juscraper.courts.tjrr.download import RESULTS_PER_PAGE
 
 from ._util import samples_dir_for
 
@@ -47,14 +54,18 @@ def _classify(
 
     is_ajax = "javax.faces.partial.ajax=true" in body_text
     if is_ajax:
-        # Each AJAX call advances the page by one; the first AJAX = page 2.
+        # Each page 2+ issues one AJAX call per results table: acórdãos
+        # (``dataTablePesquisa``) and monocráticas (``dataTablePesquisa2``).
+        # The page number comes from the absolute ``_first`` offset.
         counters["ajax"] = counters.get("ajax", 0) + 1
-        page_num = counters["ajax"] + 1  # AJAX kicks in for pages 2+.
         step_num = counters["ajax"] + 2  # GET=01, POST inicial=02, AJAX=03+
-        if scenario == "typical":
-            return f"step_{step_num:02d}_pagina_{page_num:02d}.xml"  # noqa: E231
-        # AJAX in non-typical scenarios is unexpected (paginas=1).
-        return None
+        match = re.search(r"dataTablePesquisa(2?)_first=(\d+)", body_text)
+        if scenario != "typical" or not match:
+            # AJAX in non-typical scenarios is unexpected (paginas=1).
+            return None
+        page_num = int(match.group(2)) // RESULTS_PER_PAGE + 1
+        suffix = "_monocraticas" if match.group(1) else ""
+        return f"step_{step_num:02d}_pagina_{page_num:02d}{suffix}.xml"  # noqa: E231
 
     # Initial POST.
     if scenario == "typical":
@@ -112,7 +123,7 @@ def main() -> None:
 
     _install_hook()
 
-    # Typical: 2-page pagination (GET + POST initial + 1 AJAX).
+    # Typical: 2-page pagination (GET + POST initial + 1 AJAX per table).
     state["scenario"] = "typical"
     counters.clear()
     df = scraper.cjsg("dano moral", paginas=range(1, 3))

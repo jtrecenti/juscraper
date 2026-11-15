@@ -264,6 +264,7 @@ def _paginate(
     request_fn: RequestFn,
     html: str,
     page: int,
+    datatable_id: str | None = None,
 ) -> str:
     """Navigate to a specific page via PrimeFaces AJAX pagination.
 
@@ -281,10 +282,11 @@ def _paginate(
     each page is fetched independently from the page-1 ``html`` — no need to
     thread the ViewState returned by each partial-response.
 
-    Only ``dataTablePesquisa`` (acórdãos) is paginated. The results page
-    also renders ``dataTablePesquisa2`` (decisões monocráticas) with its own
-    paginator; those rows are captured from page 1 only. Paginating the
-    second table is tracked as a follow-up to issue #287.
+    The results page renders two datatables, each with its own paginator:
+    ``dataTablePesquisa`` (acórdãos) and ``dataTablePesquisa2`` (decisões
+    monocráticas). ``datatable_id`` picks which one to page (default: the
+    acórdãos table); the second accepts the same payload, verified live
+    (issue #319).
     """
     soup = BeautifulSoup(html, "html.parser")
     vs_input = soup.find("input", {"name": "javax.faces.ViewState"})
@@ -292,7 +294,8 @@ def _paginate(
         raise RuntimeError("Could not find ViewState for pagination.")
 
     viewstate = vs_input["value"]
-    datatable_id = _extract_datatable_id(html)
+    if datatable_id is None:
+        datatable_id = _extract_datatable_id(html)
     rows = RESULTS_PER_PAGE
     first = (page - 1) * rows
 
@@ -327,6 +330,53 @@ def _paginate(
     return _extract_cdata(resp.text)
 
 
+def _datatables_with_pages(html: str) -> list[tuple[str, int]]:
+    """List the paginated results datatables of page 1 with their page counts.
+
+    ``dataTablePesquisa`` (acórdãos) always comes first. ``dataTablePesquisa2``
+    (decisões monocráticas) follows when the page renders it. Each table has
+    its own paginator, so the page count is read inside each table's
+    ``div``; the acórdãos table falls back to the whole page (previous
+    behaviour) when its ``div`` is not found. A page without any results
+    datatable yields ``[]``: page 1 alone is still usable, and asking for a
+    later page raises in :func:`_paginate`, as before issue #319.
+    """
+    try:
+        acordaos_id = _extract_datatable_id(html)
+    except RuntimeError:
+        return []
+    soup = BeautifulSoup(html, "html.parser")
+    acordaos_div = soup.find(id=acordaos_id)
+    tables = [(acordaos_id, _get_total_pages(str(acordaos_div) if acordaos_div else html))]
+    monocraticas_div = soup.find(id=f"{acordaos_id}2")
+    if monocraticas_div is not None:
+        tables.append((f"{acordaos_id}2", _get_total_pages(str(monocraticas_div))))
+    return tables
+
+
+def _download_page(
+    request_fn: RequestFn,
+    html: str,
+    page: int,
+    tables: list[tuple[str, int]],
+    sleep_time: float,
+) -> str:
+    """Fetch page ``page`` (2+) of every table that has it and join the HTML.
+
+    A table whose paginator ends before ``page`` is skipped. When no table
+    reaches ``page`` (explicit ``paginas`` past the end), the acórdãos table
+    is requested anyway, as before issue #319, and the backend decides.
+    """
+    alvos: list[str | None] = [dtid for dtid, n_pags in tables if page <= n_pags]
+    if not alvos:
+        alvos = [tables[0][0] if tables else None]
+    partes = []
+    for dtid in alvos:
+        time.sleep(sleep_time)
+        partes.append(_paginate(request_fn, html, page, dtid))
+    return "".join(partes)
+
+
 def cjsg_download_manager(
     pesquisa: str,
     paginas=None,
@@ -337,7 +387,11 @@ def cjsg_download_manager(
 ) -> list:
     """Download raw HTML results from the TJRR jurisprudence search.
 
-    Returns a list of raw HTML strings (one per page).
+    Returns a list of raw HTML strings (one per page). Each page carries up
+    to ``RESULTS_PER_PAGE`` acórdãos plus up to ``RESULTS_PER_PAGE``
+    decisões monocráticas: the two result tables are paginated together,
+    page ``n`` of one alongside page ``n`` of the other. With
+    ``paginas=None`` the download runs until the longest table ends.
 
     Args:
         pesquisa: Search term.
@@ -345,30 +399,27 @@ def cjsg_download_manager(
         request_fn: HTTP callable que faz retry + raise_for_status — em uso
             normal e ``TJRRScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
-        sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
-            normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
+        sleep_time: Delay (em segundos) antes de cada requisição de
+            paginação. Default 1.0; o client normalmente passa
+            ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
     """
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
+    tables = _datatables_with_pages(first_html)
 
     if paginas is None:
-        resultados = [first_html]
-        n_pags = _get_total_pages(first_html)
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRR"):
-                time.sleep(sleep_time)
-                html = _paginate(request_fn, first_html, pagina)
-                resultados.append(html)
-        return resultados
+        n_pags = max((n for _, n in tables), default=1)
+        paginas_iter = list(range(1, n_pags + 1))
+    else:
+        paginas_iter = list(paginas)
 
-    paginas_iter = list(paginas)
     resultados = []
     for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRR"):
         if pagina_1based == 1:
             resultados.append(first_html)
         else:
-            time.sleep(sleep_time)
-            html = _paginate(request_fn, first_html, pagina_1based)
-            resultados.append(html)
+            resultados.append(
+                _download_page(request_fn, first_html, pagina_1based, tables, sleep_time)
+            )
     return resultados

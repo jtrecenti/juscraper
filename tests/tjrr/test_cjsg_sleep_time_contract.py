@@ -43,7 +43,7 @@ def _add_post_initial(sample_path: str):
     )
 
 
-def _add_post_ajax(sample_path: str, first_offset: str):
+def _add_post_ajax(sample_path: str, first_offset: str, dtid: str):
     responses.add(
         responses.POST,
         INDEX_URL,
@@ -52,7 +52,7 @@ def _add_post_ajax(sample_path: str, first_offset: str):
         content_type="application/xml; charset=UTF-8",
         match=[urlencoded_body_subset_matcher({
             "javax.faces.partial.ajax": "true",
-            f"{get_datatable_id()}_first": first_offset,
+            f"{dtid}_first": first_offset,
         })],
     )
 
@@ -63,13 +63,16 @@ def test_cjsg_respeita_sleep_time_do_construtor(mocker):
     sleep_mock = mocker.patch("time.sleep")
     add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
-    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10")
+    dtid = get_datatable_id()
+    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10", dtid)
+    _add_post_ajax("cjsg/step_04_pagina_02_monocraticas.xml", "10", f"{dtid}2")
 
     jus.scraper("tjrr", sleep_time=SLEEP_VALUE).cjsg(
         "dano moral", paginas=range(1, 3),
     )
 
-    sleep_mock.assert_any_call(SLEEP_VALUE)
+    # Uma pausa antes de cada POST AJAX: acórdãos e monocráticas (#319).
+    assert sleep_mock.call_count == 2
     for call in sleep_mock.call_args_list:
         assert call.args == (SLEEP_VALUE,), (
             f"time.sleep chamado com valor inesperado: {call.args!r}"
