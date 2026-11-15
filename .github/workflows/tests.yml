@@ -42,12 +42,14 @@ jobs:
           cache-dependency-glob: uv.lock
       - name: Instalar dependências de desenvolvimento
         run: uv sync --frozen --extra dev
+      # -n auto: um worker por núcleo do runner, como no hook pytest local; o
+      # pytest-cov junta a cobertura dos workers antes de aplicar o piso.
       - name: Rodar a suíte offline
         if: ${{ !matrix.cobertura }}
-        run: uv run pytest
+        run: uv run pytest -n auto
       - name: Rodar a suíte offline com cobertura
         if: ${{ matrix.cobertura }}
-        run: uv run pytest --cov --cov-report=
+        run: uv run pytest -n auto --cov --cov-report=
       # Publica também quando o piso reprova o passo anterior, que é quando a
       # tabela por arquivo mais serve; --fail-under=0 impede que o próprio
       # relatório saia com erro antes de escrever.

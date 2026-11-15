@@ -30,17 +30,17 @@ _LINK_EXIBIR = re.compile(r'<div id="divExibirMovimentacoes".*?</div>', re.DOTAL
 _CD_PROCESSO_MOVIMENTACOES = re.compile(r"cdProcessoMovimentacoes = '([^']+)'")
 
 
-def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
+def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5) -> dict[str, str]:
     """
     Downloads the HTML of one or more processes from the CPOSG.
 
     Returns:
-        (dict[str, str]): ``{CNJ formatado: motivo}`` dos processos que ficaram
-            sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
-            processo que a consulta de 2º grau não mostra ("Não existem
-            informações disponíveis") sai ``nao_encontrado``. Vazio quando todos
-            foram baixados. As falhas ficam gravadas em ``<download_path>/cposg``,
-            de onde ``cposg_parse_manager`` as lê; o ``UserWarning`` delas sai de
+        ``{CNJ formatado: motivo}`` dos processos que ficaram sem arquivo, no
+            vocabulário de :mod:`juscraper.core.failures`. O processo que a
+            consulta de 2º grau não mostra ("Não existem informações disponíveis")
+            sai ``nao_encontrado``. Vazio quando todos foram baixados. As falhas
+            ficam gravadas em ``<download_path>/cposg``, de onde
+            ``cposg_parse_manager`` as lê; o ``UserWarning`` delas sai de
             ``TJSPScraper.cposg_download``.
     """
     if isinstance(id_cnj_list, str):
@@ -48,9 +48,10 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     # A pasta existe mesmo sem processo encontrado: sem ela, cposg_parse_manager
     # leria o download_path inteiro, inclusive os arquivos do cpopg.
     Path(download_path, 'cposg').mkdir(parents=True, exist_ok=True)
-    falhas = {}
+    falhas: dict[str, str] = {}
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
-        cnj = format_cnj(id_cnj, strict=False)
+        # Entrada que não é texto vira chave ``str``, como no registro que o parse lê.
+        cnj = str(format_cnj(id_cnj, strict=False))
         if cnj_invalido(id_cnj):
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue

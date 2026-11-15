@@ -8,7 +8,10 @@ ficando coberto transitivamente.
 """
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
+
+from pydantic import field_validator
+from unidecode import unidecode
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -33,14 +36,24 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ``scraper.session`` apos ``__init__`` (dependencia de runtime, nao da API).
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+    #: Explícito: o portal valida as datas com ``parseDate("d/m/yy")`` e as
+    #: envia sem conversão; em ISO, a busca volta vazia (#496).
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
     classe: str | None = None
     assunto: str | None = None
     orgao_julgador: str | None = None
     relator: str | None = None
     tipo_processo: str | None = None
-    secao: str | None = None
+    secao: Literal["civel", "crime"] | None = None
+
+    @field_validator("secao", mode="before")
+    @classmethod
+    def _normalizar_secao(cls, valor: object) -> object:
+        # Caixa, acento ("cível") e espaços não mudam a seção; ``""`` é sem filtro.
+        if isinstance(valor, str):
+            return unidecode(valor).strip().lower() or None
+        return valor
 
 
 class OutputCJSGTJRS(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

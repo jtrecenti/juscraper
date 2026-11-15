@@ -195,6 +195,20 @@ def _parse_documentos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
     return out
 
 
+COLUNAS_DETALHE: tuple[str, ...] = (
+    *_PROCESS_LABELS.values(),
+    "polo_ativo",
+    "polo_passivo",
+    "movimentacoes",
+    "documentos",
+)
+"""Colunas de :func:`parse_detail`, na ordem do registro.
+
+O DataFrame do ``cpopg`` as traz mesmo quando nenhum CNJ do lote foi lido,
+em vez de sair só com ``id_cnj`` e ``motivo_falha``.
+"""
+
+
 def parse_detail(html: str) -> dict[str, Any]:
     """Parse a TRF PJe detail page into a flat record.
 
