@@ -57,6 +57,14 @@ class TJPRScraper(HTTPScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
+            data_julgamento_inicio (str | date | None): Início do intervalo
+                de julgamento, nos formatos aceitos por :meth:`cjsg`.
+            data_julgamento_fim (str | date | None): Fim do intervalo de
+                julgamento.
+            data_publicacao_inicio (str | date | None): Início do intervalo
+                de publicação.
+            data_publicacao_fim (str | date | None): Fim do intervalo de
+                publicação.
             **kwargs: Aliases deprecados de :meth:`cjsg`.
 
         Raises:
