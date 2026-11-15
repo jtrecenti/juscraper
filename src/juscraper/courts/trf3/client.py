@@ -236,46 +236,67 @@ class TRF3Scraper(HTTPScraper):
         """
         results: list[list[str]] = []
         for cnj, bruto in zip(cnjs, brutos, strict=True):
-            if bruto is None:
+            alvo = self._documentos_do_processo(cnj, bruto)
+            if alvo is None:
                 results.append([])
                 continue
-            # ``_parse`` já transformou o processo com envelope malformado em
-            # linha só com ``id_cnj``; sem este ``try`` o mesmo envelope
-            # levantaria aqui e a chamada perderia o DataFrame do lote inteiro.
-            try:
-                # ``baixar_processo`` já recusou ``idProcesso`` inválido, e
-                # ``baixar_documento`` confere de novo antes de montar a URL.
-                id_processo = bruto["busca"]["idProcesso"]
-                documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
-            except Exception as exc:  # noqa: BLE001 (resiliência por item)
-                logger.warning("Peças do %s puladas: documentos fora do formato esperado: %s", cnj, exc)
-                results.append([])
-                continue
+            id_processo, documentos = alvo
             proc_dir = Path(base_dir) / cnj
             proc_dir.mkdir(parents=True, exist_ok=True)
             paths: list[str] = []
             for doc in documentos:
-                id_documento = doc.get("id") if isinstance(doc, dict) else None
-                if not token_valido(id_documento):
-                    logger.warning("Peça do %s pulada: id de documento inválido %r", cnj, id_documento)
+                path = self._baixar_peca(cnj, doc, proc_dir, base_url, id_processo)
+                if path is None:
                     continue
-                path = proc_dir / f"{id_documento}.pdf"
-                if path.resolve().parent != proc_dir.resolve():
-                    logger.warning("Peça do %s pulada: %r sai do diretório do processo", cnj, id_documento)
-                    continue
-                try:
-                    content = baixar_documento(self._request_with_retry, base_url, id_documento, id_processo)
-                except BotChallengeBlockedError:
-                    raise
-                except Exception as exc:  # noqa: BLE001 (resiliência por peça)
-                    logger.warning("Erro ao baixar peça %s do %s: %s", id_documento, cnj, exc)
-                    continue
-                path.write_bytes(content)
-                paths.append(str(path))
+                paths.append(path)
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
             results.append(paths)
         return results
+
+    @staticmethod
+    def _documentos_do_processo(cnj: str, bruto: dict[str, Any] | None) -> tuple[str, list[object]] | None:
+        """``idProcesso`` e documentos de um processo; ``None`` quando não há peças a baixar.
+
+        ``_parse`` já transformou o processo com envelope malformado em linha
+        só com ``id_cnj``; sem este ``try`` o mesmo envelope levantaria aqui e
+        a chamada perderia o DataFrame do lote inteiro. ``baixar_processo`` já
+        recusou ``idProcesso`` inválido, e ``baixar_documento`` confere de
+        novo antes de montar a URL.
+        """
+        if bruto is None:
+            return None
+        try:
+            id_processo = bruto["busca"]["idProcesso"]
+            documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
+        except Exception as exc:  # noqa: BLE001 (resiliência por item)
+            logger.warning("Peças do %s puladas: documentos fora do formato esperado: %s", cnj, exc)
+            return None
+        return id_processo, documentos
+
+    def _baixar_peca(self, cnj: str, doc: object, proc_dir: Path, base_url: str, id_processo: str) -> str | None:
+        """Grava o PDF de um documento e devolve o caminho; ``None`` quando a peça é pulada.
+
+        Bloqueio do Akamai e erro de gravação sobem; os demais erros viram
+        aviso no log.
+        """
+        id_documento = doc.get("id") if isinstance(doc, dict) else None
+        if not token_valido(id_documento):
+            logger.warning("Peça do %s pulada: id de documento inválido %r", cnj, id_documento)
+            return None
+        path = proc_dir / f"{id_documento}.pdf"
+        if path.resolve().parent != proc_dir.resolve():
+            logger.warning("Peça do %s pulada: %r sai do diretório do processo", cnj, id_documento)
+            return None
+        try:
+            content = baixar_documento(self._request_with_retry, base_url, id_documento, id_processo)
+        except BotChallengeBlockedError:
+            raise
+        except Exception as exc:  # noqa: BLE001 (resiliência por peça)
+            logger.warning("Erro ao baixar peça %s do %s: %s", id_documento, cnj, exc)
+            return None
+        path.write_bytes(content)
+        return str(path)
 
     # --- API pública ----------------------------------------------------
 
