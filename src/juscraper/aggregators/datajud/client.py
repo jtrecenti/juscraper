@@ -35,6 +35,7 @@ from .paginacao import (
     _hits_da_pagina,
     _mensagem_falha_parcial,
     _next_search_after,
+    _size_do_pedaco,
     _teto_apos_busca,
     _total_primeira_pagina,
     _verificar_data_frame_vazio,
@@ -785,8 +786,7 @@ class DatajudScraper(HTTPScraper):
         total_info: dict[str, Any] | None = None
         while last_page is None or current_page <= last_page:
             logger.info("Fetching page %d for alias %s...", current_page, alias)
-            # O que falta para fechar a página corrente: sem fallback, a página inteira.
-            size_pedido = min(size_maximo, tamanho_pagina - percorridos % tamanho_pagina)
+            size_pedido = _size_do_pedaco(size_maximo, tamanho_pagina - percorridos % tamanho_pagina)
             query_payload = build_listar_processos_payload(
                 numero_processo=numero_processo,
                 ano_ajuizamento=inp.ano_ajuizamento,
@@ -807,7 +807,7 @@ class DatajudScraper(HTTPScraper):
                 mensagem = _mensagem_falha_parcial(alias, current_page, recebidos, total_info)
                 _falha_pagina(mensagem + _sufixo_causa(exc), exc)
             hits = _hits_da_pagina(api_response, alias, current_page, recebidos, total_info)
-            if current_page == 1:
+            if total_info is None:  # primeira busca; depois do fallback, a página 1 vem em pedaços
                 total_info = _total_primeira_pagina(api_response, alias, current_page)
             effective_size = query_payload["size"]
             size_maximo = _teto_apos_busca(size_maximo, size_pedido, effective_size)

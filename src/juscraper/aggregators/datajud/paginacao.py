@@ -5,6 +5,7 @@ de alias, página e registros recebidos; ``client.py`` preenche
 ``erro.resultado`` com as páginas já guardadas.
 """
 import logging
+import math
 from typing import Any, NamedTuple, NoReturn, cast
 
 import pandas as pd
@@ -49,6 +50,17 @@ def _next_search_after(
         )
         return None
     return search_after
+
+
+def _size_do_pedaco(teto: int, restante: int) -> int:
+    """``size`` da próxima busca: o que falta da página, dividido em pedaços iguais de até ``teto``.
+
+    Sem fallback, ``teto`` é ``tamanho_pagina`` e a página vem numa busca só.
+    Pedaços iguais evitam um último pedaço minúsculo, que ficaria abaixo do
+    mínimo do fallback se levasse 504.
+    """
+    pedacos = math.ceil(restante / teto)
+    return math.ceil(restante / pedacos)
 
 
 def _teto_apos_busca(teto: int, pedido: int, efetivo: int) -> int:

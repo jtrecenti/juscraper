@@ -275,7 +275,7 @@ def call_datajud_api(
         vez** com ``size`` reduzido por ``FALLBACK_DIVISOR``, mutando
         ``query_payload["size"]`` no lugar: o caller lê ``query_payload["size"]``
         na heurística de última página (``len(hits) < query_payload["size"]``)
-        para não parar antes do tempo. Emite ``UserWarning`` com o novo size.
+        para não parar antes do tempo e o usa como teto das buscas seguintes. Emite ``UserWarning`` com o novo size.
         Se ``size`` já está no mínimo ou a nova busca também falha, a exceção
         sobe para o caller.
     """
@@ -326,8 +326,9 @@ def _reduzir_size(alias: str, query_payload: dict[str, Any]) -> bool:
     """Reduz ``query_payload["size"]`` por ``FALLBACK_DIVISOR`` para a nova busca após 504/timeout.
 
     Muta ``query_payload["size"]`` no lugar para que o caller leia o size
-    efetivo na heurística de última página (``len(hits) < query_payload['size']``)
-    em ``client.py:_iter_process_pages``. Devolve ``False``, sem mexer no
+    efetivo: ``client.py:_iter_process_pages`` o usa na heurística de última
+    página (``len(hits) < query_payload['size']``) e como teto das buscas
+    seguintes, que completam a página em pedaços. Devolve ``False``, sem mexer no
     payload, quando o ``size`` já está no mínimo e reduzir não ajuda.
     """
     original_size = query_payload.get("size")
