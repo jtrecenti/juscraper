@@ -243,3 +243,24 @@ def test_relatorio_dirigido_traz_a_suite_release_e_ninguem_de_fora(tmp_path):
     assert "| notebooks |" not in corpo
     # A execução dirigida ignora FORA_DO_CI, então não lista ninguém de fora.
     assert "Fora desta execução" not in corpo
+
+
+def test_relatorio_completo_traz_os_notebooks_e_quem_ficou_fora(tmp_path):
+    (tmp_path / "scripts").mkdir()
+    shutil.copy(RAIZ / "scripts" / "integration_report.py", tmp_path / "scripts")
+    junit = '<testsuites><testsuite><testcase classname="tests.tjmt.t" name="x"/></testsuite></testsuites>'
+    for nome in ("integracao", "notebooks"):
+        (tmp_path / f"junit-{nome}.xml").write_text(junit, encoding="utf-8")
+    resumo = tmp_path / "resumo.md"
+
+    codigo, _, log = rodar(
+        bloco_run("integration.yml", "Montar o relatório"), tmp_path, TRIBUNAL="",
+        FORA_DO_CI="tjrs tjpb", EXECUCAO="https://example.invalid/1",
+        GITHUB_STEP_SUMMARY=str(resumo),
+    )
+
+    assert codigo == 0, log
+    corpo = resumo.read_text(encoding="utf-8")
+    assert "| notebooks | 1 | 0 | 0 |" in corpo
+    # A issue diz quem ficou fora, para a falta de falhas não se ler como tribunal em dia.
+    assert "Fora desta execução, porque dão problema só no runner do GitHub: `tjpb`, `tjrs`." in corpo
