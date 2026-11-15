@@ -107,7 +107,7 @@ jobs:
           cache-dependency-glob: uv.lock
       - name: Instalar dependências, extras dos raspadores e o Chromium
         run: |
-          uv sync --frozen --extra dev --extra docs --extra tjmg --extra waf
+          uv sync --frozen --extra dev --extra docs --extra tjmg --extra waf --extra tls
           uv run playwright install --with-deps chromium
       # Nos passos abaixo, na execução completa, o código de saída 1 do pytest
       # (teste falhou) não derruba o job: tribunal fora do ar é assunto da

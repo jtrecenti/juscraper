@@ -47,9 +47,17 @@ class TLSNavegadorAdapter(HTTPAdapter):
     """Adapter do ``requests`` que faz a requisição pelo ``curl_cffi`` com TLS do Chrome.
 
     Os cookies ficam na sessão do ``curl_cffi``, que vive enquanto o adapter
-    estiver montado. Erros do ``curl_cffi`` viram as exceções equivalentes do
-    ``requests`` (``Timeout``, ``ConnectionError``), que a política de retry já
-    trata. ``stream`` e ``cert`` são ignorados.
+    estiver montado, e não aparecem em ``session.cookies``. Erros de transporte
+    do ``curl_cffi`` viram as exceções equivalentes do ``requests``, que a
+    política de retry já trata; erros de configuração (URL inválida, navegador
+    a imitar desconhecido) sobem como vieram. ``stream`` e ``cert`` são
+    ignorados.
+
+    O ``timeout`` ``(conexão, leitura)`` não tem o mesmo sentido do
+    ``requests``: no ``curl_cffi``, a soma dos dois limita a transferência
+    inteira, e não o intervalo entre leituras. Uma peça grande que demore mais
+    que essa soma sai ``timeout``; ``politica={"documento": {"timeout": ...}}``
+    aumenta o limite.
     """
 
     def __init__(self) -> None:
@@ -66,8 +74,10 @@ class TLSNavegadorAdapter(HTTPAdapter):
 
         Raises:
             ImportError: Quando o ``curl_cffi`` (extra ``juscraper[tls]``) não está instalado.
-            requests.Timeout: Timeout de conexão ou de leitura.
-            requests.ConnectionError: Qualquer outro erro de transporte do ``curl_cffi``.
+            requests.ConnectTimeout: Timeout ao conectar.
+            requests.ReadTimeout: A transferência passou do ``timeout``.
+            requests.ConnectionError: Outro erro de transporte (conexão, proxy,
+                stream HTTP/2 reiniciado, corpo incompleto).
         """
         curl = _importar_curl_cffi()
         if self._sessao_curl is None:
@@ -80,13 +90,17 @@ class TLSNavegadorAdapter(HTTPAdapter):
                 headers={k: v for k, v in request.headers.items() if k.lower() not in _CABECALHOS_DO_CURL},
                 data=request.body,
                 timeout=kwargs.get("timeout"),
-                verify=bool(kwargs.get("verify", True)),
+                verify=kwargs.get("verify", True),
                 proxies=dict(proxies) if isinstance(proxies, dict) and proxies else None,
                 allow_redirects=False,
             )
+        except curl.exceptions.ConnectTimeout as exc:
+            raise requests.ConnectTimeout(str(exc), request=request) from exc
         except curl.exceptions.Timeout as exc:
-            raise requests.Timeout(str(exc), request=request) from exc
+            raise requests.ReadTimeout(str(exc), request=request) from exc
         except curl.exceptions.RequestException as exc:
+            if not _erro_de_transporte(curl, exc):
+                raise
             raise requests.ConnectionError(str(exc), request=request) from exc
         return self.build_response(request, _como_urllib3(resposta))
 
@@ -106,7 +120,7 @@ def _como_urllib3(resposta: CurlResponse) -> HTTPResponse:
     mede o corpo comprimido, não acusa leitura incompleta.
     """
     cabecalhos = HTTPHeaderDict()
-    for chave, valor in resposta.headers.items():
+    for chave, valor in resposta.headers.multi_items():
         if chave.lower() not in ("content-encoding", "content-length"):
             cabecalhos.add(chave, valor)
     return HTTPResponse(
@@ -116,6 +130,18 @@ def _como_urllib3(resposta: CurlResponse) -> HTTPResponse:
         reason=resposta.reason,
         preload_content=False,
     )
+
+
+def _erro_de_transporte(curl: ModuleType, exc: Exception) -> bool:
+    """Diz se ``exc`` do ``curl_cffi`` é falha de transporte, que o retry trata como erro de conexão.
+
+    O ``HTTPError`` do ``curl_cffi`` não é status HTTP: é o stream HTTP/2
+    reiniciado pelo servidor ou o corpo incompleto. Código de erro do curl sem
+    classe própria chega como ``RequestException`` puro.
+    """
+    erros = curl.exceptions
+    transporte = (erros.ConnectionError, erros.ProxyError, erros.HTTPError, erros.ChunkedEncodingError)
+    return isinstance(exc, transporte) or type(exc) is erros.RequestException
 
 
 def _importar_curl_cffi() -> ModuleType:

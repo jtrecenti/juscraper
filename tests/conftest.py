@@ -11,10 +11,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import requests
 
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
-from juscraper.courts.trf3.transporte import TLSNavegadorAdapter
 from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DATA_ALVO_ISO
 
 # Habilita a fixture ``pytester`` (sessões pytest isoladas) usada por
@@ -90,24 +88,6 @@ def _isolar_credencial_pdpj(monkeypatch, tmp_path_factory):
     monkeypatch.delenv("PDPJ_JWT", raising=False)
     monkeypatch.delenv("JUSBR_JWT", raising=False)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path_factory.mktemp("xdg_config")))
-
-
-@pytest.fixture(autouse=True)
-def _tls_navegador_pelo_mock(monkeypatch, request):
-    """Nos testes offline, o adapter de TLS do TRF3 envia pelo ``HTTPAdapter`` do ``requests``.
-
-    O ``responses`` intercepta ``HTTPAdapter.send``; o adapter, que sobrescreve
-    ``send`` para usar o ``curl_cffi``, passaria por fora do mock. A busca de
-    ``HTTPAdapter.send`` acontece na chamada, depois do patch do ``responses``.
-    Testes ``integration`` usam o adapter real.
-    """
-    if request.node.get_closest_marker("integration") is not None:
-        return
-
-    def send(self, *args, **kwargs):
-        return requests.adapters.HTTPAdapter.send(self, *args, **kwargs)
-
-    monkeypatch.setattr(TLSNavegadorAdapter, "send", send)
 
 
 @pytest.fixture
