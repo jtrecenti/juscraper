@@ -1,10 +1,12 @@
 """Filter propagation, deprecated aliases and payload shape for STF listar_decisoes."""
+import json
+
 import pytest
 import responses
 
 import juscraper as jus
 from juscraper.courts.stf.download import build_payload, traduzir_operadores
-from tests.stf._collection_helpers import Source, add_sample, make_rows
+from tests.stf._collection_helpers import Source, add_sample, assert_filtros_no_corpo, make_rows
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
 
@@ -48,6 +50,9 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
     )
 
     assert len(responses.calls) == 3
+    # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
+    for chamada in responses.calls:
+        assert_filtros_no_corpo(json.loads(chamada.request.body), PESQUISA, ["ARE", "Rcl"])
 
 
 @responses.activate

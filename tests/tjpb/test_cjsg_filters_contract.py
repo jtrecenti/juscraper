@@ -7,6 +7,8 @@ on the parsed DataFrame against ``data_julgamento`` — for filter contracts
 we use the ``no_results`` sample so the post-filter is a no-op regardless
 of date ranges.
 """
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -61,6 +63,23 @@ def test_cjsg_all_filters_land_in_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do backend ficam pinados aqui.
+    busca = next(c for c in responses.calls if c.request.method == "POST")
+    assert json.loads(busca.request.body) == {
+        "jurisprudencia": {
+            "ementa": "dano moral",
+            "teor": "",
+            "nr_rocesso": "0000000-00.0000.0.00.0000",
+            "id_classe_judicial": "C123",
+            "id_orgao_julgador": "O456",
+            "id_relator": "R789",
+            "dt_inicio": "2024-01-01",
+            "dt_fim": "2024-03-31",
+            "id_origem": "2",
+            "decisoes": True,
+        },
+        "page": 1,
+    }
 
 
 @responses.activate

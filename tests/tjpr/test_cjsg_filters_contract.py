@@ -12,7 +12,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpr.download import build_cjsg_form_body
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_home
 
 
@@ -57,6 +57,44 @@ def test_cjsg_all_filters_land_in_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+    # O matcher deriva do builder; os nomes de campo do formulário ficam pinados aqui.
+    busca = next(c for c in responses.calls if c.request.method == "POST")
+    assert corpo_form_enviado(busca.request) == {
+        "usuarioCienteSegredoJustica": "false",
+        "segredoJustica": "pesquisar com",
+        "id": "",
+        "chave": "",
+        "dataJulgamentoInicio": "01/01/2024",
+        "dataJulgamentoFim": "31/03/2024",
+        "dataPublicacaoInicio": "02/01/2024",
+        "dataPublicacaoFim": "01/04/2024",
+        "processo": "",
+        "acordao": "",
+        "idComarca": "",
+        "idRelator": "",
+        "idOrgaoJulgador": "",
+        "idClasseProcessual": "",
+        "idAssunto": "",
+        "pageVoltar": "0",
+        "idLocalPesquisa": "1",
+        "ambito": "-1",
+        "descricaoAssunto": "",
+        "descricaoClasseProcessual": "",
+        "nomeComarca": "",
+        "nomeOrgaoJulgador": "",
+        "nomeRelator": "",
+        "idTipoDecisaoAcordao": "",
+        "idTipoDecisaoMonocratica": "",
+        "idTipoDecisaoDuvidaCompetencia": "",
+        "criterioPesquisa": "dano moral",
+        "pesquisaLivre": "",
+        "pageSize": "50",
+        "pageNumber": "1",
+        "sortColumn": "processo_sDataJulgamento",
+        "sortOrder": "DESC",
+        "page": "0",
+        "iniciar": "Pesquisar",
+    }
 
 
 @responses.activate

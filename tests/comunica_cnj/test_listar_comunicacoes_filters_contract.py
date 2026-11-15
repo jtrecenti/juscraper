@@ -57,8 +57,14 @@ def test_listar_comunicacoes_all_filters_land_in_querystring(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    # A asserva fundamental e o matcher acima — se nao bater, o
-    # ``responses`` levanta ``ConnectionError`` antes de chegar aqui.
+    # O matcher deriva do builder; os nomes de parametro da API ficam pinados aqui.
+    assert responses.calls[0].request.params == {
+        "itensPorPagina": "50",
+        "pagina": "1",
+        "texto": "resolucao",
+        "dataDisponibilizacaoInicio": "2024-01-01",
+        "dataDisponibilizacaoFim": "2024-01-31",
+    }
 
 
 @responses.activate

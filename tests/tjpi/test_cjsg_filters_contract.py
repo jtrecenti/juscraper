@@ -55,6 +55,17 @@ def test_cjsg_all_filters_land_in_query_params(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de parâmetro do backend ficam pinados aqui.
+    assert responses.calls[0].request.params == {
+        "q": "dano moral",
+        "page": "1",
+        "tipo": "Acordao",
+        "relator": "FULANO DE TAL",
+        "classe": "Apelacao",
+        "orgao": "1a Camara Civel",
+        "data_min": "2024-01-01",
+        "data_max": "2024-03-31",
+    }
 
 
 @responses.activate

@@ -1,4 +1,6 @@
 """Filter-propagation contract for TJPA cjsg."""
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -59,6 +61,26 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do BFF ficam pinados aqui.
+    assert json.loads(responses.calls[0].request.body) == {
+        "query": "dano moral",
+        "queryType": "any",
+        "queryScope": "inteiroteor",
+        "origem": ["tribunal de justica"],
+        "tipo": ["acordao"],
+        "page": 0,
+        "size": 25,
+        "sortBy": "datapublicacao",
+        "sortOrder": "asc",
+        "relator": "FULANO DE TAL",
+        "orgaoJulgadorColegiado": "1a Turma",
+        "classe": "Apelacao",
+        "assunto": "Dano moral",
+        "dataJulgamentoInicio": "2024-01-01",
+        "dataJulgamentoFim": "2024-03-31",
+        "dataPublicacaoInicio": "2024-02-01",
+        "dataPublicacaoFim": "2024-04-30",
+    }
 
 
 @responses.activate

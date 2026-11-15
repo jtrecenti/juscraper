@@ -12,7 +12,7 @@ Examples
 import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, parse_qsl, urlparse
 
 import pytest
 import responses
@@ -61,6 +61,19 @@ def load_sample_bytes(tribunal: str, relative_path: str) -> bytes:
     if not path.exists():
         raise FileNotFoundError(f"Sample not found: {path}")
     return path.read_bytes()
+
+
+def corpo_form_enviado(request) -> dict[str, str]:
+    """Corpo ``application/x-www-form-urlencoded`` de uma requisição já enviada.
+
+    Para contratos que conferem os nomes de campo do backend contra um
+    dicionário literal, sem depender do builder que o raspador usa (#514).
+    Campos vazios ficam no resultado.
+    """
+    body = request.body or ""
+    if isinstance(body, bytes):
+        body = body.decode("utf-8")
+    return dict(parse_qsl(body, keep_blank_values=True))
 
 
 def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):

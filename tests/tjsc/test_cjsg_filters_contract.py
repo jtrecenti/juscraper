@@ -6,7 +6,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample_bytes
 
 
 @responses.activate
@@ -46,6 +46,18 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do eproc ficam pinados aqui.
+    assert corpo_form_enviado(responses.calls[0].request) == {
+        "txtPesquisa": "dano moral",
+        "rdoCampo": "I",
+        "txtProcesso": "00000000000000000000",
+        "dtDecisaoInicio": "2024-01-01",
+        "dtDecisaoFim": "2024-03-31",
+        "dtPublicacaoInicio": "2024-02-01",
+        "dtPublicacaoFim": "2024-04-30",
+        "hdnPaginaAtual": "1",
+        "numResultadosPorPagina": "10",
+    }
 
 
 @responses.activate
