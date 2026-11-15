@@ -107,10 +107,9 @@ def _parse_partes(
     """Parse the ``Partes e Representantes`` table.
 
     The table is laid out as alternating ``<tr><th>POLE</th>...</tr>``
-    header rows and ``<tr><td>...</td>...</tr>`` data rows. Common poles
-    encountered: ``AUTOR``, ``RÉU``, ``MPF``, ``PERITO``. The header row
-    can carry one or two ``<th>`` (one when only one pole appears in that
-    band; two when both are side by side).
+    header rows and ``<tr><td>...</td>...</tr>`` data rows. The header row
+    can carry one or two ``<th>`` (see :func:`_par_de_polos` for the band
+    with two). Returns the parties by label.
     """
     poles: dict[str, list[dict[str, str | None]]] = {}
     tbl = soup.find("table", summary="Partes e Representantes")
@@ -132,6 +131,29 @@ def _parse_partes(
                 if text:
                     poles.setdefault(key, []).append({"descricao": text})
     return poles
+
+
+_POLOS_DE_TERCEIROS = frozenset({"MPF", "PERITO"})
+
+
+def _par_de_polos(soup: BeautifulSoup) -> tuple[str, str] | None:
+    """Rótulos do polo ativo e do polo passivo na tabela de partes.
+
+    A faixa dos polos tem dois ``<th>`` lado a lado: o ativo à esquerda e o
+    passivo à direita, com o rótulo da classe (``AUTOR``/``RÉU`` no
+    procedimento comum, ``EXEQUENTE``/``EXECUTADO`` no cumprimento de
+    sentença). ``MPF`` e ``PERITO`` vêm em faixas de um ``<th>`` que ocupa as
+    duas colunas, e uma faixa dupla com eles não é a dos polos. ``None``
+    quando não há a faixa.
+    """
+    tbl = soup.find("table", summary="Partes e Representantes")
+    for tr in tbl.find_all("tr") if tbl else []:
+        ths = tr.find_all("th")
+        if len(ths) == 2 and not tr.find_all("td"):
+            ativo, passivo = (_norm_ws(th.get_text(separator=" ")) or "" for th in ths)
+            if not {ativo, passivo} & _POLOS_DE_TERCEIROS:
+                return ativo, passivo
+    return None
 
 
 def _parse_eventos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
@@ -175,16 +197,21 @@ def parse_detail(html: str) -> dict[str, Any]:
     ``classe``, ``orgao_julgador``, ``assuntos`` (list), ``polo_ativo``,
     ``polo_passivo``, ``mpf``, ``perito`` (each a list), ``movimentacoes``
     (list). Any pole the table doesn't have comes back as an empty list.
+
+    ``polo_ativo`` e ``polo_passivo`` vêm da posição na faixa de duas
+    colunas da tabela de partes, qualquer que seja o rótulo (ver
+    :func:`_par_de_polos`). Sem essa faixa, valem os rótulos ``AUTOR`` e
+    ``RÉU``.
     """
     soup = BeautifulSoup(html, "html.parser")
     record: dict[str, Any] = _parse_capa(soup)
     record["assuntos"] = _parse_assuntos(soup)
     poles = _parse_partes(soup)
-    # Map TRF6's pole headers to canonical Portuguese keys used elsewhere
-    # in juscraper. Keys not present default to empty lists rather than
-    # omission so the DataFrame schema is stable.
-    record["polo_ativo"] = poles.get("AUTOR", [])
-    record["polo_passivo"] = poles.get("R\xc9U", []) or poles.get("RÉU", [])
+    ativo, passivo = _par_de_polos(soup) or ("AUTOR", "RÉU")
+    # Keys not present default to empty lists rather than omission so the
+    # DataFrame schema is stable.
+    record["polo_ativo"] = poles.get(ativo, [])
+    record["polo_passivo"] = poles.get(passivo, [])
     record["mpf"] = poles.get("MPF", [])
     record["perito"] = poles.get("PERITO", [])
     record["movimentacoes"] = _parse_eventos(soup)

@@ -16,21 +16,22 @@ contagem sem inteiro).
 dela; cada scraper documenta que sinal é esse.
 ``bloqueio_anti_bot`` é o desafio ou bloqueio de um bot manager (Akamai,
 CloudFront, AWS WAF, F5) que derrubou a requisição da linha.
+``captcha_esgotado`` é o captcha que o portal recusou em todas as tentativas.
 """
 from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from typing import Any, Protocol, TypeVar
 
 import requests
-from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import (
     BloqueioAntiBotWarning,
     BotChallengeBlockedError,
+    CaptchaEsgotadoError,
     InvalidJSONResponseError,
     RetryExhaustedError,
 )
@@ -75,6 +76,14 @@ então as linhas seguintes tendem a sair com este motivo também: aguardar
 alguns minutos ou trocar de IP antes de pedir de novo só as que falharam.
 """
 
+MOTIVO_CAPTCHA_ESGOTADO = "captcha_esgotado"
+"""O portal recusou o captcha resolvido em todas as tentativas (:class:`CaptchaEsgotadoError`).
+
+Depois de várias consultas seguidas assim, o resolvedor está errando
+sistematicamente: o scraper pode encerrar o lote, e as linhas seguintes saem
+com este motivo sem nova consulta.
+"""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -87,6 +96,7 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     MOTIVO_RESPOSTA_INESPERADA,
     MOTIVO_ENTRADA_INVALIDA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_CAPTCHA_ESGOTADO,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 
@@ -182,10 +192,12 @@ def motivo_falha(exc: BaseException) -> str:
 def motivo_falha_ou_inesperada(exc: BaseException) -> str:
     """:func:`motivo_falha` da exceção, ou :data:`MOTIVO_RESPOSTA_INESPERADA` fora do vocabulário.
 
-    Só as :data:`EXCECOES_DE_FALHA_POR_LINHA` têm motivo próprio. Serve a
-    quem converte qualquer erro de um item em linha de falha, inclusive o que
-    não tem motivo no vocabulário.
+    Só as :data:`EXCECOES_DE_FALHA_POR_LINHA` e :class:`CaptchaEsgotadoError`
+    têm motivo próprio. Serve a quem converte qualquer erro de um item em
+    linha de falha, inclusive o que não tem motivo no vocabulário.
     """
+    if isinstance(exc, CaptchaEsgotadoError):
+        return MOTIVO_CAPTCHA_ESGOTADO
     if isinstance(exc, EXCECOES_DE_FALHA_POR_LINHA):
         return motivo_falha(exc)
     return MOTIVO_RESPOSTA_INESPERADA
@@ -207,10 +219,15 @@ def resumir_falhas(falhas: list[str], descricao: str) -> str:
         falhas: Uma entrada por requisição que falhou, já com o item e o motivo.
         descricao: O que falhou, no plural, como ``"download(s) de documento"``.
     """
-    exemplos = falhas[:EXEMPLOS_NO_AVISO]
-    if len(falhas) > len(exemplos):
-        exemplos = [*exemplos, f"e mais {len(falhas) - len(exemplos)}"]
-    return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos)}."
+    return f"{len(falhas)} {descricao} falharam. Falhas: {'; '.join(exemplos_do_aviso(falhas))}."
+
+
+def exemplos_do_aviso(itens: list[str]) -> list[str]:
+    """Os :data:`EXEMPLOS_NO_AVISO` primeiros itens e, havendo mais, ``"e mais <n>"``."""
+    exemplos = itens[:EXEMPLOS_NO_AVISO]
+    if len(itens) > len(exemplos):
+        exemplos = [*exemplos, f"e mais {len(itens) - len(exemplos)}"]
+    return exemplos
 
 
 def avisar_falhas(
@@ -265,7 +282,7 @@ def consultar_processo(
     """``(html, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
 
     O bloqueio anti-bot sai :data:`MOTIVO_BLOQUEIO_ANTI_BOT`, que encerra o
-    lote em :func:`consultar_ate_bloqueio`; outro erro sai pelo
+    lote em :func:`consultar_em_lote`; outro erro sai pelo
     :func:`motivo_falha_ou_inesperada`. ``ImportError`` (extra ausente)
     propaga. ``html`` ``None`` sem motivo é processo que a fonte não devolveu.
     """
@@ -289,36 +306,38 @@ class _ComMotivo(Protocol):
 _Consulta = TypeVar("_Consulta", bound=_ComMotivo)
 
 
-def consultar_ate_bloqueio(
-    cnjs: list[str],
+def consultar_em_lote(
+    cnjs: Collection[str],
     consultar: Callable[[str], _Consulta],
-    bloqueada: Callable[[], _Consulta],
+    falha: Callable[[str | None], _Consulta],
     *,
     sleep_time: float,
-    desc: str,
+    encerrar: Callable[[list[_Consulta]], bool] | None = None,
 ) -> list[_Consulta]:
-    """A consulta de cada CNJ, na ordem da entrada, até um bloqueio anti-bot.
+    """A consulta de cada CNJ, na ordem da entrada, até o lote ser encerrado.
 
-    O bloqueio vale para a sessão inteira: a consulta que sai com
-    :data:`MOTIVO_BLOQUEIO_ANTI_BOT` encerra o lote, e cada CNJ seguinte
-    recebe ``bloqueada()`` sem novo pedido. Entre duas consultas, pausa
-    ``sleep_time`` segundos.
+    O bloqueio anti-bot vale para a sessão inteira: a consulta que sai com
+    :data:`MOTIVO_BLOQUEIO_ANTI_BOT` encerra o lote. ``encerrar`` acrescenta
+    outra condição. No encerramento, cada CNJ seguinte recebe
+    ``falha(motivo)``, com o motivo da última consulta, sem novo pedido.
+    Entre duas consultas, pausa ``sleep_time`` segundos.
 
     Args:
-        cnjs: CNJs a consultar.
+        cnjs: CNJs a consultar, em geral dentro de ``tqdm`` para a barra de
+            progresso.
         consultar: Consulta de um CNJ. Não levanta para falha do item, que
             vem no ``motivo`` do resultado: uma exceção, inclusive de
             bloqueio, propaga e descarta o lote.
-        bloqueada: Resultado dos CNJs que o bloqueio deixou sem consulta.
+        falha: Resultado de um CNJ que o encerramento deixou sem consulta.
         sleep_time: Pausa entre consultas, em segundos.
-        desc: Rótulo da barra de progresso.
+        encerrar: Recebe as consultas feitas até aqui e diz se o lote acaba.
     """
     consultas: list[_Consulta] = []
-    for i, cnj in enumerate(tqdm(cnjs, desc=desc)):
+    for i, cnj in enumerate(cnjs):
         consulta = consultar(cnj)
         consultas.append(consulta)
-        if consulta.motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
-            consultas.extend(bloqueada() for _ in range(len(cnjs) - i - 1))
+        if consulta.motivo == MOTIVO_BLOQUEIO_ANTI_BOT or (encerrar is not None and encerrar(consultas)):
+            consultas.extend(falha(consulta.motivo) for _ in range(len(cnjs) - i - 1))
             break
         if i + 1 < len(cnjs) and sleep_time:
             time.sleep(sleep_time)

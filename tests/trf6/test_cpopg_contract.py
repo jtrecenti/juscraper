@@ -8,6 +8,7 @@ custom subset matcher so the request shape is locked down.
 """
 from __future__ import annotations
 
+import warnings
 from urllib.parse import parse_qsl
 
 import pandas as pd
@@ -217,7 +218,7 @@ def test_cpopg_retries_on_captcha_failure(monkeypatch):
 
 @responses.activate
 def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
-    """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``resposta_inesperada``; o 2º CNJ é consultado."""
+    """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``captcha_esgotado``; o 2º CNJ é consultado."""
     for _ in range(3):
         _form()
         _busca("cpopg/search_bad_captcha.html")
@@ -229,12 +230,76 @@ def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
     monkeypatch.setattr(download, "solve_captcha", lambda b64: "wrong")
 
     scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=3)
-    with pytest.warns(UserWarning, match="processo 00000000020994060000: resposta_inesperada"):
+    with pytest.warns(UserWarning, match="processo 00000000020994060000: captcha_esgotado"):
         df = scraper.cpopg(["00000000020994060000", "10052295520234063801"])
 
-    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
+    assert list(df["motivo_falha"]) == ["captcha_esgotado", None]
     assert pd.isna(df.iloc[0]["processo"])
     assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
+
+
+CNJS = ["00000000020994060000", "00000000030994060000", "00000000040994060000", "10052295520234063801"]
+
+
+@responses.activate
+@pytest.mark.parametrize(("limite", "consultados"), [(2, 2), (3, 3), (None, 4)])
+def test_cpopg_captcha_errando_sempre_encerra_o_lote(fake_captcha_solver, limite, consultados):
+    """Após ``max_captcha_esgotado_seguidos`` CNJs com captcha esgotado, os seguintes saem sem consulta."""
+    for _ in range(consultados):
+        _form()
+        _busca("cpopg/search_bad_captcha.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=1, max_captcha_esgotado_seguidos=limite)
+    with pytest.warns(UserWarning, match="4 consulta.*captcha_esgotado"):
+        df = scraper.cpopg(CNJS)
+
+    assert list(df["motivo_falha"]) == ["captcha_esgotado"] * 4
+    assert len(responses.calls) == 2 * consultados  # form + busca por CNJ consultado
+
+
+@responses.activate
+def test_cpopg_captcha_que_volta_a_acertar_zera_a_contagem(fake_captcha_solver):
+    """O limite conta CNJs seguidos: um acerto no meio zera a contagem, e o lote vai até o fim."""
+    for sample in ["search_bad_captcha", "detail_normal", "search_bad_captcha", "detail_normal"]:
+        _form()
+        _busca(f"cpopg/{sample}.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=1, max_captcha_esgotado_seguidos=2)
+    with pytest.warns(UserWarning, match="2 consulta.*captcha_esgotado"):
+        df = scraper.cpopg(CNJS)
+
+    assert list(df["motivo_falha"]) == ["captcha_esgotado", None, "captcha_esgotado", None]
+
+
+@responses.activate
+def test_cpopg_sem_polos_avisa_uma_vez_ao_fim(fake_captcha_solver):
+    """Sem a faixa dos polos nem AUTOR/RÉU: polos vazios, a linha fica, e um aviso agregado sai ao fim."""
+    detalhe = load_sample_bytes("trf6", "cpopg/detail_cumprimento_sentenca.html").replace(
+        b'<th class="infraTh" width="50%">EXEQUENTE</th><th class="infraTh" width="50%">EXECUTADO</th>',
+        b'<th class="infraTh" colspan="2">EXEQUENTE</th>',
+    )
+    for _ in range(2):
+        _form()
+        responses.add(responses.POST, POST_URL, body=detalhe)
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with warnings.catch_warnings(record=True) as avisos:
+        warnings.simplefilter("always")
+        df = scraper.cpopg(["10052295520234063801", "10052295520234063801"])
+
+    assert [str(a.message) for a in avisos] == [
+        "TRF6Scraper.cpopg: 2 processo(s) sem polo ativo nem passivo (10052295520234063801, 10052295520234063801). "
+        "A tabela de partes não traz a faixa dos polos nem os rótulos AUTOR/RÉU; polo_ativo e polo_passivo "
+        "saem vazios."
+    ]
+    assert list(df["processo"]) == ["1005229-55.2023.4.06.3801"] * 2
+    assert list(df["motivo_falha"]) == [None, None]
+
+
+@pytest.mark.parametrize("limite", [0, -1])
+def test_max_captcha_esgotado_seguidos_invalido(limite):
+    with pytest.raises(ValueError, match="max_captcha_esgotado_seguidos"):
+        jus.scraper("trf6", max_captcha_esgotado_seguidos=limite)
 
 
 @responses.activate
