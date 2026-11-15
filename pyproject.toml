@@ -91,7 +91,7 @@ dev = [
     "griffe>=2.3.2",
 ]
 waf = [
-    # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE).
+    # Obtem o cookie aws-waf-token dos portais atras do desafio JavaScript do AWS WAF (STF, TJPE, TJTO).
     "playwright>=1.49",
 ]
 stf = [
