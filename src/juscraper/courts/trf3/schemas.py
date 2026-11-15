@@ -36,9 +36,12 @@ class _CamposProcessoTRF3(BaseModel):
     ``polo_ativo``, ``polo_passivo`` e ``outros_interessados`` são listas de
     ``{participante, nome, tipo, situacao, principal, procuradoria,
     segredo_justica}``; ``movimentacoes``, de ``{data, descricao, documento}``;
-    ``documentos``, de ``{id, data, descricao, binario}``. ``pecas`` só existe
-    com ``download_pecas=True`` e traz os caminhos dos PDFs gravados. Recurso
+    ``documentos``, de ``{id, data, descricao, binario}``. ``pecas`` e
+    ``pecas_falhas`` só existem com ``download_pecas=True``: os caminhos dos
+    PDFs gravados e ``[{"id", "motivo_falha"}]`` das peças que faltam. Recurso
     que a API não entregou (erro HTTP depois das tentativas) sai ``None``.
+    ``motivo_falha`` é ``None`` no processo lido; a linha de CNJ que falhou ou
+    que a consulta não devolveu fica fora deste contrato.
     """
 
     processo: str
@@ -55,13 +58,15 @@ class _CamposProcessoTRF3(BaseModel):
     movimentacoes: list[dict] | None = None
     documentos: list[dict] | None = None
     pecas: list[str] | None = None
+    pecas_falhas: list[dict] | None = None
+    motivo_falha: str | None = None
 
 
 class OutputCpopgTRF3(OutputCnjConsultaBase, _CamposProcessoTRF3):
     """Uma linha do DataFrame de :meth:`TRF3Scraper.cpopg`.
 
     CNJ não encontrado ou cuja consulta falhou gera linha só com ``id_cnj``
-    (fora deste contrato).
+    e ``motivo_falha`` (fora deste contrato).
     """
 
     model_config = ConfigDict(extra="allow")
@@ -72,7 +77,7 @@ class OutputCposgTRF3(OutputCnjConsultaBase, _CamposProcessoTRF3):
 
     No 2º grau, ``orgao_julgador_colegiado`` traz a turma e ``orgao_julgador``
     o gabinete do relator. CNJ não encontrado ou cuja consulta falhou gera
-    linha só com ``id_cnj`` (fora deste contrato).
+    linha só com ``id_cnj`` e ``motivo_falha`` (fora deste contrato).
     """
 
     model_config = ConfigDict(extra="allow")

@@ -121,7 +121,7 @@ def test_cpopg_with_download_pecas_handles_missing_process(tmp_path) -> None:
 
 @responses.activate
 def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) -> None:
-    """404 na primeira peça vira aviso; as demais continuam sendo gravadas."""
+    """404 na primeira peça vai para ``pecas_falhas`` com aviso; as demais continuam sendo gravadas."""
     from juscraper.courts._trf.download import extract_documento_urls
 
     detail = load_sample_bytes("trf1", "cpopg/detail_normal.html")
@@ -146,13 +146,14 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) 
     for _ in ids[1:]:
         responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 
-    with caplog.at_level("WARNING", logger="juscraper._trf"):
+    with caplog.at_level("WARNING", logger="juscraper._trf"), pytest.warns(UserWarning, match="pecas_falhas"):
         df = jus.scraper("trf1", sleep_time=0).cpopg(
             "10004080820254013602", download_pecas=True, diretorio=str(tmp_path)
         )
 
     saved = df.iloc[0]["pecas"]
     assert [Path(p).stem for p in saved] == ids[1:]
+    assert df.iloc[0]["pecas_falhas"] == [{"id": ids[0], "motivo_falha": "http_404"}]
     assert f"Erro ao baixar peça {ids[0]}" in caplog.text
 
 

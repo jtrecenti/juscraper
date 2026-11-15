@@ -13,9 +13,10 @@ import responses
 from responses import matchers
 
 import juscraper as jus
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
+from tests._helpers import load_sample_bytes
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
 
 COLUNAS = {
@@ -48,6 +49,12 @@ def _row_sem_dados(row: pd.Series) -> bool:
     return all(pd.isna(row.get(col)) for col in COLUNAS - {"id_cnj"})
 
 
+def _linha_so_com_id_cnj(df: pd.DataFrame, motivo: str | None) -> None:
+    """Uma linha, sem colunas de dados, com o ``motivo_falha`` esperado."""
+    assert list(df.columns) == ["id_cnj", "motivo_falha"]
+    assert df.iloc[0]["motivo_falha"] == motivo
+
+
 @responses.activate
 def test_cpopg_paginado_traz_todas_as_paginas_e_colunas() -> None:
     """Movimentações em 5 páginas viram uma lista só, com as colunas do portal antigo."""
@@ -55,9 +62,11 @@ def test_cpopg_paginado_traz_todas_as_paginas_e_colunas() -> None:
     df = jus.scraper("trf3", sleep_time=0).cpopg("5003536-21.2025.4.03.6342")
 
     assert len(df) == 1
-    assert set(df.columns) >= COLUNAS
+    assert set(df.columns) >= COLUNAS | {"motivo_falha"}
+    assert df.columns[0] == "id_cnj"
     row = df.iloc[0]
     assert row["id_cnj"] == CNJ_PAGINADO
+    assert row["motivo_falha"] is None
     assert row["processo"] == "5003536-21.2025.4.03.6342"
     assert row["classe"] == "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)"
     assert row["data_distribuicao"] == "24/09/2025"
@@ -131,7 +140,7 @@ def test_cpopg_sem_resultado_vira_linha_so_com_id_cnj() -> None:
     registrar_busca(BASE_URL_1G, "cpopg", "sem_resultado", "0000000-00.2099.4.03.0000")
     df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_SEM_RESULTADO)
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, None)
     assert df.iloc[0]["id_cnj"] == CNJ_SEM_RESULTADO
     assert len(responses.calls) == 1
 
@@ -160,7 +169,7 @@ def test_cpopg_retenta_timeout_de_leitura() -> None:
 
 @responses.activate
 def test_cpopg_lote_segue_apos_erro_de_rede() -> None:
-    """Erro de rede que persiste nas tentativas vira linha só com ``id_cnj``."""
+    """Erro de rede que persiste nas tentativas vira linha só com ``id_cnj`` e ``conexao``."""
     responses.add(
         responses.GET,
         busca_url(BASE_URL_1G),
@@ -168,15 +177,17 @@ def test_cpopg_lote_segue_apos_erro_de_rede() -> None:
         match=[matchers.query_param_matcher({"page": "0", "numeroProcesso": "0000000-00.2099.4.03.0000"})],
     )
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
-    df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_SEM_RESULTADO, CNJ_PAGINADO])
+    with pytest.warns(UserWarning, match=f"processo {CNJ_SEM_RESULTADO}: conexao"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_SEM_RESULTADO, CNJ_PAGINADO])
 
     assert _row_sem_dados(df.iloc[0])
+    assert list(df["motivo_falha"]) == ["conexao", None]
     assert df.iloc[1]["processo"] == "5003536-21.2025.4.03.6342"
 
 
 @responses.activate
 def test_cpopg_lote_segue_apos_erro_de_parse(monkeypatch) -> None:
-    """Erro no parser de um item vira linha só com ``id_cnj`` e o lote segue."""
+    """Erro no parser de um item vira linha só com ``id_cnj`` e ``resposta_inesperada``, e o lote segue."""
     from juscraper.courts.trf3 import client
 
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
@@ -191,30 +202,62 @@ def test_cpopg_lote_segue_apos_erro_de_parse(monkeypatch) -> None:
         return real(bruto)
 
     monkeypatch.setattr(client, "parse_processo", parse_instavel)
-    df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, "50211226520184036100"])
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, "50211226520184036100"])
 
     assert _row_sem_dados(df.iloc[0])
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
     assert df.iloc[1]["processo"] == "5021122-65.2018.4.03.6100"
 
 
+_ACCESS_DENIED = (
+    b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
+    b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>"
+)
+# 403 que a API do 1º grau devolveu em 15/11/2026 a um cliente que o sensor de
+# bot do Akamai não liberou: nginx genérico com os scripts do sensor.
+_SENSOR_403 = load_sample_bytes("trf3", "cpopg/akamai_403.html")
+
+
+@pytest.mark.parametrize("corpo", [_ACCESS_DENIED, _SENSOR_403], ids=["access_denied", "sensor"])
 @responses.activate
-def test_cpopg_bloqueio_akamai_interrompe_o_lote() -> None:
-    """403 ``Access Denied`` do Akamai levanta ``BotChallengeBlockedError`` sem retentar."""
-    responses.add(
-        responses.GET,
-        busca_url(BASE_URL_1G),
-        body=(
-            b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1>"
-            b" Reference&#32;&#35;18&#46;27f62917&#46;1779623119&#46;a59b1f4c</BODY></HTML>"
-        ),
-        status=403,
-        content_type="text/html",
-    )
-    with pytest.raises(BotChallengeBlockedError) as exc_info:
-        jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, CNJ_SEM_RESULTADO])
-    assert exc_info.value.tribunal == "TRF3"
-    assert exc_info.value.reference == "18.27f62917.1779623119.a59b1f4c"
+def test_cpopg_bloqueio_akamai_encerra_o_lote(corpo) -> None:
+    """403 do Akamai encerra o lote sem retentar: o bloqueado e os seguintes saem ``bloqueio_anti_bot``."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=corpo, status=403, content_type="text/html")
+    with pytest.warns(BloqueioAntiBotWarning, match=r"TRF3Scraper\.cpopg: 2 consulta\(s\)"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg([CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+
+    assert list(df["id_cnj"]) == [CNJ_PAGINADO, CNJ_SEM_RESULTADO]
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
     assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_bloqueio_no_meio_do_lote_preserva_as_linhas_anteriores() -> None:
+    """Akamai no 2º CNJ: o 1º sai inteiro, e o 2º e o 3º saem ``bloqueio_anti_bot`` sem novos pedidos."""
+    paginas = registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=_SENSOR_403, status=403, content_type="text/html")
+    cnjs = [CNJ_PAGINADO, "50211226520184036100", CNJ_SEM_RESULTADO]
+    with pytest.warns(BloqueioAntiBotWarning):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(cnjs)
+
+    assert list(df["id_cnj"]) == cnjs
+    assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
+    assert list(df["motivo_falha"]) == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert df.iloc[1:]["processo"].isna().all()
+    assert len(responses.calls) == 2 + paginas + 1
+
+
+def test_guarda_nao_trata_qualquer_403_como_bloqueio() -> None:
+    """403 sem as marcas do Akamai segue como erro HTTP, não como bloqueio."""
+    from juscraper.courts.trf3.download import _guarda_bot
+
+    class FakeResp:
+        status_code = 403
+        url = busca_url(BASE_URL_1G)
+        content = b"<html><head><title>403 Forbidden</title></head><body>nginx</body></html>"
+
+    _guarda_bot(FakeResp())  # type: ignore[arg-type]
 
 
 @responses.activate
@@ -258,6 +301,19 @@ def test_cpopg_download_e_parse_separados() -> None:
 
 
 @responses.activate
+def test_cpopg_download_avisa_falha_e_parse_nao_afirma_motivo() -> None:
+    """No fluxo em duas etapas, a falha vira ``None`` com aviso, e ``cpopg_parse`` sai sem ``motivo_falha``."""
+    responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ConnectionError("caiu"))
+    scraper = jus.scraper("trf3", sleep_time=0)
+    with pytest.warns(UserWarning, match=r"TRF3Scraper\.cpopg_download: 1 consulta\(s\).*conexao"):
+        brutos = scraper.cpopg_download(CNJ_PAGINADO)
+    assert brutos == [None]
+
+    df = scraper.cpopg_parse(brutos, [CNJ_PAGINADO])
+    assert list(df.columns) == ["id_cnj"]
+
+
+@responses.activate
 def test_cpopg_aceita_politica_por_perfil() -> None:
     """``politica=`` ajusta o perfil ``api`` campo a campo: o timeout muda e o retry de timeout continua."""
     responses.add(responses.GET, busca_url(BASE_URL_1G), body=requests.ReadTimeout("sem resposta"))
@@ -280,7 +336,7 @@ def test_cpopg_ignora_resultado_de_outro_numero() -> None:
     )
     df = jus.scraper("trf3", sleep_time=0).cpopg("50211226520184036100")
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, None)
     assert len(responses.calls) == 1
 
 
@@ -304,26 +360,26 @@ def test_cpopg_procura_o_numero_pedido_em_todos_os_resultados() -> None:
 @pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
 @responses.activate
 def test_cpopg_id_processo_invalido_vira_erro_do_processo(caplog, id_processo) -> None:
-    """``idProcesso`` fora do alfabeto da API não entra em URL: o processo vira linha só com ``id_cnj``."""
+    """``idProcesso`` fora do alfabeto da API não entra em URL: o processo sai ``resposta_inesperada``."""
     busca = carregar("cpopg", "paginado_busca.json")
     busca["result"][0]["idProcesso"] = id_processo
     responses.add(responses.GET, busca_url(BASE_URL_1G), json=busca)
 
-    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+    with caplog.at_level("WARNING", logger="juscraper.trf3"), pytest.warns(UserWarning, match="resposta_inesperada"):
         df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, "resposta_inesperada")
     assert len(responses.calls) == 1
     assert "idProcesso inválido" in caplog.text
 
 
 @pytest.mark.parametrize(
-    "falha",
-    [requests.ReadTimeout("sem resposta"), requests.ConnectionError("caiu")],
+    ("falha", "motivo"),
+    [(requests.ReadTimeout("sem resposta"), "timeout"), (requests.ConnectionError("caiu"), "conexao")],
     ids=["timeout", "conexao"],
 )
 @responses.activate
-def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha) -> None:
+def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha, motivo) -> None:
     """Timeout ou erro de conexão que persiste num recurso paginado derruba o processo.
 
     Só erro HTTP depois das tentativas deixa o recurso ``None``; erro de rede
@@ -334,9 +390,10 @@ def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha) -> None:
         responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "movimentacoes"), body=falha)
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
 
-    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+    with pytest.warns(UserWarning, match=motivo):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, motivo)
     url_movs = recurso_url(BASE_URL_1G, id_processo, "movimentacoes")
     assert sum(c.request.url.startswith(url_movs) for c in responses.calls) == 4
 
@@ -348,9 +405,10 @@ def test_cpopg_erro_em_dados_derruba_o_processo() -> None:
     registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
     responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), status=500, json={"status": 500})
 
-    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+    with pytest.warns(UserWarning, match="retry_esgotado_500"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, "retry_esgotado_500")
     assert len(responses.calls) == 1 + 4
     assert not any("poloAtivo" in c.request.url for c in responses.calls)
 
@@ -364,9 +422,10 @@ def test_cpopg_envelope_com_status_diferente_de_ok_derruba_o_processo() -> None:
     registrar_busca(BASE_URL_1G, "cpopg", "paginado", "5003536-21.2025.4.03.6342")
     responses.add(responses.GET, recurso_url(BASE_URL_1G, id_processo, "dados"), json=dados)
 
-    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
-    assert list(df.columns) == ["id_cnj"]
+    _linha_so_com_id_cnj(df, "resposta_inesperada")
     assert len(responses.calls) == 2
 
 

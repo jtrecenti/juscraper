@@ -21,7 +21,7 @@ import logging
 import time
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 
 import pandas as pd
 import requests
@@ -29,6 +29,17 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.exceptions import BotChallengeBlockedError
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_RESPOSTA_INESPERADA,
+    avisar_falhas,
+    avisar_falhas_de_processos,
+    consultar_em_lote,
+    consultar_processo,
+    linhas_de_processos,
+    motivo_falha_ou_inesperada,
+)
 from ...core.http import HTTPScraper, RequestPolicy
 from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
@@ -68,6 +79,20 @@ _PERFIS_HTTP: dict[str, RequestPolicy] = {
         retry_on_connection_error=True,
     ),
 }
+
+
+class _Consulta(NamedTuple):
+    """Resultado da consulta de um CNJ (peças só com ``download_pecas``)."""
+
+    bruto: dict[str, Any] | None
+    motivo: str | None
+    pecas: list[str]
+    pecas_falhas: list[dict[str, Any]]
+
+
+def _id_documento(doc: object) -> object:
+    """O ``id`` de um item de ``documentos``, sem validar; ``None`` fora de dicionário."""
+    return doc.get("id") if isinstance(doc, dict) else None
 
 
 class TRF3Scraper(HTTPScraper):
@@ -126,42 +151,53 @@ class TRF3Scraper(HTTPScraper):
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
         return [clean_cnj(c) for c in raw]
 
-    def _download(self, cnjs: list[str], base_url: str, endpoint: str) -> list[dict[str, Any] | None]:
-        """Baixa os envelopes de cada CNJ, alinhados à ordem de entrada.
+    def _baixar(
+        self, cnjs: list[str], base_url: str, endpoint: str, pecas_dir: str | None = None
+    ) -> list[_Consulta]:
+        """A consulta de cada CNJ, na ordem da entrada.
 
-        ``None`` marca o CNJ que a busca não achou ou cuja consulta falhou;
-        a falha vira aviso no log e o lote segue. Bloqueio do Akamai e
-        dependência ausente interrompem o lote, porque nenhum item passaria.
+        Com ``pecas_dir``, as peças de cada processo são baixadas logo depois
+        dos seus envelopes. Um CNJ que falha sai com ``bruto`` ``None`` e o
+        motivo, e o lote segue. O bloqueio anti-bot vale para a sessão inteira:
+        ele encerra o lote, e o CNJ bloqueado (nos envelopes ou nas peças) e os
+        seguintes saem com ``bloqueio_anti_bot`` sem novos pedidos. Processo
+        que a busca não acha sai com ``bruto`` ``None`` sem motivo.
+        ``ImportError`` propaga.
         """
-        results: list[dict[str, Any] | None] = []
-        for i, cnj in enumerate(tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} {endpoint}")):
-            try:
-                results.append(
-                    baixar_processo(
-                        self._request_with_retry,
-                        base_url,
-                        format_cnj(cnj),
-                        sleep_time=self.sleep_time,
-                    )
-                )
-            except (BotChallengeBlockedError, ImportError):
-                raise
-            except Exception as exc:  # noqa: BLE001 (resiliência por item)
-                logger.warning("Erro ao consultar %s: %s", cnj, exc)
-                results.append(None)
-            if i + 1 < len(cnjs) and self.sleep_time:
-                time.sleep(self.sleep_time)
-        return results
+        return consultar_em_lote(
+            tqdm(cnjs, desc=f"{self.TRIBUNAL_NAME} {endpoint}"),
+            lambda cnj: self._consultar(cnj, base_url, pecas_dir),
+            lambda motivo: _Consulta(None, motivo, [], []),
+            sleep_time=self.sleep_time,
+        )
 
-    def _parse(self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str]) -> pd.DataFrame:
-        """Uma linha por CNJ; CNJ sem dados ou com erro de parse vira linha só com ``id_cnj``."""
+    def _consultar(self, cnj: str, base_url: str, pecas_dir: str | None) -> _Consulta:
+        """A consulta de um CNJ (peças só com ``pecas_dir``)."""
+        bruto, motivo = consultar_processo(
+            lambda c: baixar_processo(self._request_with_retry, base_url, format_cnj(c), sleep_time=self.sleep_time),
+            cnj,
+            tribunal=self.TRIBUNAL_NAME,
+            logger=logger,
+        )
+        if bruto is None or pecas_dir is None:
+            return _Consulta(bruto, motivo, [], [])
+        return self._pecas_do_processo(cnj, bruto, base_url, pecas_dir)
+
+    def _linhas(
+        self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str], motivos: list[str | None]
+    ) -> list[dict[str, Any]]:
+        """Uma linha por CNJ, com ``id_cnj`` primeiro e ``motivo_falha`` por último.
+
+        Bruto ``None`` ou recusado pelo parser vira linha só com ``id_cnj``; o
+        recusado ganha ``resposta_inesperada`` quando não trazia motivo.
+        """
         if len(brutos) != len(id_cnj_list):
             raise ValueError(
                 f"brutos e id_cnj_list precisam ter o mesmo tamanho ({len(brutos)} != {len(id_cnj_list)})"
             )
         # O HTML do portal JSF antigo (o que ``cpopg_download`` devolvia antes
-        # da API) viraria, pelo ``except`` abaixo, linha só com ``id_cnj`` sem
-        # erro visível. Recusar a entrada inteira deixa a migração explícita.
+        # da API) viraria linha só com ``id_cnj``. Recusar a entrada inteira
+        # deixa a migração explícita.
         invalidos = sorted({type(b).__name__ for b in brutos if b is not None and not isinstance(b, dict)})
         if invalidos:
             raise TypeError(
@@ -169,19 +205,33 @@ class TRF3Scraper(HTTPScraper):
                 f"cpopg_download/cposg_download devolvem, não o HTML do portal antigo (recebido: "
                 f"{', '.join(invalidos)}). Baixe de novo com cpopg_download ou cposg_download."
             )
-        rows: list[dict[str, Any]] = []
-        for cnj, bruto in zip(id_cnj_list, brutos, strict=True):
-            if bruto is None:
-                rows.append({"id_cnj": cnj})
-                continue
-            try:
-                record = parse_processo(bruto)
-            except Exception as exc:  # noqa: BLE001 (resiliência por item)
-                logger.warning("Erro ao parsear %s: %s", cnj, exc)
-                rows.append({"id_cnj": cnj})
-                continue
-            rows.append({"id_cnj": cnj, **record})
+        rows = linhas_de_processos(id_cnj_list, brutos, motivos, parse=parse_processo, logger=logger)
+        return [{"id_cnj": row["id_cnj"], **row} for row in rows]
+
+    def _avisar(self, cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
+        """Um ``UserWarning`` com os CNJs que falharam, atribuído ao método público ``metodo``."""
+        avisar_falhas_de_processos(cnjs, motivos, f"{type(self).__name__}.{metodo}")
+
+    def _parse(self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str], metodo: str) -> pd.DataFrame:
+        """DataFrame do fluxo em duas etapas, sem a coluna ``motivo_falha``.
+
+        Um ``None`` vindo do download pode ser processo ausente ou consulta que
+        falhou, e só :meth:`cpopg`/:meth:`cposg` sabem qual. O bruto que o
+        parser recusa entra no aviso.
+        """
+        rows = self._linhas(brutos, id_cnj_list, [None] * len(brutos))
+        self._avisar(id_cnj_list, [row.pop(COLUNA_MOTIVO_FALHA) for row in rows], metodo)
         return pd.DataFrame(rows)
+
+    def _download(
+        self, endpoint: str, metodo: str, id_cnj: str | list[str], **kwargs: Any
+    ) -> list[dict[str, Any] | None]:
+        """Os brutos de ``cpopg_download``/``cposg_download``, com as falhas num aviso."""
+        schema, base_url = self._alvo(endpoint)
+        cnjs = self._coerce_id_cnj(schema, metodo, id_cnj, **kwargs)
+        consultas = self._baixar(cnjs, base_url, endpoint)
+        self._avisar(cnjs, [c.motivo for c in consultas], metodo)
+        return [c.bruto for c in consultas]
 
     def _alvo(self, endpoint: str) -> tuple[type[CnjInputBase], str]:
         """Schema de entrada e raiz da aplicação que atendem ``cpopg`` ou ``cposg``."""
@@ -202,65 +252,84 @@ class TRF3Scraper(HTTPScraper):
         cnjs = self._coerce_id_cnj(
             schema, endpoint, id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs
         )
-        brutos = self._download(cnjs, base_url, endpoint)
-        df = self._parse(brutos, cnjs)
+        pecas_dir: str | None = None
         if download_pecas:
-            base_dir = diretorio if diretorio is not None else self.download_path
-            Path(base_dir).mkdir(parents=True, exist_ok=True)
-            df["pecas"] = self._download_pecas(brutos, cnjs, base_url, base_dir)
+            pecas_dir = diretorio if diretorio is not None else self.download_path
+            Path(pecas_dir).mkdir(parents=True, exist_ok=True)
+        consultas = self._baixar(cnjs, base_url, endpoint, pecas_dir)
+        rows = self._linhas([c.bruto for c in consultas], cnjs, [c.motivo for c in consultas])
+        self._avisar(cnjs, [row[COLUNA_MOTIVO_FALHA] for row in rows], endpoint)
+        df = pd.DataFrame(rows)
+        if download_pecas:
+            df["pecas"] = [c.pecas for c in consultas]
+            df["pecas_falhas"] = [c.pecas_falhas for c in consultas]
+            self._avisar_pecas(cnjs, consultas, endpoint)
         return df
 
-    def _download_pecas(
-        self,
-        brutos: list[dict[str, Any] | None],
-        cnjs: list[str],
-        base_url: str,
-        base_dir: str,
-    ) -> list[list[str]]:
+    def _avisar_pecas(self, cnjs: list[str], consultas: list[_Consulta], endpoint: str) -> None:
+        """Um ``UserWarning`` com as peças que falharam fora do bloqueio anti-bot."""
+        # O bloqueio já está no aviso dos processos, pelo motivo_falha da linha.
+        falhas = [
+            f"processo {cnj}, peça {f['id']}: {f[COLUNA_MOTIVO_FALHA]}"
+            for cnj, c in zip(cnjs, consultas, strict=True)
+            for f in c.pecas_falhas
+            if f[COLUNA_MOTIVO_FALHA] != MOTIVO_BLOQUEIO_ANTI_BOT
+        ]
+        avisar_falhas(
+            falhas,
+            f"{type(self).__name__}.{endpoint}",
+            "download(s) de peça",
+            "As peças que faltam estão na coluna pecas_falhas.",
+        )
+
+    def _pecas_do_processo(self, cnj: str, bruto: dict[str, Any], base_url: str, base_dir: str) -> _Consulta:
         """Grava o PDF de cada documento em ``<base_dir>/<cnj>/<id do documento>.pdf``.
 
-        Falha ao baixar uma peça vira aviso no log e as demais seguem.
-        Bloqueio do Akamai interrompe, porque vale para a sessão inteira, e
-        erro ao gravar no disco sobe, porque vale para o lote inteiro. Lista
-        de documentos fora do formato esperado vira aviso e o processo fica
-        sem peças, sem derrubar o lote. O ``id`` de cada documento vem do
-        servidor e vira nome de arquivo: documento sem ``id`` ou com ``id``
-        que :func:`token_valido` recusa (alfabeto ou comprimento) é pulado
-        com aviso antes de qualquer requisição, e o caminho final ainda é
-        conferido contra o diretório do processo.
+        A peça que falha vai para ``pecas_falhas`` com o motivo, e as demais
+        seguem. O bloqueio anti-bot vale para a sessão inteira: a bloqueada e
+        as seguintes, que não são pedidas, entram em ``pecas_falhas`` com
+        ``bloqueio_anti_bot``, e a consulta sai com esse motivo. Erro ao gravar
+        no disco sobe, porque vale para o lote inteiro. Lista de documentos
+        fora do formato esperado vira aviso no log e o processo fica sem
+        peças, sem derrubar o lote.
         """
-        results: list[list[str]] = []
-        for cnj, bruto in zip(cnjs, brutos, strict=True):
-            alvo = self._documentos_do_processo(cnj, bruto)
-            if alvo is None:
-                results.append([])
-                continue
-            id_processo, documentos = alvo
-            proc_dir = Path(base_dir) / cnj
-            proc_dir.mkdir(parents=True, exist_ok=True)
-            paths: list[str] = []
-            for doc in documentos:
-                path = self._baixar_peca(cnj, doc, proc_dir, base_url, id_processo)
-                if path is None:
-                    continue
-                paths.append(path)
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
-            results.append(paths)
-        return results
+        alvo = self._documentos_do_processo(cnj, bruto)
+        if alvo is None:
+            return _Consulta(bruto, None, [], [])
+        id_processo, documentos = alvo
+        proc_dir = Path(base_dir) / cnj
+        proc_dir.mkdir(parents=True, exist_ok=True)
+        paths: list[str] = []
+        falhas: list[dict[str, Any]] = []
+        for i, doc in enumerate(documentos):
+            try:
+                resultado = self._baixar_peca(cnj, doc, proc_dir, base_url, id_processo)
+            except BotChallengeBlockedError as exc:
+                logger.warning(
+                    "%s: bloqueio anti-bot na peça %s do %s; as peças param aqui: %s",
+                    self.TRIBUNAL_NAME, _id_documento(doc), cnj, exc,
+                )
+                # A bloqueada e as seguintes, que não serão pedidas, também faltam.
+                falhas.extend(
+                    {"id": _id_documento(d), COLUNA_MOTIVO_FALHA: MOTIVO_BLOQUEIO_ANTI_BOT} for d in documentos[i:]
+                )
+                return _Consulta(bruto, MOTIVO_BLOQUEIO_ANTI_BOT, paths, falhas)
+            if isinstance(resultado, str):
+                paths.append(resultado)
+            else:
+                falhas.append(resultado)
+        return _Consulta(bruto, None, paths, falhas)
 
     @staticmethod
-    def _documentos_do_processo(cnj: str, bruto: dict[str, Any] | None) -> tuple[str, list[object]] | None:
+    def _documentos_do_processo(cnj: str, bruto: dict[str, Any]) -> tuple[str, list[object]] | None:
         """``idProcesso`` e documentos de um processo; ``None`` quando não há peças a baixar.
 
-        ``_parse`` já transformou o processo com envelope malformado em linha
-        só com ``id_cnj``; sem este ``try`` o mesmo envelope levantaria aqui e
-        a chamada perderia o DataFrame do lote inteiro. ``baixar_processo`` já
-        recusou ``idProcesso`` inválido, e ``baixar_documento`` confere de
-        novo antes de montar a URL.
+        ``linhas_de_processos`` já transformou o processo com envelope
+        malformado em linha só com ``id_cnj``; sem este ``try`` o mesmo
+        envelope levantaria aqui e a chamada perderia o DataFrame do lote
+        inteiro. ``baixar_processo`` já recusou ``idProcesso`` inválido, e
+        ``baixar_documento`` confere de novo antes de montar a URL.
         """
-        if bruto is None:
-            return None
         try:
             id_processo = bruto["busca"]["idProcesso"]
             documentos: list[object] = list(_itens(bruto.get("documentos") or []))
@@ -269,27 +338,37 @@ class TRF3Scraper(HTTPScraper):
             return None
         return id_processo, documentos
 
-    def _baixar_peca(self, cnj: str, doc: object, proc_dir: Path, base_url: str, id_processo: str) -> str | None:
-        """Grava o PDF de um documento e devolve o caminho; ``None`` quando a peça é pulada.
+    def _baixar_peca(
+        self, cnj: str, doc: object, proc_dir: Path, base_url: str, id_processo: str
+    ) -> str | dict[str, Any]:
+        """Grava o PDF de um documento e devolve o caminho, ou a falha da peça.
 
-        Bloqueio do Akamai, dependência ausente e erro de gravação sobem; os
-        demais erros viram aviso no log.
+        O ``id`` do documento vem do servidor e vira nome de arquivo: ``id``
+        ausente ou recusado por :func:`token_valido` (alfabeto ou comprimento)
+        sai ``resposta_inesperada`` antes de qualquer requisição, e o caminho
+        final ainda é conferido contra o diretório do processo. Bloqueio
+        anti-bot, dependência ausente e erro de gravação sobem; os demais
+        erros saem com o motivo.
         """
-        id_documento = doc.get("id") if isinstance(doc, dict) else None
+        id_documento = _id_documento(doc)
+        falha = {"id": id_documento, COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA}
         if not token_valido(id_documento):
             logger.warning("Peça do %s pulada: id de documento inválido %r", cnj, id_documento)
-            return None
+            return falha
         path = proc_dir / f"{id_documento}.pdf"
         if path.resolve().parent != proc_dir.resolve():
             logger.warning("Peça do %s pulada: %r sai do diretório do processo", cnj, id_documento)
-            return None
+            return falha
+        # Pausa também antes da 1ª peça, que vem logo depois dos envelopes.
+        if self.sleep_time:
+            time.sleep(self.sleep_time)
         try:
             content = baixar_documento(self._request_with_retry, base_url, id_documento, id_processo)
         except (BotChallengeBlockedError, ImportError):
             raise
         except Exception as exc:  # noqa: BLE001 (resiliência por peça)
             logger.warning("Erro ao baixar peça %s do %s: %s", id_documento, cnj, exc)
-            return None
+            return {"id": id_documento, COLUNA_MOTIVO_FALHA: motivo_falha_ou_inesperada(exc)}
         path.write_bytes(content)
         return str(path)
 
@@ -303,11 +382,11 @@ class TRF3Scraper(HTTPScraper):
         método não baixa peças. Devolve uma lista alinhada à entrada: um
         dicionário por processo (chaves ``busca``, ``dados`` e uma por recurso
         paginado) ou ``None`` para o CNJ que a consulta pública não devolveu
-        ou cuja consulta falhou.
+        ou cuja consulta falhou. As falhas entram num único ``UserWarning`` ao
+        fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``. Um
+        bloqueio anti-bot encerra o lote, e os CNJs restantes saem ``None``.
         """
-        schema, base_url = self._alvo("cpopg")
-        cnjs = self._coerce_id_cnj(schema, "cpopg_download", id_cnj, **kwargs)
-        return self._download(cnjs, base_url, "cpopg")
+        return self._download("cpopg", "cpopg_download", id_cnj, **kwargs)
 
     def cpopg_parse(
         self,
@@ -316,6 +395,11 @@ class TRF3Scraper(HTTPScraper):
         **kwargs: Any,
     ) -> pd.DataFrame:
         """Transforma a saída de :meth:`cpopg_download` num DataFrame, uma linha por CNJ.
+
+        Sem a coluna ``motivo_falha``: um ``None`` vindo de
+        :meth:`cpopg_download` pode ser processo ausente ou consulta que
+        falhou, e só :meth:`cpopg` sabe qual. O bruto que o parser recusa vira
+        linha só com ``id_cnj`` e entra num ``UserWarning``.
 
         Args:
             brutos: Lista devolvida por :meth:`cpopg_download`, com um
@@ -343,7 +427,7 @@ class TRF3Scraper(HTTPScraper):
             raise TypeError(f"{type(self).__name__}.cpopg_parse got unexpected keyword argument(s): {names}")
         if brutos is None or id_cnj_list is None:
             raise TypeError(f"{type(self).__name__}.cpopg_parse exige brutos e id_cnj_list")
-        return self._parse(brutos, id_cnj_list)
+        return self._parse(brutos, id_cnj_list, "cpopg_parse")
 
     def cpopg(
         self,
@@ -358,7 +442,8 @@ class TRF3Scraper(HTTPScraper):
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
             download_pecas: Se ``True``, baixa o PDF de cada documento listado
-                no processo. Só por nome. Default ``False``.
+                no processo, logo depois dos dados do processo. Só por nome.
+                Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
                 Quando omitido, usa ``download_path`` do construtor.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
@@ -366,22 +451,39 @@ class TRF3Scraper(HTTPScraper):
 
         Returns:
             DataFrame com uma linha por CNJ e as colunas ``id_cnj``,
-            ``processo``, ``classe``, ``assunto``, ``data_distribuicao``
-            (``DD/MM/AAAA``), ``orgao_julgador``, ``orgao_julgador_colegiado``,
-            ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``,
-            ``polo_passivo``, ``outros_interessados``, ``movimentacoes`` e
-            ``documentos``. Com ``download_pecas=True``, ganha ``pecas``, a
-            lista de caminhos gravados. Vira linha só com ``id_cnj`` tanto o
-            CNJ que a consulta pública não devolve (inexistente ou em segredo
-            de justiça) quanto o CNJ cuja consulta falhou (erro de rede ou HTTP
-            na busca ou em ``/dados`` depois das tentativas, resposta fora do
-            formato esperado, erro no parser). A linha não distingue os dois
-            casos; a falha deixa um aviso no logger ``juscraper.trf3``.
+                ``processo``, ``classe``, ``assunto``, ``data_distribuicao``
+                (``DD/MM/AAAA``), ``orgao_julgador``, ``orgao_julgador_colegiado``,
+                ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``,
+                ``polo_passivo``, ``outros_interessados``, ``movimentacoes``,
+                ``documentos`` e ``motivo_falha``. Com ``download_pecas=True``,
+                ganha ``pecas``, a lista de caminhos gravados, e
+                ``pecas_falhas``, as peças que não puderam ser baixadas, cada
+                uma como ``{"id": <id da peça>, "motivo_falha": <motivo>}``; as
+                falhas de peça saem num ``UserWarning`` próprio ao fim e não
+                mudam ``motivo_falha`` do processo.
+
+                ``motivo_falha`` é ``None`` quando a consulta respondeu,
+                inclusive para o CNJ que a consulta pública não devolve
+                (inexistente ou em segredo de justiça), que sai como linha só
+                com ``id_cnj``. Quando a consulta de um CNJ falha, a linha sai
+                só com ``id_cnj`` e o motivo, no vocabulário de
+                :data:`juscraper.core.failures.MOTIVOS_FALHA` (erro HTTP ou de
+                rede na busca ou em ``/dados`` depois das tentativas;
+                ``resposta_inesperada`` para resposta fora do formato
+                esperado), e o lote segue. As falhas entram num único
+                ``UserWarning`` ao fim
+                (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning`
+                quando há bloqueio anti-bot).
+
+                Um bloqueio do Akamai vale para a sessão inteira: o lote para
+                no CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem
+                com ``bloqueio_anti_bot``. As linhas anteriores são
+                preservadas, com as peças já gravadas. Aguarde alguns minutos
+                ou troque de IP e peça de novo só as linhas com
+                ``motivo_falha``.
 
         Raises:
             TypeError: Kwarg desconhecido.
-            BotChallengeBlockedError: O Akamai bloqueou o IP (HTTP 403
-                ``Access Denied``). Aguarde alguns minutos ou troque de IP.
 
         See Also:
             :class:`InputCpopgTRF3`: schema dos argumentos aceitos.
@@ -391,18 +493,19 @@ class TRF3Scraper(HTTPScraper):
     def cposg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict[str, Any] | None]:
         """Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.
 
-        Mesmo retorno de :meth:`cpopg_download`, consultando a aplicação de
-        2º grau. Os argumentos são os de :meth:`cposg`; ``download_pecas`` e
-        ``diretorio`` passam pela validação e são ignorados, porque este
-        método não baixa peças.
+        Mesmo retorno e mesmos avisos de :meth:`cpopg_download`, consultando a
+        aplicação de 2º grau. Os argumentos são os de :meth:`cposg`;
+        ``download_pecas`` e ``diretorio`` passam pela validação e são
+        ignorados, porque este método não baixa peças.
         """
-        schema, base_url = self._alvo("cposg")
-        cnjs = self._coerce_id_cnj(schema, "cposg_download", id_cnj, **kwargs)
-        return self._download(cnjs, base_url, "cposg")
+        return self._download("cposg", "cposg_download", id_cnj, **kwargs)
 
     def cposg_parse(self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str]) -> pd.DataFrame:
-        """Transforma a saída de :meth:`cposg_download` num DataFrame, uma linha por CNJ."""
-        return self._parse(brutos, id_cnj_list)
+        """Transforma a saída de :meth:`cposg_download` num DataFrame, uma linha por CNJ.
+
+        Como :meth:`cpopg_parse`, sem a coluna ``motivo_falha``.
+        """
+        return self._parse(brutos, id_cnj_list, "cposg_parse")
 
     def cposg(
         self,
@@ -424,23 +527,21 @@ class TRF3Scraper(HTTPScraper):
         Args:
             id_cnj: CNJ único ou lista, com ou sem máscara.
             download_pecas: Se ``True``, baixa o PDF de cada documento listado
-                no processo. Só por nome. Default ``False``.
+                no processo, logo depois dos dados do processo. Só por nome.
+                Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
                 Quando omitido, usa ``download_path`` do construtor.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
                 levanta ``TypeError``.
 
         Returns:
-            DataFrame com as mesmas colunas de :meth:`cpopg`. No 2º grau,
-            ``orgao_julgador_colegiado`` traz a turma. Como no ``cpopg``, o
-            CNJ sem recurso no 2º grau e o CNJ cuja consulta falhou viram a
-            mesma linha só com ``id_cnj``; a falha deixa um aviso no logger
-            ``juscraper.trf3``.
+            DataFrame com as mesmas colunas e o mesmo tratamento de falhas de
+                :meth:`cpopg`. No 2º grau, ``orgao_julgador_colegiado`` traz a
+                turma, e o CNJ sem recurso no 2º grau sai como linha só com
+                ``id_cnj`` e ``motivo_falha`` ``None``.
 
         Raises:
             TypeError: Kwarg desconhecido.
-            BotChallengeBlockedError: O Akamai bloqueou o IP (HTTP 403
-                ``Access Denied``). Aguarde alguns minutos ou troque de IP.
 
         See Also:
             :class:`InputCposgTRF3`: schema dos argumentos aceitos.

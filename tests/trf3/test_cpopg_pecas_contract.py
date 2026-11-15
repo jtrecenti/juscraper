@@ -17,7 +17,7 @@ import responses
 from responses import matchers
 
 import juscraper as jus
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, baixar_documento, documento_download_url
 from tests._helpers import load_sample_bytes
 from tests.trf3._api import (
@@ -122,16 +122,22 @@ def test_cpopg_download_pecas_usa_download_path(tmp_path) -> None:
 
 @responses.activate
 def test_cpopg_download_pecas_pula_peca_com_erro(tmp_path) -> None:
-    """404 numa peça e resposta que não é PDF viram aviso; as demais são gravadas."""
+    """404 numa peça e resposta que não é PDF vão para ``pecas_falhas`` com aviso; as demais são gravadas."""
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
     ids = _ids_documentos("cpopg", "paginado")
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", ids[0], status=404)
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", ids[1], body=b"<html></html>", content_type="text/html")
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", ids[2], body=_pdf(), content_type="application/pdf")
 
-    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+    with pytest.warns(UserWarning, match=r"2 download\(s\) de peça falharam.*pecas_falhas"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
     assert df.iloc[0]["pecas"] == [str(tmp_path / CNJ_PAGINADO / f"{ids[2]}.pdf")]
+    assert df.iloc[0]["pecas_falhas"] == [
+        {"id": ids[0], "motivo_falha": "http_404"},
+        {"id": ids[1], "motivo_falha": "resposta_inesperada"},
+    ]
+    assert df.iloc[0]["motivo_falha"] is None
 
 
 @responses.activate
@@ -141,6 +147,7 @@ def test_cpopg_download_pecas_processo_ausente(tmp_path) -> None:
     df = jus.scraper("trf3", sleep_time=0).cpopg("00000000020994030000", download_pecas=True, diretorio=str(tmp_path))
 
     assert df.iloc[0]["pecas"] == []
+    assert df.iloc[0]["pecas_falhas"] == []
 
 
 @responses.activate
@@ -194,10 +201,11 @@ def test_download_pecas_pula_id_de_documento_fora_do_alfabeto(tmp_path, caplog, 
     espiao = mocker.patch.object(client, "baixar_documento", wraps=client.baixar_documento)
     destino = tmp_path / "pecas"
 
-    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+    with caplog.at_level("WARNING", logger="juscraper.trf3"), pytest.warns(UserWarning, match="resposta_inesperada"):
         df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(destino))
 
     assert df.iloc[0]["pecas"] == [str(destino / CNJ_PAGINADO / f"{valido['id']}.pdf")]
+    assert df.iloc[0]["pecas_falhas"] == [{"id": id_malicioso, "motivo_falha": "resposta_inesperada"}]
     assert _arquivos(tmp_path) == [destino / CNJ_PAGINADO / f"{valido['id']}.pdf"]
     assert [c.args[2] for c in espiao.call_args_list] == [valido["id"]]
     assert "id de documento inválido" in caplog.text
@@ -206,16 +214,17 @@ def test_download_pecas_pula_id_de_documento_fora_do_alfabeto(tmp_path, caplog, 
 
 @responses.activate
 def test_download_pecas_pula_documento_sem_id(tmp_path, caplog) -> None:
-    """Documento sem a chave ``id`` vira aviso e não derruba a chamada; os demais são baixados."""
+    """Documento sem a chave ``id`` vai para ``pecas_falhas`` e não derruba a chamada; os demais são baixados."""
     valido = _doc_real()
     sem_id = {k: v for k, v in valido.items() if k != "id"}
     registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": _documentos_com(sem_id, valido)})
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
 
-    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+    with caplog.at_level("WARNING", logger="juscraper.trf3"), pytest.warns(UserWarning, match="peça None"):
         df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
     assert df.iloc[0]["pecas"] == [str(tmp_path / CNJ_PAGINADO / f"{valido['id']}.pdf")]
+    assert df.iloc[0]["pecas_falhas"] == [{"id": None, "motivo_falha": "resposta_inesperada"}]
     assert "id de documento inválido None" in caplog.text
 
 
@@ -231,10 +240,11 @@ def test_download_pecas_confere_que_o_arquivo_fica_no_diretorio_do_processo(tmp_
     baixar = mocker.patch.object(client, "baixar_documento", return_value=_pdf())
     destino = tmp_path / "pecas"
 
-    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+    with caplog.at_level("WARNING", logger="juscraper.trf3"), pytest.warns(UserWarning, match="resposta_inesperada"):
         df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(destino))
 
     assert df.iloc[0]["pecas"] == []
+    assert df.iloc[0]["pecas_falhas"] == [{"id": "../fora", "motivo_falha": "resposta_inesperada"}]
     assert _arquivos(tmp_path) == []
     baixar.assert_not_called()
     assert "sai do diretório do processo" in caplog.text
@@ -256,32 +266,43 @@ def test_download_pecas_erro_de_gravacao_sobe(tmp_path, mocker) -> None:
 
 @responses.activate
 def test_download_pecas_documentos_fora_do_formato_nao_derruba_a_chamada(tmp_path, caplog) -> None:
-    """``result`` de ``/documentos`` que não é lista deixa o processo sem peças e a chamada devolve o DataFrame."""
+    """``result`` de ``/documentos`` que não é lista deixa o processo sem peças e a chamada devolve o DataFrame.
+
+    O parser também recusa o envelope, então a linha sai ``resposta_inesperada``.
+    """
     (envelope,) = _documentos_com()
     envelope["result"] = 5
     registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": [envelope]})
 
-    with caplog.at_level("WARNING", logger="juscraper.trf3"):
+    with caplog.at_level("WARNING", logger="juscraper.trf3"), pytest.warns(UserWarning, match="resposta_inesperada"):
         df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
     assert df.iloc[0]["id_cnj"] == CNJ_PAGINADO
+    assert df.iloc[0]["motivo_falha"] == "resposta_inesperada"
     assert df.iloc[0]["pecas"] == []
+    assert df.iloc[0]["pecas_falhas"] == []
     assert _arquivos(tmp_path) == []
     assert "documentos fora do formato esperado" in caplog.text
 
 
 @responses.activate
 def test_download_pecas_pula_item_que_nao_e_documento(tmp_path) -> None:
-    """Item de ``/documentos`` que não é dicionário é pulado; a peça válida do mesmo processo é gravada."""
+    """Item de ``/documentos`` que não é dicionário vai para ``pecas_falhas``; a peça válida é gravada."""
     valido = _doc_real()
     (envelope,) = _documentos_com(valido)
     envelope["result"] = ["texto", None, 3, valido]
     registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": [envelope]})
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
 
-    df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+    with pytest.warns(UserWarning, match="falharam") as avisos:
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
+    # O parser recusa os mesmos itens: a linha sai resposta_inesperada, com aviso próprio.
+    mensagens = [str(a.message) for a in avisos]
+    assert any("1 consulta(s) de processo" in m and "resposta_inesperada" in m for m in mensagens)
+    assert any("3 download(s) de peça" in m for m in mensagens)
     assert df.iloc[0]["pecas"] == [str(tmp_path / CNJ_PAGINADO / f"{valido['id']}.pdf")]
+    assert [f["id"] for f in df.iloc[0]["pecas_falhas"]] == [None, None, None]
 
 
 def test_baixar_documento_recusa_token_invalido_sem_requisitar() -> None:
@@ -316,24 +337,37 @@ def test_download_pecas_baixa_todas_as_paginas_de_documentos(tmp_path) -> None:
 
 
 @responses.activate
-def test_download_pecas_bloqueio_akamai_interrompe(tmp_path) -> None:
-    """403 ``Access Denied`` no PDF levanta ``BotChallengeBlockedError`` em vez de pular a peça."""
-    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+def test_download_pecas_bloqueio_akamai_encerra_o_lote(tmp_path) -> None:
+    """403 ``Access Denied`` numa peça encerra o lote: as peças seguintes e o próximo CNJ não são pedidos."""
+    paginas = registrar_processo(BASE_URL_1G, "cpopg", "paginado")
     ids = _ids_documentos("cpopg", "paginado")
+    assert len(ids) > 1
+    _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", ids[0], body=_pdf(), content_type="application/pdf")
     _registrar_pdf(
         BASE_URL_1G,
         "cpopg",
         "paginado",
-        ids[0],
+        ids[1],
         body=b"<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY><H1>Access Denied</H1></BODY></HTML>",
         status=403,
         content_type="text/html",
     )
+    cnjs = [CNJ_PAGINADO, "00000000020994030000"]
 
-    with pytest.raises(BotChallengeBlockedError):
-        jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
-    url_pdf = documento_download_url(BASE_URL_1G, ids[0])
-    assert sum(c.request.url == url_pdf for c in responses.calls) == 1
+    with pytest.warns(BloqueioAntiBotWarning, match=r"2 consulta\(s\)") as avisos:
+        df = jus.scraper("trf3", sleep_time=0).cpopg(cnjs, download_pecas=True, diretorio=str(tmp_path))
+
+    # O bloqueio sai só no aviso dos processos, sem o aviso das peças.
+    assert len(avisos) == 1
+    row = df.iloc[0]
+    assert row["processo"] == "5003536-21.2025.4.03.6342"
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert row["pecas"] == [str(tmp_path / CNJ_PAGINADO / f"{ids[0]}.pdf")]
+    assert row["pecas_falhas"] == [{"id": i, "motivo_falha": "bloqueio_anti_bot"} for i in ids[1:]]
+    assert df.iloc[1]["pecas"] == []
+    assert df.iloc[1]["pecas_falhas"] == []
+    # Busca, dados e páginas do 1º CNJ, mais as duas peças; nada do 2º CNJ.
+    assert len(responses.calls) == 2 + paginas + 2
 
 
 @responses.activate

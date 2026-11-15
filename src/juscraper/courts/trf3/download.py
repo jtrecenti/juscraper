@@ -36,7 +36,7 @@ from typing import Any, TypeGuard
 
 import requests
 
-from ...core.exceptions import RetryExhaustedError
+from ...core.exceptions import BotChallengeBlockedError, RetryExhaustedError
 from ...core.http import RequestFn
 from .._trf.download import BROWSER_HEADERS, _check_bot_challenge
 
@@ -127,8 +127,17 @@ def documento_download_url(base_url: str, id_documento: str) -> str:
     return f"{base_url}{DOCUMENTOS_PATH}/{id_documento}/download"
 
 
+# Marcas do 403 que o Akamai devolve no lugar da API quando o sensor de bot
+# não liberou o cliente: o nginx genérico com os scripts do sensor
+# (``/akam/...`` na raiz, ``sec-overlay`` na API). Não traz ``Access Denied``,
+# então :func:`_check_bot_challenge` não o reconhece.
+_MARCAS_SENSOR_AKAMAI = (b"/akam/", b'id="sec-overlay"')
+
+
 def _guarda_bot(resp: requests.Response) -> None:
     _check_bot_challenge(resp, TRIBUNAL)
+    if resp.status_code == 403 and any(marca in resp.content for marca in _MARCAS_SENSOR_AKAMAI):
+        raise BotChallengeBlockedError(TRIBUNAL, resp.url)
 
 
 def _get_json(
@@ -142,7 +151,7 @@ def _get_json(
     """Faz um ``GET`` na API e devolve o envelope JSON.
 
     Raises:
-        BotChallengeBlockedError: 403 ``Access Denied`` do Akamai.
+        BotChallengeBlockedError: 403 do Akamai (``Access Denied`` ou sensor de bot).
         ValueError: Envelope com ``status`` diferente de ``"ok"``.
     """
     resp = request_fn(
@@ -279,7 +288,7 @@ def baixar_documento(
     anexados (``binario=True``) saem em PDF pela mesma rota.
 
     Raises:
-        BotChallengeBlockedError: 403 ``Access Denied`` do Akamai.
+        BotChallengeBlockedError: 403 do Akamai (``Access Denied`` ou sensor de bot).
         ValueError: Token recusado por :func:`token_valido` (nenhuma
             requisição é feita) ou resposta sem ``Content-Type`` de PDF.
     """

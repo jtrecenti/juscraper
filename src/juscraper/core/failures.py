@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Sequence
 from typing import Any, Protocol, TypeVar
 
 import requests
@@ -272,19 +272,23 @@ def anotar_falhas_anteriores(erro: BaseException, falhas: list[str], descricao: 
         erro.add_note(f"Antes do 401, {resumir_falhas(falhas, descricao)}")
 
 
+_Bruto = TypeVar("_Bruto")
+
+
 def consultar_processo(
-    buscar: Callable[[str], str | None],
+    buscar: Callable[[str], _Bruto | None],
     cnj: str,
     *,
     tribunal: str,
     logger: logging.Logger,
-) -> tuple[str | None, str | None]:
+) -> tuple[_Bruto | None, str | None]:
     """``(html, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
 
     O bloqueio anti-bot sai :data:`MOTIVO_BLOQUEIO_ANTI_BOT`, que encerra o
     lote em :func:`consultar_em_lote`; outro erro sai pelo
     :func:`motivo_falha_ou_inesperada`. ``ImportError`` (extra ausente)
     propaga. ``html`` ``None`` sem motivo é processo que a fonte não devolveu.
+    O bruto costuma ser o HTML do detalhe; no TRF3, é o dicionário da API.
     """
     try:
         return buscar(cnj), None
@@ -346,10 +350,10 @@ def consultar_em_lote(
 
 def linhas_de_processos(
     cnjs: list[str],
-    htmls: list[str | None],
+    htmls: Sequence[_Bruto | None],
     motivos: list[str | None],
     *,
-    parse: Callable[[str], dict[str, Any]],
+    parse: Callable[[_Bruto], dict[str, Any]],
     logger: logging.Logger,
 ) -> list[dict[str, Any]]:
     """Uma linha por CNJ, com ``id_cnj`` e :data:`COLUNA_MOTIVO_FALHA`.

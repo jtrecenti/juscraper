@@ -63,12 +63,13 @@ def test_cposg_pagina_unica_com_polo_passivo_em_erro() -> None:
 
 @responses.activate
 def test_cposg_sem_resultado_no_2o_grau() -> None:
-    """Processo que só existe no 1º grau vira linha só com ``id_cnj`` no ``cposg``."""
+    """Processo que só existe no 1º grau vira linha só com ``id_cnj``, sem motivo de falha, no ``cposg``."""
     registrar_busca(BASE_URL_2G, "cposg", "sem_resultado", "5003536-21.2025.4.03.6342")
     df = jus.scraper("trf3", sleep_time=0).cposg(CNJ_SO_NO_1G)
 
-    assert list(df.columns) == ["id_cnj"]
+    assert list(df.columns) == ["id_cnj", "motivo_falha"]
     assert df.iloc[0]["id_cnj"] == CNJ_SO_NO_1G
+    assert df.iloc[0]["motivo_falha"] is None
     assert not any(c.request.url.startswith(BASE_URL_1G) for c in responses.calls)
 
 

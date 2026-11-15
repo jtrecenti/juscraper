@@ -13,10 +13,11 @@ import pytest
 import juscraper as jus
 from tests._helpers import assert_no_mojibake
 
-# A consulta pública do TRF3 fica atrás do Akamai: de IPs de datacenter/CI o
-# portal devolve 403 ``Access Denied`` e o scraper levanta
-# ``BotChallengeBlockedError``. O marker ``anti_bot`` faz o conftest converter
-# esse bloqueio em xfail (falha ambiental, não regressão). Ver issue #292.
+# A consulta pública do TRF3 fica atrás do Akamai: a clientes que o sensor de
+# bot não libera, a API devolve 403, e o ``cpopg``/``cposg`` registra a linha
+# com ``bloqueio_anti_bot`` e emite ``BloqueioAntiBotWarning``. O marker
+# ``anti_bot`` faz o conftest converter esse bloqueio em xfail (falha
+# ambiental, não regressão). Ver issue #292.
 pytestmark = [pytest.mark.anti_bot, pytest.mark.integration]
 
 # JEF de Barueri com mais de 15 movimentações, que exercita a paginação.
