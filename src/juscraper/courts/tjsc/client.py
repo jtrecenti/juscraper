@@ -85,6 +85,14 @@ class TJSCScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
             RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
+            requests.ConnectionError: Quando o portal derruba a conexao em
+                todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com
+                ``politica={"cjsg": {...}}`` no construtor).
+
+        Avisos:
+            ``UserWarning``: Quando algum registro sai sem numero de processo
+                (nem link nem texto ``<numero>/TJSC``); a coluna ``processo``
+                fica vazia nessas linhas.
 
         Returns:
             pd.DataFrame: DataFrame com as decisoes.

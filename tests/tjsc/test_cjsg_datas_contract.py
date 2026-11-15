@@ -95,3 +95,16 @@ def test_cjsg_retenta_conexao_derrubada_pelo_portal(mocker):
 
     assert len(df) > 0
     assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cjsg_conexao_derrubada_em_todas_as_tentativas_sobe_o_erro(mocker):
+    """Persistindo a queda, o ``ConnectionError`` sobe; ``politica=`` ajusta as tentativas."""
+    mocker.patch("time.sleep")
+    responses.add(responses.POST, SEARCH_URL, body=requests.ConnectionError("reset"))
+
+    scraper = jus.scraper("tjsc", politica={"cjsg": {"max_retries": 2}})
+    with pytest.raises(requests.ConnectionError):
+        scraper.cjsg_download("direito", paginas=1)
+
+    assert len(responses.calls) == 2

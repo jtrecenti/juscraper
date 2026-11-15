@@ -72,8 +72,8 @@ def _raw_process_number(value) -> str | None:
     fora do padrão CNJ, que format_cnj devolve crus.
     """
     link = value.find("a", class_="numero-processo")
-    if link:
-        return str(link.get_text(strip=True)).removesuffix("/TJSC")
+    if link and (link_text := str(link.get_text(strip=True))):
+        return link_text.removesuffix("/TJSC")
     for text in value.stripped_strings:
         if text.endswith("/TJSC"):
             return str(text).removesuffix("/TJSC")
