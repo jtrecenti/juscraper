@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError
 
 pytest.importorskip(
     "txtcaptcha",
@@ -62,3 +63,22 @@ def test_cjsg_download_parse_separados():
     df = tjmg.cjsg_parse(raw)
     assert not df.empty
     assert df["ementa"].str.len().max() > 0
+
+
+@pytest.mark.integration
+def test_cjsg_segue_a_busca_categorizada():
+    """Com acórdãos de repetitivos no resultado, o portal responde com a busca categorizada."""
+    df = jus.scraper("tjmg").cjsg(
+        pesquisa="usucapiao",
+        paginas=1,
+        data_julgamento_inicio="2025-01-01",
+        data_julgamento_fim="2025-12-31",
+    )
+    assert len(df) > 10  # a página 1 de cada lista: repetitivos e demais acórdãos
+    assert df["processo"].is_unique
+
+
+@pytest.mark.integration
+def test_cjsg_download_levanta_o_erro_do_banco_sem_filtro_de_data():
+    with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000"):
+        jus.scraper("tjmg").cjsg_download(pesquisa="dano moral", paginas=1)

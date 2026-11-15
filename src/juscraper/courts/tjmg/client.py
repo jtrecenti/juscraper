@@ -173,6 +173,10 @@ class TJMGScraper(HTTPScraper):
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None`` (cap de 400 resultados, limite do TJMG).
+                Quando ha acordaos de repetitivos no resultado, o portal
+                responde com a busca categorizada, uma lista por categoria
+                (repetitivos e demais acordaos); o ``cjsg`` segue cada lista,
+                e ``paginas`` vale para cada uma delas.
             pesquisar_por ({"ementa", "acordao"}): Campo onde buscar.
                 ``"acordao"`` busca no inteiro teor. Default ``"ementa"``.
             order_by (int | str): Ordenacao: ``2`` data julgamento,
@@ -201,8 +205,14 @@ class TJMGScraper(HTTPScraper):
             ColetaParcialError: Uma pagina falhou depois das tentativas do
                 perfil ``"cjsg"``, com outra ja baixada antes dela. A busca
                 para nessa pagina; ``.resultado`` traz as anteriores, e a
-                mensagem lista as que faltam. Sem pagina baixada antes, sobe
+                mensagem lista as que faltam (e, na busca categorizada, a
+                lista da pagina e as seguintes). Sem pagina baixada antes, sobe
                 a excecao original (``requests.ConnectionError``, por exemplo).
+            TJMGBuscaSemListaError: O portal respondeu a pagina 1 com o erro
+                do banco (``ORA-20000 ... DRG-10599``), comum sem filtro de
+                data e em faixas longas.
+            CaptchaEsgotadoError: O portal recusou o captcha em todas as
+                tentativas.
 
         Returns:
             DataFrame com os acordaos.
