@@ -44,6 +44,7 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjsp", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
     ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "OutputCPOPGTJSP"),
     ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "OutputCPOSGTJSP"),
+    ("tjms", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
     ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "OutputCJSGTJAP"),
     ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "OutputCJSGTJBA"),
     ("tjdft", "cjsg"): ("juscraper.courts.tjdft.schemas", "OutputCJSGTJDFT"),
@@ -111,6 +112,8 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
     ("tjce", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjms", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjsp", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGTJSP validado manualmente",
+    # TJMS: o parser do cjpg e o do TJSP; a paridade dele roda em ("tjsp", "cjpg").
+    ("tjms", "cjpg"): "TJMS cjpg usa tjsp/cjpg_parse.py — paridade coberta por tjsp.cjpg",
     # TJDFT: parser passthrough do JSON da API.
     ("tjdft", "cjsg"): "TJDFT parser e passthrough do JSON — shape delegado ao backend",
     # STF: parser renomeia 6 chaves e repassa o resto do _source da API.

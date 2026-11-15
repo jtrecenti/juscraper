@@ -248,8 +248,8 @@ tjsp.cjsg("dano moral", paginas=1, data_julgamento_inicio=dt.date(2024, 3, 1))
 
 ## Auto-chunking (eSAJ family)
 
-Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP, plus `cjsg` in TJAC, TJAL,
-TJAM, TJCE, TJMS) cap each request at a one-year `data_julgamento_*`
+Several eSAJ endpoints (`cjpg`/`cjsg` in TJSP and TJMS, plus `cjsg` in TJAC,
+TJAL, TJAM, TJCE) cap each request at a one-year `data_julgamento_*`
 window. When the user asks for a longer interval, the scraper
 **automatically** splits the request into calendar-year windows, fetches
 each one, and concatenates the results — deduplicating by `cd_acordao`
@@ -326,7 +326,7 @@ Empirical legal research often benefits from a quick estimate of how many
 results a query will return before committing to a long collection job
 (~2 s/result in `cjsg`/`cjpg` with `sleep_time=0.5`, so 5 000 hits ≈ 3 h).
 The `count_only: bool = False` flag — accepted by `cjsg` in TJAC, TJAL,
-TJAM, TJCE, TJMS, TJSP and by `cjpg` in TJSP — short-circuits the public
+TJAM, TJCE, TJMS, TJSP and by `cjpg` in TJMS and TJSP — short-circuits the public
 method to a single network call per window, extracts the total result
 count from the first-page HTML, and returns an `int` instead of a
 `pd.DataFrame`:
@@ -532,8 +532,14 @@ The routes are the ones of `tjsp_baixar_doc_movimentacao` and
 `tjsp_baixar_sentenca_cjpg` in the R package
 [`tjsp`](https://github.com/jjesusfilho/tjsp) by José de Jesus Filho. They
 live in `juscraper.courts._esaj.pasta`. The movement route answers without
-login in TJAC, TJAL, TJAM and TJCE as well, and the `cjpg` route in TJMS,
-but those courts do not have `cpopg` or `cjpg` in juscraper yet.
+login in TJAC, TJAL, TJAM and TJCE as well, but those courts do not have
+`cpopg` in juscraper yet.
+
+TJMS has the same `cjpg`, with the same filters and columns, and the same
+`baixar_sentenca` and `baixar_sentencas`. The 120-character limit of
+`pesquisa` (`QueryTooLongError`) applies only to TJSP, where it was
+measured. `listar_varas` and `grau="1"` in `listar_classes` and
+`listar_assuntos` exist only in TJSP.
 
 ## Normalization Utilities
 

@@ -1,9 +1,9 @@
-"""Downloads cases from the TJSP jurisprudence search (CJPG).
+"""Download do cjpg do eSAJ (consulta de julgados de primeiro grau).
 
-CJPG internals are TJSP-specific and not refactored by #84 (no duplication
-across tribunals to absorb). ``QueryTooLongError`` is re-exported from the
-canonical location :mod:`juscraper.courts.tjsp.exceptions` so legacy tests
-can continue importing it from here.
+TJSP e TJMS o usam por :class:`juscraper.courts._esaj.cjpg.EsajCjpgScraper`
+(#487). ``QueryTooLongError`` é reexportado de
+:mod:`juscraper.courts.tjsp.exceptions` para os testes antigos que o
+importam daqui.
 """
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ def fetch_cjpg_first_page(
     """Run the CJPG initial GET and return the raw :class:`requests.Response`.
 
     Shared by :func:`cjpg_download` (continues into paginated download) and
-    by the ``count_only=True`` short-circuit in :meth:`TJSPScraper.cjpg`
+    by the ``count_only=True`` short-circuit in :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg`
     (issue #92), which only needs the first-page HTML.
 
     Returns the response (not just ``.text``) so that the download path can
@@ -148,11 +148,11 @@ def cjpg_download(
     data_fim: str | None = None,
     paginas: list[int] | range | None = None,
 ) -> str:
-    """Download cases from the TJSP jurisprudence search.
+    """Download cases from the eSAJ first-instance jurisprudence search (TJSP, TJMS).
 
     Internal helper — the public scraper entry point
-    (:meth:`TJSPScraper.cjpg_download`) runs ``validate_pesquisa_length``
-    and pydantic validation before calling this function. Direct callers
+    (:meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg_download`) runs the
+    ``_validate_pesquisa`` hook and pydantic validation before calling this function. Direct callers
     must validate ``pesquisa`` upstream.
 
     ``classe``/``assunto``/``vara`` chegam ja como CSV (ou ``None``); a coercao

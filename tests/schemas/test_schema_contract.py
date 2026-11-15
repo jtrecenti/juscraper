@@ -109,6 +109,7 @@ OUTPUT_MODULES = {
     ("tjsp", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
     ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "OutputCPOPGTJSP"),
     ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "OutputCPOSGTJSP"),
+    ("tjms", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
     ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "OutputCJSGTJAP"),
     ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "OutputCJSGTJBA"),
     ("tjdft", "cjsg"): ("juscraper.courts.tjdft.schemas", "OutputCJSGTJDFT"),

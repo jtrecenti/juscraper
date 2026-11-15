@@ -68,7 +68,7 @@ def cjpg_n_results(page_source) -> int:
 
     Sibling of :func:`cjpg_n_pags`, which is now a thin wrapper that divides
     by the 10-hits-per-page constant. Used by the ``count_only=True``
-    short-circuit in :meth:`TJSPScraper.cjpg` (issue #92).
+    short-circuit in :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (issue #92).
 
     Uses cascading selector + regex strategy to tolerate TJSP layout changes.
     Mirrors :func:`juscraper.courts._esaj.parse.cjsg_n_results`.

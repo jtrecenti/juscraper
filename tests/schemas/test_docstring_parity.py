@@ -40,9 +40,9 @@ CASES = [
         id="tjsp.cjsg",
     ),
     pytest.param(
-        "juscraper.courts.tjsp.client", "TJSPScraper", "cjpg",
+        "juscraper.courts._esaj.cjpg", "EsajCjpgScraper", "cjpg",
         "juscraper.courts.tjsp.schemas", "InputCJPGTJSP",
-        id="tjsp.cjpg",
+        id="esaj.cjpg",
     ),
     pytest.param(
         "juscraper.aggregators.comunica_cnj.client", "ComunicaCNJScraper", "listar_comunicacoes",
@@ -177,9 +177,9 @@ DOWNLOAD_REFERENCE_CASES = [
         id="tjsp.cjsg_download",
     ),
     pytest.param(
-        "juscraper.courts.tjsp.client", "TJSPScraper",
+        "juscraper.courts._esaj.cjpg", "EsajCjpgScraper",
         "cjpg_download", "cjpg",
-        id="tjsp.cjpg_download",
+        id="esaj.cjpg_download",
     ),
     pytest.param(
         "juscraper.courts.tjrj.client", "TJRJScraper",

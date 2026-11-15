@@ -1,0 +1,35 @@
+"""Integração do ``cjpg`` e de ``baixar_sentencas`` do TJMS contra o portal (#487).
+
+O ``esaj.tjms.jus.br`` não responde a IP de datacenter: rodar de IP
+residencial, com ``uv run pytest tests/tjms/test_cjpg_integration.py -m integration``.
+"""
+from pathlib import Path
+
+import pytest
+
+import juscraper as jus
+
+
+@pytest.mark.integration
+def test_cjpg_pagina_e_conta(tmp_path):
+    scraper = jus.scraper("tjms", download_path=str(tmp_path))
+
+    df = scraper.cjpg("dano moral", paginas=range(1, 3))
+    n = scraper.cjpg("dano moral", count_only=True)
+
+    assert len(df) > 10
+    assert set(df.columns) >= {"id_processo", "decisao", "nm_alias"}
+    assert df[["cd_processo", "cd_foro", "cd_documento"]].notna().all().all()
+    assert n >= len(df)
+
+
+@pytest.mark.integration
+def test_baixar_sentencas_da_primeira_linha_do_cjpg(tmp_path):
+    """Os quatro códigos do cjpg levam ao PDF da sentença, sem login nem captcha."""
+    scraper = jus.scraper("tjms", download_path=str(tmp_path))
+    df = scraper.cjpg("dano moral", paginas=1).head(1)
+
+    resultado = scraper.baixar_sentencas(df)
+
+    assert resultado["motivo_falha"].tolist() == [None]
+    assert Path(resultado["caminho_sentenca"].iloc[0]).read_bytes().startswith(b"%PDF")

@@ -130,7 +130,7 @@ def run_auto_chunk(
     """Orquestra a busca auto-chunked pelo limite de janela do eSAJ (#130).
 
     Consolida o boilerplate compartilhado entre :meth:`EsajSearchScraper.cjsg`
-    e :meth:`TJSPScraper.cjpg`:
+    e :meth:`EsajCjpgScraper.cjpg`:
 
     1. Pop ``auto_chunk`` (default ``True``) — se ``False``, retorna ``None``.
     2. Normaliza datas e emite uma vez o ``DeprecationWarning`` de cada
@@ -274,8 +274,9 @@ class EsajSearchScraper(HTTPScraper):
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
     # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite o
     # TJSP estender com as arvores de 1o grau (cjpg) sem if/else. Todos os
-    # tribunais eSAJ expoem as arvores de cjsg (2o grau); cjpg so existe no
-    # TJSP hoje, entao as entradas ``_1`` ficam no TJSPScraper. Refs #228.
+    # tribunais eSAJ expoem as arvores de cjsg (2o grau). As entradas ``_1``
+    # ficam no TJSPScraper: o TJMS tambem tem cjpg (#487), mas as arvores
+    # de 1o grau dele nao foram conferidas. Refs #228.
     TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
         "classes_2": "cjsg/classesTreeSelect.do?campoId=classes",
         "assuntos_2": "cjsg/assuntosTreeSelect.do?campoId=assuntos",
@@ -334,7 +335,7 @@ class EsajSearchScraper(HTTPScraper):
     ) -> pd.DataFrame | int:
         """Template Method que orquestra um endpoint de busca eSAJ (refs #205).
 
-        Compartilhado por :meth:`cjsg` e :meth:`TJSPScraper.cjpg`. O fluxo —
+        Compartilhado por :meth:`cjsg` e :meth:`EsajCjpgScraper.cjpg`. O fluxo —
         probe ``count_only`` -> auto-chunk -> download -> parse -> cleanup do
         diretorio temporario — e identico entre os dois endpoints. O que
         diverge (schema, chave de dedup, normalizacao previa, metodos de
@@ -345,7 +346,7 @@ class EsajSearchScraper(HTTPScraper):
             endpoint: ``"cjsg"`` ou ``"cjpg"`` — o vocabulario que esta
                 infra sabe orquestrar, nao a capability por tribunal (quais
                 endpoints cada scraper expoe depende da presenca do metodo:
-                so o TJSP tem ``cjpg``). Resolve os hooks
+                ``cjpg`` vem de :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`). Resolve os hooks
                 ``<endpoint>_download``, ``<endpoint>_parse`` e
                 ``_<endpoint>_count_only`` por ``getattr(self, ...)``.
             input_cls: Schema pydantic do endpoint (``INPUT_CJSG`` /
@@ -398,8 +399,9 @@ class EsajSearchScraper(HTTPScraper):
         virar falha por janela. O hook cobre so o caminho multi-janela: os
         caminhos de janela unica e ``count_only`` passam por
         ``<endpoint>_download`` e ``_<endpoint>_count_only``, que o
-        tribunal com restricao valida por conta propria. TJSP sobrepoe para
-        o limite de 120 caracteres.
+        tribunal com restricao valida por conta propria (o ``cjpg`` de
+        :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper` chama este hook nos dois).
+        TJSP sobrepoe para o limite de 120 caracteres.
         """
 
     # --- cjsg -----------------------------------------------------------
