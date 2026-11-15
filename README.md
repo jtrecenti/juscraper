@@ -65,7 +65,7 @@ dados.head()
 | TJES     | cjsg, cjpg |
 | TJGO     | cjsg |
 | TJMG     | cposg, cjsg |
-| TJMS     | cjsg |
+| TJMS     | cjsg, baixar_acordao, baixar_acordaos |
 | TJMT     | cjsg |
 | TJPA     | cjsg |
 | TJPB     | cjsg |

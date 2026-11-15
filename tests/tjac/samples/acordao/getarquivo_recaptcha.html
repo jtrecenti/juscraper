@@ -1,0 +1,681 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta http-equiv="pragma" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="cache-control" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="expires" content="text/html; charset=UTF-8"/>
+		
+		
+
+
+
+
+
+
+
+	<title>Consulta de Jurisprudência do Segundo Grau</title>
+	<script>
+		window.saj = window.saj || {};
+		window.saj.env = window.saj.env || {};
+		window.saj.env.root = '/cjsg';
+		window.saj.env.css = '/cjsg/css';
+		window.saj.env.js = '/cjsg/js';
+		window.saj.env.imagens = '/cjsg/imagens';
+		window.saj.env.cliente = 'AC';
+	</script>
+ 	<script src="/cjsg/js/jquery/jquery.min.js?n=b5d78a2c-2a08-468c-99ae-3769404dce38"></script>
+ 	
+ 	
+ 	<script type="text/JavaScript" src="/cjsg/js/saj/saj-web-2.2.41-4.js?n=6951c1f3-a82b-4673-9bb6-d52002a59308"></script>
+ 	
+ 	
+ 	<script>var localeJS = "pt_BR"; </script> 
+<script language="javascript" type="text/JavaScript" src="/cjsg/js/spw/spwResourceMsg.js"></script> 
+<script language="javascript" type="text/JavaScript" src="/cjsg/js/spw/spwResourceMap_pt.js"></script>
+	<script src="/cjsg/js/jquery/jquery.browser.min.js?n=74a8f43c-7969-44ab-8fbf-ca28740913d2"></script>
+ 	<script src="/cjsg/js/spw/spwConcatenado.js?n=27c52ebe-9241-4c43-a21b-3ddbc0b7d1df"></script>
+ 	<link href="/cjsg/css/spw/spwConcatenado.css" rel="stylesheet" type="text/css" />
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+		
+
+
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<meta http-equiv="pragma" content="no-cache"/>
+<meta http-equiv="cache-control" content="no-cache"/>
+<meta http-equiv="expires" content="0"/>
+
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/esajComum.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/css/esajLayout.css" rel="stylesheet" type="text/css" />
+<link href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/clientes/AC/css/esajLayoutAC.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+<!--
+/* botao default means o mais claro, que seria o "botï¿½o principal" */
+.spwBotaoDefault, .spwBotaoDefault-o {
+	background-image: url(https://esaj.tjac.jus.br/esaj-layout/tema/padrao/clientes/AC/imagens/layout/fundoBotaoDefault.gif);
+}
+/* o botao secundario, menos provavel de ser clicado, mais escuro */
+.spwBotao, .spwBotao-o {
+	background-image: url(https://esaj.tjac.jus.br/esaj-layout/tema/padrao/imagens/layout/fundoBotao.gif);
+}
+-->
+</style>
+
+
+<script language="javascript" type="text/JavaScript" src="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/js/menu.js?n=2553626853"></script>
+
+<link rel="shortcut icon" href="https://esaj.tjac.jus.br/esaj-layout/tema/padrao/clientes/AC/imagens/favicon.ico" type="image/x-icon" />
+
+
+
+
+<script>
+    var dict = {
+        'certificado.tituloCertificadoDigital': 'Certificado digital',
+        'certificado.msgCarregandoCertificado': 'Carregando certificados...',
+        'certificado.msgNenhumCertificadoEncontrado': 'Nenhum certificado encontrado',
+        'certificado.msgErroCarregarCertificado': 'Erro ao carregar certificados',
+        'certificado.msgCertificadoExpirado': '[Expirado]',
+        'certificado.msgCertificadoNaoValido': '[Ainda não válido]',
+        'certificado.msgCertificadoNaoIcpBrasil': '[Não ICP-Brasil]',
+        'certificado.tituloProblemasAoAssinar': 'Falha de comunicação com o dispositivo de assinatura digital',
+
+        'label.contato': 'Contato',
+        'label.identificarSe': 'Identificar-se ',
+
+        'mensagem.aguarde': 'Por favor, aguarde.',
+        'mensagem.paginaNaoCarregada': 'Não foi possível carregar a página.',
+        'mensagem.marcarLido': 'Marcar como lido',
+        'mensagem.registrosSelecionados': 'Registros selecionados',
+        'mensagem.registroJaSelecionado': 'Este registro já está selecionado',
+
+        'mensagem.data.invalida': 'A data digitada é inválida.',
+        'mensagem.data.anoInvalido': 'O ano informado deve ser maior que',
+        'mensagem.data.mesInvalido': 'O mês não pode ser maior que 12.',
+        'mensagem.data.mes': 'O mês',
+        'mensagem.data.mesMaior29dias': 'não pode ter mais que 29 dias.',
+        'mensagem.data.mesMaior28dias': 'não pode ter mais que 28 dias.',
+        'mensagem.data.mesMaior31dias': 'não pode ter mais que 31 dias.',
+        'mensagem.data.mesMaior30dias': 'não pode ter mais que 30 dias.',
+
+        'mensagem.email.invalido': 'O formato do endereço de e-mail não é válido. Verifique se ele tem o formato "usuario@dominio".',
+        'mensagem.email.caracteresInvalidos': 'O endereço de e-mail possui caracteres inválidos',
+        'mensagem.email.usuarioInvalido': 'O formato do usuário informado no endereço de e-mail não é válido.',
+        'mensagem.email.ipInvalido': 'O endereço IP informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioInvalido': 'O formato do domínio informado no endereço de e-mail não é válido.',
+        'mensagem.email.dominioIncompleto': 'O domínio informado no endereço de e-mail deve possuir pelo menos duas partes. Por exemplo: "usuario@empresa.com.br".',
+
+        'mensagem.texto.tamanhoInvalido': 'O tamanho do texto digitado é maior do que o tamanho permitido. Tamanho permitido:',
+        'mensagem.texto.caracter': 'O caracter',
+        'mensagem.texto.caracterPosicaoInvalida': 'não está permitido na posição',
+
+        'mensagem.numero.numeroInvalido': 'O valor digitado não é um número válido.',
+        'mensagem.numero.numeroNaoPodeCasasDecimais': 'O número não pode conter casas decimais',
+        'mensagem.numero.numeroCasaDecimaisInvalidas': 'O número de casas decimais é inválido. O número pode conter apenas',
+        'mensagem.numero.casaDecimais': 'casas decimais',
+        'mensagem.numero.numeroInteiroInvalido': 'O número de dígitos inteiros é inválido. O número pode conter apenas',
+        'mensagem.numero.digitosInteiros': 'dígitos inteiros',
+        'mensagem.numero.numeroTamanhoInvalido': 'O número digitado não pode ser maior que',
+        'mensagem.numero.numeroZeroInvalido': 'O número digitado deve ser diferente de zero.'
+    }
+</script>
+
+
+	
+
+
+  
+
+
+ 	
+ 	<script type="text/JavaScript" src="/cjsg/js/cjsg-2.2.5-0.js?n=260410155"></script>
+ 	<link rel="stylesheet" type="text/css" href="/cjsg/css/tema/AC/cjsg.css" />
+	<link rel="stylesheet" type="text/css" href="/cjsg/css/tema/AC/link.css" />
+
+		
+		<link rel="stylesheet" href="/cjsg/css/saj/esaj.css" type="text/css"/>
+		<link rel="stylesheet" href="/cjsg/css/tema/AC/link.css" type="text/css"/> 
+		<link href="/cjsg/css/saj/saj-captcha.css" rel="stylesheet" type="text/css" />	
+		
+		<script src="/cjsg/js/jquery/jquery.browser.min.js?n=1c2c7d1c-c22e-4a14-a88a-a49da614bc8f"></script>
+		<script language="javascript" type="text/JavaScript" src="/cjsg/js/saj/saj-tooltip.js?n=be200024-5905-4cef-8240-2f43d4f1c46f"></script>
+	</head>
+	 
+	<body style="margin: 10px">
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="esajTituloOrientacoes">Orientações</span>
+
+    
+        
+        
+            <ul class="esajUlOrientacoes" id="">
+                
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	<li>
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+Para acessar o conteúdo do Acórdão, por favor digite o código da figura no campo abaixo.</br>Esta validação lhe dará acesso para visualizar 20 resultados.
+
+
+		
+	</li>
+
+
+
+		
+            </ul>
+        
+    
+
+    
+    <br>
+
+
+		<br/>
+		
+
+
+
+
+
+			
+
+
+
+
+
+
+
+
+
+<form name="getArquivoForm" method="" action="/cjsg/getArquivo.do;jsessionid=D999BAA4CFEC931A48ABB14BC40ED6B3.cjsg1" autocomplete="off" enctype="" onsubmit="return applySubmit(this, eval('function spwSubmit(t, e){decodificaInputMulSelOnSubmit();if (!IS_enableSubmit) return false; return BENV_isCamposValidos(t); } spwSubmit(this, event);'));" id="" target="">
+	<input type="hidden" name="conversationId" value="">
+
+				
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+	
+	
+		
+			
+		
+		
+	
+	
+	<div class="">
+		
+			<br/>
+			
+			
+				
+				
+					
+
+
+
+
+
+
+
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+	<tr valign="top">
+		<td height="21" valign="top" nowrap background="/cjsg/imagens/spw/fundo_subtitulo.gif"> 
+			
+				
+				
+					<h2 class="subtitle">
+						Código de Acesso
+						
+					</h2>
+				
+			
+		</td>
+		<td background="/cjsg/imagens/spw/fundo_subtitulo2.gif" width="90%" aria-hidden="true">
+			<img src="/cjsg/imagens/spw/final_subtitulo.gif" width="16" height="20" tabindex="-1">
+		</td>
+	</tr>
+</table>
+
+				
+			
+			<br/>
+		
+		<table id="" class="secaoFormBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+							
+					<input type="hidden" name="cdAcordao" value="1978313" />
+					<input type="hidden" name="cdForo" value="0" />
+					
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+	
+	
+		
+		
+			
+				<tr class="">
+				
+			
+		
+		
+		
+		  <td id="" width="0" valign="">
+			
+		  </td>
+		
+		
+		
+		  
+		  
+		    <td valign="">
+		  
+		
+			
+	
+	
+	
+	
+	
+	<table cellpadding="0" cellspacing="0" border="0" width="">
+		<tr>
+			<td>
+				
+				
+				
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<input id="uuidCaptcha" type="hidden" name="uuidCaptcha" value=""/>
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+	
+	
+	
+	
+	
+		<span id="">
+		
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="padding-bottom: 5px;">
+ <script src="https://www.google.com/recaptcha/api.js?hl=pt-BR" async defer></script>
+ <div class="g-recaptcha" data-sitekey="6LevDTsUAAAAAN6dsn77RReaDKhYAQrOVkTUOgOD" data-size="normal"></div>
+</div>
+
+
+<script type="text/javascript">
+	(function($) {
+		$.saj = $.saj || {};
+
+
+		$.saj.obterIdentificadorDoCaptcha = function () {
+			$.ajax({
+		        type: "POST",
+		        url: '/cjsg/captchaControleAcesso.do',
+		        data: {
+		        	uuidCaptcha: $('#uuidCaptcha').val()
+				},
+		        success: function(conteudoCaptcha){
+					$('#uuidCaptcha').val(conteudoCaptcha.uuidCaptcha);
+		        },
+				error:function(error) {
+					console.log(error);
+				}
+		    });
+		};
+
+
+		$(function() {
+			$.saj.obterIdentificadorDoCaptcha();
+		});
+	})(jQuery);
+
+</script>
+	
+	
+	
+	
+	
+		
+	
+	
+	
+	
+		</span>
+	
+
+
+
+
+					
+				
+			</td>
+		</tr>
+	  </table>
+	
+	
+	
+	
+	
+	
+		
+		</td>
+		
+			</tr>
+		
+	
+	
+
+
+
+					
+
+
+
+
+
+
+
+
+
+
+
+	<table id="" class="secaoBotoesBody" width="100%" style="" cellpadding="2" cellspacing="0" border="0">
+		<tr>
+ 			
+ 				<td width="217">&nbsp;</td>
+ 			
+			<td align="">
+			
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+		
+	
+	<input type="submit" name="pbEnviar" value="Enviar" onclick="" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" onmouseover="B_mOver(this);" onmouseout="B_mOut(this);" class="spwBotaoDefault " id="pbEnviar">
+
+
+					
+			</td>
+		</tr>
+	</table>
+
+
+				
+		</table>
+	</div>
+	
+	
+	
+
+
+			
+</form>
+			
+		
+
+	</body>	
+</html>

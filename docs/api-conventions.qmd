@@ -418,9 +418,9 @@ movements in the second-degree consultation instead, as the R package
   one page per incident, the movement pages and the folder of each
   candidate document.
 
-### TJCE: straight from `cd_acordao`
+### TJCE and TJMS: straight from `cd_acordao`
 
-In TJCE the direct route of the `cjsg` works without login or captcha, so
+In TJCE and TJMS the direct route of the `cjsg` works without login or captcha, so
 the methods take the codes of the `cjsg` row instead of the process number:
 `baixar_acordao(cd_acordao, cd_foro)` makes one request to
 `cjsg/getArquivo.do` and writes `<diretorio>/acordaos/<cd_acordao>.pdf`;
@@ -442,7 +442,8 @@ localizado" for an unknown code, or a captcha or login page),
 row gets `nao_pdf`. A code that is empty or not only digits raises
 `EntradaInvalidaError` (`entrada_invalida`) before any request.
 
-TJAL, TJAM and TJMS do not have these methods yet.
+TJAL and TJAM do not have these methods yet: the direct route asks for a
+reCAPTCHA there, as in TJAC.
 
 ## Case documents of the first instance (TJSP)
 
