@@ -11,7 +11,7 @@ from tqdm import tqdm
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
 from .._esaj.pasta import documento_vinculado
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, processos_sem_arquivo, so_os_pedidos
+from ._falhas import arquivos_e_falhas, avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -115,9 +115,7 @@ def cpopg_parse_manager(
     # <path>/cposg/, com os mesmos nomes de pasta. Só a pasta do cpopg entra.
     if (root / 'cpopg').is_dir():
         root = root / 'cpopg'
-    files = arquivos_candidatos(root)
-    sem_arquivo = processos_sem_arquivo(root, files)
-    files, sem_arquivo = so_os_pedidos(files, sem_arquivo, pedidos)
+    files, sem_arquivo = arquivos_e_falhas(root, arquivos_candidatos(root), pedidos)
     parsed, falhas = _ler_arquivos(files)
     if parsed:
         result = {

@@ -129,15 +129,17 @@ def _ler_registro(arquivo: Path) -> dict[str, str]:
     return registro
 
 
-def so_os_pedidos(
-    arquivos: list[Path], sem_arquivo: dict[str, str], pedidos: list | None,
+def arquivos_e_falhas(
+    pasta: Path, arquivos: list[Path], pedidos: list | None,
 ) -> tuple[list[Path], dict[str, str]]:
-    """Os arquivos e as falhas dos CNJs ``pedidos``; tudo, com ``pedidos`` ``None``.
+    """Os ``arquivos`` e as falhas registradas em ``pasta`` (:func:`processos_sem_arquivo`) dos CNJs ``pedidos``.
 
-    O ``cpopg`` e o ``cposg`` compostos leem a pasta de download inteira, que
-    pode guardar processos e falhas de um ``*_download`` anterior: só os
-    números do lote entram no resultado, pela :func:`chave_do_registro`.
+    Com ``pedidos`` ``None``, tudo o que está na pasta. O ``cpopg`` e o
+    ``cposg`` compostos passam os CNJs do lote: a pasta de download pode
+    guardar processos e falhas de um ``*_download`` anterior, e só os números
+    do lote entram no resultado, pela :func:`chave_do_registro`.
     """
+    sem_arquivo = processos_sem_arquivo(pasta, arquivos)
     if pedidos is None:
         return arquivos, sem_arquivo
     chaves = {chave_do_registro(cnj) for cnj in pedidos}

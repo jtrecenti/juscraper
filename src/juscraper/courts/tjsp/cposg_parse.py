@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, processos_sem_arquivo, so_os_pedidos
+from ._falhas import arquivos_e_falhas, avisar_falhas_de_processo, cnj_da_pasta
 from .cpopg_parse import _split_incident_header
 
 _FIELD_MAPPING = (
@@ -72,8 +72,7 @@ def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse", pedi
     # <path>/cpopg/, com os mesmos nomes de arquivo. Só a pasta do cposg entra.
     if (raiz / 'cposg').is_dir():
         raiz = raiz / 'cposg'
-    candidatos = list(raiz.rglob('*.html'))
-    arquivos, sem_arquivo = so_os_pedidos(candidatos, processos_sem_arquivo(raiz, candidatos), pedidos)
+    arquivos, sem_arquivo = arquivos_e_falhas(raiz, list(raiz.rglob('*.html')), pedidos)
     dados = []
     falhas = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
