@@ -49,7 +49,8 @@ class TJDFTScraper(HTTPScraper):
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
-            tamanho_pagina (int): Results per page (default 10). Aceita
+            tamanho_pagina (int): Resultados por página (padrão 10, máximo 40:
+                acima disso a API responde HTTP 400). Aceita
                 ``quantidade_por_pagina`` como alias deprecado.
         """
         tamanho_pagina = resolve_deprecated_alias(
