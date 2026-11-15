@@ -73,7 +73,10 @@ class TJPEScraper(HTTPScraper):
                 ausente, cookie não emitido no prazo), o lote para ali: as
                 linhas anteriores são preservadas, e a bloqueada e as seguintes
                 saem com ``motivo_falha`` igual a ``bloqueio_anti_bot``, com um
-                ``UserWarning``.
+                :class:`~juscraper.core.exceptions.BloqueioAntiBotWarning`
+                (subclasse de ``UserWarning``). Com ``download_pecas=True``, as
+                peças de cada processo vêm logo depois do seu detalhe, e os
+                processos anteriores ao bloqueio ficam com as peças.
 
         Raises:
             TypeError: Kwarg desconhecido.
