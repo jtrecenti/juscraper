@@ -46,7 +46,7 @@ def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
 
 def _collect_candidates(
     soup: Tag,
-    html: str | None,
+    html: str,
     css_selectors: Sequence[str],
 ) -> list[str]:
     candidates: list[str] = []
@@ -55,8 +55,7 @@ def _collect_candidates(
             content = element.get_text(" ", strip=True)
             if content:
                 candidates.append(content)
-    # Sem seletor que case, o HTML bruto; o de uma ``Tag`` só é serializado aqui.
-    return candidates or [str(soup) if html is None else html]
+    return candidates or [html]
 
 
 def _extract_first(
@@ -133,10 +132,7 @@ def extract_count_with_cascade(
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
             nao salvar. ``0`` quando ``zero_markers`` casarem.
     """
-    if isinstance(html, Tag):
-        soup, bruto = html, None
-    else:
-        soup, bruto = BeautifulSoup(html, "html.parser"), html
+    soup, bruto = (html, str(html)) if isinstance(html, Tag) else (BeautifulSoup(html, "html.parser"), html)
     if _has_zero_marker(soup, zero_markers):
         return 0
 
