@@ -268,7 +268,7 @@ class TRFConsultaScraper(HTTPScraper):
                 "htmls and id_cnj_list must have the same length "
                 f"({len(htmls)} != {len(id_cnj_list)})"
             )
-        rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse_detail, logger)
+        rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
         return pd.DataFrame(rows)
 
@@ -352,7 +352,7 @@ class TRFConsultaScraper(HTTPScraper):
             Path(pecas_dir).mkdir(parents=True, exist_ok=True)
         consultas = self._baixar(cnjs, pecas_dir)
         htmls = [c.html for c in consultas]
-        rows = linhas_de_processos(cnjs, htmls, [c.motivo for c in consultas], parse_detail, logger)
+        rows = linhas_de_processos(cnjs, htmls, [c.motivo for c in consultas], parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
         df = pd.DataFrame(rows)
         if download_pecas:

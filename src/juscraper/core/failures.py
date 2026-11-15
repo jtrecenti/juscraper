@@ -280,8 +280,9 @@ def consultar_ate_bloqueio(
 
     Args:
         cnjs: CNJs a consultar.
-        consultar: Consulta de um CNJ; não levanta para falha do item, que
-            vem no ``motivo`` do resultado.
+        consultar: Consulta de um CNJ. Não levanta para falha do item, que
+            vem no ``motivo`` do resultado: uma exceção, inclusive de
+            bloqueio, propaga e descarta o lote.
         bloqueada: Resultado dos CNJs que o bloqueio deixou sem consulta.
         sleep_time: Pausa entre consultas, em segundos.
         desc: Rótulo da barra de progresso.
@@ -302,6 +303,7 @@ def linhas_de_processos(
     cnjs: list[str],
     htmls: list[str | None],
     motivos: list[str | None],
+    *,
     parse: Callable[[str], dict[str, Any]],
     logger: logging.Logger,
 ) -> list[dict[str, Any]]:
