@@ -188,12 +188,12 @@ class TRFConsultaScraper(HTTPScraper):
         """A consulta de cada CNJ, na ordem da entrada.
 
         Com ``pecas_dir``, as peças de cada processo são baixadas logo depois
-        do seu detalhe, na mesma sessão. Um CNJ que falha vira ``None`` com o
-        motivo, e o lote segue. O bloqueio anti-bot vale para a sessão
+        do seu detalhe, na mesma sessão. Um CNJ que falha sai com ``html``
+        ``None`` e o motivo, e o lote segue. O bloqueio anti-bot vale para a sessão
         inteira: ele encerra o lote, e o CNJ bloqueado (no detalhe ou nas
         peças) e os seguintes saem com ``bloqueio_anti_bot`` sem novos
         pedidos; os anteriores ficam com detalhe e peças. Processo ausente da
-        consulta pública sai ``None`` sem motivo. Uma peça que falha fora do
+        consulta pública sai com ``html`` ``None`` sem motivo. Uma peça que falha fora do
         bloqueio vai para a lista de peças que falharam, com o motivo, e as
         demais seguem. ``ImportError`` (extra ``juscraper[waf]`` ausente)
         propaga.
@@ -203,7 +203,7 @@ class TRFConsultaScraper(HTTPScraper):
             consulta = self._consultar(cnj, pecas_dir)
             consultas.append(consulta)
             if consulta.motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
-                consultas.extend(_Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], []) for _ in cnjs[i + 1:])
+                consultas.extend(_Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT, [], []) for _ in range(len(cnjs) - i - 1))
                 break
             if i + 1 < len(cnjs) and self.sleep_time:
                 time.sleep(self.sleep_time)
@@ -223,8 +223,7 @@ class TRFConsultaScraper(HTTPScraper):
             return _Consulta(None, motivo_falha_ou_inesperada(exc), [], [])
         if html is None or pecas_dir is None:
             return _Consulta(html, None, [], [])
-        paths, falhas, bloqueado = self._pecas_do_processo(cnj, html, pecas_dir)
-        return _Consulta(html, MOTIVO_BLOQUEIO_ANTI_BOT if bloqueado else None, paths, falhas)
+        return self._pecas_do_processo(cnj, html, pecas_dir)
 
     def _linhas(
         self,
@@ -402,8 +401,8 @@ class TRFConsultaScraper(HTTPScraper):
 
     def _pecas_do_processo(
         self, cnj: str, html: str, base_dir: str
-    ) -> tuple[list[str], list[dict[str, str]], bool]:
-        """Peças salvas de um processo, peças que falharam e se o download parou num bloqueio anti-bot."""
+    ) -> _Consulta:
+        """A consulta de um processo com as peças; ``bloqueio_anti_bot`` quando o download parou num bloqueio."""
         proc_dir = Path(base_dir) / cnj
         proc_dir.mkdir(parents=True, exist_ok=True)
         paths: list[str] = []
@@ -422,7 +421,7 @@ class TRFConsultaScraper(HTTPScraper):
                 )
                 # A bloqueada e as seguintes, que não serão pedidas, também faltam.
                 falhas.extend({"id": d, COLUNA_MOTIVO_FALHA: MOTIVO_BLOQUEIO_ANTI_BOT} for _, d in documentos[i:])
-                return paths, falhas, True
+                return _Consulta(html, MOTIVO_BLOQUEIO_ANTI_BOT, paths, falhas)
             except ImportError:
                 raise
             except Exception as exc:  # noqa: BLE001 — resiliência por peça
@@ -432,4 +431,4 @@ class TRFConsultaScraper(HTTPScraper):
             path = proc_dir / f"{doc_id}.html"
             path.write_bytes(content)
             paths.append(str(path))
-        return paths, falhas, False
+        return _Consulta(html, None, paths, falhas)
