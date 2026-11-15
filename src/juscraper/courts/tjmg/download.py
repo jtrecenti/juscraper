@@ -16,7 +16,7 @@ from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import paginas_no_intervalo
 
-from .parse import TJMGBuscaSemListaError, busca_sem_lista, cjsg_parse, listas_da_busca_categorizada
+from .parse import cjsg_parse, levantar_se_sem_lista, listas_da_busca_categorizada
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -256,26 +256,24 @@ def cjsg_download(
         )
         return {**base, **extra}
 
-    first_html = _fetch_page(request_fn, params(1, 1, {}))
+    base = params(1, 1, {})
+    first_html = _fetch_page(request_fn, base)
     if "muitos resultados" in first_html:
         raise ValueError(
             "TJMG returned 'muitos resultados' — refine the search "
             "(add date range or narrower terms)."
         )
-    listas = _listas(first_html, params(1, 1, {}))
+    listas = _listas(first_html, base)
     results: list = []
     for posicao, (nome, extra) in enumerate(listas):
         _baixar_lista(
             results,
-            functools.partial(params, extra=extra),
+            functools.partial(_buscar_pagina, request_fn, session, functools.partial(params, extra=extra)),
+            functools.partial(_coleta_parcial, results, lista=nome, seguintes=[s for s, _ in listas[posicao + 1:]]),
             first_html if nome is None else None,
             paginas,
             linhas_por_pagina,
             sleep_time,
-            request_fn=request_fn,
-            session=session,
-            lista=nome,
-            seguintes=[seguinte for seguinte, _ in listas[posicao + 1:]],
         )
     return results
 
@@ -293,54 +291,51 @@ def _listas(first_html: str, base: dict) -> list[tuple[str | None, dict[str, str
     ]
     if listas and all(extra for _, extra in listas):
         return listas
-    _levantar_se_sem_lista(first_html)
+    levantar_se_sem_lista(first_html)
     return [(None, {})]
 
 
-def _levantar_se_sem_lista(html: str) -> None:
-    motivo = busca_sem_lista(html)
-    if motivo:
-        raise TJMGBuscaSemListaError(motivo)
+def _buscar_pagina(
+    request_fn: RequestFn, session: requests.Session, params: Callable[[int, int], dict], pagina: int, total: int
+) -> str:
+    return _fetch_page_revalidating(request_fn, session, params(pagina, total))
 
 
 def _baixar_lista(
     results: list,
-    params: Callable[[int, int], dict],
+    buscar: Callable[[int, int], str],
+    erro: Callable[[int, list | None, Exception], ColetaParcialError],
     primeira: str | None,
     paginas,
     linhas_por_pagina: int,
     sleep_time: float,
-    *,
-    request_fn: RequestFn,
-    session: requests.Session,
-    lista: str | None,
-    seguintes: list[str | None],
 ) -> None:
     """Acrescenta a ``results`` as ``paginas`` de uma lista, a partir da página 1.
 
-    ``primeira`` é a página 1 já baixada, ou ``None`` para baixá-la aqui
-    (listas da busca categorizada, nomeadas em ``lista``). A página que falha
-    com outra já em ``results`` levanta :class:`ColetaParcialError`.
+    ``buscar(pagina, total)`` baixa uma página da lista. ``primeira`` é a
+    página 1 já baixada, ou ``None`` para baixá-la aqui (listas da busca
+    categorizada). A página que falha com outra já em ``results`` levanta
+    ``erro(pagina, faltando, exc)``, um :class:`ColetaParcialError`.
     """
     def baixar(pagina: int, total: int, faltando: list | None) -> str:
         try:
-            return _fetch_page_revalidating(request_fn, session, params(pagina, total))
+            return buscar(pagina, total)
         except Exception as exc:  # noqa: BLE001 - vai para ColetaParcialError, como no auto-chunk
             if not results:
                 raise
-            raise _coleta_parcial(results, pagina, faltando, exc, lista, seguintes) from exc
+            raise erro(pagina, faltando, exc) from exc
 
     if primeira is None:
         time.sleep(sleep_time)
         primeira = baixar(1, 1, None)
-        _levantar_se_sem_lista(primeira)
+        levantar_se_sem_lista(primeira)
     total = _extract_total(primeira) or 0
     if total == 0:
         logger.info("TJMG: nenhum resultado para a pesquisa.")
         results.append(primeira)
         return
 
-    validas = _paginas_da_lista(paginas, max(1, math.ceil(total / linhas_por_pagina)), lista)
+    validas = paginas_no_intervalo(paginas, max(1, math.ceil(total / linhas_por_pagina)), tribunal="TJMG")
     for posicao, pagina in enumerate(validas):
         if pagina == 1:
             results.append(primeira)
@@ -349,22 +344,12 @@ def _baixar_lista(
         results.append(baixar(pagina, total, validas[posicao:]))
 
 
-def _paginas_da_lista(paginas, n_pags: int, lista: str | None) -> list[int]:
-    """As ``paginas`` que a lista tem; só a busca comum avisa das que ficam de fora.
-
-    Na busca categorizada, ``paginas`` vale para cada lista, e a mais curta (a
-    de repetitivos costuma ter uma página) não precisa avisar das que não tem.
-    """
-    if lista is None:
-        return paginas_no_intervalo(paginas, n_pags, tribunal="TJMG")
-    return [pagina for pagina in (paginas or range(1, n_pags + 1)) if pagina <= n_pags]
-
-
 def _coleta_parcial(
     results: list,
     pagina: int,
     faltando: list | None,
     exc: Exception,
+    *,
     lista: str | None,
     seguintes: list[str | None],
 ) -> ColetaParcialError:

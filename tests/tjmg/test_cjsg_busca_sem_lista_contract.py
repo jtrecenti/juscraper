@@ -43,6 +43,13 @@ def _add_busca(sample: str, consulta: dict[str, str] | None = None) -> None:
     )
 
 
+def _add_sessao() -> None:
+    """Formulário, captcha e DWR, iguais em toda busca."""
+    add_form()
+    add_captcha()
+    add_dwr()
+
+
 def _consultas_da_busca() -> list[dict[str, list[str]]]:
     return [parse_qs(urlsplit(c.request.url).query) for c in responses.calls if c.request.url.startswith(SEARCH_URL)]
 
@@ -53,9 +60,7 @@ def _consultas_da_busca() -> list[dict[str, list[str]]]:
 def test_erro_ora_levanta_logo_depois_da_pagina_1(mocker, metodo):
     """O ``cjsg_download`` sozinho também levanta, sem pedir outras páginas."""
     mocker.patch("time.sleep")
-    add_form()
-    add_captcha()
-    add_dwr()
+    _add_sessao()
     _add_busca("erro_ora.html")
 
     with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000") as exc:
@@ -66,12 +71,10 @@ def test_erro_ora_levanta_logo_depois_da_pagina_1(mocker, metodo):
     assert len(_consultas_da_busca()) == 1
 
 
-def _add_busca_categorizada() -> None:
-    add_form()
-    add_captcha()
-    add_dwr()
+def _add_busca_categorizada(repetitivos: str = "categorizada_repetitivos.html") -> None:
+    _add_sessao()
     _add_busca("categorizada.html", {"numeroRegistro": "1"})
-    _add_busca("categorizada_repetitivos.html", {"listaClasse": "600", "numeroRegistro": "1"})
+    _add_busca(repetitivos, {"listaClasse": "600", "numeroRegistro": "1"})
     _add_busca("categorizada_acordaos_page_01.html", {"excluirRepetitivos": "true", "numeroRegistro": "1"})
 
 
@@ -130,9 +133,7 @@ def test_busca_categorizada_com_pagina_que_falha_guarda_as_listas_anteriores(moc
 @responses.activate(registry=OrderedRegistry)
 def test_busca_categorizada_com_lista_seguinte_que_falha_na_pagina_1(mocker):
     mocker.patch("time.sleep")
-    add_form()
-    add_captcha()
-    add_dwr()
+    _add_sessao()
     _add_busca("categorizada.html", {"numeroRegistro": "1"})
     _add_busca("categorizada_repetitivos.html", {"listaClasse": "600"})
     for _ in range(TJMGScraper.perfis_http["cjsg"].max_retries):
@@ -154,11 +155,7 @@ def test_busca_categorizada_com_lista_seguinte_que_falha_na_pagina_1(mocker):
 def test_lista_da_busca_categorizada_com_erro_do_banco_levanta(mocker):
     """A página 1 de cada lista passa pela mesma checagem da página 1 da busca."""
     mocker.patch("time.sleep")
-    add_form()
-    add_captcha()
-    add_dwr()
-    _add_busca("categorizada.html", {"numeroRegistro": "1"})
-    _add_busca("erro_ora.html", {"listaClasse": "600"})
+    _add_busca_categorizada(repetitivos="erro_ora.html")
 
     with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000"):
         jus.scraper("tjmg").cjsg_download("usucapiao", paginas=1, **_DATAS)
@@ -169,9 +166,7 @@ def test_lista_da_busca_categorizada_com_erro_do_banco_levanta(mocker):
 def test_busca_categorizada_com_link_sem_parametro_proprio_levanta(mocker):
     """Sem o parâmetro que distingue a lista, segui-la repetiria a busca categorizada."""
     mocker.patch("time.sleep")
-    add_form()
-    add_captcha()
-    add_dwr()
+    _add_sessao()
     pagina = load_sample_bytes("tjmg", "cjsg/categorizada.html").replace(b"&amp;&amp;listaClasse=600", b"")
     responses.add(responses.GET, SEARCH_URL, body=pagina, content_type="text/html; charset=ISO-8859-1")
 

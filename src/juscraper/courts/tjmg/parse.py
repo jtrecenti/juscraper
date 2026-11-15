@@ -78,7 +78,7 @@ def listas_da_busca_categorizada(html: str) -> list[tuple[str, dict[str, str]]]:
     return listas
 
 
-def busca_sem_lista(html: str) -> str | None:
+def _busca_sem_lista(html: str) -> str | None:
     """Explica por que a página não traz a lista de resultados, ou ``None`` se traz."""
     erro = _ERRO_DE_BUSCA_RE.search(html)
     if erro:
@@ -93,11 +93,18 @@ def busca_sem_lista(html: str) -> str | None:
         )
         return (
             f"TJMG devolveu a busca categorizada ({categorias}), que separa os "
-            "acórdãos de repetitivos e não lista resultados. O cjsg_download segue "
-            "a lista de cada categoria; se esta página veio dele, o formato dos "
-            "links das categorias mudou."
+            "acórdãos de repetitivos e não lista resultados. O formato dos links "
+            "das categorias não foi reconhecido, ou a página foi baixada antes de "
+            "o cjsg_download passar a seguir essas listas."
         )
     return None
+
+
+def levantar_se_sem_lista(html: str) -> None:
+    """Levanta :class:`TJMGBuscaSemListaError` se ``html`` não traz a lista de resultados."""
+    motivo = _busca_sem_lista(html)
+    if motivo:
+        raise TJMGBuscaSemListaError(motivo)
 
 
 def _split_blocks(html: str) -> list:
@@ -142,9 +149,7 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
-        motivo = busca_sem_lista(html)
-        if motivo:
-            raise TJMGBuscaSemListaError(motivo)
+        levantar_se_sem_lista(html)
         rows.extend(_parse_block(block) for block in _split_blocks(html))
     df = pd.DataFrame(rows)
     coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
