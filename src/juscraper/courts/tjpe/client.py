@@ -45,7 +45,7 @@ class TJPEScraper(HTTPScraper):
         Delega a :class:`TJPEConsultaPublicaScraper`, que reaproveita o fluxo
         dos TRFs (:meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg`).
         Processo sob segredo de justiça não aparece na consulta pública e sai
-        como linha só com ``id_cnj``, igual a processo inexistente.
+        como linha só com ``id_cnj`` preenchido, igual a processo inexistente.
 
         O site fica atrás de um AWS WAF que desafia de forma intermitente.
         Quando o desafio aparece, o cookie ``aws-waf-token`` é obtido com o

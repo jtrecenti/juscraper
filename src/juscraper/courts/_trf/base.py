@@ -51,10 +51,19 @@ from .download import (
     merge_movs_pages,
     submit_search,
 )
-from .parse import parse_detail
+from .parse import COLUNAS_DETALHE, parse_detail
 from .schemas import InputCpopgTRF
 
 logger = logging.getLogger("juscraper._trf")
+
+
+def _detalhe_em_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """DataFrame das linhas, com as colunas de :data:`COLUNAS_DETALHE` em ``None`` onde faltam.
+
+    A linha não lida traz só ``id_cnj`` (e ``motivo_falha``); sem o preenchimento,
+    um lote sem nenhuma linha lida sairia sem as colunas do detalhe (#442).
+    """
+    return pd.DataFrame([{**dict.fromkeys(COLUNAS_DETALHE), **row} for row in rows])
 
 
 class _Consulta(NamedTuple):
@@ -250,8 +259,9 @@ class TRFConsultaScraper(HTTPScraper):
         Rows for ``None`` entries carry ``id_cnj`` plus ``None`` in every
         other column, so callers can still distinguish "looked up but
         missing" from "never tried". Um HTML que sobreviveu ao download mas
-        falhou no parse vira linha só com ``id_cnj``, com ``UserWarning``, e o
-        batch continua. Sem a coluna ``motivo_falha``: um ``None`` vindo de
+        falhou no parse vira linha só com ``id_cnj`` preenchido, com
+        ``UserWarning``, e o batch continua. As colunas do detalhe existem
+        mesmo quando nenhum HTML foi lido. Sem a coluna ``motivo_falha``: um ``None`` vindo de
         :meth:`cpopg_download` pode ser processo ausente ou requisição que
         falhou, e só :meth:`cpopg` sabe qual.
         """
@@ -262,7 +272,7 @@ class TRFConsultaScraper(HTTPScraper):
             )
         rows = linhas_de_processos(id_cnj_list, htmls, [None] * len(htmls), parse=parse_detail, logger=logger)
         self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
-        return pd.DataFrame(rows)
+        return _detalhe_em_dataframe(rows)
 
     def cpopg(
         self,
@@ -310,9 +320,9 @@ class TRFConsultaScraper(HTTPScraper):
                 no aviso dos processos, pelo ``motivo_falha`` da linha.
 
                 ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
-                para processo ausente ou sob sigilo (linha só com ``id_cnj``).
-                Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj``
-                e o motivo, no vocabulário de
+                para processo ausente ou sob sigilo (linha só com ``id_cnj``
+                preenchido). Quando a requisição de um CNJ falha, a linha sai só
+                com ``id_cnj`` e o motivo preenchidos, no vocabulário de
                 :data:`juscraper.core.failures.MOTIVOS_FALHA`, e o lote segue; o
                 HTML fora do formato conhecido sai ``resposta_inesperada``. As
                 falhas entram num único ``UserWarning`` ao fim
@@ -347,7 +357,7 @@ class TRFConsultaScraper(HTTPScraper):
         motivos = [c.motivo for c in consultas]
         rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
-        df = pd.DataFrame(rows)
+        df = _detalhe_em_dataframe(rows)
         if download_pecas:
             df["pecas"] = [c.pecas for c in consultas]
             df["pecas_falhas"] = [c.pecas_falhas for c in consultas]
