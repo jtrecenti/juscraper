@@ -36,8 +36,9 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.courts.tjmg.client import TJMGScraper
 from tests._helpers import load_sample_bytes, query_param_subset_matcher
-from tests.tjmg._helpers import FORM_URL, SEARCH_URL, add_captcha, add_dwr, add_form
+from tests.tjmg._helpers import FALHAS_DE_REDE, FORM_URL, SEARCH_URL, add_captcha, add_dwr, add_form
 
 CJSG_MIN_COLUMNS = {
     "processo", "relator", "data_julgamento", "data_publicacao", "ementa",
@@ -156,19 +157,8 @@ def test_cjsg_revalida_captcha_quando_sessao_expira(mock_txtcaptcha, mocker):
     assert len(dwr_calls) == 2
 
 
-_FALHAS_DE_REDE = [
-    pytest.param(
-        requests.exceptions.ChunkedEncodingError(
-            ConnectionResetError(104, "Connection reset by peer")
-        ),
-        id="chunked-connection-reset",
-    ),
-    pytest.param(requests.ConnectionError("Connection reset by peer"), id="connection-error"),
-    pytest.param(requests.ReadTimeout("read timeout=60"), id="read-timeout"),
-]
 
-
-@pytest.mark.parametrize("falha", _FALHAS_DE_REDE)
+@pytest.mark.parametrize("falha", FALHAS_DE_REDE)
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_retenta_falha_de_rede_na_paginacao(mock_txtcaptcha, mocker, falha):
     """Conexao derrubada ou leitura lenta numa pagina ganha nova tentativa (#440)."""
@@ -191,7 +181,7 @@ def test_cjsg_retenta_falha_de_rede_na_paginacao(mock_txtcaptcha, mocker, falha)
     assert len([c for c in responses.calls if "numeroRegistro=11" in c.request.url]) == 2
 
 
-@pytest.mark.parametrize("falha", _FALHAS_DE_REDE)
+@pytest.mark.parametrize("falha", FALHAS_DE_REDE)
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_retenta_falha_de_rede_no_formulario(mock_txtcaptcha, mocker, falha):
     """O ``ReadTimeout`` do notebook (#440) vinha do formulario e do captcha."""
@@ -211,12 +201,11 @@ def test_cjsg_retenta_falha_de_rede_no_formulario(mock_txtcaptcha, mocker, falha
 def test_cjsg_falha_de_rede_persistente_sobe_a_excecao_original(mock_txtcaptcha, mocker):
     """Esgotadas as tentativas do perfil, a excecao de rede original sobe."""
     mocker.patch("time.sleep")
-    scraper = jus.scraper("tjmg")
-    for _ in range(scraper.perfis_http["cjsg"].max_retries):
+    for _ in range(TJMGScraper.perfis_http["cjsg"].max_retries):
         responses.add(responses.GET, FORM_URL, body=requests.ConnectionError("reset"))
 
     with pytest.raises(requests.ConnectionError, match="reset"):
-        scraper.cjsg("dano moral", paginas=1)
+        jus.scraper("tjmg").cjsg("dano moral", paginas=1)
 
 
 @pytest.mark.parametrize(

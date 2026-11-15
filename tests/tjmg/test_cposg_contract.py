@@ -28,6 +28,7 @@ from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
 from tests._helpers import load_sample, load_sample_bytes
+from tests.tjmg._helpers import FALHAS_DE_REDE
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
 RESULTADO_URL = f"{BASE}/proc_resultado2.jsp"
@@ -175,19 +176,7 @@ def test_cposg_rejects_invalid_length(scraper):
         scraper.cposg("123")
 
 
-@pytest.mark.parametrize(
-    "falha",
-    [
-        pytest.param(requests.Timeout("lento"), id="timeout"),
-        pytest.param(
-            requests.exceptions.ChunkedEncodingError(
-                ConnectionResetError(104, "Connection reset by peer")
-            ),
-            id="chunked-connection-reset",
-        ),
-        pytest.param(requests.ConnectionError("reset"), id="connection-error"),
-    ],
-)
+@pytest.mark.parametrize("falha", FALHAS_DE_REDE)
 @responses.activate
 def test_cposg_retries_falha_de_rede(scraper, mocker, falha):
     """Timeout e conexao derrubada ganham nova tentativa (#440)."""

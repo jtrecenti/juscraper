@@ -4,10 +4,12 @@ Funções aqui são reusadas entre ``test_cjsg_contract.py`` e
 ``test_cjsg_filters_contract.py``. As três respostas pré-busca
 (formulário, captcha, DWR) são idênticas em todo cenário; só o GET de
 ``pesquisaPalavrasEspelhoAcordao.do`` muda entre testes — e por isso
-fica local.
+fica local. ``FALHAS_DE_REDE`` serve também ao ``test_cposg_contract.py``.
 """
 from __future__ import annotations
 
+import pytest
+import requests
 import responses
 
 from tests._helpers import load_sample_bytes
@@ -19,6 +21,18 @@ DWR_VALIDATE_URL = (
     f"{BASE}/dwr/call/plaincall/ValidacaoCaptchaAction.isCaptchaValid.dwr"
 )
 SEARCH_URL = f"{BASE}/pesquisaPalavrasEspelhoAcordao.do"
+
+FALHAS_DE_REDE = [
+    pytest.param(
+        requests.exceptions.ChunkedEncodingError(
+            ConnectionResetError(104, "Connection reset by peer")
+        ),
+        id="chunked-connection-reset",
+    ),
+    pytest.param(requests.ConnectionError("Connection reset by peer"), id="connection-error"),
+    pytest.param(requests.ReadTimeout("read timeout=60"), id="read-timeout"),
+]
+"""Falhas de rede observadas no TJMG (#440), que os perfis HTTP retentam."""
 
 
 def add_form() -> None:
