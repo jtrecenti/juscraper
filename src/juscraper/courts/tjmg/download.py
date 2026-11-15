@@ -43,7 +43,7 @@ def _solve_captcha(
     server-side session, so subsequent search requests succeed. The local
     loop of up to ``max_attempts`` tries is a semantic retry (wrong OCR
     decoding) — distinct from the transport-level retry already centralized
-    in ``request_fn`` (perfil ``"cjsg"``) for 403/429/5xx, timeouts and
+    in ``request_fn`` (perfil ``"cjsg"``) for 403/429/500/502/503/504, timeouts and
     dropped connections.
     """
     try:
@@ -222,7 +222,8 @@ def cjsg_download(
         HTTP callable that handles retry + raise_for_status — em uso normal e
         ``TJMGScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
         chamado com o perfil :data:`PERFIL_CJSG`, que centraliza o backoff
-        exponencial para 403/429/5xx, timeout e conexao derrubada.
+        exponencial para 403/429/500/502/503/504, timeout e
+        conexao derrubada.
     session : requests.Session
         Compartilhada com ``request_fn`` (mesma session do
         :class:`HTTPScraper`). Precisamos do handle direto para ler o

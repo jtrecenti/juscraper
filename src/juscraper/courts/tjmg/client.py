@@ -34,7 +34,8 @@ class TJMGScraper(HTTPScraper):
     Os dois portais derrubam conexoes e travam respostas de forma
     intermitente (#440). Os perfis HTTP ``"cjsg"`` e ``"cposg"`` repetem a
     requisicao em timeout, conexao derrubada (``ConnectionResetError``,
-    ``ChunkedEncodingError``) e status 403/429/5xx, e sao ajustaveis com
+    ``ChunkedEncodingError``) e status 403, 429, 500, 502, 503 e 504, e sao
+    ajustaveis com
     ``politica=`` no construtor.
     """
 
@@ -54,7 +55,6 @@ class TJMGScraper(HTTPScraper):
         ),
         PERFIL_CPOSG: RequestPolicy(
             timeout=(10, 30),
-            max_retries=4,
             retry_on_timeout=True,
             retry_on_connection_error=True,
         ),
@@ -65,12 +65,12 @@ class TJMGScraper(HTTPScraper):
         sleep_time: float = 1.0,
         *,
         politica: Mapping[str, Mapping[str, Any]] | None = None,
-    ):
+    ) -> None:
         """Cria o raspador.
 
         Args:
             sleep_time: Pausa, em segundos, entre paginas do ``cjsg`` e entre
-                consultas do ``cposg``.
+                requisicoes do ``cposg`` (resultado e partes de cada recurso).
             politica: Ajustes por campo dos perfis HTTP ``"cjsg"`` e
                 ``"cposg"`` (ver :class:`~juscraper.core.http.RequestPolicy`),
                 por exemplo ``{"cjsg": {"timeout": 180, "max_retries": 5}}``.
