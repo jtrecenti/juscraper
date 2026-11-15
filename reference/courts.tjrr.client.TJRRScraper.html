@@ -247,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. O portal mostra duas tabelas, cada uma com paginador proprio: acordaos e decisoes monocraticas. A pagina <code>n</code> traz a pagina <code>n</code> de cada uma (ate 10 + 10 linhas); com <code>None</code>, o download vai ate o fim da mais longa.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
@@ -321,7 +321,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>DataFrame com as decisoes.</td>
+<td>DataFrame com as decisoes: acordaos e decisoes monocraticas juntos. A coluna <code>tipo_decisao</code> diz a origem de cada linha (<code>"acordao"</code> ou <code>"monocratica"</code>).</td>
 </tr>
 </tbody>
 </table>

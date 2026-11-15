@@ -57,7 +57,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -102,9 +102,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Procurar"
   }
 }</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 <link rel="stylesheet" href="reference/_styles-quartodoc.css">
@@ -456,238 +453,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div id="cell-2" class="cell" data-execution_count="6">
+<div id="cell-2" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjrr <span class="op">=</span> jus.scraper(<span class="st">'tjrr'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-4" class="cell" data-execution_count="7">
+<div id="cell-4" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjrr.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>,<span class="dv">3</span>))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJRR: 100%|██████████| 2/2 [00:06&lt;00:00,  3.02s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(30, 7)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="7">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>0827862-90.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0817102-82.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0833332-15.2019.8.23.0010</td>
-<td>ACr - Apelação Criminal</td>
-<td>LUIZ FERNANDO MALLET</td>
-<td>Câmara Criminal</td>
-<td>2026-03-27</td>
-<td>2026-04-06</td>
-<td>DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
 </div>
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjrr.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjrr.cjsg_parse(brutos)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(20, 7)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="8">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>0827862-90.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0817102-82.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0833332-15.2019.8.23.0010</td>
-<td>ACr - Apelação Criminal</td>
-<td>LUIZ FERNANDO MALLET</td>
-<td>Câmara Criminal</td>
-<td>2026-03-27</td>
-<td>2026-04-06</td>
-<td>DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<div id="cell-6" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjrr.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjrr.cjsg_parse(brutos)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>DIREITO DO CONSUMIDOR. RECURSO INOMINADO. SISTEMA DE INFORMAÇÕES DE CRÉDITO – SCR/SISBACEN. REGISTRO DE OPERAÇÃO BAIXADA COMO PREJUÍZO. DÍVIDA QUITADA POR ACORDO COM DESÁGIO. NATUREZA TÉCNICO-REGULATÓRIA DO SCR. DEVER DE REPORTE DA INSTITUIÇÃO FINANCEIRA. AUSÊNCIA DE ATO ILÍCITO. INEXISTÊNCIA DEDANO</code></pre>
-</div>
+<div id="cell-8" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>Available filters: <code>relator</code>, <code>orgao_julgador</code> (list of codes), <code>especie</code> (list of resource types).</p>
-<div id="cell-10" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjrr.cjsg(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    data_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    data_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJRR: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(20, 7)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="10">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">orgao_julgador</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">data_publicacao</th>
-<th data-quarto-table-cell-role="th">ementa</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>0827862-90.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO DO CONSUMIDOR. RECURSO INOMINADO. SIST...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0817102-82.2025.8.23.0010</td>
-<td>RI - Recurso Inominado</td>
-<td>BRUNO FERNANDO ALVES COSTA</td>
-<td>Turma Recursal</td>
-<td>2026-03-30</td>
-<td>2026-04-07</td>
-<td>DIREITO CIVIL E DO CONSUMIDOR. RECURSO INOMINA...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0833332-15.2019.8.23.0010</td>
-<td>ACr - Apelação Criminal</td>
-<td>LUIZ FERNANDO MALLET</td>
-<td>Câmara Criminal</td>
-<td>2026-03-27</td>
-<td>2026-04-06</td>
-<td>DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO CRI...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
+<div id="cell-10" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjrr.cjsg(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
