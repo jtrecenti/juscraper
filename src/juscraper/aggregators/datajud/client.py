@@ -35,7 +35,6 @@ from .paginacao import (
     _hits_da_pagina,
     _mensagem_falha_parcial,
     _next_search_after,
-    _total_para_diagnostico,
     _total_primeira_pagina,
     _verificar_data_frame_vazio,
     _verificar_fim_pagina,
@@ -709,19 +708,17 @@ class DatajudScraper(HTTPScraper):
             unit=" página",
             disable=total == 0,
         )
-        total_info = None
         recebidos = 0
         try:
-            for current_page, api_response in self._iter_process_pages(
+            # ``total_info`` vem do iterador, já validado na página 1: com ``paginas``
+            # que pula a página 1, o total dela ainda alimenta o diagnóstico de falha.
+            for current_page, api_response, total_info in self._iter_process_pages(
                 alias=alias,
                 numero_processo=numero_processo,
                 inp=inp,
                 movimentos_codigo=movimentos_codigo,
                 paginas=paginas,
             ):
-                # Antes do ``continue``: com ``paginas`` que pula a página 1, o
-                # total dela ainda alimenta o diagnóstico de falha posterior.
-                total_info = _total_para_diagnostico(api_response, current_page, total_info)
                 if paginas is not None and current_page not in paginas:
                     continue
                 frame = _parse_pagina(
@@ -760,8 +757,11 @@ class DatajudScraper(HTTPScraper):
         inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
         paginas: range | None,
-    ) -> Iterator[tuple[int, dict[str, Any]]]:
-        """Percorre o cursor físico até a última página necessária."""
+    ) -> Iterator[tuple[int, dict[str, Any], dict[str, Any] | None]]:
+        """Percorre o cursor físico até a última página necessária.
+
+        Entrega, com cada página, o ``hits.total`` da página 1 já validado.
+        """
         current_page = 1
         tamanho_pagina = inp.tamanho_pagina
         search_after: list[Any] | None = None
@@ -809,7 +809,7 @@ class DatajudScraper(HTTPScraper):
                 recebidos += len(hits)
             contexto = _FimPagina(alias, current_page, recebidos, last_page)
             _verificar_pagina_vazia(api_response, effective_size, total_info, percorridos, contexto)
-            yield current_page, api_response
+            yield current_page, api_response, total_info
             # Depois do ``yield``: o consumidor já guardou os hits válidos da página.
             _verificar_resposta_parcial(api_response, total_info, contexto)
             if next_search_after is None:
