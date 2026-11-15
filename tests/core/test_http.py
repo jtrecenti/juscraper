@@ -246,7 +246,7 @@ def test_retry_after_nao_finito_cai_no_backoff(probe, mocker, cabecalho):
 
 
 @responses.activate
-def test_retry_after_acima_do_teto_espera_o_teto(probe, mocker, caplog):
+def test_retry_after_acima_do_teto_espera_o_teto(probe, mocker):
     """``Retry-After: 86400`` prendia a coleta por um dia."""
     sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
     responses.add(responses.GET, URL, status=429, headers={"Retry-After": "86400"})
@@ -255,7 +255,6 @@ def test_retry_after_acima_do_teto_espera_o_teto(probe, mocker, caplog):
     probe._request_with_retry("GET", URL)
 
     sleep_spy.assert_called_once_with(300.0)
-    assert "Retry-After de 86400s acima do teto max_retry_after" in caplog.text
 
 
 @responses.activate
@@ -267,6 +266,13 @@ def test_max_retry_after_ajustavel_na_politica(mocker):
     _ProbeBackoff(politica={"lento": {"max_retry_after": 30}})._request_with_retry("GET", URL, perfil="lento")
 
     sleep_spy.assert_called_once_with(30.0)
+
+
+@pytest.mark.parametrize("valor", ["false", 1, None])
+def test_request_policy_recusa_expect_json_que_nao_e_bool(valor):
+    """``"false"`` é verdadeiro: sem a checagem, ligaria a validação de JSON em silêncio."""
+    with pytest.raises(ValueError, match=rf"expect_json deve ser bool, recebido {re.escape(repr(valor))}"):
+        RequestPolicy(expect_json=valor)
 
 
 @pytest.mark.parametrize("valor", [0, -1, "300", True, float("inf"), float("nan")])

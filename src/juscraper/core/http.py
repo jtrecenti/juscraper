@@ -121,8 +121,8 @@ class RequestPolicy:
     guarda estado na sessão pode duplicar o efeito (decisão sobre #440).
 
     Os nomes dos campos são os mesmos dos kwargs aceitos por chamada
-    (``timeout=``, ``max_retries=``, ``base_backoff=``), e o kwarg explícito
-    vence o campo da política.
+    (``timeout=``, ``max_retries=``, ``base_backoff=``, ``expect_json=``), e
+    o kwarg explícito vence o campo da política.
 
     Attributes:
         timeout: Repassado a ``session.request`` quando a chamada não traz
@@ -177,6 +177,8 @@ class RequestPolicy:
             valor = getattr(self, campo)
             if not numero_positivo(valor):
                 raise ValueError(f"{campo} deve ser um número positivo e finito, recebido {valor!r}")
+        if not isinstance(self.expect_json, bool):
+            raise ValueError(f"expect_json deve ser bool, recebido {self.expect_json!r}")
         if not timeout_valido(self.timeout):
             raise ValueError(
                 "timeout deve ser None, um número positivo e finito de segundos ou o par "
@@ -445,7 +447,7 @@ class HTTPScraper(BaseScraper):
             requests.ConnectionError: Na primeira ocorrência, ou na última tentativa se a política o retenta.
             requests.exceptions.ChunkedEncodingError: Na primeira ocorrência, ou na última tentativa
                 se a política o retenta.
-            InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
+            InvalidJSONResponseError: Quando ``expect_json`` vale (na chamada ou no perfil) e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
         """
@@ -527,11 +529,6 @@ class HTTPScraper(BaseScraper):
         wait = cls._parse_retry_after(resp.headers.get("Retry-After"))
         if wait is None:
             return policy.espera(attempt)
-        if wait > policy.max_retry_after:
-            logger.warning(
-                "Retry-After de %.0fs acima do teto max_retry_after; aguardando %.0fs.",
-                wait, policy.max_retry_after,
-            )
         return min(max(0.0, wait), float(policy.max_retry_after))
 
     @staticmethod

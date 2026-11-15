@@ -263,12 +263,20 @@ def test_cpopg_download_recusa_download_pecas_sem_links(tmp_path, kwargs, mensag
 
 
 @pytest.mark.parametrize(
-    "erro",
-    [requests.exceptions.ChunkedEncodingError("corpo cortado"), requests.exceptions.TooManyRedirects("laço")],
+    ("erro", "motivo"),
+    [
+        (requests.exceptions.ChunkedEncodingError("corpo cortado"), "conexao"),
+        (requests.exceptions.TooManyRedirects("laço"), "resposta_inesperada"),
+        (requests.exceptions.ContentDecodingError("gzip cortado"), "resposta_inesperada"),
+    ],
 )
 @responses.activate
-def test_erro_de_requests_fora_do_vocabulario_vira_aviso_e_nao_refaz_o_processo(tmp_path, mocker, erro):
-    """Um erro de requests num documento não pode subir ao retry, que refaria o processo e o perderia."""
+def test_erro_de_requests_no_documento_vira_aviso_e_nao_refaz_o_processo(tmp_path, mocker, erro, motivo):
+    """Um erro de requests num documento não pode subir ao retry, que refaria o processo e o perderia.
+
+    A conexão que cai no meio do corpo sai ``conexao``; o erro fora do
+    vocabulário, ``resposta_inesperada``.
+    """
     mocker.patch("time.sleep")
     _registrar_processo()
     _registrar_documento(PUBLICOS[0])
@@ -279,7 +287,7 @@ def test_erro_de_requests_fora_do_vocabulario_vira_aviso_e_nao_refaz_o_processo(
         match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
     )
 
-    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: resposta_inesperada"):
+    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: {motivo}"):
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
     assert len(_chamadas("search.do")) == 1

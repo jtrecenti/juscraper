@@ -283,7 +283,7 @@ class DatajudScraper(HTTPScraper):
 
         Raises:
             ValueError: Quando ``politica`` cita perfil desconhecido, campo
-                fora dos quatro aceitos ou valor inválido.
+                fora dos cinco aceitos ou valor inválido.
         """
         # Valida antes do core: campo sem efeito no DataJud não chega a ser
         # validado (com outra mensagem, ou outro tipo de erro) pela

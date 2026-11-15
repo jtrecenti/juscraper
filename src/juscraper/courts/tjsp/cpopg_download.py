@@ -94,7 +94,7 @@ def validar_download_pecas(baixar_movimentacoes, download_pecas):
 
 
 # Todo erro de requests, e não só os de EXCECOES_DE_FALHA_POR_LINHA: um
-# ChunkedEncodingError que subisse de _PecasPublicas.baixar faria o retry de
+# TooManyRedirects que subisse de _PecasPublicas.baixar faria o retry de
 # cpopg_download_html_single refazer o processo inteiro cinco vezes e o
 # perder, quando o que falhou foi um documento.
 _FALHAS_DE_DOCUMENTO: tuple[type[BaseException], ...] = (
