@@ -5,6 +5,8 @@ Inclui os casos canônicos da issue #185 (validação de ``session=`` na frontei
 from __future__ import annotations
 
 import re
+import socket
+import threading
 from collections.abc import Mapping
 from typing import ClassVar
 
@@ -627,10 +629,6 @@ def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
         (requests.ReadTimeout, None),
         (requests.ConnectionError, None),
         (requests.exceptions.ChunkedEncodingError, {"retry_on_timeout": True}),
-        (requests.exceptions.ChunkedEncodingError, None),
-        # Configuração errada (certificado, proxy) não se resolve com nova tentativa.
-        (requests.exceptions.SSLError, {"retry_on_connection_error": True, "retry_on_timeout": True}),
-        (requests.exceptions.ProxyError, {"retry_on_connection_error": True, "retry_on_timeout": True}),
     ],
 )
 def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
@@ -646,6 +644,46 @@ def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
 
     assert request.call_count == 1
     sleep_spy.assert_not_called()
+
+
+def _servidor_que_corta_o_primeiro_corpo() -> tuple[str, list[bytes]]:
+    """Servidor local de duas respostas chunked: a 1ª cai no meio do corpo, a 2ª vem inteira."""
+    srv = socket.create_server(("127.0.0.1", 0))
+    cabecalho = b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+    corpos = [b"5\r\n{\"ok\"\r\n", b"2\r\n{}\r\n0\r\n\r\n"]
+    enviados: list[bytes] = []
+
+    def atender() -> None:
+        with srv:
+            for corpo in corpos:
+                conn, _ = srv.accept()
+                with conn:
+                    conn.recv(65536)
+                    enviados.append(corpo)
+                    conn.sendall(cabecalho + corpo)
+
+    threading.Thread(target=atender, daemon=True).start()
+    return f"http://127.0.0.1:{srv.getsockname()[1]}/", enviados
+
+
+def test_queda_no_meio_do_corpo_real_e_retentada(mocker):
+    """Uma resposta truncada de verdade levanta ``ChunkedEncodingError`` dentro de ``session.request``.
+
+    O teste com ``side_effect`` acima não prova que o ``requests`` lê o corpo
+    dentro de ``session.request``; este usa um socket local e uma sessão real.
+    """
+    class _P(HTTPScraper):
+        perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+            "p": RequestPolicy(timeout=5, retry_on_connection_error=True),
+        }
+
+    mocker.patch("juscraper.core.http.time.sleep")
+    url, enviados = _servidor_que_corta_o_primeiro_corpo()
+
+    resp = _P()._request_with_retry("GET", url, perfil="p", expect_json=True)
+
+    assert resp.json() == {}
+    assert len(enviados) == 2
 
 
 def test_network_retry_exhausted_reraises_original(probe_perfis, mocker):

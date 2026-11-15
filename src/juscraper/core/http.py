@@ -95,6 +95,16 @@ def _max_retries_valido(valor: object) -> bool:
     return not isinstance(valor, bool) and isinstance(valor, numbers.Integral) and int(valor) >= 1
 
 
+_ERROS_DE_CONEXAO: tuple[type[requests.RequestException], ...] = (
+    requests.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
+)
+"""Falhas que ``RequestPolicy.retry_on_connection_error`` retenta."""
+
+_ERROS_DE_REDE: tuple[type[requests.RequestException], ...] = (*_ERROS_DE_CONEXAO, requests.Timeout)
+"""Falhas de rede que ``HTTPScraper._send_once`` submete à política."""
+
+
 @dataclass(frozen=True)
 class RequestPolicy:
     """Política de requisição usada por ``HTTPScraper._request_with_retry``.
@@ -124,10 +134,7 @@ class RequestPolicy:
             ``requests.exceptions.ChunkedEncodingError`` (conexão que cai no
             meio do corpo). Inclui ``requests.ConnectTimeout``, que herda das
             duas classes e é tratado como falha de conexão: estourar o prazo de
-            conexão indica host inalcançável, não resposta lenta. Não inclui
-            ``SSLError`` nem ``ProxyError``, que nunca são retentados: vêm de
-            certificado ou proxy mal configurado, que uma nova tentativa não
-            corrige.
+            conexão indica host inalcançável, não resposta lenta.
     """
 
     timeout: float | tuple[float, float] | None = None
@@ -181,35 +188,14 @@ class RequestPolicy:
     def retries_network_error(self, exc: requests.RequestException) -> bool:
         """Diz se ``exc`` (timeout ou erro de conexão) merece nova tentativa.
 
-        ``ConnectionError`` é testado antes de ``Timeout`` porque
-        ``ConnectTimeout`` herda dos dois e deve seguir a opção de conexão, na
-        mesma regra de ``juscraper.core.failures.motivo_falha``.
+        A conexão é testada antes de ``Timeout`` porque ``ConnectTimeout``
+        herda dos dois e deve seguir a opção de conexão, na mesma ordem de
+        ``juscraper.core.failures.motivo_falha``.
         """
-        if isinstance(exc, _NUNCA_RETENTADOS):
-            return False
         if isinstance(exc, _ERROS_DE_CONEXAO):
             return self.retry_on_connection_error
         return self.retry_on_timeout
 
-
-_ERROS_DE_CONEXAO: tuple[type[requests.RequestException], ...] = (
-    requests.ConnectionError,
-    requests.exceptions.ChunkedEncodingError,
-)
-"""Falhas que ``retry_on_connection_error`` retenta, salvo :data:`_NUNCA_RETENTADOS`.
-
-``ChunkedEncodingError`` não herda de ``ConnectionError``, mas é a mesma queda
-de conexão, só que no meio do corpo, depois dos cabeçalhos.
-"""
-
-_NUNCA_RETENTADOS: tuple[type[requests.RequestException], ...] = (
-    requests.exceptions.SSLError,
-    requests.exceptions.ProxyError,
-)
-"""Subclasses de ``ConnectionError`` que nenhuma política retenta: erro de configuração, não transitório."""
-
-_ERROS_DE_REDE: tuple[type[requests.RequestException], ...] = (*_ERROS_DE_CONEXAO, requests.Timeout)
-"""Exceções que ``_send_once`` avalia com :meth:`RequestPolicy.retries_network_error`."""
 
 DEFAULT_POLICY = RequestPolicy()
 """Política das chamadas sem ``perfil=``; idêntica ao comportamento anterior."""

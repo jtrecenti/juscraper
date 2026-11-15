@@ -131,8 +131,6 @@ def cjsg_download_manager(
             'metodo': 'buscar_resultados',
             'parametros': parametros_str,
         }
-        # expect_json=True: um 200 com corpo vazio ou HTML ganha nova tentativa e,
-        # persistindo, vira InvalidJSONResponseError, como no TJES e no JusBR.
         resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG, expect_json=True)
         return resp.json()
 
