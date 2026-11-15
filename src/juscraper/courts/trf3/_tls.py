@@ -91,15 +91,25 @@ class TLSNavegadorAdapter(HTTPAdapter):
                 data=request.body,
                 timeout=kwargs.get("timeout"),
                 verify=kwargs.get("verify", True),
-                proxies=dict(proxies) if isinstance(proxies, dict) and proxies else None,
+                proxies=proxies if isinstance(proxies, dict) and proxies else None,
                 allow_redirects=False,
             )
         except curl.exceptions.ConnectTimeout as exc:
             raise requests.ConnectTimeout(str(exc), request=request) from exc
         except curl.exceptions.Timeout as exc:
             raise requests.ReadTimeout(str(exc), request=request) from exc
+        except (
+            curl.exceptions.ConnectionError,
+            curl.exceptions.ProxyError,
+            # No curl_cffi, HTTPError é transporte (stream HTTP/2 reiniciado, corpo incompleto), não status.
+            curl.exceptions.HTTPError,
+            curl.exceptions.ChunkedEncodingError,
+        ) as exc:
+            raise requests.ConnectionError(str(exc), request=request) from exc
         except curl.exceptions.RequestException as exc:
-            if not _erro_de_transporte(curl, exc):
+            # Código do curl sem classe própria chega como RequestException puro; as
+            # subclasses restantes são de configuração (URL inválida, impersonate) e sobem.
+            if exc.__class__ is not curl.exceptions.RequestException:
                 raise
             raise requests.ConnectionError(str(exc), request=request) from exc
         return self.build_response(request, _como_urllib3(resposta))
@@ -130,18 +140,6 @@ def _como_urllib3(resposta: CurlResponse) -> HTTPResponse:
         reason=resposta.reason,
         preload_content=False,
     )
-
-
-def _erro_de_transporte(curl: ModuleType, exc: Exception) -> bool:
-    """Diz se ``exc`` do ``curl_cffi`` é falha de transporte, que o retry trata como erro de conexão.
-
-    O ``HTTPError`` do ``curl_cffi`` não é status HTTP: é o stream HTTP/2
-    reiniciado pelo servidor ou o corpo incompleto. Código de erro do curl sem
-    classe própria chega como ``RequestException`` puro.
-    """
-    erros = curl.exceptions
-    transporte = (erros.ConnectionError, erros.ProxyError, erros.HTTPError, erros.ChunkedEncodingError)
-    return isinstance(exc, transporte) or type(exc) is erros.RequestException
 
 
 def _importar_curl_cffi() -> ModuleType:

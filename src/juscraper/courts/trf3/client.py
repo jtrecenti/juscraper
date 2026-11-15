@@ -8,7 +8,7 @@ para essa aplicação, por isso o TRF3 deixou a família ``_trf``, que segue
 servindo TRF1 e TRF5. Detalhes do protocolo em
 :mod:`juscraper.courts.trf3.download`. As requisições à consulta passam pelo
 ``curl_cffi`` com TLS do Chrome (extra ``juscraper[tls]``,
-:mod:`juscraper.courts.trf3.transporte`).
+:mod:`juscraper.courts.trf3._tls`).
 
 ``cjsg`` pesquisa jurisprudência em ``web.trf3.jus.br/jurisprudencia``, uma
 aplicação ASP.NET separada do PJe, também atrás do Akamai. Não usa a sessão
@@ -46,13 +46,13 @@ from ...core.http import HTTPScraper, RequestPolicy
 from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, resolve_deprecated_alias
+from ._tls import montar_tls_navegador
 from .cjsg_download import PERFIL_CJSG, build_cjsg_session, cjsg_download_manager
 from .cjsg_parse import cjsg_parse_manager
 from .cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo, token_valido
 from .parse import _itens, parse_processo
 from .schemas import InputCpopgTRF3, InputCposgTRF3
-from .transporte import montar_tls_navegador
 
 logger = logging.getLogger("juscraper.trf3")
 

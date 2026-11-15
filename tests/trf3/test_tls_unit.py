@@ -1,9 +1,9 @@
 """Adapter de TLS de navegador do TRF3 (``curl_cffi``), com um ``curl_cffi`` falso.
 
 O ``curl_cffi`` é extra opcional e não está no ambiente do CI: os testes
-injetam um módulo falso em ``sys.modules``. A fixture ``_tls_navegador_pelo_mock``
-do ``tests/conftest.py`` troca ``send`` pelo do ``HTTPAdapter``; aqui o
-``send`` original é restaurado quando o teste precisa dele.
+injetam um módulo falso em ``sys.modules``. A fixture ``_sem_tls_navegador`` de
+``tests/trf3/conftest.py`` desliga o adapter no raspador; os testes que o
+querem montado pedem ``tls_real``.
 """
 from __future__ import annotations
 
@@ -14,10 +14,9 @@ import pytest
 import requests
 
 import juscraper as jus
+from juscraper.courts.trf3._tls import TLSNavegadorAdapter
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G
-from juscraper.courts.trf3.transporte import TLSNavegadorAdapter
 
-SEND_ORIGINAL = TLSNavegadorAdapter.__dict__["send"]
 URL_BUSCA = f"{BASE_URL_2G}/v1/processos?page=0&numeroProcesso=5021122-65.2018.4.03.6100"
 
 
@@ -69,8 +68,7 @@ class _RespostaCurl:
     content = '{"status": "ok", "result": []}'.encode()
     reason = "OK"
 
-    def __init__(self, url: str) -> None:
-        self.url = url
+    def __init__(self) -> None:
         # Content-Length do corpo comprimido, menor que o corpo já descomprimido.
         self.headers = _CabecalhosCurl([
             ("Content-Type", "application/json; charset=utf-8"),
@@ -114,7 +112,7 @@ class _SessaoCurl:
         self.chamadas.append((method, url, kwargs))
         if self.modulo.erro is not None:
             raise self.modulo.erro
-        return _RespostaCurl(url)
+        return _RespostaCurl()
 
     def close(self) -> None:
         self.fechada = True
@@ -122,10 +120,9 @@ class _SessaoCurl:
 
 @pytest.fixture
 def curl_falso(monkeypatch):
-    """Instala um ``curl_cffi.requests`` falso e restaura o ``send`` do adapter."""
+    """Instala um ``curl_cffi.requests`` falso."""
     modulo = _CurlFalso()
     monkeypatch.setitem(sys.modules, "curl_cffi.requests", modulo)
-    monkeypatch.setattr(TLSNavegadorAdapter, "send", SEND_ORIGINAL)
     return modulo
 
 
@@ -136,6 +133,7 @@ def _sessao_com_adapter() -> requests.Session:
     return session
 
 
+@pytest.mark.usefixtures("tls_real")
 def test_scraper_monta_adapter_so_na_consulta_processual():
     sessao = jus.scraper("trf3").session
     assert isinstance(sessao.get_adapter(f"{BASE_URL_1G}/v1/processos"), TLSNavegadorAdapter)
@@ -163,7 +161,8 @@ def test_envia_pelo_curl_com_tls_do_chrome_e_converte_resposta(curl_falso):
     assert kwargs["verify"] is True
 
 
-def test_set_cookie_repetido_chega_separado(curl_falso):
+@pytest.mark.usefixtures("curl_falso")
+def test_set_cookie_repetido_chega_separado():
     resp = _sessao_com_adapter().get(URL_BUSCA)
 
     assert resp.raw.headers.getlist("Set-Cookie") == ["bm_sz=1; Path=/", "_abck=2; Path=/"]
@@ -216,10 +215,10 @@ def test_erro_de_configuracao_do_curl_sobe_como_veio(curl_falso):
         _sessao_com_adapter().get(URL_BUSCA)
 
 
+@pytest.mark.usefixtures("tls_real")
 def test_sem_o_extra_cposg_levanta_import_error_com_a_instalacao(monkeypatch):
     monkeypatch.setitem(sys.modules, "curl_cffi", None)
     monkeypatch.setitem(sys.modules, "curl_cffi.requests", None)
-    monkeypatch.setattr(TLSNavegadorAdapter, "send", SEND_ORIGINAL)
 
     with pytest.raises(ImportError, match=r"juscraper\[tls\]"):
         jus.scraper("trf3").cposg("5021122-65.2018.4.03.6100")
