@@ -1,0 +1,115 @@
+{
+  "data": "2026-10-03",
+  "codigo_testado": "85b2a2267bbb2322a5403904879ea8ce4d9b0813",
+  "complementa": "2026-10-03.json",
+  "metodo": "Consulta adicional após a incorporação do endpoint TJMG cposg na main. Mesmos limites e ambiente da rodada principal. Um CNJ, sem tentativa de varrer o acervo.",
+  "evidencia": "Metadados e hashes das quatro respostas HTTP. Corpos e nomes de partes e advogados não são republicados.",
+  "resultados": [
+    {
+      "fonte": "tjmg",
+      "endpoint": "cposg",
+      "estado": "funcionando",
+      "motivo": "Retornou três recursos do CNJ consultado, com processo, classe, partes e advogados. Os três registros passaram pelo schema de saída após converter datas ausentes de NaT para None.",
+      "cenario": "Linux local, Wi-Fi sem VPN ativa; jus.scraper('tjmg').cposg(id_cnj='5000344-57.2025.8.13.0461'). Somente esse CNJ; outros processos e recursos não foram verificados.",
+      "tentativas": [
+        {
+          "fonte": "tjmg",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "5000344-57.2025.8.13.0461"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe",
+            "partes"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "limite_segundos": 180,
+          "inicio_utc": "2026-10-03T19:45:05.415569+00:00",
+          "versao": "0.4.0",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://www4.tjmg.jus.br",
+              "caminho": "/juridico/sf/proc_resultado2.jsp",
+              "status": 200,
+              "bytes": 21847,
+              "sha256": "d3d7a61b5a0bd81c01e2874097d91e29924fa906504938a928a0cd4affea4891"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www4.tjmg.jus.br",
+              "caminho": "/juridico/sf/proc_partes_advogados2.jsp",
+              "status": 200,
+              "bytes": 6842,
+              "sha256": "597b31d58d7c21a0147a720e49a0275e3b936e76d9678926ebaf9e23e224b3b7"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www4.tjmg.jus.br",
+              "caminho": "/juridico/sf/proc_partes_advogados2.jsp",
+              "status": 200,
+              "bytes": 6487,
+              "sha256": "42ced43dd9c190ae46533785f9255475fe57b432c9f9a08b72868eecc32bcecc"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://www4.tjmg.jus.br",
+              "caminho": "/juridico/sf/proc_partes_advogados2.jsp",
+              "status": 200,
+              "bytes": 6407,
+              "sha256": "e40f98e388dbe8489dc4da82c2619f305b863b990ebda4c726db24347df1e179"
+            }
+          ],
+          "retorno": {
+            "linhas": 3,
+            "colunas": [
+              "id_cnj",
+              "processo",
+              "processo_interno",
+              "segredo_justica",
+              "situacao",
+              "secretaria",
+              "classe",
+              "assunto",
+              "orgao_julgador",
+              "data_cadastramento",
+              "data_distribuicao",
+              "partes"
+            ],
+            "preenchidos": {
+              "processo": 3,
+              "classe": 3
+            }
+          },
+          "checagem": "aprovada",
+          "duracao_segundos": 4.02,
+          "fim_utc": "2026-10-03T19:45:09.434436+00:00"
+        }
+      ],
+      "reproducao_offline": {
+        "hashes_conferidos": 4,
+        "registros_validados_schema": 3,
+        "normalizacao": "Datas ausentes convertidas de pandas.NaT para None antes da validação pydantic.",
+        "cnj_corresponde_em_todos": true,
+        "por_recurso": [
+          {
+            "partes": 2,
+            "advogados": 4
+          },
+          {
+            "partes": 2,
+            "advogados": 2
+          },
+          {
+            "partes": 2,
+            "advogados": 2
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,4 +1,13 @@
 repos:
+  - repo: local
+    hooks:
+      - id: status-documentacao
+        name: Verificar tabelas de status
+        entry: uv run scripts/gerar_status.py --check
+        language: system
+        pass_filenames: false
+        files: ^(status\.toml|scripts/gerar_status\.py|README\.md|docs/index\.qmd)$
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
