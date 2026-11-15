@@ -11,7 +11,7 @@ import re
 
 import responses
 
-from tests._helpers import load_sample
+from tests._helpers import load_sample, urlencoded_body_subset_matcher
 
 INDEX_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
 
@@ -52,7 +52,7 @@ def get_pesquisa_field_name() -> str:
     return match.group(1)
 
 
-def get_datatable_id() -> str:
+def get_datatable_id(nome: str = "dataTablePesquisa") -> str:
     r"""Lê do sample (página de resultados) o id JSF do datatable de acórdãos.
 
     Retorna algo como ``formPesquisa:j_idt158:dataTablePesquisa``. O número
@@ -61,15 +61,53 @@ def get_datatable_id() -> str:
     de hardcodá-lo — espelha ``_extract_datatable_id`` do scraper. O
     lookahead ``(?!\w)`` evita casar ``dataTablePesquisa2`` (a segunda
     tabela, de decisões) e o ``_data`` (tbody).
+
+    ``nome="dataTablePesquisa2"`` devolve o id da tabela de decisões
+    monocráticas (#319), lido do sample da mesma forma.
     """
     sample = load_sample("tjrr", "cjsg/step_02_search.html")
     match = re.search(
-        r'id="(formPesquisa:j_idt\d+:dataTablePesquisa)(?!\w)',
+        rf'id="(formPesquisa:j_idt\d+:{nome})(?!\w)',
         sample,
     )
     if not match:
         raise RuntimeError(
-            "datatable de resultados (dataTablePesquisa) não encontrado em "
+            f"datatable de resultados ({nome}) não encontrado em "
             "tests/tjrr/samples/cjsg/step_02_search.html"
         )
     return match.group(1)
+
+
+def add_post_ajax(sample_path: str, first_offset: str, dtid: str) -> None:
+    """Registra o POST AJAX de paginação (``javax.faces.partial.ajax=true``).
+
+    Fixa a correção da camada 2 da #287: o body precisa levar o contexto
+    completo do form de resultados (``consultaAtual``, o termo de busca), o
+    evento ``page`` do PrimeFaces e o offset absoluto ``_first``; o payload
+    mínimo era ignorado pelo backend, que devolvia sempre a página 1.
+    ``dtid`` escolhe a tabela paginada: acórdãos ou monocráticas (#319).
+    """
+    responses.add(
+        responses.POST,
+        INDEX_URL,
+        body=load_sample("tjrr", sample_path),
+        status=200,
+        content_type="application/xml; charset=UTF-8",
+        match=[urlencoded_body_subset_matcher({
+            "javax.faces.partial.ajax": "true",
+            "javax.faces.behavior.event": "page",
+            "formPesquisa:consultaAtual": "dano moral",
+            "javax.faces.source": dtid,
+            f"{dtid}_first": first_offset,
+        })],
+    )
+
+
+def add_page_2_ajax() -> None:
+    """Registra a página 2 das duas tabelas: acórdãos, depois monocráticas."""
+    add_post_ajax("cjsg/step_03_pagina_02.xml", "10", get_datatable_id())
+    add_post_ajax(
+        "cjsg/step_04_pagina_02_monocraticas.xml",
+        "10",
+        get_datatable_id("dataTablePesquisa2"),
+    )

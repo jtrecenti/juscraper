@@ -17,7 +17,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample, urlencoded_body_subset_matcher
-from tests.tjrr._helpers import INDEX_URL, add_get_initial, get_datatable_id
+from tests.tjrr._helpers import INDEX_URL, add_get_initial, add_page_2_ajax
 
 SLEEP_VALUE = 0.42
 
@@ -43,29 +43,13 @@ def _add_post_initial(sample_path: str):
     )
 
 
-def _add_post_ajax(sample_path: str, first_offset: str, dtid: str):
-    responses.add(
-        responses.POST,
-        INDEX_URL,
-        body=load_sample("tjrr", sample_path),
-        status=200,
-        content_type="application/xml; charset=UTF-8",
-        match=[urlencoded_body_subset_matcher({
-            "javax.faces.partial.ajax": "true",
-            f"{dtid}_first": first_offset,
-        })],
-    )
-
-
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_respeita_sleep_time_do_construtor(mocker):
     """Valor passado em ``jus.scraper(..., sleep_time=X)`` aparece em ``time.sleep``."""
     sleep_mock = mocker.patch("time.sleep")
     add_get_initial()
     _add_post_initial("cjsg/step_02_search.html")
-    dtid = get_datatable_id()
-    _add_post_ajax("cjsg/step_03_pagina_02.xml", "10", dtid)
-    _add_post_ajax("cjsg/step_04_pagina_02_monocraticas.xml", "10", f"{dtid}2")
+    add_page_2_ajax()
 
     jus.scraper("tjrr", sleep_time=SLEEP_VALUE).cjsg(
         "dano moral", paginas=range(1, 3),
