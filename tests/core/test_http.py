@@ -4,9 +4,13 @@ Inclui os casos canônicos da issue #185 (validação de ``session=`` na frontei
 """
 from __future__ import annotations
 
+import re
+import socket
+import threading
 from collections.abc import Mapping
 from typing import ClassVar
 
+import numpy as np
 import pytest
 import requests
 import responses
@@ -229,7 +233,7 @@ def test_request_with_retry_negative_retry_after_clamped(probe, mocker):
 
 
 def test_request_with_retry_invalid_max_retries(probe):
-    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+    with pytest.raises(ValueError, match=r"max_retries deve ser um inteiro >= 1, recebido 0"):
         probe._request_with_retry("GET", URL, max_retries=0)
 
 
@@ -411,8 +415,107 @@ def test_politica_unknown_field_raises():
 
 
 def test_politica_invalid_max_retries_raises():
-    with pytest.raises(ValueError, match=r"max_retries deve ser >= 1, recebido 0"):
+    with pytest.raises(ValueError, match=r"max_retries deve ser um inteiro >= 1, recebido 0"):
         _ProbeComPerfis(politica={"documento": {"max_retries": 0}})
+
+
+@pytest.mark.parametrize(
+    ("campo", "valor"),
+    # Sem a validação, todos passavam no construtor e só estouravam no primeiro
+    # status retentável: ``range(True)`` dá uma tentativa só, ``range(2.5)`` e
+    # ``"2" ** 1`` levantam ``TypeError`` no meio da coleta.
+    [
+        ("max_retries", True), ("max_retries", 2.5), ("max_retries", "3"), ("max_retries", -1),
+        ("base_backoff", True), ("base_backoff", "2"), ("base_backoff", 0), ("base_backoff", -1.0),
+        ("base_backoff", float("inf")), ("base_backoff", float("nan")),
+    ],
+)
+def test_request_policy_recusa_tentativas_ou_backoff_invalido(campo, valor):
+    with pytest.raises(ValueError, match=rf"{campo} deve ser .*recebido {re.escape(repr(valor))}"):
+        RequestPolicy(**{campo: valor})
+    # O mesmo vale para o ajuste por ``politica=`` e para o kwarg por chamada.
+    with pytest.raises(ValueError, match=rf"{campo} deve ser"):
+        _ProbeComPerfis(politica={"documento": {campo: valor}})
+    with pytest.raises(ValueError, match=rf"{campo} deve ser"):
+        _ProbeComPerfis()._request_with_retry("GET", URL, **{campo: valor})
+
+
+def test_request_policy_aceita_backoff_inteiro_e_fracionario():
+    assert RequestPolicy(max_retries=1, base_backoff=1).base_backoff == 1
+    assert RequestPolicy(base_backoff=2.5).base_backoff == 2.5
+
+
+def test_request_policy_aceita_escalares_do_numpy():
+    # Política lida de planilha ou DataFrame traz escalares do numpy, que
+    # funcionavam antes da validação; ``numpy.bool_`` continua recusado.
+    politica = RequestPolicy(max_retries=np.int64(5), base_backoff=np.float64(2.5))
+    assert (politica.max_retries, politica.base_backoff) == (5, 2.5)
+    with pytest.raises(ValueError, match="max_retries deve ser"):
+        RequestPolicy(max_retries=np.True_)
+
+
+@pytest.mark.parametrize(
+    "timeout",
+    # Sem a validação no core, o JusBR e a PDPJ aceitavam todos na construção,
+    # e o erro só vinha do ``requests`` na primeira requisição.
+    [
+        -1, 0, "10", True, float("inf"), float("nan"), [5], (5, -1), (5, "x"), ((1, 2), 3),
+        pytest.param(10**400, id="10**400"),
+    ],
+)
+def test_request_policy_recusa_timeout_invalido(timeout):
+    with pytest.raises(ValueError, match=rf"timeout deve ser .*recebido {re.escape(repr(timeout))}"):
+        RequestPolicy(timeout=timeout)
+    with pytest.raises(ValueError, match="timeout deve ser"):
+        _ProbeComPerfis(politica={"documento": {"timeout": timeout}})
+
+
+@pytest.mark.parametrize(
+    ("timeout", "esperado"),
+    [(None, None), (10, 10), (2.5, 2.5), (np.float64(10), 10), ((5, 30), (5, 30)), ([5, 30], (5, 30)),
+     ((5, None), (5, None))],
+)
+def test_request_policy_aceita_timeout_do_requests(timeout, esperado):
+    assert RequestPolicy(timeout=timeout).timeout == esperado
+
+
+@pytest.mark.parametrize("valor", [0, -1, "300", True, float("inf"), float("nan")])
+def test_request_policy_recusa_max_backoff_invalido(valor):
+    with pytest.raises(ValueError, match=rf"max_backoff deve ser .*recebido {re.escape(repr(valor))}"):
+        RequestPolicy(max_backoff=valor)
+
+
+def test_espera_e_exponencial_ate_o_teto():
+    politica = RequestPolicy(base_backoff=10, max_backoff=50)
+    assert [politica.espera(t) for t in (1, 2, 3)] == [10, 50, 50]
+    # O default de 300 s não muda as esperas de 2 e 4 s dos defaults.
+    assert [DEFAULT_POLICY.espera(t) for t in (1, 2)] == [2.0, 4.0]
+    assert DEFAULT_POLICY.max_backoff == 300
+
+
+@responses.activate
+def test_base_backoff_enorme_espera_o_teto_sem_estourar(probe, mocker):
+    """``1e200 ** 2`` levantava ``OverflowError`` no segundo recuo, no meio da coleta."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, status=503)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe._request_with_retry("GET", URL, base_backoff=1e200)
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [300.0, 300.0]
+
+
+def test_base_backoff_enorme_no_retry_de_rede_espera_o_teto(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    probe = _ProbeBackoff(politica={"lento": {"base_backoff": 1e200, "max_backoff": 7}})
+    ok = requests.Response()
+    ok.status_code = 200
+    mocker.patch.object(probe.session, "request", side_effect=[requests.ReadTimeout(), requests.ReadTimeout(), ok])
+
+    probe._request_with_retry("GET", URL, perfil="lento")
+
+    assert [c.args[0] for c in sleep_spy.call_args_list] == [7.0, 7.0]
 
 
 def test_request_unknown_profile_raises(probe_perfis):
@@ -498,6 +601,7 @@ def test_profile_retryable_statuses_drop_403(probe_perfis, mocker):
         (requests.ReadTimeout, {"retry_on_timeout": True}),
         (requests.ConnectionError, {"retry_on_connection_error": True}),
         (requests.ConnectTimeout, {"retry_on_connection_error": True}),
+        (requests.exceptions.ChunkedEncodingError, {"retry_on_connection_error": True}),
     ],
 )
 def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
@@ -524,6 +628,7 @@ def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
         (requests.ConnectTimeout, {"retry_on_timeout": True}),
         (requests.ReadTimeout, None),
         (requests.ConnectionError, None),
+        (requests.exceptions.ChunkedEncodingError, {"retry_on_timeout": True}),
     ],
 )
 def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
@@ -539,6 +644,46 @@ def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
 
     assert request.call_count == 1
     sleep_spy.assert_not_called()
+
+
+def _servidor_que_corta_o_primeiro_corpo() -> tuple[str, list[bytes]]:
+    """Servidor local de duas respostas chunked: a 1ª cai no meio do corpo, a 2ª vem inteira."""
+    srv = socket.create_server(("127.0.0.1", 0))
+    cabecalho = b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+    corpos = [b"5\r\n{\"ok\"\r\n", b"2\r\n{}\r\n0\r\n\r\n"]
+    enviados: list[bytes] = []
+
+    def atender() -> None:
+        with srv:
+            for corpo in corpos:
+                conn, _ = srv.accept()
+                with conn:
+                    conn.recv(65536)
+                    enviados.append(corpo)
+                    conn.sendall(cabecalho + corpo)
+
+    threading.Thread(target=atender, daemon=True).start()
+    return f"http://127.0.0.1:{srv.getsockname()[1]}/", enviados
+
+
+def test_queda_no_meio_do_corpo_real_e_retentada(mocker):
+    """Uma resposta truncada de verdade levanta ``ChunkedEncodingError`` dentro de ``session.request``.
+
+    O teste com ``side_effect`` acima não prova que o ``requests`` lê o corpo
+    dentro de ``session.request``; este usa um socket local e uma sessão real.
+    """
+    class _P(HTTPScraper):
+        perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+            "p": RequestPolicy(timeout=5, retry_on_connection_error=True),
+        }
+
+    mocker.patch("juscraper.core.http.time.sleep")
+    url, enviados = _servidor_que_corta_o_primeiro_corpo()
+
+    resp = _P()._request_with_retry("GET", url, perfil="p", expect_json=True)
+
+    assert resp.json() == {}
+    assert len(enviados) == 2
 
 
 def test_network_retry_exhausted_reraises_original(probe_perfis, mocker):
@@ -618,6 +763,19 @@ def test_politica_timeout_list_becomes_tuple():
 def test_politica_non_mapping_adjustment_raises():
     with pytest.raises(ValueError, match=r"deve ser um dict de campos, recebido RequestPolicy"):
         _ProbeComPerfis(politica={"documento": RequestPolicy(timeout=1)})  # type: ignore[dict-item]
+
+
+@responses.activate
+def test_max_backoff_limita_o_retry_de_json_invalido(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff(politica={"lento": {"max_backoff": 1.5}})._request_with_retry(
+        "GET", URL, perfil="lento", expect_json=True
+    )
+
+    sleep_spy.assert_called_once_with(1.5)
 
 
 @responses.activate

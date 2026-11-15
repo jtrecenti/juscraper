@@ -27,7 +27,7 @@ import requests
 
 import juscraper as jus
 from juscraper.courts.trf6.download import (
-    BROWSER_HEADERS,
+    HEADERS,
     build_search_payload,
     extract_captcha_b64,
     fetch_form,
@@ -50,7 +50,7 @@ MISSING_CNJ = "00000000020994060000"
 
 def _fresh_session() -> requests.Session:
     s = requests.Session()
-    s.headers.update(BROWSER_HEADERS)
+    s.headers.update(HEADERS)
     return s
 
 

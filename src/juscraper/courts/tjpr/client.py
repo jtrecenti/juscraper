@@ -185,9 +185,9 @@ class TJPRScraper(HTTPScraper):
                 permite fixar o total de páginas; ver :meth:`cjsg_download`.
 
         Returns:
-            pd.DataFrame: Uma linha por decisão, com ``processo``,
-            ``orgao_julgador``, ``relator``, ``data_julgamento`` e ``ementa``,
-            mais ``fonte`` e ``caso`` quando ``incluir_corte_idh=True``.
+            Uma linha por decisão, com ``processo``,
+                ``orgao_julgador``, ``relator``, ``data_julgamento`` e ``ementa``,
+                mais ``fonte`` e ``caso`` quando ``incluir_corte_idh=True``.
 
         Examples: Exemplo
             >>> import juscraper as jus

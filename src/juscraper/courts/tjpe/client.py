@@ -61,19 +61,28 @@ class TJPEScraper(HTTPScraper):
                 temporário).
 
         Returns:
-            pd.DataFrame: Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
+            Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
                 ``classe``, ``assunto``, ``data_distribuicao``,
                 ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``,
                 ``polo_ativo``, ``polo_passivo``, ``movimentacoes``,
-                ``documentos``; com ``download_pecas=True``, também ``pecas``.
+                ``documentos`` e ``motivo_falha``; com ``download_pecas=True``,
+                também ``pecas`` e ``pecas_falhas``. ``motivo_falha`` e
+                ``pecas_falhas`` seguem a regra de
+                :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg`.
+                Quando o WAF desafia de novo logo após a renovação do cookie,
+                ou o cookie não pôde ser obtido (Chromium do Playwright
+                ausente, cookie não emitido no prazo), o lote para ali: as
+                linhas anteriores são preservadas, e a bloqueada e as seguintes
+                saem com ``motivo_falha`` igual a ``bloqueio_anti_bot``, com um
+                :class:`~juscraper.core.exceptions.BloqueioAntiBotWarning`
+                (subclasse de ``UserWarning``). Com ``download_pecas=True``, as
+                peças de cada processo vêm logo depois do seu detalhe, e os
+                processos anteriores ao bloqueio ficam com as peças.
 
         Raises:
             TypeError: Kwarg desconhecido.
             ImportError: O WAF desafiou e o Playwright não está instalado,
                 inclusive durante o download das peças.
-            WafChallengeError: O WAF desafiou de novo logo após a renovação do
-                cookie, ou o cookie não pôde ser obtido (Chromium do Playwright
-                ausente, cookie não emitido no prazo). Interrompe o lote.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -107,10 +116,11 @@ class TJPEScraper(HTTPScraper):
     ) -> list:
         """Baixa as paginas brutas do cjsg do TJPE.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa,
+        e levanta e avisa nos mesmos casos.
 
         Returns:
-            list: Lista de strings HTML brutas, uma por pagina.
+            Lista de strings HTML brutas, uma por pagina.
         """
         classe = resolve_deprecated_alias(kwargs, "classe_cnj", "classe", classe)
         assunto = resolve_deprecated_alias(kwargs, "assunto_cnj", "assunto", assunto)
@@ -208,9 +218,17 @@ class TJPEScraper(HTTPScraper):
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido (ex.: data
                 fora dos formatos aceitos, ``tipo_decisao`` fora do enum).
+            ValueError: Quando a busca devolve uma pagina fora dos formatos
+                conhecidos (nem resultados, nem escolha do tipo, nem "Nenhum
+                documento encontrado").
+
+        Avisos:
+            ``UserWarning``: Quando o portal responde "Nenhum documento
+                encontrado"; o resultado sai vazio. Com a pesquisa fora do ar,
+                o portal responde assim a qualquer termo.
 
         Returns:
-            pd.DataFrame: Uma linha por decisao. Colunas canonicas:
+            Uma linha por decisao. Colunas canonicas:
                 ``processo``, ``classe``, ``assunto``, ``relator``,
                 ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
                 ``ementa``, ``acordao``, ``meio_tramitacao``,

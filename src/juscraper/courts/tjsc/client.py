@@ -1,12 +1,13 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
-from typing import Any, Literal
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import cjsg_download_manager
+from .download import PERFIL_CJSG, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJSC
 
@@ -14,10 +15,15 @@ from .schemas import InputCJSGTJSC
 class TJSCScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica de Santa Catarina (TJSC).
 
-    Uses the eproc jurisprudence search at eproc1g.tjsc.jus.br.
+    Uses the eproc jurisprudence search at eprocwebcon.tjsc.jus.br.
     """
 
-    BASE_URL = "https://eproc1g.tjsc.jus.br"
+    BASE_URL = "https://eprocwebcon.tjsc.jus.br"
+
+    #: O portal derruba às vezes a conexão keep-alive reaproveitada.
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        PERFIL_CJSG: RequestPolicy(retry_on_connection_error=True),
+    }
 
     def __init__(
         self,
@@ -63,9 +69,10 @@ class TJSCScraper(HTTPScraper):
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``. Mapeado para ``dt_decisao_*`` no backend.
+                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``. Mapeado para
+                  ``dt_decisao_*`` no backend, que recebe ``DD/MM/YYYY``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``YYYY-MM-DD``.
+                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -76,9 +83,18 @@ class TJSCScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
+            requests.ConnectionError: Quando o portal derruba a conexao em
+                todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com
+                ``politica={"cjsg": {...}}`` no construtor).
+
+        Avisos:
+            ``UserWarning``: Quando algum registro sai sem numero de processo
+                (nem link nem texto ``<numero>/TJSC``); a coluna ``processo``
+                fica vazia nessas linhas.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes.
+            DataFrame com as decisoes.
 
         See also:
             :class:`InputCJSGTJSC` — schema pydantic e a fonte da verdade dos

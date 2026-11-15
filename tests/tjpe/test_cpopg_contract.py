@@ -16,7 +16,6 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.core.exceptions import WafChallengeError
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests._helpers import load_sample, load_sample_bytes
@@ -155,10 +154,30 @@ def test_desafio_repetido_depois_da_renovacao_interrompe_o_lote(tjpe, obter):
     _desafio()
     _desafio()
 
-    with pytest.raises(WafChallengeError, match="TJPE"):
-        tjpe.cpopg([CNJ, CNJ])
+    with pytest.warns(UserWarning, match=r"TJPEScraper\.cpopg: 2 consulta\(s\) de processo falharam"):
+        df = tjpe.cpopg([CNJ, CNJ])
 
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
     obter.assert_called_once()
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_desafio_no_meio_do_lote_preserva_as_linhas_anteriores(tjpe, obter):
+    _form()
+    _busca()
+    _detalhe()
+    _desafio(responses.POST)
+    _desafio(responses.POST)
+
+    with pytest.warns(UserWarning, match="bloqueio_anti_bot"):
+        df = tjpe.cpopg([CNJ, CNJ, CNJ])
+
+    assert df.iloc[0]["processo"] is not None
+    assert list(df["motivo_falha"]) == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
+    obter.assert_called_once()
+    # form + busca + detalhe + busca desafiada + a mesma busca com o cookie novo.
+    assert len(responses.calls) == 5
 
 
 @responses.activate
@@ -199,9 +218,10 @@ def test_falha_do_navegador_interrompe_o_lote_sem_relancar(tjpe, mocker):
     _desafio()
     _desafio()
 
-    with pytest.raises(WafChallengeError, match="nao foi obtido: O portal do TJPE nao emitiu"):
-        tjpe.cpopg([CNJ, CNJ])
+    with pytest.warns(UserWarning, match="bloqueio_anti_bot"):
+        df = tjpe.cpopg([CNJ, CNJ])
 
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
     obter.assert_called_once()
 
 

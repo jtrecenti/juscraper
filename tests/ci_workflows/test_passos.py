@@ -159,8 +159,7 @@ def checkout_de_pr(pasta, mudanca):
     """Monta base, ramo e o commit de merge do PR; ``mudanca`` altera a árvore no ramo."""
     pasta.mkdir(parents=True, exist_ok=True)
     git(pasta, "init", "-q", "-b", "main")
-    for caminho in ("src/juscraper/courts/tjmt/client.py", "src/juscraper/utils/x.py", "tests/tjmt/test_a.py",
-                    "tests/tjmt/test_b.py", "CHANGELOG.md", "README.md"):
+    for caminho in ("src/juscraper/utils/x.py", "CHANGELOG.md", "README.md"):
         (pasta / caminho).parent.mkdir(parents=True, exist_ok=True)
         (pasta / caminho).write_text(f"{caminho}\n" * 20, encoding="utf-8")
     git(pasta, "add", "-A")
@@ -224,67 +223,35 @@ def test_changelog(tmp_path, mudanca, dispensado, esperado):
 
 
 @pytest.mark.parametrize(
-    ("mudanca", "esperado"),
+    ("tribunal", "suite", "fora"),
     [
-        (acrescentar("src/juscraper/courts/tjmt/client.py"), "tjmt"),
-        # O teste movido para fora do diretório ainda conta para o tribunal de onde saiu.
-        (mover("tests/tjmt/test_b.py", "tests/core/test_b.py"), "tjmt"),
-        (acrescentar("src/juscraper/utils/x.py"), ""),
+        # A execução dirigida roda o teste release e ignora FORA_DO_CI.
+        ("tjmt", "release", None),
+        # A completa roda os notebooks e diz quem ficou fora, para que a falta
+        # de falhas não se leia como tribunal em dia.
+        ("", "notebooks", "`tjpb`, `tjrs`"),
     ],
-    ids=["codigo-do-tribunal", "teste-movido", "codigo-comum"],
+    ids=["dirigida", "completa"],
 )
-def test_lista_de_tribunais_do_pr(tmp_path, mudanca, esperado):
-    pasta = tmp_path / "repo"
-    (pasta / "scripts").mkdir(parents=True)
-    shutil.copy(RAIZ / "scripts" / "integration_report.py", pasta / "scripts")
-    (pasta / "src/juscraper/aggregators").mkdir(parents=True)
-    checkout_de_pr(pasta, mudanca)
-
-    codigo, saidas, log = rodar(
-        bloco_run("integration.yml", "Listar os tribunais que o PR toca"), pasta, FORA_DO_CI="tjrs",
-    )
-
-    assert codigo == 0, log
-    assert saidas["tribunais"] == esperado
-
-
-def test_tribunal_fora_do_ci_gera_aviso_com_o_comando_local(tmp_path):
-    pasta = tmp_path / "repo"
-    (pasta / "scripts").mkdir(parents=True)
-    shutil.copy(RAIZ / "scripts" / "integration_report.py", pasta / "scripts")
-    (pasta / "src/juscraper/aggregators").mkdir(parents=True)
-    (pasta / "tests/tjrs").mkdir(parents=True)
-    (pasta / "src/juscraper/courts/tjrs").mkdir(parents=True)
-    (pasta / "src/juscraper/courts/tjrs/client.py").write_text("x\n", encoding="utf-8")
-    checkout_de_pr(pasta, acrescentar("src/juscraper/courts/tjrs/client.py"))
-
-    codigo, saidas, log = rodar(
-        bloco_run("integration.yml", "Listar os tribunais que o PR toca"), pasta, FORA_DO_CI="tjrs tjpb",
-    )
-
-    assert codigo == 0, log
-    assert (saidas["tribunais"], saidas["fora"]) == ("", "tjrs")
-    assert "::warning title=Fora do CI::O PR toca tjrs" in log
-    assert "uv run pytest tests/tjrs" in log
-
-
-def test_relatorio_do_pr_traz_a_suite_release_e_quem_ficou_fora(tmp_path):
+def test_relatorio_traz_as_suites_e_quem_ficou_fora(tmp_path, tribunal, suite, fora):
     (tmp_path / "scripts").mkdir()
     shutil.copy(RAIZ / "scripts" / "integration_report.py", tmp_path / "scripts")
     junit = '<testsuites><testsuite><testcase classname="tests.tjmt.t" name="x"/></testsuite></testsuites>'
-    for nome in ("integracao", "release"):
+    for nome in ("integracao", suite):
         (tmp_path / f"junit-{nome}.xml").write_text(junit, encoding="utf-8")
     resumo = tmp_path / "resumo.md"
 
     codigo, _, log = rodar(
-        bloco_run("integration.yml", "Montar o relatório"), tmp_path, TRIBUNAL="tjmt", FORA_DO_PR="tjrs",
-        FORA_DO_CI="tjrs tjpb", EXECUCAO="https://example.invalid/1", DATA="2026-11-04",
+        bloco_run("integration.yml", "Montar o relatório"), tmp_path, TRIBUNAL=tribunal,
+        FORA_DO_CI="tjrs tjpb", EXECUCAO="https://example.invalid/1",
         GITHUB_STEP_SUMMARY=str(resumo),
     )
 
     assert codigo == 0, log
     corpo = resumo.read_text(encoding="utf-8")
-    assert "| release | 1 | 0 | 0 |" in corpo
+    assert f"| {suite} | 1 | 0 | 0 |" in corpo
     # Execução dirigida sem notebook não lista a suíte de notebooks.
-    assert "| notebooks |" not in corpo
-    assert "Fora desta execução, porque dão problema só no runner do GitHub: `tjrs`." in corpo
+    assert ("| notebooks |" in corpo) == (suite == "notebooks")
+    assert ("Fora desta execução" in corpo) == (fora is not None)
+    if fora is not None:
+        assert fora in corpo

@@ -4,6 +4,9 @@ Most tests characterize behavior kept from the original parser. The tests on
 the ``/TJSC`` suffix and on ``DECISÃO`` lock fixes: they fail against the
 parser that predates them.
 """
+import datetime
+
+import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
@@ -68,7 +71,7 @@ def test_parse_result_item_preserves_partial_matching():
 
 
 def test_parse_result_item_stops_class_search_at_first_hyphenated_line():
-    """The first uppercase line with "-" but without " - " ends the class search.
+    """An uppercase line with "-" outside the "SIGLA - Classe" shape ends the class search.
 
     A later line in the "SIGLA - Classe" shape is not read, so no ``classe``.
     """
@@ -89,8 +92,79 @@ def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
 
     ``partial-labels`` and ``truncated-pairs`` are dropped; the other four stay.
     """
-    df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
+    with pytest.warns(UserWarning, match="2 registro"):
+        df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
 
     assert len(_sample_items()) == 6
     assert len(df) == 4
     assert df[["processo", "ementa"]].notna().any(axis=1).all()
+
+
+def test_cjsg_parse_manager_reads_process_number_without_link():
+    """Registro sem link ``a.numero-processo`` traz o número como texto (#495).
+
+    Sample real: acórdão do Conselho da Magistratura, julgado em 09/07/2027
+    segundo o portal, que mostra ``0000.14.36.787202-3/TJSC`` sem link.
+    """
+    df = cjsg_parse_manager([load_sample("tjsc", "cjsg/processo_sem_link.html", encoding="latin-1")])
+
+    assert df["processo"].tolist() == ["0000.14.36.787202-3"]
+    assert df["data_julgamento"].tolist() == [datetime.date(2027, 7, 9)]
+
+
+def test_cjsg_parse_manager_warns_when_process_number_is_missing():
+    """Sem link nem texto ``/TJSC``, a linha fica sem processo e há aviso."""
+    html = """
+    <div class="resultadoItem">
+      <div class="resLabel">PROCESSO</div>
+      <div class="resValue"><span>422070 - Recurso Administrativo</span></div>
+      <div class="resLabel">EMENTA</div>
+      <div class="resValue">Ementa sem número</div>
+    </div>
+    """
+
+    with pytest.warns(UserWarning, match="1 registro\\(s\\) sem número de processo"):
+        df = cjsg_parse_manager([html])
+
+    assert df["ementa"].tolist() == ["Ementa sem número"]
+    assert "processo" not in df.columns
+
+
+@pytest.mark.parametrize(
+    ("sample", "classes"),
+    [
+        # Código numérico no lugar da sigla (Conselho da Magistratura).
+        ("processo_sem_link.html", ["Recurso Administrativo"]),
+        # Sigla em caixa mista (ApCiv) ao lado de sigla em maiúsculas (RCIJEF).
+        ("results_normal_page_01.html", ["RECURSO CÍVEL"] + ["Apelação"] * 7 + ["RECURSO CÍVEL"] * 2),
+        # Outra sigla em caixa mista (AgExPe), com RSE e AI.
+        (
+            "filtro_data_julgamento.html",
+            ["RECURSO EM SENTIDO ESTRITO", "Agravo de Execução Penal", "Apelação"]
+            + ["Agravo de Instrumento"] * 4
+            + ["Apelação"] * 3,
+        ),
+    ],
+)
+def test_cjsg_parse_manager_reads_class_after_numeric_or_mixed_case_code(sample, classes):
+    """A linha ``<código> - <classe>`` dá a classe também com código numérico ou sigla em caixa mista."""
+    df = cjsg_parse_manager([load_sample("tjsc", f"cjsg/{sample}", encoding="latin-1")])
+
+    assert df["classe"].tolist() == classes
+
+
+def test_parse_result_item_ignores_prose_line_with_spaced_hyphen():
+    """Texto com `` - `` só vale como classe se o código vier logo antes do hífen."""
+    html = """
+    <div class="resultadoItem">
+      <div class="resLabel">PROCESSO</div>
+      <div class="resValue">
+        <span>5000000-00.2024.8.24.0000/TJSC</span>
+        <span>Segredo de Justiça - Sigiloso</span>
+        <span>ApCiv - Apelação</span>
+      </div>
+    </div>
+    """
+    item = BeautifulSoup(html, "html.parser").find("div", class_="resultadoItem")
+
+    assert _parse_result_item(item)["classe"] == "Apelação"

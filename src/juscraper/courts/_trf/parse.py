@@ -13,9 +13,10 @@ from __future__ import annotations
 
 import re
 import warnings
+from collections.abc import Iterator
 from typing import Any
 
-from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+from bs4 import BeautifulSoup, Tag, XMLParsedAsHTMLWarning
 
 # The detail HTML is XHTML with an ``<?xml?>`` prolog; BS4's HTML parser
 # handles it but emits a noisy warning every parse. Filter once at import.
@@ -42,6 +43,27 @@ def _norm_ws(text: str | None) -> str | None:
     return s or None
 
 
+def _pares_em_negrito(value_el: Tag) -> Iterator[tuple[str | None, str | None]]:
+    """Pares ``rótulo -> valor`` de um painel sem rótulo que os traz em negrito.
+
+    O painel do órgão julgador tem o ``<label>`` vazio e o conteúdo
+    ``<b>Órgão Julgador</b><br/>valor<div><b>Endereço</b><br/>valor</div>``.
+    O valor de cada ``<b>`` é o texto que vem depois dele, até o próximo
+    ``<b>`` ou o fim do painel.
+    """
+    rotulo: str | None = None
+    textos: list[str] = []
+    for texto in value_el.find_all(string=True):
+        if texto.parent is not None and texto.parent.name == "b":
+            if rotulo is not None:
+                yield rotulo, _norm_ws(" ".join(textos))
+            rotulo, textos = _norm_ws(texto), []
+        elif rotulo is not None:
+            textos.append(str(texto))
+    if rotulo is not None:
+        yield rotulo, _norm_ws(" ".join(textos))
+
+
 def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
     """Pull ``label -> value`` pairs out of the top ``propertyView`` panels."""
     out: dict[str, str | None] = dict.fromkeys(_PROCESS_LABELS.values())
@@ -51,13 +73,19 @@ def _parse_property_views(soup: BeautifulSoup) -> dict[str, str | None]:
         if not label_el or not value_el:
             continue
         label = _norm_ws(label_el.get_text())
-        if not label:
-            continue
-        for visible, key in _PROCESS_LABELS.items():
-            if label.startswith(visible):
-                out[key] = _norm_ws(value_el.get_text(separator=" "))
-                break
+        pares = [(label, _norm_ws(value_el.get_text(separator=" ")))] if label else _pares_em_negrito(value_el)
+        for rotulo, valor in pares:
+            key = _chave_do_rotulo(rotulo)
+            if key:
+                out[key] = valor
     return out
+
+
+def _chave_do_rotulo(rotulo: str | None) -> str | None:
+    """Coluna de saída do rótulo visível, ou ``None`` se o rótulo não interessa."""
+    if not rotulo:
+        return None
+    return next((key for visible, key in _PROCESS_LABELS.items() if rotulo.startswith(visible)), None)
 
 
 def _parse_polo(soup: BeautifulSoup, suffix: str) -> list[dict[str, str | None]]:

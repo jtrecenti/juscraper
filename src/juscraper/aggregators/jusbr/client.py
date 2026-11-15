@@ -251,7 +251,11 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
 
         Raises:
             ValueError: Quando ``token`` é inválido ou está expirado, ou quando
-                ``politica`` cita perfil ou campo desconhecido.
+                ``politica`` cita perfil ou campo desconhecido ou traz valor
+                inválido (``max_retries`` que não é inteiro >= 1,
+                ``base_backoff`` ou ``max_backoff`` que não é número positivo
+                e finito, ``timeout`` que não é ``None``, número positivo e
+                finito nem o par ``(conexão, leitura)``).
         """
         super().__init__(
             "jusbr", verbose=verbose, download_path=download_path, sleep_time=sleep_time, politica=politica,
@@ -499,8 +503,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             Texto bruto, texto limpo, binário e motivo de falha. O motivo é o do
-            texto quando o texto falha, senão o do binário; as duas falhas
-            entram em ``falhas``, e o ``None`` de cada conteúdo diz qual faltou.
+                texto quando o texto falha, senão o do binário; as duas falhas
+                entram em ``falhas``, e o ``None`` de cada conteúdo diz qual faltou.
         """
         numero_processo_clean = clean_cnj(numero_processo)
         descricao = f"processo {numero_processo}"
@@ -692,8 +696,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             chamada, emitido quando a coleta termina.
 
         Returns:
-            pd.DataFrame: Uma linha por documento, com metadados, texto limpo,
-            respostas brutas disponíveis e ``motivo_falha``.
+            Uma linha por documento, com metadados, texto limpo,
+                respostas brutas disponíveis e ``motivo_falha``.
 
         See Also:
             :class:`InputDownloadDocumentsJusBR` — schema pydantic e fonte da

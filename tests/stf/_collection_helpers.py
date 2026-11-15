@@ -10,6 +10,27 @@ from juscraper.courts.stf.download import BASE_URL, build_payload
 from tests._helpers import load_sample
 
 
+def assert_filtros_no_corpo(corpo, pesquisa, classes):
+    """Nomes de campo do Elasticsearch para os filtros que os contratos passam juntos (#514).
+
+    Escritos à mão, e não derivados de ``build_payload``: base ``acordaos``,
+    ``classes``, inteiro teor e as datas de julgamento (01/01/2024 a 31/12/2024)
+    e de publicação (01/02/2024 a 30/11/2024).
+    """
+    assert corpo["post_filter"]["bool"]["must"] == [
+        {"term": {"base": "acordaos"}},
+        {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": classes}},
+    ]
+    consulta_bool = corpo["query"]["function_score"]["query"]["bool"]
+    busca = consulta_bool["filter"][0]["query_string"]
+    assert busca["query"] == pesquisa
+    assert "inteiro_teor_texto.plural" in busca["fields"]
+    assert consulta_bool["filter"][1:] == [
+        {"range": {"julgamento_data": {"format": "ddMMyyyy", "from": "01012024", "lte": "31122024"}}},
+        {"range": {"publicacao_data": {"format": "ddMMyyyy", "from": "01022024", "lte": "30112024"}}},
+    ]
+
+
 def sample_rows():
     return json.loads(load_sample("stf", "listar_decisoes/single_page.json"))["result"]["hits"]["hits"]
 

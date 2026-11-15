@@ -11,7 +11,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import BASE_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample
 
 
 def _add_post(expected_payload: dict) -> None:
@@ -53,6 +53,20 @@ def test_cjsg_all_filters_land_in_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do Solr ficam pinados aqui.
+    assert corpo_form_enviado(responses.calls[0].request) == {
+        "start": "0",
+        "rows": "20",
+        "type_minuta_selected": "2",
+        "q": "dano moral",
+        "tip_criterio_inst": "2",
+        "tip_criterio_data": "ASC",
+        "numero_processo": "0000000-00.0000.0.00.0000",
+        "tempo_julgados": "pers",
+        "dat_jul_ini": "01/01/2024",
+        "dat_jul_fim": "31/03/2024",
+        "soementa": "on",
+    }
 
 
 @responses.activate

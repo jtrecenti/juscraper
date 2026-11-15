@@ -18,6 +18,7 @@ class OutputCpopgTRF6(OutputCnjConsultaBase):
     (``processo``, ``classe``, ``data_autuacao``, ``situacao``, ``magistrado``,
     ``orgao_julgador``, ``assuntos``, ``polo_ativo``, ``polo_passivo``,
     ``mpf``, ``perito``, ``movimentacoes``) flow through ``extra='allow'``.
+    ``motivo_falha`` (``None`` ou o motivo da falha da linha) também.
     Same convention as :class:`OutputCPOPGJusBR` / :class:`OutputCPOPGTJSP`.
     """
 

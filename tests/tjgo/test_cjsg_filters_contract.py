@@ -14,7 +14,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample_bytes
 
 
 def _add_get_prime() -> None:
@@ -62,6 +62,30 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do Projudi ficam pinados aqui.
+    busca = next(c for c in responses.calls if c.request.method == "POST")
+    assert corpo_form_enviado(busca.request) == {
+        "PaginaAtual": "2",
+        "PosicaoPaginaAtual": "0",
+        "Viewstate": "",
+        "Texto": "dano moral",
+        "Id_Instancia": "2",
+        "Id_Area": "1",
+        "Id_ServentiaSubTipo": "42",
+        "Serventia": "",
+        "Id_Serventia": "",
+        "Usuario": "",
+        "Id_Usuario": "",
+        "ArquivoTipo": "",
+        "Id_ArquivoTipo": "",
+        "ProcessoNumero": "0000000-00.0000.0.00.0000",
+        "DataInicial": "01/02/2024",
+        "DataFinal": "30/04/2024",
+        "cf-turnstile-response": "",
+        "g-recaptcha-response": "",
+        "Localizar": "Consultar",
+        "qtdeItensPagina": "20",
+    }
 
 
 @responses.activate

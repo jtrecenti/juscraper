@@ -178,6 +178,8 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     row = df.iloc[0]
     assert row["id_cnj"] == "10030632720234013304"
     assert row["processo"] is not None
+    assert row["orgao_julgador"] == "2ª Vara Federal Cível e Criminal da SSJ de Anápolis-GO"
+    assert row["endereco_orgao"].startswith("Avenida Universitária, Quadra 02")
     assert isinstance(row["movimentacoes"], list) and len(row["movimentacoes"]) > 0
 
 

@@ -6,7 +6,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample_bytes
 
 
 @responses.activate
@@ -25,10 +25,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
                 page=1,
                 campo="I",
                 processo="00000000000000000000",
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
-                dt_publicacao_inicio="2024-02-01",
-                dt_publicacao_fim="2024-04-30",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
+                dt_publicacao_inicio="01/02/2024",
+                dt_publicacao_fim="30/04/2024",
             ),
             allow_blank=True,
         )],
@@ -46,6 +46,18 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+    # O matcher deriva do builder; os nomes de campo do eproc ficam pinados aqui.
+    assert corpo_form_enviado(responses.calls[0].request) == {
+        "txtPesquisa": "dano moral",
+        "rdoCampo": "I",
+        "txtProcesso": "00000000000000000000",
+        "dtDecisaoInicio": "01/01/2024",
+        "dtDecisaoFim": "31/03/2024",
+        "dtPublicacaoInicio": "01/02/2024",
+        "dtPublicacaoFim": "30/04/2024",
+        "hdnPaginaAtual": "1",
+        "numResultadosPorPagina": "10",
+    }
 
 
 @responses.activate
@@ -107,8 +119,8 @@ def test_cjsg_data_inicio_alias_maps_to_dt_decisao(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
             ),
             allow_blank=True,
         )],
@@ -186,8 +198,8 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
             ),
             allow_blank=True,
         )],
@@ -209,15 +221,7 @@ def test_cjsg_download_data_inicio_alias_maps_to_dt_decisao(mocker):
 
 @responses.activate
 def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
-    """Datas de julgamento e publicacao em ``DD/MM/YYYY`` chegam coercidas
-    em ISO ao form body do eproc.
-
-    Cobre o caminho end-to-end de ``apply_input_pipeline_search`` lendo
-    ``BACKEND_DATE_FORMAT='%Y-%m-%d'`` declarado em :class:`InputCJSGTJSC`
-    e convertendo ambos os intervalos via ``coerce_brazilian_date``. Se o
-    schema esquecer de declarar o ``BACKEND_DATE_FORMAT``, o backend
-    recebe ``dtDecisaoInicio=01/01/2024`` em vez de ``2024-01-01`` e o
-    matcher dispara ``ConnectionError`` (refs #182, #173, #167)."""
+    """Entrada ja em ``DD/MM/YYYY`` chega igual ao form body (#495)."""
     mocker.patch("time.sleep")
     responses.add(
         responses.POST,
@@ -229,10 +233,10 @@ def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                dt_decisao_inicio="2024-01-01",
-                dt_decisao_fim="2024-03-31",
-                dt_publicacao_inicio="2024-02-01",
-                dt_publicacao_fim="2024-04-30",
+                dt_decisao_inicio="01/01/2024",
+                dt_decisao_fim="31/03/2024",
+                dt_publicacao_inicio="01/02/2024",
+                dt_publicacao_fim="30/04/2024",
             ),
             allow_blank=True,
         )],

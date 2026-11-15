@@ -156,8 +156,8 @@ class TJGOScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame: DataFrame com as decisoes (coluna ``texto`` carrega
-            o conteudo do documento; ``ementa`` nao e preenchido).
+            DataFrame com as decisoes (coluna ``texto`` carrega
+                o conteudo do documento; ``ementa`` nao e preenchido).
 
         See also:
             :class:`InputCJSGTJGO` — schema pydantic e a fonte da verdade dos

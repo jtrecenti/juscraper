@@ -98,7 +98,7 @@ def clean_document_text(text: str | None) -> str | None:
 
     Returns:
         O texto limpo, ou ``None`` quando a entrada é ``None``, vazia ou só tem
-        espaço: documento sem texto aproveitável sai igual nos dois agregadores.
+            espaço: documento sem texto aproveitável sai igual nos dois agregadores.
     """
     if not text:
         return None

@@ -63,7 +63,7 @@ class TJMTScraper(HTTPScraper):
         resposta da API, sem parsear.
 
         Returns:
-            list[dict]: Resposta JSON de cada página, na ordem pedida.
+            Resposta JSON de cada página, na ordem pedida.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -111,8 +111,8 @@ class TJMTScraper(HTTPScraper):
                 tipo de cada documento.
 
         Returns:
-            list[dict]: Um dicionário por documento, com as colunas descritas
-            em :meth:`cjsg`.
+            Um dicionário por documento, com as colunas descritas
+                em :meth:`cjsg`.
         """
         return cjsg_parse(resultados_brutos, tipo_consulta=tipo_consulta)
 
@@ -205,12 +205,12 @@ class TJMTScraper(HTTPScraper):
             lados do intervalo de publicação é informado.
 
         Returns:
-            pd.DataFrame: Uma linha por documento, com as colunas de
-            ``CJSG_COLUMNS`` em :mod:`juscraper.courts.tjmt.parse`
-            (``processo``, ``ementa``, ``relator``, ``orgao_julgador``,
-            ``data_julgamento``, ``data_publicacao`` e outras, descritas em
-            :class:`OutputCJSGTJMT`). Datas vêm como ``datetime.date``. Busca
-            sem resultados devolve DataFrame vazio com as mesmas colunas.
+            Uma linha por documento, com as colunas de
+                ``CJSG_COLUMNS`` em :mod:`juscraper.courts.tjmt.parse`
+                (``processo``, ``ementa``, ``relator``, ``orgao_julgador``,
+                ``data_julgamento``, ``data_publicacao`` e outras, descritas em
+                :class:`OutputCJSGTJMT`). Datas vêm como ``datetime.date``. Busca
+                sem resultados devolve DataFrame vazio com as mesmas colunas.
 
         Examples: Exemplo
             >>> import juscraper as jus

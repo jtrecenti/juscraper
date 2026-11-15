@@ -145,8 +145,8 @@ def cjsg_parse_manager(resultados_brutos: list[str]) -> pd.DataFrame:
 
     Returns:
         DataFrame com as colunas de :data:`COLUNAS_PRINCIPAIS` primeiro.
-        ``data_julgamento`` e ``data_publicacao`` saem como ``datetime.date``;
-        ``processo`` sai no formato CNJ quando tem 20 dígitos.
+            ``data_julgamento`` e ``data_publicacao`` saem como ``datetime.date``;
+            ``processo`` sai no formato CNJ quando tem 20 dígitos.
     """
     registros: list[dict] = []
     for html in resultados_brutos:

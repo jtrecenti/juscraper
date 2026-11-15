@@ -467,6 +467,21 @@ def test_cancelamento_encerra_a_espera(mocker):
         _esperar_credencial(page, _Captura(), 5, cancelar, _ErroFalso)
 
 
+@pytest.fixture
+def ctrl_c_ativo():
+    """Garante o tratamento padrao do Ctrl-C durante o teste, e o restaura depois.
+
+    O pytest rodado em segundo plano (job com ``&`` num shell nao interativo)
+    herda o SIGINT ignorado, e o Python nao instala o ``default_int_handler``
+    nesse caso: o SIGINT do teste se perderia e ele falharia sem relacao com
+    o login.
+    """
+    anterior = signal.signal(signal.SIGINT, signal.default_int_handler)
+    yield
+    signal.signal(signal.SIGINT, anterior)
+
+
+@pytest.mark.usefixtures("ctrl_c_ativo")
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_chega_ao_chamador_sem_esperar_o_worker(mocker):
     cancelado = threading.Event()
@@ -500,6 +515,7 @@ def test_abrir_navegador_sem_porta_no_prazo_encerra_o_processo(mocker, tmp_path)
     assert processo.encerrado
 
 
+@pytest.mark.usefixtures("ctrl_c_ativo")
 @pytest.mark.skipif(sys.platform == "win32", reason="SIGINT enviado ao proprio processo")
 def test_ctrl_c_nao_espera_worker_preso(mocker):
     """Worker preso num passo que nao confere o cancelamento (``goto`` longo, por exemplo)."""
@@ -586,9 +602,11 @@ def test_ctrl_c_com_worker_preso_nao_segura_a_saida_do_interpretador():
     # (tratamento do bpo-45274). O interpretador então sai sem esperar o
     # worker, com ou sem daemon, e o tempo não denuncia um worker não daemon.
     # Por isso o worker falso também informa se a própria thread é daemon, o
-    # que vale em toda versão.
+    # que vale em toda versão. O filho reinstala o tratamento do Ctrl-C, pelo
+    # mesmo motivo da fixture ctrl_c_ativo: ele herda o SIGINT do pytest.
     codigo = (
         "import atexit, os, signal, sys, threading, time\n"
+        "signal.signal(signal.SIGINT, signal.default_int_handler)\n"
         "from juscraper.aggregators._pdpj_sso import login\n"
         "worker_preso = threading.Event()\n"
         "def credencial_presa(*_a):\n"

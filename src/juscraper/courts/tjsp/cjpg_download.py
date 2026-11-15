@@ -7,6 +7,7 @@ can continue importing it from here.
 """
 from __future__ import annotations
 
+import html
 import logging
 import time
 from datetime import datetime
@@ -16,10 +17,13 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
-from .cjpg_parse import cjpg_n_pags
+from .cjpg_parse import MARCA_PAGINA_NAO_BAIXADA, cjpg_n_pags
+from .cpopg_download import _TENTATIVAS, _TIMEOUT
 from .exceptions import QueryTooLongError
 
 __all__ = ["QueryTooLongError", "cjpg_download", "fetch_cjpg_first_page"]
+
+logger = logging.getLogger("juscraper.cjpg_download")
 
 
 def _save_debug_html(response: requests.Response, download_path: str, error: Exception) -> Path:
@@ -61,6 +65,33 @@ def _save_page(path: Path, page: int, html: str) -> None:
     path.joinpath(f"cjpg_{page:05d}.html").write_text(html, encoding="utf-8")
 
 
+def _baixar_pagina(session: requests.Session, url: str, page: int, sleep_time: float) -> str:
+    """HTML da página ``page``, com até ``_TENTATIVAS`` pedidos, como no ``cpopg``.
+
+    Status de erro conta como falha: a página de erro do eSAJ, gravada,
+    seria lida como página sem resultados. Esgotadas as tentativas, devolve
+    uma página com a marca :data:`MARCA_PAGINA_NAO_BAIXADA` e o último erro,
+    que :func:`~juscraper.courts.tjsp.cjpg_parse.cjpg_parse_single` recusa:
+    as demais páginas seguem, e a perdida sobe no ``ColetaParcialError`` do
+    parse (#460).
+    """
+    ultimo_erro: requests.RequestException | None = None
+    for tentativa in range(_TENTATIVAS):
+        if tentativa:
+            time.sleep(sleep_time)
+        try:
+            resposta = session.get(url, timeout=_TIMEOUT)
+            resposta.raise_for_status()
+        except requests.RequestException as erro:
+            ultimo_erro = erro
+            logger.warning("cjpg: página %s, tentativa %s de %s: %s", page, tentativa + 1, _TENTATIVAS, erro)
+        else:
+            return resposta.text
+    mensagem = f"página {page} não baixada após {_TENTATIVAS} tentativas; último erro: {ultimo_erro}"
+    logger.error("cjpg: %s", mensagem)
+    return f'<p id="{MARCA_PAGINA_NAO_BAIXADA}">{html.escape(mensagem)}</p>\n'
+
+
 def fetch_cjpg_first_page(
     *,
     pesquisa: str,
@@ -100,7 +131,7 @@ def fetch_cjpg_first_page(
         'dadosConsulta.ordenacao': 'DESC'
     }
 
-    return session.get(f"{u_base}cjpg/pesquisar.do", params=query)
+    return session.get(f"{u_base}cjpg/pesquisar.do", params=query, timeout=_TIMEOUT)
 
 
 def cjpg_download(
@@ -127,6 +158,10 @@ def cjpg_download(
     ``classe``/``assunto``/``vara`` chegam ja como CSV (ou ``None``); a coercao
     de ``int``/``list`` -> CSV acontece no schema (:class:`InputCJPGTJSP`) via
     :data:`IdFiltro`. Refs #232.
+
+    Cada página a partir da 2 tem até cinco pedidos. A que falha em todos
+    é gravada com o último erro, e o parse a recusa (``cjpg_parse_manager``):
+    o parse do diretório levanta ``ColetaParcialError`` com as demais.
 
     Raises:
         ValueError: If the page count cannot be extracted from the first-page
@@ -165,6 +200,5 @@ def cjpg_download(
     for page in tqdm(remaining, desc="Baixando documentos", total=total, initial=initial):
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
-        r = session.get(u)
-        _save_page(path, page, r.text)
+        _save_page(path, page, _baixar_pagina(session, u, page, sleep_time))
     return str(path)

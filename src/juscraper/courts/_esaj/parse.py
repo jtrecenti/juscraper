@@ -364,10 +364,10 @@ def parse_arvore(html: str) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame com as colunas ``id`` (str), ``nome`` (str, caixa
-        original), ``id_pai`` (str | None — ``None`` na raiz), ``nivel``
-        (int, raiz = 1), ``selecionavel`` (bool — folhas selecionaveis) e
-        ``caminho`` (str — nomes dos ancestrais ate o no, juntados por
-        `` > ``). Vazio quando o HTML nao contem nos.
+            original), ``id_pai`` (str | None — ``None`` na raiz), ``nivel``
+            (int, raiz = 1), ``selecionavel`` (bool — folhas selecionaveis) e
+            ``caminho`` (str — nomes dos ancestrais ate o no, juntados por
+            `` > ``). Vazio quando o HTML nao contem nos.
     """
     soup = BeautifulSoup(html, "html.parser")
     linhas: list[dict] = []

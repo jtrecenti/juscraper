@@ -26,10 +26,11 @@ class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     que roda *antes* deste modelo. Datas de julgamento e publicacao
     aceitam os aliases ``data_inicio``/``data_fim`` via
     :func:`juscraper.utils.params.normalize_datas`. Filtros de data
-    herdados dos mixins. Backend espera ``YYYY-MM-DD``.
+    herdados dos mixins. Backend espera ``DD/MM/YYYY``: em ``YYYY-MM-DD``
+    a busca volta vazia (#495).
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
     campo: Literal["E", "I"] = "E"
     processo: str | None = None

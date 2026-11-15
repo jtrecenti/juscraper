@@ -6,6 +6,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from juscraper.core.avisos import avisar
 from juscraper.utils.cnj import format_cnj
 
 _FIELD_MAP = {
@@ -48,28 +49,52 @@ def _resolve_field(label: str) -> str | None:
     return None
 
 
+_CLASS_LINE = re.compile(r"^(?:[A-Z][A-Za-z]*|\d+) - (.+)")
+_UPPERCASE_PREFIX = re.compile(r"^[A-Z]{2,}")
+
+
 def _extract_class(value) -> str | None:
-    """Extract the class description from the process field when present."""
+    """Extrai a classe do campo PROCESSO, quando houver.
+
+    A linha da classe tem a forma ``<código> - <classe>``. O código é uma sigla,
+    às vezes em caixa mista (``AI``, ``ApCiv``), ou um número (``422070``, no
+    Conselho da Magistratura), seguido direto de `` - ``. A linha do número do
+    processo não tem espaço em volta do hífen e fica de fora. Como no parser
+    original, uma linha em maiúsculas com hífen fora dessa forma encerra a busca.
+    """
     class_text = str(value.get_text(separator="\n", strip=True))
     lines = (line.strip() for line in class_text.split("\n") if line.strip())
     for line in lines:
-        if not re.match(r"^[A-Z]{2,}", line) or "-" not in line:
-            continue
-        parts = line.split(" - ", 1)
-        if len(parts) == 2:
-            return parts[1].strip()
-        break
+        match = _CLASS_LINE.match(line)
+        if match:
+            return match.group(1).strip()
+        if "-" in line and _UPPERCASE_PREFIX.match(line):
+            break
+    return None
+
+
+def _raw_process_number(value) -> str | None:
+    """Return the process number without the ``/TJSC`` suffix, or ``None``.
+
+    O número costuma vir no link ``a.numero-processo``. Alguns registros (acórdãos
+    do Conselho da Magistratura, por exemplo) trazem só o texto ``<número>/TJSC``,
+    sem link. Tirar o sufixo antes de formatar vale também para números antigos
+    fora do padrão CNJ, que format_cnj devolve crus.
+    """
+    link = value.find("a", class_="numero-processo")
+    if link:
+        return str(link.get_text(strip=True)).removesuffix("/TJSC")
+    for text in value.stripped_strings:
+        if text.endswith("/TJSC"):
+            return str(text).removesuffix("/TJSC")
     return None
 
 
 def _extract_process_fields(value) -> dict[str, str]:
     """Extract the linked process number and the adjacent class description."""
     fields = {}
-    link = value.find("a", class_="numero-processo")
-    if link:
-        # O eproc anexa "/TJSC" ao número. Tirar o sufixo antes de formatar vale
-        # também para números antigos fora do padrão CNJ, que format_cnj devolve crus.
-        raw_process = link.get_text(strip=True).removesuffix("/TJSC")
+    raw_process = _raw_process_number(value)
+    if raw_process:
         fields["processo"] = format_cnj(raw_process, strict=False) or raw_process
     process_class = _extract_class(value)
     if process_class is not None:
@@ -120,6 +145,13 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         registro = _parse_result_item(item)
         if registro and ("ementa" in registro or "processo" in registro):
             registros.append(registro)
+
+    sem_processo = sum("processo" not in registro for registro in registros)
+    if sem_processo:
+        avisar(
+            f"TJSC cjsg: {sem_processo} registro(s) sem número de processo "
+            "reconhecível; a coluna 'processo' fica vazia nessas linhas."
+        )
 
     df = pd.DataFrame(registros)
     if df.empty:

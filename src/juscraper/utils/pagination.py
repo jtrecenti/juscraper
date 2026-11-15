@@ -125,7 +125,7 @@ def extract_count_with_cascade(
 
     Returns:
         ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
-        nao salvar. ``0`` quando ``zero_markers`` casarem.
+            nao salvar. ``0`` quando ``zero_markers`` casarem.
     """
     soup = BeautifulSoup(html, "html.parser")
     if _has_zero_marker(soup, zero_markers):

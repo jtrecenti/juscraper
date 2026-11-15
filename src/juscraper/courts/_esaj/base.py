@@ -152,8 +152,8 @@ def run_auto_chunk(
 
     Returns:
         ``None`` quando o chunking nao se aplica (auto_chunk=False ou
-        janela curta) — caller deve seguir o caminho noop. Caso contrario,
-        retorna o ``pd.DataFrame`` deduplicado.
+            janela curta) — caller deve seguir o caminho noop. Caso contrario,
+            retorna o ``pd.DataFrame`` deduplicado.
 
     Side effects:
         Sempre remove ``auto_chunk`` de ``kwargs``. No caminho noop,
@@ -357,7 +357,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             ``pd.DataFrame`` com os resultados parseados, ou ``int`` quando
-            ``count_only=True``.
+                ``count_only=True``.
         """
         if pre_normalize is not None:
             pre_normalize(kwargs)
@@ -409,7 +409,7 @@ class EsajSearchScraper(HTTPScraper):
         pesquisa: str,
         paginas: int | list | range | None = None,
         **kwargs: Any,
-    ):
+    ) -> pd.DataFrame | int:
         """Pesquisa jurisprudencia de segundo grau do tribunal (CJSG).
 
         Delega para :meth:`cjsg_download` + :meth:`cjsg_parse` e remove o
@@ -478,11 +478,11 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            pd.DataFrame | int: Resultados parseados (colunas conforme
-            :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
-            via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
-            ``cd_foro``); ``int`` com o total de resultados quando
-            ``count_only=True``.
+            Resultados parseados (colunas conforme
+                :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
+                via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
+                ``cd_foro``); ``int`` com o total de resultados quando
+                ``count_only=True``.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -642,7 +642,7 @@ class EsajSearchScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            str: Caminho do diretorio onde os HTMLs foram salvos.
+            Caminho do diretorio onde os HTMLs foram salvos.
         """
         pesquisa = normalize_pesquisa(pesquisa, **kwargs)
 
@@ -694,8 +694,8 @@ class EsajSearchScraper(HTTPScraper):
                 de 1o grau num tribunal que so tem cjsg).
 
         Returns:
-            pd.DataFrame: Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
-            ``selecionavel``, ``caminho``.
+            Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
+                ``selecionavel``, ``caminho``.
         """
         rel = self.TREE_ENDPOINTS.get(tree_key)
         if rel is None:
@@ -726,9 +726,9 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de classes (colunas ``id``, ``nome``,
-            ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
-            linhas com ``selecionavel=True`` valem como filtro.
+            Arvore de classes (colunas ``id``, ``nome``,
+                ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
+                linhas com ``selecionavel=True`` valem como filtro.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -752,9 +752,9 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de assuntos (mesmas colunas de
-            :meth:`listar_classes`). So as linhas com ``selecionavel=True``
-            valem como filtro.
+            Arvore de assuntos (mesmas colunas de
+                :meth:`listar_classes`). So as linhas com ``selecionavel=True``
+                valem como filtro.
         """
         return self._listar_arvore(f"assuntos_{grau}")
 
@@ -771,8 +771,8 @@ class EsajSearchScraper(HTTPScraper):
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
 
         Returns:
-            pd.DataFrame: Arvore de orgaos julgadores (mesmas colunas de
-            :meth:`listar_classes`).
+            Arvore de orgaos julgadores (mesmas colunas de
+                :meth:`listar_classes`).
         """
         return self._listar_arvore(f"orgaos_{grau}")
 

@@ -2,10 +2,14 @@
 from urllib.parse import urlencode
 
 import pandas as pd
+import pytest
+import requests
 import responses
 from responses.matchers import urlencoded_params_matcher
+from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.core.exceptions import InvalidJSONResponseError
 from tests._helpers import load_sample
 
 BASE = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -124,3 +128,67 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@pytest.mark.parametrize(
+    "falha",
+    [requests.ReadTimeout("lento"), requests.ConnectionError("fora do ar")],
+    ids=["timeout", "conexao"],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_retenta_timeout_e_erro_de_conexao(mocker, falha):
+    """Timeout e erro de conexão transitórios ganham nova tentativa, como no TRF3."""
+    mocker.patch("time.sleep")
+    responses.add(responses.POST, BASE, body=falha)
+    _add_page("mandado de seguranca", 1, "cjsg/single_page.json")
+
+    df = jus.scraper("tjrs").cjsg("mandado de seguranca", paginas=1)
+
+    assert len(df) > 0
+    assert len(responses.calls) == 2
+
+
+@pytest.mark.parametrize(
+    "corpo",
+    ["", "<html><body>Manutenção</body></html>"],
+    ids=["vazio", "html"],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_retenta_corpo_nao_json(mocker, corpo):
+    """Um 200 com corpo vazio ou HTML é transitório e ganha nova tentativa, como no TJES."""
+    mocker.patch("time.sleep")
+    responses.add(responses.POST, BASE, body=corpo, status=200, content_type="text/html")
+    _add_page("mandado de seguranca", 1, "cjsg/single_page.json")
+
+    df = jus.scraper("tjrs").cjsg("mandado de seguranca", paginas=1)
+
+    assert len(df) > 0
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cjsg_corpo_nao_json_persistente_levanta_invalid_json(mocker):
+    """Persistindo, sai ``InvalidJSONResponseError`` com o status, não ``JSONDecodeError`` opaco."""
+    mocker.patch("time.sleep")
+    responses.add(responses.POST, BASE, body="", status=200)
+
+    with pytest.raises(InvalidJSONResponseError):
+        jus.scraper("tjrs").cjsg("mandado de seguranca", paginas=1)
+
+    assert len(responses.calls) == 3
+
+
+@pytest.mark.parametrize(
+    ("politica", "timeout_esperado"),
+    [(None, (10, 30)), ({"cjsg": {"timeout": 7}}, 7)],
+    ids=["default", "politica"],
+)
+@responses.activate
+def test_cjsg_timeout_vem_do_perfil_http(mocker, politica, timeout_esperado):
+    """O timeout sai do perfil ``cjsg``, ajustável com ``politica=`` no construtor."""
+    mocker.patch("time.sleep")
+    _add_page("mandado de seguranca", 1, "cjsg/single_page.json")
+
+    jus.scraper("tjrs", politica=politica).cjsg("mandado de seguranca", paginas=1)
+
+    assert responses.calls[0].request.req_kwargs["timeout"] == timeout_esperado

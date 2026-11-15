@@ -11,7 +11,7 @@ def _sample(name: str) -> str:
 
 def test_get_total_pages_results_normal():
     html = _sample("results_normal_page_01.html")
-    total_docs = 218319
+    total_docs = 231089
     expected = max(1, (total_docs + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE)
     assert _get_total_pages(html) == expected
 

@@ -12,12 +12,15 @@ from pathlib import Path
 
 import pytest
 
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from tests.helpers import DATA_ALVO_BR, DATA_ALVO_FIM_BR, DATA_ALVO_FIM_ISO, DATA_ALVO_ISO
 
 # Habilita a fixture ``pytester`` (sessões pytest isoladas) usada por
 # ``tests/test_anti_bot_marker.py`` para exercitar o hook ``anti_bot`` abaixo.
 pytest_plugins = ["pytester"]
+
+#: Prazo, em segundos, de cada teste ``integration`` (ver ``pytest_collection_modifyitems``).
+PRAZO_INTEGRACAO = 600
 
 # Dentro de um hook, o git exporta GIT_DIR, GIT_INDEX_FILE e outras variáveis
 # que apontam para o repositório de quem commita. Os testes que criam
@@ -30,13 +33,32 @@ for _variavel in subprocess.run(
     os.environ.pop(_variavel, None)
 
 
+def pytest_collection_modifyitems(config, items):
+    """Dá a cada teste ``integration`` sem prazo próprio o prazo ``PRAZO_INTEGRACAO`` (pytest-timeout).
+
+    Uma conexão lenta prendia a integração por horas (#441); com o prazo, só o
+    teste que estoura reprova. Offline e notebooks do ``--nbmake`` ficam de
+    fora. ``--timeout=N`` na linha de comando vale no lugar deste prazo
+    (``0`` desliga); ``@pytest.mark.timeout(N)`` ajusta um teste.
+    """
+    if config.getoption("timeout") is not None:
+        return
+    for item in items:
+        if item.get_closest_marker("integration") and not item.get_closest_marker("timeout"):
+            item.add_marker(pytest.mark.timeout(PRAZO_INTEGRACAO))
+
+
 @pytest.hookimpl(wrapper=True)
 def pytest_runtest_makereport(item, call):
     """Converte um bloqueio anti-bot em xfail para testes marcados ``anti_bot``.
 
     Portais protegidos por Akamai (TRF1/TRF3/TRF5 ``cpopg``) devolvem HTTP 403
     ``Access Denied`` a partir de IPs de datacenter/CI; o código levanta
-    ``BotChallengeBlockedError`` de propósito (bloqueio session-wide). Isso é
+    ``BotChallengeBlockedError`` de propósito (bloqueio session-wide); o
+    ``cpopg`` em lote registra o bloqueio na linha (``bloqueio_anti_bot``) e
+    emite um :class:`BloqueioAntiBotWarning`, que o ``filterwarnings = error``
+    da suíte transforma em exceção, e o hook reconhece pela categoria, não pelo
+    texto, que cita só as primeiras falhas. Isso é
     falha *ambiental* — depende do IP do cliente, não é regressão —, então vira
     xfail em vez de vermelho. Qualquer outra exceção continua falhando
     normalmente, preservando o sinal de regressão real (parser quebrado, schema
@@ -48,7 +70,7 @@ def pytest_runtest_makereport(item, call):
         report.when == "call"
         and call.excinfo is not None
         and item.get_closest_marker("anti_bot") is not None
-        and call.excinfo.errisinstance(BotChallengeBlockedError)
+        and call.excinfo.errisinstance((BotChallengeBlockedError, BloqueioAntiBotWarning))
     ):
         report.outcome = "skipped"
         report.wasxfail = "bloqueio anti-bot (Akamai) — falha ambiental, não regressão"

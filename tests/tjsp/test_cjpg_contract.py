@@ -18,11 +18,13 @@ Samples exercised:
 """
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjsp.cjpg_download import QueryTooLongError
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
@@ -233,3 +235,91 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     assert isinstance(n, int)
     assert n == 39764 + 25  # soma bruta cross-janela
     assert len(responses.calls) == 2
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_todo_pedido_do_cjpg_tem_timeout(tmp_path, mocker):
+    """pesquisar.do e trocarDePagina.do saem com prazo: conexão parada não trava a coleta (#484)."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    _add_trocar_de_pagina(2, "cjpg/results_normal_page_02.html")
+
+    jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(responses.calls) == 2
+    assert [c.request.req_kwargs.get("timeout") is not None for c in responses.calls] == [True, True]
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_pagina_que_falha_no_parse_levanta_coleta_parcial(tmp_path, mocker):
+    """Página fora do formato não some do resultado (#460): o erro sobe com a página lida em ``.resultado``.
+
+    A página 2 é a captura real com um rótulo sem os dois-pontos, como num
+    layout novo do eSAJ. Antes, ela saía só no log e o ``cjpg`` devolvia 10
+    decisões como se fossem todas.
+    """
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    pagina_2 = load_sample_bytes("tjsp", "cjpg/results_normal_page_02.html").replace(b"Classe:", b"Classe", 1)
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocarDePagina.do",
+        body=pagina_2,
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"pagina": "2", "conversationId": ""})],
+    )
+
+    falha_na_pagina_2 = r"cjpg: 1 de 2 página\(s\) falharam: cjpg_00002\.html\."
+    with pytest.raises(ColetaParcialError, match=falha_na_pagina_2) as erro:
+        jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(erro.value.resultado) == 10
+    assert set(erro.value.resultado.columns) >= CJPG_MIN_COLUMNS
+    assert len(erro.value.falhas) == 1
+    assert not list(tmp_path.rglob("*.html"))
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_pagina_de_erro_no_meio_da_coleta_levanta_coleta_parcial(tmp_path, mocker):
+    """Página de captcha na página 2 não conta como página lida sem resultados."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    _add_trocar_de_pagina(2, "cjpg/count_captcha_error.html")
+
+    with pytest.raises(ColetaParcialError, match=r"cjpg_00002\.html.*Captcha") as erro:
+        jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(erro.value.resultado) == 10
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_pagina_com_status_de_erro_e_pedida_de_novo(tmp_path, mocker):
+    """Página 2 que volta 503 e depois 200 entra inteira: o erro passageiro não perde a página."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", status=503)
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", body=requests.ConnectionError("recusada"))
+    _add_trocar_de_pagina(2, "cjpg/results_normal_page_02.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(df) == 20
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+def test_cjpg_pagina_que_falha_em_todas_as_tentativas_levanta_coleta_parcial(tmp_path, mocker):
+    """Página 2 com 500 em todas as tentativas não vira página vazia (#460): sobe com a página 1 lida.
+
+    Antes, o HTML da página de erro era gravado como a página 2 e lido sem
+    resultados, e o ``cjpg`` devolvia 10 decisões como se fossem todas.
+    """
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", body="<html>erro</html>", status=500)
+
+    with pytest.raises(ColetaParcialError, match=r"cjpg_00002\.html.*página 2 não baixada após 5 tentativas.*500"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(responses.calls) == 1 + 5

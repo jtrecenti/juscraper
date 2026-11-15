@@ -11,6 +11,7 @@ digital gravada em ``samples/documentos/``, e por ``getPDF.do`` com os
 
 import json
 import re
+import warnings
 from pathlib import Path
 from urllib.parse import parse_qsl, urlsplit
 
@@ -23,6 +24,7 @@ import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
 from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
 from tests.tjsp.test_cpopg_contract import (
+    CNJ,
     CNJ_INCIDENTE,
     CURSOR_PAGINA_2,
     CURSOR_PAGINA_3,
@@ -191,21 +193,26 @@ def test_falha_de_documento_vira_aviso_e_o_processo_fica(tmp_path, mocker):
     assert not list(tmp_path.rglob("*.tmp"))
 
 
+@pytest.mark.parametrize(
+    ("resposta", "motivo"),
+    [({"status": 500}, "http_500"), ({"body": requests.ReadTimeout("prazo")}, "timeout")],
+)
 @responses.activate
-def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker):
+def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker, resposta, motivo):
     mocker.patch("time.sleep")
     _registrar_processo()
     _registrar_documento(PUBLICOS[0])
     responses.add(
         responses.GET,
         f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
-        status=500,
         match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
+        **resposta,
     )
 
-    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: http_500"):
+    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: {motivo}"):
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
+    assert len(_chamadas("search.do")) == 1
     assert [p.stem for p in tmp_path.rglob("*.pdf")] == [PUBLICOS[0]]
     assert list(tmp_path.rglob("*.html"))
 
@@ -340,3 +347,81 @@ def test_varios_incidentes_baixam_os_pdfs_de_cada_um_antes_do_show_seguinte(tmp_
     assert _documentos_pedidos() == list(PUBLICOS)
     assert sorted(p.stem for p in tmp_path.rglob("*.pdf")) == sorted(PUBLICOS)
     assert len(list(tmp_path.rglob("*.html"))) == 2
+
+
+@responses.activate
+def test_todo_pedido_do_cpopg_tem_timeout(tmp_path, mocker):
+    """Busca, show.do, movimentações, pasta e getPDF saem com prazo: conexão parada não trava o lote (#484)."""
+    mocker.patch("time.sleep")
+    _registrar_processo()
+    for cd in PUBLICOS:
+        _registrar_documento(cd)
+    codigo_lista = "1W001AAAA0000"
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/search.do",
+        body=f'<div id="listagemDeProcessos"><a href="/cpopg/show.do?processo.codigo={codigo_lista}">x</a></div>',
+        content_type=_HTML,
+        match=[query_param_matcher({"dadosConsulta.valorConsultaNuUnificado": CNJ}, strict_match=False)],
+    )
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/show.do",
+        body=_show_antigo(codigo_lista, PUBLICOS[0]),
+        content_type=_HTML,
+    )
+
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    scraper.cpopg_download([CNJ_INCIDENTE, CNJ], download_pecas=True)
+
+    rotas = {c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls}
+    assert rotas >= {"search.do", "show.do", "carregarMovimentacoesAjax.do", ROTA_DOCUMENTO, "getPDF.do"}
+    sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
+    assert sem_timeout == []
+
+
+def _gravacao_falha_uma_vez(mocker):
+    """O primeiro ``.tmp`` do processo falha por disco cheio: o processo é refeito depois dos documentos."""
+    gravar = Path.write_text
+    falhou: list[Path] = []
+
+    def gravar_falhando_uma_vez(caminho, *args, **kwargs):
+        if caminho.suffix == ".tmp" and not falhou:
+            falhou.append(caminho)
+            raise OSError(28, "No space left on device")
+        return gravar(caminho, *args, **kwargs)
+
+    mocker.patch.object(Path, "write_text", gravar_falhando_uma_vez)
+
+
+@pytest.mark.parametrize("segunda_vez_falha", [True, False])
+@responses.activate
+def test_documento_pedido_de_novo_no_processo_refeito_sai_uma_vez_no_aviso(tmp_path, mocker, segunda_vez_falha):
+    """Documento que estoura o prazo antes de o processo ser refeito por outro erro conta só a última tentativa."""
+    mocker.patch("time.sleep")
+    _gravacao_falha_uma_vez(mocker)
+    _registrar_processo()
+    _registrar_documento(PUBLICOS[0])
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
+        body=requests.ReadTimeout("prazo"),
+        match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
+    )
+    if not segunda_vez_falha:
+        _registrar_documento(PUBLICOS[1])
+
+    with warnings.catch_warnings(record=True) as avisos:
+        warnings.simplefilter("always")
+        jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
+
+    assert len(_chamadas("search.do")) == 2
+    assert _documentos_pedidos() == [*PUBLICOS, PUBLICOS[1]]
+    mensagens = [str(a.message) for a in avisos if "documento público" in str(a.message)]
+    if segunda_vez_falha:
+        assert len(mensagens) == 1
+        assert mensagens[0].count(f"{PUBLICOS[1]}: timeout") == 1
+        assert "1 download(s) de documento público falharam" in mensagens[0]
+    else:
+        assert mensagens == []
+        assert sorted(p.stem for p in tmp_path.rglob("*.pdf")) == sorted(PUBLICOS)

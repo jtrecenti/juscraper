@@ -1,10 +1,22 @@
 """Testes de ``juscraper.core.failures``: o vocabulário do motivo, o aviso agregado e a nota do 401."""
 from __future__ import annotations
 
+import logging
+from types import SimpleNamespace
+from typing import NamedTuple
+
 import pytest
 import requests
 
-from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core import failures
+from juscraper.core.exceptions import (
+    BloqueioAntiBotWarning,
+    BotChallengeBlockedError,
+    CaptchaEsgotadoError,
+    InvalidJSONResponseError,
+    RetryExhaustedError,
+    WafChallengeError,
+)
 from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
@@ -14,8 +26,13 @@ from juscraper.core.failures import (
     STATUS_TOKEN_INVALIDO,
     anotar_falhas_anteriores,
     avisar_falhas,
+    avisar_falhas_de_processos,
+    consultar_em_lote,
+    consultar_processo,
     e_token_invalido,
+    linhas_de_processos,
     motivo_falha,
+    motivo_falha_ou_inesperada,
     resumir_falhas,
 )
 
@@ -36,6 +53,9 @@ def _http_error(status: int) -> requests.HTTPError:
         (requests.Timeout(), "timeout"),
         (requests.ConnectionError(), "conexao"),
         (InvalidJSONResponseError("https://example.test", 200, 3), "json_invalido"),
+        (requests.JSONDecodeError("Expecting value", "<html>", 0), "json_invalido"),
+        (BotChallengeBlockedError("TRF3", "https://example.test"), "bloqueio_anti_bot"),
+        (WafChallengeError("TJPE", "https://example.test"), "bloqueio_anti_bot"),
     ],
 )
 def test_motivo_falha_por_excecao(exc, esperado):
@@ -68,7 +88,8 @@ def test_vocabulario_publicado():
     assert COLUNA_MOTIVO_FALHA == "motivo_falha"
     assert set(MOTIVOS_FALHA) == {
         "http_<status>", "retry_esgotado_<status>", "timeout", "conexao", "json_invalido", "nao_encontrado",
-        "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida",
+        "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida", "bloqueio_anti_bot",
+        "captcha_esgotado",
     }
 
 
@@ -95,6 +116,26 @@ def test_avisar_falhas_emite_um_aviso_com_o_metodo():
     with pytest.warns(UserWarning, match=r"^Scraper\.metodo: 1 download\(s\) de documento falharam") as avisos:
         avisar_falhas(["doc 1: timeout"], "Scraper.metodo", "download(s) de documento")
     assert len(avisos) == 1
+    assert avisos[0].category is UserWarning
+
+
+def test_avisar_falhas_com_bloqueio_usa_categoria_propria_mesmo_fora_dos_exemplos():
+    falhas = [f"doc {i}: timeout" for i in range(EXEMPLOS_NO_AVISO)] + ["doc 9: bloqueio_anti_bot"]
+    with pytest.warns(BloqueioAntiBotWarning) as avisos:
+        avisar_falhas(falhas, "Scraper.metodo", "download(s) de documento")
+    assert len(avisos) == 1
+    assert "bloqueio_anti_bot" not in str(avisos[0].message)
+
+
+def test_avisar_falhas_fecha_com_a_consequencia_pedida():
+    with pytest.warns(UserWarning, match=r"falharam\. Falhas: peça 1: http_404\. Veja a coluna x\.$"):
+        avisar_falhas(["peça 1: http_404"], "Scraper.metodo", "download(s) de peça", "Veja a coluna x.")
+
+
+def test_motivo_falha_ou_inesperada():
+    assert motivo_falha_ou_inesperada(_http_error(404)) == "http_404"
+    assert motivo_falha_ou_inesperada(requests.TooManyRedirects()) == "resposta_inesperada"
+    assert motivo_falha_ou_inesperada(ValueError("layout")) == "resposta_inesperada"
 
 
 def test_avisar_falhas_sem_falha_nao_avisa(recwarn):
@@ -138,6 +179,8 @@ def test_e_token_invalido(exc, esperado):
         requests.ConnectTimeout(),
         requests.ConnectionError(),
         InvalidJSONResponseError("https://example.test", 200, 3),
+        BotChallengeBlockedError("TRF3", "https://example.test"),
+        WafChallengeError("TJPE", "https://example.test"),
     ],
 )
 def test_excecoes_de_falha_por_linha_tem_motivo(exc):
@@ -146,10 +189,140 @@ def test_excecoes_de_falha_por_linha_tem_motivo(exc):
     motivo_falha(exc)
 
 
-@pytest.mark.parametrize("exc", [requests.TooManyRedirects(), requests.exceptions.InvalidURL(), ValueError()])
+@pytest.mark.parametrize(
+    "exc",
+    # ``requests.JSONDecodeError`` tem motivo, mas fica fora da tupla para não
+    # mudar o que JusBR, PDPJ e eSAJ capturam como linha.
+    [
+        requests.TooManyRedirects(), requests.exceptions.InvalidURL(), ValueError(),
+        requests.JSONDecodeError("Expecting value", "", 0),
+    ],
+)
 def test_excecoes_fora_do_vocabulario_nao_viram_linha(exc):
     assert not isinstance(exc, EXCECOES_DE_FALHA_POR_LINHA)
 
 
 def test_status_consulta_falha():
     assert STATUS_CONSULTA_FALHA == "Falha na consulta"
+
+
+class _Consulta(NamedTuple):
+    html: str | None
+    motivo: str | None
+    pecas: list[str]
+
+
+def test_consultar_em_lote_para_no_bloqueio_e_preenche_os_seguintes(monkeypatch):
+    """O CNJ bloqueado encerra o lote; os seguintes não são consultados e recebem cada um o seu resultado."""
+    pausas: list[float] = []
+    monkeypatch.setattr(failures, "time", SimpleNamespace(sleep=pausas.append))
+    motivos = {"a": None, "b": "http_500", "c": "bloqueio_anti_bot"}
+    consultados: list[str] = []
+
+    def consultar(cnj: str) -> _Consulta:
+        consultados.append(cnj)
+        return _Consulta(cnj if motivos[cnj] is None else None, motivos[cnj], [])
+
+    consultas = consultar_em_lote(
+        ["a", "b", "c", "d", "e"],
+        consultar,
+        lambda motivo: _Consulta(None, motivo, []),
+        sleep_time=0.5,
+    )
+
+    assert consultados == ["a", "b", "c"]
+    assert [c.motivo for c in consultas] == [None, "http_500", *["bloqueio_anti_bot"] * 3]
+    assert pausas == [0.5, 0.5]  # entre a/b e b/c; nada depois do bloqueio
+    assert consultas[3].pecas is not consultas[4].pecas
+
+
+def test_consultar_em_lote_sem_pausa_depois_do_ultimo(monkeypatch):
+    pausas: list[float] = []
+    monkeypatch.setattr(failures, "time", SimpleNamespace(sleep=pausas.append))
+    consultas = consultar_em_lote(
+        ["a", "b"], lambda cnj: _Consulta(cnj, None, []), lambda motivo: _Consulta(None, motivo, []), sleep_time=1
+    )
+    assert [c.html for c in consultas] == ["a", "b"]
+    assert pausas == [1]
+
+
+def test_consultar_em_lote_encerrar_preenche_com_o_motivo_da_ultima():
+    """``encerrar`` vê as consultas feitas; os CNJs seguintes recebem o motivo da que encerrou."""
+    vistas: list[int] = []
+
+    def encerrar(consultas: list[_Consulta]) -> bool:
+        vistas.append(len(consultas))
+        return [c.motivo for c in consultas[-2:]] == ["captcha_esgotado"] * 2
+
+    consultas = consultar_em_lote(
+        ["a", "b", "c", "d"],
+        lambda _cnj: _Consulta(None, "captcha_esgotado", []),
+        lambda motivo: _Consulta(None, motivo, []),
+        sleep_time=0,
+        encerrar=encerrar,
+    )
+    assert vistas == [1, 2]
+    assert [c.motivo for c in consultas] == ["captcha_esgotado"] * 4
+
+
+def _parse(html: str) -> dict[str, str]:
+    if html == "quebrado":
+        raise ValueError("layout novo")
+    return {"processo": html}
+
+
+def test_linhas_de_processos():
+    """Parse ok, download que falhou e HTML recusado (sem e com motivo do download) viram uma linha cada."""
+    linhas = linhas_de_processos(
+        ["1", "2", "3", "4"],
+        ["ok", None, "quebrado", "quebrado"],
+        [None, "timeout", None, "bloqueio_anti_bot"],
+        parse=_parse,
+        logger=logging.getLogger("teste"),
+    )
+    assert linhas == [
+        {"processo": "ok", "id_cnj": "1", COLUNA_MOTIVO_FALHA: None},
+        {"id_cnj": "2", COLUNA_MOTIVO_FALHA: "timeout"},
+        {"id_cnj": "3", COLUNA_MOTIVO_FALHA: "resposta_inesperada"},
+        {"id_cnj": "4", COLUNA_MOTIVO_FALHA: "bloqueio_anti_bot"},
+    ]
+
+
+def test_avisar_falhas_de_processos():
+    esperado = r"X\.cpopg: 1 consulta\(s\) de processo falharam. Falhas: processo 2: timeout\."
+    with pytest.warns(UserWarning, match=esperado):
+        avisar_falhas_de_processos(["1", "2"], [None, "timeout"], "X.cpopg")
+
+
+def test_avisar_falhas_de_processos_sem_falha_nao_avisa(recwarn):
+    avisar_falhas_de_processos(["1"], [None], "X.cpopg")
+    assert not recwarn.list
+
+
+def _buscar(erro: BaseException | None, html: str | None = None):
+    def buscar(_cnj: str) -> str | None:
+        if erro is not None:
+            raise erro
+        return html
+
+    return buscar
+
+
+@pytest.mark.parametrize(
+    ("buscar", "esperado"),
+    [
+        (_buscar(None, "<html>"), ("<html>", None)),
+        (_buscar(None), (None, None)),
+        (_buscar(BotChallengeBlockedError("TRF6", "https://example.test")), (None, "bloqueio_anti_bot")),
+        (_buscar(requests.ReadTimeout()), (None, "timeout")),
+        (_buscar(CaptchaEsgotadoError("TRF6: captcha recusado")), (None, "captcha_esgotado")),
+        (_buscar(RuntimeError("formulário sem captcha")), (None, "resposta_inesperada")),
+    ],
+)
+def test_consultar_processo(buscar, esperado):
+    assert consultar_processo(buscar, "1", tribunal="TRF6", logger=logging.getLogger("teste")) == esperado
+
+
+def test_consultar_processo_propaga_import_error():
+    with pytest.raises(ImportError):
+        consultar_processo(_buscar(ImportError("txtcaptcha")), "1", tribunal="TRF6", logger=logging.getLogger("t"))

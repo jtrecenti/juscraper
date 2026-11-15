@@ -29,6 +29,10 @@ from pathlib import Path
 
 import requests
 
+from juscraper import __version__
+
+from ...core.exceptions import BotChallengeBlockedError, CaptchaEsgotadoError
+
 logger = logging.getLogger("juscraper.trf6.download")
 
 BASE_URL = "https://eproc1g.trf6.jus.br/eproc/"
@@ -38,12 +42,12 @@ POST_PATH = (
     "&acao_origem=principal&acao_retorno=processo_consulta_publica"
 )
 
-BROWSER_HEADERS: dict[str, str] = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/147.0.0.0 Safari/537.36"
-    ),
+# User agent da biblioteca, não de navegador: em 15/11/2026, o bot manager F5
+# (TSPD) do portal servia um desafio JavaScript no lugar do formulário a todo
+# user agent ``Mozilla/...`` (Chrome, Firefox), e o formulário com o captcha a
+# ``juscraper/...`` e ao padrão do ``requests``.
+HEADERS: dict[str, str] = {
+    "User-Agent": f"juscraper/{__version__} (https://github.com/jtrecenti/juscraper)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
     "Accept-Encoding": "gzip, deflate, br",
@@ -59,17 +63,51 @@ _CAPTCHA_RE = re.compile(
     re.DOTALL,
 )
 
+# Página de desafio do F5 (TSPD), servida com HTTP 200 no lugar do formulário.
+_MARCADORES_DESAFIO_F5 = (b"/TSPD/", b'window["bobcmn"]')
+
+
+class DesafioF5Error(BotChallengeBlockedError):
+    """O bot manager F5 do TRF6 serviu, com HTTP 200, um desafio JavaScript no lugar da página.
+
+    Tratado como os demais bloqueios em :meth:`~juscraper.courts.trf6.client.TRF6Scraper.cpopg`.
+    """
+
+    def __init__(self, url: str) -> None:
+        """Guarda ``url``, com a mensagem do desafio do F5 no lugar da do 403."""
+        super().__init__(
+            "TRF6",
+            url,
+            bot_manager="F5",
+            mensagem=(
+                f"O bot manager (F5) do TRF6 serviu um desafio JavaScript em {url} no lugar da "
+                "consulta pública. O desafio sai para user agents de navegador: confira se a sessão "
+                "não recebeu um User-Agent desses, ou aguarde alguns minutos antes de tentar de novo."
+            ),
+        )
+
+
 # eproc echoes captcha validation errors in a hidden textarea that JS would
 # normally pop as an alert. We sniff this on a 200 response to decide whether
 # to retry with a fresh captcha.
 _CAPTCHA_ERROR_RE = re.compile(r"captcha\)\s*incorreto", re.IGNORECASE)
 
 
-def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
-    """``GET`` the consulta form. Returns latin-1 text with captcha embedded."""
-    resp = session.get(BASE_URL + GET_PATH, timeout=timeout)
+def _texto(resp: requests.Response) -> str:
+    """Corpo latin-1 de ``resp``; levanta no status de erro e no desafio do F5."""
     resp.raise_for_status()
+    if all(marcador in resp.content for marcador in _MARCADORES_DESAFIO_F5):
+        raise DesafioF5Error(resp.url)
     return resp.content.decode("latin-1")
+
+
+def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
+    """``GET`` the consulta form. Returns latin-1 text with captcha embedded.
+
+    Raises:
+        DesafioF5Error: O portal serviu o desafio do F5 no lugar do formulário.
+    """
+    return _texto(session.get(BASE_URL + GET_PATH, timeout=timeout))
 
 
 def extract_captcha_b64(form_html: str) -> str:
@@ -138,15 +176,19 @@ def submit_search(
     payload: dict[str, str],
     timeout: float = 30.0,
 ) -> str:
-    """``POST`` the search payload and return the response as latin-1 text."""
-    resp = session.post(
-        BASE_URL + POST_PATH,
-        data=payload,
-        timeout=timeout,
-        headers={"Referer": BASE_URL + GET_PATH},
+    """``POST`` the search payload and return the response as latin-1 text.
+
+    Raises:
+        DesafioF5Error: O portal serviu o desafio do F5 no lugar da resposta.
+    """
+    return _texto(
+        session.post(
+            BASE_URL + POST_PATH,
+            data=payload,
+            timeout=timeout,
+            headers={"Referer": BASE_URL + GET_PATH},
+        )
     )
-    resp.raise_for_status()
-    return resp.content.decode("latin-1")
 
 
 def is_captcha_error(response_html: str) -> bool:
@@ -165,6 +207,15 @@ def is_detail_page(response_html: str) -> bool:
     )
 
 
+def is_search_form(response_html: str) -> bool:
+    """``True`` when the response is the search form re-served (CNJ not matched).
+
+    O campo de busca ``txtNumProcesso`` só existe como ``<input>`` no
+    formulário; no detalhe, ``txtNumProcesso`` é o ``id`` do ``<dd>`` da capa.
+    """
+    return 'name="txtNumProcesso"' in response_html
+
+
 def fetch_detail(
     session: requests.Session,
     numero_processo: str,
@@ -175,8 +226,12 @@ def fetch_detail(
     """Run the full captcha-solving lookup for one CNJ.
 
     Returns the detail HTML (latin-1 decoded text) on success, or ``None``
-    when the CNJ matches no process. Raises :class:`RuntimeError` if the
-    captcha solver keeps failing past ``max_captcha_attempts`` retries.
+    when the CNJ matches no process (the form is re-served). Levanta
+    :class:`~juscraper.core.exceptions.CaptchaEsgotadoError` quando o
+    captcha é recusado nas ``max_captcha_attempts`` tentativas,
+    :class:`RuntimeError` quando a resposta não é o detalhe nem o
+    formulário, e :class:`DesafioF5Error` quando o portal serve o desafio do
+    F5.
     Each retry fetches a fresh captcha — the captcha is bound to the
     session's ``PHPSESSID`` cookie, so re-using a stale image silently
     fails server-side validation.
@@ -197,11 +252,16 @@ def fetch_detail(
                 "TRF6 attempt %d for %s: %s", attempt, numero_processo, last_err
             )
             continue
-        # No captcha error and no detail → the CNJ doesn't match anything
-        # the public consultation can return (sigilo, archived, invalid).
-        return None
+        # No captcha error and no detail, but the form → the CNJ doesn't match
+        # anything the public consultation can return (sigilo, archived, invalid).
+        if is_search_form(response):
+            return None
+        raise RuntimeError(
+            f"TRF6: a busca de {numero_processo!r} devolveu uma página que não é "
+            "o detalhe do processo nem o formulário da consulta"
+        )
 
-    raise RuntimeError(
+    raise CaptchaEsgotadoError(
         f"TRF6: captcha solver failed {max_captcha_attempts} times for "
         f"{numero_processo!r} (last attempt: {last_err})"
     )

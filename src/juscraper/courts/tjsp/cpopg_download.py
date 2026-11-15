@@ -12,10 +12,12 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ...core.failures import EXCECOES_DE_FALHA_POR_LINHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas, motivo_falha
+from ...core.failures import EXCECOES_DE_FALHA_POR_LINHA, MOTIVO_ENTRADA_INVALIDA, MOTIVO_NAO_ENCONTRADO, avisar_falhas
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
+from .._esaj.acordao import busca_sem_informacoes
 from .._esaj.pasta import DocumentoIndisponivelError, documentos_vinculados, gravar_pdf, pdf_pela_pasta
+from ._falhas import cnj_invalido, motivo_do_processo, registrar_falhas
 
 logger = logging.getLogger('juscraper.cpopg_download')
 
@@ -26,6 +28,14 @@ class _InvalidProcessCodeError(ValueError):
 
 _TENTATIVAS = 5
 
+# (conexão, leitura), em segundos, de cada pedido do cpopg; o cposg e o cjpg
+# importam esta constante. Sem prazo, uma conexão que o eSAJ deixa aberta sem
+# responder prende o lote inteiro, e o retry de cpopg_download_html_single
+# nunca roda. O prazo estourado vira requests.Timeout, que o retry e
+# _FALHAS_DE_DOCUMENTO já tratam (#484). A conexão curta faz o portal fora do
+# ar falhar logo, sem 60 s por tentativa.
+_TIMEOUT = (10, 60)
+
 
 # Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em
 # sequência rápida na mesma sessão. O bloqueio passa em alguns segundos.
@@ -34,6 +44,10 @@ _AVISO_CONSULTAS_SIMULTANEAS = "multiplas consultas simult"
 
 class _ConsultaBloqueadaError(RuntimeError):
     """A busca voltou com o aviso de consultas simultâneas do e-SAJ."""
+
+
+class _ProcessoNaoEncontradoError(LookupError):
+    """A busca respondeu "Não existem informações disponíveis" para o CNJ."""
 
 
 def _verificar_bloqueio(texto):
@@ -98,16 +112,20 @@ class _PecasPublicas:
     Falha de um documento não derruba o processo: ela vai para ``falhas``, o
     PDF fica faltando, e o próximo download com ``download_pecas`` no mesmo
     diretório pede de novo só o que falta.
+
+    ``falhas`` guarda o último motivo de cada documento: quando outro erro faz
+    o processo ser refeito, o documento que falhou é pedido de novo e não deve
+    sair duas vezes no aviso, nem sair nele se desta vez foi gravado.
     """
 
     sleep_time: float
-    falhas: list[str] = field(default_factory=list)
+    falhas: dict[str, str] = field(default_factory=dict)
 
     def baixar(self, html, sessao, url_base, pasta_processo, id_limpo):
         """Grava em ``pasta_processo`` o PDF de cada documento público de ``html`` que ainda não está lá."""
         def get(url):
             time.sleep(self.sleep_time)
-            resposta = sessao.get(url)
+            resposta = sessao.get(url, timeout=_TIMEOUT)
             resposta.raise_for_status()
             return resposta
 
@@ -115,25 +133,22 @@ class _PecasPublicas:
             destino = caminho_do_documento(pasta_processo, documento.cd_documento)
             if not documento.publico or destino.is_file():
                 continue
+            chave = f"{id_limpo}/{documento.cd_documento}"
             try:
                 conteudo = pdf_pela_pasta(get, f"{url_base}{documento.url}", url_base, documento.cd_documento)
             except _FALHAS_DE_DOCUMENTO as erro:
-                self._falhou(id_limpo, documento.cd_documento, _motivo_do_documento(erro), erro)
+                logger.warning("Processo %s, documento %s: %s", id_limpo, documento.cd_documento, erro)
+                self.falhas[chave] = _motivo_do_documento(erro)
                 continue
             gravar_pdf(conteudo, destino)
-
-    def _falhou(self, id_limpo, cd_documento, motivo, erro):
-        logger.warning("Processo %s, documento %s: %s", id_limpo, cd_documento, erro)
-        self.falhas.append(f"{id_limpo}/{cd_documento}: {motivo}")
+            self.falhas.pop(chave, None)
 
 
 def _motivo_do_documento(erro):
     """Motivo de falha de um documento; erro de requests fora do vocabulário vira ``resposta_inesperada``."""
     if isinstance(erro, DocumentoIndisponivelError):
         return erro.motivo
-    if isinstance(erro, EXCECOES_DE_FALHA_POR_LINHA):
-        return motivo_falha(erro)
-    return MOTIVO_RESPOSTA_INESPERADA
+    return motivo_do_processo(erro)
 
 
 def cpopg_download_html(
@@ -157,10 +172,24 @@ def cpopg_download_html(
     get_links_callback: function to extract links from HTML
     baixar_movimentacoes: with False, skips the movements requests
     download_pecas: with True, also saves the PDF of each public document of the movements
+
+    Returns:
+        (dict[str, str]): ``{CNJ formatado: motivo}`` dos processos que ficaram
+            sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
+            número que a busca diz não ter sai ``nao_encontrado``, e o que não
+            tem 20 dígitos, ``entrada_invalida``. Vazio quando
+            todos foram baixados. As falhas ficam gravadas em
+            ``<download_path>/cpopg``, de onde ``cpopg_parse_manager`` as lê; o
+            ``UserWarning`` delas sai de ``TJSPScraper.cpopg_download``.
     """
     pecas = _PecasPublicas(sleep_time) if download_pecas else None
+    falhas = {}
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
+        cnj = format_cnj(idp, strict=False)
+        if cnj_invalido(idp):
+            falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
+            continue
         try:
             cpopg_download_html_single(
                 idp,
@@ -172,6 +201,8 @@ def cpopg_download_html(
                 baixar_movimentacoes=baixar_movimentacoes,
                 pecas=pecas,
             )
+        except _ProcessoNaoEncontradoError:
+            falhas[cnj] = MOTIVO_NAO_ENCONTRADO
         except (OSError, UnicodeDecodeError, ValueError,
                 AttributeError, RuntimeError, requests.RequestException) as e:
             logger.error(
@@ -179,9 +210,15 @@ def cpopg_download_html(
                 idp,
                 e
             )
-            continue
+            falhas[cnj] = motivo_do_processo(e)
     if pecas is not None:
-        avisar_falhas(pecas.falhas, "TJSPScraper.cpopg_download", "download(s) de documento público")
+        avisar_falhas(
+            [f"{chave}: {motivo}" for chave, motivo in pecas.falhas.items()],
+            "TJSPScraper.cpopg_download",
+            "download(s) de documento público",
+        )
+    registrar_falhas(Path(download_path, 'cpopg'), id_cnj_list, falhas)
+    return falhas
 
 
 def cpopg_download_html_single(
@@ -230,8 +267,11 @@ def cpopg_download_html_single(
     ultimo_erro: Exception | None = None
     for tentativa in range(_TENTATIVAS):
         try:
-            r = session.get(u, params=parms)
+            r = session.get(u, params=parms, timeout=_TIMEOUT)
+            r.raise_for_status()
             _verificar_bloqueio(r.text)
+            if 'mensagemRetorno' in r.text and busca_sem_informacoes(BeautifulSoup(r.text, 'html.parser')):
+                raise _ProcessoNaoEncontradoError(id_clean)
             if get_links_callback is None:
                 raise RuntimeError(
                     "get_links_callback precisa ser"
@@ -338,12 +378,13 @@ def _salvar_resultados_html(
     else:
         for indice, link in enumerate(links):
             # urljoin junta base e href com barra simples; "//cpopg/show.do" dá 404.
-            resposta_documento = sessao.get(urljoin(url_base, link))
+            resposta_documento = sessao.get(urljoin(url_base, link), timeout=_TIMEOUT)
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."
                     f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
-                    f"Status code {resposta_documento.status_code}."
+                    f"Status code {resposta_documento.status_code}.",
+                    response=resposta_documento,
                 )
             # As movimentações de cada documento saem logo depois do show.do
             # dele, enquanto a sessão está nesse processo.
@@ -487,10 +528,11 @@ def _pagina_movimentacoes(sessao, url_base, codigo_processo, cursor):
     parametros = {'processo.codigo': codigo_processo}
     if cursor:
         parametros['cursor'] = cursor
-    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros)
+    resposta = sessao.get(f"{url_base}{_ROTA_MOVIMENTACOES}", params=parametros, timeout=_TIMEOUT)
     if resposta.status_code != 200:
         raise requests.HTTPError(
-            f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}."
+            f"Movimentações do processo {codigo_processo}: status code {resposta.status_code}.",
+            response=resposta,
         )
     if 'mensagemErroMovimentacoes' in resposta.text:
         # ValueError: o retry de cpopg_download_html_single refaz a busca,

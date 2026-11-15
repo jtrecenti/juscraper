@@ -140,13 +140,13 @@ class FalcaoScraper(HTTPScraper):
             * ``query`` / ``termo`` -> ``pesquisa``
 
         Returns:
-            pd.DataFrame: Uma linha por documento. Colunas canonicas
-            garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
-            ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
-            ``ementa`` (texto sem HTML), ``data_julgamento`` e
-            ``data_juntada``. Os demais campos brutos da colecao sao
-            preservados, exceto os ``highlight*`` (ver
-            :class:`OutputListarDecisoesFalcao`).
+            Uma linha por documento. Colunas canonicas
+                garantidas: ``processo``, ``colecao``, ``tribunal``, ``relator``,
+                ``classe``, ``classe_sigla`` e, quando a colecao os expoe,
+                ``ementa`` (texto sem HTML), ``data_julgamento`` e
+                ``data_juntada``. Os demais campos brutos da colecao sao
+                preservados, exceto os ``highlight*`` (ver
+                :class:`OutputListarDecisoesFalcao`).
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (inclusive
@@ -222,7 +222,7 @@ class FalcaoScraper(HTTPScraper):
                 primeiro uso). Cria a pasta e seus pais quando não existem.
 
         Returns:
-            str: Caminho do subdiretorio com os arquivos JSON baixados.
+            Caminho do subdiretorio com os arquivos JSON baixados.
 
         See also:
             :meth:`listar_decisoes` -- lista completa de filtros aceitos.
@@ -242,8 +242,8 @@ class FalcaoScraper(HTTPScraper):
             diretorio (str | Path): Pasta com os arquivos JSON.
 
         Returns:
-            pd.DataFrame: Resultados concatenados (veja :meth:`listar_decisoes` para as
-            colunas canonicas).
+            Resultados concatenados (veja :meth:`listar_decisoes` para as
+                colunas canonicas).
         """
         pasta = Path(diretorio)
         arquivos = sorted(pasta.rglob("*.json"))

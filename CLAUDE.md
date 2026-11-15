@@ -19,7 +19,7 @@ uv run pre-commit run --all-files            # todos os hooks, como no CI
 
 - O typecheck que reprova é o hook `mypy` do pre-commit, com versão e dependências fixadas no `.pre-commit-config.yaml`. `uv run mypy src` usa outra versão e acusa centenas de erros que não são gate.
 - O hook `pytest` roda a suíte offline em todo commit. `SKIP=pytest git commit ...` o pula num commit pontual; o CI roda a suíte de qualquer forma.
-- CI (`.github/workflows/`): `Testes` (pytest em 3.11–3.15, cobertura mínima de 94% na perna 3.13), `Lint` (`uv.lock`, Ruff, política de dispensas e pre-commit), `Qualidade` (complexidade e Semgrep), `Changelog` e `Integração` (notebooks contra os tribunais; semanal e nos tribunais tocados pelo PR). Os passos de CI são testados em `tests/ci_workflows/`.
+- CI (`.github/workflows/`): `Testes` (pytest em 3.11–3.15, cobertura mínima de 94% na perna 3.13), `Lint` (`uv.lock`, Ruff, política de dispensas e pre-commit), `Qualidade` (complexidade e Semgrep), `Changelog` e `Integração` (testes ao vivo e notebooks contra os tribunais; só por disparo manual). Os passos de CI são testados em `tests/ci_workflows/`.
 
 ## Estrutura
 
@@ -47,7 +47,7 @@ uv run pytest -m integration           # acessa serviços externos
 
 - Ao usar skills para criar ou alterar raspadores, seguir a política de testes deste repositório.
 - Mudança em parser HTML/JSON exige sample e teste para o formato afetado. Contratos verificam colunas do DataFrame e propagação de filtros no payload; samples vêm de respostas reais, não de campos inventados.
-- Testes ao vivo rodam localmente, de IP residencial: os tribunais bloqueiam com frequência os IPs do runner do GitHub, e uma falha da `Integração` no runner não prova quebra do raspador. Ao mexer num tribunal, rodar a integração dele antes do PR; os comandos estão em `CONTRIBUTING.md` > **Integração local**.
+- Testes ao vivo rodam localmente, de IP residencial: os tribunais bloqueiam com frequência os IPs do runner do GitHub, e por isso a `Integração` não roda sozinha em PR nem por agendamento. Ao mexer num tribunal, rodar a integração dele antes do PR; os comandos estão em `CONTRIBUTING.md` > **Integração local**.
 - Marcar testes que acessam rede com `integration`. Ferramentas, estrutura de samples, helpers e tratamento de anti-bot estão em `CONTRIBUTING.md` > **Tests**; consultar antes de escrever contratos ou executar integração.
 - Antes de refatorar um tribunal, seus contratos devem passar. Wiring de schema entra na refatoração estrutural ou em PR dedicado posterior, separado do PR de contratos. Se a issue de contratos deixar wiring em aberto, abrir follow-up.
 

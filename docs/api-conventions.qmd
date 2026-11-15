@@ -177,6 +177,40 @@ tjsp.cpopg("1000149-71.2024.8.26.0346")
 `cpopg_parse` and `cposg_parse` no longer read the `.json` files the API
 download used to save.
 
+### TJSP `cjpg`/`cpopg`/`cposg`: failures stay in the result
+
+A case or page that fails no longer drops out of the result with only a log
+line. In `cpopg` (table `basicos`) and `cposg`, every requested CNJ has a row,
+and the `motivo_falha` column is `None` for the cases read. A CNJ that was not
+downloaded keeps a row with only the number and the reason: `nao_encontrado`
+when the public lookup does not show it (no such case, or under seal),
+`entrada_invalida`, `http_<status>`, `conexao`, `timeout` or
+`resposta_inesperada`. Download and parse failures go into a single
+`UserWarning`, and `cpopg_download`/`cposg_download` return them as
+`{cnj: motivo_falha}`. The download also records them in
+`falhas_download.json`, inside its `cpopg/` or `cposg/` folder, so
+`cpopg_parse`/`cposg_parse` return the same failure rows as the one-step call.
+
+```python
+res = tjsp.cpopg(cnjs)
+falhas = res["basicos"].query("motivo_falha.notna()")
+```
+
+A lost `cjpg` page has no row to carry the reason, so a partial read raises
+`ColetaParcialError`, as in the eSAJ auto-chunk; the pages read are in
+`.resultado`. Each page from the second on gets up to five requests, and an
+HTTP error status counts as a failure; a page that fails all of them is lost
+the same way:
+
+```python
+from juscraper.core.exceptions import ColetaParcialError
+
+try:
+    df = tjsp.cjpg("dano moral")
+except ColetaParcialError as erro:
+    df = erro.resultado
+```
+
 ### Date format flexibility
 
 Wired endpoints accept multiple input formats and coerce to the
@@ -264,7 +298,7 @@ except ColetaParcialError as erro:
     print(erro.falhas)
 ```
 
-DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
+DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, a response with `_shards.failed > 0`, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
 
 Combining `auto_chunk=True` with `paginas` is rejected when
 the interval is long enough to actually trigger chunking: the multi-window
@@ -479,7 +513,7 @@ share the same retry loop via `_request_with_retry`. Defaults:
 |---------|---------|-------------------|
 | Retried statuses | `403`, `429`, `500`, `502`, `503`, `504` | constant `RETRYABLE_STATUSES` |
 | Max attempts | `3` (including the first) | `max_retries=` per call |
-| Backoff | `base_backoff ** attempt` → `2s` then `4s` (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises `RetryExhaustedError` without sleeping, so the default `8s` from `2 ** 3` only kicks in with `max_retries >= 4`) | `base_backoff=` per call |
+| Backoff | `base_backoff ** attempt` → `2s` then `4s` (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises `RetryExhaustedError` without sleeping, so the default `8s` from `2 ** 3` only kicks in with `max_retries >= 4`); each wait is capped at `max_backoff` (300 s) | `base_backoff=` per call; `max_backoff` in `politica=` (DataJud, JusBR, PDPJ, TRF3, TJRS, TJSC) |
 | `Retry-After` (numeric seconds) | Honored when present | n/a |
 | `Retry-After` (HTTP-date) | Ignored — falls back to backoff (#201) | n/a |
 | Inter-request pause | `sleep_time=1.0` from the scraper constructor | `jus.scraper("tjsp", sleep_time=5.0)` |

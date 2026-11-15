@@ -82,7 +82,7 @@ class EsajSentencaScraper(EsajSearchScraper):
             DocumentoNaoPdfError: ``getPDF.do`` respondeu sem ``%PDF``.
 
         Returns:
-            str: Caminho do PDF gravado.
+            Caminho do PDF gravado.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -128,11 +128,11 @@ class EsajSentencaScraper(EsajSearchScraper):
             diretorio (str | None): Pasta de destino. Default :attr:`download_path`.
 
         Returns:
-            pd.DataFrame: As linhas de entrada com ``caminho_sentenca`` (``None``
-            quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
-            ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
-            :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-            também num único ``UserWarning`` ao fim.
+            As linhas de entrada com ``caminho_sentenca`` (``None``
+                quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
+                ``nao_pdf``, ``resposta_inesperada`` ou um motivo de rede de
+                :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
+                também num único ``UserWarning`` ao fim.
         """
         faltando = set(COLUNAS_CODIGOS_SENTENCA) - set(cjpg.columns)
         if faltando:

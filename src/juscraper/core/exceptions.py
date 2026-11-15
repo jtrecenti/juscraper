@@ -40,6 +40,14 @@ class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
 
 
+class CaptchaEsgotadoError(HTTPSemanticError, RuntimeError):
+    """O portal recusou o captcha resolvido em todas as tentativas de uma consulta.
+
+    Vira o motivo :data:`juscraper.core.failures.MOTIVO_CAPTCHA_ESGOTADO`.
+    Herda de ``RuntimeError``, que era o erro levantado antes dela.
+    """
+
+
 class BotChallengeBlockedError(Exception):
     """Levantada quando um portal bloqueia o request via bot manager (ex.: Akamai, CloudFront).
 
@@ -49,13 +57,19 @@ class BotChallengeBlockedError(Exception):
     rate-limited — não adianta retentar com a mesma sessão.
 
     Mensagem orienta o usuário a aguardar alguns minutos antes de tentar de
-    novo, ou trocar de IP (VPN, hotspot). É propagada (em vez de engolida
-    pelos try/except por-item) porque um bloqueio nesse nível é session-wide:
-    nenhum CNJ do batch vai conseguir passar.
+    novo, ou trocar de IP (VPN, hotspot). O bloqueio é session-wide: nenhum
+    item do batch vai conseguir passar. Os métodos com ``motivo_falha`` por
+    linha a registram como linha (ver
+    :data:`juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`); os demais a
+    propagam.
 
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
     HTML ``The request could not be satisfied`` servida pelo próprio CDN.
+
+    ``mensagem`` substitui o texto padrão, que descreve o 403: as subclasses
+    cujo sintoma é outro (desafio JavaScript com HTTP 200, cookie que não
+    resolve o desafio) passam a própria mensagem.
     """
 
     def __init__(
@@ -65,20 +79,35 @@ class BotChallengeBlockedError(Exception):
         reference: str | None = None,
         *,
         bot_manager: str = "Akamai",
+        mensagem: str | None = None,
     ):
         self.tribunal = tribunal
         self.url = url
         self.reference = reference
         self.bot_manager = bot_manager
-        msg = (
-            f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
-            f"Provavelmente foi o bot manager ({bot_manager}) limitando "
-            f"o seu IP — aguarde alguns minutos antes de tentar de novo "
-            f"ou troque de IP (VPN, hotspot)."
-        )
-        if reference:
-            msg += f" Reference: {reference}."
-        super().__init__(msg)
+        if mensagem is None:
+            mensagem = (
+                f"{tribunal} bloqueou a requisição (HTTP 403) em {url}. "
+                f"Provavelmente foi o bot manager ({bot_manager}) limitando "
+                f"o seu IP — aguarde alguns minutos antes de tentar de novo "
+                f"ou troque de IP (VPN, hotspot)."
+            )
+            if reference:
+                mensagem += f" Reference: {reference}."
+        super().__init__(mensagem)
+
+
+class BloqueioAntiBotWarning(UserWarning):
+    """Aviso agregado de um lote em que alguma linha saiu com ``bloqueio_anti_bot``.
+
+    Os métodos com ``motivo_falha`` por linha registram o
+    :class:`BotChallengeBlockedError` na linha e emitem um único aviso ao fim
+    (:func:`juscraper.core.failures.avisar_falhas`). Quando alguma das falhas é
+    um bloqueio anti-bot, o aviso sai nesta categoria, mesmo que a mensagem não
+    cite essa linha entre os exemplos. Por herdar de ``UserWarning``, os filtros
+    existentes continuam valendo; para tratar só o bloqueio, filtre por esta
+    classe (``warnings.simplefilter("error", BloqueioAntiBotWarning)``).
+    """
 
 
 class WafChallengeError(BotChallengeBlockedError):
@@ -88,7 +117,7 @@ class WafChallengeError(BotChallengeBlockedError):
     (ver :mod:`juscraper.core.waf`). Se a requisição repetida com o cookie novo
     volta a receber o desafio, o WAF está recusando a sessão inteira, e nenhum
     item do batch passaria. Herda de :class:`BotChallengeBlockedError` para ser
-    propagada pelos mesmos ``try/except`` por item.
+    tratada pelos mesmos ``try/except`` por item.
 
     Também sai quando o cookie não pôde ser obtido (navegador ausente, cookie
     não emitido no prazo): sem ele, nenhuma requisição desafiada passaria, e
@@ -96,8 +125,6 @@ class WafChallengeError(BotChallengeBlockedError):
     """
 
     def __init__(self, tribunal: str, url: str, motivo: str | None = None):
-        super().__init__(tribunal, url)
-        # A mensagem da classe-mãe descreve o 403 do Akamai; aqui o sintoma é outro.
         if motivo is None:
             mensagem = (
                 f"O WAF do {tribunal} desafiou de novo logo apos a renovacao do cookie "
@@ -105,7 +132,7 @@ class WafChallengeError(BotChallengeBlockedError):
             )
         else:
             mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
-        self.args = (mensagem,)
+        super().__init__(tribunal, url, mensagem=mensagem)
 
 
 class ColetaParcialError(RuntimeError):
@@ -124,6 +151,10 @@ class ColetaParcialError(RuntimeError):
     ``resultado`` traz tudo o que veio de todos eles, e cada item de
     ``falhas`` vem como ``(None, None, excecao)``; o alias e a página estão
     na mensagem.
+
+    O ``cjpg`` do TJSP também o levanta quando parte das páginas baixadas não
+    pode ser lida: ``resultado`` traz as páginas lidas, e cada item de
+    ``falhas`` vem como ``(None, None, excecao)``, com o arquivo na mensagem.
 
     O ``__cause__`` é a exceção da primeira falha.
     """

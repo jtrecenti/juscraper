@@ -22,6 +22,8 @@ Fases 1-4 do refactor #194).
 from __future__ import annotations
 
 import logging
+import math
+import numbers
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, fields, replace
@@ -53,13 +55,64 @@ perfis de :class:`RequestPolicy` com ``retryable_statuses`` sem o 403, como
 ``PdpjScraper.perfis_http``."""
 
 
+def numero_positivo(valor: object) -> bool:
+    """Diz se ``valor`` é número real positivo e finito; ``bool`` fica de fora.
+
+    ``numbers.Real`` aceita também os escalares do numpy, comuns em política
+    lida de uma planilha ou de um DataFrame.
+    """
+    if isinstance(valor, bool) or not isinstance(valor, numbers.Real):
+        return False
+    # ``isfinite`` barra ``inf``, que passaria em ``> 0`` e faria o ``requests``
+    # levantar ``OverflowError`` só na hora da requisição. O ``float`` levanta
+    # ``OverflowError`` para inteiro que não cabe nele, e esse valor é recusado
+    # do mesmo jeito.
+    try:
+        como_float = float(valor)
+    except OverflowError:
+        return False
+    return math.isfinite(como_float) and como_float > 0
+
+
+def timeout_valido(valor: object, *, aceita_none: bool = True) -> bool:
+    """Diz se ``valor`` é um ``timeout`` que o ``requests`` aplica como prazo.
+
+    Vale número positivo e finito de segundos ou o par ``(conexão, leitura)``,
+    em tupla ou lista. ``None``, sozinho ou num lado do par, desliga o prazo no
+    ``requests``; ``aceita_none=False`` o recusa para quem não pode esperar
+    indefinidamente.
+    """
+    def _parte_valida(parte: object) -> bool:
+        return (aceita_none and parte is None) or numero_positivo(parte)
+
+    if isinstance(valor, (list, tuple)):
+        return len(valor) == 2 and all(_parte_valida(parte) for parte in valor)
+    return _parte_valida(valor)
+
+
+def _max_retries_valido(valor: object) -> bool:
+    """Diz se ``valor`` é inteiro >= 1, inclusive do numpy; ``bool`` fica de fora."""
+    return not isinstance(valor, bool) and isinstance(valor, numbers.Integral) and int(valor) >= 1
+
+
+_ERROS_DE_CONEXAO: tuple[type[requests.RequestException], ...] = (
+    requests.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
+)
+"""Falhas que ``RequestPolicy.retry_on_connection_error`` retenta."""
+
+_ERROS_DE_REDE: tuple[type[requests.RequestException], ...] = (*_ERROS_DE_CONEXAO, requests.Timeout)
+"""Falhas de rede que ``HTTPScraper._send_once`` submete à política."""
+
+
 @dataclass(frozen=True)
 class RequestPolicy:
     """Política de requisição usada por ``HTTPScraper._request_with_retry``.
 
     Os defaults reproduzem o comportamento anterior à política: sem ``timeout``
     injetado, 3 tentativas, backoff ``2.0 ** tentativa``, :data:`RETRYABLE_STATUSES`
-    e nenhuma nova tentativa em timeout ou erro de conexão.
+    e nenhuma nova tentativa em timeout ou erro de conexão. O teto
+    ``max_backoff`` só age com mais tentativas ou base maior que os defaults.
 
     Os nomes dos campos são os mesmos dos kwargs aceitos por chamada
     (``timeout=``, ``max_retries=``, ``base_backoff=``), e o kwarg explícito
@@ -67,28 +120,52 @@ class RequestPolicy:
 
     Attributes:
         timeout: Repassado a ``session.request`` quando a chamada não traz
-            ``timeout=``. ``None`` não injeta nada.
+            ``timeout=``. ``None`` não injeta nada. Número positivo e finito
+            de segundos ou o par ``(conexão, leitura)``; ver :func:`timeout_valido`.
         max_retries: Número máximo de tentativas, inclusive a primeira.
         base_backoff: Base do backoff exponencial entre tentativas.
+        max_backoff: Teto, em segundos, da espera do backoff exponencial
+            (default 300). Sem ele, ``base_backoff`` alto ou muitas tentativas
+            esperariam horas, ou estourariam o ``float`` no primeiro recuo. Não
+            limita o ``Retry-After`` que o servidor manda.
         retryable_statuses: Status HTTP que disparam nova tentativa.
         retry_on_timeout: Retenta ``requests.Timeout`` de leitura.
-        retry_on_connection_error: Retenta ``requests.ConnectionError``. Inclui
-            ``requests.ConnectTimeout``, que herda das duas classes e é tratado
-            como falha de conexão: estourar o prazo de conexão indica host
-            inalcançável, não resposta lenta.
+        retry_on_connection_error: Retenta ``requests.ConnectionError`` e
+            ``requests.exceptions.ChunkedEncodingError`` (conexão que cai no
+            meio do corpo). Inclui ``requests.ConnectTimeout``, que herda das
+            duas classes e é tratado como falha de conexão: estourar o prazo de
+            conexão indica host inalcançável, não resposta lenta.
     """
 
     timeout: float | tuple[float, float] | None = None
     max_retries: int = 3
     base_backoff: float = 2.0
+    max_backoff: float = 300.0
     retryable_statuses: frozenset[int] = RETRYABLE_STATUSES
     retry_on_timeout: bool = False
     retry_on_connection_error: bool = False
 
     def __post_init__(self) -> None:
-        """Valida ``max_retries`` e congela ``retryable_statuses`` e ``timeout``."""
-        if self.max_retries < 1:
-            raise ValueError(f"max_retries deve ser >= 1, recebido {self.max_retries}")
+        """Valida os campos numéricos e congela ``retryable_statuses`` e ``timeout``.
+
+        A validação vale para os perfis, para o ajuste por ``politica=`` e para
+        os kwargs ``max_retries=`` e ``base_backoff=`` por chamada, que passam
+        por ``replace``: sem ela, ``max_retries=2.5``, ``base_backoff="2"`` ou
+        ``timeout=-1`` só estourariam na primeira requisição ou no primeiro
+        status retentável, no meio da coleta. O ``timeout=`` por chamada vai
+        direto ao ``requests``.
+        """
+        if not _max_retries_valido(self.max_retries):
+            raise ValueError(f"max_retries deve ser um inteiro >= 1, recebido {self.max_retries!r}")
+        for campo in ("base_backoff", "max_backoff"):
+            valor = getattr(self, campo)
+            if not numero_positivo(valor):
+                raise ValueError(f"{campo} deve ser um número positivo e finito, recebido {valor!r}")
+        if not timeout_valido(self.timeout):
+            raise ValueError(
+                "timeout deve ser None, um número positivo e finito de segundos ou o par "
+                f"(conexão, leitura), recebido {self.timeout!r}"
+            )
         # ``politica=`` vinda de JSON traz lista; ``requests`` só aceita tupla (connect, read).
         timeout: Any = self.timeout  # a anotação não cobre a lista que chega em runtime
         if isinstance(timeout, list):
@@ -96,14 +173,26 @@ class RequestPolicy:
         # Aceita set/list vindos de ``politica=`` sem deixar a política mutável.
         object.__setattr__(self, "retryable_statuses", frozenset(self.retryable_statuses))
 
+    def espera(self, tentativa: int) -> float:
+        """Segundos de backoff depois da ``tentativa``: ``base_backoff ** tentativa``, até ``max_backoff``.
+
+        A potência de ``float`` levanta ``OverflowError`` com base enorme
+        (``1e200 ** 2``); o ``except`` a trata como ``inf``, que cai no teto.
+        """
+        try:
+            exponencial = float(self.base_backoff) ** tentativa
+        except OverflowError:
+            exponencial = math.inf
+        return min(exponencial, float(self.max_backoff))
+
     def retries_network_error(self, exc: requests.RequestException) -> bool:
         """Diz se ``exc`` (timeout ou erro de conexão) merece nova tentativa.
 
-        ``ConnectionError`` é testado antes de ``Timeout`` porque
-        ``ConnectTimeout`` herda dos dois e deve seguir a opção de conexão, na
-        mesma regra de ``juscraper.core.failures.motivo_falha``.
+        A conexão é testada antes de ``Timeout`` porque ``ConnectTimeout``
+        herda dos dois e deve seguir a opção de conexão, na mesma ordem de
+        ``juscraper.core.failures.motivo_falha``.
         """
-        if isinstance(exc, requests.ConnectionError):
+        if isinstance(exc, _ERROS_DE_CONEXAO):
             return self.retry_on_connection_error
         return self.retry_on_timeout
 
@@ -259,10 +348,10 @@ class HTTPScraper(BaseScraper):
             kwargs = {**kwargs, "timeout": policy.timeout}
         try:
             return sess.request(method, url, **kwargs)
-        except (requests.ConnectionError, requests.Timeout) as exc:
+        except _ERROS_DE_REDE as exc:
             if not policy.retries_network_error(exc) or attempt == policy.max_retries:
                 raise
-            wait = max(0.0, policy.base_backoff ** attempt)
+            wait = policy.espera(attempt)
             logger.warning(
                 "%s em %s %s (tentativa %d/%d). Aguardando %.2fs.",
                 type(exc).__name__, method, url, attempt, policy.max_retries, wait,
@@ -305,7 +394,8 @@ class HTTPScraper(BaseScraper):
             max_retries: Número máximo de tentativas (inclusive a primeira).
                 ``None`` usa o valor da política; valor explícito vence.
             base_backoff: Base do backoff exponencial (``base_backoff ** attempt``
-                segundos entre tentativas). ``None`` usa o valor da política.
+                segundos entre tentativas, até o ``max_backoff`` da política).
+                ``None`` usa o valor da política.
             expect_json: Se ``True``, valida que o corpo de uma resposta com
                 status < 400 é JSON. Corpo vazio/não-JSON é tratado como
                 transitório (retry com backoff); persistindo, levanta
@@ -324,15 +414,18 @@ class HTTPScraper(BaseScraper):
 
         Returns:
             ``requests.Response`` na primeira resposta com status < 400 (e, se
-            ``expect_json=True``, com corpo JSON válido).
+                ``expect_json=True``, com corpo JSON válido).
 
         Raises:
             TypeError: Se ``session`` não for ``None`` nem ``requests.Session``.
-            ValueError: Se ``max_retries`` for menor que 1 ou ``perfil`` não
-                estiver declarado.
+            ValueError: Se ``max_retries`` não for inteiro >= 1, se
+                ``base_backoff`` não for número positivo e finito ou se
+                ``perfil`` não estiver declarado.
             RetryExhaustedError: Quando esgota ``max_retries`` em status retryable.
-            requests.Timeout, requests.ConnectionError: Na primeira ocorrência,
-                ou na última tentativa quando a política retenta esse erro.
+            requests.Timeout: Na primeira ocorrência, ou na última tentativa se a política o retenta.
+            requests.ConnectionError: Na primeira ocorrência, ou na última tentativa se a política o retenta.
+            requests.exceptions.ChunkedEncodingError: Na primeira ocorrência, ou na última tentativa
+                se a política o retenta.
             InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
@@ -343,7 +436,6 @@ class HTTPScraper(BaseScraper):
             )
         policy = self._resolve_policy(perfil, max_retries, base_backoff)
         max_retries = policy.max_retries
-        base_backoff = policy.base_backoff
 
         sess = session if session is not None else self.session
 
@@ -363,7 +455,7 @@ class HTTPScraper(BaseScraper):
                             resp.headers.get("Content-Type"),
                             resp.text[:200],
                         )
-                    backoff_wait = max(0.0, base_backoff ** attempt)
+                    backoff_wait = policy.espera(attempt)
                     logger.warning(
                         "Corpo nao-JSON em HTTP %s %s %s (tentativa %d/%d). Aguardando %.2fs.",
                         resp.status_code, method, url, attempt, max_retries, backoff_wait,
@@ -375,7 +467,7 @@ class HTTPScraper(BaseScraper):
             if resp.status_code in policy.retryable_statuses:
                 if attempt == max_retries:
                     raise RetryExhaustedError(resp.status_code, attempt)
-                wait = self._status_wait(resp, attempt, base_backoff)
+                wait = self._status_wait(resp, attempt, policy)
                 logger.warning(
                     "HTTP %s em %s %s (tentativa %d/%d). Aguardando %.2fs.",
                     resp.status_code, method, url, attempt, max_retries, wait,
@@ -407,14 +499,14 @@ class HTTPScraper(BaseScraper):
         return True
 
     @classmethod
-    def _status_wait(cls, resp: requests.Response, attempt: int, base_backoff: float) -> float:
-        """Espera antes de retentar um status: ``Retry-After`` numérico ou backoff exponencial.
+    def _status_wait(cls, resp: requests.Response, attempt: int, policy: RequestPolicy) -> float:
+        """Espera antes de retentar um status: ``Retry-After`` numérico ou :meth:`RequestPolicy.espera`.
 
         O clamp em 0 tolera ``Retry-After`` negativo de servidores mal-comportados.
         """
         wait = cls._parse_retry_after(resp.headers.get("Retry-After"))
         if wait is None:
-            wait = base_backoff ** attempt
+            wait = policy.espera(attempt)
         return max(0.0, wait)
 
     @staticmethod

@@ -170,7 +170,36 @@ def test_cjsg_no_results(mocker):
     _add_get_consulta()
     _add_post_consulta("cjsg/no_results.html")
 
-    df = jus.scraper("tjpe").cjsg("juscraperprobeztzeroxyz", paginas=1)
+    with pytest.warns(UserWarning, match="Nenhum documento encontrado"):
+        df = jus.scraper("tjpe").cjsg("juscraperprobeztzeroxyz", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sem_resultados_em_todos_os_tipos_avisa(mocker):
+    """Escolha com 'Nenhum documento encontrado' nos dois tipos: vazio com aviso.
+
+    Sample capturado ao vivo em 15/11/2026, quando o portal respondia assim a
+    qualquer busca, inclusive no navegador.
+    """
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    _add_post_consulta("cjsg/no_results_todos.html")
+
+    with pytest.warns(UserWarning, match="Nenhum documento.*'dano moral'"):
+        df = jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")
+
+    assert df.empty
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_desconhecida_levanta_erro(mocker):
+    """Página fora dos formatos conhecidos levanta erro em vez de sair vazia."""
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    _add_post_consulta("cjsg/step_01_consulta.html")
+
+    with pytest.raises(ValueError, match="fora dos formatos conhecidos"):
+        jus.scraper("tjpe").cjsg("dano moral", paginas=1)

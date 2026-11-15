@@ -31,6 +31,7 @@ def _captured_payloads(monkeypatch):
         return {"hits": {"total": {"value": 0, "relation": "eq"}, "hits": []}}
 
     monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
+    monkeypatch.setattr(datajud_client.time, "sleep", lambda _segundos: None)
     return payloads
 
 

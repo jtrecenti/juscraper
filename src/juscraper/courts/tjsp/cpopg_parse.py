@@ -8,7 +8,9 @@ from bs4.element import PreformattedString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
+from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
 from .._esaj.pasta import documento_vinculado
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, processos_sem_arquivo
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -66,64 +68,109 @@ def _normalize_field_name(label: str) -> str:
     return re.sub(r'\s+', '_', text.strip())
 
 
-def cpopg_parse_manager(path: str):
+def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse"):
     """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
 
     Parameters
     ----------
     path : str
         The file path or directory containing the downloaded files.
+    metodo : str
+        Método público que abre o ``UserWarning`` das falhas.
 
     Returns
     -------
     dict
         A dictionary where the keys are table names and the values are DataFrames
-        with the parsed data from the case files. When ``path`` is a directory,
-        files that fail to parse are reported with ``print`` and skipped.
+        with the parsed data from the case files. Quando ``path`` é um
+        diretório, ``basicos`` ganha a coluna ``motivo_falha``: ``None`` em
+        cada arquivo lido e ``resposta_inesperada`` no arquivo que o parser
+        recusa, que fica numa linha com ``file_path``, ``id_processo`` (o CNJ
+        da pasta do processo) e as demais colunas ``None``. O processo que
+        ``cpopg_download`` não baixou nessa pasta ganha uma linha com
+        ``id_processo`` e o motivo do download. As falhas também saem num
+        único ``UserWarning``.
 
     Raises
     ------
     ValueError
         Quando ``path`` é um diretório e nenhum arquivo dele pôde ser lido,
-        porque não há ``.html`` ou porque todos falharam. Devolver ``{}``
-        esconderia uma falha de download ou de leitura atrás de um resultado
-        vazio.
+        porque todos falharam ou porque não há ``.html`` nem falha de
+        download registrada. Devolver ``{}`` esconderia uma falha de download
+        ou de leitura atrás de um resultado vazio.
     """
     root = Path(path)
     if root.is_file():
         return cpopg_parse_single(str(root))
 
-    files = [file for file in root.rglob("*.html") if file.is_file()]
+    files = arquivos_candidatos(root)
+    sem_arquivo = processos_sem_arquivo(root / 'cpopg' if (root / 'cpopg').is_dir() else root, files)
+    parsed, falhas = _ler_arquivos(files)
+    if parsed:
+        result = {
+            key: pd.concat([result[key] for result in parsed], ignore_index=True)
+            for key in parsed[0]
+        }
+    elif sem_arquivo and not files:
+        # Lote em que nenhum processo foi baixado: as linhas de falha vão em tabelas vazias.
+        result = tabelas_vazias()
+    else:
+        raise _nothing_parsed_error(root, len(files), falhas)
+    result['basicos'] = com_linhas_de_falha(result['basicos'], [
+        *({'file_path': str(file), 'id_processo': cnj_da_pasta(file), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA}
+          for file, _ in falhas),
+        *({'id_processo': cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in sem_arquivo.items()),
+    ])
+    avisar_falhas_de_processo(
+        sem_arquivo,
+        [f"{file}: {MOTIVO_RESPOSTA_INESPERADA} ({error})" for file, error in falhas],
+        metodo,
+        "Eles saem na tabela basicos",
+    )
+    return result
+
+
+def _ler_arquivos(files: list[Path]) -> tuple[list[dict], list[tuple[Path, Exception]]]:
+    """As tabelas de cada arquivo lido e o erro de cada arquivo que o parser recusou."""
     parsed = []
-    falhas = 0
+    falhas: list[tuple[Path, Exception]] = []
     for file in tqdm(files, desc="Processando documentos"):
         try:
             single_result = cpopg_parse_single(str(file))
         except (OSError, UnicodeDecodeError, ValueError, AttributeError) as error:
-            print(f"Erro ao processar o arquivo {file}: {error}")
-            falhas += 1
+            falhas.append((file, error))
             continue
         if single_result:
             parsed.append(single_result)
+    return parsed, falhas
 
-    if not parsed:
-        raise _nothing_parsed_error(root, len(files), falhas)
+
+def arquivos_candidatos(root: Path) -> list[Path]:
+    """Os ``.html`` de processo sob ``root``, que :func:`cpopg_parse_manager` lê."""
+    return [file for file in root.rglob("*.html") if file.is_file()]
+
+
+def tabelas_vazias() -> dict[str, pd.DataFrame]:
+    """As quatro tabelas do ``cpopg`` sem linhas, para o lote em que nenhum processo foi baixado."""
     return {
-        key: pd.concat([result[key] for result in parsed], ignore_index=True)
-        for key in parsed[0]
+        'basicos': pd.DataFrame(columns=[*_BASIC_COLUMNS, COLUNA_MOTIVO_FALHA]),
+        'partes': pd.DataFrame(columns=list(_PARTY_COLUMNS)),
+        'movimentacoes': pd.DataFrame(columns=list(_MOVEMENT_COLUMNS)),
+        'peticoes_diversas': pd.DataFrame(columns=list(_MISC_PETITION_COLUMNS)),
     }
 
 
-def _nothing_parsed_error(root: Path, candidatos: int, falhas: int) -> ValueError:
+def _nothing_parsed_error(root: Path, candidatos: int, falhas: list[tuple[Path, Exception]]) -> ValueError:
     """Build the error for a directory where no CPOPG file could be parsed."""
     if candidatos == 0:
         return ValueError(
             f"Nenhum arquivo do CPOPG lido em {root}: nenhum arquivo candidato "
             "(.html de processo) encontrado no diretório."
         )
+    arquivo, erro = falhas[0]
     return ValueError(
         f"Nenhum arquivo do CPOPG lido em {root}: {candidatos} arquivo(s) candidato(s), "
-        f"{falhas} com erro. Os erros de cada arquivo foram impressos acima."
+        f"{len(falhas)} com erro. Primeiro erro, em {arquivo.name}: {erro}"
     )
 
 

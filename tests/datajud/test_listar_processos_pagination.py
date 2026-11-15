@@ -145,31 +145,6 @@ def test_falha_posterior_retorna_resultados_parciais(monkeypatch):
     assert len(calls) == 2
 
 
-def test_size_reduzido_fica_sticky_nas_paginas_seguintes(monkeypatch):
-    calls: list[dict[str, Any]] = []
-
-    def fake_call(**kwargs):
-        calls.append(kwargs)
-        payload = kwargs["query_payload"]
-        if len(calls) == 1:
-            payload["size"] = 100
-            return _page(1, size=100, total=101)
-        assert payload["size"] == 100
-        return _page(2, size=1, total=101)
-
-    monkeypatch.setattr(datajud_client, "call_datajud_api", fake_call)
-    monkeypatch.setattr(datajud_client.time, "sleep", lambda _: None)
-
-    df = jus.scraper("datajud", verbose=0).listar_processos(
-        tribunal="TJSP",
-        paginas=range(1, 3),
-        tamanho_pagina=400,
-    )
-
-    assert len(df) == 101
-    assert [call["query_payload"]["size"] for call in calls] == [100, 100]
-
-
 def test_lista_de_cnjs_usa_alias_e_filtro_especificos(monkeypatch):
     calls = _install_pages(monkeypatch, [_page(1, size=1, total=1), _page(1, size=1, total=1)])
     cnj_tjac = "00033258820148010001"
