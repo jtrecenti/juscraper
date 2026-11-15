@@ -1,4 +1,6 @@
 """Offline contract tests for TJDFT cjsg."""
+import json
+
 import pandas as pd
 import responses
 from responses.matchers import json_params_matcher
@@ -23,7 +25,8 @@ def _payload(
     return {
         "query": pesquisa,
         "termosAcessorios": list(termos_acessorios) if termos_acessorios else [],
-        "pagina": pagina,
+        # ``pagina`` é a página 1-based de ``cjsg``; a API conta a partir de 0.
+        "pagina": pagina - 1,
         "tamanho": tamanho_pagina,
         "sinonimos": sinonimos,
         "espelho": espelho,
@@ -80,4 +83,31 @@ def test_cjsg_no_results(mocker):
     df = jus.scraper("tjdft").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
 
     assert isinstance(df, pd.DataFrame)
+    assert df.empty
+
+
+@responses.activate
+def test_cjsg_paginas_none_busca_todas_as_paginas(mocker):
+    """``paginas=None`` lê o total em ``hits.value`` e pede as páginas 0 e 1 da API."""
+    mocker.patch("time.sleep")
+    _add_page("enfiteuse", 1, "cjsg/todas_paginas_page_01.json")
+    _add_page("enfiteuse", 2, "cjsg/todas_paginas_page_02.json")
+
+    df = jus.scraper("tjdft").cjsg("enfiteuse", paginas=None)
+
+    assert [json.loads(call.request.body)["pagina"] for call in responses.calls] == [0, 1]
+    assert len(df) == 13
+    assert df["processo"].is_unique
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+
+
+@responses.activate
+def test_cjsg_paginas_none_sem_resultados_faz_uma_requisicao(mocker):
+    """Com ``hits.value == 0``, ``paginas=None`` para na primeira página."""
+    mocker.patch("time.sleep")
+    _add_page("juscraper_probe_zero_hits_xyzqwe", 1, "cjsg/no_results.json")
+
+    df = jus.scraper("tjdft").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=None)
+
+    assert len(responses.calls) == 1
     assert df.empty
