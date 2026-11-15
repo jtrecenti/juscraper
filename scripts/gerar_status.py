@@ -50,20 +50,14 @@ class Modelo(BaseModel):
 class Observacao(Modelo):
     """Registra uma verificação datada, com evidência e escopo explícitos."""
 
-    estado: str
+    # Uma tentativa inconclusiva (nao_verificado) também exige cenário e evidência.
+    estado: Literal["funcionando", "degradado", "indisponivel", "nao_verificado"]
     verificado_em: date
     versao: str
     motivo: str
     cenario: str
     evidencias: list[HttpUrl] = Field(min_length=1)
     excecao: str | None = None
-
-    @model_validator(mode="after")
-    def validar_estado(self):
-        """Uma tentativa inconclusiva também exige cenário e evidência."""
-        if self.estado not in ESTADOS:
-            raise ValueError("Observação deve registrar um estado conhecido com evidência.")
-        return self
 
 
 class Fonte(Modelo):
@@ -232,10 +226,11 @@ def main() -> int:
             return int(bool(pendentes))
         # A sincronia reproduz a geração na data gravada; com a data corrente, o resultado mudaria no vencimento.
         hoje = argumentos.data or (data_gravada(documentos) if argumentos.check else date.today())
+        bloco = renderizar(registro, hoje)
         alteracoes = []
         # Valida os dois documentos antes de escrever, evitando atualização parcial por erro de marcador.
         for destino, atual in documentos.items():
-            novo = substituir_bloco(atual, renderizar(registro, hoje))
+            novo = substituir_bloco(atual, bloco)
             if atual != novo:
                 alteracoes.append((destino, novo))
         for destino, novo in alteracoes:
