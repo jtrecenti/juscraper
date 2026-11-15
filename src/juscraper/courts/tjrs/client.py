@@ -44,6 +44,7 @@ class TJRSScraper(HTTPScraper):
             timeout=(10, 30),
             retry_on_timeout=True,
             retry_on_connection_error=True,
+            expect_json=True,
         ),
     }
 

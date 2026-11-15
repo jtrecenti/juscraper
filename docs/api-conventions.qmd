@@ -577,7 +577,7 @@ share the same retry loop via `_request_with_retry`. Defaults:
 | Max attempts | `3` (including the first) | `max_retries=` per call |
 | Backoff | `base_backoff ** attempt` → `2s` then `4s` (sleeps run between attempts 1→2 and 2→3; the 3rd failure raises `RetryExhaustedError` without sleeping, so the default `8s` from `2 ** 3` only kicks in with `max_retries >= 4`); each wait is capped at `max_backoff` (300 s) | `base_backoff=` per call; `max_backoff` in `politica=` (DataJud, JusBR, PDPJ, TRF3, TJMG, TJRS, TJSC) |
 | Timeout and dropped connection | Not retried: the first `requests.Timeout` or `requests.ConnectionError` is raised | `retry_on_timeout` and `retry_on_connection_error` in `politica=`, for scrapers with HTTP profiles; already on in the profiles of TJMG, TJRS and TRF3 (both), JusBR and PDPJ (timeout only) and TJSC (connection only) |
-| `Retry-After` (numeric seconds) | Honored when present | n/a |
+| `Retry-After` (numeric seconds) | Honored when present, capped at `max_retry_after` (300 s); `inf` and `nan` fall back to backoff | `max_retry_after` in `politica=`, for scrapers with HTTP profiles |
 | `Retry-After` (HTTP-date) | Ignored — falls back to backoff (#201) | n/a |
 | Inter-request pause | `sleep_time=1.0` from the scraper constructor | `jus.scraper("tjsp", sleep_time=5.0)` |
 

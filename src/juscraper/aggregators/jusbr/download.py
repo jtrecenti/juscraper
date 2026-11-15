@@ -45,7 +45,7 @@ _STATUS_CNJ_INEXISTENTE = 404
 def _forma_invalida(response: requests.Response, url: str) -> InvalidJSONResponseError:
     """Erro para um corpo JSON válido na forma que o endpoint não usa.
 
-    O ``request_fn`` é chamado com ``expect_json=True``, então o corpo já é
+    O perfil ``"listagem"`` exige JSON (``expect_json``), então o corpo já é
     JSON; o erro aqui é de forma, e sai com o mesmo motivo ``json_invalido``.
     """
     return InvalidJSONResponseError(
@@ -75,7 +75,7 @@ def fetch_process_list(
     url = f"{base_api_url}?numeroProcesso={cnj_cleaned}"
     logger.debug("Buscando a lista de processos em %s", url)
     try:
-        response = request_fn("GET", url, perfil="listagem", expect_json=True)
+        response = request_fn("GET", url, perfil="listagem")
     except requests.HTTPError as exc:
         if exc.response is not None and exc.response.status_code == _STATUS_CNJ_INEXISTENTE:
             logger.info("CNJ %s inexistente na listagem (HTTP 404).", cnj_cleaned)
@@ -109,7 +109,7 @@ def fetch_process_details(
     """
     url = f"{base_api_url}{numero_processo_oficial}"
     logger.debug("Buscando os detalhes do processo em %s", url)
-    response = request_fn("GET", url, perfil="listagem", expect_json=True)
+    response = request_fn("GET", url, perfil="listagem")
     data = response.json()
     if isinstance(data, dict):
         return data

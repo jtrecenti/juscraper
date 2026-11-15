@@ -243,9 +243,9 @@ class DatajudScraper(HTTPScraper):
             "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
         ),
     }
-    # ``max_retries``, ``base_backoff`` e ``max_backoff`` são validados pela ``RequestPolicy``.
+    # Os campos além do ``timeout`` são validados pela ``RequestPolicy``.
     CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(
-        {"timeout", "max_retries", "base_backoff", "max_backoff"}
+        {"timeout", "max_retries", "base_backoff", "max_backoff", "max_retry_after"}
     )
 
     def __init__(
@@ -268,16 +268,18 @@ class DatajudScraper(HTTPScraper):
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
                 :meth:`listar_processos` e :meth:`contar_processos`, como em
                 ``politica={"busca": {"timeout": 180, "max_retries": 5}}``.
-                Aceita quatro campos. ``timeout`` (default 60 s) é um número
+                Aceita cinco campos. ``timeout`` (default 60 s) é um número
                 positivo e finito de segundos ou o par ``(conexão, leitura)``;
                 ``None``, que esperaria indefinidamente, é recusado. Consultas
                 grandes podem passar de 60 s já na primeira página.
                 ``max_retries`` (default 3, contando a primeira),
                 ``base_backoff`` (default 2, espera de ``base_backoff **
-                tentativa`` segundos, ou o ``Retry-After`` numérico) e
+                tentativa`` segundos, ou o ``Retry-After`` numérico),
                 ``max_backoff`` (default 300, teto em segundos dessa espera
-                exponencial) regem as novas tentativas em HTTP 429, 502 e 503,
-                como o 429 que o DataJud devolve quando a fila de busca enche.
+                exponencial) e ``max_retry_after`` (default 300, teto em
+                segundos do ``Retry-After``) regem as novas tentativas em HTTP
+                429, 502 e 503, como o 429 que o DataJud devolve quando a fila
+                de busca enche.
 
         Raises:
             ValueError: Quando ``politica`` cita perfil desconhecido, campo

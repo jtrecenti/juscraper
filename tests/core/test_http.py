@@ -232,6 +232,49 @@ def test_request_with_retry_negative_retry_after_clamped(probe, mocker):
     sleep_spy.assert_called_once_with(0.0)
 
 
+@responses.activate
+@pytest.mark.parametrize("cabecalho", ["inf", "-inf", "nan", "Infinity"])
+def test_retry_after_nao_finito_cai_no_backoff(probe, mocker, cabecalho):
+    """``float`` aceita ``inf`` e ``nan``, que levantavam no ``time.sleep``."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=503, headers={"Retry-After": cabecalho})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe._request_with_retry("GET", URL)
+
+    sleep_spy.assert_called_once_with(2.0)
+
+
+@responses.activate
+def test_retry_after_acima_do_teto_espera_o_teto(probe, mocker, caplog):
+    """``Retry-After: 86400`` prendia a coleta por um dia."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=429, headers={"Retry-After": "86400"})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    probe._request_with_retry("GET", URL)
+
+    sleep_spy.assert_called_once_with(300.0)
+    assert "Retry-After de 86400s acima do teto max_retry_after" in caplog.text
+
+
+@responses.activate
+def test_max_retry_after_ajustavel_na_politica(mocker):
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, status=429, headers={"Retry-After": "120"})
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    _ProbeBackoff(politica={"lento": {"max_retry_after": 30}})._request_with_retry("GET", URL, perfil="lento")
+
+    sleep_spy.assert_called_once_with(30.0)
+
+
+@pytest.mark.parametrize("valor", [0, -1, "300", True, float("inf"), float("nan")])
+def test_request_policy_recusa_max_retry_after_invalido(valor):
+    with pytest.raises(ValueError, match=rf"max_retry_after deve ser .*recebido {re.escape(repr(valor))}"):
+        RequestPolicy(max_retry_after=valor)
+
+
 def test_request_with_retry_invalid_max_retries(probe):
     with pytest.raises(ValueError, match=r"max_retries deve ser um inteiro >= 1, recebido 0"):
         probe._request_with_retry("GET", URL, max_retries=0)
@@ -788,3 +831,30 @@ def test_profile_base_backoff_used_for_invalid_json(mocker):
     _ProbeBackoff()._request_with_retry("GET", URL, perfil="lento", expect_json=True)
 
     assert [c.args[0] for c in sleep_spy.call_args_list] == [3.0, 9.0]
+
+
+class _ProbeJson(HTTPScraper):
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {"api": RequestPolicy(expect_json=True)}
+
+
+@responses.activate
+def test_expect_json_vem_do_perfil(mocker):
+    """O perfil cujas respostas são JSON declara ``expect_json`` uma vez, em vez de cada chamada."""
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL, body="", status=200)
+    responses.add(responses.GET, URL, json={"ok": True}, status=200)
+
+    resp = _ProbeJson()._request_with_retry("GET", URL, perfil="api")
+
+    assert resp.json() == {"ok": True}
+    sleep_spy.assert_called_once_with(2.0)
+
+
+@responses.activate
+def test_expect_json_da_chamada_vence_o_perfil():
+    responses.add(responses.GET, URL, body="<html></html>", status=200)
+
+    resp = _ProbeJson()._request_with_retry("GET", URL, perfil="api", expect_json=False)
+
+    assert resp.text == "<html></html>"
+    assert DEFAULT_POLICY.expect_json is False
