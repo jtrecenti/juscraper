@@ -183,7 +183,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Scraper for CNJ’s Datajud API.</p>
 <section id="note" class="level2 doc-section doc-section-note">
 <h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
-<p>Diferente de outros agregadores migrados em #204, o DataJud nao usa <code>self._request_with_retry</code> no caminho quente: a funcao <code>download.call_datajud_api</code> aplica um retry especializado (504/Timeout -&gt; refaz <strong>1 vez</strong> com <code>size</code> reduzido por <code>FALLBACK_DIVISOR</code>), incompativel com o backoff exponencial do <code>HTTPScraper</code>. A heranca aqui garante session/headers compartilhados e o cumprimento de #185, mas o transporte segue via <code>call_datajud_api</code>.</p>
+<p>Cada busca passa pelo <code>self._request_with_retry</code> com o perfil <code>"busca"</code>, que repete 429, 502 e 503 com espera. Por cima dele, <code>download.call_datajud_api</code> trata 504 e timeout refazendo a busca <strong>uma vez</strong> com <code>size</code> reduzido por <code>FALLBACK_DIVISOR</code>.</p>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -277,7 +277,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>motivo.</td>
+<td>motivo no vocabulário de <code>juscraper.core.failures.motivo_falha</code></td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>(<code>"http_401"</code>, <code>"retry_esgotado_429"</code>, <code>"timeout"</code>,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td><code>"conexao"</code>). Falha sem motivo no vocabulário, como corpo que</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>não é JSON, sai como <code>"&lt;Classe&gt;: &lt;mensagem&gt;"</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -399,7 +414,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>ColetaParcialError</code></td>
-<td>Se uma falha HTTP, de parsing ou de paginação impedir a conclusão da coleta. <code>erro.resultado</code> contém os registros preservados e <code>erro.falhas</code> contém as causas.</td>
+<td>Se uma falha HTTP, de parsing ou de paginação impedir a conclusão da coleta. <code>erro.resultado</code> contém os registros preservados e <code>erro.falhas</code> contém as causas. Na falha HTTP, a causa é a exceção original: <code>requests.HTTPError</code> (status em <code>.response.status_code</code>), <code>RetryExhaustedError</code> (429, 502 ou 503 em todas as tentativas, status em <code>.status_code</code>), <code>requests.Timeout</code>, erro de conexão ou <code>requests.JSONDecodeError</code> (resposta 200 que não é JSON).</td>
 </tr>
 </tbody>
 </table>
