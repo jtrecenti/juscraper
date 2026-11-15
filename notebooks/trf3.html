@@ -754,7 +754,7 @@ polo_passivo
 </tbody>
 </table>
 <p>Each call opens its own session on the portal and reads the result list, which already carries the ementa and the full text of every document: the cost is three fixed requests (opening the tab, the search POST and the GET of its redirect, which is page 1) plus one per extra page, with <code>sleep_time</code> between pages.</p>
-<div id="a3c1f0e2" class="cell">
+<div id="a3c1f0e2" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>df_cjsg <span class="op">=</span> trf3.cjsg(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
@@ -763,21 +763,102 @@ polo_passivo
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_cjsg.shape)</span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>df_cjsg[[<span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"relator"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"meio_publicacao"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando CJSG TRF3:   0%|          | 0/2 [00:00&lt;?, ?it/s]Baixando CJSG TRF3: 100%|██████████| 2/2 [00:01&lt;00:00,  1.46it/s]Baixando CJSG TRF3: 100%|██████████| 2/2 [00:01&lt;00:00,  1.46it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(20, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">meio_publicacao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5001743-27.2026.4.03.0000</td>
+<td>AI - AGRAVO DE INSTRUMENTO</td>
+<td>3ª Turma</td>
+<td>Desembargador Federal NERY DA COSTA JUNIOR</td>
+<td>2026-06-30</td>
+<td>DJEN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>5010057-39.2019.4.03.6100</td>
+<td>ApelRemNec - APELAÇÃO / REMESSA NECESSÁRIA</td>
+<td>4ª Turma</td>
+<td>Desembargador Federal ANDRE NABARRETE NETO</td>
+<td>2026-06-30</td>
+<td>Intimação via sistema</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>5002047-63.2025.4.03.6110</td>
+<td>ApCrim - APELAÇÃO CRIMINAL</td>
+<td>5ª Turma</td>
+<td>Desembargadora Federal RENATA ANDRADE LOTUFO</td>
+<td>2026-06-30</td>
+<td>Intimação via sistema</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>5002192-62.2020.4.03.6121</td>
+<td>ApCiv - APELAÇÃO CÍVEL</td>
+<td>4ª Turma</td>
+<td>Desembargador Federal ANDRE NABARRETE NETO</td>
+<td>2026-06-30</td>
+<td>DJEN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5004682-95.2021.4.03.6000</td>
+<td>ApCiv - APELAÇÃO CÍVEL</td>
+<td>Turma Regional de Mato Grosso do Sul</td>
+<td>Juiz Federal Convocado NEY GUSTAVO PAES DE AND...</td>
+<td>2026-06-30</td>
+<td>Intimação via sistema</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 <section id="the-other-bases" class="level3">
 <h3 class="anchored" data-anchor-id="the-other-bases">The other bases</h3>
 <p>In the single-judge bases, <code>ementa</code> holds the text of the decision (there is no ementa) and <code>orgao_julgador</code> is empty; <code>data_julgamento</code> is the date of the decision.</p>
 <p>In part of the older appeal-panel judgments (<code>turmas_recursais</code>), <code>ementa</code> is null because the portal sends an empty ementa block; <code>inteiro_teor</code> still carries the full text. When this was measured, every ementa from 2013 and 2014 was empty, and some from 2011.</p>
-<div id="a3c1f0e4" class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> base <span class="kw">in</span> [<span class="st">"turmas_recursais"</span>, <span class="st">"monocraticas"</span>, <span class="st">"monocraticas_turmas_recursais"</span>]:</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    df_base <span class="op">=</span> trf3.cjsg(</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"medicamento"</span>,</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        base<span class="op">=</span>base,</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(base, df_base.shape, df_base[<span class="st">"relator"</span>].iloc[<span class="dv">0</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="a3c1f0e4" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> base <span class="kw">in</span> [<span class="st">"turmas_recursais"</span>, <span class="st">"monocraticas"</span>, <span class="st">"monocraticas_turmas_recursais"</span>]:</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    df_base <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"medicamento"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>        base<span class="op">=</span>base,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        data_julgamento_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        data_julgamento_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(base, df_base.shape, df_base[<span class="st">"relator"</span>].iloc[<span class="dv">0</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>turmas_recursais (10, 12) Juíza Federal MAIRA FELIPE LOURENCO
+monocraticas (10, 12) Desembargadora Federal GISELLE DE AMARO E FRANCA
+monocraticas_turmas_recursais (10, 12) Juíza Federal LIN PEI JENG</code></pre>
+</div>
 </div>
 </section>
 <section id="filters" class="level3">
@@ -785,16 +866,43 @@ polo_passivo
 <p><code>relator</code> and <code>classe</code> are free text matched against the portal’s index, not dropdown IDs. Use the spelling of the form’s dropdowns: <code>relator="NERY JUNIOR"</code>, <code>classe="AI - AGRAVO DE INSTRUMENTO"</code>.</p>
 <p><code>orgao_julgador</code> picks one option of the órgão dropdown of the tab, by its label (<code>"3ª Turma"</code>, <code>"11ª Turma Recursal da Seção Judiciária de São Paulo"</code>) or by its indexed name (<code>"TERCEIRA TURMA"</code>, <code>"11ª TURMA RECURSAL DE SÃO PAULO"</code>), ignoring case and spacing. The value in the <code>orgao_julgador</code> column also works: as in the portal’s form, <code>"1a. seção"</code> becomes <code>"1A"</code>, so <code>"QUINTA TURMA - 1A. SEÇÃO"</code> matches the option <code>QUINTA TURMA - 1a. SEÇÃO</code>. The search reads the dropdown from the tab it already opens and sends the pair the browser sends, the label and the indexed name of the option, and the portal returns the documents recorded under either (measured with “medicamento”: <code>"QUINTA TURMA"</code> finds 576 documents, against 443 for the label alone and 133 for the indexed name alone). A label shared by more than one option, such as <code>"5ª Turma"</code> in the acórdãos base, raises <code>ValueError</code> listing the indexed names that resolve it; text that matches no option is sent as is and only finds what the portal records with that spelling. The monocratic bases have no órgão filter.</p>
 <p>The form has a single date pair, so pass either <code>data_julgamento_*</code> or <code>data_publicacao_*</code>, not both.</p>
-<div id="a3c1f0e6" class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_filtrado <span class="op">=</span> trf3.cjsg(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="st">"NERY JUNIOR"</span>,</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="st">"AI - AGRAVO DE INSTRUMENTO"</span>,</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>df_filtrado[[<span class="st">"processo"</span>, <span class="st">"relator"</span>, <span class="st">"relator_acordao"</span>, <span class="st">"data_publicacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="a3c1f0e6" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>df_filtrado <span class="op">=</span> trf3.cjsg(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"medicamento"</span>,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    relator<span class="op">=</span><span class="st">"NERY JUNIOR"</span>,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="st">"AI - AGRAVO DE INSTRUMENTO"</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="st">"2026-01-01"</span>,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="st">"2026-06-30"</span>,</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>df_filtrado[[<span class="st">"processo"</span>, <span class="st">"relator"</span>, <span class="st">"relator_acordao"</span>, <span class="st">"data_publicacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">relator_acordao</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>5027413-04.2025.4.03.0000</td>
+<td>Desembargador Federal NERY DA COSTA JUNIOR</td>
+<td>None</td>
+<td>2026-06-25</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 
 
