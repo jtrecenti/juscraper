@@ -15,8 +15,8 @@ from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
 from ...core.exceptions import ColetaParcialError, RetryExhaustedError
-from ...core.failures import FALHAS_DE_TRANSPORTE, motivo_falha
-from ...core.http import HTTPScraper, RequestPolicy, numero_positivo
+from ...core.failures import FALHAS_DE_TRANSPORTE, anotar_falhas_anteriores, e_token_invalido, motivo_falha
+from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
@@ -140,17 +140,6 @@ def _next_search_after(
     return search_after
 
 
-def _timeout_valido(timeout: Any) -> bool:
-    """Número positivo e finito, ou par ``(conexão, leitura)`` deles, como o ``requests`` aceita.
-
-    ``None`` fica de fora: no ``requests`` ele desliga o limite, e uma consulta
-    pesada ao DataJud ficaria esperando indefinidamente.
-    """
-    if isinstance(timeout, (list, tuple)):
-        return len(timeout) == 2 and all(numero_positivo(v) for v in timeout)
-    return numero_positivo(timeout)
-
-
 def _mensagem_falha_parcial(
     alias: str,
     pagina: int,
@@ -195,16 +184,31 @@ def _descrever_causa(exc: Exception) -> str:
     return f"{type(exc).__name__}: {exc}"
 
 
-def _motivo_da_contagem(exc: Exception) -> str:
-    """Coluna ``error`` de :meth:`DatajudScraper.contar_processos`, no vocabulário de ``motivo_falha``.
+def _timeout_com_prazo(timeout: object) -> bool:
+    """:func:`timeout_valido` sem ``None``, que desligaria o prazo de uma consulta pesada."""
+    return timeout_valido(timeout, aceita_none=False)
 
-    Falha de transporte sem motivo no vocabulário (``TooManyRedirects``,
-    ``InvalidURL``, ...) sai como ``"<Classe>: <mensagem>"``, como antes.
+
+def _relancar_se_token_invalido(exc: Exception, linhas: list[dict[str, Any]]) -> None:
+    """Relança o 401 de :meth:`DatajudScraper.contar_processos`, com as falhas de ``linhas`` numa nota.
+
+    Raises:
+        requests.HTTPError: O próprio ``exc``, quando é o 401 da chave inválida.
     """
+    if e_token_invalido(exc):
+        anteriores = [f"{linha['alias']}: {linha['error']}" for linha in linhas if linha["error"] is not None]
+        anotar_falhas_anteriores(exc, anteriores, "contagem(ns) de tribunal")
+        raise exc
+
+
+def _linha_de_falha(tribunal: str, alias: str, exc: Exception) -> dict[str, Any]:
+    """Linha do tribunal cuja contagem falhou; ``error`` no vocabulário de ``motivo_falha`` ou ``"<Classe>: <msg>"``."""
+    logger.warning("DataJud: contagem do alias %s falhou: %s", alias, exc)
     try:
-        return motivo_falha(exc)
+        motivo = motivo_falha(exc)
     except TypeError:
-        return f"{type(exc).__name__}: {exc}"
+        motivo = f"{type(exc).__name__}: {exc}"
+    return {"tribunal": tribunal, "alias": alias, "count": None, "relation": None, "error": motivo}
 
 
 DICA_TIMEOUT = (
@@ -422,12 +426,14 @@ class DatajudScraper(HTTPScraper):
     }
     VALIDADORES_POLITICA: ClassVar[Mapping[str, tuple[Callable[[Any], bool], str]]] = {
         "timeout": (
-            _timeout_valido,
+            _timeout_com_prazo,
             "Use um número positivo e finito de segundos ou o par (conexão, leitura).",
         ),
     }
-    # ``max_retries`` e ``base_backoff`` são validados pela ``RequestPolicy``.
-    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset({"timeout", "max_retries", "base_backoff"})
+    # ``max_retries``, ``base_backoff`` e ``max_backoff`` são validados pela ``RequestPolicy``.
+    CAMPOS_POLITICA_SUPORTADOS: ClassVar[frozenset[str]] = frozenset(
+        {"timeout", "max_retries", "base_backoff", "max_backoff"}
+    )
 
     def __init__(
         self,
@@ -449,19 +455,20 @@ class DatajudScraper(HTTPScraper):
             politica: Ajuste do perfil HTTP ``"busca"``, usado por
                 :meth:`listar_processos` e :meth:`contar_processos`, como em
                 ``politica={"busca": {"timeout": 180, "max_retries": 5}}``.
-                Aceita três campos. ``timeout`` (default 60 s) é um número
+                Aceita quatro campos. ``timeout`` (default 60 s) é um número
                 positivo e finito de segundos ou o par ``(conexão, leitura)``;
                 ``None``, que esperaria indefinidamente, é recusado. Consultas
                 grandes podem passar de 60 s já na primeira página.
-                ``max_retries`` (default 3, contando a primeira) e
+                ``max_retries`` (default 3, contando a primeira),
                 ``base_backoff`` (default 2, espera de ``base_backoff **
-                tentativa`` segundos, ou o ``Retry-After`` numérico) regem as
-                novas tentativas em HTTP 429, 502 e 503, como o 429 que o
-                DataJud devolve quando a fila de busca enche.
+                tentativa`` segundos, ou o ``Retry-After`` numérico) e
+                ``max_backoff`` (default 300, teto em segundos dessa espera
+                exponencial) regem as novas tentativas em HTTP 429, 502 e 503,
+                como o 429 que o DataJud devolve quando a fila de busca enche.
 
         Raises:
             ValueError: Quando ``politica`` cita perfil desconhecido, campo
-                fora dos três aceitos ou valor inválido.
+                fora dos quatro aceitos ou valor inválido.
         """
         # Valida antes do core: campo sem efeito no DataJud não chega a ser
         # validado (com outra mensagem, ou outro tipo de erro) pela
@@ -535,16 +542,18 @@ class DatajudScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por tribunal consultado, com colunas
-            ``tribunal`` (sigla), ``alias`` (índice ES), ``count`` (int) e
-            ``relation`` (``"eq"`` exato ou ``"gte"`` truncado pelo cap
-            interno do Elasticsearch). Quando a chamada falha para um
-            tribunal, ``count`` é ``None`` e a coluna ``error`` traz o
-            motivo no vocabulário de ``juscraper.core.failures.motivo_falha``
-            (``"http_401"``, ``"retry_esgotado_429"``, ``"timeout"``,
-            ``"conexao"``). Falha sem motivo no vocabulário, como corpo que
-            não é JSON, sai como ``"<Classe>: <mensagem>"``.
+            ``tribunal`` (sigla), ``alias`` (índice ES), ``count``
+            (inteiro anulável ``Int64``) e ``relation`` (``"eq"`` exato ou
+            ``"gte"`` truncado pelo cap interno do Elasticsearch). Quando a
+            chamada falha para um tribunal, ``count`` é ``<NA>`` e a coluna
+            ``error`` traz o motivo no vocabulário de
+            ``juscraper.core.failures.motivo_falha`` (``"http_500"``,
+            ``"retry_esgotado_429"``, ``"timeout"``, ``"conexao"``,
+            ``"json_invalido"``), ou ``"<Classe>: <mensagem>"`` fora dele.
 
         Raises:
+            requests.HTTPError: No 401 (chave inválida), que interrompe a
+                contagem; as falhas anteriores vão numa nota do erro.
             TypeError: Quando um kwarg desconhecido é passado.
             ValidationError: Quando um filtro tem formato inválido (ex.:
                 ``data_ajuizamento_*`` fora de ISO 8601), quando
@@ -611,14 +620,8 @@ class DatajudScraper(HTTPScraper):
             try:
                 api_response = self._buscar(alias, payload)
             except FALHAS_DE_TRANSPORTE as exc:
-                logger.warning("DataJud: contagem do alias %s falhou: %s", alias, exc)
-                rows.append({
-                    "tribunal": tribunal_sigla,
-                    "alias": alias,
-                    "count": None,
-                    "relation": None,
-                    "error": _motivo_da_contagem(exc),
-                })
+                _relancar_se_token_invalido(exc, rows)
+                rows.append(_linha_de_falha(tribunal_sigla, alias, exc))
                 continue
             total = api_response.get("hits", {}).get("total", {}) or {}
             rows.append({
@@ -628,7 +631,8 @@ class DatajudScraper(HTTPScraper):
                 "relation": total.get("relation", "eq"),
                 "error": None,
             })
-        return pd.DataFrame(rows)
+        colunas = ["tribunal", "alias", "count", "relation", "error"]  # Int64: com None de falha, viraria float
+        return pd.DataFrame(rows, columns=colunas).astype({"count": "Int64"})
 
     def _buscar(self, alias: str, query_payload: dict[str, Any]) -> dict[str, Any]:
         """Busca no alias pelo perfil ``"busca"``; falhas sobem como em :func:`call_datajud_api`."""

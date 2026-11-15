@@ -534,7 +534,7 @@ def test_timeout_do_perfil_vale_tambem_no_retry_com_size_reduzido(mocker):
     ],
 )
 def test_politica_com_campo_sem_efeito_no_datajud_levanta(ajuste):
-    with pytest.raises(ValueError, match=r"só aceita \['base_backoff', 'max_retries', 'timeout'\]"):
+    with pytest.raises(ValueError, match=r"só aceita \['base_backoff', 'max_backoff', 'max_retries', 'timeout'\]"):
         jus.scraper("datajud", politica={"busca": ajuste})
 
 

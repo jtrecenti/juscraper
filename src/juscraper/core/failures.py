@@ -9,7 +9,9 @@ O vocabulário separa ``timeout`` (leitura lenta: o ``timeout`` do perfil pode
 estar curto) de ``conexao`` (host inalcançável) e de ``retry_esgotado_<status>``
 (o servidor respondeu, mas com status retentável até o fim das tentativas).
 ``json_invalido`` cobre o corpo que não é o JSON esperado: corpo que não é
-JSON e JSON na forma errada (lista no lugar de objeto, contagem sem inteiro).
+JSON (``InvalidJSONResponseError`` e o ``requests.JSONDecodeError`` de
+``Response.json()``) e JSON na forma errada (lista no lugar de objeto,
+contagem sem inteiro).
 ``nao_encontrado`` é o processo que a fonte declara ausente por um sinal medido
 dela; cada scraper documenta que sinal é esse.
 """
@@ -69,17 +71,19 @@ EXCECOES_DE_FALHA_POR_LINHA: tuple[type[BaseException], ...] = (
 )
 """Exceções que o scraper captura e converte em linha de falha.
 
-São as que :func:`motivo_falha` traduz. Qualquer outra (``TooManyRedirects``,
+Todas têm motivo em :func:`motivo_falha`. Qualquer outra (``TooManyRedirects``,
 ``InvalidURL``, erro de programação) propaga, porque não há motivo no
-vocabulário para ela. O 401 é ``HTTPError`` mas propaga antes de virar linha:
-ver :func:`e_token_invalido`.
+vocabulário para ela. ``requests.JSONDecodeError`` tem motivo
+(``json_invalido``) e mesmo assim fica de fora, para não mudar o que os
+scrapers que usam esta tupla capturam. O 401 é ``HTTPError`` mas propaga antes
+de virar linha: ver :func:`e_token_invalido`.
 """
 
 FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
 """Toda falha de transporte de ``HTTPScraper._request_with_retry``, com ou sem motivo no vocabulário.
 
 Mais larga que :data:`EXCECOES_DE_FALHA_POR_LINHA`: inclui ``TooManyRedirects``,
-``InvalidURL``, ``JSONDecodeError`` e os demais ``RequestException``. Serve a
+``InvalidURL``, ``requests.JSONDecodeError`` e os demais ``RequestException``. Serve a
 quem converte a falha de um item em resultado parcial mesmo quando
 :func:`motivo_falha` não tem motivo para ela. ``RetryExhaustedError`` entra à
 parte porque não herda de ``RequestException``.
@@ -129,7 +133,7 @@ def motivo_falha(exc: BaseException) -> str:
         if exc.status_code is None:
             raise TypeError("RetryExhaustedError sem status não tem motivo de falha.") from exc
         return f"retry_esgotado_{exc.status_code}"
-    if isinstance(exc, InvalidJSONResponseError):
+    if isinstance(exc, (InvalidJSONResponseError, requests.JSONDecodeError)):
         return "json_invalido"
     if isinstance(exc, requests.HTTPError):
         if exc.response is None:
