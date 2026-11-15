@@ -41,7 +41,7 @@ class TJRJScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         ano_inicio: str | int | None = None,
         ano_fim: str | int | None = None,
-        competencia: str | int = "1",
+        competencia: str | int | None = None,
         origem: str | int = "1",
         tipo_acordao: bool = True,
         tipo_monocratica: bool = True,
@@ -119,11 +119,17 @@ class TJRJScraper(HTTPScraper):
                 * ``ano_inicio`` / ``ano_fim`` (str | int): Ano de
                   julgamento. **Granularidade anual e o unico filtro de
                   data exposto pelo backend ASPX** — use estes em vez de
-                  ``data_julgamento_*``. Backend:
+                  ``data_julgamento_*``. ``None`` usa o ano mais recente
+                  que o form da origem oferece: o corrente, ou 1998 nos
+                  Tribunais de Alcada, que vao de 1975 a 1998. Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
                 * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
                   criminal / ``"3"`` fazendaria (so na Turma Recursal).
-                  Default ``"1"``. Backend: ``cmbCompetencia``.
+                  ``None`` (default) usa a primeira competencia do form da
+                  origem: ``"1"`` na 2a instancia, no Alcada Civel e na
+                  Turma Recursal, ``"2"`` no Alcada Criminal. O Conselho da
+                  Magistratura nao tem competencia: deixe ``None``.
+                  Backend: ``cmbCompetencia``.
                 * ``origem`` (str | int): ``"1"`` 2a instancia (default) /
                   ``"2"`` Tribunal de Alcada Civel / ``"3"`` Tribunal de
                   Alcada Criminal / ``"4"`` Turma Recursal / ``"5"``
@@ -149,6 +155,10 @@ class TJRJScraper(HTTPScraper):
                 backend ASPX do TJRJ nao expoe esses filtros; use
                 ``ano_inicio`` / ``ano_fim`` (granularidade anual apenas).
             ValidationError: Quando um filtro tem formato invalido.
+            ValueError: Quando ``ano_inicio``, ``ano_fim`` ou ``competencia``
+                nao e opcao do form da ``origem`` pedida (ex.: ``ano_inicio=2020``
+                com ``origem="2"``, ou ``competencia="1"`` com ``origem="5"``),
+                que o portal responderia com HTTP 500.
 
         Returns:
             DataFrame com colunas ``processo``, ``classe``,

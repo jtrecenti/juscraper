@@ -388,3 +388,94 @@ def test_cjsg_turma_recursal_competencia_fazendaria(mocker):
     df = jus.scraper("tjrj").cjsg("dano moral", origem="4", competencia=3, paginas=1)
 
     assert len(df) == 10
+
+
+def _add_postback_origem(origem: str, sample: str) -> None:
+    responses.add(
+        responses.POST, FORM_URL, body=load_sample("tjrj", f"cjsg/{sample}"), status=200,
+        content_type="text/html; charset=utf-8",
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$cmbOrigem",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": origem,
+        })],
+    )
+
+
+def _add_busca(origem: str, ano: str, competencia: str) -> None:
+    responses.add(
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": "/EJURIS/ProcessarConsJurisES.aspx?PageSeq=0&Version=1.2.2.3"},
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$btnPesquisar",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": origem,
+            "ctl00$ContentPlaceHolder1$cmbAnoInicio": ano,
+            "ctl00$ContentPlaceHolder1$cmbAnoFim": ano,
+            "ctl00$ContentPlaceHolder1$cmbCompetencia": competencia,
+        })],
+    )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
+    _add_xhr(0, "xhr_single_page.json")
+
+
+@pytest.mark.parametrize(
+    ("origem", "sample", "ano", "competencia"),
+    [
+        ("2", "postback_origem_alcada_civel.html", "1998", "1"),
+        ("3", "postback_origem_alcada_criminal.html", "1998", "2"),
+        ("5", "postback_origem_conselho_magistratura.html", "2026", "0"),
+    ],
+    ids=["alcada_civel", "alcada_criminal", "conselho_magistratura"],
+)
+@responses.activate
+def test_cjsg_sem_ano_nem_competencia_usa_o_form_da_origem(mocker, origem, sample, ano, competencia):
+    """Sem filtro, ano e competencia saem do form da origem, nao do form inicial.
+
+    Os Tribunais de Alcada vao de 1975 a 1998, o de Alcada Criminal so tem a
+    competencia ``"2"`` e o Conselho da Magistratura so a ``"0"``
+    ("Selecione..."). Com o ano corrente e a competencia ``"1"`` do form
+    inicial, o portal respondia HTTP 500. O XHR de resultados e o da 2a
+    instancia: o teste confere o form da busca, nao o conteudo.
+    """
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_postback_origem(origem, sample)
+    _add_busca(origem, ano, competencia)
+
+    df = jus.scraper("tjrj").cjsg("dano", origem=origem, paginas=1)
+
+    assert len(df) > 0
+
+
+@responses.activate
+def test_cjsg_ano_vazio_vale_como_sem_filtro(mocker):
+    """``ano_inicio=""`` segue o padrao do form, como antes da conferencia por origem."""
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="2026", ano_fim="2026")
+    _add_xhr(0, "xhr_single_page.json")
+
+    df = jus.scraper("tjrj").cjsg("dano moral", ano_inicio="", ano_fim="", paginas=1)
+
+    assert len(df) > 0
+
+
+@pytest.mark.parametrize(
+    ("origem", "sample", "filtro", "mensagem"),
+    [
+        ("2", "postback_origem_alcada_civel.html", {"ano_inicio": 2020}, "ano_inicio='2020'.*1998"),
+        ("2", "postback_origem_alcada_civel.html", {"ano_fim": 2020}, "ano_fim='2020'.*1998"),
+        ("5", "postback_origem_conselho_magistratura.html", {"competencia": 1}, "competencia='1'.*opcoes: 0"),
+    ],
+    ids=["ano_inicio_fora_da_alcada", "ano_fim_fora_da_alcada", "competencia_no_conselho"],
+)
+@responses.activate
+def test_cjsg_filtro_fora_do_form_da_origem_levanta_antes_da_busca(mocker, origem, sample, filtro, mensagem):
+    """Ano ou competencia que o form da origem nao oferece: ``ValueError``, sem a busca (HTTP 500)."""
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_postback_origem(origem, sample)
+
+    with pytest.raises(ValueError, match=mensagem):
+        jus.scraper("tjrj").cjsg("dano", origem=origem, paginas=1, **filtro)
+
+    assert len(responses.calls) == 2

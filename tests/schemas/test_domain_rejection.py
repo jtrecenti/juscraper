@@ -42,6 +42,7 @@ from juscraper.courts.tjmt.schemas import InputCJSGTJMT
 from juscraper.courts.tjpa.schemas import InputCJSGTJPA
 from juscraper.courts.tjpb.schemas import InputCJSGTJPB
 from juscraper.courts.tjpi.schemas import InputCJSGTJPI
+from juscraper.courts.tjrj.download import extract_select_options
 from juscraper.courts.tjrj.schemas import InputCJSGTJRJ
 from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
@@ -375,14 +376,17 @@ def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
 def test_tjrj_competencia_e_origem_batem_com_os_seletores_do_ejuris():
     """Origens do form inicial; competências da origem padrão e da Turma Recursal (#207)."""
     def opcoes(html: str, campo: str) -> set[str]:
-        select = re.search(rf'name="ctl00\$ContentPlaceHolder1\${campo}".*?</select>', html, re.S)
-        assert select is not None, campo
-        return set(re.findall(r'<option[^>]*value="([^"]*)"', select.group(0)))
+        valores = extract_select_options(html, campo)
+        assert valores, campo
+        return set(valores)
 
     inicial = load_sample("tjrj", "cjsg/post_initial.html")
     turma_recursal = load_sample("tjrj", "cjsg/postback_origem_turma_recursal.html")
     campos = InputCJSGTJRJ.model_fields
     assert set(get_args(campos["origem"].annotation)) == opcoes(inicial, "cmbOrigem")
-    assert set(get_args(campos["competencia"].annotation)) == (
+    # ``competencia`` e ``Literal[...] | None``: ``None`` usa o padrao do form.
+    literal_competencia, nenhum = get_args(campos["competencia"].annotation)
+    assert nenhum is type(None)
+    assert set(get_args(literal_competencia)) == (
         opcoes(inicial, "cmbCompetencia") | opcoes(turma_recursal, "cmbCompetencia")
     )

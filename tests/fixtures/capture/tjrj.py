@@ -19,7 +19,13 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from juscraper.courts.tjrj.download import FORM_URL, RESULT_URL, build_cjsg_payload, extract_viewstate_fields
+from juscraper.courts.tjrj.download import (
+    FORM_URL,
+    RESULT_URL,
+    build_cjsg_payload,
+    extract_default_year,
+    extract_viewstate_fields,
+)
 
 from ._util import dump, samples_dir_for
 
@@ -27,6 +33,31 @@ USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 )
+
+
+def _form_and_postback(
+    session: requests.Session, pesquisa: str, ano: str, origem: str,
+) -> tuple[requests.Response, dict, requests.Response | None]:
+    """GET the form and, for an ``origem`` other than ``"1"``, run the ``cmbOrigem`` postback.
+
+    Returns the GET response, the search body (hidden fields already updated
+    by the postback) and the postback response, if any. An empty ``ano``
+    takes the form default (the newest year).
+    """
+    get_resp = session.get(FORM_URL, timeout=30)
+    get_resp.raise_for_status()
+    default_year = extract_default_year(get_resp.text)
+    body = build_cjsg_payload(
+        hidden=extract_viewstate_fields(get_resp.text), pesquisa=pesquisa,
+        ano_inicio=ano or default_year, ano_fim=ano or default_year, origem=origem,
+    )
+    postback_resp = None
+    if origem != "1":
+        postback = dict(body, __EVENTTARGET="ctl00$ContentPlaceHolder1$cmbOrigem")
+        postback_resp = session.post(FORM_URL, data=postback, timeout=30)
+        postback_resp.raise_for_status()
+        body.update(extract_viewstate_fields(postback_resp.text))
+    return get_resp, body, postback_resp
 
 
 def _seed_session(
@@ -38,23 +69,12 @@ def _seed_session(
     a 500 on ``cmbAnoInicio``/``cmbAnoFim`` empty (refs #143). Captures
     always pin a year so they match the contract test fixtures.
     """
-    get_resp = session.get(FORM_URL, timeout=30)
-    get_resp.raise_for_status()
-    body = build_cjsg_payload(
-        hidden=extract_viewstate_fields(get_resp.text), pesquisa=pesquisa,
-        ano_inicio=ano, ano_fim=ano, origem=origem,
-    )
-    postback_html = None
-    if origem != "1":
-        postback = dict(body, __EVENTTARGET="ctl00$ContentPlaceHolder1$cmbOrigem")
-        postback_resp = session.post(FORM_URL, data=postback, timeout=30)
-        postback_resp.raise_for_status()
-        postback_html = postback_resp.content
-        body.update(extract_viewstate_fields(postback_resp.text))
+    get_resp, body, postback_resp = _form_and_postback(session, pesquisa, ano, origem)
     post_resp = session.post(FORM_URL, data=body, timeout=30, allow_redirects=True)
     post_resp.raise_for_status()
     page_seq = parse_qs(urlparse(post_resp.url).query)["PageSeq"][0]
     print(f"[tjrj] form redirect: {post_resp.history[0].headers.get('Location')}")
+    postback_html = postback_resp.content if postback_resp is not None else None
     return get_resp.content, postback_html, page_seq
 
 
@@ -97,6 +117,18 @@ def _capture_query(
         dump(dest / filename, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
         total = payload.get("d", {}).get("TotalDocs")
         print(f"[tjrj] '{pesquisa}' page={num_pagina_0} -> {filename} (TotalDocs={total})")
+
+
+def _capture_postback(session: requests.Session, dest, origem: str, filename: str) -> None:
+    """Save only the ``cmbOrigem`` postback HTML, with the combos of that ``origem``.
+
+    The search itself is not run: the contract tests use these forms to check
+    the years and competencias sent for each origin.
+    """
+    _, _, postback_resp = _form_and_postback(session, "dano", "", origem)
+    assert postback_resp is not None
+    dump(dest / filename, postback_resp.content)
+    print(f"[tjrj] origem={origem} postback HTML saved (bytes={len(postback_resp.content)})")
 
 
 def main() -> None:
@@ -149,6 +181,17 @@ def main() -> None:
         origem="4",
         postback_file="postback_origem_turma_recursal.html",
     )
+
+    # Tribunais de Alcada (anos 1975-1998; o Criminal so com a competencia 2)
+    # e Conselho da Magistratura (sem competencia): so o form de cada origem.
+    for origem, filename in (
+        ("2", "postback_origem_alcada_civel.html"),
+        ("3", "postback_origem_alcada_criminal.html"),
+        ("5", "postback_origem_conselho_magistratura.html"),
+    ):
+        postback_session = requests.Session()
+        postback_session.headers.update({"User-Agent": USER_AGENT})
+        _capture_postback(postback_session, dest, origem, filename)
 
     print(f"[tjrj] ALL samples written to {dest}")
 
