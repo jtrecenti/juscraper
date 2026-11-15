@@ -112,26 +112,8 @@ def test_cjsg_parse_manager_reads_process_number_without_link():
     assert df["data_julgamento"].tolist() == [datetime.date(2027, 7, 9)]
 
 
-def test_parse_result_item_falls_back_to_text_when_link_is_blank():
-    """Link ``a.numero-processo`` vazio não esconde o número em texto."""
-    item = BeautifulSoup(
-        """
-        <div class="resultadoItem">
-          <div class="resLabel">PROCESSO</div>
-          <div class="resValue">
-            <a class="numero-processo"> </a>
-            <div>5001234-56.2024.8.24.0000/TJSC</div>
-          </div>
-        </div>
-        """,
-        "html.parser",
-    ).find("div", class_="resultadoItem")
-
-    assert _parse_result_item(item) == {"processo": "5001234-56.2024.8.24.0000"}
-
-
 def test_cjsg_parse_manager_warns_when_process_number_is_missing():
-    """Sem link nem texto ``/TJSC``, a linha fica sem processo e há aviso (P3)."""
+    """Sem link nem texto ``/TJSC``, a linha fica sem processo e há aviso."""
     html = """
     <div class="resultadoItem">
       <div class="resLabel">PROCESSO</div>

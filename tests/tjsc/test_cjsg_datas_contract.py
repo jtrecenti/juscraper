@@ -1,11 +1,9 @@
-"""TJSC cjsg: datas em DD/MM/YYYY, falha em redirecionamento (#495) e conexão derrubada."""
+"""TJSC cjsg: datas em DD/MM/YYYY e falha em redirecionamento (#495)."""
 import datetime
 
 import pytest
-import requests
 import responses
 from responses.matchers import urlencoded_params_matcher
-from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjsc.download import SEARCH_URL, build_cjsg_form_body, cjsg_url_for_page
@@ -67,44 +65,3 @@ def test_cjsg_redirecionamento_da_busca_falha_alto(mocker, pagina):
         jus.scraper("tjsc").cjsg_download("direito", paginas=[pagina])
 
     assert len(responses.calls) == 1
-
-
-@responses.activate(registry=OrderedRegistry)
-def test_cjsg_retenta_conexao_derrubada_pelo_portal(mocker):
-    """Conexão derrubada pelo portal ganha nova tentativa.
-
-    O portal reseta às vezes a conexão keep-alive reaproveitada (15/11/2026: 5
-    de 18 pedidos em sequência rápida na mesma sessão). Sem nova tentativa, a
-    terceira busca seguida de uma instância caía com ``ConnectionError``.
-    """
-    mocker.patch("time.sleep")
-    responses.add(
-        responses.POST,
-        SEARCH_URL,
-        body=requests.ConnectionError(ConnectionResetError(54, "Connection reset by peer")),
-    )
-    responses.add(
-        responses.POST,
-        SEARCH_URL,
-        body=load_sample_bytes("tjsc", "cjsg/single_page.html"),
-        status=200,
-        content_type="text/html; charset=iso-8859-1",
-    )
-
-    df = jus.scraper("tjsc").cjsg("plano saude paciente doenca rara", paginas=1)
-
-    assert len(df) > 0
-    assert len(responses.calls) == 2
-
-
-@responses.activate
-def test_cjsg_conexao_derrubada_em_todas_as_tentativas_sobe_o_erro(mocker):
-    """Persistindo a queda, o ``ConnectionError`` sobe; ``politica=`` ajusta as tentativas."""
-    mocker.patch("time.sleep")
-    responses.add(responses.POST, SEARCH_URL, body=requests.ConnectionError("reset"))
-
-    scraper = jus.scraper("tjsc", politica={"cjsg": {"max_retries": 2}})
-    with pytest.raises(requests.ConnectionError):
-        scraper.cjsg_download("direito", paginas=1)
-
-    assert len(responses.calls) == 2

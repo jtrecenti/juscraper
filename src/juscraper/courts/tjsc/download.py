@@ -12,7 +12,7 @@ CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlado
 SEARCH_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/listar_resultados"
 AJAX_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/ajax_paginar_resultado"
 RESULTS_PER_PAGE = 10
-#: Nome do perfil HTTP da busca; a política fica em ``TJSCScraper.perfis_http``.
+#: Perfil HTTP da busca, declarado em ``TJSCScraper.perfis_http``.
 PERFIL_CJSG = "cjsg"
 
 

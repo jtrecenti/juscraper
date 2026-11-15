@@ -20,8 +20,7 @@ class TJSCScraper(HTTPScraper):
 
     BASE_URL = "https://eprocwebcon.tjsc.jus.br"
 
-    #: O portal derruba às vezes a conexão keep-alive reaproveitada; a busca
-    #: ganha nova tentativa nesse caso. Ajustável com ``politica={"cjsg": {...}}``.
+    #: O portal derruba às vezes a conexão keep-alive reaproveitada.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         PERFIL_CJSG: RequestPolicy(retry_on_connection_error=True),
     }
