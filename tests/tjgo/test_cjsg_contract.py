@@ -7,13 +7,16 @@ the ``cf-turnstile-response=""`` literal. Since 12/11/2026 (Projudi 3.194.1)
 the backend validates the Cloudflare Turnstile token and answers every search
 without it with the empty form, so an empty search emits ``UserWarning``.
 """
+from datetime import date
+
 import pandas as pd
 import pytest
 import responses
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
+from juscraper.courts.tjgo.download import SEARCH_URL, _extract_total, build_cjsg_payload
+from juscraper.courts.tjgo.parse import _split_blocks, cjsg_parse
 from tests._helpers import load_sample_bytes
 
 CJSG_FIELDS = {
@@ -26,11 +29,11 @@ def _add_get_prime() -> None:
     responses.add(responses.GET, SEARCH_URL, body=b"", status=200)
 
 
-def _add_post(pesquisa: str, page: int, sample_path: str) -> None:
+def _add_post(pesquisa: str, page: int, sample_path: str, body: bytes | None = None) -> None:
     responses.add(
         responses.POST,
         SEARCH_URL,
-        body=load_sample_bytes("tjgo", sample_path),
+        body=body if body is not None else load_sample_bytes("tjgo", sample_path),
         status=200,
         content_type="text/html; charset=iso-8859-1",
         match=[urlencoded_params_matcher(
@@ -109,6 +112,61 @@ def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
     df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
 
     assert not df.empty
+
+
+@responses.activate
+def test_cjsg_resultado_formato_atual(mocker):
+    """Pagina real de 15/11/2026, capturada com o token Turnstile (issue #436).
+
+    No HTML atual a ``<div class="search-result">`` traz atributos depois da
+    classe (``data-realizador``, ``data-id-arquivo``...), com ``->`` dentro de
+    ``data-classe-acao``; a data vem como "Julgado em ..." e nao ha mais o
+    paragrafo do tipo de ato.
+    """
+    mocker.patch("time.sleep")
+    _add_get_prime()
+    _add_post("dano moral", page=1, sample_path="cjsg/results_julgado_em_page_01.html")
+
+    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
+
+    assert len(df) == 10
+    assert set(df.columns) == CJSG_FIELDS
+    for col in ("processo", "id_arquivo", "serventia", "relator", "texto", "data_publicacao"):
+        assert df[col].notna().all(), col
+    assert df["tipo_ato"].isna().all()
+    primeira = df.iloc[0]
+    assert primeira["processo"] == "5323172-88.2023.8.09.0029"
+    # id do inteiro teor (abrirArquivo), nao o data-id-arquivo da div (580585407)
+    assert primeira["id_arquivo"] == "580585406"
+    assert primeira["relator"] == "RICARDO PRATA - (DESEMBARGADOR)"
+    assert primeira["data_publicacao"] == date(2026, 11, 15)
+    assert primeira["texto"].startswith("EMENTA:DIREITO CIVIL")
+
+
+def test_cjsg_formato_atual_bloco_comeca_depois_da_tag():
+    """O ``>`` dentro de ``data-classe-acao`` nao encerra a tag de abertura."""
+    html = load_sample_bytes("tjgo", "cjsg/results_julgado_em_page_01.html").decode("iso-8859-1")
+    blocos = _split_blocks(html)
+    assert len(blocos) == 10
+    assert all("data-numero" not in b.split("<h4>")[0] for b in blocos)
+
+
+def test_cjsg_formato_atual_ignora_trechos_do_inteiro_teor():
+    """Os trechos do INTEIRO TEOR depois do texto nao viram ``tipo_ato``."""
+    html = load_sample_bytes("tjgo", "cjsg/results_julgado_em_page_01.html").decode("iso-8859-1")
+    trechos = (
+        '<p style="text-align:justify"><b>1</b><i> resultado(s) encontrado(s) '
+        "no INTEIRO TEOR.</i></p>"
+    )
+    fim_do_texto = html.index("</p>", html.index('class="conteudoTexto')) + len("</p>")
+    df = cjsg_parse([html[:fim_do_texto] + trechos + html[fim_do_texto:]])
+    assert df["tipo_ato"].isna().all()
+
+
+def test_cjsg_formato_atual_contagem():
+    """A contagem do HTML atual continua na ``legend.formLocalizarLegenda``."""
+    html = load_sample_bytes("tjgo", "cjsg/results_julgado_em_page_01.html").decode("iso-8859-1")
+    assert _extract_total(html) == 20255
 
 
 @responses.activate

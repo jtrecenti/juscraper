@@ -44,7 +44,9 @@ class OutputCJSGTJGO(OutputCJSGBase):
     O parser do TJGO (``src/juscraper/courts/tjgo/parse.py``) entrega o
     conteudo do documento na coluna ``texto``, nao em ``ementa`` — diferente
     dos demais cjsg. ``OutputCJSGBase.ementa`` ja e Optional, entao o TJGO
-    apenas nao preenche ``ementa``.
+    apenas nao preenche ``ementa``. No HTML atual (nov/2026) ``tipo_ato`` vem
+    vazio, e ``data_publicacao`` vem do paragrafo rotulado "Julgado em ...",
+    o mesmo campo que o formato antigo rotulava "Publicado em ...".
     """
 
     id_arquivo: str | None = None
