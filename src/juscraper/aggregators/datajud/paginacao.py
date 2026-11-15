@@ -185,6 +185,23 @@ def _verificar_fim_pagina(
     _verificar_termino_prematuro(hits, effective_size, total_info, percorridos, contexto)
 
 
+def _descrever_falha_de_shards(api_response: dict[str, Any]) -> str:
+    """Texto da resposta parcial do Elasticsearch (``_shards.failed > 0``); vazio na resposta completa.
+
+    ``_shards`` ausente conta como resposta completa.
+    """
+    shards = api_response.get("_shards")
+    falhos = shards.get("failed") if isinstance(shards, dict) else None
+    if not isinstance(falhos, int) or isinstance(falhos, bool) or falhos <= 0:
+        return ""
+    total = cast(dict[str, Any], shards).get("total")
+    de_total = f" de {total}" if isinstance(total, int) and not isinstance(total, bool) else ""
+    return (
+        f"Resposta parcial: {falhos}{de_total} shard(s) falharam no Elasticsearch; "
+        "a página e o total podem estar incompletos."
+    )
+
+
 def _verificar_shards(
     api_response: dict[str, Any],
     total_info: dict[str, Any] | None,
@@ -194,19 +211,12 @@ def _verificar_shards(
 
     Com shards falhos, a página pode vir incompleta ou vazia, e o cursor dela
     pularia os registros perdidos; por isso a coleta do alias para aqui.
-    ``_shards`` ausente conta como resposta completa.
     """
-    shards = api_response.get("_shards")
-    falhos = shards.get("failed") if isinstance(shards, dict) else None
-    if not isinstance(falhos, int) or isinstance(falhos, bool) or falhos <= 0:
+    falha = _descrever_falha_de_shards(api_response)
+    if not falha:
         return
-    total = cast(dict[str, Any], shards).get("total")
-    de_total = f" de {total}" if isinstance(total, int) and not isinstance(total, bool) else ""
-    causa = RuntimeError(
-        f"{falhos}{de_total} shard(s) falharam no Elasticsearch; a página e o total podem estar incompletos."
-    )
     diagnostico = _mensagem_falha_parcial(contexto.alias, contexto.pagina, contexto.recebidos, total_info)
-    _falha_pagina(f"{diagnostico} Resposta parcial: {causa}", causa)
+    _falha_pagina(f"{diagnostico} {falha}", RuntimeError(falha))
 
 
 def _verificar_pagina_vazia(

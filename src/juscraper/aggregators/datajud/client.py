@@ -29,6 +29,7 @@ from .download import (
 # Import mappings for tribunal and justice aliases.
 from .mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TIPOS_MOVIMENTACAO, TRIBUNAL_TO_ALIAS
 from .paginacao import (
+    _descrever_falha_de_shards,
     _falha_pagina,
     _FimPagina,
     _hits_da_pagina,
@@ -182,12 +183,13 @@ def _parse_pagina(
     mostrar_movs: bool,
     diagnostico: str,
 ) -> pd.DataFrame:
-    """Converte uma página; a falha sobe como coleta parcial."""
+    """Converte uma página; a falha sobe como coleta parcial, com a falha de shards da página, se houver."""
     try:
         return parse_datajud_api_response(api_response, mostrar_movs)
     except Exception as exc:
+        partes = (diagnostico, _descrever_falha_de_shards(api_response), "Erro ao parsear a resposta.")
         raise ColetaParcialError(
-            f"{diagnostico} Erro ao parsear a resposta.",
+            " ".join(filter(None, partes)),
             resultado=pd.DataFrame(),
             falhas=[(None, None, exc)],
         ) from exc

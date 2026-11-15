@@ -125,6 +125,7 @@ def test_falha_de_shards_com_hits_que_nao_parseiam_preserva_anteriores(monkeypat
     erro = exc_info.value
     assert erro.resultado["numeroProcesso"].tolist() == _numeros(1)
     assert "página 2" in str(erro)
+    assert "1 de 5 shard(s) falharam" in str(erro)
 
 
 def test_falha_de_shards_em_pagina_descartada_por_paginas_levanta(monkeypatch):
