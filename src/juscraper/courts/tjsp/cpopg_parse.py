@@ -111,8 +111,12 @@ def cpopg_parse_manager(
     if root.is_file():
         return cpopg_parse_single(str(root))
 
+    # O download grava em <path>/cpopg/; o cposg, no mesmo download_path, em
+    # <path>/cposg/, com os mesmos nomes de pasta. Só a pasta do cpopg entra.
+    if (root / 'cpopg').is_dir():
+        root = root / 'cpopg'
     files = arquivos_candidatos(root)
-    sem_arquivo = processos_sem_arquivo(root / 'cpopg' if (root / 'cpopg').is_dir() else root, files)
+    sem_arquivo = processos_sem_arquivo(root, files)
     files, sem_arquivo = so_os_pedidos(files, sem_arquivo, pedidos)
     parsed, falhas = _ler_arquivos(files)
     if parsed:

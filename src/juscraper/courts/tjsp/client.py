@@ -380,7 +380,8 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             )
         if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
             raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
-        ids = [id_cnj] if isinstance(id_cnj, str) else id_cnj
+        # ``list``: os CNJs servem ao download e ao parse, e um gerador se esgotaria no primeiro.
+        ids = [id_cnj] if isinstance(id_cnj, str) else list(id_cnj)
         # Sem o aviso do download: o parse lê as falhas que ele gravou na
         # pasta e avisa uma vez só, junto com as de leitura.
         self._baixar_cpopg(
@@ -470,9 +471,10 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         motivo, e as falhas, num ``UserWarning``.
 
         Raises:
-            ValueError: Quando ``path`` e um diretorio e nenhum arquivo dele
-                pode ser lido, ou quando ``path`` e um arquivo com extensao
-                diferente de ``.html``. Ver :func:`cpopg_parse_manager`.
+            ValueError: Quando ``path`` e um diretorio sem falha de download
+                registrada e nenhum arquivo dele pode ser lido, ou quando
+                ``path`` e um arquivo com extensao diferente de ``.html``. Ver
+                :func:`cpopg_parse_manager`.
         """
         return cpopg_parse_manager(path)
 
@@ -497,7 +499,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """
         self.set_method(method)
         path = self.download_path
-        ids = [id_cnj] if isinstance(id_cnj, str) else id_cnj
+        ids = [id_cnj] if isinstance(id_cnj, str) else list(id_cnj)
         # Como no cpopg: o parse lê as falhas do download e avisa uma vez só.
         self._baixar_cposg(ids, path)
         result = cposg_parse_manager(path, metodo="TJSPScraper.cposg", pedidos=ids)
@@ -529,17 +531,17 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 devolve no DataFrame, como o :meth:`cposg`.
         """
         self.set_method(method)
-        falhas = self._baixar_cposg(id_cnj, diretorio or self.download_path)
+        falhas = self._baixar_cposg([id_cnj] if isinstance(id_cnj, str) else id_cnj, diretorio or self.download_path)
         avisar_falhas_de_processo(
             falhas, [], "TJSPScraper.cposg_download",
             "Esses processos ficam sem arquivo; cposg_parse os devolve no DataFrame",
         )
         return falhas
 
-    def _baixar_cposg(self, id_cnj: str | list, pasta: str) -> dict[str, str]:
+    def _baixar_cposg(self, ids: list, pasta: str) -> dict[str, str]:
         """Download do cposg sem o aviso, que fica com quem chama: ``cposg_download`` ou o parse do ``cposg``."""
         return cposg_download_html(
-            id_cnj_list=[id_cnj] if isinstance(id_cnj, str) else id_cnj,
+            id_cnj_list=ids,
             session=self.session,
             u_base=self.u_base,
             download_path=pasta,

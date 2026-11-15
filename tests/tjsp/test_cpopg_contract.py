@@ -508,6 +508,10 @@ def test_cpopg_le_so_os_processos_do_lote(tmp_path, mocker):
     anterior = tmp_path / "cpopg" / "10093677620178260344"
     anterior.mkdir(parents=True)
     (anterior / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
+    # A página de 2º grau do mesmo CNJ, de um cposg_download na mesma pasta, também fica de fora.
+    segundo_grau = tmp_path / "cposg" / "10001497120248260346"
+    segundo_grau.mkdir(parents=True)
+    (segundo_grau / "show.html").write_text(load_sample("tjsp", "cposg/show.html"), encoding="utf-8")
     _registrar_busca_por_cnj(
         CNJ, body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
     )

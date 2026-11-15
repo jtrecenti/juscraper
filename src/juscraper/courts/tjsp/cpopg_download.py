@@ -17,7 +17,7 @@ from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import busca_sem_informacoes
 from .._esaj.pasta import DocumentoIndisponivelError, documentos_vinculados, gravar_pdf, pdf_pela_pasta
-from ._falhas import cnj_invalido, motivo_do_processo, registrar_falhas
+from ._falhas import chave_do_registro, cnj_invalido, motivo_do_processo, registrar_falhas
 
 logger = logging.getLogger('juscraper.cpopg_download')
 
@@ -187,7 +187,7 @@ def cpopg_download_html(
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
         # Entrada que não é texto vira chave ``str``, como no registro que o parse lê.
-        cnj = str(format_cnj(idp, strict=False))
+        cnj = chave_do_registro(idp)
         if cnj_invalido(idp):
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue

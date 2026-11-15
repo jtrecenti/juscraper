@@ -16,7 +16,7 @@ from ...core.failures import MOTIVO_ENTRADA_INVALIDA, MOTIVO_NAO_ENCONTRADO
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
-from ._falhas import cnj_invalido, motivo_do_processo, registrar_falhas
+from ._falhas import chave_do_registro, cnj_invalido, motivo_do_processo, registrar_falhas
 from .cpopg_download import _TIMEOUT
 
 logger = logging.getLogger('juscraper.cposg_download')
@@ -51,7 +51,7 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
     falhas: dict[str, str] = {}
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
         # Entrada que não é texto vira chave ``str``, como no registro que o parse lê.
-        cnj = str(format_cnj(id_cnj, strict=False))
+        cnj = chave_do_registro(id_cnj)
         if cnj_invalido(id_cnj):
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue
