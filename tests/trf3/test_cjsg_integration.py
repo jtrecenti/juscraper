@@ -74,7 +74,8 @@ def test_cjsg_filtros_so_de_acordaos_restringem() -> None:
 
     # The case is the only criterion: had the server ignored it, the search would be refused.
     total = cjsg_n_results(trf3.cjsg_download(sistema_interamericano=1, paginas=1)[0])
-    assert total is not None and 0 < total < 1000
+    assert total is not None
+    assert 0 < total < 1000
 
     df = trf3.cjsg(legislacao="LEI PELÉ FED LEI 9615 1998", paginas=1)
     assert len(df) > 0

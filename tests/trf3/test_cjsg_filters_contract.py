@@ -26,7 +26,6 @@ from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3, validar_combinacoe
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.trf3._cjsg_mock import add_page, add_search
 
-
 #: Bases cujo formulário não tem os filtros só de acórdãos.
 BASES_SEM_ACORDAOS = ["turmas_recursais", "monocraticas", "monocraticas_turmas_recursais"]
 
