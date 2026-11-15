@@ -142,7 +142,7 @@ def test_lista_com_um_processo_baixa_o_show_do(tmp_path, contexto):
 
 
 @pytest.mark.parametrize("erro", [
-    requests.ConnectionError("rede"), ValueError("valor"), OSError("disco"), AttributeError("atributo"),
+    requests.ConnectionError("rede"), requests.ReadTimeout("prazo"), ValueError("valor"), OSError("disco"), AttributeError("atributo"),
     UnicodeDecodeError("utf-8", b"\xe9", 0, 1, "byte inválido"),
 ])
 def test_cinco_falhas_levantam_erro_com_diretorio_vazio(tmp_path, contexto, erro):

@@ -192,21 +192,26 @@ def test_falha_de_documento_vira_aviso_e_o_processo_fica(tmp_path, mocker):
     assert not list(tmp_path.rglob("*.tmp"))
 
 
+@pytest.mark.parametrize(
+    ("resposta", "motivo"),
+    [({"status": 500}, "http_500"), ({"body": requests.ReadTimeout("prazo")}, "timeout")],
+)
 @responses.activate
-def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker):
+def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker, resposta, motivo):
     mocker.patch("time.sleep")
     _registrar_processo()
     _registrar_documento(PUBLICOS[0])
     responses.add(
         responses.GET,
         f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
-        status=500,
         match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
+        **resposta,
     )
 
-    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: http_500"):
+    with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: {motivo}"):
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
+    assert len(_chamadas("search.do")) == 1
     assert [p.stem for p in tmp_path.rglob("*.pdf")] == [PUBLICOS[0]]
     assert list(tmp_path.rglob("*.html"))
 
