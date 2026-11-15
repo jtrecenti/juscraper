@@ -631,8 +631,8 @@ class DatajudScraper(HTTPScraper):
                 "relation": total.get("relation", "eq"),
                 "error": None,
             })
-        # ``Int64``: com ``None`` de uma falha misturado a ``int``, ``count`` viraria float.
-        return pd.DataFrame(rows, columns=["tribunal", "alias", "count", "relation", "error"]).astype({"count": "Int64"})
+        colunas = ["tribunal", "alias", "count", "relation", "error"]  # Int64: com None de falha, viraria float
+        return pd.DataFrame(rows, columns=colunas).astype({"count": "Int64"})
 
     def _buscar(self, alias: str, query_payload: dict[str, Any]) -> dict[str, Any]:
         """Busca no alias pelo perfil ``"busca"``; falhas sobem como em :func:`call_datajud_api`."""
