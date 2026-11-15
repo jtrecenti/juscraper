@@ -38,11 +38,13 @@ def test_sem_bloqueio_a_busca_passa(tjto):
 
 
 @pytest.mark.parametrize(
-    ("status", "acao"), [(202, "challenge"), (405, "captcha")], ids=["desafio", "captcha"],
+    ("status", "cabecalhos"),
+    [(202, {"x-amzn-waf-action": "challenge"}), (202, {}), (405, {"x-amzn-waf-action": "captcha"})],
+    ids=["desafio", "desafio-sem-cabecalho", "captcha"],
 )
 @responses.activate
-def test_bloqueio_do_waf_levanta_sem_repetir(tjto, status, acao):
-    responses.add(responses.POST, BASE_URL, body="", status=status, headers={"x-amzn-waf-action": acao})
+def test_bloqueio_do_waf_levanta_sem_repetir(tjto, status, cabecalhos):
+    responses.add(responses.POST, BASE_URL, body="", status=status, headers=cabecalhos)
 
     with pytest.raises(BotChallengeBlockedError, match="Aguarde pelo menos 10 minutos"):
         tjto.cjsg("dano moral", paginas=1)

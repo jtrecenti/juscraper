@@ -50,11 +50,12 @@ class TJTOScraper(HTTPScraper):
         residencial). Sem esta checagem, o 202 vazio sairia como busca sem
         resultados.
         """
-        if eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
+        # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
+        if resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
             raise BotChallengeBlockedError(
                 self.tribunal_name, resp.url, bot_manager="AWS WAF",
                 mensagem=(
-                    f"O AWS WAF do {self.tribunal_name} bloqueou a busca em {resp.url} (desafio ou CAPTCHA), "
+                    f"O AWS WAF do {self.tribunal_name} bloqueou a requisição a {resp.url} (desafio ou CAPTCHA), "
                     "o que acontece depois de algumas buscas seguidas do mesmo IP e o raspador não resolve. "
                     "Aguarde pelo menos 10 minutos antes de tentar de novo."
                 ),
