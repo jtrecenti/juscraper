@@ -18,6 +18,12 @@ from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, pagi
 
 logger = logging.getLogger('juscraper.cposg_download')
 
+# (conexão, leitura), em segundos, de cada pedido do cposg, como no cpopg
+# (#484): sem prazo, uma conexão que o eSAJ deixa aberta sem responder prende
+# o lote inteiro. O prazo estourado vira requests.Timeout, e o processo sai
+# no log de erro, como qualquer falha de rede.
+_TIMEOUT = (10, 60)
+
 # A página do processo traz o container de movimentações vazio e o link
 # "Exibir movimentações"; o JavaScript do eSAJ busca a lista em
 # carregarMovimentacoesAjax.do, cinco linhas por página, com a sessão que
@@ -73,7 +79,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
     u = f"{u_base}cposg/search.do"
     # 1. Acessar página inicial para garantir cookies válidos
     open_url = f"{u_base}cposg/open.do?gateway=true"
-    session.get(open_url)
+    session.get(open_url, timeout=_TIMEOUT)
     # 2. Montar parâmetros corretos
     params = {
         'conversationId': '',
@@ -88,7 +94,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         'uuidCaptcha': '',
         'pbEnviar': 'Pesquisar'
     }
-    r = session.get(u, params=params)
+    r = session.get(u, params=params, timeout=_TIMEOUT)
     soup = BeautifulSoup(r.text, 'html.parser')
     if _sem_informacoes(soup, id_format):
         return None
@@ -107,7 +113,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
             codigo = codigos[0]
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
+            html = _incluir_movimentacoes(session.get(show_url, timeout=_TIMEOUT).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
                 f.write(html)
@@ -117,7 +123,7 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         for codigo in codigos:
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
             show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url).text, session, u_base, id_format)
+            html = _incluir_movimentacoes(session.get(show_url, timeout=_TIMEOUT).text, session, u_base, id_format)
             file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
             with file_name.open('w', encoding='utf-8') as f:
                 f.write(html)
@@ -163,7 +169,7 @@ def _incluir_movimentacoes(html, session, u_base, id_cnj):
         raise ValueError(f"Processo {id_cnj}: a página não traz o cdProcesso das movimentações.")
 
     def get(url: str, params: dict) -> requests.Response:
-        resposta: requests.Response = session.get(url, params=params, timeout=60)
+        resposta: requests.Response = session.get(url, params=params, timeout=_TIMEOUT)
         resposta.raise_for_status()
         return resposta
 

@@ -11,6 +11,7 @@ digital gravada em ``samples/documentos/``, e por ``getPDF.do`` com os
 
 import json
 import re
+import warnings
 from pathlib import Path
 from urllib.parse import parse_qsl, urlsplit
 
@@ -377,3 +378,50 @@ def test_todo_pedido_do_cpopg_tem_timeout(tmp_path, mocker):
     assert rotas >= {"search.do", "show.do", "carregarMovimentacoesAjax.do", ROTA_DOCUMENTO, "getPDF.do"}
     sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
     assert sem_timeout == []
+
+
+def _gravacao_falha_uma_vez(mocker):
+    """O primeiro ``.tmp`` do processo falha por disco cheio: o processo é refeito depois dos documentos."""
+    gravar = Path.write_text
+    falhou: list[Path] = []
+
+    def gravar_falhando_uma_vez(caminho, *args, **kwargs):
+        if caminho.suffix == ".tmp" and not falhou:
+            falhou.append(caminho)
+            raise OSError(28, "No space left on device")
+        return gravar(caminho, *args, **kwargs)
+
+    mocker.patch.object(Path, "write_text", gravar_falhando_uma_vez)
+
+
+@pytest.mark.parametrize("segunda_vez_falha", [True, False])
+@responses.activate
+def test_documento_pedido_de_novo_no_processo_refeito_sai_uma_vez_no_aviso(tmp_path, mocker, segunda_vez_falha):
+    """Documento que estoura o prazo antes de o processo ser refeito por outro erro conta só a última tentativa."""
+    mocker.patch("time.sleep")
+    _gravacao_falha_uma_vez(mocker)
+    _registrar_processo()
+    _registrar_documento(PUBLICOS[0])
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cpopg/{ROTA_DOCUMENTO}",
+        body=requests.ReadTimeout("prazo"),
+        match=[query_param_matcher({"cdDocumento": PUBLICOS[1]}, strict_match=False)],
+    )
+    if not segunda_vez_falha:
+        _registrar_documento(PUBLICOS[1])
+
+    with warnings.catch_warnings(record=True) as avisos:
+        warnings.simplefilter("always")
+        jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
+
+    assert len(_chamadas("search.do")) == 2
+    assert _documentos_pedidos() == [*PUBLICOS, PUBLICOS[1]]
+    mensagens = [str(a.message) for a in avisos if "documento público" in str(a.message)]
+    if segunda_vez_falha:
+        assert len(mensagens) == 1
+        assert mensagens[0].count(f"{PUBLICOS[1]}: timeout") == 1
+        assert "1 download(s) de documento público falharam" in mensagens[0]
+    else:
+        assert mensagens == []
+        assert sorted(p.stem for p in tmp_path.rglob("*.pdf")) == sorted(PUBLICOS)
