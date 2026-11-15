@@ -49,12 +49,11 @@ class BotChallengeBlockedError(Exception):
     rate-limited — não adianta retentar com a mesma sessão.
 
     Mensagem orienta o usuário a aguardar alguns minutos antes de tentar de
-    novo, ou trocar de IP (VPN, hotspot). Os loops por item dos TRFs a
-    propagam, porque um bloqueio nesse nível é session-wide: nenhum CNJ do
-    batch vai conseguir passar. Os métodos com ``motivo_falha`` por linha
-    (que capturam ``EXCECOES_DE_FALHA_POR_LINHA``) a registram como
-    ``bloqueio_anti_bot`` e devolvem o DataFrame, para não perder as linhas
-    já processadas.
+    novo, ou trocar de IP (VPN, hotspot). O bloqueio é session-wide: nenhum
+    item do batch vai conseguir passar. Os métodos com ``motivo_falha`` por
+    linha a registram como linha (ver
+    :data:`juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`); os demais a
+    propagam.
 
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página

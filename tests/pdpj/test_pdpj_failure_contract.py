@@ -289,7 +289,7 @@ def test_desafio_anti_bot_no_meio_do_lote_vira_linha(metodo):
     with pytest.warns(UserWarning, match=f"processo {OUTRO}: bloqueio_anti_bot"):
         df = getattr(_mk_scraper(), metodo)([PROC, OUTRO, PROC])
 
-    assert df.drop_duplicates("processo", keep=False)["motivo_falha"].tolist() == ["bloqueio_anti_bot"]
+    assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["bloqueio_anti_bot"]
     assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
     assert len(_urls()) == 3
 

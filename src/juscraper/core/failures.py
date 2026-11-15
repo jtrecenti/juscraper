@@ -53,9 +53,10 @@ MOTIVO_ENTRADA_INVALIDA = "entrada_invalida"
 MOTIVO_BLOQUEIO_ANTI_BOT = "bloqueio_anti_bot"
 """Um bot manager desafiou ou bloqueou a requisição (:class:`BotChallengeBlockedError`).
 
-O bloqueio costuma valer para a sessão inteira, então as linhas seguintes do
-mesmo lote tendem a sair com este motivo também: aguardar alguns minutos ou
-trocar de IP antes de pedir de novo só as linhas que falharam.
+Vira linha, e não erro, para que um desafio no meio do lote não descarte as
+linhas já processadas (#471). O bloqueio costuma valer para a sessão inteira,
+então as linhas seguintes tendem a sair com este motivo também: aguardar
+alguns minutos ou trocar de IP antes de pedir de novo só as que falharam.
 """
 
 MOTIVOS_FALHA: tuple[str, ...] = (
@@ -89,8 +90,7 @@ vocabulário para ela. ``requests.JSONDecodeError`` tem motivo
 (``json_invalido``) e mesmo assim fica de fora, para não mudar o que os
 scrapers que usam esta tupla capturam. O 401 é ``HTTPError`` mas propaga antes
 de virar linha: ver :func:`e_token_invalido`. ``BotChallengeBlockedError``
-(e a subclasse ``WafChallengeError``) vira linha para que um desafio no meio
-do lote não descarte as linhas já processadas (#471).
+vira linha: ver :data:`MOTIVO_BLOQUEIO_ANTI_BOT`.
 """
 
 FALHAS_DE_TRANSPORTE: tuple[type[Exception], ...] = (requests.RequestException, RetryExhaustedError)
