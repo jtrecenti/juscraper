@@ -647,7 +647,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         baixar_movimentacoes: bool = True,
         download_pecas: bool = False,
         diretorio: str | None = None,
-    ):
+    ) -> dict[str, pd.DataFrame]:
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
         Args:
@@ -679,15 +679,15 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 argumentos.
 
         Returns:
-            (dict[str, pd.DataFrame]): Tabelas ``basicos``, ``partes``,
-                ``movimentacoes`` e ``peticoes_diversas``. ``basicos`` traz a
-                ``situacao`` do cabecalho ("Extinto", "Suspenso" etc.) e
-                ``movimentacoes`` traz a lista completa, que o download busca
-                pagina a pagina. Em ``movimentacoes``, ``cd_documento`` e
-                ``documento_publico`` dizem se a linha tem documento e se ele
-                abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
-                ``None`` sem ``download_pecas``, para documento com senha e para
-                o que falhou (as falhas saem num ``UserWarning``).
+            Tabelas ``basicos``, ``partes``, ``movimentacoes`` e
+                ``peticoes_diversas``. ``basicos`` traz a ``situacao`` do
+                cabecalho ("Extinto", "Suspenso" etc.) e ``movimentacoes`` traz
+                a lista completa, que o download busca pagina a pagina. Em
+                ``movimentacoes``, ``cd_documento`` e ``documento_publico``
+                dizem se a linha tem documento e se ele abre sem senha;
+                ``caminho_documento`` traz o PDF baixado, ou ``None`` sem
+                ``download_pecas``, para documento com senha e para o que falhou
+                (as falhas saem num ``UserWarning``).
 
                 Todo CNJ pedido aparece em ``basicos``. A coluna ``motivo_falha``
                 e ``None`` no processo lido; o CNJ que nao foi baixado ganha uma
@@ -730,7 +730,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         *,
         baixar_movimentacoes: bool = True,
         download_pecas: bool = False,
-    ):
+    ) -> dict[str, str]:
         """Baixa as paginas HTML do CPOPG.
 
         Args:
@@ -750,11 +750,11 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 e pede so os PDFs que faltam. Default ``False``.
 
         Returns:
-            (dict[str, str]): ``{CNJ formatado: motivo_falha}`` dos processos
-                que ficaram sem arquivo; vazio quando todos foram baixados. Os
-                motivos sao os de :meth:`cpopg`, e as falhas tambem saem num
-                ``UserWarning``. Elas ficam gravadas na pasta do download, e
-                :meth:`cpopg_parse` as devolve em ``basicos``, como o :meth:`cpopg`.
+            ``{CNJ formatado: motivo_falha}`` dos processos que ficaram sem arquivo;
+                vazio quando todos foram baixados. Os motivos sao os de
+                :meth:`cpopg`, e as falhas tambem saem num ``UserWarning``. Elas
+                ficam gravadas na pasta do download, e :meth:`cpopg_parse` as
+                devolve em ``basicos``, como o :meth:`cpopg`.
         """
         self.set_method(method)
         validar_download_pecas(baixar_movimentacoes, download_pecas)
@@ -774,7 +774,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         self, ids: list, pasta: str, *, baixar_movimentacoes: bool, download_pecas: bool,
     ) -> dict[str, str]:
         """Download do cpopg sem o aviso, que fica com quem chama: ``cpopg_download`` ou o parse do ``cpopg``."""
-        falhas: dict[str, str] = cpopg_download_html(
+        return cpopg_download_html(
             id_cnj_list=ids,
             session=self.session,
             u_base=self.u_base,
@@ -784,7 +784,6 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
             baixar_movimentacoes=baixar_movimentacoes,
             download_pecas=download_pecas,
         )
-        return falhas
 
     def cpopg_parse(self, path: str):
         """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
@@ -834,7 +833,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
         id_cnj: str | list,
         method: Literal["html"] = "html",
         diretorio: str | None = None,
-    ):
+    ) -> dict[str, str]:
         """Baixa as paginas HTML do CPOSG.
 
         Args:
@@ -844,11 +843,11 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
                 Default ``None``.
 
         Returns:
-            (dict[str, str]): ``{CNJ formatado: motivo_falha}`` dos processos
-                que ficaram sem arquivo; vazio quando todos foram baixados. Os
-                motivos são os de :meth:`cposg`, e as falhas também saem num
-                ``UserWarning``. Elas ficam gravadas na pasta do download, e
-                :meth:`cposg_parse` as devolve no DataFrame, como o :meth:`cposg`.
+            ``{CNJ formatado: motivo_falha}`` dos processos que ficaram sem
+                arquivo; vazio quando todos foram baixados. Os motivos são os de
+                :meth:`cposg`, e as falhas também saem num ``UserWarning``. Elas
+                ficam gravadas na pasta do download, e :meth:`cposg_parse` as
+                devolve no DataFrame, como o :meth:`cposg`.
         """
         self.set_method(method)
         falhas = self._baixar_cposg(id_cnj, diretorio or self.download_path)
@@ -860,14 +859,13 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
     def _baixar_cposg(self, id_cnj: str | list, pasta: str) -> dict[str, str]:
         """Download do cposg sem o aviso, que fica com quem chama: ``cposg_download`` ou o parse do ``cposg``."""
-        falhas: dict[str, str] = cposg_download_html(
+        return cposg_download_html(
             id_cnj_list=[id_cnj] if isinstance(id_cnj, str) else id_cnj,
             session=self.session,
             u_base=self.u_base,
             download_path=pasta,
             sleep_time=self.sleep_time,
         )
-        return falhas
 
     def cposg_parse(self, path: str):
         """Parse downloaded CPOSG files into a DataFrame.

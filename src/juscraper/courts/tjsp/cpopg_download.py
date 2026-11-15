@@ -161,7 +161,7 @@ def cpopg_download_html(
     *,
     baixar_movimentacoes=True,
     download_pecas=False,
-):
+) -> dict[str, str]:
     """
     Downloads processes in HTML from the TJSP Consulta de Processos Originários do Primeiro Grau (CPOPG).
     id_cnj_list: list of CNJs
@@ -174,19 +174,20 @@ def cpopg_download_html(
     download_pecas: with True, also saves the PDF of each public document of the movements
 
     Returns:
-        (dict[str, str]): ``{CNJ formatado: motivo}`` dos processos que ficaram
-            sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
-            número que a busca diz não ter sai ``nao_encontrado``, e o que não
-            tem 20 dígitos, ``entrada_invalida``. Vazio quando
-            todos foram baixados. As falhas ficam gravadas em
-            ``<download_path>/cpopg``, de onde ``cpopg_parse_manager`` as lê; o
-            ``UserWarning`` delas sai de ``TJSPScraper.cpopg_download``.
+        ``{CNJ formatado: motivo}`` dos processos que ficaram sem arquivo, no
+            vocabulário de :mod:`juscraper.core.failures`; o número que a busca
+            diz não ter sai ``nao_encontrado``, e o que não tem 20 dígitos,
+            ``entrada_invalida``. Vazio quando todos foram baixados. As falhas
+            ficam gravadas em ``<download_path>/cpopg``, de onde
+            ``cpopg_parse_manager`` as lê; o ``UserWarning`` delas sai de
+            ``TJSPScraper.cpopg_download``.
     """
     pecas = _PecasPublicas(sleep_time) if download_pecas else None
-    falhas = {}
+    falhas: dict[str, str] = {}
     n_items = len(id_cnj_list)
     for idp in tqdm(id_cnj_list, total=n_items, desc="Baixando processos"):
-        cnj = format_cnj(idp, strict=False)
+        # Entrada que não é texto vira chave ``str``, como no registro que o parse lê.
+        cnj = str(format_cnj(idp, strict=False))
         if cnj_invalido(idp):
             falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
             continue

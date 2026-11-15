@@ -3,7 +3,7 @@ import difflib
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
 from numbers import Integral
-from typing import Any
+from typing import Any, TypeVar
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -184,7 +184,7 @@ def _materialize_normalized_dates(
     return result
 
 
-def normalize_datas(**kwargs):
+def normalize_datas(**kwargs) -> dict[str, Any]:
     """Normalize date parameters to canonical names.
 
     Canonical names:
@@ -202,7 +202,7 @@ def normalize_datas(**kwargs):
         ``data_fim`` → ``data_julgamento_fim``
 
     Returns:
-        dict with the four canonical keys (values may be ``None``).
+        Dict with the four canonical keys (values may be ``None``).
 
     Raises:
         ValueError: When more than one source (canonical or alias) fills the
@@ -255,9 +255,10 @@ _ACCEPTED_DATE_FORMATS: tuple[str, ...] = (
     "%Y-%m-%d",
     "%Y/%m/%d",
 )
+_Data = TypeVar("_Data")  # Entrada de ``coerce_brazilian_date``, devolvida intacta quando não é data.
 
 
-def coerce_brazilian_date(value, backend_format: str):
+def coerce_brazilian_date(value: _Data, backend_format: str) -> _Data | str:
     """Coerce a user-supplied date into the format the backend expects.
 
     Accepted inputs:
@@ -284,7 +285,7 @@ def coerce_brazilian_date(value, backend_format: str):
             (e.g. ``"%d/%m/%Y"`` for eSAJ, ``"%Y-%m-%d"`` for ISO backends).
 
     Returns:
-        ``None``, an empty string, or a ``str`` in ``backend_format``.
+        ``None``, an empty string, a ``str`` in ``backend_format`` or the unchanged input.
 
     See also:
         :func:`apply_input_pipeline_search` — applies this coercion to the
@@ -527,7 +528,7 @@ def iter_date_windows(
 
 
 def run_chunked_search(
-    fetch_window: Callable[[str | None, str | None], Any],
+    fetch_window: Callable[[str | None, str | None], pd.DataFrame],
     *,
     data_inicio: str | None,
     data_fim: str | None,
@@ -538,7 +539,7 @@ def run_chunked_search(
     rotulo: str = "data_julgamento",
     origem: str = "O servidor",
     formato: str = "%d/%m/%Y",
-):
+) -> pd.DataFrame:
     """Drive a search method across date windows and return a deduped DataFrame.
 
     Single-window case (interval ≤ ``max_dias`` or open-ended): forwards to
@@ -573,7 +574,7 @@ def run_chunked_search(
         formato: Date format used by ``iter_date_windows``.
 
     Returns:
-        DataFrame com todas as janelas, deduplicado.
+        DataFrame com todas as janelas, deduplicado por ``dedup_key`` quando há mais de uma.
 
     Raises:
         ValueError: For invalid date input or ``paginas != None`` in the
