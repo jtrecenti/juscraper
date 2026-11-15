@@ -101,7 +101,7 @@ dados.head()
 
 > ⚠️ **TJGO — `cjsg` sem resultados:** desde 12/11/2026 (Projudi 3.194.1) a busca de jurisprudência do TJGO valida no servidor o token [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), que o raspador não envia. Sem ele, o portal devolve a busca vazia, sem mensagem de erro, e `cjsg`/`cjsg_download` emitem `UserWarning` explicando o bloqueio. O portal responde do mesmo jeito a uma busca que de fato não tem resultados, por isso o aviso sai em toda busca vazia.
 
-> ⚠️ **TJPE — `cjsg` sem resultados:** desde pelo menos 21/10/2026, a pesquisa da [Consulta Jurisprudência Web](https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml) do TJPE responde "Nenhum documento encontrado" a qualquer termo, também numa busca feita no navegador. A falha é do portal, não do raspador: `cjsg`/`cjsg_download` devolvem vazio e emitem `UserWarning`. A consulta processual (`cpopg`) não é afetada.
+> ⚠️ **TJPE — `cjsg` sem resultados:** em 15/11/2026, a pesquisa da [Consulta Jurisprudência Web](https://www.tjpe.jus.br/consultajurisprudenciaweb/xhtml/consulta/consulta.xhtml) do TJPE respondia "Nenhum documento encontrado" a qualquer termo, também numa busca feita no navegador. A falha é do portal, não do raspador: `cjsg`/`cjsg_download` devolvem vazio e emitem `UserWarning`. A consulta processual (`cpopg`) não é afetada.
 
 #### Autenticação no JusBR e no PDPJ
 

@@ -56,8 +56,8 @@ _TJGO_TURNSTILE = (
     "não envia: toda busca volta vazia, com UserWarning"
 )
 _TJPE_PESQUISA_FORA_DO_AR = (
-    "a pesquisa do portal responde 'Nenhum documento encontrado' a qualquer termo, também no "
-    "navegador (visto em 15/11/2026; a Integração já falhava em 21/10/2026): cjsg volta vazio, com UserWarning"
+    "pesquisa do TJPE responde 'Nenhum documento encontrado' a qualquer termo, também no navegador "
+    "(15/11/2026): cjsg volta vazio, com UserWarning"
 )
 
 # Tribunals where the date filter itself is broken. Remove once fixed.
