@@ -16,6 +16,7 @@ import requests
 import responses
 
 import juscraper as jus
+from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from tests._helpers import load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
@@ -28,6 +29,16 @@ POST_PARAMS = {
 }
 
 FAKE_CAPTCHA = "abc1"
+
+
+def _form(sample: str = "cpopg/form_initial.html") -> None:
+    """Registra uma resposta ao GET do formulário."""
+    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", sample))
+
+
+def _busca(sample: str) -> None:
+    """Registra uma resposta ao POST da busca, a partir de um sample."""
+    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", sample))
 
 
 def _subset_form_matcher(expected: dict[str, str]):
@@ -205,27 +216,128 @@ def test_cpopg_retries_on_captcha_failure(monkeypatch):
 
 
 @responses.activate
-def test_cpopg_raises_when_captcha_keeps_failing(monkeypatch):
-    """After ``max_captcha_attempts`` rejections, surface the error."""
+def test_cpopg_captcha_esgotado_vira_linha_e_o_lote_segue(monkeypatch):
+    """Captcha recusado ``max_captcha_attempts`` vezes: a linha sai ``resposta_inesperada``; o 2º CNJ é consultado."""
     for _ in range(3):
-        responses.add(
-            responses.GET,
-            GET_URL,
-            body=load_sample_bytes("trf6", "cpopg/form_initial.html"),
-        )
-        responses.add(
-            responses.POST,
-            POST_URL,
-            body=load_sample_bytes("trf6", "cpopg/search_bad_captcha.html"),
-        )
+        _form()
+        _busca("cpopg/search_bad_captcha.html")
+    _form()
+    _busca("cpopg/detail_normal.html")
 
     from juscraper.courts.trf6 import download
 
     monkeypatch.setattr(download, "solve_captcha", lambda b64: "wrong")
 
     scraper = jus.scraper("trf6", sleep_time=0, max_captcha_attempts=3)
-    with pytest.raises(RuntimeError, match="captcha solver failed"):
+    with pytest.warns(UserWarning, match="processo 00000000020994060000: resposta_inesperada"):
+        df = scraper.cpopg(["00000000020994060000", "10052295520234063801"])
+
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
+    assert pd.isna(df.iloc[0]["processo"])
+    assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
+
+
+@responses.activate
+def test_cpopg_nao_envia_user_agent_de_navegador(fake_captcha_solver):
+    """O F5 do portal desafia user agents ``Mozilla/...``; a sessão usa o padrão do ``requests``."""
+    _form()
+    _busca("cpopg/detail_normal.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    scraper.cpopg("10052295520234063801")
+
+    for call in responses.calls:
+        assert not call.request.headers["User-Agent"].startswith("Mozilla/")
+
+
+@responses.activate
+def test_cpopg_desafio_f5_encerra_o_lote_com_bloqueio_anti_bot(fake_captcha_solver):
+    """O desafio do F5 no lugar do formulário: o 1º CNJ e os seguintes saem ``bloqueio_anti_bot``, sem novos pedidos."""
+    _form("cpopg/form_desafio_f5.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(BloqueioAntiBotWarning, match="2 consulta.*bloqueio_anti_bot"):
+        df = scraper.cpopg(["10052295520234063801", "00000000020994060000"])
+
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(responses.calls) == 1
+
+
+@responses.activate
+def test_cpopg_desafio_f5_na_busca_tambem_encerra_o_lote(fake_captcha_solver):
+    """O desafio do F5 na resposta do POST não passa por processo ausente."""
+    _form()
+    _busca("cpopg/form_desafio_f5.html")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(BloqueioAntiBotWarning):
+        df = scraper.cpopg(["10052295520234063801", "00000000020994060000"])
+
+    assert list(df["motivo_falha"]) == ["bloqueio_anti_bot", "bloqueio_anti_bot"]
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cpopg_pagina_desconhecida_na_busca_vira_resposta_inesperada(fake_captcha_solver):
+    """Uma página que não é detalhe nem formulário (manutenção, erro) não passa por processo ausente."""
+    _form()
+    responses.add(responses.POST, POST_URL, body="<html><body>Sistema em manutenção</body></html>")
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="processo 10052295520234063801: resposta_inesperada"):
+        df = scraper.cpopg("10052295520234063801")
+
+    assert list(df["motivo_falha"]) == ["resposta_inesperada"]
+
+
+def test_desafio_f5_tem_mensagem_propria():
+    """A mensagem fala do desafio JavaScript do F5, não do 403 do Akamai."""
+    from juscraper.courts.trf6.download import DesafioF5Error
+
+    erro = DesafioF5Error("https://eproc1g.trf6.jus.br/eproc/")
+    assert isinstance(erro, BotChallengeBlockedError)
+    assert "F5" in str(erro) and "desafio JavaScript" in str(erro)
+    assert "403" not in str(erro)
+
+
+@responses.activate
+def test_cpopg_txtcaptcha_ausente_propaga(monkeypatch):
+    """Sem o ``txtcaptcha``, nenhum CNJ passaria: o ``ImportError`` sobe em vez de virar linha."""
+    _form()
+    from juscraper.courts.trf6 import download
+
+    def sem_txtcaptcha(b64):
+        raise ImportError("txtcaptcha")
+
+    monkeypatch.setattr(download, "solve_captcha", sem_txtcaptcha)
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.raises(ImportError):
         scraper.cpopg("10052295520234063801")
+
+
+def test_cpopg_parse_html_fora_do_formato_vira_linha(monkeypatch):
+    """Um HTML que o parser recusa vira linha só com ``id_cnj``, com aviso; os demais são lidos."""
+    from juscraper.courts.trf6 import client
+
+    detalhe = load_sample_bytes("trf6", "cpopg/detail_normal.html").decode("latin-1")
+    original = client.parse_detail
+
+    def parse_que_recusa(html):
+        if html == "quebrado":
+            raise ValueError("layout novo")
+        return original(html)
+
+    monkeypatch.setattr(client, "parse_detail", parse_que_recusa)
+
+    scraper = jus.scraper("trf6", sleep_time=0)
+    with pytest.warns(UserWarning, match="cpopg_parse: 1 consulta.*processo 00000000020994060000: resposta_inesperada"):
+        df = scraper.cpopg_parse(["quebrado", detalhe], ["00000000020994060000", "10052295520234063801"])
+
+    assert list(df["id_cnj"]) == ["00000000020994060000", "10052295520234063801"]
+    assert "motivo_falha" not in df.columns
+    assert pd.isna(df.iloc[0]["processo"])
+    assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
 
 
 def test_cpopg_rejects_unknown_kwargs():

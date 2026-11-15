@@ -19,9 +19,16 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.base import BaseScraper
-from ...core.failures import COLUNA_MOTIVO_FALHA, avisar_falhas, motivo_falha_ou_inesperada
+from ...core.exceptions import BotChallengeBlockedError
+from ...core.failures import (
+    COLUNA_MOTIVO_FALHA,
+    MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_RESPOSTA_INESPERADA,
+    avisar_falhas,
+    motivo_falha_ou_inesperada,
+)
 from ...utils.cnj import clean_cnj, format_cnj
-from .download import BROWSER_HEADERS, fetch_detail
+from .download import HEADERS, fetch_detail
 from .parse import parse_detail
 from .schemas import InputCpopgTRF6
 
@@ -43,7 +50,7 @@ class TRF6Scraper(BaseScraper):
     ):
         super().__init__("TRF6")
         self.session = requests.Session()
-        self.session.headers.update(BROWSER_HEADERS)
+        self.session.headers.update(HEADERS)
         self.set_verbose(verbose)
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
@@ -79,8 +86,8 @@ class TRF6Scraper(BaseScraper):
     def _baixar(self, cnjs: list[str]) -> tuple[list[str | None], list[str | None]]:
         """Detalhe HTML e motivo de falha de cada CNJ, na ordem da entrada.
 
-        Processo ausente da consulta pública sai ``None`` sem motivo. A
-        requisição que falha sai ``None`` com o motivo, e o lote segue.
+        Regras de falha e de bloqueio anti-bot em :meth:`cpopg`. ``ImportError``
+        (``txtcaptcha`` ausente) propaga.
         """
         htmls: list[str | None] = []
         motivos: list[str | None] = []
@@ -89,7 +96,15 @@ class TRF6Scraper(BaseScraper):
             motivo: str | None = None
             try:
                 html = self._fetch_one(cnj)
-            except requests.RequestException as exc:
+            except BotChallengeBlockedError as exc:
+                logger.warning("TRF6: bloqueio anti-bot em %s; o lote para aqui: %s", cnj, exc)
+                restantes = len(cnjs) - i
+                htmls.extend([None] * restantes)
+                motivos.extend([MOTIVO_BLOQUEIO_ANTI_BOT] * restantes)
+                break
+            except ImportError:
+                raise
+            except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao consultar %s: %s", cnj, exc)
                 motivo = motivo_falha_ou_inesperada(exc)
             htmls.append(html)
@@ -99,8 +114,28 @@ class TRF6Scraper(BaseScraper):
         return htmls, motivos
 
     @staticmethod
+    def _linhas(
+        htmls: list[str | None],
+        cnjs: list[str],
+        motivos: list[str | None],
+    ) -> list[dict[str, Any]]:
+        """Uma linha por CNJ, com ``motivo_falha``; HTML que o parser recusa sai ``resposta_inesperada``."""
+        rows: list[dict[str, Any]] = []
+        for cnj, html, motivo_download in zip(cnjs, htmls, motivos, strict=True):
+            record: dict[str, Any] = {}
+            motivo = motivo_download
+            if html is not None:
+                try:
+                    record = parse_detail(html)
+                except Exception as exc:  # noqa: BLE001 — resiliência por item
+                    logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
+                    motivo = MOTIVO_RESPOSTA_INESPERADA
+            rows.append({**record, "id_cnj": cnj, COLUNA_MOTIVO_FALHA: motivo})
+        return rows
+
+    @staticmethod
     def _avisar(cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
-        """Um ``UserWarning`` com os CNJs cuja requisição falhou."""
+        """Um ``UserWarning`` com os CNJs cuja consulta falhou."""
         falhas = [f"processo {c}: {m}" for c, m in zip(cnjs, motivos, strict=True) if m]
         avisar_falhas(falhas, f"TRF6Scraper.{metodo}", "consulta(s) de processo")
 
@@ -115,10 +150,10 @@ class TRF6Scraper(BaseScraper):
 
         Devolve uma lista na ordem da entrada. ``None`` indica processo que a
         consulta pública não devolveu: sigilo, CNJ inexistente ou falha da
-        requisição. Falhas de requisição não interrompem o lote e entram num
-        único ``UserWarning`` ao fim; :meth:`cpopg` traz o motivo de cada uma
-        em ``motivo_falha``. Falhas do resolvedor de captcha
-        (``RuntimeError``) propagam.
+        consulta (requisição, captcha esgotado). Falhas individuais não
+        interrompem o lote; um bloqueio anti-bot encerra o lote e os CNJs
+        restantes saem ``None``. As falhas entram num único ``UserWarning``
+        ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
         htmls, motivos = self._baixar(cnjs)
@@ -134,23 +169,19 @@ class TRF6Scraper(BaseScraper):
 
         Rows for ``None`` entries carry ``id_cnj`` plus ``None`` in every
         other column, so callers can still distinguish "looked up but
-        missing" from "never tried". Sem a coluna ``motivo_falha``: um
-        ``None`` vindo de :meth:`cpopg_download` pode ser processo ausente
-        ou requisição que falhou, e só :meth:`cpopg` sabe qual.
+        missing" from "never tried". Um HTML que o parser recusa vira linha
+        só com ``id_cnj``, com ``UserWarning``, e o lote continua. Sem a
+        coluna ``motivo_falha``: um ``None`` vindo de :meth:`cpopg_download`
+        pode ser processo ausente ou consulta que falhou, e só :meth:`cpopg`
+        sabe qual.
         """
         if len(htmls) != len(id_cnj_list):
             raise ValueError(
                 "htmls and id_cnj_list must have the same length "
                 f"({len(htmls)} != {len(id_cnj_list)})"
             )
-        rows: list[dict[str, Any]] = []
-        for cnj, html in zip(id_cnj_list, htmls, strict=False):
-            if html is None:
-                rows.append({"id_cnj": cnj})
-            else:
-                record = parse_detail(html)
-                record["id_cnj"] = cnj
-                rows.append(record)
+        rows = self._linhas(htmls, id_cnj_list, [None] * len(htmls))
+        self._avisar(id_cnj_list, [r.pop(COLUNA_MOTIVO_FALHA) for r in rows], "cpopg_parse")
         return pd.DataFrame(rows)
 
     def cpopg(
@@ -168,16 +199,20 @@ class TRF6Scraper(BaseScraper):
 
         ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
         para processo ausente ou sob sigilo (linha só com ``id_cnj``).
-        Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj`` e
+        Quando a consulta de um CNJ falha, a linha sai só com ``id_cnj`` e
         o motivo, no vocabulário de
         :data:`juscraper.core.failures.MOTIVOS_FALHA` (``http_<status>``,
-        ``timeout``, ``conexao``; ``resposta_inesperada`` para outro erro de
-        requisição), e o lote segue. As falhas entram num único
-        ``UserWarning`` ao fim.
+        ``timeout``, ``conexao``; ``resposta_inesperada`` para captcha
+        esgotado, formulário sem captcha, HTML que o parser recusa ou outro
+        erro), e o lote segue. Um desafio anti-bot vale para a sessão
+        inteira: o lote para no CNJ desafiado, sem novos pedidos, e ele e os
+        seguintes saem com ``bloqueio_anti_bot``. As falhas entram num único
+        ``UserWarning`` ao fim
+        (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning` quando
+        há bloqueio anti-bot).
         """
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
         htmls, motivos = self._baixar(cnjs)
-        df = self.cpopg_parse(htmls, cnjs)
-        df[COLUNA_MOTIVO_FALHA] = motivos
-        self._avisar(cnjs, motivos, "cpopg")
-        return df
+        rows = self._linhas(htmls, cnjs, motivos)
+        self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
+        return pd.DataFrame(rows)

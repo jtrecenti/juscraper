@@ -15,7 +15,7 @@ contagem sem inteiro).
 ``nao_encontrado`` é o processo que a fonte declara ausente por um sinal medido
 dela; cada scraper documenta que sinal é esse.
 ``bloqueio_anti_bot`` é o desafio ou bloqueio de um bot manager (Akamai,
-CloudFront, AWS WAF) que derrubou a requisição da linha.
+CloudFront, AWS WAF, F5) que derrubou a requisição da linha.
 """
 from __future__ import annotations
 
