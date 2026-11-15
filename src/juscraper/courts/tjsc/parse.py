@@ -49,12 +49,21 @@ def _resolve_field(label: str) -> str | None:
     return None
 
 
+_CLASS_CODE = re.compile(r"^(?:[A-Z][A-Za-z]+|\d+ - )")
+
+
 def _extract_class(value) -> str | None:
-    """Extract the class description from the process field when present."""
+    """Extract the class description from the process field when present.
+
+    A linha da classe tem a forma ``<código> - <classe>``. O código é uma sigla,
+    às vezes em caixa mista (``AI``, ``ApCiv``), ou um número (``422070``, no
+    Conselho da Magistratura). O número exige o `` - `` logo em seguida para não
+    confundir com a linha do número do processo.
+    """
     class_text = str(value.get_text(separator="\n", strip=True))
     lines = (line.strip() for line in class_text.split("\n") if line.strip())
     for line in lines:
-        if not re.match(r"^[A-Z]{2,}", line) or "-" not in line:
+        if not _CLASS_CODE.match(line) or "-" not in line:
             continue
         parts = line.split(" - ", 1)
         if len(parts) == 2:

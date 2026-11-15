@@ -128,3 +128,23 @@ def test_cjsg_parse_manager_warns_when_process_number_is_missing():
 
     assert df["ementa"].tolist() == ["Ementa sem número"]
     assert "processo" not in df.columns
+
+
+@pytest.mark.parametrize(
+    ("sample", "encoding", "classes"),
+    [
+        # Código numérico no lugar da sigla (Conselho da Magistratura).
+        ("processo_sem_link.html", "latin-1", ["Recurso Administrativo"]),
+        # Sigla em caixa mista (ApCiv) ao lado de sigla em maiúsculas (RCIJEF).
+        (
+            "results_normal_page_01.html",
+            "latin-1",
+            ["RECURSO CÍVEL"] + ["Apelação"] * 7 + ["RECURSO CÍVEL"] * 2,
+        ),
+    ],
+)
+def test_cjsg_parse_manager_reads_class_after_numeric_or_mixed_case_code(sample, encoding, classes):
+    """A linha ``<código> - <classe>`` dá a classe também com código numérico ou sigla em caixa mista."""
+    df = cjsg_parse_manager([load_sample("tjsc", f"cjsg/{sample}", encoding=encoding)])
+
+    assert df["classe"].tolist() == classes
