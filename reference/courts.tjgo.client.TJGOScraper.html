@@ -262,7 +262,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>id_serventia_subtipo</td>
 <td><code>int</code> | <code>str</code></td>
-<td>ID do subtipo de serventia (dropdown do site). <code>0</code> = todas.</td>
+<td>Codigo do seletor “Orgao” do site (por exemplo, <code>14</code> Camaras Civeis, <code>20</code> Camaras Criminais, <code>6</code> Turma Recursal Civel e Criminal). <code>0</code> = todos. Codigo fora da lista levanta <code>ValidationError</code>.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
@@ -353,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Aceita os mesmos filtros de <a href="../reference/courts.tjgo.client.TJGOScraper.html#juscraper.courts.tjgo.client.TJGOScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<p>pesquisa : str Free-text search term (aliases <code>query</code> / <code>termo</code> accepted). paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page. id_instancia : int or str <code>0</code> all / <code>1</code> 1st degree / <code>2</code> recursal / <code>3</code> tribunal. id_area : int or str <code>0</code> all / <code>1</code> civil / <code>2</code> criminal. id_serventia_subtipo : int or str Court unit sub-type id (see website dropdown). <code>0</code> = all. numero_processo : str Filter by specific CNJ process number. tamanho_pagina : int Items per page (default 10). Aceita <code>qtde_itens_pagina</code> como alias deprecado. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range in <code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>.</p>
+<p>pesquisa : str Free-text search term (aliases <code>query</code> / <code>termo</code> accepted). paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page. id_instancia : int or str <code>0</code> all / <code>1</code> 1st degree / <code>2</code> recursal / <code>3</code> tribunal. id_area : int or str <code>0</code> all / <code>1</code> civil / <code>2</code> criminal. id_serventia_subtipo : int or str Code from the website’s “Orgao” dropdown (e.g.&nbsp;<code>14</code> civil chambers, <code>20</code> criminal chambers). <code>0</code> = all. numero_processo : str Filter by specific CNJ process number. tamanho_pagina : int Items per page (default 10). Aceita <code>qtde_itens_pagina</code> como alias deprecado. data_publicacao_inicio, data_publicacao_fim : str, optional Publication date range in <code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjgo.client.TJGOScraper.cjsg_parse" class="level3">
