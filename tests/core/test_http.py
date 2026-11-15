@@ -599,6 +599,7 @@ def test_profile_retryable_statuses_drop_403(probe_perfis, mocker):
         (requests.ReadTimeout, {"retry_on_timeout": True}),
         (requests.ConnectionError, {"retry_on_connection_error": True}),
         (requests.ConnectTimeout, {"retry_on_connection_error": True}),
+        (requests.exceptions.ChunkedEncodingError, {"retry_on_connection_error": True}),
     ],
 )
 def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
@@ -625,6 +626,11 @@ def test_network_error_retried_when_enabled(mocker, exc_cls, perfil):
         (requests.ConnectTimeout, {"retry_on_timeout": True}),
         (requests.ReadTimeout, None),
         (requests.ConnectionError, None),
+        (requests.exceptions.ChunkedEncodingError, {"retry_on_timeout": True}),
+        (requests.exceptions.ChunkedEncodingError, None),
+        # Configuração errada (certificado, proxy) não se resolve com nova tentativa.
+        (requests.exceptions.SSLError, {"retry_on_connection_error": True, "retry_on_timeout": True}),
+        (requests.exceptions.ProxyError, {"retry_on_connection_error": True, "retry_on_timeout": True}),
     ],
 )
 def test_network_error_not_retried_when_disabled(mocker, exc_cls, perfil):
