@@ -10,8 +10,8 @@ from bs4.element import Comment, Script, Stylesheet, Tag, TemplateString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
-from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas
-from ._falhas import cnj_da_pasta
+from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, falhas_registradas
 from .cpopg_parse import _split_incident_header
 
 _FIELD_MAPPING = (
@@ -56,13 +56,15 @@ def cposg_parse(path: str):
     return cposg_parse_manager(path)
 
 
-def cposg_parse_manager(path: str):
+def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse"):
     """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame.
 
     A coluna ``motivo_falha`` é ``None`` em cada processo lido. O arquivo que
     não pode ser lido, ou que não é a página de um processo, vira uma linha com ``processo`` (o CNJ da pasta),
     ``motivo_falha`` igual a ``resposta_inesperada`` e as demais colunas
-    ``None``; as falhas também saem num ``UserWarning``.
+    ``None``. O processo que ``cposg_download`` não baixou nessa pasta vira
+    uma linha com ``processo`` e o motivo do download. As falhas também saem
+    num ``UserWarning``, aberto por ``metodo``.
     """
     raiz = Path(path)
     # O download grava em <path>/cposg/; o cpopg, no mesmo download_path, em
@@ -86,7 +88,9 @@ def cposg_parse_manager(path: str):
             continue
         dados.append({'processo': cnj_da_pasta(arq), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA})
         falhas.append(f"{arq}: {MOTIVO_RESPOSTA_INESPERADA} ({erro})")
-    avisar_falhas(falhas, "TJSPScraper.cposg_parse", "leitura(s) de arquivo")
+    sem_arquivo = falhas_registradas(raiz)
+    dados.extend({'processo': cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in sem_arquivo.items())
+    avisar_falhas_de_processo(sem_arquivo, falhas, metodo, "Eles saem no DataFrame")
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)
 
 

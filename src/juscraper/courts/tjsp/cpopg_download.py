@@ -17,7 +17,7 @@ from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import busca_sem_informacoes
 from .._esaj.pasta import DocumentoIndisponivelError, documentos_vinculados, gravar_pdf, pdf_pela_pasta
-from ._falhas import avisar_processos_sem_arquivo, cnj_invalido, motivo_do_processo
+from ._falhas import cnj_invalido, motivo_do_processo, registrar_falhas
 
 logger = logging.getLogger('juscraper.cpopg_download')
 
@@ -178,7 +178,9 @@ def cpopg_download_html(
         sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
         número que a busca diz não ter sai ``nao_encontrado``, e o que não
         tem 20 dígitos, ``entrada_invalida``. Vazio quando
-        todos foram baixados. As falhas também saem num ``UserWarning``.
+        todos foram baixados. As falhas ficam gravadas em
+        ``<download_path>/cpopg``, de onde ``cpopg_parse_manager`` as lê; o
+        ``UserWarning`` delas sai de ``TJSPScraper.cpopg_download``.
     """
     pecas = _PecasPublicas(sleep_time) if download_pecas else None
     falhas = {}
@@ -215,7 +217,8 @@ def cpopg_download_html(
             "TJSPScraper.cpopg_download",
             "download(s) de documento público",
         )
-    avisar_processos_sem_arquivo(falhas, "TJSPScraper.cpopg_download", "cpopg os devolve na tabela basicos")
+    pedidos = [format_cnj(idp, strict=False) for idp in id_cnj_list]
+    registrar_falhas(Path(download_path, 'cpopg'), pedidos, falhas)
     return falhas
 
 

@@ -8,9 +8,9 @@ from bs4.element import PreformattedString
 from tqdm import tqdm
 
 from ...core.avisos import avisar
-from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA, avisar_falhas
+from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
 from .._esaj.pasta import documento_vinculado
-from ._falhas import cnj_da_pasta, com_linhas_de_falha
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, falhas_registradas
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -68,13 +68,15 @@ def _normalize_field_name(label: str) -> str:
     return re.sub(r'\s+', '_', text.strip())
 
 
-def cpopg_parse_manager(path: str):
+def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse"):
     """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
 
     Parameters
     ----------
     path : str
         The file path or directory containing the downloaded files.
+    metodo : str
+        Método público que abre o ``UserWarning`` das falhas.
 
     Returns
     -------
@@ -84,22 +86,52 @@ def cpopg_parse_manager(path: str):
         diretório, ``basicos`` ganha a coluna ``motivo_falha``: ``None`` em
         cada arquivo lido e ``resposta_inesperada`` no arquivo que o parser
         recusa, que fica numa linha com ``file_path``, ``id_processo`` (o CNJ
-        da pasta do processo) e as demais colunas ``None``. As falhas também
-        saem num ``UserWarning``.
+        da pasta do processo) e as demais colunas ``None``. O processo que
+        ``cpopg_download`` não baixou nessa pasta ganha uma linha com
+        ``id_processo`` e o motivo do download. As falhas também saem num
+        único ``UserWarning``.
 
     Raises
     ------
     ValueError
         Quando ``path`` é um diretório e nenhum arquivo dele pôde ser lido,
-        porque não há ``.html`` ou porque todos falharam. Devolver ``{}``
-        esconderia uma falha de download ou de leitura atrás de um resultado
-        vazio.
+        porque todos falharam ou porque não há ``.html`` nem falha de
+        download registrada. Devolver ``{}`` esconderia uma falha de download
+        ou de leitura atrás de um resultado vazio.
     """
     root = Path(path)
     if root.is_file():
         return cpopg_parse_single(str(root))
 
     files = arquivos_candidatos(root)
+    sem_arquivo = falhas_registradas(root / 'cpopg' if (root / 'cpopg').is_dir() else root)
+    parsed, falhas = _ler_arquivos(files)
+    if parsed:
+        result = {
+            key: pd.concat([result[key] for result in parsed], ignore_index=True)
+            for key in parsed[0]
+        }
+    elif sem_arquivo and not files:
+        # Lote em que nenhum processo foi baixado: as linhas de falha vão em tabelas vazias.
+        result = tabelas_vazias()
+    else:
+        raise _nothing_parsed_error(root, len(files), falhas)
+    result['basicos'] = com_linhas_de_falha(result['basicos'], [
+        *({'file_path': str(file), 'id_processo': cnj_da_pasta(file), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA}
+          for file, _ in falhas),
+        *({'id_processo': cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in sem_arquivo.items()),
+    ])
+    avisar_falhas_de_processo(
+        sem_arquivo,
+        [f"{file}: {MOTIVO_RESPOSTA_INESPERADA} ({error})" for file, error in falhas],
+        metodo,
+        "Eles saem na tabela basicos",
+    )
+    return result
+
+
+def _ler_arquivos(files: list[Path]) -> tuple[list[dict], list[tuple[Path, Exception]]]:
+    """As tabelas de cada arquivo lido e o erro de cada arquivo que o parser recusou."""
     parsed = []
     falhas: list[tuple[Path, Exception]] = []
     for file in tqdm(files, desc="Processando documentos"):
@@ -110,23 +142,7 @@ def cpopg_parse_manager(path: str):
             continue
         if single_result:
             parsed.append(single_result)
-
-    if not parsed:
-        raise _nothing_parsed_error(root, len(files), falhas)
-    result = {
-        key: pd.concat([result[key] for result in parsed], ignore_index=True)
-        for key in parsed[0]
-    }
-    result['basicos'] = com_linhas_de_falha(result['basicos'], [
-        {'file_path': str(file), 'id_processo': cnj_da_pasta(file), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA}
-        for file, _ in falhas
-    ])
-    avisar_falhas(
-        [f"{file}: {MOTIVO_RESPOSTA_INESPERADA} ({error})" for file, error in falhas],
-        "TJSPScraper.cpopg_parse",
-        "leitura(s) de arquivo",
-    )
-    return result
+    return parsed, falhas
 
 
 def arquivos_candidatos(root: Path) -> list[Path]:
