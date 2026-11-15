@@ -60,18 +60,13 @@ def has_results(html: str) -> bool:
 
 
 def _split_blocks(html: str) -> list:
-    # Split HTML into result blocks. Each result is a <div class="search-result">
-    # followed by paragraphs; blocks end when the next search-result or the
-    # pagination footer starts.
-    parts = _RESULT_OPEN_RE.split(html)
-    if len(parts) <= 1:
-        return []
-    blocks = []
-    for chunk in parts[1:]:
-        end = chunk.find('<div class="search-result-pagination')
-        if end == -1:
-            end = len(chunk)
-        blocks.append(chunk[:end])
+    # Cada resultado comeca num <div class="search-result">, e o bloco vai ate o
+    # proximo. Os resultados ficam dentro do <fieldset id="formLocalizar">; o
+    # ultimo bloco termina no </fieldset>, para nao levar a paginacao, os modais
+    # e os scripts do rodape da pagina.
+    blocks = _RESULT_OPEN_RE.split(html)[1:]
+    if blocks:
+        blocks[-1] = blocks[-1].partition("</fieldset>")[0]
     return blocks
 
 

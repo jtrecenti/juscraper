@@ -118,6 +118,8 @@ def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
 def test_cjsg_resultado_formato_atual(mocker):
     """Pagina real de 15/11/2026, capturada com o token Turnstile (issue #436).
 
+    Para regravar: ``TJGO_JSESSIONID=... python -m tests.fixtures.capture.tjgo atual``.
+
     No HTML atual a ``<div class="search-result">`` traz atributos depois da
     classe (``data-realizador``, ``data-id-arquivo``...), com ``->`` dentro de
     ``data-classe-acao``; a data vem como "Julgado em ..." e nao ha mais o
@@ -149,6 +151,24 @@ def test_cjsg_formato_atual_bloco_comeca_depois_da_tag():
     blocos = _split_blocks(html)
     assert len(blocos) == 10
     assert all("data-numero" not in b.split("<h4>")[0] for b in blocos)
+
+
+@pytest.mark.parametrize(
+    "sample_path",
+    [
+        "cjsg/results_julgado_em_page_01.html",
+        "cjsg/results_normal_page_01.html",
+        "cjsg/results_normal_page_02.html",
+        "cjsg/single_page.html",
+    ],
+)
+def test_cjsg_ultimo_bloco_termina_no_fim_dos_resultados(sample_path):
+    """O ultimo bloco para no ``</fieldset>`` dos resultados, sem o rodape da pagina."""
+    html = load_sample_bytes("tjgo", sample_path).decode("iso-8859-1")
+    ultimo = _split_blocks(html)[-1]
+    assert "</fieldset>" not in ultimo
+    assert "modalBusca" not in ultimo
+    assert "conteudoTexto" in ultimo
 
 
 def test_cjsg_formato_atual_ignora_trechos_do_inteiro_teor():
