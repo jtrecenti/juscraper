@@ -1,5 +1,6 @@
 """Scraper for the Tribunal de Justiça do Rio Grande do Sul (TJRS)."""
 from collections.abc import Mapping
+from datetime import date
 from typing import Any, ClassVar
 
 import pandas as pd
@@ -72,25 +73,21 @@ class TJRSScraper(HTTPScraper):
         assunto: str | None = None,
         orgao_julgador: str | None = None,
         relator: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         tipo_processo: str | None = None,
         secao: str | None = None,
         **kwargs,
     ) -> list:
-        """
-        Downloads raw results from the TJRS 'jurisprudence search' (multiple pages).
-        Returns a list of raw results (JSON).
+        """Baixa as páginas brutas da pesquisa de jurisprudência do TJRS.
 
-        Args:
-            pesquisa: Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-            paginas (int, list, range, or None): Pages to download (1-based).
-                int: paginas=3 downloads pages 1-3.
-                range: range(1, 4) downloads pages 1-3.
-                None: downloads all available pages.
-            secao: 'civel', 'crime', or None.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`;
+        veja lá a lista completa.
+
+        Returns:
+            Lista com o JSON cru de cada página.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJRS,
@@ -141,17 +138,60 @@ class TJRSScraper(HTTPScraper):
         assunto: str | None = None,
         orgao_julgador: str | None = None,
         relator: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         tipo_processo: str | None = None,
         secao: str | None = None,
         **kwargs,
     ) -> 'pd.DataFrame':
-        """
-        Fetches jurisprudence from TJRS in a simplified way (download + parse).
-        Returns a ready-to-analyze DataFrame.
+        """Pesquisa jurisprudência do TJRS (download + parse).
+
+        Args:
+            pesquisa (str | None): Termo de busca livre.
+            paginas (int | list | range | None): Páginas 1-based; ``None``
+                busca todas. ``paginas=3`` baixa as páginas 1 a 3.
+            classe (str | None): Classe processual.
+            assunto (str | None): Assunto.
+            orgao_julgador (str | None): Órgão julgador.
+            relator (str | None): Nome do relator.
+            data_julgamento_inicio (str | date | None): Início do intervalo
+                de julgamento. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+            data_julgamento_fim (str | date | None): Fim do intervalo de
+                julgamento, nos mesmos formatos.
+            data_publicacao_inicio (str | date | None): Início do intervalo
+                de publicação, nos mesmos formatos.
+            data_publicacao_fim (str | date | None): Fim do intervalo de
+                publicação, nos mesmos formatos. Num intervalo com só o
+                início, o fim vira a data atual; com só o fim, o início vira
+                o piso de busca aberta. Nos dois casos sai ``UserWarning``.
+            tipo_processo (str | None): Tipo de processo.
+            secao (str | None): ``"civel"``, ``"crime"`` ou ``None`` (as
+                duas).
+            **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são
+                os parâmetros explícitos, campos de :class:`InputCJSGTJRS`.
+
+        Aliases deprecados (popados com ``DeprecationWarning`` antes do
+        pydantic):
+
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+
+        Raises:
+            TypeError: Quando todos os erros são kwargs desconhecidos.
+            ValueError: Quando uma data é inválida, o início é posterior ao
+                fim, ou um parâmetro e seu alias deprecado são passados juntos.
+            ValidationError: Para os demais erros de validação do schema.
+
+        Returns:
+            Uma linha por decisão.
+
+        See Also:
+            :class:`InputCJSGTJRS`: fonte dos filtros aceitos.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,

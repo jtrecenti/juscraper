@@ -1,9 +1,12 @@
 """Filter-propagation contract for TJRS cjsg."""
+from datetime import date, datetime, timezone
+
 import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
+from juscraper.courts.tjrs.schemas import InputCJSGTJRS
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.tjrs.test_cjsg_contract import _add_page
 
@@ -45,6 +48,29 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         tipo_processo="Civel",
         secao="crime",
     )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_aceita_date_e_datetime_nos_filtros_de_data(mocker):
+    """``date`` e ``datetime`` chegam ao body no formato do backend, como a string equivalente."""
+    mocker.patch("time.sleep")
+    datas = {
+        "data_julgamento_inicio": date(2024, 1, 1),
+        "data_julgamento_fim": datetime(2024, 3, 31, 15, 30, tzinfo=timezone.utc),
+        "data_publicacao_inicio": date(2024, 2, 1),
+        "data_publicacao_fim": datetime(2024, 4, 30, tzinfo=timezone.utc),
+    }
+    formato = InputCJSGTJRS.BACKEND_DATE_FORMAT
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/no_results.json",
+        **{campo: valor.strftime(formato) for campo, valor in datas.items()},
+    )
+
+    df = jus.scraper("tjrs").cjsg("dano moral", paginas=1, **datas)
 
     assert isinstance(df, pd.DataFrame)
 
