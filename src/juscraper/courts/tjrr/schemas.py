@@ -7,6 +7,8 @@ A lista de campos bate byte-a-byte com a assinatura publica de
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
@@ -33,3 +35,4 @@ class OutputCJSGTJRR(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     """
 
     classe: str | None = None
+    tipo_decisao: Literal["acordao", "monocratica"] | None = None
