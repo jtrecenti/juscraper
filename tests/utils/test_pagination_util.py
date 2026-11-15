@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 
 import pytest
+from bs4 import BeautifulSoup
 
 from juscraper.utils.pagination import (
     extract_count_with_cascade,
@@ -36,6 +37,23 @@ def test_selector_miss_falls_back_to_raw_html():
         css_selectors=("td.totalResultados",),
         regex_patterns=(re.compile(r"(\d+)\s+documentos\s+encontrados",),),
     ) == 120
+
+
+def test_tag_restringe_a_cascata_ao_trecho():
+    """Com uma ``Tag``, seletores, regex e marcadores de zero só veem o trecho."""
+    soup = BeautifulSoup(
+        "<div id='a'><span class='n'>45 resultados</span></div>"
+        "<div id='b'>Nenhum documento encontrado; 99 resultados</div>",
+        "html.parser",
+    )
+    regex = (re.compile(r"(\d+)\s*resultados?"),)
+    trecho = soup.find(id="a")
+
+    assert extract_count_with_cascade(trecho, css_selectors=("span.n",), regex_patterns=regex) == 45
+    assert extract_count_with_cascade(
+        trecho, css_selectors=("td.ausente",), regex_patterns=regex, zero_markers=("nenhum documento",)
+    ) == 45
+    assert extract_count_with_cascade(soup.find(id="b"), regex_patterns=regex, zero_markers=("nenhum documento",)) == 0
 
 
 def test_fallback_max_int_picks_largest():

@@ -121,11 +121,11 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """
         return self._listar_arvore(f"varas_{grau}")
 
-    def set_download_path(self, path: str | None = None):
+    def set_download_path(self, path: str | None = None) -> None:
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
 
-    def set_method(self, method: str):
+    def set_method(self, method: str) -> None:
         """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
         if method == "api":
             raise ValueError(
@@ -455,7 +455,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             download_pecas=download_pecas,
         )
 
-    def cpopg_parse(self, path: str):
+    def cpopg_parse(self, path: str) -> dict[str, pd.DataFrame]:
         """Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.
 
         ``basicos`` traz a coluna ``motivo_falha``, como no :meth:`cpopg`:
@@ -472,7 +472,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     # --- cposg ----------------------------------------------------------
 
-    def cposg(self, id_cnj: str, method: Literal["html"] = "html"):
+    def cposg(self, id_cnj: str, method: Literal["html"] = "html") -> pd.DataFrame:
         """Fetch a second-degree process by CNJ and return a DataFrame.
 
         ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e
@@ -537,7 +537,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             sleep_time=self.sleep_time,
         )
 
-    def cposg_parse(self, path: str):
+    def cposg_parse(self, path: str) -> pd.DataFrame:
         """Parse downloaded CPOSG files into a DataFrame.
 
         Com a coluna ``motivo_falha``, como no :meth:`cposg`: o arquivo que não

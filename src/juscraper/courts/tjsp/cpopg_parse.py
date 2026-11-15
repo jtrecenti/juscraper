@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from bs4.element import PreformattedString
 from tqdm import tqdm
@@ -427,19 +428,19 @@ def cpopg_parse_single_html(path: str) -> dict[str, pd.DataFrame]:
     }
 
 
-def get_cpopg_download_links(request):
+def get_cpopg_download_links(request: requests.Response) -> list[str]:
     """Return the download links for the listed processes."""
     text = request.text
     bsoup = BeautifulSoup(text, 'html.parser')
     lista = listagem_de_processos(bsoup)
-    links: list = []
+    links: list[str] = []
     if lista is None:
         id_tag = bsoup.find('form', {'id': 'popupSenha'})
         if id_tag is None:
             return links
         href = id_tag.get('action')
         if href is not None and 'show.do' in str(href):
-            links.append(href)
+            links.append(str(href))
     else:
         # A listagem também traz âncoras de interface, como o colapso
         # "Incidentes e recursos" (href="#"); só os links para show.do

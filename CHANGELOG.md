@@ -115,6 +115,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- TJSP `cjpg_parse`, `cpopg_parse`, `cposg` e `cposg_parse`: as assinaturas passam a anotar o retorno (`pd.DataFrame`, e `dict[str, pd.DataFrame]` no `cpopg_parse`), que o verificador de tipos via como `Any`.
 - `juscraper.core.exceptions.WafChallengeError` (TJPE `cpopg`): o atributo `bot_manager` passa a valer `"AWS WAF"`; antes, herdava o `"Akamai"` padrão de `BotChallengeBlockedError`, embora a mensagem já falasse do AWS WAF.
 - `BotChallengeBlockedError`, as subclasses (`WafChallengeError` e o `DesafioF5Error` do TRF6) e `InvalidJSONResponseError` passam a sobreviver a `pickle` e `copy`, com a mensagem e os atributos. Antes, `pickle.loads` levantava `TypeError`, porque o erro era recriado só com a mensagem; isso perdia o erro numa coleta rodada em `ProcessPoolExecutor`, inclusive dentro de `ColetaParcialError.falhas`.
 - TRF6: o construtor passa a recusar `max_captcha_attempts` menor que 1 (`ValueError`), que fazia todo CNJ sair `captcha_esgotado` sem consulta, e `max_captcha_attempts` ou `max_captcha_esgotado_seguidos` que não sejam inteiros (`TypeError`), como `"3"`, `2.5` ou `3.0`; inteiros do numpy continuam aceitos. Antes, esses valores eram aceitos ou falhavam só no meio do lote.
