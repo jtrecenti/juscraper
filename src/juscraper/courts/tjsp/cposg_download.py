@@ -58,9 +58,10 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
                 RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
             falhas[cnj] = motivo_do_processo(e)
-            continue
-        if path is None:
-            falhas[cnj] = MOTIVO_NAO_ENCONTRADO
+        else:
+            if path is None:
+                falhas[cnj] = MOTIVO_NAO_ENCONTRADO
+        # Também depois de um erro: o eSAJ bloqueia buscas em sequência rápida.
         time.sleep(sleep_time)
     avisar_processos_sem_arquivo(falhas, "TJSPScraper.cposg_download", "cposg os devolve no DataFrame")
     return falhas

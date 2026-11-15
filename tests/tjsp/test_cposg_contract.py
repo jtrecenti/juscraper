@@ -401,3 +401,21 @@ def test_cposg_pagina_que_nao_e_de_processo_sai_como_falha(tmp_path, mocker):
     assert df[["processo", "motivo_falha"]].to_dict("records") == [
         {"processo": CNJ, "motivo_falha": "resposta_inesperada"},
     ]
+
+
+@responses.activate
+def test_cposg_pausa_entre_processos_tambem_depois_de_um_erro(tmp_path, mocker):
+    """O processo que falha não encurta o intervalo até a busca seguinte: o eSAJ bloqueia buscas em sequência."""
+    pausas = mocker.patch("juscraper.courts.tjsp.cposg_download.time.sleep")
+    sem_conexao = "1000000-00.2024.8.26.0001"
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cposg/open.do",
+        body=requests.ConnectionError("recusada"),
+        match=[query_param_matcher({"gateway": "true"})],
+    )
+
+    with pytest.warns(UserWarning, match=f"{sem_conexao}: conexao"):
+        jus.scraper("tjsp", download_path=str(tmp_path), sleep_time=0.7).cposg_download([sem_conexao, sem_conexao])
+
+    assert [c.args for c in pausas.call_args_list] == [(0.7,), (0.7,)]

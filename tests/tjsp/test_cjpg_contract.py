@@ -18,6 +18,7 @@ Samples exercised:
 """
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
@@ -290,3 +291,35 @@ def test_cjpg_pagina_de_erro_no_meio_da_coleta_levanta_coleta_parcial(tmp_path, 
         jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
 
     assert len(erro.value.resultado) == 10
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjpg_pagina_com_status_de_erro_e_pedida_de_novo(tmp_path, mocker):
+    """Página 2 que volta 503 e depois 200 entra inteira: o erro passageiro não perde a página."""
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", status=503)
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", body=requests.ConnectionError("recusada"))
+    _add_trocar_de_pagina(2, "cjpg/results_normal_page_02.html")
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(df) == 20
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+def test_cjpg_pagina_que_falha_em_todas_as_tentativas_levanta_coleta_parcial(tmp_path, mocker):
+    """Página 2 com 500 em todas as tentativas não vira página vazia (#460): sobe com a página 1 lida.
+
+    Antes, o HTML da página de erro era gravado como a página 2 e lido sem
+    resultados, e o ``cjpg`` devolvia 10 decisões como se fossem todas.
+    """
+    mocker.patch("time.sleep")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
+    responses.add(responses.GET, f"{BASE}/trocarDePagina.do", body="<html>erro</html>", status=500)
+
+    with pytest.raises(ColetaParcialError, match=r"cjpg_00002\.html.*página 2 não baixada após 5 tentativas.*500"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
+
+    assert len(responses.calls) == 1 + 5
