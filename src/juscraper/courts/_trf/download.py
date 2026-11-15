@@ -12,9 +12,10 @@ A single ``cpopg`` lookup is three requests:
    — returns the full process detail page (latin-1 encoded).
 
 The three PJe ConsultaPública deployments share this flow byte-for-byte
-except for ``BASE_URL`` (per-tribunal), the classe form field (TRF1/TRF3 use
-the ``classeJudicial`` autocomplete + ``dataAutuacaoDecoration`` block; TRF5
-uses the ``classeProcessualProcessoHidden`` popup), and the tribunal name.
+except for ``BASE_URL`` (per-tribunal), the classe form field (all of them
+use the ``classeJudicial`` autocomplete + ``dataAutuacaoDecoration`` block; until
+November 2026 TRF5 used the ``classeProcessualProcessoHidden`` popup), and the
+tribunal name.
 Those vary via parameters injected by :class:`TRFConsultaScraper`, never via
 ``if tribunal == ...`` here.
 
@@ -121,9 +122,9 @@ def extract_form_field_ids(
 ) -> FormFieldIds:
     """Pull the dynamic ``j_idNNN`` IDs out of the form HTML.
 
-    ``classe_field_name`` selects the classe component: TRF1/TRF3 ship the
-    ``classeJudicial`` autocomplete, TRF5 the ``classeProcessualProcessoHidden``
-    popup picker — visually similar, different form field names.
+    ``classe_field_name`` selects the classe component: the deployments ship the
+    ``classeJudicial`` autocomplete; until November 2026 TRF5 shipped the
+    ``classeProcessualProcessoHidden`` popup picker instead.
     ``tribunal`` prefixes the error messages, since the family also serves TJPE.
     """
     def _find(pattern: str, label: str) -> str:

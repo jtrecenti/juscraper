@@ -2,8 +2,7 @@
 
 Same shape as ``tests/trf3/test_cpopg_contract.py``. Distinct from the TRF3
 suite to keep sample fixtures and matchers independent — TRF5 ships
-slightly different form field IDs (``j_id156`` vs ``j_id165``) and a
-``classeProcessual`` popup field instead of an autocomplete.
+different form field IDs (``j_id162`` vs ``j_id165``).
 """
 from __future__ import annotations
 
@@ -62,8 +61,12 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "0058457-31.2025.4.05.8000",
                     "AJAXREQUEST": "_viewRoot",
-                    "fPP:j_id224": "fPP:j_id224",
-                    "fPP:j_id183:classeProcessualProcessoHidden": "",
+                    "fPP:j_id244": "fPP:j_id244",
+                    # Desde 11/2026 o TRF5 usa o autocomplete ``classeJudicial``
+                    # e o bloco de datas, como o resto da família.
+                    "fPP:j_id189:classeJudicial": "",
+                    "fPP:j_id189:sgbClasseJudicial_selection": "",
+                    "fPP:dataAutuacaoDecoration:dataAutuacaoInicioInputDate": "",
                 },
             ),
         ],

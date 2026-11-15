@@ -2,8 +2,8 @@
 
 Absorbs the near-identical ``client.py`` modules of the three PJe
 ConsultaPública deployments (refs #84, #294). A concrete tribunal is a thin
-subclass that sets ``BASE_URL`` + ``TRIBUNAL_NAME`` (and, for TRF5, the
-classe form-field shape). Mirrors ``courts/_esaj/base.py``:
+subclass that sets ``BASE_URL`` + ``TRIBUNAL_NAME`` (and, when a deployment
+diverges, the classe form-field shape). Mirrors ``courts/_esaj/base.py``:
 
 * inherits :class:`HTTPScraper` (session + centralized retry/backoff, refs #281);
 * the only per-tribunal divergences are class attributes / one hook, never
@@ -67,8 +67,8 @@ class TRFConsultaScraper(HTTPScraper):
     TRIBUNAL_NAME: str = ""
     #: Pydantic schema validating ``cpopg`` kwargs (``extra="forbid"``).
     INPUT_CPOPG: type[BaseModel] = InputCpopgTRF
-    #: PJe classe form field. TRF1/TRF3 use the ``classeJudicial`` autocomplete;
-    #: TRF5 overrides with the ``classeProcessualProcessoHidden`` popup.
+    #: PJe classe form field. Every current deployment uses the ``classeJudicial``
+    #: autocomplete; a deployment with another component overrides it.
     CLASSE_FIELD_NAME: str = "classeJudicial"
 
     def __init__(
@@ -103,7 +103,7 @@ class TRFConsultaScraper(HTTPScraper):
 
         Default = TRF1/TRF3 shape: the ``classeJudicial`` autocomplete (with its
         paired ``sgbClasseJudicial_selection``) plus the ``dataAutuacaoDecoration``
-        date block. TRF5 overrides this with its single popup field.
+        date block. A deployment with another classe component overrides this.
         """
         return {
             f"fPP:{field_ids.classe}:classeJudicial": "",
