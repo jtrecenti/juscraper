@@ -32,12 +32,12 @@ from ...core.exceptions import BotChallengeBlockedError
 from ...core.http import HTTPScraper, RequestPolicy
 from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
-from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias
+from ...utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, resolve_deprecated_alias
 from .cjsg_download import PERFIL_CJSG, build_cjsg_session, cjsg_download_manager
 from .cjsg_parse import cjsg_parse_manager
 from .cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 from .download import API_HEADERS, BASE_URL_1G, BASE_URL_2G, baixar_documento, baixar_processo, token_valido
-from .parse import parse_processo
+from .parse import _itens, parse_processo
 from .schemas import InputCpopgTRF3, InputCposgTRF3
 
 logger = logging.getLogger("juscraper.trf3")
@@ -121,12 +121,7 @@ class TRF3Scraper(HTTPScraper):
         try:
             inp = schema(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
-            extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
-            if extras and len(extras) == len(exc.errors()):
-                names = ", ".join(repr(err["loc"][-1]) for err in extras)
-                raise TypeError(
-                    f"{type(self).__name__}.{endpoint} got unexpected keyword argument(s): {names}"
-                ) from exc
+            raise_on_extra_kwargs(exc, f"{type(self).__name__}.{endpoint}", schema_cls=schema)
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
         return [clean_cnj(c) for c in raw]
@@ -268,7 +263,7 @@ class TRF3Scraper(HTTPScraper):
             return None
         try:
             id_processo = bruto["busca"]["idProcesso"]
-            documentos = [doc for pagina in bruto.get("documentos") or [] for doc in pagina.get("result") or []]
+            documentos: list[object] = list(_itens(bruto.get("documentos") or []))
         except Exception as exc:  # noqa: BLE001 (resiliência por item)
             logger.warning("Peças do %s puladas: documentos fora do formato esperado: %s", cnj, exc)
             return None
@@ -277,8 +272,8 @@ class TRF3Scraper(HTTPScraper):
     def _baixar_peca(self, cnj: str, doc: object, proc_dir: Path, base_url: str, id_processo: str) -> str | None:
         """Grava o PDF de um documento e devolve o caminho; ``None`` quando a peça é pulada.
 
-        Bloqueio do Akamai e erro de gravação sobem; os demais erros viram
-        aviso no log.
+        Bloqueio do Akamai, dependência ausente e erro de gravação sobem; os
+        demais erros viram aviso no log.
         """
         id_documento = doc.get("id") if isinstance(doc, dict) else None
         if not token_valido(id_documento):
@@ -290,7 +285,7 @@ class TRF3Scraper(HTTPScraper):
             return None
         try:
             content = baixar_documento(self._request_with_retry, base_url, id_documento, id_processo)
-        except BotChallengeBlockedError:
+        except (BotChallengeBlockedError, ImportError):
             raise
         except Exception as exc:  # noqa: BLE001 (resiliência por peça)
             logger.warning("Erro ao baixar peça %s do %s: %s", id_documento, cnj, exc)
@@ -310,8 +305,9 @@ class TRF3Scraper(HTTPScraper):
         paginado) ou ``None`` para o CNJ que a consulta pública não devolveu
         ou cuja consulta falhou.
         """
-        cnjs = self._coerce_id_cnj(self.INPUT_CPOPG, "cpopg_download", id_cnj, **kwargs)
-        return self._download(cnjs, self.BASE_URL, "cpopg")
+        schema, base_url = self._alvo("cpopg")
+        cnjs = self._coerce_id_cnj(schema, "cpopg_download", id_cnj, **kwargs)
+        return self._download(cnjs, base_url, "cpopg")
 
     def cpopg_parse(
         self,
@@ -341,13 +337,7 @@ class TRF3Scraper(HTTPScraper):
             ValueError: ``brutos`` e ``id_cnj_list`` de tamanhos diferentes,
                 ou ``brutos`` e ``htmls`` passados juntos.
         """
-        # ``pop_deprecated_alias`` chamado daqui aponta o aviso para o código
-        # de quem chamou ``cpopg_parse``; via ``resolve_deprecated_alias`` o
-        # ``stacklevel`` fixo pararia neste arquivo.
-        if "htmls" in kwargs and brutos is not None:
-            raise ValueError("Não é possível passar 'brutos' e 'htmls' ao mesmo tempo. Use apenas 'brutos'.")
-        if "htmls" in kwargs:
-            brutos = pop_deprecated_alias(kwargs, "htmls", "brutos")
+        brutos = resolve_deprecated_alias(kwargs, "htmls", "brutos", brutos)
         if kwargs:
             names = ", ".join(repr(k) for k in kwargs)
             raise TypeError(f"{type(self).__name__}.cpopg_parse got unexpected keyword argument(s): {names}")
@@ -406,8 +396,9 @@ class TRF3Scraper(HTTPScraper):
         ``diretorio`` passam pela validação e são ignorados, porque este
         método não baixa peças.
         """
-        cnjs = self._coerce_id_cnj(self.INPUT_CPOSG, "cposg_download", id_cnj, **kwargs)
-        return self._download(cnjs, self.BASE_URL_2G, "cposg")
+        schema, base_url = self._alvo("cposg")
+        cnjs = self._coerce_id_cnj(schema, "cposg_download", id_cnj, **kwargs)
+        return self._download(cnjs, base_url, "cposg")
 
     def cposg_parse(self, brutos: list[dict[str, Any] | None], id_cnj_list: list[str]) -> pd.DataFrame:
         """Transforma a saída de :meth:`cposg_download` num DataFrame, uma linha por CNJ."""

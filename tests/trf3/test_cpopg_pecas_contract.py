@@ -336,6 +336,16 @@ def test_download_pecas_bloqueio_akamai_interrompe(tmp_path) -> None:
     assert sum(c.request.url == url_pdf for c in responses.calls) == 1
 
 
+@responses.activate
+def test_download_pecas_dependencia_ausente_interrompe(tmp_path, mocker) -> None:
+    """``ImportError`` no download de uma peça sobe, como no download do processo, em vez de pular cada peça."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    mocker.patch("juscraper.courts.trf3.client.baixar_documento", side_effect=ImportError("sem módulo"))
+
+    with pytest.raises(ImportError, match="sem módulo"):
+        jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+
+
 @pytest.mark.parametrize(
     "falha",
     [requests.ReadTimeout("sem resposta"), requests.ConnectionError("caiu")],
