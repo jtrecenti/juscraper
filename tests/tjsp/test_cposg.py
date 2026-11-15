@@ -158,6 +158,7 @@ class TestCPOSGUnit:
             'decisoes',
             'composicao',
             'primeira_inst',
+            'motivo_falha',
         ]
         assert row['id_original'] == '1234567-89.2025.8.26.0000'
         assert row['processo'] == '1234567-89.2025.8.26.0000'
@@ -330,6 +331,7 @@ class TestCPOSGUnit:
             'decisoes',
             'composicao',
             'primeira_inst',
+            'motivo_falha',
         ]
 
     def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):

@@ -550,7 +550,8 @@ def run_chunked_search(
         * Calls ``fetch_window(win_inicio, win_fim)`` for each window.
         * Captura :class:`Exception` por janela (KeyboardInterrupt/SystemExit propagam) e segue.
         * Concatena e deduplica por ``dedup_key`` se a coluna existir (``monocratica`` pode omiti-la).
-        * Se alguma janela falhou, levanta :class:`ColetaParcialError` com esse resultado parcial.
+        * Se alguma janela falhou, levanta :class:`ColetaParcialError` com esse resultado parcial;
+          a janela que já levantou ``ColetaParcialError`` entra nele com o seu ``.resultado``.
 
     Args:
         fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
@@ -612,6 +613,9 @@ def run_chunked_search(
             frames.append(fetch_window(win_i, win_f))
         except Exception as exc:  # noqa: BLE001 - vai para ColetaParcialError
             falhas.append((win_i, win_f, exc))
+            # Janela que já falhou em parte não perde o que leu.
+            if isinstance(exc, ColetaParcialError):
+                frames.append(exc.resultado)
 
     df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=[dedup_key])
     if dedup_key in df.columns:
@@ -619,8 +623,9 @@ def run_chunked_search(
     if falhas:
         resumo = resumir_falhas([f"{i} a {f}: {exc!r}" for i, f, exc in falhas], f"de {len(windows)} janela(s)")
         raise ColetaParcialError(
-            f"auto_chunk: {resumo} As {len(frames)} janela(s) que passaram estão no atributo .resultado "
-            "do erro; .falhas lista todas as que falharam.",
+            f"auto_chunk: {resumo} As {len(windows) - len(falhas)} janela(s) que passaram, e o que as "
+            "janelas com falha parcial leram, estão no atributo .resultado do erro; .falhas lista todas "
+            "as que falharam.",
             resultado=df,
             falhas=falhas,
         ) from falhas[0][2]

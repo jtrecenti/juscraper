@@ -5,16 +5,18 @@ import logging
 import re
 import time
 from pathlib import Path
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from ...core.avisos import avisar
+from ...core.failures import MOTIVO_ENTRADA_INVALIDA, MOTIVO_NAO_ENCONTRADO
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
+from ._falhas import avisar_processos_sem_arquivo, cnj_invalido, motivo_do_processo
 from .cpopg_download import _TIMEOUT
 
 logger = logging.getLogger('juscraper.cposg_download')
@@ -31,40 +33,37 @@ _CD_PROCESSO_MOVIMENTACOES = re.compile(r"cdProcessoMovimentacoes = '([^']+)'")
 def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=0.5):
     """
     Downloads the HTML of one or more processes from the CPOSG.
-    Returns a list of paths if list, or a single path if string.
 
-    Processo que a consulta de 2º grau não mostra ("Não existem informações
-    disponíveis") não gera arquivo e sai num ``UserWarning`` ao fim; se for o
-    único, a função devolve ``[]``.
+    Returns:
+        dict[str, str]: ``{CNJ formatado: motivo}`` dos processos que ficaram
+        sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
+        processo que a consulta de 2º grau não mostra ("Não existem
+        informações disponíveis") sai ``nao_encontrado``. Vazio quando todos
+        foram baixados. As falhas também saem num ``UserWarning``.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]
     # A pasta existe mesmo sem processo encontrado: sem ela, cposg_parse_manager
     # leria o download_path inteiro, inclusive os arquivos do cpopg.
     Path(download_path, 'cposg').mkdir(parents=True, exist_ok=True)
-    paths = []
-    nao_encontrados = []
+    falhas = {}
     for id_cnj in tqdm(id_cnj_list, desc="Baixando processos"):
+        cnj = format_cnj(id_cnj, strict=False)
+        if cnj_invalido(id_cnj):
+            falhas[cnj] = MOTIVO_ENTRADA_INVALIDA
+            continue
         try:
             path = _cposg_download_html_single(id_cnj, session, u_base, download_path)
         except (OSError, UnicodeDecodeError, ValueError, AttributeError,
                 RuntimeError, RespostaInesperadaError, requests.RequestException) as e:
             logger.error("Erro ao baixar o processo %s: %s", id_cnj, e)
+            falhas[cnj] = motivo_do_processo(e)
             continue
         if path is None:
-            nao_encontrados.append(id_cnj)
-        else:
-            paths.append(path)
+            falhas[cnj] = MOTIVO_NAO_ENCONTRADO
         time.sleep(sleep_time)
-    if nao_encontrados:
-        avisar(
-            f"cposg: a consulta de 2º grau não mostra {len(nao_encontrados)} processo(s), que fica(m) "
-            f"fora do resultado: {', '.join(nao_encontrados)}. O número pode não existir no 2º grau, "
-            "ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública."
-        )
-    if not paths and not nao_encontrados:
-        raise RuntimeError("Nenhum processo foi baixado com sucesso.")
-    return paths if len(paths) != 1 else paths[0]
+    avisar_processos_sem_arquivo(falhas, "TJSPScraper.cposg_download", "cposg os devolve no DataFrame")
+    return falhas
 
 
 def _cposg_download_html_single(id_cnj, session, u_base, download_path):
@@ -89,48 +88,56 @@ def _cposg_download_html_single(id_cnj, session, u_base, download_path):
         'uuidCaptcha': '',
         'pbEnviar': 'Pesquisar'
     }
-    r = session.get(u, params=params, timeout=_TIMEOUT)
+    r = _get(session, u, params=params)
     soup = BeautifulSoup(r.text, 'html.parser')
     if _sem_informacoes(soup, id_format):
         return None
-    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
-    path = f"{download_path}/cposg/{id_clean}"
-    if not Path(path).is_dir():
-        Path(path).mkdir(parents=True)
-    # 3. Tratar tipos de resposta
-    # Caso 1: listagem de processos
-    if soup.find('div', id='listagemDeProcessos'):
-        links = [str(a['href']) for a in soup.select('a.linkProcesso')]
-        for link in links:
-            codigos = parse_qs(urlparse(link).query).get('processo.codigo', [])
-            if not codigos:
-                raise RuntimeError(f"Link sem 'processo.codigo': {link}")
-            codigo = codigos[0]
-            safe_codigo = safe_path_component(codigo, field="processo.codigo")
-            show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url, timeout=_TIMEOUT).text, session, u_base, id_format)
-            file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
-            with file_name.open('w', encoding='utf-8') as f:
-                f.write(html)
-    # Caso 2: incidentes/modal
-    elif soup.find('div', id='modalIncidentes'):
-        codigos = [str(i['value']) for i in soup.select('input#processoSelecionado')]
+    codigos = _codigos_da_busca(soup)
+    if codigos is None:
+        # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao
+        # de processo.codigo como nos casos 1/2), dai field="cdProcesso".
+        documentos = {
+            parse_cd_processo(r.text) or "simples": _incluir_movimentacoes(r.text, session, u_base, id_format),
+        }
+    else:
+        documentos = {}
         for codigo in codigos:
             safe_codigo = safe_path_component(codigo, field="processo.codigo")
-            show_url = f"{u_base}cposg/show.do?processo.codigo={codigo}"
-            html = _incluir_movimentacoes(session.get(show_url, timeout=_TIMEOUT).text, session, u_base, id_format)
-            file_name = Path(path) / f"{id_clean}_cd_processo_{safe_codigo}.html"
-            with file_name.open('w', encoding='utf-8') as f:
-                f.write(html)
-    # Caso 3: resposta simples — o id vem do input[name=cdProcesso] (nao de
-    # processo.codigo como nos casos 1/2), dai field="cdProcesso".
-    else:
-        codigo_part = parse_cd_processo(r.text) or "simples"
-        html = _incluir_movimentacoes(r.text, session, u_base, id_format)
-        file_name = Path(path) / f"{id_clean}_cd_processo_{codigo_part}.html"
-        with file_name.open('w', encoding='utf-8') as f:
-            f.write(html)
-    return path
+            pagina = _get(session, f"{u_base}cposg/show.do?processo.codigo={codigo}").text
+            documentos[safe_codigo] = _incluir_movimentacoes(pagina, session, u_base, id_format)
+    if not documentos:
+        raise RuntimeError(f"Processo {id_format}: a busca não listou nenhum processo.")
+    # Os arquivos só são gravados depois do último documento: a falha de um
+    # incidente não deixa os outros na pasta, lidos como o processo completo.
+    # id_clean vem de clean_cnj (so digitos), seguro como componente de path.
+    path = Path(download_path, 'cposg', id_clean)
+    path.mkdir(parents=True, exist_ok=True)
+    for codigo, html in documentos.items():
+        (path / f"{id_clean}_cd_processo_{codigo}.html").write_text(html, encoding='utf-8')
+    return str(path)
+
+
+def _codigos_da_busca(soup):
+    """``processo.codigo`` da listagem (caso 1) ou do modal de incidentes (caso 2); ``None`` fora dos dois."""
+    if soup.find('div', id='listagemDeProcessos'):
+        codigos = []
+        for a in soup.select('a.linkProcesso'):
+            link = str(a['href'])
+            codigo = parse_qs(urlparse(link).query).get('processo.codigo', [])
+            if not codigo:
+                raise RuntimeError(f"Link sem 'processo.codigo': {link}")
+            codigos.append(codigo[0])
+        return codigos
+    if soup.find('div', id='modalIncidentes'):
+        return [str(i['value']) for i in soup.select('input#processoSelecionado')]
+    return None
+
+
+def _get(session: requests.Session, url: str, **kwargs: Any) -> requests.Response:
+    """GET com o timeout do eSAJ; status de erro levanta ``requests.HTTPError``, e a página não vira processo."""
+    resposta: requests.Response = session.get(url, timeout=_TIMEOUT, **kwargs)
+    resposta.raise_for_status()
+    return resposta
 
 
 def _sem_informacoes(soup, id_cnj):

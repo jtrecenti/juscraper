@@ -46,6 +46,9 @@ ESAJ_BASE = "https://esaj.tjsp.jus.br/"
 # If it disappears from the TJSP index, pass --cnj to override.
 DEFAULT_CNJ = "1000149-71.2024.8.26.0346"
 
+# Número sem processo no TJSP, para a busca "Não existem informações disponíveis".
+CPOPG_CNJ_INEXISTENTE = "0000001-12.2024.8.26.0100"
+
 
 def _clean_cnj(cnj: str) -> str:
     """Strip non-digit characters from a CNJ. Mirrors ``utils.cnj.clean_cnj``."""
@@ -192,6 +195,18 @@ def capture_cpopg_html(cnj: str) -> None:
     r_search.raise_for_status()
     dump(dest / "search.html", r_search.content)
     print(f"[tjsp] cpopg html search for {cnj} → saved")
+
+    # Número sem processo: "Não existem informações disponíveis" (#460).
+    params_inexistente = {
+        **params,
+        "numeroDigitoAnoUnificado": "0000001-12.2024",
+        "foroNumeroUnificado": "0100",
+        "dadosConsulta.valorConsultaNuUnificado": CPOPG_CNJ_INEXISTENTE,
+    }
+    r_inexistente = session.get(f"{ESAJ_BASE}cpopg/search.do", params=params_inexistente, timeout=60)
+    r_inexistente.raise_for_status()
+    dump(dest / "search_sem_informacoes.html", r_inexistente.content)
+    print(f"[tjsp] cpopg html search for {CPOPG_CNJ_INEXISTENTE} → saved")
 
     # parse the search response to discover the processo.codigo param
     # (simplified: regex over the HTML; scraper uses BeautifulSoup but we

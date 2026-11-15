@@ -242,8 +242,8 @@ class TestCPOPGUnit:
 
         assert str(tmp_path) in str(excinfo.value)
 
-    def test_cpopg_parse_manager_all_files_failing_raises(self, tmp_path, capsys):
-        """A directory whose every candidate fails to parse reports the failure count."""
+    def test_cpopg_parse_manager_all_files_failing_raises(self, tmp_path):
+        """A directory whose every candidate fails to parse reports the failure count and the first error."""
         quebrado = tmp_path / 'quebrado.html'
         quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
 
@@ -251,21 +251,28 @@ class TestCPOPGUnit:
             cpopg_parse_manager(str(tmp_path))
 
         assert str(tmp_path) in str(excinfo.value)
-        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+        assert 'Primeiro erro, em quebrado.html' in str(excinfo.value)
 
-    def test_cpopg_parse_manager_skips_broken_file(self, tmp_path, capsys):
-        """One readable file is enough: broken files are printed and skipped."""
-        valido = tmp_path / 'show_standard.html'
+    def test_cpopg_parse_manager_broken_file_becomes_failure_row(self, tmp_path):
+        """A broken file next to a readable one keeps a row with motivo_falha and goes into a warning."""
+        pasta = tmp_path / '10093677620178260344'
+        pasta.mkdir()
+        valido = pasta / 'show_standard.html'
         valido.write_text(load_sample('tjsp', 'cpopg/show_standard.html'), encoding='utf-8')
-        quebrado = tmp_path / 'quebrado.html'
+        quebrado = pasta / 'quebrado.html'
         quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
 
-        result = cpopg_parse_manager(str(tmp_path))
+        with pytest.warns(UserWarning, match=r'cpopg_parse: 1 leitura\(s\) de arquivo falharam.*quebrado\.html'):
+            result = cpopg_parse_manager(str(tmp_path))
 
         assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
-        assert result['basicos']['file_path'].tolist() == [str(valido)]
-        assert result['basicos'].iloc[0]['id_processo'] == '1009367-76.2017.8.26.0344'
-        assert f'Erro ao processar o arquivo {quebrado}' in capsys.readouterr().out
+        basicos = result['basicos']
+        assert basicos[['file_path', 'id_processo', 'motivo_falha']].to_dict('records') == [
+            {'file_path': str(valido), 'id_processo': '1009367-76.2017.8.26.0344', 'motivo_falha': None},
+            {'file_path': str(quebrado), 'id_processo': '1009367-76.2017.8.26.0344',
+             'motivo_falha': 'resposta_inesperada'},
+        ]
+        assert basicos.iloc[1].drop(['file_path', 'id_processo', 'motivo_falha']).isna().all()
 
     def test_cpopg_parse_empty_file(self):
         """Test parsing an empty CPOPG HTML file."""

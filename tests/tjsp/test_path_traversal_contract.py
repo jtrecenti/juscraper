@@ -94,14 +94,17 @@ def test_cpopg_html_lote_continua_apos_codigo_malicioso(tmp_path, mocker):
         "1000000-00.2024.8.26.0002",
     ]
 
-    cpopg_download_html(
-        cnjs,
-        sessao,
-        ESAJ + "/",
-        str(tmp_path),
-        0,
-        extrair,
-    )
+    with pytest.warns(UserWarning, match=r"1 consulta\(s\) de processo falharam"):
+        falhas = cpopg_download_html(
+            cnjs,
+            sessao,
+            ESAJ + "/",
+            str(tmp_path),
+            0,
+            extrair,
+        )
+
+    assert falhas == {"1000000-00.2024.8.26.0001": "resposta_inesperada"}
 
     primeiro = tmp_path / "cpopg" / CNJ_DIGITS
     terceiro = tmp_path / "cpopg" / "10000000020248260002"

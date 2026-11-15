@@ -595,6 +595,27 @@ class TestRunChunkedSearch:
         assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2023", "31/12/2023")]
         assert isinstance(erro.__cause__, RuntimeError)
 
+    def test_janela_com_coleta_parcial_entra_no_resultado_com_o_que_leu(self):
+        """Janela que leu parte das páginas (cjpg do TJSP, #460) é falha, mas o lido não se perde."""
+        def fetch(i, f):
+            if i == "01/01/2023":
+                raise ColetaParcialError(
+                    "1 página perdida", resultado=pd.DataFrame({"cd_acordao": ["lida-2023"]}), falhas=[],
+                )
+            return pd.DataFrame({"cd_acordao": [f"a-{i}"]})
+
+        with pytest.raises(ColetaParcialError, match=r"1 de 3 janela.*As 2 janela\(s\) que passaram") as exc_info:
+            run_chunked_search(
+                fetch,
+                data_inicio="01/01/2022",
+                data_fim="31/12/2024",
+                dedup_key="cd_acordao",
+                max_anos=1,
+            )
+        erro = exc_info.value
+        assert list(erro.resultado["cd_acordao"]) == ["a-01/01/2022", "lida-2023", "a-01/01/2024"]
+        assert [(i, f) for i, f, _ in erro.falhas] == [("01/01/2023", "31/12/2023")]
+
     def test_coleta_parcial_sobrevive_a_pickle_e_copy(self):
         import copy
         import pickle
