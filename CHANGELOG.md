@@ -1,5 +1,6 @@
 # Changelog
 
+- TJRR `cjsg` e `cjsg_download`: a segunda busca na mesma instância deixa de devolver, sem aviso, os resultados da busca anterior. O portal guarda a última busca na sessão (`JSESSIONID`) e, com ela, ignorava a busca nova, inclusive os filtros de data; cada busca passa a começar numa sessão nova. Se o portal ainda assim responder sem o formulário de busca, a busca levanta `RuntimeError`, em vez de repetir os resultados antigos.
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
