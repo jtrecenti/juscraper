@@ -4,6 +4,9 @@ Most tests characterize behavior kept from the original parser. The tests on
 the ``/TJSC`` suffix and on ``DECISÃO`` lock fixes: they fail against the
 parser that predates them.
 """
+import datetime
+
+import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
@@ -89,8 +92,39 @@ def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
 
     ``partial-labels`` and ``truncated-pairs`` are dropped; the other four stay.
     """
-    df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
+    with pytest.warns(UserWarning, match="2 registro"):
+        df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
 
     assert len(_sample_items()) == 6
     assert len(df) == 4
     assert df[["processo", "ementa"]].notna().any(axis=1).all()
+
+
+def test_cjsg_parse_manager_reads_process_number_without_link():
+    """Registro sem link ``a.numero-processo`` traz o número como texto (#495).
+
+    Sample real: acórdão do Conselho da Magistratura, julgado em 09/07/2027
+    segundo o portal, que mostra ``0000.14.36.787202-3/TJSC`` sem link.
+    """
+    df = cjsg_parse_manager([load_sample("tjsc", "cjsg/processo_sem_link.html", encoding="latin-1")])
+
+    assert df["processo"].tolist() == ["0000.14.36.787202-3"]
+    assert df["data_julgamento"].tolist() == [datetime.date(2027, 7, 9)]
+
+
+def test_cjsg_parse_manager_warns_when_process_number_is_missing():
+    """Sem link nem texto ``/TJSC``, a linha fica sem processo e há aviso."""
+    html = """
+    <div class="resultadoItem">
+      <div class="resLabel">PROCESSO</div>
+      <div class="resValue"><span>422070 - Recurso Administrativo</span></div>
+      <div class="resLabel">EMENTA</div>
+      <div class="resValue">Ementa sem número</div>
+    </div>
+    """
+
+    with pytest.warns(UserWarning, match="1 registro\\(s\\) sem número de processo"):
+        df = cjsg_parse_manager([html])
+
+    assert df["ementa"].tolist() == ["Ementa sem número"]
+    assert "processo" not in df.columns

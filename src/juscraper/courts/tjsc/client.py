@@ -1,12 +1,13 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
-from typing import Any, Literal
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import cjsg_download_manager
+from .download import PERFIL_CJSG, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJSC
 
@@ -18,6 +19,11 @@ class TJSCScraper(HTTPScraper):
     """
 
     BASE_URL = "https://eprocwebcon.tjsc.jus.br"
+
+    #: O portal derruba às vezes a conexão keep-alive reaproveitada.
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        PERFIL_CJSG: RequestPolicy(retry_on_connection_error=True),
+    }
 
     def __init__(
         self,
@@ -78,6 +84,14 @@ class TJSCScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
             RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
+            requests.ConnectionError: Quando o portal derruba a conexao em
+                todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com
+                ``politica={"cjsg": {...}}`` no construtor).
+
+        Avisos:
+            ``UserWarning``: Quando algum registro sai sem numero de processo
+                (nem link nem texto ``<numero>/TJSC``); a coluna ``processo``
+                fica vazia nessas linhas.
 
         Returns:
             pd.DataFrame: DataFrame com as decisoes.

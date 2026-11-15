@@ -6,6 +6,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from juscraper.core.avisos import avisar
 from juscraper.utils.cnj import format_cnj
 
 _FIELD_MAP = {
@@ -62,14 +63,28 @@ def _extract_class(value) -> str | None:
     return None
 
 
+def _raw_process_number(value) -> str | None:
+    """Return the process number without the ``/TJSC`` suffix, or ``None``.
+
+    O número costuma vir no link ``a.numero-processo``. Alguns registros (acórdãos
+    do Conselho da Magistratura, por exemplo) trazem só o texto ``<número>/TJSC``,
+    sem link. Tirar o sufixo antes de formatar vale também para números antigos
+    fora do padrão CNJ, que format_cnj devolve crus.
+    """
+    link = value.find("a", class_="numero-processo")
+    if link:
+        return str(link.get_text(strip=True)).removesuffix("/TJSC")
+    for text in value.stripped_strings:
+        if text.endswith("/TJSC"):
+            return str(text).removesuffix("/TJSC")
+    return None
+
+
 def _extract_process_fields(value) -> dict[str, str]:
     """Extract the linked process number and the adjacent class description."""
     fields = {}
-    link = value.find("a", class_="numero-processo")
-    if link:
-        # O eproc anexa "/TJSC" ao número. Tirar o sufixo antes de formatar vale
-        # também para números antigos fora do padrão CNJ, que format_cnj devolve crus.
-        raw_process = link.get_text(strip=True).removesuffix("/TJSC")
+    raw_process = _raw_process_number(value)
+    if raw_process:
         fields["processo"] = format_cnj(raw_process, strict=False) or raw_process
     process_class = _extract_class(value)
     if process_class is not None:
@@ -120,6 +135,13 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         registro = _parse_result_item(item)
         if registro and ("ementa" in registro or "processo" in registro):
             registros.append(registro)
+
+    sem_processo = sum("processo" not in registro for registro in registros)
+    if sem_processo:
+        avisar(
+            f"TJSC cjsg: {sem_processo} registro(s) sem número de processo "
+            "reconhecível; a coluna 'processo' fica vazia nessas linhas."
+        )
 
     df = pd.DataFrame(registros)
     if df.empty:
