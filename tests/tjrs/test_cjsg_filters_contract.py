@@ -76,20 +76,24 @@ def test_cjsg_aceita_date_e_datetime_nos_filtros_de_data(mocker):
     assert isinstance(df, pd.DataFrame)
 
 
-@pytest.mark.parametrize(("secao", "no_body"), [("CIVEL", "civel"), ("Crime", "crime"), ("", None)])
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    ("secao", "no_body"),
+    [("CIVEL", "civel"), ("Cível", "civel"), (" crime ", "crime"), ("", None)],
+)
 @responses.activate
-def test_cjsg_secao_ignora_caixa_e_vazio_nao_filtra(mocker, secao, no_body):
-    """``secao`` ignora a caixa, e ``""`` não filtra, como antes da validação."""
+def test_cjsg_secao_ignora_caixa_e_acento_e_vazio_nao_filtra(mocker, metodo, secao, no_body):
+    """``secao`` ignora caixa, acento e espaços nas pontas; ``""`` não filtra."""
     mocker.patch("time.sleep")
     _add_page("dano moral", 1, "cjsg/no_results.json", secao=no_body)
 
-    df = jus.scraper("tjrs").cjsg("dano moral", paginas=1, secao=secao)
+    getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, secao=secao)
 
-    assert isinstance(df, pd.DataFrame)
+    assert len(responses.calls) == 1
 
 
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
-@pytest.mark.parametrize("secao", ["cível", "familia"])
+@pytest.mark.parametrize("secao", ["familia", "civil", "todas"])
 @responses.activate
 def test_cjsg_secao_fora_de_civel_e_crime_levanta(metodo, secao):
     """Seção desconhecida falha antes da busca, em vez de cobrir as duas em silêncio."""

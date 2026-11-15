@@ -72,10 +72,9 @@ def build_cjsg_inner_payload(
         "facet_mes_ano_publicacao": "",
     }
     if secao:
-        secao_map = {"civel": "C", "crime": "P"}
-        valor = secao_map.get(secao.lower())
-        if valor:
-            payload["filtroSecao"] = valor
+        # ``secao`` chega validada por ``InputCJSGTJRS``: valor fora do mapa
+        # é erro de programação e deve falhar, não sumir do filtro.
+        payload["filtroSecao"] = {"civel": "C", "crime": "P"}[secao]
     return payload
 
 

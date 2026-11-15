@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import ClassVar, Literal
 
 from pydantic import field_validator
+from unidecode import unidecode
 
 from ...schemas import (
     DataJulgamentoMixin,
@@ -48,12 +49,13 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
 
     @field_validator("secao", mode="before")
     @classmethod
-    def _secao_minuscula(cls, valor: object) -> object:
+    def _normalizar_secao(cls, valor: object) -> object:
         # O download sempre ignorou a caixa e tratou ``""`` como ausência de
-        # filtro. Qualquer outro valor caía fora do mapa e a busca cobria as
+        # filtro; o acento de "cível" e espaços nas pontas também não mudam
+        # a seção. Qualquer outro valor caía fora do mapa e a busca cobria as
         # duas seções em silêncio; agora o ``Literal`` o recusa.
         if isinstance(valor, str):
-            return valor.lower() or None
+            return unidecode(valor).strip().lower() or None
         return valor
 
 
