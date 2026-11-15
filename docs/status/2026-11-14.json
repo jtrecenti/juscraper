@@ -1,0 +1,755 @@
+{
+  "data": "2026-11-14",
+  "codigo_testado": "38bb88fcaa7f6b509b0e836cb317468ba29e7110",
+  "versao_juscraper": "0.5.0",
+  "ambiente": {
+    "sistema": "macOS",
+    "python": "3.15.2",
+    "rede": "Wi-Fi residencial; nenhuma conexão VPN ativa na inspeção local"
+  },
+  "metodo": "Reamostra dos dois endpoints registrados como indisponíveis por incompatibilidade do código com a página e corrigidos na main depois de 14/10/2026: TJSP cposg (movimentações por Ajax, #528) e TJMT cjsg (configuração da API, #519 e #526). Consultas pela API pública do pacote, importado do código testado, que é a main mesclada no ramo do PR. Os mesmos parâmetros do cenário anterior, em sequência, sem repetição. As datas UTC caem em 15/11; a data do relatório é a local (UTC-3). Nenhuma chamada de JusBR ou PDPJ e nenhum token pessoal usado.",
+  "validacao": "DataFrame não vazio, presença das colunas listadas em cada tentativa e pelo menos um valor preenchido nos campos indicados. Essa checagem não prova completude, paginação adicional nem funcionamento de filtros não exercitados.",
+  "evidencia": "Inclui parâmetros, horários UTC, formato dos retornos, contagens de preenchimento, status HTTP e hashes SHA-256 das respostas. Corpos de respostas, textos judiciais, nomes de partes, credenciais, IPs e nomes de redes locais não são republicados.",
+  "resumo": {
+    "funcionando": 2
+  },
+  "endpoints_publicos_consultados": 2,
+  "resultados": [
+    {
+      "fonte": "tjsp",
+      "endpoint": "cposg",
+      "estado": "funcionando",
+      "motivo": "As consultas HTML pelos dois CNJs retornaram 1 e 2 registros, com processo e classe preenchidos; as movimentações vieram pela rota Ajax carregarMovimentacoes. Colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjsp').cposg(id_cnj='1000149-71.2024.8.26.0346', method='html'); depois jus.scraper('tjsp').cposg(id_cnj='00221752420038260344', method='html'). Somente os parâmetros informados, sem validar outros processos ou filtros",
+      "tentativas": [
+        {
+          "fonte": "tjsp",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "1000149-71.2024.8.26.0346",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-11-15T00:41:16.848398+00:00",
+          "versao": "0.5.0",
+          "retorno": {
+            "linhas": 1,
+            "colunas": [
+              "id_original",
+              "processo",
+              "status",
+              "classe",
+              "assunto",
+              "secao",
+              "orgao_julgador",
+              "area",
+              "relator",
+              "valor_da_acao",
+              "origem",
+              "volume_apenso",
+              "movimentacoes",
+              "partes",
+              "historico",
+              "decisoes",
+              "composicao",
+              "primeira_inst"
+            ],
+            "preenchidos": {
+              "processo": 1,
+              "classe": 1
+            }
+          },
+          "checagem": "aprovada",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49023,
+              "sha256": "905adf9df8d00b757609af3572b8b138dc48d7184e09ecacab8e5f9129b2180a"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/open.do",
+              "status": 302,
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49023,
+              "sha256": "905adf9df8d00b757609af3572b8b138dc48d7184e09ecacab8e5f9129b2180a"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/search.do",
+              "status": 200,
+              "bytes": 50014,
+              "sha256": "a0877a2a031d9f495db8568685884f6c2f581c46ccf950fdfa7aebb8045e9244"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 5942,
+              "sha256": "4676d4d0229ff3563835b803c8d17ea27e6ed7c692df620be4422f35f4e6968b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 5249,
+              "sha256": "4593e3c1a6bff81b69ab53612248260ffff02e64d57fb6c5a1c91307e1afef6c"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3826,
+              "sha256": "94faa6c09ce8ec2cb4efd8ede097601fddf237c009a56f2f2f70c8c924e97f6b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3975,
+              "sha256": "b17d3b0cdb3980f22804bed683ec57cc51eb551e7b89e5fdee9c38b0c64449d9"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3056,
+              "sha256": "a148d4d293b937520b9d92f0d3a0592b336bb478f176589b40241004112fbe46"
+            }
+          ],
+          "duracao_segundos": 2.47,
+          "fim_utc": "2026-11-15T00:41:19.316470+00:00"
+        },
+        {
+          "fonte": "tjsp",
+          "endpoint": "cposg",
+          "parametros": {
+            "id_cnj": "00221752420038260344",
+            "method": "html"
+          },
+          "colunas_exigidas": [
+            "processo",
+            "classe"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "classe"
+          ],
+          "inicio_utc": "2026-11-15T00:41:19.316692+00:00",
+          "versao": "0.5.0",
+          "retorno": {
+            "linhas": 2,
+            "colunas": [
+              "id_original",
+              "processo",
+              "status",
+              "classe",
+              "assunto",
+              "secao",
+              "orgao_julgador",
+              "area",
+              "relator",
+              "valor_da_acao",
+              "origem",
+              "volume_apenso",
+              "movimentacoes",
+              "partes",
+              "historico",
+              "decisoes",
+              "composicao",
+              "primeira_inst"
+            ],
+            "preenchidos": {
+              "processo": 2,
+              "classe": 2
+            }
+          },
+          "checagem": "aprovada",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49023,
+              "sha256": "2197c0d7b81e872266342a3bdba78bc8b654fd2daf3c5770a379f1668d14d1bb"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/open.do",
+              "status": 302,
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/sajcas/login",
+              "status": 200,
+              "bytes": 49023,
+              "sha256": "2197c0d7b81e872266342a3bdba78bc8b654fd2daf3c5770a379f1668d14d1bb"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/search.do",
+              "status": 200,
+              "bytes": 38861,
+              "sha256": "4c90756ac718a5d66da0fe7b3cb6ea03a683b23bade42652a8748b7bfc56c0cb"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/show.do",
+              "status": 200,
+              "bytes": 52737,
+              "sha256": "556987b5c0a34892e02dfadca53a4187e940fd037c976720a23c5e53b1de05a4"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4457,
+              "sha256": "922b3192733c9dc13a98be0bb3d318f25c2e103aa9207c9085a9b754da50e441"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4521,
+              "sha256": "6fded2f359aaae021398226373a3e6fb34c18dc37f1763623edb733030df540c"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3909,
+              "sha256": "88335c2170b981fa8a7db5e0573c6cc63c808f3078fe0b50e0d1ef12822a6eca"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3776,
+              "sha256": "cd4b497b1ca07751461dcf6fd819853e4ba4183e865d787d4a0b8a15a73b170d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4528,
+              "sha256": "1b9f969ad535c1afdb48d709adc058048eb812d73645b3634bb260e5ab33721b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3730,
+              "sha256": "b06d5f43ea56b286692c30f281d5b3f8236784edb7365272c7bcbfd533b3c42e"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3766,
+              "sha256": "db8f8c7d4e64f6910edd3262509f155898d68d51e24eddb662ca4b73ada4b07a"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3820,
+              "sha256": "496c4a0afc5356ab4192fe2a095128a6b20a5a684cdc0cbd4db7ecb9a2199e39"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4725,
+              "sha256": "d782eff13af6f8048099f4c612aa69a891c1a165d9b8bafb96cdbb034cc66394"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3463,
+              "sha256": "bd358328275d8a5563e5ee0c70a5e815f510cb2a3cb21ef1fbe05c5bd8ab41e5"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3702,
+              "sha256": "859a3a053d9234e8622db7d3f691c9b93ec30ef66518a0ceb930049be6b3f9e9"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4914,
+              "sha256": "d23dc8f0d9738b2083160d2127ac7a0a75e66fefaefd7ef2dc58db6dc55afa8a"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3559,
+              "sha256": "ec4bc9edb10904181991a01be0d3dd109e2561e507013d2ea79974441cb58610"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3793,
+              "sha256": "7a0e5ef1da1b766dc7218112aa398f5997ccb98fb83bd3f4d5d391bd316fca80"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 6950,
+              "sha256": "1de21557c93a960f2e628924eaa2e47cadd3221ddc21dec7ad0f2344231e5f29"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3740,
+              "sha256": "c2a6eafb0da148381f2457b04597ec66540c865b80c3cbc522b0cf3cda83e307"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4092,
+              "sha256": "ee8653f7df1aeffefdfd375ddca8279f1f83b8a48fe126b61dfaf051f9e02ee4"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3650,
+              "sha256": "45f9221a771281c8cd43a2dc3ca433d07c4d91b80e1797bccee9cc599290ac41"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4359,
+              "sha256": "64b831436c19f173415f7d595e2808a077623810ccb38f3cff2a29f8c90af0e0"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3522,
+              "sha256": "e5aed846000b14b9d8a1a941e3b0020ecfb58447ec16468eb64fc79acb65c38e"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4132,
+              "sha256": "abfb66e51baf5b33988c2fd5f2fafb804010862b60a74cdeb5dd884786444d23"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3617,
+              "sha256": "7b0f2bdfef6e3edc1c15498c88f9f305dba13aeca185c4461c886fdf6939840b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3616,
+              "sha256": "fe77644dee7e2efc29ca5bc523a8d69e321d4db45efad8ee0b9794a5dbc23c9b"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3576,
+              "sha256": "de9296251a489b47de24025f81d9ac9357c4defdfd27ee9a545ca4281e36db4d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 828,
+              "sha256": "966794d7a6681b6d0b5721061833d870ce4e93b35b73c9ec858fb95b8271d441"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/show.do",
+              "status": 200,
+              "bytes": 51826,
+              "sha256": "e3a4b02fdbc4f6064ceca638d261a635e73b2b7648d442b119280e74dbb41b41"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4708,
+              "sha256": "d07cf8732b9b70708eea18866888fdb9a3f78165ac31d8e3776027ea5d4fb503"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 5367,
+              "sha256": "6e3358e06dd691516f9b673b7247f1e23213fc456fc733496429d1bc2d9ab7f5"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4744,
+              "sha256": "7f3b1b18c97b816fb1d1e726c0e42085a403196e549f90e9f0dd9789ca09d973"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3690,
+              "sha256": "68b5680e874edda577414f30becc6d92005775134fa33e59ce25af759bf75920"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3552,
+              "sha256": "7ae3c95221fcce2a120d51926c565689a7785d983a1ab8f7996f5b60dd21ea51"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3593,
+              "sha256": "1a76cbc88a5c354eca26b13d978b070fa44633c788439fde2cf4d90ea7016c55"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 5207,
+              "sha256": "09f01594745a427affb8fa6879a56a3c69b8f49ab9c34e03366db645914d2826"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4000,
+              "sha256": "5104d987b5afcb7f4f8f98b7c3fa5e2924644cc35d34c852f1e4005e9eb09bb9"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4306,
+              "sha256": "253ac4eb5246281771793c4e393f1f30d021a631a4841c62ef315b5735b761a6"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3637,
+              "sha256": "9b15e6f8095e29b5bdbf3ea4a325c0bd943e4222acd0153492dae641942c2bb0"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3686,
+              "sha256": "caadf0139ee28b6157761bf2012849d425a2e8529e400bccecdf8b6904499bc3"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 6103,
+              "sha256": "34793dcb6290c3a72c78ef651b97c6a8c4c097f722f26ca7fd3ce537210bd8c9"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4487,
+              "sha256": "d355d08f8cfc1bd2a7c4c6e9785adaa15b682a3db09a28d22f05b8b6551919a4"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 5416,
+              "sha256": "97a74b5a79b9148ab4dac020205466848445775e91360bd3c60d0ac6c29e68db"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 4984,
+              "sha256": "a62085726e4d0e16fa4ca6d8f866d11cbce691746805c7135a90b19627c423d2"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3695,
+              "sha256": "effd0be1bea8168678335584db8d4426695680d5b87c78f10dfb76a2907983f3"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://esaj.tjsp.jus.br",
+              "caminho": "/cposg/carregarMovimentacoesAjax.do",
+              "status": 200,
+              "bytes": 3685,
+              "sha256": "0e85a630ed1deb3148cdb249a57016d298055a0421fe42b1e771b665cb28096a"
+            }
+          ],
+          "duracao_segundos": 2.25,
+          "fim_utc": "2026-11-15T00:41:21.564974+00:00"
+        }
+      ]
+    },
+    {
+      "fonte": "tjmt",
+      "endpoint": "cjsg",
+      "estado": "funcionando",
+      "motivo": "Retornou 10 registros, com processo e ementa preenchidos; colunas exigidas e preenchimento mínimo conferidos no cenário informado.",
+      "cenario": "macOS local, Wi-Fi residencial sem VPN ativa; jus.scraper('tjmt').cjsg(pesquisa='direito', paginas=1). Somente a primeira página, sem validação de paginação adicional ou de outros filtros",
+      "tentativas": [
+        {
+          "fonte": "tjmt",
+          "endpoint": "cjsg",
+          "parametros": {
+            "pesquisa": "direito",
+            "paginas": 1
+          },
+          "colunas_exigidas": [
+            "processo",
+            "ementa"
+          ],
+          "preenchimento_exigido": [
+            "processo",
+            "ementa"
+          ],
+          "inicio_utc": "2026-11-15T00:41:21.565434+00:00",
+          "versao": "0.5.0",
+          "retorno": {
+            "linhas": 10,
+            "colunas": [
+              "id",
+              "tipo",
+              "ementa",
+              "observacao",
+              "processo",
+              "classe",
+              "assunto",
+              "tipo_acao",
+              "tipo_processo",
+              "relator",
+              "redator_designado",
+              "orgao_julgador",
+              "sigla_classe_feito",
+              "data_julgamento",
+              "data_publicacao",
+              "instancia",
+              "origem",
+              "julgamento"
+            ],
+            "preenchidos": {
+              "processo": 10,
+              "ementa": 10
+            }
+          },
+          "checagem": "aprovada",
+          "http": [
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/",
+              "status": 200,
+              "bytes": 60188,
+              "sha256": "26b4d4a1998ad87526bffbbf9ce10374ae24563fa225e7ed98c9514bb6d9588d"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/polyfills-B6TNHZQ6.js",
+              "status": 200,
+              "bytes": 34579,
+              "sha256": "e58411db71b908616c5c212d2373e7b5ab79055c7987e0836e64b259da72507f"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/scripts-FOY7VGER.js",
+              "status": 200,
+              "bytes": 81976,
+              "sha256": "983c746766ef14ece3f526d31331e8391b9fad18aa3391bc90e30c9689f2f961"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/main-UAKV4YWY.js",
+              "status": 200,
+              "bytes": 556251,
+              "sha256": "05f52144ce2b08fda44b1b4d81cd0f75a731dd2c1e5035b50f1dc1e25213b493"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-NJLFMP4J.js",
+              "status": 200,
+              "bytes": 499,
+              "sha256": "fbd5eea5b3349c02aaf3f4e0f7838bca0f464baafe23bfe9f241e128bb61ed83"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-NNITVY2R.js",
+              "status": 200,
+              "bytes": 78553,
+              "sha256": "c27a798259651e2e540da3eba78a5f658b80c8c1b769daa377303ba27b5c7be0"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-VQ4XUMHT.js",
+              "status": 200,
+              "bytes": 45961,
+              "sha256": "5187d00c8749098e78fe5d788001f3530388ba1bef281d2044ba2d55c0f0907c"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-3RK6DDJD.js",
+              "status": 200,
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-WLONFCVJ.js",
+              "status": 200,
+              "bytes": 43750,
+              "sha256": "9c1bd6782228b6cc452bfc1d61256b753d34ae8eee24ab2b48ac10b939131d95"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-GNK2H7IK.js",
+              "status": 200,
+              "bytes": 132730,
+              "sha256": "b7a137068e5b6cc6c04087138cdcfe69a40e00e7dca0f0373127bf319e0f2b0e"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-PKD3ZIUU.js",
+              "status": 200,
+              "bytes": 9903,
+              "sha256": "2168d1cb302aae0707a89078d5c43bbf1e303f858c650a29be883b1832d0c6a1"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-WUZKAGYW.js",
+              "status": 200,
+              "bytes": 117778,
+              "sha256": "8333d8b8d8ebfdd463bfbc1bec0b1f26594306dc80d511502ebd61a1edadd425"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://jurisprudencia.tjmt.jus.br",
+              "caminho": "/chunk-PWZGOO32.js",
+              "status": 200,
+              "bytes": 674255,
+              "sha256": "a4045746ba9e87b57bfbb643e9f69e960cd2ba5b71d643e84cf252244be8c1d7"
+            },
+            {
+              "metodo": "GET",
+              "origem": "https://hellsgate.tjmt.jus.br",
+              "caminho": "/jurisprudencia/consulta",
+              "status": 200,
+              "bytes": 278477,
+              "sha256": "ab50d11b8944840b7ceac761737ca173c250b886217650b2926915cf46376936"
+            }
+          ],
+          "duracao_segundos": 4.51,
+          "fim_utc": "2026-11-15T00:41:26.071064+00:00"
+        }
+      ]
+    }
+  ]
+}
