@@ -36,12 +36,12 @@ def cposg_download_html(id_cnj_list, session, u_base, download_path, sleep_time=
 
     Returns:
         dict[str, str]: ``{CNJ formatado: motivo}`` dos processos que ficaram
-        sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
-        processo que a consulta de 2º grau não mostra ("Não existem
-        informações disponíveis") sai ``nao_encontrado``. Vazio quando todos
-        foram baixados. As falhas ficam gravadas em ``<download_path>/cposg``,
-        de onde ``cposg_parse_manager`` as lê; o ``UserWarning`` delas sai de
-        ``TJSPScraper.cposg_download``.
+            sem arquivo, no vocabulário de :mod:`juscraper.core.failures`. O
+            processo que a consulta de 2º grau não mostra ("Não existem
+            informações disponíveis") sai ``nao_encontrado``. Vazio quando todos
+            foram baixados. As falhas ficam gravadas em ``<download_path>/cposg``,
+            de onde ``cposg_parse_manager`` as lê; o ``UserWarning`` delas sai de
+            ``TJSPScraper.cposg_download``.
     """
     if isinstance(id_cnj_list, str):
         id_cnj_list = [id_cnj_list]

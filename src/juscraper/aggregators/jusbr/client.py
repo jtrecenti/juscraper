@@ -503,8 +503,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             Texto bruto, texto limpo, binário e motivo de falha. O motivo é o do
-            texto quando o texto falha, senão o do binário; as duas falhas
-            entram em ``falhas``, e o ``None`` de cada conteúdo diz qual faltou.
+                texto quando o texto falha, senão o do binário; as duas falhas
+                entram em ``falhas``, e o ``None`` de cada conteúdo diz qual faltou.
         """
         numero_processo_clean = clean_cnj(numero_processo)
         descricao = f"processo {numero_processo}"
@@ -697,7 +697,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por documento, com metadados, texto limpo,
-            respostas brutas disponíveis e ``motivo_falha``.
+                respostas brutas disponíveis e ``motivo_falha``.
 
         See Also:
             :class:`InputDownloadDocumentsJusBR` — schema pydantic e fonte da

@@ -251,17 +251,17 @@ class TJMGScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por recurso, com ``id_cnj``, ``processo``,
-            ``processo_interno``, ``segredo_justica``, ``situacao``,
-            ``secretaria``, ``classe``, ``assunto``, ``orgao_julgador``,
-            ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
-            ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa",
-            "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``
-            (``oab`` como publicada, ou ``None`` quando ausente).
-            Numeros nao encontrados geram uma linha so com ``id_cnj``.
-            ``partes`` fica ``None`` em dois casos, separados pela coluna
-            ``segredo_justica``: recurso em segredo de justica
-            (``segredo_justica=True``) ou falha ao baixar a pagina de partes
-            (``segredo_justica=False``).
+                ``processo_interno``, ``segredo_justica``, ``situacao``,
+                ``secretaria``, ``classe``, ``assunto``, ``orgao_julgador``,
+                ``data_cadastramento``, ``data_distribuicao`` e ``partes``.
+                ``partes`` e uma lista de dicts ``{"tipo", "nome", "baixa",
+                "advogados"}``, com ``advogados`` = lista de ``{"oab", "nome"}``
+                (``oab`` como publicada, ou ``None`` quando ausente).
+                Numeros nao encontrados geram uma linha so com ``id_cnj``.
+                ``partes`` fica ``None`` em dois casos, separados pela coluna
+                ``segredo_justica``: recurso em segredo de justica
+                (``segredo_justica=True``) ou falha ao baixar a pagina de partes
+                (``segredo_justica=False``).
 
         Avisos:
             ``UserWarning``: Quando alguma consulta falha: timeout, erro de

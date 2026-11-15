@@ -150,9 +150,9 @@ class TJRJScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: DataFrame com colunas ``processo``, ``classe``,
-            ``orgao_julgador``, ``relator``, ``data_julgamento``,
-            ``data_publicacao``, ``ementa``, alem de ``cod_documento``,
-            ``numero_antigo`` e ``tipo_documento``.
+                ``orgao_julgador``, ``relator``, ``data_julgamento``,
+                ``data_publicacao``, ``ementa``, alem de ``cod_documento``,
+                ``numero_antigo`` e ``tipo_documento``.
 
         Examples: Exemplo
             >>> import juscraper as jus

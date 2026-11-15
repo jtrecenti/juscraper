@@ -164,7 +164,7 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             pd.DataFrame: Arvore de varas (colunas ``id``, ``nome``,
-            ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
+                ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
         """
         return self._listar_arvore(f"varas_{grau}")
 
@@ -249,10 +249,10 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             pd.DataFrame | int: Resultados parseados (colunas conforme
-            :class:`OutputCJSGTJSP` — ``processo``, ``ementa``,
-            ``data_julgamento``, ``cd_acordao``, ``relator``,
-            ``orgao_julgador``); ``int`` com o total de resultados quando
-            ``count_only=True``.
+                :class:`OutputCJSGTJSP` — ``processo``, ``ementa``,
+                ``data_julgamento``, ``cd_acordao``, ``relator``,
+                ``orgao_julgador``); ``int`` com o total de resultados quando
+                ``count_only=True``.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -434,11 +434,11 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             pd.DataFrame | int: Resultados parseados (colunas conforme
-            :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
-            campos extras emitidos pelo parser via ``extra='allow'`` —
-            ``classe``, ``assunto``, ``magistrado``, ``comarca``,
-            ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
-            ``int`` com o total de resultados quando ``count_only=True``.
+                :class:`OutputCJPGTJSP` — ``id_processo``, ``cd_processo`` e
+                campos extras emitidos pelo parser via ``extra='allow'`` —
+                ``classe``, ``assunto``, ``magistrado``, ``comarca``,
+                ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
+                ``int`` com o total de resultados quando ``count_only=True``.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -680,23 +680,23 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             dict[str, pd.DataFrame]: Tabelas ``basicos``, ``partes``,
-            ``movimentacoes`` e ``peticoes_diversas``. ``basicos`` traz a
-            ``situacao`` do cabecalho ("Extinto", "Suspenso" etc.) e
-            ``movimentacoes`` traz a lista completa, que o download busca
-            pagina a pagina. Em ``movimentacoes``, ``cd_documento`` e
-            ``documento_publico`` dizem se a linha tem documento e se ele
-            abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
-            ``None`` sem ``download_pecas``, para documento com senha e para
-            o que falhou (as falhas saem num ``UserWarning``).
+                ``movimentacoes`` e ``peticoes_diversas``. ``basicos`` traz a
+                ``situacao`` do cabecalho ("Extinto", "Suspenso" etc.) e
+                ``movimentacoes`` traz a lista completa, que o download busca
+                pagina a pagina. Em ``movimentacoes``, ``cd_documento`` e
+                ``documento_publico`` dizem se a linha tem documento e se ele
+                abre sem senha; ``caminho_documento`` traz o PDF baixado, ou
+                ``None`` sem ``download_pecas``, para documento com senha e para
+                o que falhou (as falhas saem num ``UserWarning``).
 
-            Todo CNJ pedido aparece em ``basicos``. A coluna ``motivo_falha``
-            e ``None`` no processo lido; o CNJ que nao foi baixado ganha uma
-            linha so com ``id_processo`` e o motivo (``nao_encontrado`` quando
-            a consulta diz nao ter o numero, ``entrada_invalida``,
-            ``http_<status>``, ``conexao``, ``timeout`` ou
-            ``resposta_inesperada``), e o arquivo baixado que nao pode ser
-            lido sai ``resposta_inesperada``. As falhas de download e as de
-            leitura saem juntas num unico ``UserWarning``.
+                Todo CNJ pedido aparece em ``basicos``. A coluna ``motivo_falha``
+                e ``None`` no processo lido; o CNJ que nao foi baixado ganha uma
+                linha so com ``id_processo`` e o motivo (``nao_encontrado`` quando
+                a consulta diz nao ter o numero, ``entrada_invalida``,
+                ``http_<status>``, ``conexao``, ``timeout`` ou
+                ``resposta_inesperada``), e o arquivo baixado que nao pode ser
+                lido sai ``resposta_inesperada``. As falhas de download e as de
+                leitura saem juntas num unico ``UserWarning``.
         """
         self.set_method(method)
         validar_download_pecas(baixar_movimentacoes, download_pecas)
@@ -751,10 +751,10 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
-            que ficaram sem arquivo; vazio quando todos foram baixados. Os
-            motivos sao os de :meth:`cpopg`, e as falhas tambem saem num
-            ``UserWarning``. Elas ficam gravadas na pasta do download, e
-            :meth:`cpopg_parse` as devolve em ``basicos``, como o :meth:`cpopg`.
+                que ficaram sem arquivo; vazio quando todos foram baixados. Os
+                motivos sao os de :meth:`cpopg`, e as falhas tambem saem num
+                ``UserWarning``. Elas ficam gravadas na pasta do download, e
+                :meth:`cpopg_parse` as devolve em ``basicos``, como o :meth:`cpopg`.
         """
         self.set_method(method)
         validar_download_pecas(baixar_movimentacoes, download_pecas)
@@ -845,10 +845,10 @@ class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
 
         Returns:
             dict[str, str]: ``{CNJ formatado: motivo_falha}`` dos processos
-            que ficaram sem arquivo; vazio quando todos foram baixados. Os
-            motivos são os de :meth:`cposg`, e as falhas também saem num
-            ``UserWarning``. Elas ficam gravadas na pasta do download, e
-            :meth:`cposg_parse` as devolve no DataFrame, como o :meth:`cposg`.
+                que ficaram sem arquivo; vazio quando todos foram baixados. Os
+                motivos são os de :meth:`cposg`, e as falhas também saem num
+                ``UserWarning``. Elas ficam gravadas na pasta do download, e
+                :meth:`cposg_parse` as devolve no DataFrame, como o :meth:`cposg`.
         """
         self.set_method(method)
         falhas = self._baixar_cposg(id_cnj, diretorio or self.download_path)

@@ -444,6 +444,8 @@ Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, po
 
 O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção; `tests/test_docstring_secoes.py` reprova o nome traduzido, como `Argumentos:` ou `Retorno:`. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
 
+Em `Args:`, `Raises:` e `Returns:`, a primeira linha de cada entrada traz o nome inteiro até os dois-pontos, e as linhas de continuação levam recuo a mais. Em `Raises:`, uma exceção por entrada, repetindo a descrição quando ela for a mesma: numa entrada só, várias exceções separadas por vírgula viram um tipo único e, partidas em duas linhas, se perdem: o griffe guarda só a última ou descarta a seção inteira. Em `Returns:`, cada linha no recuo do item vira um retorno novo, e um único `pd.DataFrame` sai na referência como tabela de várias linhas; mais de um item só cabe em função que devolve `tuple`. O `quartodoc build` passa nos dois casos; quem reprova é `tests/test_docstring_griffe.py`.
+
 ### Filtros e aliases
 
 - Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
@@ -478,7 +480,8 @@ Avisos:
     ``<CategoriaDoAviso>``: <Condição em que o método emite o aviso.>
 
 Returns:
-    pd.DataFrame: <Colunas principais e significado do resultado.>
+    pd.DataFrame: <Colunas principais e significado do resultado; a
+        continuação leva recuo a mais.>
 
 Examples: Exemplo
     >>> <Chamada pública válida, usando nomes canônicos.>

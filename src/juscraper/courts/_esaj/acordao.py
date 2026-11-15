@@ -152,10 +152,10 @@ def parse_codigos_processo(html: str, processo: str) -> list[str] | None:
 
     Returns:
         A lista de códigos quando a resposta é o modal de incidentes, caso em
-        que cada código precisa do próprio ``show.do``; ``None`` nos demais
-        casos, em que a resposta deve ser a página do único processo. A
-        listagem de processos (``#listagemDeProcessos``) não apareceu na busca
-        por número nas sondas e cai em :class:`RespostaInesperadaError`.
+            que cada código precisa do próprio ``show.do``; ``None`` nos demais
+            casos, em que a resposta deve ser a página do único processo. A
+            listagem de processos (``#listagemDeProcessos``) não apareceu na busca
+            por número nas sondas e cai em :class:`RespostaInesperadaError`.
 
     Raises:
         ProcessoNaoEncontradoError: Quando a consulta diz que não há informações.
@@ -435,11 +435,11 @@ class EsajAcordaoScraper(EsajSearchScraper):
 
         Returns:
             pd.DataFrame: As linhas de entrada com ``caminho_acordao`` (``None``
-            quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
-            ``nao_encontrado``, ``sem_acordao``, ``nao_pdf``,
-            ``resposta_inesperada`` ou um motivo de rede de
-            :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
-            também num único ``UserWarning`` ao fim.
+                quando falhou) e ``motivo_falha``. O motivo é ``entrada_invalida``,
+                ``nao_encontrado``, ``sem_acordao``, ``nao_pdf``,
+                ``resposta_inesperada`` ou um motivo de rede de
+                :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
+                também num único ``UserWarning`` ao fim.
         """
         faltando = {"processo", "data_julgamento"} - set(cjsg.columns)
         if faltando:

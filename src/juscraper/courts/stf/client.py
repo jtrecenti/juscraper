@@ -159,9 +159,9 @@ class STFScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Uma linha por documento, com ``processo``, ``classe``,
-            ``relator``, ``data_julgamento``, ``data_publicacao``, ``ementa``
-            (acordaos), ``decisao_texto`` (monocraticas), ``inteiro_teor_url`` e o
-            restante do ``_source`` da API.
+                ``relator``, ``data_julgamento``, ``data_publicacao``, ``ementa``
+                (acordaos), ``decisao_texto`` (monocraticas), ``inteiro_teor_url`` e o
+                restante do ``_source`` da API.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -200,12 +200,12 @@ class STFScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Colunas ``faceta``, ``valor`` e ``n``. A primeira linha e
-            ``faceta="total"``; as demais vem das agregacoes do portal (``base``,
-            ``ministro_facet``, ``processo_classe_processual_unificada_classe_sigla``,
-            ``procedencia_geografica_uf_sigla``, ``orgao_julgador`` e indicadores).
-            Com ``classe``, a faceta de classe ignora o proprio filtro e as outras
-            facetas o respeitam, como no portal. Uma decisao pode ter mais de um
-            ministro, entao a soma de ``ministro_facet`` pode passar do total.
+                ``faceta="total"``; as demais vem das agregacoes do portal (``base``,
+                ``ministro_facet``, ``processo_classe_processual_unificada_classe_sigla``,
+                ``procedencia_geografica_uf_sigla``, ``orgao_julgador`` e indicadores).
+                Com ``classe``, a faceta de classe ignora o proprio filtro e as outras
+                facetas o respeitam, como no portal. Uma decisao pode ter mais de um
+                ministro, entao a soma de ``ministro_facet`` pode passar do total.
         """
         inp = search_input(
             InputContarDecisoesSTF, "STFScraper.contar_decisoes()",

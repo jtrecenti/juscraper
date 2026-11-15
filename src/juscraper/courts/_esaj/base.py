@@ -152,8 +152,8 @@ def run_auto_chunk(
 
     Returns:
         ``None`` quando o chunking nao se aplica (auto_chunk=False ou
-        janela curta) — caller deve seguir o caminho noop. Caso contrario,
-        retorna o ``pd.DataFrame`` deduplicado.
+            janela curta) — caller deve seguir o caminho noop. Caso contrario,
+            retorna o ``pd.DataFrame`` deduplicado.
 
     Side effects:
         Sempre remove ``auto_chunk`` de ``kwargs``. No caminho noop,
@@ -357,7 +357,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             ``pd.DataFrame`` com os resultados parseados, ou ``int`` quando
-            ``count_only=True``.
+                ``count_only=True``.
         """
         if pre_normalize is not None:
             pre_normalize(kwargs)
@@ -479,10 +479,10 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame | int: Resultados parseados (colunas conforme
-            :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
-            via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
-            ``cd_foro``); ``int`` com o total de resultados quando
-            ``count_only=True``.
+                :class:`OutputCJSGEsaj` — ``processo``, ``ementa``, ``relator``
+                via mixin, ``data_publicacao`` via mixin, ``cd_acordao``,
+                ``cd_foro``); ``int`` com o total de resultados quando
+                ``count_only=True``.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -695,7 +695,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Colunas ``id``, ``nome``, ``id_pai``, ``nivel``,
-            ``selecionavel``, ``caminho``.
+                ``selecionavel``, ``caminho``.
         """
         rel = self.TREE_ENDPOINTS.get(tree_key)
         if rel is None:
@@ -727,8 +727,8 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Arvore de classes (colunas ``id``, ``nome``,
-            ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
-            linhas com ``selecionavel=True`` valem como filtro.
+                ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``). So as
+                linhas com ``selecionavel=True`` valem como filtro.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -753,8 +753,8 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Arvore de assuntos (mesmas colunas de
-            :meth:`listar_classes`). So as linhas com ``selecionavel=True``
-            valem como filtro.
+                :meth:`listar_classes`). So as linhas com ``selecionavel=True``
+                valem como filtro.
         """
         return self._listar_arvore(f"assuntos_{grau}")
 
@@ -772,7 +772,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: Arvore de orgaos julgadores (mesmas colunas de
-            :meth:`listar_classes`).
+                :meth:`listar_classes`).
         """
         return self._listar_arvore(f"orgaos_{grau}")
 

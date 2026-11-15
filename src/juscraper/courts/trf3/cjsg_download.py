@@ -171,9 +171,9 @@ def _campos_orgao(orgao: str | None, opcoes: list[tuple[str, str]]) -> dict[str,
 
     Returns:
         Os dois campos da opção que casou, nos moldes do formulário. Vazio
-        sem órgão, sem opções lidas da aba, ou quando o texto não casa com
-        nenhuma opção: nesse caso fica o que :func:`build_cjsg_payload`
-        montou, o mesmo texto nos dois campos.
+            sem órgão, sem opções lidas da aba, ou quando o texto não casa com
+            nenhuma opção: nesse caso fica o que :func:`build_cjsg_payload`
+            montou, o mesmo texto nos dois campos.
 
     Raises:
         ValueError: O texto casa com mais de uma opção, como o rótulo
@@ -445,8 +445,8 @@ def cjsg_download_manager(
 
     Returns:
         Lista de HTML, uma entrada por página baixada, na ordem pedida. A
-        página 1 vem da resposta do próprio POST; se ela não foi pedida, é
-        descartada.
+            página 1 vem da resposta do próprio POST; se ela não foi pedida, é
+            descartada.
 
     Raises:
         BotChallengeBlockedError: 403 ``Access Denied`` da Akamai.

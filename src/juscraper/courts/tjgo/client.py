@@ -157,7 +157,7 @@ class TJGOScraper(HTTPScraper):
 
         Returns:
             pd.DataFrame: DataFrame com as decisoes (coluna ``texto`` carrega
-            o conteudo do documento; ``ementa`` nao e preenchido).
+                o conteudo do documento; ``ementa`` nao e preenchido).
 
         See also:
             :class:`InputCJSGTJGO` — schema pydantic e a fonte da verdade dos

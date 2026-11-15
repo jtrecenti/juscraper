@@ -175,12 +175,12 @@ def cpopg_download_html(
 
     Returns:
         dict[str, str]: ``{CNJ formatado: motivo}`` dos processos que ficaram
-        sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
-        número que a busca diz não ter sai ``nao_encontrado``, e o que não
-        tem 20 dígitos, ``entrada_invalida``. Vazio quando
-        todos foram baixados. As falhas ficam gravadas em
-        ``<download_path>/cpopg``, de onde ``cpopg_parse_manager`` as lê; o
-        ``UserWarning`` delas sai de ``TJSPScraper.cpopg_download``.
+            sem arquivo, no vocabulário de :mod:`juscraper.core.failures`; o
+            número que a busca diz não ter sai ``nao_encontrado``, e o que não
+            tem 20 dígitos, ``entrada_invalida``. Vazio quando
+            todos foram baixados. As falhas ficam gravadas em
+            ``<download_path>/cpopg``, de onde ``cpopg_parse_manager`` as lê; o
+            ``UserWarning`` delas sai de ``TJSPScraper.cpopg_download``.
     """
     pecas = _PecasPublicas(sleep_time) if download_pecas else None
     falhas = {}

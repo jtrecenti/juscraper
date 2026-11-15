@@ -222,8 +222,8 @@ class TJPEScraper(HTTPScraper):
                 conhecidos (nem resultados, nem escolha do tipo, nem "Nenhum
                 documento encontrado").
 
-        Warns:
-            UserWarning: Quando o portal responde "Nenhum documento
+        Avisos:
+            ``UserWarning``: Quando o portal responde "Nenhum documento
                 encontrado"; o resultado sai vazio. Com a pesquisa fora do ar,
                 o portal responde assim a qualquer termo.
 

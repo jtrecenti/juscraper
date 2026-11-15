@@ -115,7 +115,7 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
 
     Returns:
         CredencialPdpj: Access token e, quando o SSO o entrega ao navegador,
-        refresh token.
+            refresh token.
 
     Raises:
         ImportError: Quando o Playwright nao esta instalado (extra ``juscraper[govbr]``).

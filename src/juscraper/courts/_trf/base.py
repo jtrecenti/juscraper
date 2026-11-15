@@ -295,39 +295,39 @@ class TRFConsultaScraper(HTTPScraper):
 
         Returns:
             DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
-            ``classe``, ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
-            ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``, ``polo_passivo``,
-            ``movimentacoes``, ``documentos`` (metadados) e ``motivo_falha``.
-            Quando ``download_pecas=True``, ganha ainda a coluna ``pecas`` com
-            a lista de caminhos salvos e a coluna ``pecas_falhas`` com as peças
-            que não puderam ser baixadas, cada uma como
-            ``{"id": <id da peça>, "motivo_falha": <motivo>}``, no mesmo
-            vocabulário. A falha de uma peça não afeta ``motivo_falha`` do
-            processo nem as outras peças, e as falhas de peça saem num
-            ``UserWarning`` próprio ao fim. Num bloqueio anti-bot nas peças,
-            a bloqueada e as seguintes, que não são pedidas, entram em
-            ``pecas_falhas`` com ``bloqueio_anti_bot``; esse bloqueio sai só
-            no aviso dos processos, pelo ``motivo_falha`` da linha.
+                ``classe``, ``assunto``, ``data_distribuicao``, ``orgao_julgador``,
+                ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``, ``polo_passivo``,
+                ``movimentacoes``, ``documentos`` (metadados) e ``motivo_falha``.
+                Quando ``download_pecas=True``, ganha ainda a coluna ``pecas`` com
+                a lista de caminhos salvos e a coluna ``pecas_falhas`` com as peças
+                que não puderam ser baixadas, cada uma como
+                ``{"id": <id da peça>, "motivo_falha": <motivo>}``, no mesmo
+                vocabulário. A falha de uma peça não afeta ``motivo_falha`` do
+                processo nem as outras peças, e as falhas de peça saem num
+                ``UserWarning`` próprio ao fim. Num bloqueio anti-bot nas peças,
+                a bloqueada e as seguintes, que não são pedidas, entram em
+                ``pecas_falhas`` com ``bloqueio_anti_bot``; esse bloqueio sai só
+                no aviso dos processos, pelo ``motivo_falha`` da linha.
 
-            ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
-            para processo ausente ou sob sigilo (linha só com ``id_cnj``).
-            Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj``
-            e o motivo, no vocabulário de
-            :data:`juscraper.core.failures.MOTIVOS_FALHA`, e o lote segue; o
-            HTML fora do formato conhecido sai ``resposta_inesperada``. As
-            falhas entram num único ``UserWarning`` ao fim
-            (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning` quando
-            há bloqueio anti-bot).
+                ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
+                para processo ausente ou sob sigilo (linha só com ``id_cnj``).
+                Quando a requisição de um CNJ falha, a linha sai só com ``id_cnj``
+                e o motivo, no vocabulário de
+                :data:`juscraper.core.failures.MOTIVOS_FALHA`, e o lote segue; o
+                HTML fora do formato conhecido sai ``resposta_inesperada``. As
+                falhas entram num único ``UserWarning`` ao fim
+                (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning` quando
+                há bloqueio anti-bot).
 
-            Um bloqueio anti-bot vale para a sessão inteira: o lote para no
-            CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem com
-            ``bloqueio_anti_bot``. As linhas anteriores são preservadas. Com
-            ``download_pecas=True``, as peças de cada processo são baixadas
-            logo depois do seu detalhe: os processos anteriores ao bloqueio
-            saem com detalhe e peças, e o bloqueado nas peças sai com
-            ``bloqueio_anti_bot``, o detalhe e as peças já salvas. Aguarde
-            alguns minutos ou troque de IP e peça de novo só as linhas com
-            ``motivo_falha``.
+                Um bloqueio anti-bot vale para a sessão inteira: o lote para no
+                CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem com
+                ``bloqueio_anti_bot``. As linhas anteriores são preservadas. Com
+                ``download_pecas=True``, as peças de cada processo são baixadas
+                logo depois do seu detalhe: os processos anteriores ao bloqueio
+                saem com detalhe e peças, e o bloqueado nas peças sai com
+                ``bloqueio_anti_bot``, o detalhe e as peças já salvas. Aguarde
+                alguns minutos ou troque de IP e peça de novo só as linhas com
+                ``motivo_falha``.
 
         Raises:
             TypeError: Kwarg desconhecido.

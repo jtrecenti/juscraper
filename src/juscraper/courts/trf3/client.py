@@ -152,16 +152,16 @@ class TRF3Scraper(TRFConsultaScraper):
 
         Returns:
             pd.DataFrame: Uma linha por documento, com ``processo``,
-            ``classe``, ``orgao_julgador``, ``relator``, ``relator_acordao``,
-            ``data_julgamento``, ``data_publicacao``, ``meio_publicacao``
-            (``DJEN``, ``Intimação via sistema``, ``e-DJF3 Judicial 1``...),
-            ``ementa`` (nas monocráticas, o texto da decisão), ``base``,
-            ``url_inteiro_teor`` (íntegra do acórdão no site do TRF3; vazio
-            nas monocráticas) e ``inteiro_teor`` (texto completo). Em parte
-            dos acórdãos antigos das Turmas Recursais, ``ementa`` vem nula
-            porque o portal manda o bloco da ementa vazio; ``inteiro_teor``
-            vem preenchido. Na medição, com "medicamento", foram nulas todas
-            as ementas de 2013 e 2014 e parte das de 2011.
+                ``classe``, ``orgao_julgador``, ``relator``, ``relator_acordao``,
+                ``data_julgamento``, ``data_publicacao``, ``meio_publicacao``
+                (``DJEN``, ``Intimação via sistema``, ``e-DJF3 Judicial 1``...),
+                ``ementa`` (nas monocráticas, o texto da decisão), ``base``,
+                ``url_inteiro_teor`` (íntegra do acórdão no site do TRF3; vazio
+                nas monocráticas) e ``inteiro_teor`` (texto completo). Em parte
+                dos acórdãos antigos das Turmas Recursais, ``ementa`` vem nula
+                porque o portal manda o bloco da ementa vazio; ``inteiro_teor``
+                vem preenchido. Na medição, com "medicamento", foram nulas todas
+                as ementas de 2013 e 2014 e parte das de 2011.
 
         Examples: Exemplo
             >>> import juscraper as jus
