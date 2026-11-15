@@ -269,6 +269,29 @@ def test_status_nao_repetivel_chega_ao_erro_parcial_com_a_resposta():
 
 @responses.activate
 @pytest.mark.usefixtures("esperas")
+def test_401_interrompe_a_coleta_nos_aliases_seguintes():
+    """Antes, o 401 virava falha do alias e a coleta seguia, recusada, em todos os outros."""
+    url = f"{DatajudScraper.BASE_API_URL}/api_publica_{{}}/_search"
+    responses.add(responses.POST, url.format("tjac"), json=_pagina(1, tamanho=2, total=2))
+    responses.add(responses.POST, url.format("tjal"), json={"error": "chave inválida"}, status=401)
+    responses.add(responses.POST, url.format("tjap"), json=_pagina(1, tamanho=2, total=2))
+    responses.add(responses.POST, url.format("tjam"), json=_pagina(1, tamanho=2, total=2))
+    cnjs = [f"0000001-23.2024.8.{codigo}.0001" for codigo in ("01", "02", "03", "04")]
+
+    with pytest.raises(ColetaParcialError) as exc_info:
+        _scraper().listar_processos(numero_processo=cnjs, tamanho_pagina=10)
+
+    erro = exc_info.value
+    assert [chamada.request.url for chamada in responses.calls] == [url.format("tjac"), url.format("tjal")]
+    assert len(erro.resultado) == 2
+    assert [causa.response.status_code for *_, causa in erro.falhas] == [401]
+    assert str(erro).endswith(
+        "HTTP 401 (chave da API recusada): alias(es) não consultado(s): 'api_publica_tjap', 'api_publica_tjam'"
+    )
+
+
+@responses.activate
+@pytest.mark.usefixtures("esperas")
 def test_timeout_chega_ao_erro_parcial_como_causa():
     responses.add(responses.POST, URL_TJAC, body=requests.ReadTimeout("lento"))
 

@@ -7,6 +7,9 @@ o DF nao segue o padrao "tre-df": o alias oficial e `api_publica_tre-dft`.
 
 ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     # Justiça Estadual (id_justica="8")
+    # O código do tribunal segue a ordem alfabética do nome da UF, não da
+    # sigla: Mato Grosso (11), Mato Grosso do Sul (12), Minas Gerais (13).
+    # Conferido ao vivo: o índice ``api_publica_tjmg`` traz CNJs ``.8.13.``.
     ("8", "01"): "api_publica_tjac",  # TJAC
     ("8", "02"): "api_publica_tjal",  # TJAL
     ("8", "03"): "api_publica_tjap",  # TJAP
@@ -17,9 +20,9 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("8", "08"): "api_publica_tjes",  # TJES
     ("8", "09"): "api_publica_tjgo",  # TJGO
     ("8", "10"): "api_publica_tjma",  # TJMA
-    ("8", "11"): "api_publica_tjmg",  # TJMG
+    ("8", "11"): "api_publica_tjmt",  # TJMT
     ("8", "12"): "api_publica_tjms",  # TJMS
-    ("8", "13"): "api_publica_tjmt",  # TJMT
+    ("8", "13"): "api_publica_tjmg",  # TJMG
     ("8", "14"): "api_publica_tjpa",  # TJPA
     ("8", "15"): "api_publica_tjpb",  # TJPB
     ("8", "16"): "api_publica_tjpr",  # TJPR
@@ -81,9 +84,9 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("6", "08"): "api_publica_tre-es",  # TRE-ES
     ("6", "09"): "api_publica_tre-go",  # TRE-GO
     ("6", "10"): "api_publica_tre-ma",  # TRE-MA
-    ("6", "11"): "api_publica_tre-mg",  # TRE-MG
+    ("6", "11"): "api_publica_tre-mt",  # TRE-MT
     ("6", "12"): "api_publica_tre-ms",  # TRE-MS
-    ("6", "13"): "api_publica_tre-mt",  # TRE-MT
+    ("6", "13"): "api_publica_tre-mg",  # TRE-MG
     ("6", "14"): "api_publica_tre-pa",  # TRE-PA
     ("6", "15"): "api_publica_tre-pb",  # TRE-PB
     ("6", "16"): "api_publica_tre-pr",  # TRE-PR
@@ -100,10 +103,11 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("6", "27"): "api_publica_tre-to",  # TRE-TO
     # Justiça Militar da União (id_justica="7")
     ("7", "00"): "api_publica_stm",  # STM
-    # Justiça Militar Estadual (id_justica="9")
-    ("9", "11"): "api_publica_tjmmg",  # TJMMG (MG)
+    # Justiça Militar Estadual (id_justica="9"): o código é o da UF na
+    # Justiça Estadual, como o ``.9.26.`` dos CNJs do ``api_publica_tjmsp``.
+    ("9", "13"): "api_publica_tjmmg",  # TJMMG (MG)
     ("9", "21"): "api_publica_tjmrs",  # TJMRS (RS)
-    ("9", "25"): "api_publica_tjmsp",  # TJMSP (SP)
+    ("9", "26"): "api_publica_tjmsp",  # TJMSP (SP)
     # Conselhos (id_justica="3")
     ("3", "00"): "api_publica_cnj",  # CNJ
     # Tribunais Superiores (id_justica="1", "2")

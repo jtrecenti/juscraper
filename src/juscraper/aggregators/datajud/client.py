@@ -156,6 +156,14 @@ def _relancar_se_token_invalido(exc: Exception, linhas: list[dict[str, Any]]) ->
         raise exc
 
 
+def _aliases_nao_consultados(restantes: list[AliasSelection]) -> list[str]:
+    """Diagnóstico dos aliases que :meth:`DatajudScraper.listar_processos` deixa de consultar depois do 401."""
+    if not restantes:
+        return []
+    nomes = ", ".join(repr(alias) for alias, _ in restantes)
+    return [f"HTTP 401 (chave da API recusada): alias(es) não consultado(s): {nomes}"]
+
+
 def _linha_de_falha(tribunal: str, alias: str, exc: Exception) -> dict[str, Any]:
     """Linha do tribunal cuja contagem falhou; ``error`` no vocabulário de ``motivo_falha`` ou ``"<Classe>: <msg>"``."""
     logger.warning("DataJud: contagem do alias %s falhou: %s", alias, exc)
@@ -610,6 +618,9 @@ class DatajudScraper(HTTPScraper):
                 (429, 502 ou 503 em todas as tentativas, status em
                 ``.status_code``), ``requests.Timeout``, erro de conexão ou
                 ``requests.JSONDecodeError`` (resposta 200 que não é JSON).
+                O 401 (chave inválida) interrompe a coleta no alias em que
+                ocorre: os aliases seguintes não são consultados, e a mensagem
+                os lista.
                 Resposta 200 parcial do Elasticsearch (``_shards.failed > 0``
                 ou ``timed_out: true``) também levanta, com os motivos dos
                 shards na mensagem e os hits válidos da página em
@@ -672,7 +683,7 @@ class DatajudScraper(HTTPScraper):
         frames = []
         falhas = []
         diagnosticos = []
-        for alias, cnjs in aliases:
+        for indice, (alias, cnjs) in enumerate(aliases):
             try:
                 frame = self._listar_processos_por_alias(
                     alias=alias,
@@ -685,6 +696,11 @@ class DatajudScraper(HTTPScraper):
                 frame = exc.resultado
                 falhas.extend(exc.falhas)
                 diagnosticos.append(str(exc))
+                # A chave inválida recusa todos os aliases: os seguintes ficam sem consulta.
+                if any(e_token_invalido(causa) for *_, causa in exc.falhas):
+                    frames.append(frame)
+                    diagnosticos.extend(_aliases_nao_consultados(aliases[indice + 1:]))
+                    break
             frames.append(frame)
 
         non_empty = [frame for frame in frames if not frame.empty]
@@ -712,12 +728,13 @@ class DatajudScraper(HTTPScraper):
             unit=" página",
             disable=total == 0,
         )
-        recebidos = 0
         ultima_pagina_contada = 0
         try:
-            # ``total_info`` vem do iterador, já validado na página 1: com ``paginas``
-            # que pula a página 1, o total dela ainda alimenta o diagnóstico de falha.
-            for current_page, api_response, total_info in self._iter_process_pages(
+            # ``total_info`` e ``recebidos`` vêm do iterador: o total já validado na
+            # página 1, que alimenta o diagnóstico mesmo com ``paginas`` que a pula,
+            # e os hits das páginas pedidas antes desta, a mesma contagem das
+            # mensagens de falha do próprio iterador.
+            for current_page, api_response, total_info, recebidos in self._iter_process_pages(
                 alias=alias,
                 numero_processo=numero_processo,
                 inp=inp,
@@ -744,7 +761,6 @@ class DatajudScraper(HTTPScraper):
                     )
                     break
                 frames.append(frame)
-                recebidos += len(frame)
                 # Depois do fallback, a página chega em pedaços: a barra avança no primeiro.
                 pbar.update(int(current_page != ultima_pagina_contada))
                 ultima_pagina_contada = current_page
@@ -764,11 +780,12 @@ class DatajudScraper(HTTPScraper):
         inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
         paginas: range | None,
-    ) -> Iterator[tuple[int, dict[str, Any], dict[str, Any] | None]]:
+    ) -> Iterator[tuple[int, dict[str, Any], dict[str, Any] | None, int]]:
         """Percorre o cursor físico até a última página necessária.
 
         Entrega cada busca com o número da página de ``tamanho_pagina`` a que
-        ela pertence e o ``hits.total`` da página 1 já validado. Depois do
+        ela pertence, o ``hits.total`` da página 1 já validado e quantos hits
+        das páginas pedidas vieram antes dela. Depois do
         fallback de 504/timeout, uma página chega em vários pedaços do
         ``size`` reduzido, cortados na fronteira dela, para que ``paginas``
         continue contando páginas do tamanho pedido (#513).
@@ -817,12 +834,13 @@ class DatajudScraper(HTTPScraper):
                 alias=alias,
                 effective_size=effective_size,
             )
+            recebidos_antes = recebidos
             if paginas is None or current_page in paginas:
                 recebidos += len(hits)
             proxima_pagina = percorridos // tamanho_pagina + 1
             contexto = _FimPagina(alias, current_page, recebidos, last_page, proxima_pagina)
             _verificar_pagina_vazia(api_response, effective_size, total_info, percorridos, contexto)
-            yield current_page, api_response, total_info
+            yield current_page, api_response, total_info, recebidos_antes
             # Depois do ``yield``: o consumidor já guardou os hits válidos da página.
             _verificar_resposta_parcial(api_response, total_info, contexto)
             if next_search_after is None:
