@@ -45,27 +45,25 @@ class TJTOScraper(HTTPScraper):
 
     def _renovar_cookie_waf(self, url: str) -> None:
         try:
-            token = obter_waf_token(self.BASE_URL, tribunal="TJTO")
+            token = obter_waf_token(self.BASE_URL, tribunal=self.tribunal_name)
         except ImportError:
             raise  # a mensagem já ensina a instalar o extra
         except Exception as exc:
-            raise WafChallengeError("TJTO", url, motivo=str(exc)) from exc
+            # Navegador não instalado ou cookie não emitido valem para a sessão
+            # inteira; tentar de novo a cada página relançaria o navegador.
+            raise WafChallengeError(self.tribunal_name, url, motivo=str(exc)) from exc
         self.session.cookies.set(WAF_COOKIE, token, domain=urlparse(self.BASE_URL).hostname)
 
-    def _pedir(self, method: str, url: str, **kwargs: Any) -> requests.Response:
-        try:
-            return super()._request_with_retry(method, url, **kwargs)
-        except requests.HTTPError as exc:
-            if exc.response is None or exc.response.headers.get("x-amzn-waf-action") != "captcha":
-                raise
+    def _levantar_captcha_waf(self, resp: requests.Response) -> None:
+        if resp.headers.get("x-amzn-waf-action") == "captcha":
             raise BotChallengeBlockedError(
-                "TJTO", url, bot_manager="AWS WAF",
+                self.tribunal_name, resp.url, bot_manager="AWS WAF",
                 mensagem=(
-                    f"O AWS WAF do TJTO pediu um CAPTCHA em {url}, que o raspador não resolve. "
-                    "Ele apareceu depois de várias buscas seguidas do mesmo IP; aguarde antes de "
-                    "tentar de novo ou aumente sleep_time."
+                    f"O AWS WAF do {self.tribunal_name} pediu um CAPTCHA em {resp.url}, que o raspador "
+                    "não resolve. Ele apareceu depois de várias buscas seguidas do mesmo IP; aguarde "
+                    "antes de tentar de novo ou aumente sleep_time."
                 ),
-            ) from exc
+            )
 
     def _request_with_retry(self, method: str, url: str, **kwargs: Any) -> requests.Response:
         """Repete a requisição uma vez com cookie novo quando o AWS WAF desafia.
@@ -75,13 +73,14 @@ class TJTOScraper(HTTPScraper):
         enquanto o WAF deixa passar. O CAPTCHA (HTTP 405) levanta
         :class:`BotChallengeBlockedError`.
         """
-        resp = self._pedir(method, url, **kwargs)
+        kwargs.setdefault("on_response", self._levantar_captcha_waf)
+        resp = super()._request_with_retry(method, url, **kwargs)
         if not eh_desafio_waf(resp):
             return resp
         self._renovar_cookie_waf(url)
-        resp = self._pedir(method, url, **kwargs)
+        resp = super()._request_with_retry(method, url, **kwargs)
         if eh_desafio_waf(resp):
-            raise WafChallengeError("TJTO", url)
+            raise WafChallengeError(self.tribunal_name, url)
         return resp
 
     def cpopg(self, id_cnj: str | list[str]):

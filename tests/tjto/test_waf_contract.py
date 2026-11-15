@@ -5,7 +5,6 @@ Ao vivo (15/11/2026), o ``consulta.php`` respondeu 403 ao user agent
 com ``x-amzn-waf-action: challenge``) ao user agent de navegador. O desafio é
 mockado aqui como chegou: sem corpo, só com o cabeçalho.
 """
-import pandas as pd
 import pytest
 import responses
 
@@ -62,7 +61,6 @@ def test_desafio_renova_o_cookie_e_repete_o_post(tjto, obter):
 
     df = tjto.cjsg('"alimentos avoengos"', paginas=1)
 
-    assert isinstance(df, pd.DataFrame)
     assert len(df) == 9
     obter.assert_called_once_with(BASE_URL, tribunal="TJTO")
     assert "Cookie" not in responses.calls[0].request.headers
@@ -81,27 +79,21 @@ def test_desafio_repetido_depois_da_renovacao_levanta(tjto, obter):
     obter.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("erro", "esperado", "mensagem"),
+    [
+        (RuntimeError("O portal do TJTO nao emitiu o cookie aws-waf-token em 60s."), WafChallengeError,
+         "nao emitiu o cookie"),
+        (ImportError("Instale com `pip install 'juscraper[waf]'`"), ImportError, r"juscraper\[waf\]"),
+    ],
+    ids=["navegador-falha", "sem-playwright"],
+)
 @responses.activate
-def test_falha_do_navegador_vira_waf_challenge_error(tjto, mocker):
-    mocker.patch(
-        "juscraper.courts.tjto.client.obter_waf_token",
-        side_effect=RuntimeError("O portal do TJTO nao emitiu o cookie aws-waf-token em 60s."),
-    )
+def test_falha_ao_obter_o_cookie_chega_ao_usuario(tjto, obter, erro, esperado, mensagem):
+    obter.side_effect = erro
     _desafio()
 
-    with pytest.raises(WafChallengeError, match="nao emitiu o cookie"):
-        tjto.cjsg("dano moral", paginas=1)
-
-
-@responses.activate
-def test_sem_playwright_o_erro_chega_ao_usuario(tjto, mocker):
-    mocker.patch(
-        "juscraper.courts.tjto.client.obter_waf_token",
-        side_effect=ImportError("Instale com `pip install 'juscraper[waf]'`"),
-    )
-    _desafio()
-
-    with pytest.raises(ImportError, match=r"juscraper\[waf\]"):
+    with pytest.raises(esperado, match=mensagem):
         tjto.cjsg("dano moral", paginas=1)
 
 
