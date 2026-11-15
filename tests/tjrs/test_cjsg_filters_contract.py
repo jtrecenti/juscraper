@@ -10,7 +10,10 @@ from tests.tjrs.test_cjsg_contract import _add_page
 
 @responses.activate
 def test_cjsg_all_filters_land_in_form_body(mocker):
-    """All TJRS public filters must reach the nested Solr params form body."""
+    """All TJRS public filters must reach the nested Solr params form body.
+
+    Entrada ISO, datas em ``DD/MM/AAAA`` no body (#496).
+    """
     mocker.patch("time.sleep")
     _add_page(
         "dano moral",
@@ -20,10 +23,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         assunto="Dano moral",
         orgao_julgador="Primeira Camara",
         relator="FULANO DE TAL",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
-        data_publicacao_inicio="2024-02-01",
-        data_publicacao_fim="2024-04-30",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
+        data_publicacao_inicio="01/02/2024",
+        data_publicacao_fim="30/04/2024",
         tipo_processo="Civel",
         secao="crime",
     )
@@ -81,8 +84,8 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
         "dano moral",
         1,
         "cjsg/no_results.json",
-        data_julgamento_inicio="2024-01-01",
-        data_julgamento_fim="2024-03-31",
+        data_julgamento_inicio="01/01/2024",
+        data_julgamento_fim="31/03/2024",
     )
 
     with pytest.warns(DeprecationWarning) as warning_list:
