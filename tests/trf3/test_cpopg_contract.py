@@ -253,14 +253,14 @@ def test_cpopg_bloqueio_no_meio_do_lote_preserva_as_linhas_anteriores() -> None:
 
 def test_guarda_nao_trata_qualquer_403_como_bloqueio() -> None:
     """403 sem as marcas do Akamai segue como erro HTTP, não como bloqueio."""
-    from juscraper.courts.trf3.download import _guarda_bot
+    from juscraper.courts.trf3.download import guarda_akamai
 
     class FakeResp:
         status_code = 403
         url = busca_url(BASE_URL_1G)
         content = b"<html><head><title>403 Forbidden</title></head><body>nginx</body></html>"
 
-    _guarda_bot(FakeResp())  # type: ignore[arg-type]
+    guarda_akamai(FakeResp())  # type: ignore[arg-type]
 
 
 @responses.activate

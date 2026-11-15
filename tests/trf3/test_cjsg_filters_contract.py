@@ -25,34 +25,10 @@ import juscraper as jus
 from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3, validar_combinacoes
 from tests._helpers import assert_unknown_kwarg_raises
 from tests.trf3._cjsg_mock import add_page, add_search
+from tests.trf3._cjsg_mock import corpo_busca as _body
 
 #: Bases cujo formulário não tem os filtros só de acórdãos.
 BASES_SEM_ACORDAOS = ["turmas_recursais", "monocraticas", "monocraticas_turmas_recursais"]
-
-
-def _body(**campos: str) -> dict[str, str]:
-    """POST body of the portal with every field empty or at its default."""
-    body = {
-        "txtPesquisaLivre": "",
-        "chkAcordaos": "on",
-        "chkMostrarLista": "on",
-        "opcaoQtdePagina": "10",
-        "numero": "",
-        "magistrado": "0",
-        "data_inicial": "",
-        "data_final": "",
-        "data_tipo": "1",
-        "classe": "0",
-        "orgao": "0",
-        "ementa": "",
-        "indexacao": "",
-        "hdnMagistrado": "",
-        "hdnClasse": "",
-        "hdnOrgao": "",
-        "hdnOrgaoJef": "",
-    }
-    body.update(campos)
-    return body
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -145,6 +121,70 @@ def test_cjsg_filtros_so_de_acordaos_recusados_nas_outras_bases(filtro, valor, b
     assert len(responses.calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("nome", "tema"),
+    [
+        ("Gomes Lund", "2"),
+        ("  gomes   LUND ", "2"),
+        ("CORTE IDH - CASO HERZOG E OUTROS VS. BRASIL", "3"),
+        ("Xucuru", "6"),
+        ("favela nova brasilia", "4"),
+        # The misspelled option 10 reads "LA CATUNTA", so "Cantuta" is unique.
+        ("Cantuta", "12"),
+        # Typographic quotes and dashes of the labels match the typed ones.
+        ('Gomes Lund e outros ("Guerrilha do Araguaia")', "2"),
+        ("casos brasileiros - providencias cautelares", "8"),
+        # A digits-only string is the option ID, not a piece of the name.
+        ("13", "13"),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sistema_interamericano_por_nome_vira_id_da_opcao(mocker, nome, tema):
+    """A piece of the case name selects one option of the tab's ``select#tema``; its ID goes in ``tema``.
+
+    Matching ignores accents, case and spacing (the portal labels read
+    ``CORTE  IDH`` and ``BRASÍLIA``). A full label wins even when it is part
+    of another one.
+    """
+    mocker.patch("time.sleep")
+    add_search(_body(tema=tema), "no_results.html")
+
+    jus.scraper("trf3").cjsg(paginas=1, sistema_interamericano=nome)
+
+
+@pytest.mark.parametrize(
+    ("nome", "mensagem", "candidatas"),
+    [
+        ("Peru", "ambíguo", ["10:", "12:", "13:"]),
+        ("caso que não existe", "não aparece em nenhuma", ["1:", "2:", "13:"]),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sistema_interamericano_nome_sem_opcao_unica_levanta_sem_buscar(mocker, nome, mensagem, candidatas):
+    """A name in no option, or in several, raises before the POST, listing the options with their IDs."""
+    mocker.patch("time.sleep")
+    add_search(_body(), "no_results.html")
+
+    with pytest.raises(ValueError, match=mensagem) as exc_info:
+        jus.scraper("trf3").cjsg(paginas=1, sistema_interamericano=nome)
+
+    for candidata in candidatas:
+        assert candidata in str(exc_info.value)
+    assert len(responses.calls) == 1
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sistema_interamericano_nome_sem_dropdown_levanta(mocker):
+    """A tab without ``select#tema`` (changed layout) cannot resolve the name; the error says to pass the ID."""
+    mocker.patch("time.sleep")
+    add_search(_body(), "no_results.html", aba="no_results.html")
+
+    with pytest.raises(RuntimeError, match="Passe o ID"):
+        jus.scraper("trf3").cjsg(paginas=1, sistema_interamericano="Gomes Lund")
+
+    assert len(responses.calls) == 1
+
+
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_data_publicacao_usa_data_tipo_zero(mocker):
     """``data_publicacao_*`` fills the same date pair with ``data_tipo=0``."""
@@ -212,6 +252,7 @@ def test_cjsg_sem_criterio_levanta():
         ("indexacao", "   "),
         ("numero_classe", "   "),
         ("legislacao", "   "),
+        ("sistema_interamericano", "   "),
     ],
 )
 @responses.activate(registry=OrderedRegistry)

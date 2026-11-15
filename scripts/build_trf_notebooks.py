@@ -6,7 +6,7 @@ Run from repo root::
     python scripts/build_trf_notebooks.py trf3     # only TRF3
 
 Writes ``docs/notebooks/trf3.ipynb`` and ``docs/notebooks/trf5.ipynb`` with
-real outputs from a live cpopg lookup. Re-run whenever the scrapers change
+real outputs from live lookups (``cpopg``/``cposg`` and, in TRF3, ``cjsg``). Re-run whenever the scrapers change
 their output shape so the docs stay in sync.
 """
 from __future__ import annotations
@@ -32,7 +32,7 @@ def code(source: str) -> nbformat.NotebookNode:
 
 
 def make_trf3() -> nbformat.NotebookNode:
-    """Build the TRF3 cpopg/cposg notebook in-memory."""
+    """Build the TRF3 cpopg/cposg/cjsg notebook in-memory."""
     nb = nbformat.v4.new_notebook()
     nb.cells = [
         md(
@@ -171,6 +171,108 @@ print(sorted(brutos[0]))
 
 df_again = trf3.cpopg_parse(brutos, ["50035362120254036342"])
 df_again[["id_cnj", "processo", "data_distribuicao"]]
+"""
+        ),
+        md(
+            """
+## Searching case law (`cjsg`)
+
+`cjsg` searches the TRF3 case-law portal at
+[web.trf3.jus.br/jurisprudencia](https://web.trf3.jus.br/jurisprudencia/),
+a system separate from the PJe. The `base` argument picks one of the four
+result sets the portal keeps apart:
+
+| `base` | Content |
+|--------|---------|
+| `"acordaos"` (default) | TRF3 appellate judgments |
+| `"turmas_recursais"` | judgments of the federal small-claims appeal panels (JEF) |
+| `"monocraticas"` | single-judge decisions of the TRF3 |
+| `"monocraticas_turmas_recursais"` | single-judge decisions of the appeal panels |
+
+Each call opens its own session on the portal and reads the result list,
+which already carries the ementa and the full text of every document: the
+cost is three fixed requests (opening the tab, the search POST and the GET of
+its redirect, which is page 1) plus one per extra page, with `sleep_time`
+between pages.
+"""
+        ),
+        code(
+            """
+df_cjsg = trf3.cjsg(
+    "medicamento",
+    paginas=range(1, 3),
+    data_julgamento_inicio="2026-01-01",
+    data_julgamento_fim="2026-06-30",
+)
+print(df_cjsg.shape)
+df_cjsg[["processo", "classe", "orgao_julgador", "relator", "data_julgamento", "meio_publicacao"]].head()
+"""
+        ),
+        md(
+            """
+### The other bases
+
+In the single-judge bases, `ementa` holds the text of the decision (there is
+no ementa) and `orgao_julgador` is empty; `data_julgamento` is the date of the
+decision.
+
+In part of the older appeal-panel judgments (`turmas_recursais`), `ementa` is
+null because the portal sends an empty ementa block; `inteiro_teor` still
+carries the full text. When this was measured, every ementa from 2013 and 2014
+was empty, and some from 2011.
+"""
+        ),
+        code(
+            """
+for base in ["turmas_recursais", "monocraticas", "monocraticas_turmas_recursais"]:
+    df_base = trf3.cjsg(
+        "medicamento",
+        base=base,
+        paginas=1,
+        data_julgamento_inicio="2026-01-01",
+        data_julgamento_fim="2026-06-30",
+    )
+    print(base, df_base.shape, df_base["relator"].iloc[0])
+"""
+        ),
+        md(
+            """
+### Filters
+
+`relator` and `classe` are free text matched against the
+portal's index, not dropdown IDs. Use the spelling of the form's dropdowns:
+`relator="NERY JUNIOR"`, `classe="AI - AGRAVO DE INSTRUMENTO"`.
+
+`orgao_julgador` picks one option of the órgão dropdown of the tab, by its
+label (`"3ª Turma"`, `"11ª Turma Recursal da Seção Judiciária de São Paulo"`)
+or by its indexed name (`"TERCEIRA TURMA"`, `"11ª TURMA RECURSAL DE SÃO
+PAULO"`), ignoring case and spacing. The value in the `orgao_julgador` column
+also works: as in the portal's form, `"1a. seção"` becomes `"1A"`, so `"QUINTA
+TURMA - 1A. SEÇÃO"` matches the option `QUINTA TURMA - 1a. SEÇÃO`. The search
+reads the dropdown from the tab it already opens and sends the pair the browser
+sends, the label and the indexed name of the option, and the portal returns the
+documents recorded under either (measured with "medicamento": `"QUINTA TURMA"`
+finds 576 documents, against 443 for the label alone and 133 for the indexed
+name alone). A label shared by more than one option, such as `"5ª Turma"` in
+the acórdãos base, raises `ValueError` listing the indexed names that resolve
+it; text that matches no option is sent as is and only finds what the portal
+records with that spelling. The monocratic bases have no órgão filter.
+
+The form has a single date pair, so pass either `data_julgamento_*` or
+`data_publicacao_*`, not both.
+"""
+        ),
+        code(
+            """
+df_filtrado = trf3.cjsg(
+    "medicamento",
+    relator="NERY JUNIOR",
+    classe="AI - AGRAVO DE INSTRUMENTO",
+    data_publicacao_inicio="2026-01-01",
+    data_publicacao_fim="2026-06-30",
+    paginas=1,
+)
+df_filtrado[["processo", "relator", "relator_acordao", "data_publicacao"]]
 """
         ),
     ]

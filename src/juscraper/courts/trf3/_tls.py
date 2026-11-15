@@ -10,9 +10,12 @@ sessão do raspador continua sendo uma ``requests.Session``, e o retry e os
 motivos de falha de :class:`~juscraper.core.http.HTTPScraper` não mudam.
 
 O ``curl_cffi`` é o extra opcional ``juscraper[tls]``. Ele só é importado na
-primeira requisição: sem o extra, o raspador é criado e o ``cjsg`` funciona,
-e a primeira consulta do ``cpopg``/``cposg`` levanta ``ImportError`` com a
-instrução de instalação.
+primeira requisição: sem o extra, o raspador é criado, e a primeira consulta
+do ``cpopg``/``cposg`` levanta ``ImportError`` com a instrução de instalação.
+O ``cjsg`` usa o adapter quando o extra está instalado
+(:func:`tls_navegador_disponivel`) e, sem ele, segue com o ``requests``, que o
+portal de jurisprudência atende de IP residencial, mas não de IP de
+datacenter.
 """
 from __future__ import annotations
 
@@ -148,6 +151,15 @@ def _importar_curl_cffi() -> ModuleType:
         return importlib.import_module("curl_cffi.requests")
     except ImportError as exc:
         raise ImportError(MENSAGEM_SEM_EXTRA) from exc
+
+
+def tls_navegador_disponivel() -> bool:
+    """Diz se o ``curl_cffi`` (extra ``juscraper[tls]``) pode ser importado."""
+    try:
+        _importar_curl_cffi()
+    except ImportError:
+        return False
+    return True
 
 
 def montar_tls_navegador(session: requests.Session, bases: list[str]) -> None:

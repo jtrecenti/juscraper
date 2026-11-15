@@ -7,6 +7,8 @@ prefixo ``ID:`` e caem no ramo que guarda só a descrição.
 """
 from __future__ import annotations
 
+import re
+
 from juscraper.courts._trf.parse import parse_detail
 from tests._helpers import load_sample_bytes
 
@@ -15,24 +17,29 @@ def _detail(tribunal: str, nome: str) -> str:
     return load_sample_bytes(tribunal, f"cpopg/{nome}").decode("latin-1")
 
 
-def test_documentos_com_prefixo_id_separam_o_id_e_cortam_a_data_no_primeiro_hifen() -> None:
+def test_documentos_com_prefixo_id_separam_id_data_e_descricao() -> None:
     """Linha ``ID: 578698643 - 2026-04-29 12:37:07.255 - Despacho (Despacho)``.
 
-    O ``id`` sai certo. A data não: o separador entre os campos é ``-``, o
-    mesmo caractere da data ISO, então ``data`` fica só com o ano e o resto da
-    data vai para o início de ``descricao``. É limitação conhecida da
-    expressão de ``_trf/parse.py`` para esse ramo, que o TRF1 e o TRF5 não
-    exercitam hoje. O teste fixa a saída atual para que a correção da
-    expressão apareça como mudança deliberada deste teste.
+    O separador entre os campos é ``-``, o mesmo caractere da data ISO; a data
+    sai inteira, com a hora, e só a descrição fica em ``descricao``.
     """
     documentos = parse_detail(_detail("_trf", "detail_normal.html"))["documentos"]
 
     assert documentos[0] == {
         "id": "578698643",
-        "data": "2026",
-        "descricao": "04-29 12:37:07.255 - Despacho (Despacho)",
+        "data": "2026-04-29 12:37:07.255",
+        "descricao": "Despacho (Despacho)",
     }
     assert all(doc["id"] and doc["id"].isdigit() for doc in documentos)
+
+
+def test_documentos_com_prefixo_id_e_milissegundos_curtos() -> None:
+    """Na página paginada o PJe corta zeros dos milissegundos (``13:44:34.33``)."""
+    documentos = parse_detail(_detail("_trf", "detail_paginated.html"))["documentos"]
+
+    assert documentos
+    assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+", doc["data"] or "") for doc in documentos)
+    assert not any(re.match(r"\d", doc["descricao"] or "") for doc in documentos)
 
 
 def test_documentos_sem_prefixo_id_guardam_so_a_descricao() -> None:

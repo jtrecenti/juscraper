@@ -19,3 +19,4 @@ def _sem_tls_navegador(monkeypatch, request):
     if request.node.get_closest_marker("integration") is not None or "tls_real" in request.fixturenames:
         return
     monkeypatch.setattr("juscraper.courts.trf3.client.montar_tls_navegador", lambda *_: None)
+    monkeypatch.setattr("juscraper.courts.trf3.cjsg_download.montar_tls_navegador", lambda *_: None)

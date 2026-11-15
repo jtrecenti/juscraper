@@ -6,9 +6,9 @@ processual do PJe, com contrato e ciclo de mudança próprios.
 """
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import Annotated, ClassVar, Literal
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
 from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, InteiroSemBool, OutputCJSGBase, SearchBase
 from ...schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
@@ -65,6 +65,17 @@ _CRITERIOS = (
 )
 
 
+def _id_numerico_como_int(valor: object) -> object:
+    """Texto só de dígitos é o ID da opção (``"2"`` vira ``2``), e não um trecho do nome do caso.
+
+    Sem isso, a união ``int | str`` do pydantic guardaria ``"2"`` como texto,
+    que nenhum nome de caso contém.
+    """
+    if isinstance(valor, str) and valor.strip().isdigit():
+        return int(valor.strip())
+    return valor
+
+
 class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Accepted input for :meth:`TRF3Scraper.cjsg` / ``cjsg_download``.
 
@@ -83,9 +94,11 @@ class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ``classe`` dos acórdãos antigos (``1708075`` em
     ``"Ap - APELAÇÃO CÍVEL - 1708075"``). ``sistema_interamericano`` é o ID
     da opção do dropdown "Sistema Interamericano", que o portal pesquisa
-    pelo ID. ``legislacao`` é texto livre, pesquisado nas referências
-    legislativas dos documentos; o painel de legislações do formulário
-    escreve nele textos como ``"LEI PELÉ FED LEI 9615 1998"``.
+    pelo ID, ou um trecho do nome do caso, que o download troca pelo ID da
+    opção lida no formulário da aba. ``legislacao`` é texto livre,
+    pesquisado nas referências legislativas dos documentos; o painel de
+    legislações do formulário escreve nele textos como
+    ``"LEI PELÉ FED LEI 9615 1998"``.
 
     ``pesquisa`` pode ser vazia quando outro critério (número, filtro ou datas)
     for informado; sem nenhum critério o portal recusa a busca. Essas regras de
@@ -103,7 +116,9 @@ class InputCJSGTRF3(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     ementa: str | None = None
     indexacao: str | None = None
     numero_classe: str | None = None
-    sistema_interamericano: InteiroSemBool | None = Field(default=None, ge=1)
+    sistema_interamericano: Annotated[
+        Annotated[InteiroSemBool, Field(ge=1)] | str | None, BeforeValidator(_id_numerico_como_int)
+    ] = None
     legislacao: str | None = None
     tamanho_pagina: Literal[10, 30, 50] = 10
 

@@ -12,10 +12,14 @@ import types
 
 import pytest
 import requests
+import responses
+from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.trf3._tls import TLSNavegadorAdapter
+from juscraper.courts.trf3.cjsg_download import INDEX_URL, SEARCH_URL
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G
+from tests.trf3._cjsg_mock import add_search, corpo_busca
 
 URL_BUSCA = f"{BASE_URL_2G}/v1/processos?page=0&numeroProcesso=5021122-65.2018.4.03.6100"
 
@@ -222,3 +226,36 @@ def test_sem_o_extra_cposg_levanta_import_error_com_a_instalacao(monkeypatch):
 
     with pytest.raises(ImportError, match=r"juscraper\[tls\]"):
         jus.scraper("trf3").cposg("5021122-65.2018.4.03.6100")
+
+
+@pytest.mark.usefixtures("tls_real")
+def test_cjsg_usa_o_tls_do_chrome_com_o_extra_e_fecha_a_sessao(curl_falso):
+    """Com o extra, a busca sai pelo ``curl_cffi``; a sessão do ``curl_cffi`` fecha ao fim da busca.
+
+    O ``curl_cffi`` falso responde JSON a tudo, então a busca para na checagem
+    da lista de resultados; o que importa é por onde a requisição saiu.
+    """
+    with pytest.raises(RuntimeError, match="não é a lista de resultados"):
+        jus.scraper("trf3", sleep_time=0).cjsg("medicamento", paginas=1)
+
+    [sessao] = curl_falso.sessoes
+    assert sessao.impersonate == "chrome"
+    assert [(metodo, url) for metodo, url, _ in sessao.chamadas[:2]] == [
+        ("GET", INDEX_URL.format(indice=0)),
+        ("POST", SEARCH_URL),
+    ]
+    assert sessao.fechada
+
+
+@pytest.mark.usefixtures("tls_real")
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_sem_o_extra_segue_com_requests(monkeypatch):
+    """Sem o extra, o ``cjsg`` não levanta ``ImportError``: a busca sai pelo ``requests``."""
+    monkeypatch.setitem(sys.modules, "curl_cffi", None)
+    monkeypatch.setitem(sys.modules, "curl_cffi.requests", None)
+    add_search(corpo_busca(txtPesquisaLivre="medicamento"), "no_results.html")
+
+    df = jus.scraper("trf3", sleep_time=0).cjsg("medicamento", paginas=1)
+
+    assert df.empty
+    assert len(responses.calls) == 3

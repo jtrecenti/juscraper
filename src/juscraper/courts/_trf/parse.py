@@ -148,22 +148,22 @@ def _parse_movimentacoes(soup: BeautifulSoup) -> list[dict[str, str | None]]:
     return out
 
 
+# A data é ISO (``yyyy-MM-dd``) com hora opcional; ancorá-la no formato evita
+# que o ``-`` interno da data seja lido como o separador dos campos.
 _DOC_RE = re.compile(
-    r"ID:\s*(\d+)\s*-\s*([\d\-:.\s]+?)\s*-\s*(.+?)$",
+    r"ID:\s*(\d+)\s*-\s*(\d{4}-\d{2}-\d{2}(?:\s+[\d:.]+)?)\s*-\s*(.+?)$",
     flags=re.DOTALL,
 )
 
 
 def _parse_documentos(soup: BeautifulSoup) -> list[dict[str, str | None]]:
-    """Parse the documentos table into ``[{id, data, descricao}, ...]``.
+    """Lê a tabela de documentos como ``[{id, data, descricao}, ...]``.
 
-    PJe formats each row as ``ID: <id> - <yyyy-MM-dd HH:MM:SS.fff> - <descricao>``.
-    Rows that don't match keep their full text in ``descricao`` so we don't
-    drop data when the format drifts. Known limitation of the ``ID:`` branch:
-    the field separator is the same hyphen the ISO date uses, so ``data``
-    keeps only the year and the rest of the date lands at the start of
-    ``descricao``. The TRF1 and TRF5 samples list documents without the
-    ``ID:`` prefix and do not reach this branch.
+    O PJe escreve cada linha como
+    ``ID: <id> - <yyyy-MM-dd HH:MM:SS.fff> - <descricao>``. A linha fora desse
+    formato guarda o texto inteiro em ``descricao``, para não perder dado
+    quando o formato muda. As páginas do TRF1 e do TRF5 dos samples listam os
+    documentos sem o prefixo ``ID:`` e caem nesse caso.
     """
     table = soup.find(
         "table", id=lambda i: bool(i and i.endswith(":processoDocumentoGridTab"))
