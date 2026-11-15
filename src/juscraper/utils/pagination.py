@@ -100,7 +100,7 @@ def extract_count_with_cascade(
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
-            tabela, sem serializar e parsear de novo. Com uma ``Tag``, a
+            tabela, sem parsear de novo. Com uma ``Tag``, a
             cascata inteira (seletores, regex no HTML bruto e
             ``zero_markers``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
