@@ -48,6 +48,11 @@ def main() -> None:
         session, dest, "direito", 1, "filtro_data_julgamento.html",
         dt_decisao_inicio="10/03/2025", dt_decisao_fim="13/03/2025",
     )
+    # Registro sem link de processo: o número vem só como texto (#495).
+    _capture(
+        session, dest, "", 1, "processo_sem_link.html",
+        dt_decisao_inicio="09/07/2027", dt_decisao_fim="09/07/2027",
+    )
 
 
 if __name__ == "__main__":
