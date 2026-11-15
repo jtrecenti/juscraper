@@ -187,9 +187,9 @@ def _session_request_fn(session: requests.Session):
     Em uso real o ``request_fn`` e ``TJMGScraper._request_with_retry``, que
     centraliza retry + ``raise_for_status``. ``_fetch_page`` depende so do
     contrato ``(method, url, **kw) -> Response`` — esse wrapper o satisfaz
-    sem amarrar o teste ao stack de retry.
+    sem amarrar o teste ao stack de retry; o ``perfil=`` e descartado.
     """
-    def request_fn(method, url, **kwargs):
+    def request_fn(method, url, *, perfil=None, **kwargs):
         return session.request(method, url, **kwargs)
     return request_fn
 
@@ -236,8 +236,9 @@ class TestFetchPage:
         assert result == "AÇÃO"
 
     def test_invoca_request_fn_com_get_e_search_url(self):
-        # Contrato minimo: GET + url + params + timeout=120 (pinado para
-        # detectar mudanca silenciosa do default que afetaria conexoes lentas).
+        # Contrato minimo: GET + url + params + perfil "cjsg", que traz o
+        # timeout e o retry de rede (o timeout e pinado em
+        # ``test_cjsg_contract.py::test_cjsg_timeout_vem_do_perfil``).
         response = MagicMock()
         response.text = "<html>ok</html>"
         request_fn = MagicMock(return_value=response)
@@ -250,7 +251,7 @@ class TestFetchPage:
         assert method == "GET"
         assert url == SEARCH_URL
         assert request_fn.call_args.kwargs["params"] == {"palavras": "x"}
-        assert request_fn.call_args.kwargs["timeout"] == 120
+        assert request_fn.call_args.kwargs["perfil"] == "cjsg"
 
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,6 @@ from __future__ import annotations
 import logging
 import time
 
-import requests
 from tqdm.auto import tqdm
 
 from juscraper.core.avisos import avisar
@@ -32,30 +31,14 @@ PARTES_URL = f"{BASE}/proc_partes_advogados2.jsp"
 ENCODING = "iso-8859-1"
 
 
-TIMEOUT = 30
-TRANSPORT_ATTEMPTS = 3
+PERFIL_CPOSG = "cposg"
+"""Perfil HTTP das paginas de resultado e de partes do ``cposg``."""
 
 
 def _get(request_fn: RequestFn, url: str, numero: str) -> str:
-    """GET com retry para timeout/conexao, que o ``request_fn`` nao cobre.
-
-    O ``request_fn`` ja repete HTTP 5xx; aqui cobrimos o caso observado em
-    que o backend responde 500 e, na nova tentativa, trava ate o timeout.
-    """
-    for attempt in range(1, TRANSPORT_ATTEMPTS + 1):
-        try:
-            resp = request_fn("GET", url, params={"listaProcessos": numero}, timeout=TIMEOUT)
-            return resp.content.decode(ENCODING)
-        except (requests.Timeout, requests.ConnectionError) as exc:
-            if attempt == TRANSPORT_ATTEMPTS:
-                raise
-            wait = 2.0 ** attempt
-            logger.warning(
-                "TJMG cposg: %s em %s (tentativa %d/%d). Aguardando %.0fs.",
-                type(exc).__name__, numero, attempt, TRANSPORT_ATTEMPTS, wait,
-            )
-            time.sleep(wait)
-    raise AssertionError("unreachable")  # pragma: no cover
+    """GET de uma pagina da consulta, com o retry do perfil :data:`PERFIL_CPOSG`."""
+    resp = request_fn("GET", url, params={"listaProcessos": numero}, perfil=PERFIL_CPOSG)
+    return resp.content.decode(ENCODING)
 
 
 def fetch_resultado(request_fn: RequestFn, numero: str) -> str:

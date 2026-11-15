@@ -31,12 +31,13 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from tests._helpers import load_sample_bytes, query_param_subset_matcher
-from tests.tjmg._helpers import SEARCH_URL, add_captcha, add_dwr, add_form
+from tests.tjmg._helpers import FORM_URL, SEARCH_URL, add_captcha, add_dwr, add_form
 
 CJSG_MIN_COLUMNS = {
     "processo", "relator", "data_julgamento", "data_publicacao", "ementa",
@@ -153,3 +154,87 @@ def test_cjsg_revalida_captcha_quando_sessao_expira(mock_txtcaptcha, mocker):
     assert df["processo"].nunique() > 10
     dwr_calls = [c for c in responses.calls if "isCaptchaValid" in c.request.url]
     assert len(dwr_calls) == 2
+
+
+_FALHAS_DE_REDE = [
+    pytest.param(
+        requests.exceptions.ChunkedEncodingError(
+            ConnectionResetError(104, "Connection reset by peer")
+        ),
+        id="chunked-connection-reset",
+    ),
+    pytest.param(requests.ConnectionError("Connection reset by peer"), id="connection-error"),
+    pytest.param(requests.ReadTimeout("read timeout=60"), id="read-timeout"),
+]
+
+
+@pytest.mark.parametrize("falha", _FALHAS_DE_REDE)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_retenta_falha_de_rede_na_paginacao(mock_txtcaptcha, mocker, falha):
+    """Conexao derrubada ou leitura lenta numa pagina ganha nova tentativa (#440)."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/results_normal_page_01.html", {"numeroRegistro": "1"})
+    responses.add(
+        responses.GET,
+        SEARCH_URL,
+        body=falha,
+        match=[query_param_subset_matcher({"numeroRegistro": "11"})],
+    )
+    _add_search("cjsg/results_normal_page_02.html", {"numeroRegistro": "11"})
+
+    df = jus.scraper("tjmg").cjsg("dano moral", paginas=range(1, 3))
+
+    assert df["processo"].nunique() > 10
+    assert len([c for c in responses.calls if "numeroRegistro=11" in c.request.url]) == 2
+
+
+@pytest.mark.parametrize("falha", _FALHAS_DE_REDE)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_retenta_falha_de_rede_no_formulario(mock_txtcaptcha, mocker, falha):
+    """O ``ReadTimeout`` do notebook (#440) vinha do formulario e do captcha."""
+    mocker.patch("time.sleep")
+    responses.add(responses.GET, FORM_URL, body=falha)
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/single_page.html", {"numeroRegistro": "1"})
+
+    df = jus.scraper("tjmg").cjsg("homicidio qualificado dolo eventual", paginas=1)
+
+    assert len(df) > 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_falha_de_rede_persistente_sobe_a_excecao_original(mock_txtcaptcha, mocker):
+    """Esgotadas as tentativas do perfil, a excecao de rede original sobe."""
+    mocker.patch("time.sleep")
+    scraper = jus.scraper("tjmg")
+    for _ in range(scraper.perfis_http["cjsg"].max_retries):
+        responses.add(responses.GET, FORM_URL, body=requests.ConnectionError("reset"))
+
+    with pytest.raises(requests.ConnectionError, match="reset"):
+        scraper.cjsg("dano moral", paginas=1)
+
+
+@pytest.mark.parametrize(
+    ("politica", "timeout"),
+    [
+        pytest.param(None, (10, 120), id="default"),
+        pytest.param({"cjsg": {"timeout": 300}}, 300, id="politica"),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_timeout_vem_do_perfil(mock_txtcaptcha, mocker, politica, timeout):
+    """Todas as requisicoes do cjsg usam o timeout do perfil, ajustavel por ``politica=``."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/single_page.html", {"numeroRegistro": "1"})
+
+    jus.scraper("tjmg", politica=politica).cjsg("homicidio", paginas=1)
+
+    assert [c.request.req_kwargs["timeout"] for c in responses.calls] == [timeout] * 4
