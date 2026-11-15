@@ -1,4 +1,8 @@
-"""Calendário, alvo do PR e relatório da integração, usados pelo workflow Integração."""
+"""Alvo de uma branch e relatório da integração ao vivo.
+
+O ``alvo-pr`` lista os tribunais que uma branch toca, para rodar a integração
+localmente; o ``relatorio`` monta a issue no workflow Integração.
+"""
 
 import argparse
 import json
@@ -27,22 +31,8 @@ LINHA_DE_EXCECAO = re.compile(r"^[A-Za-z_][\w.]*: \S")
 # sublinhado na frente (`_esaj`, `_trf`, `_pdpj_sso`) é código de uma família,
 # importado por vários tribunais.
 FONTES = ("src/juscraper/courts", "src/juscraper/aggregators")
-# O nome do tribunal vira caminho e opção de pytest no workflow.
+# O nome do tribunal vira caminho e opção de pytest.
 NOME_DE_TRIBUNAL = re.compile(r"^[a-z0-9_]+$")
-# Quando o PR muda só o workflow ou este script, o autoteste roda o TJMG, que
-# exercita a instalação mais pesada: o extra `tjmg` traz o solver de captcha.
-ARQUIVOS_DO_AUTOTESTE = frozenset({".github/workflows/integration.yml", "scripts/integration_report.py"})
-TRIBUNAL_DO_AUTOTESTE = "tjmg"
-
-
-def em_recesso(dia: date) -> bool:
-    """Indica se a data cai no recesso forense, de 20/12 a 20/01, inclusive."""
-    return (dia.month == 12 and dia.day >= 20) or (dia.month == 1 and dia.day <= 20)
-
-
-def deve_rodar(dia: date, evento: str) -> bool:
-    """Só a execução agendada respeita o recesso; disparo manual roda sempre."""
-    return not (evento == "schedule" and em_recesso(dia))
 
 
 def tribunais_conhecidos(raiz: Path) -> set[str]:
@@ -68,14 +58,14 @@ def usuarios_da_familia(raiz: Path, fonte: str, familia: str) -> set[str]:
     }
 
 
-def alvo_do_pr(arquivos: list[str], raiz: Path, fora: set[str]) -> tuple[list[str], list[str]]:
-    """Devolve ``(a rodar, fora do CI)``: os tribunais cujo diretório o PR tocou.
+def alvo_do_pr(arquivos: list[str], raiz: Path) -> list[str]:
+    """Devolve os tribunais cujo diretório a branch tocou.
 
     Conta o diretório do tribunal em ``src/juscraper/courts/`` ou
     ``src/juscraper/aggregators/``, em ``tests/`` e o notebook em
     ``docs/notebooks/``. Mudança no código de uma família conta para todo
     tribunal que a importa. Código comum (``core/``, ``utils/``) não aponta
-    tribunal: rodar todos seria a execução semanal inteira.
+    tribunal: rodar todos seria a execução completa.
     """
     tocados: set[str] = set()
     for arquivo in arquivos:
@@ -90,10 +80,7 @@ def alvo_do_pr(arquivos: list[str], raiz: Path, fora: set[str]) -> tuple[list[st
             tocados.add(partes[1])
         elif partes[:2] == ["docs", "notebooks"] and len(partes) == 3 and partes[2].endswith(".ipynb"):
             tocados.add(partes[2].removesuffix(".ipynb"))
-    tocados &= tribunais_conhecidos(raiz)
-    if not tocados and ARQUIVOS_DO_AUTOTESTE & set(arquivos):
-        tocados = {TRIBUNAL_DO_AUTOTESTE}
-    return sorted(tocados - fora), sorted(tocados & fora)
+    return sorted(tocados & tribunais_conhecidos(raiz))
 
 
 def arquivos_da_branch(raiz: Path, referencia: str) -> list[str]:
@@ -269,15 +256,10 @@ def main() -> int:
     analisador = argparse.ArgumentParser(description=__doc__)
     subcomandos = analisador.add_subparsers(dest="subcomando", required=True)
 
-    calendario = subcomandos.add_parser("calendario", help="imprime rodar=true ou rodar=false")
-    calendario.add_argument("--data", type=date.fromisoformat, required=True)
-    calendario.add_argument("--evento", required=True)
-
-    alvo = subcomandos.add_parser("alvo-pr", help="imprime tribunais=... e fora=... a partir dos arquivos do PR")
+    alvo = subcomandos.add_parser("alvo-pr", help="imprime tribunais=... a partir dos arquivos da branch")
     origem = alvo.add_mutually_exclusive_group(required=True)
     origem.add_argument("--arquivos", type=Path, help="saída de git diff --name-only")
-    origem.add_argument("--base-ref", help="base do PR no Git local; o script roda o git diff a partir dela")
-    alvo.add_argument("--fora", default="", help="nomes separados por espaço que ficam fora do CI")
+    origem.add_argument("--base-ref", help="base da branch no Git local; o script roda o git diff a partir dela")
     alvo.add_argument("--raiz", type=Path, default=Path())
 
     relatorio = subcomandos.add_parser("relatorio", help="monta o corpo da issue e o comentário de mudança")
@@ -290,10 +272,6 @@ def main() -> int:
     relatorio.add_argument("--fora", default="", help="nomes separados por espaço que ficaram fora da execução")
 
     argumentos = analisador.parse_args()
-    if argumentos.subcomando == "calendario":
-        rodar = "true" if deve_rodar(argumentos.data, argumentos.evento) else "false"
-        sys.stdout.write(f"rodar={rodar}\n")
-        return 0
     if argumentos.subcomando == "alvo-pr":
         if argumentos.arquivos is not None:
             arquivos = argumentos.arquivos.read_text(encoding="utf-8").splitlines()
@@ -306,8 +284,7 @@ def main() -> int:
                     "Atualize a referência com git fetch ou informe outra --base-ref.\n",
                 )
                 return 1
-        rodar_no_pr, fora = alvo_do_pr(arquivos, argumentos.raiz, set(argumentos.fora.split()))
-        sys.stdout.write(f"tribunais={' '.join(rodar_no_pr)}\nfora={' '.join(fora)}\n")
+        sys.stdout.write(f"tribunais={' '.join(alvo_do_pr(arquivos, argumentos.raiz))}\n")
         return 0
 
     suites = {rotulo: ler_suite(caminho) for rotulo, caminho in argumentos.suite}
