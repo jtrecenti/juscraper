@@ -23,6 +23,8 @@ class _FimPagina(NamedTuple):
     pagina: int
     recebidos: int
     last_page: int | None
+    # Página da busca seguinte; é a mesma ``pagina`` quando ela vem em pedaços após o fallback.
+    proxima_pagina: int
 
 
 def _next_search_after(
@@ -47,6 +49,16 @@ def _next_search_after(
         )
         return None
     return search_after
+
+
+def _teto_apos_busca(teto: int, pedido: int, efetivo: int) -> int:
+    """Teto de ``size`` das buscas seguintes.
+
+    ``call_datajud_api`` reduz ``size`` no payload quando faz o fallback de
+    504/timeout; o tamanho reduzido vira o teto. Um pedido menor que o teto,
+    o pedaço que fecha a página, não o rebaixa.
+    """
+    return efetivo if efetivo < pedido else teto
 
 
 def _mensagem_falha_parcial(
@@ -169,7 +181,7 @@ def _verificar_fim_pagina(
     """Verifica cursor pendente e término prematuro após consumir a página."""
     total_exato = _total_exato(total_info)
     cursor_ausente = len(hits) >= effective_size and not isinstance(hits[-1].get("sort"), list)
-    pagina_pendente = contexto.last_page is None or contexto.pagina < contexto.last_page
+    pagina_pendente = contexto.last_page is None or contexto.proxima_pagina <= contexto.last_page
     total_esgotado = total_exato is not None and percorridos >= total_exato
     if cursor_ausente and pagina_pendente and not total_esgotado:
         mensagem = (
