@@ -539,6 +539,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ColetaParcialError <span class="im">as</span> erro:</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> erro.resultado</span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(erro.falhas)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>TJMG <code>cjsg</code> and <code>cjsg_download</code> raise it too when a result page fails with another page already downloaded. The search stops at that page: <code>.resultado</code> holds the pages read before it (as a DataFrame, also in <code>cjsg_download</code>), <code>.falhas</code> holds only that failure, and the message lists the missing pages, to request again with <code>paginas=</code>.</p>
 <p>DataJud’s <code>listar_processos</code> follows the same rule. When a page fails (HTTP error, malformed response, a response with <code>_shards.failed &gt; 0</code>, or a page that ends before the exact <code>hits.total</code>), the remaining aliases are still queried and <code>ColetaParcialError</code> is raised at the end. <code>.resultado</code> holds every record received, from all aliases, and each item in <code>.falhas</code> is <code>(None, None, exception)</code>; the error message names the alias and the page that failed.</p>
 <p>Combining <code>auto_chunk=True</code> with <code>paginas</code> is rejected when the interval is long enough to actually trigger chunking: the multi-window semantics for <code>paginas</code> are ambiguous (each window? aggregated budget?) and the design prefers to fail explicitly. For short intervals where chunking is a no-op, <code>paginas</code> works as usual.</p>
 </section>
@@ -666,16 +667,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>base_backoff=</code> per call; <code>max_backoff</code> in <code>politica=</code> (DataJud, JusBR, PDPJ, TRF3, TJMG, TJRS, TJSC)</td>
 </tr>
 <tr class="even">
+<td>Timeout and dropped connection</td>
+<td>Not retried: the first <code>requests.Timeout</code> or <code>requests.ConnectionError</code> is raised</td>
+<td><code>retry_on_timeout</code> and <code>retry_on_connection_error</code> in <code>politica=</code>, for scrapers with HTTP profiles; already on in the profiles of TJMG, TJRS and TRF3 (both), JusBR and PDPJ (timeout only) and TJSC (connection only)</td>
+</tr>
+<tr class="odd">
 <td><code>Retry-After</code> (numeric seconds)</td>
 <td>Honored when present</td>
 <td>n/a</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>Retry-After</code> (HTTP-date)</td>
 <td>Ignored — falls back to backoff (#201)</td>
 <td>n/a</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Inter-request pause</td>
 <td><code>sleep_time=1.0</code> from the scraper constructor</td>
 <td><code>jus.scraper("tjsp", sleep_time=5.0)</code></td>
