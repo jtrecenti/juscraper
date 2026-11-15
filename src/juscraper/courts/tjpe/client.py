@@ -112,7 +112,8 @@ class TJPEScraper(HTTPScraper):
     ) -> list:
         """Baixa as paginas brutas do cjsg do TJPE.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa,
+        e levanta e avisa nos mesmos casos.
 
         Returns:
             list: Lista de strings HTML brutas, uma por pagina.
@@ -213,6 +214,14 @@ class TJPEScraper(HTTPScraper):
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido (ex.: data
                 fora dos formatos aceitos, ``tipo_decisao`` fora do enum).
+            ValueError: Quando a busca devolve uma pagina fora dos formatos
+                conhecidos (nem resultados, nem escolha do tipo, nem "Nenhum
+                documento encontrado").
+
+        Warns:
+            UserWarning: Quando o portal responde "Nenhum documento
+                encontrado"; o resultado sai vazio. Com a pesquisa fora do ar,
+                o portal responde assim a qualquer termo.
 
         Returns:
             pd.DataFrame: Uma linha por decisao. Colunas canonicas:

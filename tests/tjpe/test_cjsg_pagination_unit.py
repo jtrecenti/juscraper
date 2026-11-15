@@ -1,7 +1,9 @@
 """Testes unitarios da parseria de paginacao TJPE (refs #87)."""
 from __future__ import annotations
 
-from juscraper.courts.tjpe.download import extract_total_docs, is_escolha_page, is_results_page
+import pytest
+
+from juscraper.courts.tjpe.download import extract_total_docs, is_escolha_page, is_results_page, is_sem_resultados_page
 from tests._helpers import load_sample
 
 
@@ -47,3 +49,16 @@ def test_is_escolha_page_case_insensitive():
     html = "<html><body>5 DOCUMENTOS ENCONTRADOS</body></html>"
     assert is_escolha_page(html) is True
     assert is_results_page(html) is False
+
+
+@pytest.mark.parametrize(
+    ("sample", "esperado"),
+    [
+        ("no_results.html", True),
+        ("no_results_todos.html", True),
+        ("step_02_escolha.html", False),
+        ("step_03_resultado.html", False),
+    ],
+)
+def test_is_sem_resultados_page(sample, esperado):
+    assert is_sem_resultados_page(load_sample("tjpe", f"cjsg/{sample}")) is esperado
