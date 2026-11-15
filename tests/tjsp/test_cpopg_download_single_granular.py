@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 import requests
 
-from juscraper.courts.tjsp.cpopg_download import cpopg_download_html_single
+from juscraper.courts.tjsp.cpopg_download import _TIMEOUT, cpopg_download_html_single
 from tests._helpers import load_sample
 
 CNJ = "1000000-00.2024.8.26.0001"
@@ -46,7 +46,7 @@ def test_link_unico_salva_busca_sem_requisicao_adicional(tmp_path, contexto):
         "dadosConsulta.valorConsultaNuUnificado": CNJ,
         "dadosConsulta.valorConsulta": "",
         "dadosConsulta.tipoNuProcesso": "UNIFICADO",
-    })
+    }, timeout=_TIMEOUT)
     extrair.assert_called_once_with(resposta)
     pausa.assert_called_once_with(0.2)
 
@@ -75,7 +75,7 @@ def test_varios_links_baixam_html_individual_em_ordem(tmp_path, contexto):
     extrair.return_value = LINKS
     sessao.get.side_effect = [resposta, Mock(text="Decisão", status_code=200), Mock(text="Petição", status_code=200)]
     cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
-    assert sessao.get.call_args_list[1:] == [call(url) for url in URLS_DOCUMENTOS]
+    assert sessao.get.call_args_list[1:] == [call(url, timeout=_TIMEOUT) for url in URLS_DOCUMENTOS]
     assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == "Decisão"
     assert (diretorio / f"{CNJ_LIMPO}_SEGUNDO.html").read_text(encoding="utf-8") == "Petição"
 
@@ -137,12 +137,13 @@ def test_lista_com_um_processo_baixa_o_show_do(tmp_path, contexto):
     resposta.text = '<div id="listagemDeProcessos"><a href="#">Incidentes e recursos</a></div>'
     sessao.get.side_effect = [resposta, Mock(text="Processo", status_code=200)]
     cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
-    assert sessao.get.call_args_list[1:] == [call(URLS_DOCUMENTOS[0])]
+    assert sessao.get.call_args_list[1:] == [call(URLS_DOCUMENTOS[0], timeout=_TIMEOUT)]
     assert (diretorio / f"{CNJ_LIMPO}_PRIMEIRO.html").read_text(encoding="utf-8") == "Processo"
 
 
 @pytest.mark.parametrize("erro", [
-    requests.ConnectionError("rede"), ValueError("valor"), OSError("disco"), AttributeError("atributo"),
+    requests.ConnectionError("rede"), requests.ReadTimeout("prazo"), ValueError("valor"), OSError("disco"),
+    AttributeError("atributo"),
     UnicodeDecodeError("utf-8", b"\xe9", 0, 1, "byte inválido"),
 ])
 def test_cinco_falhas_levantam_erro_com_diretorio_vazio(tmp_path, contexto, erro):
