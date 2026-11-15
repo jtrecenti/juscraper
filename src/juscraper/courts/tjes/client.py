@@ -71,8 +71,14 @@ class TJESScraper(HTTPScraper):
             Filter by jurisdiction.
         assunto : str
             Filter by subject.
-        ordenacao : str
-            Sort expression (e.g. ``dt_juntada desc``).
+        ordenacao : str, optional
+            Sort order; ``None`` (default) sorts by relevance. Options depend on
+            ``core``: ``"dt_juntada desc"``, ``"dt_juntada asc"``,
+            ``"nr_processo asc"``, ``"nr_processo desc"`` for ``pje2g``,
+            ``pje2g_mono`` and :meth:`cjpg` (``pje1g``); ``"data_julgamento desc|asc"``,
+            ``"data_publicacao desc|asc"``, ``"numero_processo_legado asc|desc"``
+            for ``legado``; ``"data_julgamento desc|asc"``,
+            ``"num_processo asc|desc"`` for ``turma_recursal_legado``.
         tamanho_pagina : int
             Results per page (default 20 — particularidade do backend
             Elasticsearch do TJES; demais tribunais usam 10). Aceita

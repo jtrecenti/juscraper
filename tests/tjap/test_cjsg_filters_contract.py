@@ -24,7 +24,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "relator": "FULANO DE TAL",
         "secretaria": "CAMARA UNICA",
         "classe": "APELACAO",
-        "votacao": "Unanime",
+        "votacao": "Unânime",
         "origem": "MACAPA",
     }
     responses.add(
@@ -61,6 +61,29 @@ def test_cjsg_numero_cnj_alias_emits_deprecation_warning(mocker):
             paginas=1,
             numero_cnj=numero,
         )
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_votacao_unanime_sem_acento_vira_unanime_com_aviso(mocker):
+    """``votacao="Unanime"`` vai ao portal como ``"Unânime"``, com aviso.
+
+    Ao vivo, em 15/11/2026, o Tucujuris devolvia para ``"Unanime"`` os mesmos
+    acordaos de ``"Maioria"``.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=load_sample("tjap", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(_payload("dano moral", votacao="Unânime"))],
+    )
+
+    with pytest.warns(DeprecationWarning, match='votacao="Unanime".*deprecado'):
+        df = jus.scraper("tjap").cjsg("dano moral", paginas=1, votacao="Unanime")
 
     assert isinstance(df, pd.DataFrame)
 

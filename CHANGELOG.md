@@ -44,14 +44,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **BREAKING:** TRF3 `cpopg`, `cposg` e os pares `*_download`: passam a exigir o extra opcional `juscraper[tls]` (`curl_cffi`), que faz as requisições à consulta pública com a impressão digital TLS do Chrome. O Akamai do portal deixa sem resposta, até o timeout, as requisições do `requests`, inclusive de IP residencial. Sem o extra, a primeira consulta levanta `ImportError` com a instrução `pip install 'juscraper[tls]'`. O `cjsg` não precisa do extra, mas o usa quando instalado (ver `Fixed`).
 - **BREAKING:** TRF3 `cpopg`: `download_pecas` e `diretorio` passam a ser aceitos só por nome (`cpopg(cnj, download_pecas=True)`); a forma posicional `cpopg(cnj, True)` levanta `TypeError`. O `cposg`, novo, já nasce assim. A mudança entra sem ciclo de aviso porque o `cpopg` do TRF3 não devolvia dados desde a troca do portal e as demais quebras desta versão já obrigam a rever a chamada.
 - **BREAKING:** TRF3 `cpopg`: mudanças de formato nas colunas que já existiam. `assunto` com mais de um assunto mantém a quebra de linha (`\n`) entre eles; antes os espaços eram colapsados num só. `participante`, em `polo_ativo` e `polo_passivo`, deixa de trazer a procuradoria no fim do texto, que passa a ficar na chave `procuradoria`. A ordem das colunas muda: `id_cnj` passa a ser a primeira (antes ficava por último quando o primeiro CNJ do lote era encontrado), as colunas de texto saem como `processo`, `classe`, `assunto`, `data_distribuicao`, `orgao_julgador`, `orgao_julgador_colegiado`, `jurisdicao`, `endereco_orgao` (antes `processo`, `data_distribuicao`, `classe`, `assunto`, `jurisdicao`, `orgao_julgador`, `endereco_orgao`), e `outros_interessados` entra entre `polo_passivo` e `movimentacoes`; quem lê as colunas por posição precisa passar a ler por nome.
-- TJBA, TJMT, TJAP, TJRJ, TJPA, TJPB e TJGO `cjsg`/`cjsg_download`: filtros de domínio fechado passam a aceitar só os valores que o portal oferece, e um valor fora da lista levanta `ValidationError` antes de qualquer requisição. Antes, ele ia ao backend, que respondia com erro genérico (TJBA, TJPA `sort_by`, TJRJ `competencia`) ou ignorava o valor sem avisar (TJPA `query_type`); no TJMT, `tipo_consulta` desconhecido já era recusado, com `ValueError`. Os valores vêm dos formulários e das APIs de cada portal, capturados em 15/11/2026 (#207):
+- TJBA, TJMT, TJAP, TJRJ, TJPA, TJPB, TJGO e TJES `cjsg`/`cjsg_download` (e `cjpg`/`cjpg_download` no TJES): filtros de domínio fechado passam a aceitar só os valores que o portal oferece, e um valor fora da lista levanta `ValidationError` antes de qualquer requisição. Antes, ele ia ao backend, que respondia com erro genérico (TJBA, TJPA `sort_by`, TJRJ `competencia`, TJES `ordenacao` com campo que o core não tem) ou ignorava o valor sem avisar (TJPA `query_type`; TJES `ordenacao` com campo vazio no core); no TJMT, `tipo_consulta` desconhecido já era recusado, com `ValueError`. Os valores vêm dos formulários e das APIs de cada portal, capturados em 15/11/2026 (#207):
 
   | Tribunal | Parâmetro | Valores aceitos |
   | --- | --- | --- |
   | TJBA | `ordenado_por` | `"dataPublicacao"`, `"relevancia"` |
   | TJMT | `tipo_consulta` | `"Acordao"`, `"DecisaoMonocratica"` |
   | TJAP | `orgao` | `"0"`, `"tj"`, `"recursal"` |
-  | TJAP | `votacao` | `"0"`, `"Unânime"`, `"Unanime"`, `"Maioria"` |
+  | TJAP | `votacao` | `"0"`, `"Unânime"`, `"Maioria"` (`"Unanime"` vira `"Unânime"`, com aviso; ver `Deprecated`) |
   | TJRJ | `competencia` | `"1"` a `"3"` (ou o inteiro) |
   | TJRJ | `origem` | `"1"` a `"5"` (ou o inteiro) |
   | TJPA | `sort_by` | `"datajulgamento"`, `"datapublicacao"`, `"relevancia"` |
@@ -59,8 +59,11 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   | TJPA | `query_scope` | `"ementa"`, `"inteiroTeor"`, `"inteiroteor"` |
   | TJPB | `id_origem` | `"8"`, `"2"`, `"8,2"` |
   | TJGO | `id_serventia_subtipo` | `0` e os códigos do seletor "Órgão" do Projudi, como string ou inteiro |
+  | TJES | `ordenacao` em `pje2g`, `pje2g_mono` e `cjpg` | `"dt_juntada desc"`, `"dt_juntada asc"`, `"nr_processo asc"`, `"nr_processo desc"` |
+  | TJES | `ordenacao` em `legado` | `"data_julgamento desc"`/`"asc"`, `"data_publicacao desc"`/`"asc"`, `"numero_processo_legado asc"`/`"desc"` |
+  | TJES | `ordenacao` em `turma_recursal_legado` | `"data_julgamento desc"`/`"asc"`, `"num_processo asc"`/`"desc"` |
 
-  Sem ciclo de deprecação: os valores recusados não estão entre as opções do portal. A grafia que a documentação indicava continua aceita quando não se provou errada (TJAP `"Unanime"`, TJPA `"inteiroteor"`). A exceção é `query_type="any"`, que a docstring do TJPA indicava e que o portal tratava como `"free"` sem aviso em 15/11/2026; passa a levantar `ValidationError`, e o valor certo é `"anywords"`. A docstring do TJRJ descrevia `competencia="3"` como "ambos"; no formulário, `"3"` é a competência fazendária, que só existe na Turma Recursal (`origem="4"`). O TJES `ordenacao` continua texto livre: é a expressão de ordenação repassada à API, e o portal recusou o acesso na captura.
+  Sem ciclo de deprecação: os valores recusados não estão entre as opções do portal. A grafia que a documentação indicava continua aceita quando não se provou errada (TJPA `"inteiroteor"`). A exceção é `query_type="any"`, que a docstring do TJPA indicava e que o portal tratava como `"free"` sem aviso em 15/11/2026; passa a levantar `ValidationError`, e o valor certo é `"anywords"`. A docstring do TJRJ descrevia `competencia="3"` como "ambos"; no formulário, `"3"` é a competência fazendária, que só existe na Turma Recursal (`origem="4"`). No TJES, `ordenacao=None` continua ordenando por relevância; um valor de outro core levanta `ValidationError` dizendo quais o core aceita.
 - TJRJ `cjsg`/`cjsg_download` com `origem="4"` (Turma Recursal) e `competencia="3"` (fazendária) passa a trazer os acórdãos das turmas fazendárias. Antes, o postback que troca a origem levava a competência 3, que o formulário da origem padrão não oferece, e o portal respondia HTTP 500 até esgotar as tentativas.
 
 ### Added
@@ -82,6 +85,12 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Deprecated
 
+- TJAP `cjsg`/`cjsg_download`: `votacao="Unanime"`, sem acento, passa a ser alias deprecado de `"Unânime"` e emite `DeprecationWarning` (ver `Fixed`). Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
+
+  | Valor antigo | Valor canônico |
+  | --- | --- |
+  | `votacao="Unanime"` | `votacao="Unânime"` |
+
 - TRF3 `cpopg_parse`: o parâmetro `htmls` passa a ser alias deprecado de `brutos` e emite `DeprecationWarning`; passar os dois levanta `ValueError`. O conteúdo precisa ser o dicionário que `cpopg_download` devolve agora (ver `Changed`). Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
 
   | Nome antigo | Nome canônico |
@@ -95,6 +104,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- TJAP `cjsg`/`cjsg_download`: `votacao="Unanime"`, a grafia que a docstring indicava até a 0.5.0, passa a trazer os acórdãos unânimes. O portal só reconhece `"Unânime"`, com acento, e, em 15/11/2026, devolvia para `"Unanime"` os mesmos acórdãos de `"Maioria"`, sem erro.
 - TRF3 `cjsg` e `cjsg_download`: com o extra `juscraper[tls]` instalado, as requisições ao portal de jurisprudência saem com o TLS do Chrome, como no `cpopg` e no `cposg`. Em 15/11/2026, o Akamai do portal deixava sem resposta até o timeout as requisições do `requests` vindas de IP de datacenter, e o `cjsg` falhava depois das tentativas. Sem o extra, a busca segue com o `requests`, que funciona de IP residencial.
 - TRF3 `cjsg` e `cjsg_download`: o 403 do sensor de bot do Akamai, que não traz "Access Denied" (no formato observado na consulta processual do TRF3), passa a levantar `BotChallengeBlockedError` na primeira requisição, como no `cpopg`. Antes, era retentado como um 403 comum e terminava em `RetryExhaustedError`.
 - TRF1, TRF5 e TJPE `cpopg`: no documento que o PJe lista como `ID: <id> - <data> - <descrição>`, `data` traz a data inteira, com a hora (`"2026-04-29 12:37:07.255"`), e `descricao` só a descrição. Antes, `data` ficava só com o ano e o resto da data ia para o início de `descricao`. As páginas do TRF1 e do TRF5 observadas listam os documentos sem esse prefixo.

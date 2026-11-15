@@ -29,7 +29,13 @@ from juscraper.courts.stf.schemas import InputListarDecisoesSTF
 from juscraper.courts.tjap.schemas import InputCJSGTJAP
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
 from juscraper.courts.tjdft.schemas import InputCJSGTJDFT
-from juscraper.courts.tjes.schemas import InputCJPGTJES, InputCJSGTJES
+from juscraper.courts.tjes.schemas import (
+    ORDENACOES_POR_CORE,
+    InputCJPGTJES,
+    InputCJSGTJES,
+    OrdenacaoCJPG,
+    OrdenacaoCJSG,
+)
 from juscraper.courts.tjgo.schemas import InputCJSGTJGO
 from juscraper.courts.tjmg.schemas import InputCJSGTJMG
 from juscraper.courts.tjmt.schemas import InputCJSGTJMT
@@ -105,7 +111,8 @@ _LITERAL_207_CASES = [
     (InputCJSGTJBA, "ordenado_por", ["dataPublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
     (InputCJSGTJMT, "tipo_consulta", ["Acordao", "DecisaoMonocratica"], ["Decisao", "acordao"]),
     (InputCJSGTJAP, "orgao", ["0", "tj", "recursal"], ["1", "turma"]),
-    (InputCJSGTJAP, "votacao", ["0", "Unânime", "Unanime", "Maioria"], ["unanime", "Empate"]),
+    # "Unanime" sai do schema: o client o converte em "Unânime" com DeprecationWarning.
+    (InputCJSGTJAP, "votacao", ["0", "Unânime", "Maioria"], ["Unanime", "unanime", "Empate"]),
     (InputCJSGTJRJ, "competencia", ["1", "2", "3", 1, 3], ["4", 9]),
     (InputCJSGTJRJ, "origem", ["1", "5", 4], ["6", 0]),
     (InputCJSGTJPA, "sort_by", ["datajulgamento", "datapublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
@@ -113,6 +120,12 @@ _LITERAL_207_CASES = [
     (InputCJSGTJPA, "query_scope", ["ementa", "inteiroTeor", "inteiroteor"], ["integra", "xyz"]),
     (InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
     (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
+    (
+        InputCJPGTJES,
+        "ordenacao",
+        [None, "dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"],
+        ["data_julgamento desc", "dt_juntada", "dt_juntada DESC", "foo desc", ""],
+    ),
 ]
 
 
@@ -127,6 +140,24 @@ def test_literal_207_aceita_dominio_e_recusa_o_resto(schema_cls, campo, aceitos,
     for valor in recusados:
         with pytest.raises(ValidationError):
             schema_cls(pesquisa="x", **{campo: valor})
+
+
+@pytest.mark.parametrize("core", sorted(ORDENACOES_POR_CORE.keys() - {"pje1g"}))
+def test_tjes_cjsg_ordenacao_aceita_so_as_opcoes_do_core(core):
+    aceitas = set(ORDENACOES_POR_CORE[core])
+    todas = set(get_args(OrdenacaoCJSG))
+    for valor in aceitas:
+        InputCJSGTJES(pesquisa="x", core=core, ordenacao=valor)
+    for valor in todas - aceitas:
+        with pytest.raises(ValidationError, match="nao existe no core"):
+            InputCJSGTJES(pesquisa="x", core=core, ordenacao=valor)
+    assert InputCJSGTJES(pesquisa="x", core=core).ordenacao is None
+
+
+def test_tjes_cjsg_ordenacao_cobre_as_opcoes_de_todos_os_cores():
+    opcoes = {v for valores in ORDENACOES_POR_CORE.values() for v in valores}
+    assert opcoes == set(get_args(OrdenacaoCJSG))
+    assert set(ORDENACOES_POR_CORE["pje1g"]) == set(get_args(OrdenacaoCJPG))
 
 
 def test_tjgo_id_serventia_subtipo_int_vira_string():

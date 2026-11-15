@@ -4,6 +4,7 @@ from datetime import date
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
 from tests._helpers import assert_unknown_kwarg_raises
@@ -113,6 +114,25 @@ def test_cjsg_deprecated_relator_and_classe_aliases_emit_warnings(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("magistrado" in m and "deprecado" in m for m in messages)
     assert any("classe_judicial" in m and "deprecado" in m for m in messages)
+
+
+@responses.activate
+def test_cjsg_ordenacao_do_core_legado_vai_como_sort(mocker):
+    """No core ``legado``, a ordenacao usa os campos desse core."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", core="legado", ordenacao="numero_processo_legado asc")
+
+    df = jus.scraper("tjes").cjsg("dano moral", paginas=1, core="legado", ordenacao="numero_processo_legado asc")
+
+    assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_ordenacao_de_outro_core_falha_antes_da_rede():
+    """``dt_juntada`` nao existe no core ``legado``: a API responderia HTTP 500."""
+    with pytest.raises(ValidationError, match="nao existe no core 'legado'"):
+        jus.scraper("tjes").cjsg("dano moral", paginas=1, core="legado", ordenacao="dt_juntada desc")
+    assert len(responses.calls) == 0
 
 
 def test_cjsg_unknown_kwarg_raises():
