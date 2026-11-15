@@ -11,7 +11,12 @@ import pandas as pd
 # Abertura de cada resultado. No HTML atual do portal a div traz atributos
 # (``data-realizador``, ``data-id-arquivo``) depois da classe; o literal
 # ``<div class="search-result">`` deixava de casar e o cjsg voltava vazio.
-_RESULT_OPEN_RE = re.compile(r'<div class="search-result"(?:\s[^>]*)?>')
+# Os valores podem conter ``>`` (``data-classe-acao='... -> Recursos -> ...'``),
+# entao a tag so termina fora das aspas.
+_RESULT_OPEN_RE = re.compile(
+    r'<div class="search-result"'
+    r"""(?:\s+[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?)*\s*>"""
+)
 _PROC_RE = re.compile(r"(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _ID_ARQUIVO_RE = re.compile(
     r"abrirArquivo\('ConsultaJurisprudencia',\s*'(\d+)'\)"
@@ -23,9 +28,11 @@ _ID_ARQUIVO_RE = re.compile(
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"\s+")
 # Paragrafo de data: "Publicado em ..." no formato antigo; no HTML atual
-# (nov/2026) vem "Julgado em ..." e o paragrafo do tipo de ato deixou de existir.
+# (nov/2026) o mesmo campo vem rotulado "Julgado em ..." (nos samples antigos
+# "Publicado em" coincide com o "julgado em" do texto de copia do bloco), e o
+# paragrafo do tipo de ato deixou de existir.
 _DATA_RE = re.compile(
-    r"(Publicado|Julgado) em\s*(\d{2}/\d{2}/\d{4}(?:\s*\d{2}:\d{2}:\d{2})?)?"
+    r"(?:Publicado|Julgado) em\s*(\d{2}/\d{2}/\d{4}(?:\s*\d{2}:\d{2}:\d{2})?)?"
 )
 
 
@@ -82,22 +89,24 @@ def _parse_block(block: str) -> dict:
     # <p><b><i>Publicado em ...</i></b></p>
     # <p class="conteudoTexto">texto</p>
     # No HTML atual nao ha o <p> do tipo e a data vem como "Julgado em ...".
+    # Depois do texto vem o bloco de trechos do INTEIRO TEOR, que nao entra:
+    # sem o <p> do tipo, o primeiro desses paragrafos cairia em ``tipo_ato``.
     paragraphs = re.findall(r"<p([^>]*)>(.*?)</p>", block, re.DOTALL)
     serventia: str | None = None
     relator: str | None = None
     tipo: str | None = None
-    datas: dict[str, str | None] = {}
+    data_raw: str | None = None
     texto: str | None = None
     for attrs, content in paragraphs:
         cleaned = _clean(content)
         if "conteudoTexto" in attrs:
             texto = cleaned
-            continue
+            break
         if not cleaned:
             continue
         data_match = _DATA_RE.match(cleaned)
         if data_match:
-            datas[data_match.group(1)] = data_match.group(2)
+            data_raw = data_match.group(1)
             continue
         if serventia is None:
             serventia = cleaned
@@ -112,8 +121,7 @@ def _parse_block(block: str) -> dict:
         "serventia": serventia,
         "relator": relator,
         "tipo_ato": tipo,
-        "data_publicacao": _parse_date(datas.get("Publicado")),
-        "data_julgamento": _parse_date(datas.get("Julgado")),
+        "data_publicacao": _parse_date(data_raw),
         "texto": texto,
     }
 
