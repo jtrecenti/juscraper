@@ -8,7 +8,12 @@ import re
 
 import pytest
 
-from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
+from juscraper.utils.pagination import (
+    extract_count_with_cascade,
+    paginas_no_intervalo,
+    parse_page_number,
+    resolve_total_pages,
+)
 
 
 def test_selector_and_regex_match():
@@ -248,3 +253,18 @@ def test_parse_page_number_aceita_digitos_ascii():
 def test_parse_page_number_rejeita(valor):
     with pytest.raises(ValueError, match="TJXX: link sem número de página válido"):
         parse_page_number(valor, tribunal="TJXX", origem="link")
+
+
+def test_paginas_no_intervalo_mantem_a_ordem_e_avisa_as_de_fora(caplog):
+    with caplog.at_level("WARNING", logger="juscraper.utils.pagination"):
+        assert paginas_no_intervalo([3, 0, 1, 5, 2], 3, tribunal="TJXX") == [3, 1, 2]
+
+    assert [r.getMessage() for r in caplog.records] == [
+        "TJXX: página 0 fora do intervalo 1-3",
+        "TJXX: página 5 fora do intervalo 1-3",
+    ]
+
+
+def test_paginas_no_intervalo_aceita_range_e_devolve_lista_vazia_sem_validas():
+    assert paginas_no_intervalo(range(1, 4), 3, tribunal="TJXX") == [1, 2, 3]
+    assert paginas_no_intervalo(range(4, 6), 3, tribunal="TJXX") == []

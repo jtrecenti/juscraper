@@ -1,18 +1,15 @@
 """HTTP-level helpers for the TJGO jurisprudence search."""
 from __future__ import annotations
 
-import logging
 import math
 import re
 import time
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
 
 from .parse import has_results
-
-logger = logging.getLogger("juscraper.tjgo")
 
 SEARCH_URL = "https://projudi.tjgo.jus.br/ConsultaJurisprudencia"
 RESULTS_PER_PAGE = 10
@@ -161,10 +158,7 @@ def cjsg_download(
         paginas = range(1, n_pags + 1)
 
     results: list = []
-    for pagina in paginas:
-        if pagina < 1 or pagina > n_pags:
-            logger.warning("TJGO: pagina %s fora do intervalo 1-%s", pagina, n_pags)
-            continue
+    for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJGO"):
         if pagina == 1:
             results.append(first)
             continue

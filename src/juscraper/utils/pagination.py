@@ -11,11 +11,14 @@ estrategia como helper generico para os tribunais nao-eSAJ.
 """
 from __future__ import annotations
 
+import logging
 import math
 import re
 from collections.abc import Iterable, Sequence
 
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
 
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
@@ -193,3 +196,14 @@ def resolve_total_pages(
             f"em páginas de {resultados_por_pagina} dão {total} página(s)."
         )
     return total
+
+
+def paginas_no_intervalo(paginas: Iterable[int], n_pags: int, *, tribunal: str) -> list[int]:
+    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida, com aviso no log para as demais."""
+    validas = []
+    for pagina in paginas:
+        if 1 <= pagina <= n_pags:
+            validas.append(pagina)
+        else:
+            logger.warning("%s: página %s fora do intervalo 1-%s", tribunal, pagina, n_pags)
+    return validas

@@ -1,15 +1,13 @@
 """HTTP-level helpers for the TJRJ jurisprudence search."""
 from __future__ import annotations
 
-import logging
 import math
 import re
 import time
 from urllib.parse import parse_qs, urlparse
 
 from juscraper.core.http import RequestFn
-
-logger = logging.getLogger("juscraper.tjrj")
+from juscraper.utils.pagination import paginas_no_intervalo
 
 FORM_URL = "https://www3.tjrj.jus.br/ejuris/ConsultarJurisprudencia.aspx"
 RESULT_URL = (
@@ -269,10 +267,7 @@ def cjsg_download(
         paginas = range(1, n_pags + 1)
 
     results: list = []
-    for pagina in paginas:
-        if pagina < 1 or pagina > n_pags:
-            logger.warning("TJRJ: pagina %s fora do intervalo 1-%s", pagina, n_pags)
-            continue
+    for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJRJ"):
         if pagina == 1:
             results.append(first)
             continue

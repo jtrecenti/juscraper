@@ -7,6 +7,7 @@ subset (everything except ``__VIEWSTATE`` / ``__VIEWSTATEGENERATOR`` /
 ``__EVENTVALIDATION`` — those rotate per request).
 """
 import json
+import math
 
 import pandas as pd
 import pytest
@@ -17,6 +18,7 @@ import juscraper as jus
 from juscraper.courts.tjrj.download import (
     FORM_URL,
     RESULT_URL,
+    RESULTS_PER_PAGE,
     build_cjsg_payload,
     extract_default_year,
     extract_viewstate_fields,
@@ -93,6 +95,26 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_FIELDS
     assert len(df) == 20  # 10 docs/page × 2 páginas
+
+
+@responses.activate
+def test_cjsg_pagina_fora_do_total_e_pulada_sem_requisicao(mocker, caplog):
+    """Página além do total não vira requisição: só fica o aviso no log."""
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="2024", ano_fim="2024")
+    _add_xhr(0, "xhr_page_01.json")
+    total = _xhr_payload("xhr_page_01.json")["d"]["TotalDocs"]
+    alem_do_total = math.ceil(total / RESULTS_PER_PAGE) + 1
+
+    with caplog.at_level("WARNING", logger="juscraper.utils.pagination"):
+        df = jus.scraper("tjrj").cjsg(
+            "dano moral", ano_inicio=2024, ano_fim=2024, paginas=[1, alem_do_total],
+        )
+
+    assert len(df) == 10
+    assert len([c for c in responses.calls if c.request.url == RESULT_URL]) == 1
+    assert f"TJRJ: página {alem_do_total} fora do intervalo" in caplog.text
 
 
 @responses.activate

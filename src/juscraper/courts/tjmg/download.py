@@ -12,6 +12,7 @@ import requests
 
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import paginas_no_intervalo
 
 from .parse import cjsg_parse
 
@@ -262,7 +263,7 @@ def cjsg_download(
     if paginas is None:
         paginas = range(1, n_pags + 1)
 
-    validas = _paginas_validas(paginas, n_pags)
+    validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJMG")
     results: list = []
     for posicao, pagina in enumerate(validas):
         if pagina == 1:
@@ -288,17 +289,6 @@ def cjsg_download(
                 raise
             raise _coleta_parcial(results, validas[posicao:], exc) from exc
     return results
-
-
-def _paginas_validas(paginas, n_pags: int) -> list[int]:
-    """As paginas pedidas dentro de ``1..n_pags``, com aviso no log para as demais."""
-    validas = []
-    for pagina in paginas:
-        if 1 <= pagina <= n_pags:
-            validas.append(pagina)
-        else:
-            logger.warning("TJMG: página %s fora do intervalo 1-%s", pagina, n_pags)
-    return validas
 
 
 def _coleta_parcial(results: list, faltando: list, exc: Exception) -> ColetaParcialError:
