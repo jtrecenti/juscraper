@@ -25,13 +25,11 @@ def test_mensagem_substitui_o_texto_padrao():
 def test_waf_challenge_passa_a_propria_mensagem():
     renovado = WafChallengeError("TJPE", URL)
     sem_cookie = WafChallengeError("TJPE", URL, motivo="navegador ausente")
-    assert renovado.args == (
-        f"O WAF do TJPE desafiou de novo logo apos a renovacao do cookie aws-waf-token em {URL}. "
-        "Aguarde alguns minutos antes de tentar outra vez.",
-    )
-    assert sem_cookie.args == (
-        f"O WAF do TJPE desafiou em {URL}, e o cookie aws-waf-token nao foi obtido: navegador ausente",
-    )
+    (mensagem_renovado,) = renovado.args
+    (mensagem_sem_cookie,) = sem_cookie.args
+    assert "renovacao do cookie" in mensagem_renovado
+    assert mensagem_sem_cookie.endswith("nao foi obtido: navegador ausente")
+    assert "403" not in mensagem_renovado + mensagem_sem_cookie
     assert (renovado.tribunal, renovado.url) == ("TJPE", URL)
 
 

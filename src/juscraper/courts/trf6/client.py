@@ -17,14 +17,13 @@ import requests
 from pydantic import ValidationError
 
 from ...core.base import BaseScraper
-from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
     avisar_falhas_de_processos,
     consultar_ate_bloqueio,
+    consultar_processo,
     linhas_de_processos,
-    motivo_falha_ou_inesperada,
 )
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import HEADERS, fetch_detail
@@ -105,16 +104,7 @@ class TRF6Scraper(BaseScraper):
 
     def _consultar(self, cnj: str) -> _Consulta:
         """A consulta de um CNJ; a falha vem no motivo, e não como exceção."""
-        try:
-            return _Consulta(self._fetch_one(cnj), None)
-        except BotChallengeBlockedError as exc:
-            logger.warning("TRF6: bloqueio anti-bot em %s; o lote para aqui: %s", cnj, exc)
-            return _Consulta(None, MOTIVO_BLOQUEIO_ANTI_BOT)
-        except ImportError:
-            raise
-        except Exception as exc:  # noqa: BLE001 — resiliência por item
-            logger.warning("Erro ao consultar %s: %s", cnj, exc)
-            return _Consulta(None, motivo_falha_ou_inesperada(exc))
+        return _Consulta(*consultar_processo(self._fetch_one, cnj, tribunal="TRF6", logger=logger))
 
     @staticmethod
     def _avisar(cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
@@ -196,6 +186,7 @@ class TRF6Scraper(BaseScraper):
         cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
         consultas = self._baixar(cnjs)
         htmls = [c.html for c in consultas]
-        rows = linhas_de_processos(cnjs, htmls, [c.motivo for c in consultas], parse=parse_detail, logger=logger)
+        motivos = [c.motivo for c in consultas]
+        rows = linhas_de_processos(cnjs, htmls, motivos, parse=parse_detail, logger=logger)
         self._avisar(cnjs, [r[COLUNA_MOTIVO_FALHA] for r in rows], "cpopg")
         return pd.DataFrame(rows)

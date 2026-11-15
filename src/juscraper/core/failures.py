@@ -255,6 +255,32 @@ def anotar_falhas_anteriores(erro: BaseException, falhas: list[str], descricao: 
         erro.add_note(f"Antes do 401, {resumir_falhas(falhas, descricao)}")
 
 
+def consultar_processo(
+    buscar: Callable[[str], str | None],
+    cnj: str,
+    *,
+    tribunal: str,
+    logger: logging.Logger,
+) -> tuple[str | None, str | None]:
+    """``(html, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
+
+    O bloqueio anti-bot sai :data:`MOTIVO_BLOQUEIO_ANTI_BOT`, que encerra o
+    lote em :func:`consultar_ate_bloqueio`; outro erro sai pelo
+    :func:`motivo_falha_ou_inesperada`. ``ImportError`` (extra ausente)
+    propaga. ``html`` ``None`` sem motivo é processo que a fonte não devolveu.
+    """
+    try:
+        return buscar(cnj), None
+    except BotChallengeBlockedError as exc:
+        logger.warning("%s: bloqueio anti-bot em %s; o lote para aqui: %s", tribunal, cnj, exc)
+        return None, MOTIVO_BLOQUEIO_ANTI_BOT
+    except ImportError:
+        raise
+    except Exception as exc:  # noqa: BLE001 — resiliência por item
+        logger.warning("Erro ao consultar %s: %s", cnj, exc)
+        return None, motivo_falha_ou_inesperada(exc)
+
+
 class _ComMotivo(Protocol):
     @property
     def motivo(self) -> str | None: ...

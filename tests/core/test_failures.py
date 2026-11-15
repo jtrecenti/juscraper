@@ -27,6 +27,7 @@ from juscraper.core.failures import (
     avisar_falhas,
     avisar_falhas_de_processos,
     consultar_ate_bloqueio,
+    consultar_processo,
     e_token_invalido,
     linhas_de_processos,
     motivo_falha,
@@ -276,3 +277,31 @@ def test_avisar_falhas_de_processos():
 def test_avisar_falhas_de_processos_sem_falha_nao_avisa(recwarn):
     avisar_falhas_de_processos(["1"], [None], "X.cpopg")
     assert not recwarn.list
+
+
+def _buscar(erro: BaseException | None, html: str | None = None):
+    def buscar(_cnj: str) -> str | None:
+        if erro is not None:
+            raise erro
+        return html
+
+    return buscar
+
+
+@pytest.mark.parametrize(
+    ("buscar", "esperado"),
+    [
+        (_buscar(None, "<html>"), ("<html>", None)),
+        (_buscar(None), (None, None)),
+        (_buscar(BotChallengeBlockedError("TRF6", "https://example.test")), (None, "bloqueio_anti_bot")),
+        (_buscar(requests.ReadTimeout()), (None, "timeout")),
+        (_buscar(RuntimeError("captcha esgotado")), (None, "resposta_inesperada")),
+    ],
+)
+def test_consultar_processo(buscar, esperado):
+    assert consultar_processo(buscar, "1", tribunal="TRF6", logger=logging.getLogger("teste")) == esperado
+
+
+def test_consultar_processo_propaga_import_error():
+    with pytest.raises(ImportError):
+        consultar_processo(_buscar(ImportError("txtcaptcha")), "1", tribunal="TRF6", logger=logging.getLogger("t"))
