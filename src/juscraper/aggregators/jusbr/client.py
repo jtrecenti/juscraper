@@ -3,7 +3,6 @@
 import logging
 import time
 import urllib.parse
-import warnings
 from collections.abc import Callable, Hashable, Iterator, Mapping
 from functools import partial
 from typing import Any, ClassVar
@@ -14,6 +13,7 @@ import requests
 from pydantic import ValidationError
 
 from ...core.auth import validar_jwt
+from ...core.avisos import avisar
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
@@ -299,7 +299,7 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     def auth_firefox(self) -> bool:
         """Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.
 
-        Depreciado: use :meth:`auth_govbr` com o extra ``juscraper[govbr]``.
+        Depreciado: use ``auth_govbr()`` com o extra ``juscraper[govbr]``.
         Este método será removido em uma versão futura. Até lá, exige o
         extra ``juscraper[firefox]``, um perfil do Firefox e login ativo no
         portal de serviços da PDPJ nesse navegador.
@@ -321,14 +321,13 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             ValueError: Quando o token devolvido é inválido ou está expirado.
             requests.RequestException: Falha de rede ao falar com o SSO.
 
-        Warns:
-            DeprecationWarning: Ao chamar este método; use :meth:`auth_govbr`.
+        Avisos:
+            ``DeprecationWarning``: Ao chamar este método; use ``auth_govbr()``.
         """
-        warnings.warn(
+        avisar(
             "JusbrScraper.auth_firefox() está depreciado e será removido em uma versão futura. "
             "Use auth_govbr() com o extra juscraper[govbr].",
             DeprecationWarning,
-            stacklevel=2,
         )
         try:
             import browser_cookie3  # noqa: PLC0415 - dependência opcional do extra firefox
