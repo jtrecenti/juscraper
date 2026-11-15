@@ -15,7 +15,13 @@ from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
 from ...core.exceptions import ColetaParcialError, RetryExhaustedError
-from ...core.failures import FALHAS_DE_TRANSPORTE, anotar_falhas_anteriores, e_token_invalido, motivo_falha
+from ...core.failures import (
+    FALHAS_DE_TRANSPORTE,
+    anotar_falhas_anteriores,
+    e_token_invalido,
+    exemplos_do_aviso,
+    motivo_falha,
+)
 from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
@@ -158,7 +164,7 @@ def _relancar_se_token_invalido(exc: Exception, linhas: list[dict[str, Any]]) ->
 
 def _aliases_nao_consultados(restantes: list[AliasSelection]) -> str:
     """Diagnóstico dos aliases que :meth:`DatajudScraper.listar_processos` deixa de consultar depois do 401."""
-    nomes = ", ".join(repr(alias) for alias, _ in restantes)
+    nomes = ", ".join(exemplos_do_aviso([repr(alias) for alias, _ in restantes]))
     return f"HTTP 401 (chave da API recusada): alias(es) não consultado(s): {nomes}"
 
 
