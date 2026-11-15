@@ -1,10 +1,9 @@
 """Offline contract tests for TRF1 ``cpopg`` (PJe consulta pública).
 
-Same shape as ``tests/trf3/test_cpopg_contract.py``. Distinct from the TRF3
+Same shape as ``tests/trf5/test_cpopg_contract.py``. Distinct from the TRF5
 suite to keep sample fixtures and matchers independent — TRF1 lives at a
 different host (``pje1g-consultapublica.trf1.jus.br/consultapublica/``) and
-the captured field IDs differ from TRF3's, even though the form structure
-mirrors it (autocomplete ``classeJudicial`` + ``dataAutuacaoDecoration``).
+uses the autocomplete ``classeJudicial`` + ``dataAutuacaoDecoration`` form.
 """
 from __future__ import annotations
 

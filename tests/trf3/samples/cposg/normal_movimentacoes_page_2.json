@@ -1,0 +1,53 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/12/2020 19:24:51",
+   "idDocumento": "UvrHkk9_T232KAfYTdEgfhkHyrNviWff1jZLejYjvUB4zuhMruM16LYK1uXxfMkK0B7y"
+  },
+  {
+   "movimento": "Recebidos os autos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "01/12/2020 09:19:44",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "01/12/2020 09:19:41",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "01/12/2020 09:19:41",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 3,
+  "last": 3,
+  "size": 15,
+  "count": 34
+ }
+}

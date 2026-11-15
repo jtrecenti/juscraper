@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "LelEuIQd1Y8at0aKK5iy6jIuHKY4Yk1b9A-0RsTFwZ6Nba1wbW5mvHYjpqPam78ftto",
+   "numeroProcesso": "5025507-75.2026.4.03.6100",
+   "classe": "MANDADO DE SEGURANÇA CÍVEL",
+   "classeSigla": "MSCiv",
+   "assunto": "Cadastro de Indadimplentes - CADIN",
+   "ultimaMovimentacao": "Publicado Intimação em 29/09/2026. (29/09/2026 02:08:07)",
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "UNIMED NACIONAL - COOPERATIVA CENTRAL",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "AGENCIA NACIONAL DE SAÚDE SUPLEMENTAR - ANS",
+     "qntOutros": 1,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}

@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Publicado Despacho em 26/11/2025.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/11/2025 01:58:29",
+   "idDocumento": "X9ccry2JrRhHy3g8mbI11_wL4M2xK9BefpdcByK4ILGeJf9UrxCH7smFV2YoJkqiyOT6"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 25/11/2025",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/11/2025 01:58:29",
+   "idDocumento": "Lu116EfrK5JH9az1AoCRPRiCtFZZgXVxGXGqV82pLmmE6Sr2R-LxZf3FHWNhxWTHJLhN"
+  },
+  {
+   "movimento": "Juntada de Petição de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2025 16:03:09",
+   "idDocumento": "_Mzc2Z2Kn3Np5pZNlskkXAv78ULUCr7PVfZAbnhLouykAsIiiC008vEqyLz171YE4yQA"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2025 13:30:05",
+   "idDocumento": "L-wZ-EqTU2OvU5JfGxNgAlKUDmTv45n8AX4qRRKPU7fW_8SkXoxfe4pZkjukomySdYsc"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2025 13:30:03",
+   "idDocumento": "MI6xUfWVFhN1HKgqa4WxySNvkjSuXRabfsEAlPOG2Paxz9vtgkQkTquQWG8H145r-brT"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/11/2025 12:39:56",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Petição de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2025 11:50:06",
+   "idDocumento": "irVVbnZMJfj1bJBRzfBMuPxx2fEJBkBfkq85rZKeggNVaK8sWQ7QWHmZrbMP26-HRqxq"
+  },
+  {
+   "movimento": "Publicado Decisão em 14/11/2025.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/11/2025 14:04:02 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/11/2025 01:01:34",
+   "idDocumento": "dwa1zT-jHQ1mOkbpfeEw4w2P7F-oVq2hfgVwCSdm-mST3rrS8TS_5mYJxkPLVtJtXz1L"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 13/11/2025",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/11/2025 14:04:02 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/11/2025 01:01:34",
+   "idDocumento": "FoQLC52wCU7Wl1G9YTu0mgROKmFRBIA74j7bNawQqrypd5XHh5xtmkIr39NHMdYczrKy"
+  },
+  {
+   "movimento": "Juntada de Petição de ciência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/11/2025 16:52:07",
+   "idDocumento": "8NfikC3VT71xl0YmKykzvQI8htofYE5Kt_6JujyeUDC-M_wxgBQLEaZJ5-xgdU901nAs"
+  },
+  {
+   "movimento": "Juntada de Petição de ciência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/11/2025 15:35:32",
+   "idDocumento": "hMCLs86XuPRhsSBPOkLISpS4rANvvfaC3phzXXlXMBr4YH8sGme35aSlTn1lgA1697Lc"
+  },
+  {
+   "movimento": "Expedida/certificada a intimação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/11/2025 14:04:04",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/11/2025 14:04:02 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/11/2025 14:04:04",
+   "idDocumento": "rdKH1IGsgjFQzm56JP2TbqBFJHClwlymD-Lcmr1-dVisVOl-dSuhhBgTb73eq0Uqp1V0"
+  },
+  {
+   "movimento": "Não Concedida a tutela provisória",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/11/2025 14:03:59 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/11/2025 14:04:02",
+   "idDocumento": "--BREcb2wgW1NZMP23G2hnGbMSh8ONBxcgLl5evocdEUme3JOVdVfKb4CcNWPC303xcc"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/11/2025 15:06:14",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 4,
+  "last": 5,
+  "size": 15,
+  "count": 70
+ }
+}

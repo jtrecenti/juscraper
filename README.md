@@ -81,7 +81,7 @@ dados.head()
 | TJSP     | cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas |
 | TJTO     | cjsg, cjpg, cjsg_ementa |
 | TRF1     | cpopg |
-| TRF3     | cpopg, cjsg |
+| TRF3     | cpopg, cposg, cjsg |
 | TRF5     | cpopg |
 | TRF6     | cpopg |
 

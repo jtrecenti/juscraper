@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "5021122-65.2018.4.03.6100",
+  "dataDistribuicao": "2018-08-23T09:37:37.764",
+  "classeJudicial": "CUMPRIMENTO DE SENTENÇA (156)",
+  "assunto": "DIREITO DA SAÚDE (12480) - Pública (12481) - Sistema Único de Saúde (SUS) (12511) - Ressarcimento do SUS (12516)",
+  "jurisdicao": "Subseção Judiciária de São Paulo (Varas Cíveis)",
+  "orgaoJulgador": "6ª Vara Cível Federal de São Paulo",
+  "orgaoJulgadorColegiado": "",
+  "endereco": "Avenida Paulista, 1682, Bela Vista, SãO PAULO - SP - CEP: 01310-200",
+  "enderecoOrgaoJulgadorColegiado": "",
+  "numeroProcessoReferencia": "5021122-65.2018.4.03.6100"
+ }
+}
