@@ -71,7 +71,7 @@ def test_parse_result_item_preserves_partial_matching():
 
 
 def test_parse_result_item_stops_class_search_at_first_hyphenated_line():
-    """The first uppercase line with "-" but without " - " ends the class search.
+    """An uppercase line with "-" outside the "SIGLA - Classe" shape ends the class search.
 
     A later line in the "SIGLA - Classe" shape is not read, so no ``classe``.
     """
@@ -128,3 +128,43 @@ def test_cjsg_parse_manager_warns_when_process_number_is_missing():
 
     assert df["ementa"].tolist() == ["Ementa sem número"]
     assert "processo" not in df.columns
+
+
+@pytest.mark.parametrize(
+    ("sample", "classes"),
+    [
+        # Código numérico no lugar da sigla (Conselho da Magistratura).
+        ("processo_sem_link.html", ["Recurso Administrativo"]),
+        # Sigla em caixa mista (ApCiv) ao lado de sigla em maiúsculas (RCIJEF).
+        ("results_normal_page_01.html", ["RECURSO CÍVEL"] + ["Apelação"] * 7 + ["RECURSO CÍVEL"] * 2),
+        # Outra sigla em caixa mista (AgExPe), com RSE e AI.
+        (
+            "filtro_data_julgamento.html",
+            ["RECURSO EM SENTIDO ESTRITO", "Agravo de Execução Penal", "Apelação"]
+            + ["Agravo de Instrumento"] * 4
+            + ["Apelação"] * 3,
+        ),
+    ],
+)
+def test_cjsg_parse_manager_reads_class_after_numeric_or_mixed_case_code(sample, classes):
+    """A linha ``<código> - <classe>`` dá a classe também com código numérico ou sigla em caixa mista."""
+    df = cjsg_parse_manager([load_sample("tjsc", f"cjsg/{sample}", encoding="latin-1")])
+
+    assert df["classe"].tolist() == classes
+
+
+def test_parse_result_item_ignores_prose_line_with_spaced_hyphen():
+    """Texto com `` - `` só vale como classe se o código vier logo antes do hífen."""
+    html = """
+    <div class="resultadoItem">
+      <div class="resLabel">PROCESSO</div>
+      <div class="resValue">
+        <span>5000000-00.2024.8.24.0000/TJSC</span>
+        <span>Segredo de Justiça - Sigiloso</span>
+        <span>ApCiv - Apelação</span>
+      </div>
+    </div>
+    """
+    item = BeautifulSoup(html, "html.parser").find("div", class_="resultadoItem")
+
+    assert _parse_result_item(item)["classe"] == "Apelação"

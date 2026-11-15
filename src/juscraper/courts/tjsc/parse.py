@@ -49,17 +49,27 @@ def _resolve_field(label: str) -> str | None:
     return None
 
 
+_CLASS_LINE = re.compile(r"^(?:[A-Z][A-Za-z]*|\d+) - (.+)")
+_UPPERCASE_PREFIX = re.compile(r"^[A-Z]{2,}")
+
+
 def _extract_class(value) -> str | None:
-    """Extract the class description from the process field when present."""
+    """Extrai a classe do campo PROCESSO, quando houver.
+
+    A linha da classe tem a forma ``<código> - <classe>``. O código é uma sigla,
+    às vezes em caixa mista (``AI``, ``ApCiv``), ou um número (``422070``, no
+    Conselho da Magistratura), seguido direto de `` - ``. A linha do número do
+    processo não tem espaço em volta do hífen e fica de fora. Como no parser
+    original, uma linha em maiúsculas com hífen fora dessa forma encerra a busca.
+    """
     class_text = str(value.get_text(separator="\n", strip=True))
     lines = (line.strip() for line in class_text.split("\n") if line.strip())
     for line in lines:
-        if not re.match(r"^[A-Z]{2,}", line) or "-" not in line:
-            continue
-        parts = line.split(" - ", 1)
-        if len(parts) == 2:
-            return parts[1].strip()
-        break
+        match = _CLASS_LINE.match(line)
+        if match:
+            return match.group(1).strip()
+        if "-" in line and _UPPERCASE_PREFIX.match(line):
+            break
     return None
 
 
