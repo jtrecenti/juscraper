@@ -474,7 +474,10 @@ def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
 
     with warnings.catch_warnings(record=True) as avisos:
         warnings.simplefilter("always")
-        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_SEM_CONEXAO)
+        # Sem movimentações, os dois processos salvos contam como baixados e não são pedidos de novo.
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(
+            ["1009367-76.2017.8.26.0344", CNJ, CNJ_SEM_CONEXAO], baixar_movimentacoes=False,
+        )
 
     assert len(avisos) == 1
     mensagem = str(avisos[0].message)
@@ -488,6 +491,55 @@ def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
         {"id_processo": CNJ, "motivo_falha": "resposta_inesperada"},
         {"id_processo": CNJ_SEM_CONEXAO, "motivo_falha": "conexao"},
     ]
+
+
+@responses.activate
+def test_cpopg_le_so_os_processos_do_lote(tmp_path, mocker):
+    """Processo e falha de um ``cpopg_download`` anterior na mesma pasta ficam fora do composto.
+
+    Antes, o ``cpopg`` lia a pasta de download inteira: o lote de um CNJ
+    devolvia também o processo salvo antes e a falha registrada antes.
+    """
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ_INEXISTENTE, body=requests.ConnectionError("recusada"))
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(UserWarning, match=f"{CNJ_INEXISTENTE}: conexao"):
+        scraper.cpopg_download(CNJ_INEXISTENTE)
+    anterior = tmp_path / "cpopg" / "10093677620178260344"
+    anterior.mkdir(parents=True)
+    (anterior / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
+    _registrar_busca_por_cnj(
+        CNJ, body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
+    )
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = scraper.cpopg(CNJ, baixar_movimentacoes=False)
+
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": CNJ, "motivo_falha": None},
+    ]
+
+
+@responses.activate
+def test_cpopg_arquivos_ilegiveis_com_falha_de_download_devolvem_as_linhas(tmp_path, mocker):
+    """Antes, o lote em que todo arquivo é ilegível levantava ``ValueError`` mesmo com falha de download."""
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
+    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel.mkdir(parents=True)
+    (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
+
+    with pytest.warns(UserWarning, match=rf"{CNJ_SEM_CONEXAO}: conexao; .*quebrado\.html: resposta_inesperada"):
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(
+            [CNJ, CNJ_SEM_CONEXAO], baixar_movimentacoes=False,
+        )
+
+    assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
+        {"id_processo": CNJ, "motivo_falha": "resposta_inesperada"},
+        {"id_processo": CNJ_SEM_CONEXAO, "motivo_falha": "conexao"},
+    ]
+    assert all(result[tabela].empty for tabela in ("partes", "movimentacoes", "peticoes_diversas"))
 
 
 @responses.activate

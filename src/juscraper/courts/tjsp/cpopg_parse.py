@@ -11,7 +11,7 @@ from tqdm import tqdm
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
 from .._esaj.pasta import documento_vinculado
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, processos_sem_arquivo
+from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha, processos_sem_arquivo, so_os_pedidos
 from .cpopg_download import caminho_do_documento, listagem_de_processos
 
 # Mapping from normalized dt/dd labels to canonical dados keys
@@ -69,7 +69,9 @@ def _normalize_field_name(label: str) -> str:
     return re.sub(r'\s+', '_', text.strip())
 
 
-def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse") -> dict[str, pd.DataFrame]:
+def cpopg_parse_manager(
+    path: str, metodo: str = "TJSPScraper.cpopg_parse", pedidos: list | None = None,
+) -> dict[str, pd.DataFrame]:
     """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
 
     Parameters
@@ -78,6 +80,10 @@ def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse") -> d
         The file path or directory containing the downloaded files.
     metodo : str
         Método público que abre o ``UserWarning`` das falhas.
+    pedidos : list, optional
+        CNJs do lote: com eles, só os arquivos e as falhas desses números
+        entram no resultado, e o que um download anterior deixou na pasta
+        fica de fora. ``None`` lê a pasta inteira.
 
     Returns
     -------
@@ -95,10 +101,11 @@ def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse") -> d
     Raises
     ------
     ValueError
-        Quando ``path`` é um diretório e nenhum arquivo dele pôde ser lido,
-        porque todos falharam ou porque não há ``.html`` nem falha de
-        download registrada. Devolver ``{}`` esconderia uma falha de download
-        ou de leitura atrás de um resultado vazio.
+        Quando ``path`` é um diretório sem falha de download registrada e
+        nenhum arquivo dele pôde ser lido, porque todos falharam ou porque
+        não há ``.html``. Devolver ``{}`` esconderia uma falha de leitura atrás
+        de um resultado vazio. Com falha de download registrada, as tabelas
+        saem vazias, com as linhas de falha em ``basicos``.
     """
     root = Path(path)
     if root.is_file():
@@ -106,14 +113,15 @@ def cpopg_parse_manager(path: str, metodo: str = "TJSPScraper.cpopg_parse") -> d
 
     files = arquivos_candidatos(root)
     sem_arquivo = processos_sem_arquivo(root / 'cpopg' if (root / 'cpopg').is_dir() else root, files)
+    files, sem_arquivo = so_os_pedidos(files, sem_arquivo, pedidos)
     parsed, falhas = _ler_arquivos(files)
     if parsed:
         result = {
             key: pd.concat([result[key] for result in parsed], ignore_index=True)
             for key in parsed[0]
         }
-    elif sem_arquivo and not files:
-        # Lote em que nenhum processo foi baixado: as linhas de falha vão em tabelas vazias.
+    elif sem_arquivo:
+        # Lote em que nenhum processo foi baixado ou lido: as linhas de falha vão em tabelas vazias.
         result = tabelas_vazias()
     else:
         raise _nothing_parsed_error(root, len(files), falhas)

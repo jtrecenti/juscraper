@@ -343,8 +343,9 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
         Raises:
             ValueError: Quando ``method`` nao e suportado, quando ha
-                arquivos baixados e nenhum pode ser lido (nesse caso o
-                diretorio de download nao e apagado), ou quando
+                arquivos baixados, nenhum pode ser lido e nenhum outro
+                processo do lote falhou no download (nesse caso o diretorio
+                de download nao e apagado), ou quando
                 ``download_pecas`` e ``diretorio`` nao combinam com os demais
                 argumentos.
 
@@ -359,7 +360,9 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 ``download_pecas``, para documento com senha e para o que falhou
                 (as falhas saem num ``UserWarning``).
 
-                Todo CNJ pedido aparece em ``basicos``. A coluna ``motivo_falha``
+                Todo CNJ pedido, e so ele, aparece em ``basicos``: o que um
+                ``cpopg_download`` anterior deixou em :attr:`download_path`
+                fica de fora. A coluna ``motivo_falha``
                 e ``None`` no processo lido; o CNJ que nao foi baixado ganha uma
                 linha so com ``id_processo`` e o motivo (``nao_encontrado`` quando
                 a consulta diz nao ter o numero, ``entrada_invalida``,
@@ -384,7 +387,10 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             ids, self.download_path, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
         )
         # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
-        result = cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg") if ids else tabelas_vazias()
+        result = (
+            cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg", pedidos=ids)
+            if ids else tabelas_vazias()
+        )
         if diretorio is not None:
             result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
         # O lote vazio não cria a pasta de download.
@@ -478,7 +484,9 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e
         levanta ``ValueError``.
 
-        Todo CNJ pedido aparece no DataFrame. A coluna ``motivo_falha`` é
+        Todo CNJ pedido, e só ele, aparece no DataFrame: o que um
+        ``cposg_download`` anterior deixou em :attr:`download_path` fica de
+        fora. A coluna ``motivo_falha`` é
         ``None`` no processo lido; o CNJ que não foi baixado ganha uma linha
         só com ``processo`` e o motivo (``nao_encontrado`` quando a consulta
         de 2º grau não mostra o número, ``entrada_invalida``,
@@ -489,9 +497,10 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """
         self.set_method(method)
         path = self.download_path
+        ids = [id_cnj] if isinstance(id_cnj, str) else id_cnj
         # Como no cpopg: o parse lê as falhas do download e avisa uma vez só.
-        self._baixar_cposg(id_cnj, path)
-        result = cposg_parse_manager(path, metodo="TJSPScraper.cposg")
+        self._baixar_cposg(ids, path)
+        result = cposg_parse_manager(path, metodo="TJSPScraper.cposg", pedidos=ids)
         if Path(path).exists():
             shutil.rmtree(path)
         else:

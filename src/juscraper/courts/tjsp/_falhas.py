@@ -124,6 +124,25 @@ def _ler_registro(arquivo: Path) -> dict[str, str]:
     return registro
 
 
+def so_os_pedidos(
+    arquivos: list[Path], sem_arquivo: dict[str, str], pedidos: list | None,
+) -> tuple[list[Path], dict[str, str]]:
+    """Os arquivos e as falhas dos CNJs ``pedidos``; tudo, com ``pedidos`` ``None``.
+
+    O ``cpopg`` e o ``cposg`` compostos leem a pasta de download inteira, que
+    pode guardar processos e falhas de um ``*_download`` anterior: só os
+    números do lote entram no resultado. A chave é a do registro de falhas,
+    o CNJ formatado, ou a entrada como ``str`` quando não tem 20 dígitos.
+    """
+    if pedidos is None:
+        return arquivos, sem_arquivo
+    chaves = {str(format_cnj(cnj, strict=False)) for cnj in pedidos}
+    return (
+        [arquivo for arquivo in arquivos if cnj_da_pasta(arquivo) in chaves],
+        {cnj: motivo for cnj, motivo in sem_arquivo.items() if cnj in chaves},
+    )
+
+
 def cnj_da_pasta(arquivo: Path) -> str | None:
     """CNJ formatado da pasta do processo (``<download>/<cnj limpo>/<arquivo>.html``); ``None`` fora dela."""
     nome = arquivo.parent.name
