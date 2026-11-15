@@ -77,6 +77,8 @@ class TJBAScraper(HTTPScraper):
             Include acordaos (default True).
         tipo_decisoes_monocraticas : bool
             Include monocratic decisions (default True).
+        ordenado_por : str
+            ``"dataPublicacao"`` (default) or ``"relevancia"``.
         tamanho_pagina : int
             Results per page (default 10). Aceita ``items_per_page`` como
             alias deprecado (emite ``DeprecationWarning``).
@@ -187,6 +189,8 @@ class TJBAScraper(HTTPScraper):
             Start date (YYYY-MM-DD).
         data_publicacao_fim : str, optional
             End date (YYYY-MM-DD).
+        ordenado_por : str
+            ``"dataPublicacao"`` (default) or ``"relevancia"``.
         tamanho_pagina : int
             Results per page (default 10).
 

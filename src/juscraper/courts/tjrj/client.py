@@ -122,10 +122,12 @@ class TJRJScraper(HTTPScraper):
                   ``data_julgamento_*``. Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
                 * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
-                  criminal / ``"3"`` ambos. Default ``"1"``. Backend:
-                  ``cmbCompetencia``.
-                * ``origem`` (str | int): ``"1"`` 2o grau (default).
-                  Backend: ``cmbOrigem``.
+                  criminal / ``"3"`` fazendaria (so na Turma Recursal).
+                  Default ``"1"``. Backend: ``cmbCompetencia``.
+                * ``origem`` (str | int): ``"1"`` 2a instancia (default) /
+                  ``"2"`` Tribunal de Alcada Civel / ``"3"`` Tribunal de
+                  Alcada Criminal / ``"4"`` Turma Recursal / ``"5"``
+                  Conselho da Magistratura. Backend: ``cmbOrigem``.
                 * ``tipo_acordao`` (bool): Inclui acordaos. Default
                   ``True``. Backend: ``chkAcordao``.
                 * ``tipo_monocratica`` (bool): Inclui decisoes

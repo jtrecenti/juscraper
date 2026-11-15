@@ -7,9 +7,12 @@ A lista de campos bate byte-a-byte com a assinatura publica de
 """
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import Annotated, ClassVar, Literal
+
+from pydantic import BeforeValidator
 
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
+from ...schemas.types import _coerce_id_filtro_unico
 
 
 class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
@@ -32,8 +35,17 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
 
     id_instancia: Literal[0, 1, 2, 3, "0", "1", "2", "3"] = 0
     id_area: Literal[0, 1, 2, "0", "1", "2"] = 0
-    # TODO (#212): apertar com Literal[...] após captura do dropdown do site.
-    id_serventia_subtipo: str | int = 0
+    # Codigos do seletor "Orgao" (lista ``tipos`` de ``js/ConsultaJurisprudencia.js``
+    # do Projudi, nov/2026). ``"0"`` = todos. Inteiros sao aceitos e viram string.
+    id_serventia_subtipo: Annotated[
+        Literal[
+            "0", "1", "2", "3", "6", "7", "8", "9", "10", "11", "12", "14", "20", "21", "22",
+            "26", "27", "34", "35", "36", "37", "39", "41", "42", "43", "44", "45", "46",
+            "47", "49", "58", "60", "61", "63", "64", "66", "67", "68", "69", "70", "71",
+            "72", "81", "82", "83",
+        ],
+        BeforeValidator(_coerce_id_filtro_unico),
+    ] = "0"
     numero_processo: str | None = None
     tamanho_pagina: TamanhoPagina = 10
 

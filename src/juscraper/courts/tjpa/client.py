@@ -136,10 +136,11 @@ class TJPAScraper(HTTPScraper):
                 ``["tribunal de justica do estado do para"]``).
             tipo (list | None): Lista de tipos de decisao (default backend:
                 ``["acordao", "decisao monocratica"]``).
-            sort_by (str): Campo de ordenacao. Default ``"datajulgamento"``.
+            sort_by (str): ``"datajulgamento"`` (default), ``"datapublicacao"``
+                ou ``"relevancia"``.
             sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
-            query_type (str): ``"free"`` ou ``"any"``. Default ``"free"``.
-            query_scope (str): ``"ementa"`` ou ``"inteiroteor"``. Default ``"ementa"``.
+            query_type (str): ``"free"`` (default) ou ``"anywords"``.
+            query_scope (str): ``"ementa"`` (default) ou ``"inteiroTeor"``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPA`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

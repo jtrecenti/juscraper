@@ -1,6 +1,8 @@
 """Pydantic schemas for TJRJ scraper endpoints."""
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import field_validator
 
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
@@ -19,9 +21,11 @@ class InputCJSGTJRJ(SearchBase):
 
     ano_inicio: str | int | None = None
     ano_fim: str | int | None = None
-    # TODO (#212): apertar com Literal[...] após captura do form ASPX/ejuris — vale para `competencia` e `origem`.
-    competencia: str = "1"
-    origem: str = "1"
+    # Opcoes de ``cmbCompetencia`` e ``cmbOrigem`` no formulario do ejuris. A
+    # lista de competencias muda com a origem (``"3"`` Fazendaria so aparece na
+    # Turma Recursal); a combinacao fica a cargo do backend.
+    competencia: Literal["1", "2", "3"] = "1"
+    origem: Literal["1", "2", "3", "4", "5"] = "1"
     tipo_acordao: bool = True
     tipo_monocratica: bool = True
     magistrado_codigo: str | None = None

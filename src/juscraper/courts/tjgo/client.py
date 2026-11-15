@@ -66,7 +66,8 @@ class TJGOScraper(HTTPScraper):
         id_area : int or str
             ``0`` all / ``1`` civil / ``2`` criminal.
         id_serventia_subtipo : int or str
-            Court unit sub-type id (see website dropdown). ``0`` = all.
+            Code from the website's "Orgao" dropdown (e.g. ``14`` civil
+            chambers, ``20`` criminal chambers). ``0`` = all.
         numero_processo : str
             Filter by specific CNJ process number.
         tamanho_pagina : int
@@ -132,8 +133,10 @@ class TJGOScraper(HTTPScraper):
             id_instancia (int | str): ``0`` todas / ``1`` 1o grau / ``2`` recursal /
                 ``3`` tribunal.
             id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
-            id_serventia_subtipo (int | str): ID do subtipo de serventia
-                (dropdown do site). ``0`` = todas.
+            id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
+                site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
+                Criminais, ``6`` Turma Recursal Civel e Criminal). ``0`` =
+                todos. Codigo fora da lista levanta ``ValidationError``.
             numero_processo (str): Filtrar por numero CNJ especifico.
             tamanho_pagina (int): Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.

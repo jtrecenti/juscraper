@@ -331,3 +331,41 @@ def test_cjsg_turma_recursal_respeita_o_ano(mocker):
     assert "chkEmentario" not in (busca.decode() if isinstance(busca, bytes) else busca)
     assert len(df) == 10
     assert {d.year for d in df["data_julgamento"]} == {2025}
+
+
+@responses.activate
+def test_cjsg_turma_recursal_competencia_fazendaria(mocker):
+    """``competencia="3"`` so existe no form da Turma Recursal (#207).
+
+    O postback de ``cmbOrigem`` sai do form ainda na origem padrao, que so
+    oferece as competencias 1 e 2; com ``"3"`` nele, o servidor respondia
+    HTTP 500. O postback leva ``"1"`` e a busca, ja no form da Turma Recursal,
+    leva ``"3"``.
+    """
+    mocker.patch("time.sleep")
+    postback_html = load_sample("tjrj", "cjsg/postback_origem_turma_recursal.html")
+    _add_form_get()
+    responses.add(
+        responses.POST, FORM_URL, body=postback_html, status=200,
+        content_type="text/html; charset=utf-8",
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$cmbOrigem",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": "4",
+            "ctl00$ContentPlaceHolder1$cmbCompetencia": "1",
+        })],
+    )
+    responses.add(
+        responses.POST, FORM_URL, status=302,
+        headers={"Location": "/EJURIS/ProcessarConsJurisES.aspx?PageSeq=0&Version=1.2.2.3"},
+        match=[urlencoded_body_subset_matcher({
+            "__EVENTTARGET": "ctl00$ContentPlaceHolder1$btnPesquisar",
+            "ctl00$ContentPlaceHolder1$cmbOrigem": "4",
+            "ctl00$ContentPlaceHolder1$cmbCompetencia": "3",
+        })],
+    )
+    responses.add(responses.GET, RESULTS_PAGE_URL, body=b"", status=200)
+    _add_xhr(0, "xhr_turma_recursal.json")
+
+    df = jus.scraper("tjrj").cjsg("dano moral", origem="4", competencia=3, paginas=1)
+
+    assert len(df) == 10

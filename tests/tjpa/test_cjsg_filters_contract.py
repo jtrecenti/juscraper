@@ -36,8 +36,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             data_publicacao_fim="2024-04-30",
             sort_by="datapublicacao",
             sort_order="asc",
-            query_type="any",
-            query_scope="inteiroteor",
+            query_type="anywords",
+            query_scope="inteiroTeor",
         ))],
     )
 
@@ -56,16 +56,16 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         data_publicacao_fim="2024-04-30",
         sort_by="datapublicacao",
         sort_order="asc",
-        query_type="any",
-        query_scope="inteiroteor",
+        query_type="anywords",
+        query_scope="inteiroTeor",
     )
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do BFF ficam pinados aqui.
     assert json.loads(responses.calls[0].request.body) == {
         "query": "dano moral",
-        "queryType": "any",
-        "queryScope": "inteiroteor",
+        "queryType": "anywords",
+        "queryScope": "inteiroTeor",
         "origem": ["tribunal de justica"],
         "tipo": ["acordao"],
         "page": 0,
