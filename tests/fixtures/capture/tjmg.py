@@ -15,6 +15,11 @@ Saves raw responses for the four endpoints TJMG hits per ``cjsg`` call:
 - ``results_normal_page_NN.html`` — typical multi-page scenario.
 - ``single_page.html`` — single-page scenario.
 - ``no_results.html`` — zero-hit scenario.
+- ``erro_ora.html`` — search without a date filter: the portal answers with
+  ``ORA-20000 ... DRG-10599`` instead of results.
+- ``categorizada.html`` — "Resultado da busca (Categorizada)": with
+  repetitive-appeal rulings among the hits, the portal lists only the count
+  per category.
 
 The PNG sample stored is the *real* captcha bytes captured live (per the
 project rule "samples sempre do backend real"). Decoding inside pytest
@@ -88,22 +93,40 @@ def main() -> None:
     print(f"[tjmg/typical] DataFrame columns: {list(df.columns)}")
     print(f"[tjmg/typical] rows: {len(df)}")
 
-    # Single page: a narrower phrase whose hits fit in one page (the
-    # date filter is unreliable here — TJMG silently returns 0 for
-    # most narrow date windows even on common terms).
+    # Single page: a narrower phrase whose hits fit in one page. Without a
+    # date filter the portal answers with ORA-20000 (see ``erro_ora``).
     state["scenario"] = "single_page"
     counters.clear()
     df = scraper.cjsg(
         "homicidio qualificado dolo eventual",
         paginas=1,
+        data_julgamento_inicio="01/01/2025",
+        data_julgamento_fim="31/01/2025",
     )
     print(f"[tjmg/single_page] rows: {len(df)}")
 
-    # Zero hits.
+    # Zero hits (with a date filter, for the same reason).
     state["scenario"] = "no_results"
     counters.clear()
-    df = scraper.cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
+    df = scraper.cjsg(
+        "juscraper_probe_zero_hits_xyzqwe",
+        paginas=1,
+        data_julgamento_inicio="01/01/2025",
+        data_julgamento_fim="31/01/2025",
+    )
     print(f"[tjmg/no_results] rows: {len(df)} (expected 0)")
+
+    # Pages without the result list: only the download, since the parser
+    # raises on them.
+    state["scenario"] = "erro_ora"
+    scraper.cjsg_download("dano moral", paginas=1)
+    state["scenario"] = "categorizada"
+    scraper.cjsg_download(
+        "usucapiao",
+        paginas=1,
+        data_julgamento_inicio="01/01/2025",
+        data_julgamento_fim="31/12/2025",
+    )
 
 
 if __name__ == "__main__":

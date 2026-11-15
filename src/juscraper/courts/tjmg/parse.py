@@ -5,6 +5,7 @@ import re
 
 import pandas as pd
 
+from juscraper.core.exceptions import HTTPSemanticError
 from juscraper.core.parse_utils import clean_html, coerce_date_columns
 
 _CNJ_RE = re.compile(r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}")
@@ -24,10 +25,54 @@ _DPUBL_RE = re.compile(
 _EMENTA_RE = re.compile(
     r"<strong>\s*Ementa:\s*</strong>(.*?)</div>", re.DOTALL | re.IGNORECASE
 )
+# Erro do banco do portal, mostrado no aviso da página no lugar dos resultados,
+# como em "Ocorreu um erro na busca por Palavras - ORA-20000: Oracle Text error:
+# DRG-10599: a coluna não está indexada".
+_ERRO_DE_BUSCA_RE = re.compile(
+    r'<p class="aviso">\s*(Ocorreu um erro na busca[^<]*)', re.IGNORECASE
+)
+# Com acórdãos de repetitivos entre os resultados, o portal mostra só a contagem
+# por categoria, com um link para cada lista, e nenhum resultado.
+_CATEGORIZADA_RE = re.compile(r"<h1>\s*Resultado da busca \(Categorizada\)", re.IGNORECASE)
+_CATEGORIA_RE = re.compile(
+    r"<td>([^<]+?):</td>\s*<td><a [^>]*>(\d+) documento\(s\) encontrado\(s\)</a>",
+    re.IGNORECASE,
+)
 _PROC_ID_RE = re.compile(
     r"procAno=(\d+)&procCodigo=(\d+)&procCodigoOrigem=(\d+)"
     r"&procNumero=(\d+)&procSequencial=(\d+)&procSeqAcordao=(\d+)"
 )
+
+
+class TJMGBuscaSemListaError(HTTPSemanticError):
+    """O portal respondeu à busca sem a lista de resultados.
+
+    Duas páginas observadas ao vivo viravam um DataFrame vazio, como se não
+    houvesse resultados: o erro ``ORA-20000 ... DRG-10599: a coluna não está
+    indexada``, nas buscas sem filtro de data e em algumas faixas longas, e a
+    busca categorizada, quando há acórdãos de repetitivos no resultado.
+    """
+
+
+def _busca_sem_lista(html: str) -> str | None:
+    """Explica por que a página não traz a lista de resultados, ou ``None`` se traz."""
+    erro = _ERRO_DE_BUSCA_RE.search(html)
+    if erro:
+        return (
+            f"TJMG devolveu um erro de busca: {clean_html(erro.group(1))!r}. "
+            "O portal falha assim sem filtro de data e em algumas faixas longas; "
+            "informe um filtro de data com uma faixa menor."
+        )
+    if _CATEGORIZADA_RE.search(html):
+        categorias = "; ".join(
+            f"{clean_html(nome)}: {n}" for nome, n in _CATEGORIA_RE.findall(html)
+        )
+        return (
+            f"TJMG devolveu a busca categorizada ({categorias}), que separa os "
+            "acórdãos de repetitivos e não lista resultados; o juscraper ainda não "
+            "segue essas listas. Restrinja a faixa de datas ou os termos."
+        )
+    return None
 
 
 def _split_blocks(html: str) -> list:
@@ -72,6 +117,9 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
+        motivo = _busca_sem_lista(html)
+        if motivo:
+            raise TJMGBuscaSemListaError(motivo)
         rows.extend(_parse_block(block) for block in _split_blocks(html))
     df = pd.DataFrame(rows)
     coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")
