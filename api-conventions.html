@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -176,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#pre-scraping-count-count_only" id="toc-pre-scraping-count-count_only" class="nav-link" data-scroll-target="#pre-scraping-count-count_only">Pre-scraping count (<code>count_only</code>)</a></li>
   <li><a href="#full-text-of-acórdãos-esaj" id="toc-full-text-of-acórdãos-esaj" class="nav-link" data-scroll-target="#full-text-of-acórdãos-esaj">Full text of acórdãos (eSAJ)</a>
   <ul class="collapse">
-  <li><a href="#tjce-straight-from-cd_acordao" id="toc-tjce-straight-from-cd_acordao" class="nav-link" data-scroll-target="#tjce-straight-from-cd_acordao">TJCE: straight from <code>cd_acordao</code></a></li>
+  <li><a href="#tjce-and-tjms-straight-from-cd_acordao" id="toc-tjce-and-tjms-straight-from-cd_acordao" class="nav-link" data-scroll-target="#tjce-and-tjms-straight-from-cd_acordao">TJCE and TJMS: straight from <code>cd_acordao</code></a></li>
   </ul></li>
   <li><a href="#case-documents-of-the-first-instance-tjsp" id="toc-case-documents-of-the-first-instance-tjsp" class="nav-link" data-scroll-target="#case-documents-of-the-first-instance-tjsp">Case documents of the first instance (TJSP)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
@@ -584,15 +584,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Password-protected documents.</strong> Documents that ask for the process password are skipped. If the acórdão of the requested date is one of them, the method returns the next acórdão of the process instead; a <code>logging</code> warning then says how many protected documents were skipped before the returned one.</li>
 <li><strong>Pace.</strong> <code>sleep_time</code> is the minimum interval between two requests to the court, also inside a single row: one TJSP acórdão takes the search, one page per incident, the movement pages and the folder of each candidate document.</li>
 </ul>
-<section id="tjce-straight-from-cd_acordao" class="level3">
-<h3 class="anchored" data-anchor-id="tjce-straight-from-cd_acordao">TJCE: straight from <code>cd_acordao</code></h3>
-<p>In TJCE the direct route of the <code>cjsg</code> works without login or captcha, so the methods take the codes of the <code>cjsg</code> row instead of the process number: <code>baixar_acordao(cd_acordao, cd_foro)</code> makes one request to <code>cjsg/getArquivo.do</code> and writes <code>&lt;diretorio&gt;/acordaos/&lt;cd_acordao&gt;.pdf</code>; <code>baixar_acordaos(df)</code> reads the <code>cd_acordao</code> and <code>cd_foro</code> columns and adds <code>caminho_acordao</code> and <code>motivo_falha</code>, as above:</p>
+<section id="tjce-and-tjms-straight-from-cd_acordao" class="level3">
+<h3 class="anchored" data-anchor-id="tjce-and-tjms-straight-from-cd_acordao">TJCE and TJMS: straight from <code>cd_acordao</code></h3>
+<p>In TJCE and TJMS the direct route of the <code>cjsg</code> works without login or captcha, so the methods take the codes of the <code>cjsg</code> row instead of the process number: <code>baixar_acordao(cd_acordao, cd_foro)</code> makes one request to <code>cjsg/getArquivo.do</code> and writes <code>&lt;diretorio&gt;/acordaos/&lt;cd_acordao&gt;.pdf</code>; <code>baixar_acordaos(df)</code> reads the <code>cd_acordao</code> and <code>cd_foro</code> columns and adds <code>caminho_acordao</code> and <code>motivo_falha</code>, as above:</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tjce <span class="op">=</span> jus.scraper(<span class="st">"tjce"</span>)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.baixar_acordaos(df)</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"cd_acordao"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>cd_acordao</code> already identifies one acórdão, so there is no choice by date. When the court answers with an HTML page instead of the PDF (“Arquivo não localizado” for an unknown code, or a captcha or login page), <code>baixar_acordao</code> raises <code>DocumentoNaoPdfError</code>, from <code>juscraper.courts._esaj.pasta</code>, and writes nothing; in <code>baixar_acordaos</code> the row gets <code>nao_pdf</code>. A code that is empty or not only digits raises <code>EntradaInvalidaError</code> (<code>entrada_invalida</code>) before any request.</p>
-<p>TJAL, TJAM and TJMS do not have these methods yet.</p>
+<p>TJAL and TJAM do not have these methods yet: the direct route asks for a reCAPTCHA there, as in TJAC.</p>
 </section>
 </section>
 <section id="case-documents-of-the-first-instance-tjsp" class="level2">
