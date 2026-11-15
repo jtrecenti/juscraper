@@ -26,8 +26,9 @@ class _InvalidProcessCodeError(ValueError):
 
 _TENTATIVAS = 5
 
-# (conexão, leitura), em segundos, de cada pedido do cpopg. Sem prazo, uma
-# conexão que o eSAJ deixa aberta sem responder prende o lote inteiro, e o
+# (conexão, leitura), em segundos, de cada pedido do cpopg; o cposg e o cjpg
+# importam esta constante. Sem prazo, uma conexão que o eSAJ deixa aberta sem
+# responder prende o lote inteiro, e o
 # retry de cpopg_download_html_single nunca roda. O prazo estourado vira
 # requests.Timeout, que o retry e _FALHAS_DE_DOCUMENTO já tratam (#484). A
 # conexão curta faz o portal fora do ar falhar logo, sem 60 s por tentativa.

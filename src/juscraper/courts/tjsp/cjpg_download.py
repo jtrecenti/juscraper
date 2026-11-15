@@ -17,14 +17,10 @@ from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
 from .cjpg_parse import cjpg_n_pags
+from .cpopg_download import _TIMEOUT
 from .exceptions import QueryTooLongError
 
 __all__ = ["QueryTooLongError", "cjpg_download", "fetch_cjpg_first_page"]
-
-# (conexão, leitura), em segundos, de cada pedido do cjpg, como no cpopg
-# (#484): sem prazo, uma conexão que o eSAJ deixa aberta sem responder prende
-# a coleta inteira, sem erro.
-_TIMEOUT = (10, 60)
 
 
 def _save_debug_html(response: requests.Response, download_path: str, error: Exception) -> Path:

@@ -15,14 +15,9 @@ from ...core.avisos import avisar
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
+from .cpopg_download import _TIMEOUT
 
 logger = logging.getLogger('juscraper.cposg_download')
-
-# (conexão, leitura), em segundos, de cada pedido do cposg, como no cpopg
-# (#484): sem prazo, uma conexão que o eSAJ deixa aberta sem responder prende
-# o lote inteiro. O prazo estourado vira requests.Timeout, e o processo sai
-# no log de erro, como qualquer falha de rede.
-_TIMEOUT = (10, 60)
 
 # A página do processo traz o container de movimentações vazio e o link
 # "Exibir movimentações"; o JavaScript do eSAJ busca a lista em
