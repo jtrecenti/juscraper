@@ -282,13 +282,12 @@ def consultar_processo(
     tribunal: str,
     logger: logging.Logger,
 ) -> tuple[_Bruto | None, str | None]:
-    """``(html, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
+    """``(bruto, motivo)`` da busca de um CNJ, com a falha no motivo em vez de exceção.
 
     O bloqueio anti-bot sai :data:`MOTIVO_BLOQUEIO_ANTI_BOT`, que encerra o
     lote em :func:`consultar_em_lote`; outro erro sai pelo
     :func:`motivo_falha_ou_inesperada`. ``ImportError`` (extra ausente)
-    propaga. ``html`` ``None`` sem motivo é processo que a fonte não devolveu.
-    O bruto costuma ser o HTML do detalhe; no TRF3, é o dicionário da API.
+    propaga. ``bruto`` ``None`` sem motivo é processo que a fonte não devolveu.
     """
     try:
         return buscar(cnj), None
@@ -350,7 +349,7 @@ def consultar_em_lote(
 
 def linhas_de_processos(
     cnjs: list[str],
-    htmls: Sequence[_Bruto | None],
+    brutos: Sequence[_Bruto | None],
     motivos: list[str | None],
     *,
     parse: Callable[[_Bruto], dict[str, Any]],
@@ -358,17 +357,17 @@ def linhas_de_processos(
 ) -> list[dict[str, Any]]:
     """Uma linha por CNJ, com ``id_cnj`` e :data:`COLUNA_MOTIVO_FALHA`.
 
-    O HTML ``None`` vira linha só com ``id_cnj`` e o motivo do download. O
-    HTML que ``parse`` recusa também, com :data:`MOTIVO_RESPOSTA_INESPERADA`
+    O bruto ``None`` vira linha só com ``id_cnj`` e o motivo do download. O
+    bruto que ``parse`` recusa também, com :data:`MOTIVO_RESPOSTA_INESPERADA`
     quando o download não trouxe motivo, e o lote segue.
     """
     rows: list[dict[str, Any]] = []
-    for cnj, html, motivo_download in zip(cnjs, htmls, motivos, strict=True):
+    for cnj, bruto, motivo_download in zip(cnjs, brutos, motivos, strict=True):
         record: dict[str, Any] = {}
         motivo = motivo_download
-        if html is not None:
+        if bruto is not None:
             try:
-                record = parse(html)
+                record = parse(bruto)
             except Exception as exc:  # noqa: BLE001 — resiliência por item
                 logger.warning("Erro ao parsear detalhe de %s: %s", cnj, exc)
                 motivo = motivo or MOTIVO_RESPOSTA_INESPERADA
