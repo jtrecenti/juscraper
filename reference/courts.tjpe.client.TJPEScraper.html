@@ -322,8 +322,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido (ex.: data fora dos formatos aceitos, <code>tipo_decisao</code> fora do enum).</td>
 </tr>
+<tr class="even">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando a busca devolve uma pagina fora dos formatos conhecidos (nem resultados, nem escolha do tipo, nem “Nenhum documento encontrado”).</td>
+</tr>
 </tbody>
 </table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: Quando o portal responde “Nenhum documento encontrado”; o resultado sai vazio. Com a pesquisa fora do ar, o portal responde assim a qualquer termo.</p>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
@@ -371,7 +380,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas brutas do cjsg do TJPE.</p>
-<p>Aceita os mesmos filtros de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
+<p>Aceita os mesmos filtros de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa, e levanta e avisa nos mesmos casos.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
@@ -455,7 +464,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code>; com <code>download_pecas=True</code>, também <code>pecas</code>.</td>
+<td>pd.DataFrame: Uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code> e <code>motivo_falha</code>; com <code>download_pecas=True</code>, também <code>pecas</code> e <code>pecas_falhas</code>. <code>motivo_falha</code> e <code>pecas_falhas</code> seguem a regra de <code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg</code>. Quando o WAF desafia de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo), o lote para ali: as linhas anteriores são preservadas, e a bloqueada e as seguintes saem com <code>motivo_falha</code> igual a <code>bloqueio_anti_bot</code>, com um <code>BloqueioAntiBotWarning</code> (subclasse de <code>UserWarning</code>). Com <code>download_pecas=True</code>, as peças de cada processo vêm logo depois do seu detalhe, e os processos anteriores ao bloqueio ficam com as peças.</td>
 </tr>
 </tbody>
 </table>
@@ -480,11 +489,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><code>ImportError</code></td>
 <td>O WAF desafiou e o Playwright não está instalado, inclusive durante o download das peças.</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td><code>WafChallengeError</code></td>
-<td>O WAF desafiou de novo logo após a renovação do cookie, ou o cookie não pôde ser obtido (Chromium do Playwright ausente, cookie não emitido no prazo). Interrompe o lote.</td>
 </tr>
 </tbody>
 </table>

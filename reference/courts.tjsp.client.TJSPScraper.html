@@ -335,6 +335,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>ValueError</code></td>
 <td>Quando <code>classe</code> e <code>classes</code> (ou par equivalente) sao passados simultaneamente.</td>
 </tr>
+<tr class="odd">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Quando parte das paginas baixadas nao pode ser lida; <code>.resultado</code> traz as paginas lidas. Ver <code>cjpg_parse_manager</code>.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -342,9 +347,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 10%">
-<col style="width: 10%">
-<col style="width: 79%">
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 95%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -357,32 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td></td>
-<td>pd.DataFrame | int: Resultados parseados (colunas conforme</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td>class:<code>OutputCJPGTJSP</code> — <code>id_processo</code>, <code>cd_processo</code> e</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td>campos extras emitidos pelo parser via <code>extra='allow'</code> —</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>classe</code>, <code>assunto</code>, <code>magistrado</code>, <code>comarca</code>,</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td><code>foro</code>, <code>vara</code>, <code>data_disponibilizacao</code>, <code>decisao</code>);</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
+<td>pd.DataFrame | int: Resultados parseados (colunas conforme <code>OutputCJPGTJSP</code> — <code>id_processo</code>, <code>cd_processo</code> e campos extras emitidos pelo parser via <code>extra='allow'</code> — <code>classe</code>, <code>assunto</code>, <code>magistrado</code>, <code>comarca</code>, <code>foro</code>, <code>vara</code>, <code>data_disponibilizacao</code>, <code>decisao</code>); <code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -514,6 +494,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cjpg_parse">cjpg_parse</h3>
 <div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cjpg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parse downloaded CJPG HTML files into a DataFrame.</p>
+<p>Pagina que falha num diretorio levanta <code>ColetaParcialError</code>, com as demais em <code>.resultado</code>. Ver <code>cjpg_parse_manager</code>.</p>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cjsg">cjsg</h3>
@@ -591,9 +572,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 10%">
-<col style="width: 10%">
-<col style="width: 79%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 93%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -606,27 +587,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td></td>
-<td>pd.DataFrame | int: Resultados parseados (colunas conforme</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td>class:<code>OutputCJSGTJSP</code> — <code>processo</code>, <code>ementa</code>,</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td><code>data_julgamento</code>, <code>cd_acordao</code>, <code>relator</code>,</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>orgao_julgador</code>); <code>int</code> com o total de resultados quando</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td><code>count_only=True</code>.</td>
+<td>pd.DataFrame | int: Resultados parseados (colunas conforme <code>OutputCJSGTJSP</code> — <code>processo</code>, <code>ementa</code>, <code>data_julgamento</code>, <code>cd_acordao</code>, <code>relator</code>, <code>orgao_julgador</code>); <code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -814,7 +775,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando <code>method</code> nao e suportado, quando nenhum arquivo baixado pode ser lido (nenhum arquivo candidato no diretorio de download, ou todos com erro de leitura; nesse caso o diretorio de download nao e apagado), ou quando <code>download_pecas</code> e <code>diretorio</code> nao combinam com os demais argumentos.</td>
+<td>Quando <code>method</code> nao e suportado, quando ha arquivos baixados e nenhum pode ser lido (nesse caso o diretorio de download nao e apagado), ou quando <code>download_pecas</code> e <code>diretorio</code> nao combinam com os demais argumentos.</td>
 </tr>
 </tbody>
 </table>
@@ -823,9 +784,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 9%">
-<col style="width: 9%">
-<col style="width: 80%">
+<col style="width: 0%">
+<col style="width: 0%">
+<col style="width: 98%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -838,47 +799,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td></td>
-<td>dict[str, pd.DataFrame]: Tabelas <code>basicos</code>, <code>partes</code>,</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>movimentacoes</code> e <code>peticoes_diversas</code>. <code>basicos</code> traz a</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td><code>situacao</code> do cabecalho (“Extinto”, “Suspenso” etc.) e</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>movimentacoes</code> traz a lista completa, que o download busca</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td>pagina a pagina. Em <code>movimentacoes</code>, <code>cd_documento</code> e</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>documento_publico</code> dizem se a linha tem documento e se ele</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td>abre sem senha; <code>caminho_documento</code> traz o PDF baixado, ou</td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td><code>None</code> sem <code>download_pecas</code>, para documento com senha e para</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td>o que falhou (as falhas saem num <code>UserWarning</code>).</td>
+<td>dict[str, pd.DataFrame]: Tabelas <code>basicos</code>, <code>partes</code>, <code>movimentacoes</code> e <code>peticoes_diversas</code>. <code>basicos</code> traz a <code>situacao</code> do cabecalho (“Extinto”, “Suspenso” etc.) e <code>movimentacoes</code> traz a lista completa, que o download busca pagina a pagina. Em <code>movimentacoes</code>, <code>cd_documento</code> e <code>documento_publico</code> dizem se a linha tem documento e se ele abre sem senha; <code>caminho_documento</code> traz o PDF baixado, ou <code>None</code> sem <code>download_pecas</code>, para documento com senha e para o que falhou (as falhas saem num <code>UserWarning</code>). Todo CNJ pedido aparece em <code>basicos</code>. A coluna <code>motivo_falha</code> e <code>None</code> no processo lido; o CNJ que nao foi baixado ganha uma linha so com <code>id_processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta diz nao ter o numero, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que nao pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num unico <code>UserWarning</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -940,11 +861,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 95%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td>dict[str, str]: <code>{CNJ formatado: motivo_falha}</code> dos processos que ficaram sem arquivo; vazio quando todos foram baixados. Os motivos sao os de <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cpopg"><code>cpopg</code></a>, e as falhas tambem saem num <code>UserWarning</code>. Elas ficam gravadas na pasta do download, e <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cpopg_parse"><code>cpopg_parse</code></a> as devolve em <code>basicos</code>, como o <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cpopg"><code>cpopg</code></a>.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cpopg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cpopg_parse">cpopg_parse</h3>
 <div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cpopg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Le os arquivos baixados do CPOPG e devolve um dict de DataFrames.</p>
+<p><code>basicos</code> traz a coluna <code>motivo_falha</code>, como no <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cpopg"><code>cpopg</code></a>: o arquivo que nao pode ser lido e o processo que <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cpopg_download"><code>cpopg_download</code></a> nao baixou nessa pasta saem numa linha com o motivo, e as falhas, num <code>UserWarning</code>.</p>
 <section id="raises-5" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
 <table class="caption-top table">
@@ -970,6 +916,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cposg(id_cnj, method<span class="op">=</span><span class="st">'html'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Fetch a second-degree process by CNJ and return a DataFrame.</p>
 <p><code>method</code> aceita só <code>"html"</code>, o default; o <code>"api"</code> foi removido e levanta <code>ValueError</code>.</p>
+<p>Todo CNJ pedido aparece no DataFrame. A coluna <code>motivo_falha</code> é <code>None</code> no processo lido; o CNJ que não foi baixado ganha uma linha só com <code>processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta de 2º grau não mostra o número, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que não pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num único <code>UserWarning</code>.</p>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cposg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cposg_download">cposg_download</h3>
@@ -1012,11 +959,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="returns-6" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 2%">
+<col style="width: 95%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td>dict[str, str]: <code>{CNJ formatado: motivo_falha}</code> dos processos que ficaram sem arquivo; vazio quando todos foram baixados. Os motivos são os de <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cposg"><code>cposg</code></a>, e as falhas também saem num <code>UserWarning</code>. Elas ficam gravadas na pasta do download, e <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cposg_parse"><code>cposg_parse</code></a> as devolve no DataFrame, como o <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cposg"><code>cposg</code></a>.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cposg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cposg_parse">cposg_parse</h3>
 <div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cposg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parse downloaded CPOSG files into a DataFrame.</p>
+<p>Com a coluna <code>motivo_falha</code>, como no <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cposg"><code>cposg</code></a>: o arquivo que não pode ser lido e o processo que <a href="../reference/courts.tjsp.client.TJSPScraper.html#juscraper.courts.tjsp.client.TJSPScraper.cposg_download"><code>cposg_download</code></a> não baixou nessa pasta saem numa linha com o motivo, e as falhas, num <code>UserWarning</code>.</p>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.listar_varas" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.listar_varas">listar_varas</h3>
@@ -1063,8 +1035,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-5" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<section id="returns-7" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1077,12 +1049,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>pd.DataFrame: Arvore de varas (colunas <code>id</code>, <code>nome</code>,</td>
-</tr>
-<tr class="even">
-<td></td>
-<td><code>pd</code>.<code>DataFrame</code></td>
-<td><code>id_pai</code>, <code>nivel</code>, <code>selecionavel</code>, <code>caminho</code>).</td>
+<td>pd.DataFrame: Arvore de varas (colunas <code>id</code>, <code>nome</code>, <code>id_pai</code>, <code>nivel</code>, <code>selecionavel</code>, <code>caminho</code>).</td>
 </tr>
 </tbody>
 </table>

@@ -178,8 +178,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    download_path<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sleep_time<span class="op">=</span><span class="fl">1.0</span>,</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    max_captcha_attempts<span class="op">=</span><span class="dv">3</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    max_captcha_esgotado_seguidos<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>TRF6 eproc consulta pública (1º grau).</p>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -197,7 +198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.trf6.client.TRF6Scraper.cpopg_download">cpopg_download</a></td>
-<td>Download the detail HTML for each <code>id_cnj</code>.</td>
+<td>Baixa o HTML do detalhe de cada <code>id_cnj</code>.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.trf6.client.TRF6Scraper.cpopg_parse">cpopg_parse</a></td>
@@ -209,19 +210,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf6.client.TRF6Scraper.cpopg">cpopg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.trf6.client.TRF6Scraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>High-level <code>cpopg</code> lookup: download + parse.</p>
-<p>Accepts a single CNJ or a list. Returns a DataFrame with one row per process; columns include <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>data_autuacao</code>, <code>situacao</code>, <code>magistrado</code>, <code>orgao_julgador</code>, <code>assuntos</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>mpf</code>, <code>perito</code> and <code>movimentacoes</code>.</p>
+<p>Accepts a single CNJ or a list. Returns a DataFrame with one row per process; columns include <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>data_autuacao</code>, <code>situacao</code>, <code>magistrado</code>, <code>orgao_julgador</code>, <code>assuntos</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>mpf</code>, <code>perito</code>, <code>movimentacoes</code> and <code>motivo_falha</code>.</p>
+<p><code>motivo_falha</code> é <code>None</code> quando a consulta respondeu, inclusive para processo ausente ou sob sigilo (linha só com <code>id_cnj</code>). Quando a consulta de um CNJ falha, a linha sai só com <code>id_cnj</code> e o motivo, no vocabulário de <code>juscraper.core.failures.MOTIVOS_FALHA</code> (<code>http_&lt;status&gt;</code>, <code>timeout</code>, <code>conexao</code>; <code>captcha_esgotado</code> para captcha recusado nas <code>max_captcha_attempts</code> tentativas; <code>resposta_inesperada</code> para formulário sem captcha, HTML que o parser recusa ou outro erro), e o lote segue. Um desafio anti-bot vale para a sessão inteira: o lote para no CNJ desafiado, sem novos pedidos, e ele e os seguintes saem com <code>bloqueio_anti_bot</code>. Do mesmo modo, depois de <code>max_captcha_esgotado_seguidos</code> CNJs seguidos com <code>captcha_esgotado</code> (default 3), o resolvedor está errando sempre: o lote para, e os CNJs seguintes saem com <code>captcha_esgotado</code> sem nova consulta. As falhas entram num único <code>UserWarning</code> ao fim (<code>BloqueioAntiBotWarning</code> quando há bloqueio anti-bot).</p>
 </section>
 <section id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_download">cpopg_download</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.trf6.client.TRF6Scraper.cpopg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download the detail HTML for each <code>id_cnj</code>.</p>
-<p>Returns a list aligned with the input order. <code>None</code> entries indicate processes the public consultation could not return — typically sigilo or invalid CNJ. Captcha-solver failures (<code>RuntimeError</code>) propagate.</p>
+<p>Baixa o HTML do detalhe de cada <code>id_cnj</code>.</p>
+<p>Devolve uma lista na ordem da entrada. <code>None</code> indica processo que a consulta pública não devolveu: sigilo, CNJ inexistente ou falha da consulta (requisição, captcha esgotado). Falhas individuais não interrompem o lote; um bloqueio anti-bot, ou o captcha esgotado em <code>max_captcha_esgotado_seguidos</code> CNJs seguidos, encerra o lote, e os CNJs restantes saem <code>None</code>. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.trf6.client.TRF6Scraper.html#juscraper.courts.trf6.client.TRF6Scraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>.</p>
 </section>
 <section id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_parse">cpopg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.trf6.client.TRF6Scraper.cpopg_parse(htmls, id_cnj_list)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parse a list of detail HTMLs into a one-row-per-process DataFrame.</p>
-<p>Rows for <code>None</code> entries (process not found) carry <code>id_cnj</code> plus <code>None</code> in every other column, so callers can still distinguish “looked up but missing” from “never tried”.</p>
+<p>Rows for <code>None</code> entries carry <code>id_cnj</code> plus <code>None</code> in every other column, so callers can still distinguish “looked up but missing” from “never tried”. Um HTML que o parser recusa vira linha só com <code>id_cnj</code>, com <code>UserWarning</code>, e o lote continua. Sem a coluna <code>motivo_falha</code>: um <code>None</code> vindo de <a href="../reference/courts.trf6.client.TRF6Scraper.html#juscraper.courts.trf6.client.TRF6Scraper.cpopg_download"><code>cpopg_download</code></a> pode ser processo ausente ou consulta que falhou, e só <a href="../reference/courts.trf6.client.TRF6Scraper.html#juscraper.courts.trf6.client.TRF6Scraper.cpopg"><code>cpopg</code></a> sabe qual.</p>
 
 
 </section>
