@@ -332,10 +332,27 @@ def test_cpopg_sem_polos_avisa_uma_vez_ao_fim(fake_captcha_solver):
     assert list(df["motivo_falha"]) == [None, None]
 
 
+@pytest.mark.parametrize("parametro", ["max_captcha_attempts", "max_captcha_esgotado_seguidos"])
 @pytest.mark.parametrize("limite", [0, -1])
-def test_max_captcha_esgotado_seguidos_invalido(limite):
-    with pytest.raises(ValueError, match="max_captcha_esgotado_seguidos"):
-        jus.scraper("trf6", max_captcha_esgotado_seguidos=limite)
+def test_limite_de_captcha_menor_que_um(parametro, limite):
+    with pytest.raises(ValueError, match=parametro):
+        jus.scraper("trf6", **{parametro: limite})
+
+
+@pytest.mark.parametrize("parametro", ["max_captcha_attempts", "max_captcha_esgotado_seguidos"])
+@pytest.mark.parametrize("limite", ["3", 2.5, True])
+def test_limite_de_captcha_fora_de_int(parametro, limite):
+    with pytest.raises(TypeError, match=parametro):
+        jus.scraper("trf6", **{parametro: limite})
+
+
+def test_max_captcha_attempts_nao_aceita_none():
+    with pytest.raises(TypeError, match="max_captcha_attempts"):
+        jus.scraper("trf6", max_captcha_attempts=None)
+
+
+def test_max_captcha_esgotado_seguidos_none_desliga():
+    assert jus.scraper("trf6", max_captcha_esgotado_seguidos=None).max_captcha_esgotado_seguidos is None
 
 
 @responses.activate

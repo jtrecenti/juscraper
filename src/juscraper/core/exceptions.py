@@ -65,7 +65,8 @@ class BotChallengeBlockedError(Exception):
 
     ``bot_manager`` nomeia o bloqueador na mensagem. O default é ``"Akamai"``
     (TRFs); o agregador Falcao passa ``"CloudFront"``, cujo 403 é uma página
-    HTML ``The request could not be satisfied`` servida pelo próprio CDN.
+    HTML ``The request could not be satisfied`` servida pelo próprio CDN, e
+    :class:`WafChallengeError` e o TJTO passam ``"AWS WAF"``.
 
     ``mensagem`` substitui o texto padrão, que descreve o 403: as subclasses
     cujo sintoma é outro (desafio JavaScript com HTTP 200, cookie que não
@@ -95,6 +96,23 @@ class BotChallengeBlockedError(Exception):
             if reference:
                 mensagem += f" Reference: {reference}."
         super().__init__(mensagem)
+
+    def __reduce__(self) -> tuple[object, ...]:
+        """Reconstrói o erro, e as subclasses, sem chamar o ``__init__``.
+
+        ``args`` só guarda a mensagem, e o ``__init__`` desta classe e de cada
+        subclasse pede outros argumentos: sem isto, pickle e ``copy`` chamariam
+        ``__init__(mensagem)`` e quebrariam, o que perderia o erro numa coleta
+        rodada em ``ProcessPoolExecutor``. Os atributos voltam pelo ``__dict__``.
+        """
+        return (_restaurar_excecao, (type(self), self.args), self.__dict__)
+
+
+def _restaurar_excecao(cls: type[BaseException], args: tuple[object, ...]) -> BaseException:
+    """Cria ``cls`` com ``args`` sem passar pelo ``__init__`` (ver ``BotChallengeBlockedError.__reduce__``)."""
+    erro = cls.__new__(cls)
+    erro.args = args
+    return erro
 
 
 class BloqueioAntiBotWarning(UserWarning):
@@ -132,7 +150,7 @@ class WafChallengeError(BotChallengeBlockedError):
             )
         else:
             mensagem = f"O WAF do {tribunal} desafiou em {url}, e o cookie aws-waf-token nao foi obtido: {motivo}"
-        super().__init__(tribunal, url, mensagem=mensagem)
+        super().__init__(tribunal, url, bot_manager="AWS WAF", mensagem=mensagem)
 
 
 class ColetaParcialError(RuntimeError):

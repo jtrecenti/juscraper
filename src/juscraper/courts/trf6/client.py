@@ -52,6 +52,15 @@ class _Consulta(NamedTuple):
     motivo: str | None
 
 
+def _exigir_inteiro_positivo(nome: str, valor: object, *, ou_none: bool = False) -> None:
+    """Levanta ``TypeError`` se ``valor`` não é ``int`` (``bool`` não conta) e ``ValueError`` se é menor que 1."""
+    esperado = f"{nome} deve ser {'None ou ' if ou_none else ''}um inteiro maior que zero, não {valor!r}."
+    if isinstance(valor, bool) or not isinstance(valor, int):
+        raise TypeError(esperado)
+    if valor < 1:
+        raise ValueError(esperado)
+
+
 class TRF6Scraper(BaseScraper):
     """TRF6 eproc consulta pública (1º grau)."""
 
@@ -79,9 +88,15 @@ class TRF6Scraper(BaseScraper):
                 errando sempre, e os CNJs restantes saem com o mesmo motivo,
                 sem nova consulta. ``None`` não encerra.
             **kwargs: Guardados em ``self.args``.
+
+        Raises:
+            TypeError: ``max_captcha_attempts`` ou ``max_captcha_esgotado_seguidos``
+                não é ``int`` (nem ``None``, no segundo).
+            ValueError: Um dos dois é menor que 1.
         """
-        if max_captcha_esgotado_seguidos is not None and max_captcha_esgotado_seguidos < 1:
-            raise ValueError("max_captcha_esgotado_seguidos deve ser None ou um inteiro maior que zero.")
+        _exigir_inteiro_positivo("max_captcha_attempts", max_captcha_attempts)
+        if max_captcha_esgotado_seguidos is not None:
+            _exigir_inteiro_positivo("max_captcha_esgotado_seguidos", max_captcha_esgotado_seguidos, ou_none=True)
         super().__init__("TRF6")
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
