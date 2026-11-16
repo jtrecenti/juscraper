@@ -2,8 +2,7 @@
 
 Os dois portais usam as mesmas rotas e parâmetros de busca e paginação. O
 download fica em :mod:`.cjpg_download`, o parse em :mod:`.cjpg_parse` e os
-schemas em :mod:`.schemas` (``InputCJPGEsaj``/``OutputCJPGEsaj``). Só as
-constantes de prazo e tentativas do download ainda vêm de ``tjsp/``. O limite de
+schemas em :mod:`.schemas` (``InputCJPGEsaj``/``OutputCJPGEsaj``). O limite de
 tamanho de ``pesquisa`` fica no hook :meth:`EsajSearchScraper._validate_pesquisa`
 de cada tribunal: o de 120 caracteres é do TJSP.
 """

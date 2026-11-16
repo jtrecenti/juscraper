@@ -66,8 +66,6 @@ class OutputCJSGTJSP(OutputCJSGBase):
     orgao_julgador: str | None = None
 
 
-# O cjpg e do eSAJ, comum a TJSP e TJMS: os schemas ficam em ``_esaj.schemas``.
-# Os nomes antigos continuam importaveis daqui.
 InputCJPGTJSP = InputCJPGEsaj
 OutputCJPGTJSP = OutputCJPGEsaj
 

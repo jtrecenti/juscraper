@@ -131,11 +131,8 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
 }
 
 
-# Parser de familia, fora do pacote do tribunal: entra nos candidatos abaixo.
-PARSER_MODULES_DA_FAMILIA: dict[tuple[str, str], str] = {
-    ("tjsp", "cjpg"): "juscraper.courts._esaj.cjpg_parse",
-    ("tjms", "cjpg"): "juscraper.courts._esaj.cjpg_parse",
-}
+# Raspador de cada tribunal, para achar o parser da familia (``courts/_<familia>/``).
+COURT_CLASSES = dict(_iter_court_scrapers())
 
 
 def _parser_sources(tribunal: str, endpoint: str) -> str:
@@ -146,7 +143,8 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
     - ``juscraper.courts.<trib>.<endpoint>_parse`` (TJSP tem cjsg_parse, cjpg_parse)
     - ``juscraper.aggregators.<name>.parse``
     - ``juscraper.courts.<trib>.client`` (fallback, caso cjsg_parse seja metodo)
-    - o parser da familia, quando registrado em :data:`PARSER_MODULES_DA_FAMILIA`
+    - ``juscraper.courts._<familia>.<endpoint>_parse``, de cada pacote de
+      familia no MRO do raspador (ex.: o ``cjpg`` do eSAJ para TJSP e TJMS)
     """
     sources: list[str] = []
     candidates = [
@@ -155,8 +153,11 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
         f"juscraper.aggregators.{tribunal}.parse",
         f"juscraper.courts.{tribunal}.client",
     ]
-    if (tribunal, endpoint) in PARSER_MODULES_DA_FAMILIA:
-        candidates.append(PARSER_MODULES_DA_FAMILIA[tribunal, endpoint])
+    for cls in getattr(COURT_CLASSES.get(tribunal), "__mro__", ()):
+        pacote = cls.__module__.rpartition(".")[0]
+        if pacote.startswith("juscraper.courts._"):
+            candidates.append(f"{pacote}.{endpoint}_parse")
+    candidates = list(dict.fromkeys(candidates))
     for module_path in candidates:
         try:
             mod = importlib.import_module(module_path)
@@ -195,7 +196,7 @@ def _resolve_output(module_path: str, class_name: str) -> type[BaseModel]:
     return output_cls
 
 
-COURT_NAMES = {name for name, _cls in _iter_court_scrapers()}
+COURT_NAMES = set(COURT_CLASSES)
 AGG_NAMES = {name for name, _cls in _iter_aggregator_scrapers()}
 
 COURT_CASES = [
