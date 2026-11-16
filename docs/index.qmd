@@ -59,7 +59,8 @@ Most courts implement some of the methods below; the tables in the Implementatio
 | Court | Available methods |
 |-------|-------------------|
 | STF   | contar_decisoes, listar_decisoes |
-| TSE   | baixar_inteiro_teor |
+| TSE   | baixar_inteiro_teor, baixar_inteiros_teores |
+| STM   | cjsg |
 | TJAC  | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL  | cjsg |
 | TJAM  | cjsg |
@@ -106,7 +107,9 @@ Most courts implement some of the methods below; the tables in the Implementatio
 
 > ⚠️ **TJGO — `cjsg` returns no results:** since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and `cjsg`/`cjsg_download` emit a `UserWarning` explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.
 
-> ⚠️ **TSE — no jurisprudence search:** the search of the [TSE jurisprudence portal](https://jurisprudencia.tse.jus.br/) requires a CAPTCHA token validated server-side, which the scraper, issuing plain HTTP requests (no browser), cannot produce; without it the API replies `"Falha na verificação antirrobô."` (probed on 16 November 2026). The scraper covers what the portal serves without a CAPTCHA: `baixar_inteiro_teor(codigo_decisao)`, which downloads the PDF of a decision given its code, and the catalogs of the search form (`listar_classes`, `listar_relatores`, `listar_eleicoes` and `listar_normas`). `cjsg` raises `NotImplementedError` with this explanation. See [issue #378](https://github.com/jtrecenti/juscraper/issues/378).
+> ⚠️ **TSE — no jurisprudence search:** the search of the [TSE jurisprudence portal](https://jurisprudencia.tse.jus.br/) requires a CAPTCHA token validated server-side, which the scraper, issuing plain HTTP requests (no browser), cannot produce; without it the API replies `"Falha na verificação antirrobô."` (probed on 16 November 2026). The scraper covers what the portal serves without a CAPTCHA: `baixar_inteiro_teor(codigo_decisao)`, which downloads the PDF of a decision given its code, `baixar_inteiros_teores(codigos_decisao)`, which does the same for several codes, and the catalogs of the search form (`listar_classes`, `listar_relatores`, `listar_eleicoes` and `listar_normas`). The portal of the TREs runs on the same services, with the same CAPTCHA on the search: the full text of a TRE decision downloads by its code, and the catalogs take `tribunal="tre-sp"` (or `"tres"`, the 27 together). `cjsg` raises `NotImplementedError` with this explanation. See [issue #378](https://github.com/jtrecenti/juscraper/issues/378).
+
+> ⚠️ **STM — IP-based blocking:** the [STM jurisprudence portal](https://jurisprudencia.stm.jus.br/) sits behind a WAF that rejected every request from a datacenter IP address outside Brazil, with a "Request Rejected" page served as HTTP 200 (probe on 2026-11-16). In that case `cjsg` raises `BotChallengeBlockedError`; try another connection, such as a residential one in Brazil.
 
 Falcao covers national labor jurisprudence (TST and TRTs).
 

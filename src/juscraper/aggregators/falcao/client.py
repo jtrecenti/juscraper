@@ -38,7 +38,15 @@ from ...utils.params import (
     validate_intervalo_datas,
 )
 from . import _checkpoint
-from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id, verificar_resposta
+from .download import (
+    DATA_INICIO_PISO,
+    DEFAULT_HEADERS,
+    SEARCH_URL,
+    build_pesquisa_params,
+    gerar_session_id,
+    identidade_da_busca,
+    verificar_resposta,
+)
 from .parse import parse_documentos, parse_total
 from .schemas import COLECOES, InputListarDecisoesFalcao
 
@@ -109,11 +117,34 @@ class FalcaoScraper(HTTPScraper):
         removido, e ``resume=True`` continua uma coleta interrompida (pela
         cota diária do backend, por exemplo) requisitando só as páginas que
         faltam. O DataFrame traz todas as páginas presentes no checkpoint.
-        Entre sessões o índice pode mudar: se o total da busca mudar, as
-        páginas já gravadas são mantidas e um ``UserWarning`` avisa que elas
-        podem repetir ou omitir documentos em relação às novas. Mudança que
-        conserva o total (inclusive acima do teto de 10000) não é detectada.
-        O checkpoint completo não é reaberto: vale o total registrado.
+        A ordem padrão (``mais_relevante``) varia entre chamadas da mesma
+        busca (medido em 16/11/2026: três versões da mesma página em três
+        minutos), e páginas gravadas em momentos diferentes podem repetir ou
+        omitir documentos: com ``checkpoint_dir`` e essa ordem, a coleta
+        emite ``UserWarning``. Para coleta de vários dias, use
+        ``ordenacao="menos_recente"`` com ``data_juntada_fim`` fechado no
+        passado, combinação que devolveu a mesma página em três chamadas.
+        ``mais_recente`` não foi medida; nela, cada documento novo desloca
+        as páginas seguintes.
+
+        Limites do checkpoint:
+
+        * Entre sessões o índice pode mudar. Se o total da busca mudar, as
+          páginas já gravadas são mantidas e um ``UserWarning`` avisa que
+          elas podem repetir ou omitir documentos em relação às novas.
+          Mudança que conserva o total (inclusive acima do teto de 10000)
+          não é detectada: conferi-la exigiria requisitar de novo as
+          páginas gravadas.
+        * O checkpoint completo não é reaberto para documentos novos: vale
+          o total registrado, e a retomada não gasta requisição. Para os
+          documentos juntados depois, faça outra coleta, em outro
+          diretório, com ``data_juntada_inicio``.
+        * ``resume=True`` exige o checkpoint, como no STF: caminho errado
+          falha em vez de começar do zero. Num script diário de chamada
+          única, passe
+          ``resume=(Path(checkpoint_dir) / "manifest.json").exists()``.
+        * Não há trava de diretório: duas execuções simultâneas no mesmo
+          checkpoint requisitam as mesmas páginas e gastam a cota em dobro.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -155,14 +186,16 @@ class FalcaoScraper(HTTPScraper):
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode
                   ser usado sozinho; só com o limite superior, a busca
                   envia ``dataInicio=1900-01-01``, porque o backend
-                  rejeita ``dataFim`` sozinho.
+                  rejeita ``dataFim`` sozinho; limite superior anterior a
+                  essa data levanta ``ValueError``.
                 * ``checkpoint_dir`` (str | Path): Diretório de páginas e
                   manifesto da coleta retomável. Diretório ocupado exige
                   ``resume=True``; nunca é sobrescrito por coleta nova.
                 * ``resume`` (bool): Retoma o checkpoint da mesma busca
                   (mesmo termo, coleção, filtros e ``tamanho_pagina``), sem
                   requisitar as páginas já gravadas. ``paginas`` pode mudar
-                  entre sessões. Default ``False``.
+                  entre sessões, e a ordem dos valores de um filtro em
+                  lista não importa. Default ``False``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -267,6 +300,11 @@ class FalcaoScraper(HTTPScraper):
         Raises:
             ValueError: Quando ``diretorio`` e ``checkpoint_dir`` vêm juntos.
 
+        Avisos:
+            ``UserWarning``: com ``checkpoint_dir`` na ordem padrão
+            (``mais_relevante``), que varia entre chamadas; veja
+            :meth:`listar_decisoes`.
+
         See also:
             :meth:`listar_decisoes` -- lista completa de filtros aceitos.
         """
@@ -318,8 +356,9 @@ class FalcaoScraper(HTTPScraper):
             return str(destino)
 
         destino = Path(inp.checkpoint_dir)
-        identidade = {k: v for k, v in self._params(inp, 1).items() if k not in ("sessionId", "page")}
+        identidade = identidade_da_busca(self._params(inp, 1))
         checkpoint = _checkpoint.Checkpoint(destino, identidade, resume=inp.resume)
+        self._avisar_ordem_instavel(inp)
         try:
             self._coletar(inp, destino, checkpoint)
         except BaseException as erro:
@@ -442,7 +481,27 @@ class FalcaoScraper(HTTPScraper):
             origem="O Falcao",
             formato=_FORMATO_BACKEND,
         )
+        # Só com o fim, a busca envia o piso como ``dataInicio``, e o intervalo sairia invertido.
+        # As duas datas já estão validadas em ISO, que ordena como texto.
+        fim = inp.data_juntada_fim
+        if inp.data_juntada_inicio is None and fim is not None and fim < DATA_INICIO_PISO:
+            raise ValueError(
+                f"'data_juntada_fim' ({fim}) é anterior a {DATA_INICIO_PISO}, "
+                "o início que a busca envia quando só o limite superior é informado."
+            )
         return inp
+
+    @staticmethod
+    def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
+        """Avisa que a coleta com checkpoint junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
+        if inp.ordenacao in (None, "mais_relevante"):
+            avisar(
+                "A ordem padrão do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
+                "páginas gravadas no checkpoint em momentos diferentes podem repetir ou omitir "
+                "documentos. Para coleta retomável, use ordenacao='menos_recente' com "
+                "data_juntada_fim fechado no passado, ou confira duplicatas no resultado.",
+                UserWarning,
+            )
 
     @staticmethod
     def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:

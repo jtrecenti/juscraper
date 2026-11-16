@@ -7,7 +7,7 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import InvalidJSONResponseError
-from juscraper.courts.tse.download import CATALOGO_BODY, PESQUISA_URL
+from juscraper.courts.tse.download import CATALOGO_BODY, PESQUISA_URL, TRIBUNAIS
 from juscraper.courts.tse.parse import CatalogoInesperadoError
 from tests._helpers import load_sample_bytes
 
@@ -140,3 +140,61 @@ def test_timeout_do_perfil_e_ajustavel_por_politica(mocker):
 
     assert pedido.call_args.kwargs["timeout"] == 7
     assert jus.scraper("tse")._perfis_http["catalogo"].timeout == 60  # noqa: SLF001  # default do perfil
+
+
+TRE_AC_URL = PESQUISA_URL.replace("/tse/", "/tre-ac/")
+
+
+@responses.activate
+@pytest.mark.parametrize(
+    ("metodo", "sub_rota", "colunas", "primeiro"),
+    [
+        ("listar_classes", "classes", ["sigla_classe", "descricao_classe"], "PC"),
+        ("listar_relatores", "relatorias", ["relator"], "Adair José Longuini"),
+        ("listar_eleicoes", "eleicoes", ["eleicao"], "2026"),
+    ],
+)
+def test_catalogo_de_um_tre_vem_da_rota_do_tribunal(metodo, sub_rota, colunas, primeiro):
+    corpo = load_sample_bytes("tse", f"catalogos_tre-ac/{sub_rota}.json")
+    responses.add(
+        responses.POST,
+        f"{TRE_AC_URL}/{sub_rota}",
+        match=[matchers.json_params_matcher(CATALOGO_BODY)],
+        body=corpo,
+        content_type="application/json",
+    )
+
+    # Maiúsculas e espaços em volta são aceitos.
+    df = getattr(jus.scraper("tse"), metodo)(tribunal=" TRE-AC ")
+
+    assert list(df.columns) == colunas
+    assert len(df) == len(json.loads(corpo)) > 0
+    assert df.iloc[0, 0] == primeiro
+
+
+@responses.activate
+def test_normas_de_todos_os_tres_vem_da_rota_tres():
+    # O catálogo de normas é o mesmo arquivo em todos os tribunais (sonda de 16/11/2026).
+    corpo = load_sample_bytes("tse", "catalogos/normas.json")
+    responses.add(
+        responses.POST, PESQUISA_URL.replace("/tse/", "/tres/") + "/normas", body=corpo, content_type="application/json"
+    )
+
+    df = jus.scraper("tse").listar_normas(tribunal="tres")
+
+    assert len(df) == len(json.loads(corpo))
+
+
+@responses.activate
+@pytest.mark.parametrize("tribunal", ["tre-xx", "sp", "tjsp", "", "tse/../x", None, 3])
+@pytest.mark.parametrize("metodo", [metodo for metodo, _, _ in CATALOGOS])
+def test_tribunal_desconhecido_e_recusado_antes_do_pedido(metodo, tribunal):
+    with pytest.raises(ValueError, match="tribunal"):
+        getattr(jus.scraper("tse"), metodo)(tribunal=tribunal)
+
+    assert len(responses.calls) == 0
+
+
+def test_tribunais_sao_o_tse_os_27_tres_e_o_conjunto():
+    assert len(TRIBUNAIS) == len(set(TRIBUNAIS)) == 29
+    assert {"tse", "tres", "tre-sp", "tre-df"} <= set(TRIBUNAIS)

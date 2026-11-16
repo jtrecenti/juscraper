@@ -595,6 +595,7 @@ partial Elasticsearch response.
 | `sem_acordao` | The process was found, but without an accessible acórdão on that date. |
 | `bloqueio_anti_bot` | A bot manager (Akamai, CloudFront, AWS WAF, F5) challenged or blocked the request. |
 | `captcha_esgotado` | The portal refused the solved captcha in every attempt. |
+| `limite_de_requisicoes` | The service refused the request for too many requests, in a response that is not a retryable status (the TSE full-text service answers HTTP 200 with a text). Wait and ask again for the failed rows. |
 
 An anti-bot block holds for the whole session. In the PJe `cpopg`/`cposg`
 (TRF1, TRF3, TRF5, TRF6 and TJPE) and in the eSAJ `baixar_acordaos` and

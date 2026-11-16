@@ -154,7 +154,9 @@ def test_json(capsys):
     # Na ordem e com os nomes das tabelas: STF primeiro, TRFs no fim, agregadores com o nome exibido.
     assert saida["tribunais"][0] == {"sigla": "stf", "nome": "STF", "metodos": ["contar_decisoes", "listar_decisoes"]}
     # Os catálogos ``listar_*`` do TSE são auxiliares e ficam fora da linha.
-    assert saida["tribunais"][1] == {"sigla": "tse", "nome": "TSE", "metodos": ["baixar_inteiro_teor"]}
+    metodos_tse = ["baixar_inteiro_teor", "baixar_inteiros_teores"]
+    assert saida["tribunais"][1] == {"sigla": "tse", "nome": "TSE", "metodos": metodos_tse}
+    assert saida["tribunais"][2] == {"sigla": "stm", "nome": "STM", "metodos": ["cjsg"]}
     assert saida["tribunais"][-1]["sigla"] == "trf6"
     assert {"sigla": "trf3", "nome": "TRF3", "metodos": ["cpopg", "cposg", "cjsg"]} in saida["tribunais"]
     assert {"sigla": "comunica_cnj", "nome": "ComunicaCNJ", "metodos": ["listar_comunicacoes"]} in saida["agregadores"]

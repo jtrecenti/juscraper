@@ -16,9 +16,9 @@ from urllib.parse import urlencode
 
 import pandas as pd
 
+from ...core.lote import DownloadEmLote, baixar_em_lote
 from .acordao import EntradaInvalidaError, codigo_da_linha
 from .base import EsajSearchScraper
-from .lote import DownloadEmLote, baixar_em_lote
 from .pasta import DocumentoIndisponivelError, gravar_pdf, pdf_pela_pasta
 
 logger = logging.getLogger("juscraper._esaj.sentenca")

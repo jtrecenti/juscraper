@@ -211,3 +211,4 @@ quartodoc:
         - courts.trf5.client.TRF5Scraper
         - courts.trf6.client.TRF6Scraper
         - courts.tse.client.TSEScraper
+        - courts.stm.client.STMScraper

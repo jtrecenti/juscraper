@@ -55,6 +55,11 @@ CASES = [
         id="falcao.listar_decisoes",
     ),
     pytest.param(
+        "juscraper.courts.stm.client", "STMScraper", "cjsg",
+        "juscraper.courts.stm.schemas", "InputCJSGSTM",
+        id="stm.cjsg",
+    ),
+    pytest.param(
         "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
         "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
         id="tjrj.cjsg",
