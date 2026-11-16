@@ -70,10 +70,10 @@ class TJRSScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        classe: str | None = None,
-        assunto: str | None = None,
-        orgao_julgador: str | None = None,
-        relator: str | None = None,
+        classe: int | str | None = None,
+        assunto: int | str | None = None,
+        orgao_julgador: int | str | None = None,
+        relator: int | str | None = None,
         data_julgamento_inicio: str | date | None = None,
         data_julgamento_fim: str | date | None = None,
         data_publicacao_inicio: str | date | None = None,
@@ -135,10 +135,10 @@ class TJRSScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        classe: str | None = None,
-        assunto: str | None = None,
-        orgao_julgador: str | None = None,
-        relator: str | None = None,
+        classe: int | str | None = None,
+        assunto: int | str | None = None,
+        orgao_julgador: int | str | None = None,
+        relator: int | str | None = None,
         data_julgamento_inicio: str | date | None = None,
         data_julgamento_fim: str | date | None = None,
         data_publicacao_inicio: str | date | None = None,
@@ -153,10 +153,16 @@ class TJRSScraper(HTTPScraper):
             pesquisa (str): Termo de busca livre; obrigatório.
             paginas (int | list | range | None): Páginas 1-based; ``None``
                 busca todas. ``paginas=3`` baixa as páginas 1 a 3.
-            classe (str | None): Classe processual.
-            assunto (str | None): Assunto.
-            orgao_julgador (str | None): Órgão julgador.
-            relator (str | None): Nome do relator.
+            classe (int | str | None): Código da classe processual (coluna
+                ``cod_classe_cnj`` do resultado; ``460`` é Recurso Inominado).
+            assunto (int | str | None): Código do assunto (coluna
+                ``cod_assunto_cnj``).
+            orgao_julgador (int | str | None): Código do órgão julgador
+                (coluna ``cod_org_julg``).
+            relator (int | str | None): Código do relator (coluna
+                ``cod_relator``); casa com o relator ou com o redator do
+                acórdão. Nestes quatro filtros, o portal aceita só o código:
+                um nome levanta ``ValidationError``.
             data_julgamento_inicio (str | date | None): Início do intervalo
                 de julgamento. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
                 ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.

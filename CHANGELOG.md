@@ -237,6 +237,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 - `cjsg` e `cjsg_download`: os filtros `data_julgamento_inicio`/`_fim` e `data_publicacao_inicio`/`_fim` voltam a valer. As datas iam ao portal em `AAAA-MM-DD`, que ele não reconhece, e toda busca com filtro de data voltava vazia, sem erro nem aviso; passam a ir em `DD/MM/AAAA`. Os formatos aceitos na entrada não mudam (#496).
 - `cjsg` e `cjsg_download`: `secao="civel"` e `secao="crime"` passam a filtrar de fato; antes, o backend ignorava o parâmetro e devolvia acórdãos das duas seções. `secao` aceita a grafia com acento e espaços nas pontas (`"Cível"` vale como `"civel"`), e um valor que não seja `"civel"` nem `"crime"` (por exemplo, `"familia"`) levanta `ValidationError` antes da busca; antes, era descartado sem aviso. A caixa continua indiferente, e `""` continua sem filtro.
+- `cjsg` e `cjsg_download`: `classe`, `assunto`, `orgao_julgador` e `relator` recebem o código do portal, em `int` ou string de dígitos, que está nas colunas `cod_classe_cnj`, `cod_assunto_cnj`, `cod_org_julg` e `cod_relator` do resultado (por exemplo, `classe=460` para Recurso Inominado). Um nome, como a docstring sugeria (`relator`: "Nome do relator"), passa a levantar `ValidationError` antes da busca; antes, o portal recusava a consulta e a busca voltava vazia, sem erro nem aviso. O código em string já funcionava e não muda; `relator` casa com o relator ou com o redator do acórdão.
 
 #### TJSC
 

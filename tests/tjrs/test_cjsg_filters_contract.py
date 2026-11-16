@@ -23,10 +23,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         "dano moral",
         1,
         "cjsg/no_results.json",
-        classe="Apelacao",
-        assunto="Dano moral",
-        orgao_julgador="Primeira Camara",
-        relator="FULANO DE TAL",
+        classe="460",
+        assunto="7780",
+        orgao_julgador="65",
+        relator="650",
         data_julgamento_inicio="01/01/2024",
         data_julgamento_fim="31/03/2024",
         data_publicacao_inicio="01/02/2024",
@@ -38,10 +38,10 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     df = jus.scraper("tjrs").cjsg(
         "dano moral",
         paginas=1,
-        classe="Apelacao",
-        assunto="Dano moral",
-        orgao_julgador="Primeira Camara",
-        relator="FULANO DE TAL",
+        classe="460",
+        assunto="7780",
+        orgao_julgador="65",
+        relator="650",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
         data_publicacao_inicio="2024-02-01",
@@ -99,6 +99,41 @@ def test_cjsg_secao_fora_de_civel_e_crime_levanta(metodo, secao):
     """Seção desconhecida falha antes da busca, em vez de cobrir as duas em silêncio."""
     with pytest.raises(ValidationError, match="secao"):
         getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, secao=secao)
+
+    assert not responses.calls
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_codigos_em_int_vao_ao_body_como_texto(mocker, metodo):
+    """Os códigos vêm em ``int`` das colunas ``cod_*`` do cjsg; vão ao body como o texto equivalente."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "dano moral", 1, "cjsg/no_results.json", classe="460", assunto="7780", orgao_julgador="65", relator="650"
+    )
+
+    getattr(jus.scraper("tjrs"), metodo)(
+        "dano moral", paginas=1, classe=460, assunto=7780, orgao_julgador=65, relator=" 650 "
+    )
+
+    assert len(responses.calls) == 1
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    ("filtro", "nome", "coluna"),
+    [
+        ("classe", "Recurso Inominado", "cod_classe_cnj"),
+        ("assunto", "Indenização por Dano Material", "cod_assunto_cnj"),
+        ("orgao_julgador", "Primeira Turma Recursal Cível", "cod_org_julg"),
+        ("relator", "José Ricardo de Bem Sanhudo", "cod_relator"),
+    ],
+)
+@responses.activate
+def test_cjsg_filtro_por_nome_levanta_antes_da_busca(metodo, filtro, nome, coluna):
+    """O portal monta ``cod_*:<valor>``: com nome, o Solr recusava a consulta e a busca voltava vazia sem erro."""
+    with pytest.raises(ValidationError, match=coluna):
+        getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=1, **{filtro: nome})
 
     assert not responses.calls
 
