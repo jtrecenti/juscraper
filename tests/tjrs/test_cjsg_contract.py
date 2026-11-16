@@ -240,7 +240,12 @@ def test_cjsg_erro_do_solr_no_meio_de_todas_as_paginas_resume_as_que_faltam(mock
     mocker.patch("time.sleep")
     primeira = json.loads(load_sample("tjrs", "cjsg/results_normal_page_01.json"))
     primeira["response"]["numFound"] = 45
-    responses.add(responses.POST, BASE, json=primeira)
+    responses.add(
+        responses.POST,
+        BASE,
+        json=primeira,
+        match=[urlencoded_params_matcher(_form_payload("dano moral", 1), allow_blank=True)],
+    )
     _add_page("dano moral", 2, "cjsg/erro_solr.json")
     todas = None  # a página 2 responde erro, e nenhuma outra é pedida
 
@@ -260,6 +265,26 @@ def test_cjsg_parse_de_envelope_de_erro_levanta_em_vez_de_vazio(brutos):
         jus.scraper("tjrs").cjsg_parse([json.loads(load_sample("tjrs", amostras[nome])) for nome in brutos])
 
     assert excinfo.value.codigo == 400
+    assert excinfo.value.__notes__ == [f"cjsg_parse: é o item {len(brutos) - 1} da lista de páginas brutas."]
+
+
+@responses.activate
+def test_cjsg_falha_de_rede_no_meio_da_paginacao_guarda_as_paginas_anteriores(mocker):
+    """Como no TJPR: a página que falha de vez depois das tentativas não descarta as já baixadas."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.json")
+    responses.add(
+        responses.POST,
+        BASE,
+        body=requests.ConnectionError("queda"),
+        match=[urlencoded_params_matcher(_form_payload("dano moral", 2), allow_blank=True)],
+    )
+
+    with pytest.raises(ColetaParcialError, match=r"página 2 falhou.*faltam as páginas \[2\],") as excinfo:
+        jus.scraper("tjrs").cjsg("dano moral", paginas=range(1, 3))
+
+    assert len(excinfo.value.resultado) == 10
+    assert isinstance(excinfo.value.__cause__, requests.ConnectionError)
 
 
 def test_cjsg_parse_de_busca_sem_resultado_segue_vazio():

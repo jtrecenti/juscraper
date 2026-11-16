@@ -319,6 +319,33 @@ def contador_com_teto(
     return contar
 
 
+def baixar_paginas_guardando_parcial(
+    buscar: Callable[[int], _Pagina],
+    paginas: list[int],
+    resultados: list[_Pagina],
+    *,
+    coleta_parcial: Callable[[list[_Pagina], list[int], Exception], Exception],
+    desc: str,
+) -> list[_Pagina]:
+    """Acrescenta a ``resultados`` cada uma das ``paginas``, na ordem, e os devolve.
+
+    A página que falha com outra já em ``resultados`` encerra a busca e
+    levanta ``coleta_parcial(resultados, faltando, exc)``, um
+    :class:`~juscraper.core.exceptions.ColetaParcialError` com as páginas
+    baixadas lidas em ``.resultado``; ``faltando`` começa na página que
+    falhou. Sem página baixada, não há parcial a guardar, e a falha original
+    sobe. Laço do ``cjsg`` do TJPR e do TJRS.
+    """
+    for posicao, pagina in enumerate(tqdm(paginas, desc=desc) if paginas else paginas):
+        try:
+            resultados.append(buscar(pagina))
+        except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
+            if not resultados:
+                raise
+            raise coleta_parcial(resultados, paginas[posicao:], exc) from exc
+    return resultados
+
+
 def descrever_paginas(paginas: Sequence[int]) -> str:
     """Páginas para uma mensagem, num texto que vale como ``paginas=``.
 

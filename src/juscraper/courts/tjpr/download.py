@@ -1,16 +1,17 @@
 """
 Functions for downloading specific to TJPR
 """
+import functools
 import re
 from collections.abc import Callable
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from tqdm.auto import tqdm
 
 from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
+    baixar_paginas_guardando_parcial,
     descrever_paginas,
     extract_count_with_cascade,
     parse_page_number,
@@ -284,16 +285,13 @@ def _baixar_paginas(
     ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
     original sobe.
     """
-    if not paginas:
-        return resultados
-    for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
-        try:
-            resultados.append(fetch_page(pagina))
-        except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
-            if not resultados:
-                raise
-            raise _coleta_parcial(resultados, paginas[posicao:], exc, ler_parcial) from exc
-    return resultados
+    return baixar_paginas_guardando_parcial(
+        fetch_page,
+        paginas,
+        resultados,
+        coleta_parcial=functools.partial(_coleta_parcial, ler_parcial=ler_parcial),
+        desc="Baixando páginas TJPR",
+    )
 
 
 def _coleta_parcial(

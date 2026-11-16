@@ -8,7 +8,7 @@ import pandas as pd
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import PERFIL_CJSG, _exigir_resultados, cjsg_download_manager
+from .download import PERFIL_CJSG, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRS
 
@@ -89,8 +89,9 @@ class TJRSScraper(HTTPScraper):
 
         Raises:
             TJRSBuscaError: Erro do Solr na primeira página pedida, como em :meth:`cjsg`.
-            ColetaParcialError: Erro do Solr numa página seguinte; ``.resultado``
-                traz as páginas anteriores, já lidas, em DataFrame.
+            ColetaParcialError: Falha numa página seguinte (erro do Solr, rede
+                depois das tentativas); ``.resultado`` traz as páginas
+                anteriores, já lidas, em DataFrame.
 
         Returns:
             Lista com o JSON cru de cada página.
@@ -134,9 +135,10 @@ class TJRSScraper(HTTPScraper):
 
         Raises:
             TJRSBuscaError: Quando uma página é o envelope de erro do Solr, e
-                não resultados; a busca sem resultados devolve DataFrame vazio.
+                não resultados; uma nota do erro diz a posição dela na lista.
+                A busca sem resultados devolve DataFrame vazio.
         """
-        return cjsg_parse_manager([_exigir_resultados(bruto) for bruto in resultados_brutos])
+        return cjsg_parse_manager(resultados_brutos)
 
     def cjsg(
         self,
@@ -201,10 +203,11 @@ class TJRSScraper(HTTPScraper):
             TJRSBuscaError: Quando o portal responde com erro do Solr no lugar
                 dos resultados, como em ``pesquisa`` com aspas sem fechar
                 (:class:`juscraper.courts.tjrs.download.TJRSBuscaError`).
-            ColetaParcialError: Quando o erro do Solr vem numa página depois
-                da primeira baixada: a busca para ali, ``.resultado`` traz as
-                páginas anteriores, ``.falhas`` e ``__cause__`` trazem o
-                ``TJRSBuscaError``, e a mensagem diz as páginas que faltam
+            ColetaParcialError: Quando uma página falha depois da primeira
+                baixada (erro do Solr, rede depois das tentativas): a busca
+                para ali, ``.resultado`` traz as páginas anteriores,
+                ``.falhas`` e ``__cause__`` trazem a exceção da página, e a
+                mensagem diz as páginas que faltam
                 (:class:`juscraper.core.exceptions.ColetaParcialError`).
 
         Avisos:

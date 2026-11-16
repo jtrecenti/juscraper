@@ -181,8 +181,8 @@ class ColetaParcialError(_RecriaSemInit, RuntimeError):
 
     O ``cjsg`` do TJMG, o do TJPR e o ``cjsg``/``cjpg`` do TJTO o levantam quando uma
     página falha depois das tentativas (no TJTO, também pelo bloqueio do AWS
-    WAF), e o ``cjsg`` do TJRS, quando o Solr responde erro numa página
-    depois da primeira: a busca para ali, ``resultado`` traz as páginas anteriores, e
+    WAF), como o ``cjsg`` do TJRS, também pelo erro do Solr no lugar dos
+    resultados: a busca para ali, ``resultado`` traz as páginas anteriores, e
     ``falhas`` tem um item ``(None, None, excecao)``; as páginas que faltam
     estão na mensagem.
 
