@@ -17,6 +17,7 @@ Particularidades do backend refletidas aqui:
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import ClassVar
 
 from pydantic import ConfigDict, field_validator
@@ -76,6 +77,10 @@ class InputListarDecisoesFalcao(SearchBase):
             ``AAAA-MM-DD``). Backend: ``dataInicio``. Opcional.
         data_juntada_fim: Limite superior de ``dataJuntada`` (ISO
             ``AAAA-MM-DD``). Backend: ``dataFim``. Opcional.
+        checkpoint_dir: Diretorio de paginas e manifesto da coleta retomavel.
+            Nao vai ao backend. Default ``None`` (sem checkpoint).
+        resume: Retoma o checkpoint da mesma busca, sem requisitar as paginas
+            ja gravadas. Exige ``checkpoint_dir``. Default ``False``.
 
     Os nomes ``data_juntada_*`` sao explicitos de proposito: o backend filtra
     por data de juntada do documento (nao julgamento nem publicacao), entao
@@ -102,6 +107,8 @@ class InputListarDecisoesFalcao(SearchBase):
     ordenacao: str | None = None
     data_juntada_inicio: str | None = None
     data_juntada_fim: str | None = None
+    checkpoint_dir: str | Path | None = None
+    resume: bool = False
 
     model_config = ConfigDict(
         extra="forbid",

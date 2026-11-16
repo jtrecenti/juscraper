@@ -37,6 +37,7 @@ from ...utils.params import (
     raise_on_extra_kwargs,
     validate_intervalo_datas,
 )
+from . import _checkpoint
 from .download import DEFAULT_HEADERS, SEARCH_URL, build_pesquisa_params, gerar_session_id, verificar_resposta
 from .parse import parse_documentos, parse_total
 from .schemas import COLECOES, InputListarDecisoesFalcao
@@ -101,9 +102,18 @@ class FalcaoScraper(HTTPScraper):
         após devolver o resultado parseado.
         Se a coleta ou o parsing falhar, preserva as páginas recebidas nesse
         diretório e informa o caminho em uma nota da exceção. Recupere
-        esse resultado parcial com :meth:`listar_decisoes_parse`; não há retomada
-        automática. Para guardar também coletas completas, use
-        :meth:`listar_decisoes_download`.
+        esse resultado parcial com :meth:`listar_decisoes_parse`. Para guardar
+        também coletas completas, use :meth:`listar_decisoes_download`.
+
+        Com ``checkpoint_dir``, as páginas vão para esse diretório, que não é
+        removido, e ``resume=True`` continua uma coleta interrompida (pela
+        cota diária do backend, por exemplo) requisitando só as páginas que
+        faltam. O DataFrame traz todas as páginas presentes no checkpoint.
+        Entre sessões o índice pode mudar: se o total da busca mudar, as
+        páginas já gravadas são mantidas e um ``UserWarning`` avisa que elas
+        podem repetir ou omitir documentos em relação às novas. Mudança que
+        conserva o total (inclusive acima do teto de 10000) não é detectada.
+        O checkpoint completo não é reaberto: vale o total registrado.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -144,6 +154,13 @@ class FalcaoScraper(HTTPScraper):
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode
                   ser usado sozinho.
+                * ``checkpoint_dir`` (str | Path): Diretório de páginas e
+                  manifesto da coleta retomável. Diretório ocupado exige
+                  ``resume=True``; nunca é sobrescrito por coleta nova.
+                * ``resume`` (bool): Retoma o checkpoint da mesma busca
+                  (mesmo termo, coleção, filtros e ``tamanho_pagina``), sem
+                  requisitar as páginas já gravadas. ``paginas`` pode mudar
+                  entre sessões. Default ``False``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -165,6 +182,9 @@ class FalcaoScraper(HTTPScraper):
                 dominio).
             ValueError: Quando uma data e invalida, o intervalo esta
                 invertido ou o backend recusa a busca (403 com mensagem).
+                Tambem quando ``checkpoint_dir`` esta ocupado sem
+                ``resume=True``, ou ``resume=True`` nao encontra o checkpoint
+                da mesma busca.
             BotChallengeBlockedError: Quando o WAF (CloudFront) bloqueia a
                 requisicao.
             requests.HTTPError: Quando o backend bloqueia o IP por excesso
@@ -187,11 +207,14 @@ class FalcaoScraper(HTTPScraper):
                 "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
                 "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
+        metodo = "FalcaoScraper.listar_decisoes()"
+        if kwargs.get("checkpoint_dir") is not None:
+            return self.listar_decisoes_parse(self._baixar(pesquisa, paginas, None, kwargs, metodo))
         # Não usa download_path: listar_decisoes_parse lê a pasta recursivamente, e
         # uma sobra preservada ali entraria no parse dos downloads guardados.
         temporario = Path(tempfile.mkdtemp(prefix="falcao_"))
         try:
-            diretorio = self._baixar(pesquisa, paginas, temporario, kwargs, "FalcaoScraper.listar_decisoes()")
+            diretorio = self._baixar(pesquisa, paginas, temporario, kwargs, metodo)
             resultado = self.listar_decisoes_parse(diretorio)
         except BaseException as erro:
             # Inclui interrupção manual: a cota já foi gasta nas páginas recebidas.
@@ -221,6 +244,10 @@ class FalcaoScraper(HTTPScraper):
         no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
         ``{colecao}_{pagina:04d}.json``.
 
+        Com ``checkpoint_dir``, os arquivos vão direto para esse diretório,
+        junto de um ``manifest.json``, e ``resume=True`` continua a coleta
+        interrompida sem requisitar as páginas já gravadas.
+
         Args:
             pesquisa (str): Termo de busca. Obrigatorio.
             paginas (int | list | range | None): Paginas 1-based; ``None`` =
@@ -229,14 +256,24 @@ class FalcaoScraper(HTTPScraper):
                 chamada. Default ``None`` (usa o ``download_path`` do scraper,
                 que sem configuracao e um diretorio temporario criado no
                 primeiro uso). Cria a pasta e seus pais quando não existem.
+                Não combina com ``checkpoint_dir``.
 
         Returns:
-            Caminho do subdiretorio com os arquivos JSON baixados.
+            Caminho do subdiretorio com os arquivos JSON baixados; com
+                ``checkpoint_dir``, o próprio diretório do checkpoint.
+
+        Raises:
+            ValueError: Quando ``diretorio`` e ``checkpoint_dir`` vêm juntos.
 
         See also:
             :meth:`listar_decisoes` -- lista completa de filtros aceitos.
         """
-        base = diretorio if diretorio is not None else self.download_path
+        base: str | None = diretorio
+        if kwargs.get("checkpoint_dir") is not None:
+            if diretorio is not None:
+                raise ValueError("Use checkpoint_dir ou diretorio, não os dois: o checkpoint já define onde gravar.")
+        elif diretorio is None:
+            base = self.download_path
         return self._baixar(pesquisa, paginas, base, kwargs, "FalcaoScraper.listar_decisoes_download()")
 
     def listar_decisoes_parse(self, diretorio: str | Path) -> pd.DataFrame:
@@ -245,7 +282,8 @@ class FalcaoScraper(HTTPScraper):
         Percorre ``diretorio`` recursivamente, entao aceita tanto o caminho
         devolvido por :meth:`listar_decisoes_download` quanto a pasta-mae que junta
         varias buscas. A colecao de cada arquivo e inferida do prefixo do
-        nome (``{colecao}_{pagina}.json``).
+        nome (``{colecao}_{pagina}.json``). O ``manifest.json`` de um
+        checkpoint é ignorado.
 
         Args:
             diretorio (str | Path): Pasta com os arquivos JSON.
@@ -255,7 +293,7 @@ class FalcaoScraper(HTTPScraper):
                 colunas canonicas).
         """
         pasta = Path(diretorio)
-        arquivos = sorted(pasta.rglob("*.json"))
+        arquivos = sorted(a for a in pasta.rglob("*.json") if a.name != _checkpoint.MANIFESTO)
         rows: list[dict] = []
         for arquivo in arquivos:
             colecao = arquivo.stem.rsplit("_", 1)[0]
@@ -267,28 +305,56 @@ class FalcaoScraper(HTTPScraper):
     # helpers
     # ------------------------------------------------------------------ #
     def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
-        """Valida a entrada, pagina a busca e grava cada pagina em ``base``."""
+        """Valida a entrada, pagina a busca e grava cada pagina em ``base`` ou no checkpoint."""
         inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
-        Path(base).mkdir(parents=True, exist_ok=True)
-        destino = Path(tempfile.mkdtemp(prefix=f"falcao_{inp.colecao}_", dir=base))
+        if inp.checkpoint_dir is None:
+            if inp.resume:
+                raise ValueError("resume=True exige checkpoint_dir.")
+            Path(base).mkdir(parents=True, exist_ok=True)
+            destino = Path(tempfile.mkdtemp(prefix=f"falcao_{inp.colecao}_", dir=base))
+            self._coletar(inp, destino)
+            return str(destino)
 
-        # O teto é conhecido antes da consulta: nenhuma página fora dele
-        # pode servir de primeira requisição, pois o backend a rejeita.
-        paginas = inp.paginas
-        if paginas is not None:
-            teto_paginas = self._total_paginas(_MAX_RESULTADOS, inp.tamanho_pagina)
-            paginas = self._resolver_paginas(paginas, teto_paginas)
-            if not paginas:
-                return str(destino)
+        destino = Path(inp.checkpoint_dir)
+        identidade = {k: v for k, v in self._params(inp, 1).items() if k not in ("sessionId", "page")}
+        checkpoint = _checkpoint.Checkpoint(destino, identidade, resume=inp.resume)
+        try:
+            self._coletar(inp, destino, checkpoint)
+        except BaseException as erro:
+            # Inclui interrupção manual: a cota já foi gasta nas páginas recebidas.
+            erro.add_note(
+                f"Checkpoint da coleta em {destino}. "
+                "Repita a chamada com resume=True para requisitar só as páginas que faltam."
+            )
+            raise
+        return str(destino)
 
-        # A primeira pagina pedida serve tambem para ler o total; com
+    def _coletar(
+        self,
+        inp: InputListarDecisoesFalcao,
+        destino: Path,
+        checkpoint: _checkpoint.Checkpoint | None = None,
+    ) -> None:
+        """Requisita as páginas pedidas que faltam em ``destino``.
+
+        Sem ``checkpoint``, ``destino`` está vazio e nada é pulado.
+        """
+        gravadas = checkpoint.gravadas if checkpoint is not None else set()
+        total_anterior = checkpoint.total if checkpoint is not None else None
+        # A primeira pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = paginas[0] if paginas is not None else 1
+        primeira = self._primeira_pendente(inp, gravadas, total_anterior)
+        if primeira is None:
+            if total_anterior is not None:
+                self._avisar_teto(inp, total_anterior)
+            return
         primeiro_json = self._buscar_pagina(inp, primeira)
         # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
         arquivo_inicial = destino / f"{inp.colecao}_{primeira:04d}.json"
-        arquivo_inicial.write_text(json.dumps(primeiro_json, ensure_ascii=False), encoding="utf-8")
+        _checkpoint.gravar_json(arquivo_inicial, primeiro_json)
         total = parse_total(primeiro_json)
+        if checkpoint is not None:
+            checkpoint.observar(total)
         total_paginas = self._total_paginas(total, inp.tamanho_pagina)
         if self.verbose:
             logger.info(
@@ -296,30 +362,35 @@ class FalcaoScraper(HTTPScraper):
                 inp.colecao, total, _MAX_RESULTADOS, total_paginas,
                 inp.tamanho_pagina,
             )
-        if inp.paginas is None and total >= _MAX_RESULTADOS:
-            avisar(
-                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
-                "backend nao informa o total real e o resultado pode estar incompleto. "
-                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
-                UserWarning,
-            )
+        self._avisar_teto(inp, total)
 
-        paginas_iter = list(self._resolver_paginas(paginas, total_paginas))
-        if primeira not in paginas_iter:
+        pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
+        if primeira not in pendentes:
             arquivo_inicial.unlink()
-        for pagina in tqdm(paginas_iter, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
+        for pagina in tqdm(pendentes, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
                 continue
             if self.sleep_time:
                 time.sleep(self.sleep_time)
             conteudo = self._buscar_pagina(inp, pagina)
-            arquivo = destino / f"{inp.colecao}_{pagina:04d}.json"
-            arquivo.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
+            _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
-        return str(destino)
+    def _primeira_pendente(
+        self, inp: InputListarDecisoesFalcao, gravadas: set[int], total_anterior: int | None,
+    ) -> int | None:
+        """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
-    def _buscar_pagina(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
-        params = build_pesquisa_params(
+        O teto é conhecido antes da consulta: nenhuma página fora dele pode
+        servir de primeira requisição, pois o backend a rejeita. Na retomada,
+        vale o total da sessão anterior: página além dele não gasta a cota, e
+        o checkpoint completo não requisita nada.
+        """
+        conhecido = _MAX_RESULTADOS if total_anterior is None else total_anterior
+        candidatas = self._resolver_paginas(inp.paginas, self._total_paginas(conhecido, inp.tamanho_pagina))
+        return next((p for p in candidatas if p not in gravadas), None)
+
+    def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
+        return build_pesquisa_params(
             pesquisa=inp.pesquisa,
             colecao=inp.colecao,
             session_id=self.session_id,
@@ -337,8 +408,10 @@ class FalcaoScraper(HTTPScraper):
             data_juntada_inicio=inp.data_juntada_inicio,
             data_juntada_fim=inp.data_juntada_fim,
         )
+
+    def _buscar_pagina(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         resp = self._request_with_retry(
-            "GET", SEARCH_URL, params=params, perfil="listagem", on_response=verificar_resposta,
+            "GET", SEARCH_URL, params=self._params(inp, pagina), perfil="listagem", on_response=verificar_resposta,
         )
         dados: dict = resp.json()
         return dados
@@ -368,6 +441,16 @@ class FalcaoScraper(HTTPScraper):
             formato=_FORMATO_BACKEND,
         )
         return inp
+
+    @staticmethod
+    def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:
+        if inp.paginas is None and total >= _MAX_RESULTADOS:
+            avisar(
+                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
+                "backend nao informa o total real e o resultado pode estar incompleto. "
+                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
+                UserWarning,
+            )
 
     @staticmethod
     def _total_paginas(total: int, tamanho_pagina: int) -> int:
