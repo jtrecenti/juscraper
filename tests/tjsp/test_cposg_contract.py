@@ -469,6 +469,33 @@ def test_cposg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
 
 
 @responses.activate
+def test_cposg_le_so_os_processos_do_lote(tmp_path, mocker):
+    """Processo e falha de um ``cposg_download`` anterior na mesma pasta ficam fora do composto."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    sem_conexao = "1000000-00.2024.8.26.0001"
+    responses.add(
+        responses.GET,
+        f"{ESAJ}/cposg/search.do",
+        body=requests.ConnectionError("recusada"),
+        match=[query_param_matcher({"dePesquisaNuUnificado": sem_conexao}, strict_match=False)],
+    )
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    with pytest.warns(UserWarning, match=f"{sem_conexao}: conexao"):
+        scraper.cposg_download(sem_conexao)
+    anterior = tmp_path / "cposg" / "10093677620178260344"
+    anterior.mkdir(parents=True)
+    (anterior / "show.html").write_text(load_sample("tjsp", "cposg/show.html"), encoding="utf-8")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        df = scraper.cposg(CNJ)
+
+    assert df[["processo", "motivo_falha"]].to_dict("records") == [{"processo": CNJ, "motivo_falha": None}]
+
+
+@responses.activate
 def test_cposg_parse_devolve_o_processo_que_o_download_nao_baixou(tmp_path, mocker):
     """No fluxo em duas etapas, o CNJ que o download não baixou sai no DataFrame, como no ``cposg``."""
     mocker.patch("time.sleep")

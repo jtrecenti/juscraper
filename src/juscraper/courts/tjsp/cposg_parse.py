@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
-from ._falhas import avisar_falhas_de_processo, cnj_da_pasta, processos_sem_arquivo
+from ._falhas import arquivos_e_falhas, avisar_falhas_de_processo, cnj_da_pasta
 from .cpopg_parse import _split_incident_header
 
 _FIELD_MAPPING = (
@@ -56,7 +56,9 @@ def cposg_parse(path: str) -> pd.DataFrame:
     return cposg_parse_manager(path)
 
 
-def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse") -> pd.DataFrame:
+def cposg_parse_manager(
+    path: str, metodo: str = "TJSPScraper.cposg_parse", pedidos: list | None = None,
+) -> pd.DataFrame:
     """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame.
 
     A coluna ``motivo_falha`` é ``None`` em cada processo lido. O arquivo que
@@ -64,14 +66,15 @@ def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse") -> p
     ``motivo_falha`` igual a ``resposta_inesperada`` e as demais colunas
     ``None``. O processo que ``cposg_download`` não baixou nessa pasta vira
     uma linha com ``processo`` e o motivo do download. As falhas também saem
-    num ``UserWarning``, aberto por ``metodo``.
+    num ``UserWarning``, aberto por ``metodo``. Com ``pedidos``, só os
+    arquivos e as falhas desses CNJs entram, como em ``cpopg_parse_manager``.
     """
     raiz = Path(path)
     # O download grava em <path>/cposg/; o cpopg, no mesmo download_path, em
     # <path>/cpopg/, com os mesmos nomes de arquivo. Só a pasta do cposg entra.
     if (raiz / 'cposg').is_dir():
         raiz = raiz / 'cposg'
-    arquivos = list(raiz.rglob('*.html'))
+    arquivos, sem_arquivo = arquivos_e_falhas(raiz, list(raiz.rglob('*.html')), pedidos)
     dados = []
     falhas = []
     for arq in tqdm(arquivos, total=len(arquivos), desc="Processando arquivos"):
@@ -88,7 +91,6 @@ def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse") -> p
             continue
         dados.append({'processo': cnj_da_pasta(arq), COLUNA_MOTIVO_FALHA: MOTIVO_RESPOSTA_INESPERADA})
         falhas.append(f"{arq}: {MOTIVO_RESPOSTA_INESPERADA} ({erro})")
-    sem_arquivo = processos_sem_arquivo(raiz, arquivos)
     dados.extend({'processo': cnj, COLUNA_MOTIVO_FALHA: motivo} for cnj, motivo in sem_arquivo.items())
     avisar_falhas_de_processo(sem_arquivo, falhas, metodo, "Eles saem no DataFrame")
     return pd.DataFrame(dados, columns=_OUTPUT_COLUMNS)

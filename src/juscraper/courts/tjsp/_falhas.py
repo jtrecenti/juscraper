@@ -83,6 +83,11 @@ ARQUIVO_FALHAS = "falhas_download.json"
 """``{CNJ formatado: motivo}`` dos processos sem arquivo, em ``<download>/cpopg`` ou ``<download>/cposg``."""
 
 
+def chave_do_registro(cnj: object) -> str:
+    """Chave de ``cnj`` no registro de falhas: o CNJ formatado, ou a entrada como ``str`` sem 20 dígitos."""
+    return str(format_cnj(cnj, strict=False))  # type: ignore[call-overload]  # entrada fora de str: "None", "123"
+
+
 def registrar_falhas(pasta: Path, pedidos: list, falhas: dict) -> None:
     """Grava em ``pasta`` as falhas do lote, para o parse as devolver como linhas.
 
@@ -96,7 +101,7 @@ def registrar_falhas(pasta: Path, pedidos: list, falhas: dict) -> None:
     arquivo = pasta / ARQUIVO_FALHAS
     registro = _ler_registro(arquivo)
     for cnj in pedidos:
-        registro.pop(str(format_cnj(cnj, strict=False)), None)
+        registro.pop(chave_do_registro(cnj), None)
     registro.update({str(cnj): motivo for cnj, motivo in falhas.items()})
     if not registro:
         arquivo.unlink(missing_ok=True)
@@ -122,6 +127,26 @@ def _ler_registro(arquivo: Path) -> dict[str, str]:
         return {}
     registro: dict[str, str] = json.loads(arquivo.read_text(encoding="utf-8"))
     return registro
+
+
+def arquivos_e_falhas(
+    pasta: Path, arquivos: list[Path], pedidos: list | None,
+) -> tuple[list[Path], dict[str, str]]:
+    """Os ``arquivos`` e as falhas registradas em ``pasta`` (:func:`processos_sem_arquivo`) dos CNJs ``pedidos``.
+
+    Com ``pedidos`` ``None``, tudo o que está na pasta. O ``cpopg`` e o
+    ``cposg`` compostos passam os CNJs do lote: a pasta de download pode
+    guardar processos e falhas de um ``*_download`` anterior, e só os números
+    do lote entram no resultado, pela :func:`chave_do_registro`.
+    """
+    sem_arquivo = processos_sem_arquivo(pasta, arquivos)
+    if pedidos is None:
+        return arquivos, sem_arquivo
+    chaves = {chave_do_registro(cnj) for cnj in pedidos}
+    return (
+        [arquivo for arquivo in arquivos if cnj_da_pasta(arquivo) in chaves],
+        {cnj: motivo for cnj, motivo in sem_arquivo.items() if cnj in chaves},
+    )
 
 
 def cnj_da_pasta(arquivo: Path) -> str | None:

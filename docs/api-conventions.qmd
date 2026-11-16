@@ -214,6 +214,9 @@ when the public lookup does not show it (no such case, or under seal),
 `{cnj: motivo_falha}`. The download also records them in
 `falhas_download.json`, inside its `cpopg/` or `cposg/` folder, so
 `cpopg_parse`/`cposg_parse` return the same failure rows as the one-step call.
+The parse step reads the whole `cpopg/` or `cposg/` folder; the one-step
+`cpopg`/`cposg` keeps only the requested CNJs, so cases and failures left in
+`download_path` by an earlier `*_download` stay out of its result.
 
 ```python
 res = tjsp.cpopg(cnjs)
