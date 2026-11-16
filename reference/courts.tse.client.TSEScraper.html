@@ -159,6 +159,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor" id="toc-juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor" class="nav-link" data-scroll-target="#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor">baixar_inteiro_teor</a></li>
+  <li><a href="#juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores" id="toc-juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores" class="nav-link" data-scroll-target="#juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores">baixar_inteiros_teores</a></li>
   <li><a href="#juscraper.courts.tse.client.TSEScraper.cjsg" id="toc-juscraper.courts.tse.client.TSEScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tse.client.TSEScraper.cjsg">cjsg</a></li>
   <li><a href="#juscraper.courts.tse.client.TSEScraper.listar_classes" id="toc-juscraper.courts.tse.client.TSEScraper.listar_classes" class="nav-link" data-scroll-target="#juscraper.courts.tse.client.TSEScraper.listar_classes">listar_classes</a></li>
   <li><a href="#juscraper.courts.tse.client.TSEScraper.listar_eleicoes" id="toc-juscraper.courts.tse.client.TSEScraper.listar_eleicoes" class="nav-link" data-scroll-target="#juscraper.courts.tse.client.TSEScraper.listar_eleicoes">listar_eleicoes</a></li>
@@ -184,7 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    politica<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Raspador do Tribunal Superior Eleitoral.</p>
-<p>Cobre o que o portal de jurisprudência entrega sem captcha: o PDF do inteiro teor pelo código da decisão e os catálogos do formulário (classes, relatores, eleições e normas). A busca de jurisprudência exige um token de captcha validado no servidor, que requisições HTTP puras não têm como gerar, e não está implementada; ver <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.cjsg"><code>cjsg</code></a>.</p>
+<p>Cobre o que o portal de jurisprudência entrega sem captcha: o PDF do inteiro teor pelo código da decisão, do TSE ou de um TRE, e os catálogos do formulário (classes, relatores, eleições e normas), do TSE e dos TREs. A busca de jurisprudência exige um token de captcha validado no servidor, que requisições HTTP puras não têm como gerar, e não está implementada; ver <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.cjsg"><code>cjsg</code></a>.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -200,7 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>sleep_time</td>
 <td><code>float</code></td>
-<td>Segundos entre dois pedidos de inteiro teor (default 10). O serviço recusa pedidos mais próximos com “Excesso de requisições”.</td>
+<td>Segundos entre dois pedidos de inteiro teor (default 10). O serviço recusa pedidos mais próximos com “Excesso de requisições”. O intervalo conta entre todas as instâncias do processo, porque o serviço não distingue uma da outra; cada pedido espera o <code>sleep_time</code> da instância que o faz.</td>
 <td><code>INTERVALO_INTEIRO_TEOR</code></td>
 </tr>
 <tr class="even">
@@ -236,35 +237,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor">baixar_inteiro_teor</a></td>
-<td>Baixa o PDF do inteiro teor de uma decisão do TSE.</td>
+<td>Baixa o PDF do inteiro teor de uma decisão do TSE ou de um TRE.</td>
 </tr>
 <tr class="even">
+<td><a href="#juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores">baixar_inteiros_teores</a></td>
+<td>Baixa o PDF do inteiro teor de várias decisões, uma linha por código.</td>
+</tr>
+<tr class="odd">
 <td><a href="#juscraper.courts.tse.client.TSEScraper.cjsg">cjsg</a></td>
 <td>Stub: a busca de jurisprudência do TSE exige captcha e não está implementada.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#juscraper.courts.tse.client.TSEScraper.listar_classes">listar_classes</a></td>
-<td>Lista as classes processuais do formulário de jurisprudência do TSE.</td>
-</tr>
-<tr class="even">
-<td><a href="#juscraper.courts.tse.client.TSEScraper.listar_eleicoes">listar_eleicoes</a></td>
-<td>Lista as eleições do formulário de jurisprudência do TSE.</td>
+<td>Lista as classes processuais do formulário de jurisprudência do TSE ou dos TREs.</td>
 </tr>
 <tr class="odd">
-<td><a href="#juscraper.courts.tse.client.TSEScraper.listar_normas">listar_normas</a></td>
-<td>Lista as normas (legislação) do formulário de jurisprudência do TSE.</td>
+<td><a href="#juscraper.courts.tse.client.TSEScraper.listar_eleicoes">listar_eleicoes</a></td>
+<td>Lista as eleições do formulário de jurisprudência do TSE ou dos TREs.</td>
 </tr>
 <tr class="even">
+<td><a href="#juscraper.courts.tse.client.TSEScraper.listar_normas">listar_normas</a></td>
+<td>Lista as normas (legislação) do formulário de jurisprudência do TSE ou dos TREs.</td>
+</tr>
+<tr class="odd">
 <td><a href="#juscraper.courts.tse.client.TSEScraper.listar_relatores">listar_relatores</a></td>
-<td>Lista os relatores do formulário de jurisprudência do TSE.</td>
+<td>Lista os relatores do formulário de jurisprudência do TSE ou dos TREs.</td>
 </tr>
 </tbody>
 </table>
 <section id="juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor">baixar_inteiro_teor</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.baixar_inteiro_teor(codigo_decisao, diretorio<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Baixa o PDF do inteiro teor de uma decisão do TSE.</p>
-<p>Um pedido por decisão, sem login e sem captcha. Devolve o PDF como o tribunal o publica; a extração de texto fica com quem usa a biblioteca. Pedidos seguidos na mesma instância guardam <code>sleep_time</code> entre si.</p>
+<p>Baixa o PDF do inteiro teor de uma decisão do TSE ou de um TRE.</p>
+<p>Um pedido por decisão, sem login e sem captcha. Devolve o PDF como o tribunal o publica; a extração de texto fica com quem usa a biblioteca. O serviço é o mesmo para o TSE e os TREs, e o código basta para achar a decisão. Pedidos seguidos guardam <code>sleep_time</code> entre si, também entre instâncias diferentes do raspador no mesmo processo; processos diferentes não se enxergam.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
@@ -305,8 +310,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><code>ValueError</code></td>
-<td>Código que não é inteiro nem texto só de dígitos, antes de qualquer pedido.</td>
+<td><code>CodigoInvalidoError</code></td>
+<td>Código que não é inteiro nem texto só de dígitos, antes de qualquer pedido. Herda de <code>ValueError</code>.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -316,7 +321,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>InteiroTeorIndisponivelError</code></td>
-<td>O serviço respondeu sem PDF, como faz com código que não existe; nada é gravado. As duas exceções ficam em <code>juscraper.courts.tse.download</code>.</td>
+<td>O serviço respondeu sem PDF, como faz com código que não existe; nada é gravado. As três exceções ficam em <code>juscraper.courts.tse.download</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -347,17 +352,137 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> caminho <span class="op">=</span> tse.baixar_inteiro_teor(<span class="dv">3522031</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
+<section id="juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.baixar_inteiros_teores">baixar_inteiros_teores</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.baixar_inteiros_teores(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    codigos_decisao,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa o PDF do inteiro teor de várias decisões, uma linha por código.</p>
+<p>Chama <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor"><code>baixar_inteiro_teor</code></a> para cada código, na ordem da entrada, com <code>sleep_time</code> entre os pedidos: são 10 s por decisão no default. A falha de uma decisão não interrompe o lote; duas recusas seguidas por excesso de requisições, sim, e as linhas seguintes saem <code>limite_de_requisicoes</code> sem pedido.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>codigos_decisao</td>
+<td><code>Iterable</code>[<code>int</code> | <code>str</code>]</td>
+<td>Códigos das decisões, como em <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor"><code>baixar_inteiro_teor</code></a>; uma lista ou a coluna de um DataFrame. Código repetido é baixado de novo.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Pasta de destino, como em <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor"><code>baixar_inteiro_teor</code></a>.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td><code>codigos_decisao</code> é um código só (texto ou inteiro), e não uma coleção deles.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Colunas <code>codigo_decisao</code> (como veio na entrada), <code>caminho_inteiro_teor</code> (<code>None</code> na falha) e <code>motivo_falha</code>: <code>None</code> no sucesso, <code>nao_pdf</code> (resposta sem PDF, como a de código que não existe), <code>limite_de_requisicoes</code> (o serviço recusou o pedido; basta pedir de novo as linhas que falharam), <code>entrada_invalida</code> (código que não é inteiro nem texto só de dígitos, como a célula vazia; nada é pedido) ou um motivo de rede de <code>MOTIVOS_FALHA</code>. As falhas saem também num único <code>UserWarning</code> ao fim.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tse <span class="op">=</span> jus.scraper(<span class="st">"tse"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> baixados <span class="op">=</span> tse.baixar_inteiros_teores([<span class="dv">2972172</span>, <span class="dv">3522031</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
 <section id="juscraper.courts.tse.client.TSEScraper.cjsg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.cjsg">cjsg</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.cjsg(<span class="op">*</span>args, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.cjsg(<span class="op">*</span>args, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Stub: a busca de jurisprudência do TSE exige captcha e não está implementada.</p>
 </section>
 <section id="juscraper.courts.tse.client.TSEScraper.listar_classes" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.listar_classes">listar_classes</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_classes()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lista as classes processuais do formulário de jurisprudência do TSE.</p>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_classes(tribunal<span class="op">=</span><span class="st">'tse'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista as classes processuais do formulário de jurisprudência do TSE ou dos TREs.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tribunal</td>
+<td><code>str</code></td>
+<td><code>"tse"</code> (default), um TRE (<code>"tre-sp"</code>) ou <code>"tres"</code>, os 27 TREs juntos. Vale o mesmo nos demais <code>listar_*</code>.</td>
+<td><code>'tse'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td><code>tribunal</code> desconhecido, antes de qualquer pedido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -375,19 +500,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
-<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tse <span class="op">=</span> jus.scraper(<span class="st">"tse"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes <span class="op">=</span> tse.listar_classes()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="exemplo-2" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-2">Exemplo</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tse <span class="op">=</span> jus.scraper(<span class="st">"tse"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes <span class="op">=</span> tse.listar_classes()</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes_tre_sp <span class="op">=</span> tse.listar_classes(tribunal<span class="op">=</span><span class="st">"tre-sp"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="juscraper.courts.tse.client.TSEScraper.listar_eleicoes" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.listar_eleicoes">listar_eleicoes</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_eleicoes()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lista as eleições do formulário de jurisprudência do TSE.</p>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_eleicoes(tribunal<span class="op">=</span><span class="st">'tse'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista as eleições do formulário de jurisprudência do TSE ou dos TREs.</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tribunal</td>
+<td><code>str</code></td>
+<td>Ver <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.listar_classes"><code>listar_classes</code></a>.</td>
+<td><code>'tse'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -408,10 +555,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tse.client.TSEScraper.listar_normas" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.listar_normas">listar_normas</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_normas()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lista as normas (legislação) do formulário de jurisprudência do TSE.</p>
-<section id="returns-3" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_normas(tribunal<span class="op">=</span><span class="st">'tse'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista as normas (legislação) do formulário de jurisprudência do TSE ou dos TREs.</p>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tribunal</td>
+<td><code>str</code></td>
+<td>Ver <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.listar_classes"><code>listar_classes</code></a>.</td>
+<td><code>'tse'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -432,10 +600,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tse.client.TSEScraper.listar_relatores" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tse.client.TSEScraper.listar_relatores">listar_relatores</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_relatores()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Lista os relatores do formulário de jurisprudência do TSE.</p>
-<section id="returns-4" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>courts.tse.client.TSEScraper.listar_relatores(tribunal<span class="op">=</span><span class="st">'tse'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista os relatores do formulário de jurisprudência do TSE ou dos TREs.</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tribunal</td>
+<td><code>str</code></td>
+<td>Ver <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.listar_classes"><code>listar_classes</code></a>.</td>
+<td><code>'tse'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -448,7 +637,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Coluna <code>relator</code>, com o nome como o portal o devolve.</td>
+<td>Coluna <code>relator</code>, com o nome como o portal o devolve. Nos TREs a lista traz também textos que não são nomes, digitados no campo do relator.</td>
 </tr>
 </tbody>
 </table>

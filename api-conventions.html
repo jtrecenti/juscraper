@@ -719,6 +719,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>captcha_esgotado</code></td>
 <td>The portal refused the solved captcha in every attempt.</td>
 </tr>
+<tr class="odd">
+<td><code>limite_de_requisicoes</code></td>
+<td>The service refused the request for too many requests, in a response that is not a retryable status (the TSE full-text service answers HTTP 200 with a text). Wait and ask again for the failed rows.</td>
+</tr>
 </tbody>
 </table>
 <p>An anti-bot block holds for the whole session. In the PJe <code>cpopg</code>/<code>cposg</code> (TRF1, TRF3, TRF5, TRF6 and TJPE) and in the eSAJ <code>baixar_acordaos</code> and <code>baixar_sentencas</code>, the first <code>bloqueio_anti_bot</code> ends the batch: the following rows get the same reason without a request, and the rows already read stay in the result. The JusBR and PDPJ batch methods go on with the next item. Whenever a row has <code>bloqueio_anti_bot</code>, the warning comes as <code>juscraper.core.exceptions.BloqueioAntiBotWarning</code>, a <code>UserWarning</code> subclass. Wait a few minutes or switch networks, and ask again only for the failed rows. The values live in <code>juscraper.core.failures.MOTIVOS_FALHA</code>.</p>
