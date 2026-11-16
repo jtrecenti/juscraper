@@ -112,12 +112,12 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
 
-    def _pasta_da_chamada(self) -> tuple[str, bool]:
+    def _pasta_da_chamada(self, *, raiz_temporaria_criada: bool = False) -> tuple[str, bool]:
         """Cria pasta própria e registra se a raiz nasceu com esta chamada."""
         # A propriedade cria a raiz temporária na primeira leitura: registrar
         # sua origem antes dela para não deixar a raiz vazia após o composto.
         caminho_atual = self._download_path
-        raiz_criada = caminho_atual is None or not Path(caminho_atual).exists()
+        raiz_criada = raiz_temporaria_criada or caminho_atual is None or not Path(caminho_atual).exists()
         raiz = Path(self.download_path)
         raiz.mkdir(parents=True, exist_ok=True)
         return tempfile.mkdtemp(prefix="composto_", dir=raiz), raiz_criada
@@ -371,6 +371,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 leitura saem juntas num unico ``UserWarning``.
         """
         self.set_method(method)
+        raiz_temporaria_criada = self._download_path is None
         validar_download_pecas(baixar_movimentacoes, download_pecas)
         if download_pecas != (diretorio is not None):
             raise ValueError(
@@ -382,8 +383,11 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         ids = _lista_de_cnjs(id_cnj)
         # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
         if not ids:
+            if raiz_temporaria_criada and self._download_path is not None:
+                with suppress(OSError):
+                    Path(self._download_path).rmdir()
             return tabelas_vazias()
-        pasta, raiz_criada = self._pasta_da_chamada()
+        pasta, raiz_criada = self._pasta_da_chamada(raiz_temporaria_criada=raiz_temporaria_criada)
         # Sem o aviso do download: o parse lê as falhas que ele gravou na
         # pasta e avisa uma vez só, junto com as de leitura.
         self._baixar_cpopg(ids, pasta, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas)
