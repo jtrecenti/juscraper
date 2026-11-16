@@ -2,6 +2,7 @@
 Functions for downloading specific to TJPR
 """
 import re
+from collections.abc import Callable
 
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
@@ -75,6 +76,27 @@ _XHR_HEADERS = {
     'x-prototype-version': '1.5.1.1',
     'x-requested-with': 'XMLHttpRequest',
 }
+
+
+class PaginasParciaisError(Exception):
+    """Uma página da busca falhou depois de outras já baixadas.
+
+    Interna: :class:`~juscraper.courts.tjpr.client.TJPRScraper` a converte em
+    :class:`~juscraper.core.exceptions.ColetaParcialError`, com as páginas
+    lidas, porque a leitura depende do raspador (ementa completa, Corte IDH).
+
+    Attributes:
+        paginas: HTMLs baixados antes da falha, na ordem pedida.
+        faltando: Páginas não baixadas; a primeira é a que falhou.
+        causa: Exceção da página que falhou.
+    """
+
+    def __init__(self, paginas: list[str], faltando: list[int], causa: Exception) -> None:
+        """Guarda as páginas baixadas, as que faltam e a causa."""
+        super().__init__(f"TJPR: a página {faltando[0]} falhou depois de {len(paginas)} baixada(s).")
+        self.paginas = paginas
+        self.faltando = faltando
+        self.causa = causa
 
 
 class TJPREmentaIndisponivelError(HTTPSemanticError):
@@ -255,15 +277,26 @@ def cjsg_download(
         # Download all: fetch first page, extract total, then fetch the rest
         first_html = _fetch_page(1)
         n_pags = extract_total_pages(first_html)
-        resultados = [first_html]
-        if n_pags > 1:
-            for pagina_atual in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJPR'):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_fetch_page(pagina_atual))  # noqa: PERF401
-        return resultados
+        return [first_html, *_baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), ja_baixadas=[first_html])]
+    return _baixar_paginas(_fetch_page, list(paginas), ja_baixadas=[])
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJPR'):
-        resultados.append(_fetch_page(pagina_atual))
+
+def _baixar_paginas(fetch_page: Callable[[int], str], paginas: list[int], *, ja_baixadas: list[str]) -> list[str]:
+    """Baixa ``paginas`` em ordem; a que falha com outra já baixada levanta :class:`PaginasParciaisError`.
+
+    Como no TJMG e no TJTO, a página que falha encerra a busca sem descartar
+    as anteriores; se nada foi baixado ainda, a falha original sobe.
+    ``ja_baixadas`` são as páginas baixadas antes desta chamada.
+    """
+    resultados: list[str] = []
+    if not paginas:
+        return resultados
+    for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
+        try:
+            resultados.append(fetch_page(pagina))
+        except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
+            baixadas = [*ja_baixadas, *resultados]
+            if not baixadas:
+                raise
+            raise PaginasParciaisError(baixadas, paginas[posicao:], exc) from exc
     return resultados

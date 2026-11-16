@@ -620,8 +620,8 @@ not yet requested go to `pecas_falhas`, the row keeps the detail with
 Methods whose unit of work has no row to carry the reason (a page, a date
 window, an alias) raise `juscraper.core.exceptions.ColetaParcialError`
 instead of returning a partial result as if it were complete: the eSAJ
-auto-chunk, TJSP and TJMS `cjpg`, TJMG `cjsg`, TJTO `cjsg` and `cjpg`, and
-DataJud `listar_processos`.
+auto-chunk, TJSP and TJMS `cjpg`, TJMG `cjsg`, TJPR `cjsg`, TJTO `cjsg` and
+`cjpg`, and DataJud `listar_processos`.
 `erro.resultado` has what was collected, in the same format as the full
 return, and `erro.falhas` the failed units with their exceptions (see the
 `cjpg` example in the migration guide above).

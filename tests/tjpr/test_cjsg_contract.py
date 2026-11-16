@@ -20,10 +20,12 @@ import re
 
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body
 from tests._helpers import load_sample, query_param_subset_matcher
 from tests.tjpr._helpers import SEARCH_URL, add_ementa_completa, add_home, add_search_page
@@ -192,3 +194,83 @@ def test_build_cjsg_form_body_envia_page_size_50():
     ``pageSize=10``, que inflava o link 5 vezes.
     """
     assert build_cjsg_form_body("dano moral", page=1)["pageSize"] == "50"
+
+
+def _pagina_que_estoura_o_prazo(pesquisa: str, pagina: int) -> None:
+    responses.add(
+        responses.POST,
+        SEARCH_URL,
+        body=requests.ReadTimeout("prazo estourado"),
+        match=[urlencoded_params_matcher(build_cjsg_form_body(pesquisa, page=pagina), allow_blank=True)],
+    )
+
+
+@responses.activate
+def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
+    """A página 2 estoura o prazo: a 1 não se perde, e a 3 não é pedida (como no TJMG e no TJTO)."""
+    add_home()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    _pagina_que_estoura_o_prazo("dano moral", 2)
+    add_ementa_completa()
+
+    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*faltam as páginas 2, 3") as info:
+        jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 4))
+
+    erro = info.value
+    assert isinstance(erro.__cause__, requests.ReadTimeout)
+    assert [type(falha[2]) for falha in erro.falhas] == [requests.ReadTimeout]
+    # As 40 linhas do TJ da página 1, lidas como no retorno normal (ementa completa inclusive).
+    assert len(erro.resultado) == 40
+    assert set(erro.resultado.columns) >= CJSG_MIN_COLUMNS
+    assert not erro.resultado["ementa"].str.contains("Leia mais|Erro ao buscar").any()
+    buscas = [chamada for chamada in responses.calls if chamada.request.method == "POST"]
+    assert len(buscas) == 2
+
+
+@responses.activate
+def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
+    add_home()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    _pagina_que_estoura_o_prazo("dano moral", 2)
+    add_ementa_completa()
+
+    with pytest.raises(ColetaParcialError) as info:
+        jus.scraper("tjpr").cjsg("dano moral", paginas=2, incluir_corte_idh=True)
+
+    assert len(info.value.resultado) == 50
+    assert set(info.value.resultado["fonte"]) == {"TJPR", "Corte IDH"}
+
+
+@responses.activate
+def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
+    add_home()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    _pagina_que_estoura_o_prazo("dano moral", 2)
+    add_ementa_completa()
+
+    with pytest.raises(ColetaParcialError, match=r"faltam as páginas 2 a \d+,") as info:
+        jus.scraper("tjpr").cjsg("dano moral")
+
+    assert len(info.value.resultado) == 40
+
+
+@responses.activate
+def test_cjsg_download_pagina_que_falha_levanta_coleta_parcial():
+    add_home()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    _pagina_que_estoura_o_prazo("dano moral", 2)
+    add_ementa_completa()
+
+    with pytest.raises(ColetaParcialError) as info:
+        jus.scraper("tjpr").cjsg_download("dano moral", paginas=2)
+
+    assert len(info.value.resultado) == 40
+
+
+@responses.activate
+def test_cjsg_falha_na_primeira_pagina_levanta_a_excecao_original():
+    add_home()
+    _pagina_que_estoura_o_prazo("dano moral", 1)
+
+    with pytest.raises(requests.ReadTimeout):
+        jus.scraper("tjpr").cjsg("dano moral", paginas=2)

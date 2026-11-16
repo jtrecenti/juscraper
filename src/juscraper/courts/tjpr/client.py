@@ -7,10 +7,11 @@ from typing import Any, ClassVar
 import pandas as pd
 import requests
 
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
-from .download import BASE_URL, cjsg_download
+from .download import BASE_URL, PaginasParciaisError, cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJPR
 
@@ -89,6 +90,9 @@ class TJPRScraper(HTTPScraper):
                 permite fixar o total de páginas; os casos estão em
                 :func:`juscraper.courts.tjpr.download.extract_total_pages`. O
                 scraper levanta depois da primeira página, em vez de estimar.
+            ColetaParcialError: Uma página falhou depois de outras já
+                baixadas, como em :meth:`cjsg`; ``resultado`` traz as
+                baixadas já lidas, em DataFrame, sem as linhas da Corte IDH.
         """
         if "incluir_corte_idh" in kwargs:
             raise TypeError(
@@ -96,6 +100,29 @@ class TJPRScraper(HTTPScraper):
                 "brutas sempre trazem as linhas da Corte IDH. Passe "
                 "incluir_corte_idh a cjsg_parse()."
             )
+        return self._baixar(
+            pesquisa, paginas, data_julgamento_inicio, data_julgamento_fim,
+            data_publicacao_inicio, data_publicacao_fim, kwargs,
+        )
+
+    def _baixar(
+        self,
+        pesquisa: str | None,
+        paginas: int | list | range | None,
+        data_julgamento_inicio: str | date | None,
+        data_julgamento_fim: str | date | None,
+        data_publicacao_inicio: str | date | None,
+        data_publicacao_fim: str | date | None,
+        kwargs: dict[str, Any],
+        *,
+        incluir_corte_idh: bool = False,
+    ) -> list:
+        """Páginas brutas da busca.
+
+        Raises:
+            ColetaParcialError: Uma página falhou depois de outras baixadas;
+                ``resultado`` traz as baixadas, lidas com ``incluir_corte_idh``.
+        """
         inp = apply_input_pipeline_search(
             InputCJSGTJPR,
             "TJPRScraper.cjsg_download()",
@@ -108,17 +135,38 @@ class TJPRScraper(HTTPScraper):
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
         )
-        brutos: list = cjsg_download(
-            home_url=BASE_URL,
-            pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
-            data_julgamento_inicio=inp.data_julgamento_inicio,
-            data_julgamento_fim=inp.data_julgamento_fim,
-            data_publicacao_inicio=inp.data_publicacao_inicio,
-            data_publicacao_fim=inp.data_publicacao_fim,
-            request_fn=self._request_with_retry,
-        )
+        try:
+            brutos: list = cjsg_download(
+                home_url=BASE_URL,
+                pesquisa=inp.pesquisa,
+                paginas=inp.paginas,
+                data_julgamento_inicio=inp.data_julgamento_inicio,
+                data_julgamento_fim=inp.data_julgamento_fim,
+                data_publicacao_inicio=inp.data_publicacao_inicio,
+                data_publicacao_fim=inp.data_publicacao_fim,
+                request_fn=self._request_with_retry,
+            )
+        except PaginasParciaisError as parcial:
+            raise self._coleta_parcial(
+                    parcial, inp.pesquisa, incluir_corte_idh=incluir_corte_idh
+                ) from parcial.causa
         return brutos
+
+    def _coleta_parcial(
+        self, parcial: PaginasParciaisError, criterio: str | None, *, incluir_corte_idh: bool
+    ) -> ColetaParcialError:
+        """``ColetaParcialError`` com as páginas baixadas antes da falha, já lidas, em ``resultado``."""
+        causa = parcial.causa
+        faltando = parcial.faltando
+        contiguas = faltando == list(range(faltando[0], faltando[-1] + 1)) and len(faltando) > 2
+        faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
+        mensagem = (
+            f"TJPR cjsg: a página {faltando[0]} falhou ({causa!r}), e a busca parou. "
+            f"As {len(parcial.paginas)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
+            f"faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
+        )
+        resultado = self.cjsg_parse(parcial.paginas, criterio, incluir_corte_idh=incluir_corte_idh)
+        return ColetaParcialError(mensagem, resultado=resultado, falhas=[(None, None, causa)])
 
     def cjsg_parse(
         self,
@@ -210,6 +258,12 @@ class TJPRScraper(HTTPScraper):
             ValidationError: Para os demais erros de validação do schema.
             ValueError: Com ``paginas=None``, quando a primeira página não
                 permite fixar o total de páginas; ver :meth:`cjsg_download`.
+            ColetaParcialError: Uma página falhou (prazo estourado, erro HTTP
+                depois das tentativas) quando outras já tinham sido baixadas.
+                A busca para ali: ``resultado`` traz as páginas anteriores, já
+                lidas, e a mensagem diz as que faltam, para pedir de novo com
+                ``paginas=``. Se a falha é na primeira requisição, sobe a
+                exceção original.
 
         Returns:
             Uma linha por decisão, com ``processo``,
@@ -234,14 +288,10 @@ class TJPRScraper(HTTPScraper):
         pesquisa_resolved = normalize_pesquisa(pesquisa, **kwargs)
         for alias in SEARCH_ALIASES:
             kwargs.pop(alias, None)
-        brutos = self.cjsg_download(
-            pesquisa=pesquisa_resolved,
-            paginas=paginas,
-            data_julgamento_inicio=data_julgamento_inicio,
-            data_julgamento_fim=data_julgamento_fim,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            **kwargs,
+        brutos = self._baixar(
+            pesquisa_resolved, paginas, data_julgamento_inicio, data_julgamento_fim,
+            data_publicacao_inicio, data_publicacao_fim, kwargs,
+            incluir_corte_idh=incluir_corte_idh,
         )
         return self.cjsg_parse(brutos, pesquisa_resolved, incluir_corte_idh=incluir_corte_idh)
 
