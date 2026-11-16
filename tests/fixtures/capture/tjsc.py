@@ -61,7 +61,7 @@ def main() -> None:
     # a página traz números antigos com os dois sufixos.
     _capture(
         session, dest, "habeas corpus", 1, "processo_sufixo_sc.html",
-        dt_decisao_inicio="01/01/2005", dt_decisao_fim="31/12/2006",
+        dt_decisao_inicio="12/12/2006", dt_decisao_fim="19/12/2006",
     )
 
 

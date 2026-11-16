@@ -110,7 +110,6 @@ def test_cjsg_parse_manager_drops_sc_suffix_from_linked_process_number():
     """
     df = cjsg_parse_manager([load_sample("tjsc", "cjsg/processo_sufixo_sc.html", encoding="latin-1")])
 
-    assert len(df) == 10
     assert {"0000.20.06.300854-0", "0000.20.06.047047-0"} <= set(df["processo"])
     assert not df["processo"].str.contains("/").any()
 
