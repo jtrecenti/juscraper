@@ -5,18 +5,15 @@ endpoint entra, sai ou vira stub, ``test_documentacao_em_dia`` reprova até o
 script ser rodado de novo.
 """
 
-import importlib.util
 import json
 from pathlib import Path
 
 import pytest
 
+from tests._tooling import carregar_script
+
 RAIZ = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location("tabela_cobertura", RAIZ / "scripts" / "tabela_cobertura.py")
-assert _spec is not None
-assert _spec.loader is not None
-tabela_cobertura = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(tabela_cobertura)
+tabela_cobertura = carregar_script("tabela_cobertura", RAIZ / "scripts" / "tabela_cobertura.py")
 
 
 def test_documentacao_em_dia():

@@ -4,7 +4,6 @@ O git só roda em repositórios temporários; o ``origin``, quando existe, é um
 local temporário.
 """
 
-import importlib.util
 import re
 import subprocess
 import sys
@@ -12,13 +11,11 @@ from pathlib import Path
 
 import pytest
 
+from tests._tooling import carregar_script
+
 RAIZ = Path(__file__).resolve().parents[1]
 
-_spec = importlib.util.spec_from_file_location("release", RAIZ / "scripts" / "release.py")
-assert _spec is not None
-assert _spec.loader is not None
-release = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(release)
+release = carregar_script("release", RAIZ / "scripts" / "release.py")
 
 INTRODUCAO = """# Changelog
 
