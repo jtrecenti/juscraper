@@ -121,7 +121,9 @@ class TJRJScraper(HTTPScraper):
                   data exposto pelo backend ASPX** — use estes em vez de
                   ``data_julgamento_*``. ``None`` usa o ano mais recente
                   que o form da origem oferece: o corrente, ou 1998 nos
-                  Tribunais de Alcada, que vao de 1975 a 1998. Backend:
+                  Tribunais de Alcada, que vao de 1975 a 1998. So
+                  ``ano_fim`` informado: ``ano_inicio`` vira o ano mais
+                  antigo da origem (1975). Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
                 * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
                   criminal / ``"3"`` fazendaria (so na Turma Recursal).
