@@ -124,8 +124,18 @@ def preparar_changelog(version: str) -> str:
 
 
 def tag_existe(tag: str) -> bool:
-    """Diz se a tag já existe no repositório local, por consulta somente leitura das refs."""
-    return run_command(f"git show-ref --verify --quiet refs/tags/{tag}", check=False).returncode == 0
+    """Diz se a tag já existe no repositório local ou no ``origin``, por consultas somente leitura.
+
+    Levanta ``RuntimeError`` quando a tag não está nas refs locais e o ``origin`` não pôde
+    ser consultado (sem rede, sem remoto ou sem acesso). O ``git ls-remote --exit-code``
+    sai com 2 quando o remoto respondeu sem a tag.
+    """
+    if run_command(f"git show-ref --verify --quiet refs/tags/{tag}", check=False).returncode == 0:
+        return True
+    remoto = run_command(f"git ls-remote --exit-code --tags origin refs/tags/{tag}", check=False)
+    if remoto.returncode not in (0, 2):
+        raise RuntimeError(f"Não foi possível consultar as tags do origin: {remoto.stderr.strip()}")
+    return remoto.returncode == 0
 
 
 def main():
@@ -149,8 +159,17 @@ def main():
     # Confere o CHANGELOG.md antes de qualquer alteração, inclusive no dry run
     changelog = preparar_changelog(args.version)
 
-    # Confere a tag também no dry run, para não deixar commit de versão sem tag
-    if tag_existe(f"v{args.version}"):
+    # Confere a tag, local e no origin, também no dry run, para não deixar commit de versão sem tag
+    try:
+        existe = tag_existe(f"v{args.version}")
+    except RuntimeError as erro:
+        print(erro)
+        if not args.dry_run:
+            print("Sem confirmar que a tag está livre no origin, nenhum arquivo foi alterado.")
+            sys.exit(1)
+        print(f"Aviso: o dry run segue sem conferir a tag v{args.version} no origin.")
+        existe = False
+    if existe:
         print(f"A tag v{args.version} já existe! Nenhum arquivo foi alterado.")
         sys.exit(1)
 
@@ -168,9 +187,8 @@ def main():
     # Executa testes e linting se não foi solicitado para pular
     if not args.skip_tests:
         print("Executando linting...")
-        run_command("uv run pylint src/juscraper/")
-        run_command("uv run isort --check-only src/ tests/")
-        run_command("uv run flake8 src/ tests/")
+        # Gate de lint do CI: os hooks do pre-commit; a suíte offline roda no passo seguinte
+        run_command("SKIP=pytest uv run pre-commit run --all-files")
 
         print("Executando testes...")
         run_command("uv run pytest tests/ -v")
