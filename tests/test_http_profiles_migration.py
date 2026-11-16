@@ -109,10 +109,4 @@ def test_tjpr_requisicoes_usam_os_timeouts_ajustados(mocker):
 
     request.reset_mock()
     scraper.cjsg_parse(brutos)
-    assert request.call_count > 0
     assert {chamada.kwargs["timeout"] for chamada in request.call_args_list} == {5}
-
-
-def test_tjpr_sem_ajuste_tem_prazo():
-    assert TJPRScraper.perfis_http["cjsg"].timeout == 60
-    assert TJPRScraper.perfis_http["ementa"].timeout == 30

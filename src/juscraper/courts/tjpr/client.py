@@ -32,8 +32,6 @@ class TJPRScraper(HTTPScraper):
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
     )
 
-    # ``"cjsg"`` vale para a home e a busca; ``"ementa"``, para o pedido da
-    # ementa completa de cada linha truncada, cuja falha fica na própria linha.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "cjsg": RequestPolicy(timeout=60),
         "ementa": RequestPolicy(timeout=30),
