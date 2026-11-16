@@ -1,8 +1,9 @@
 """``paginas`` explícito no ``cjsg``: página repetida uma vez só e página além do total sem pedido.
 
 Contrato comum dos portais JSON (TJRN e TJRO, Elasticsearch, total em
-``hits.total``; TJPA, ``data.totalPages``; TJBA, GraphQL, ``pageCount``) e de
-um HTML (TJSC, total no cabeçalho de toda página), como já valia para TJGO,
+``hits.total``; TJPA, ``data.totalPages``; TJBA, GraphQL, ``pageCount``; TJES,
+``total_pages``; TJPB, ``total``) e dos HTML (TJSC, total no cabeçalho de toda
+página; TJPI, contagem "de um total de N"), como já valia para TJGO,
 TJMG, TJRJ, TJTO e o eSAJ. A menor página pedida sai primeiro, porque é dela
 que vem o total (como no TJTO); as demais saem na ordem pedida. Os samples são
 respostas reais: a busca "dano moral" tem 69.440 resultados no TJRN e 23.109
@@ -16,17 +17,21 @@ from __future__ import annotations
 import json
 import logging
 from typing import cast
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 import responses
 
 import juscraper as jus
 from juscraper.courts.tjba import download as tjba_download
+from juscraper.courts.tjes import download as tjes_download
 from juscraper.courts.tjpa import download as tjpa_download
+from juscraper.courts.tjpb import download as tjpb_download
+from juscraper.courts.tjpi import download as tjpi_download
 from juscraper.courts.tjro import download as tjro_download
 from juscraper.courts.tjsc.download import AJAX_URL, SEARCH_URL
 from tests._helpers import load_sample, load_sample_bytes
+from tests.tjpb._helpers import add_get_classes
 
 
 def _registrar_tjrn() -> None:
@@ -84,11 +89,49 @@ def _pagina_tjro(request) -> int:
     return cast("int", json.loads(request.body)["from"]) // tjro_download.RESULTS_PER_PAGE + 1
 
 
+# TJES (GET, JSON), TJPB (POST, JSON, depois do GET do token) e TJPI (GET,
+# HTML): método, URL, extensão do sample e tipo da resposta da busca.
+BUSCAS = {
+    "tjes": (responses.GET, f"{tjes_download.BASE_URL}/search", "json", "application/json"),
+    "tjpb": (responses.POST, tjpb_download.SEARCH_URL, "json", "application/json"),
+    "tjpi": (responses.GET, tjpi_download.BASE_URL, "html", "text/html; charset=utf-8"),
+}
+
+
+def _registrar_busca(tribunal: str, corpo_de=None):
+    """Registra a busca do portal; ``corpo_de(pagina)`` escolhe o corpo, e o default é a página 2."""
+    def registrar() -> None:
+        metodo, url, extensao, tipo = BUSCAS[tribunal]
+        pagina_2 = load_sample(tribunal, f"cjsg/results_normal_page_02.{extensao}")
+        if tribunal == "tjpb":
+            add_get_classes()
+        responses.add_callback(
+            metodo,
+            url,
+            callback=lambda request: (
+                200, {}, corpo_de(PORTAIS[tribunal][1](request)) if corpo_de else pagina_2,
+            ),
+            content_type=tipo,
+        )
+    return registrar
+
+
+def _pagina_da_query(request) -> int:
+    return int(parse_qs(urlparse(request.url).query)["page"][0])
+
+
+def _pagina_tjpb(request) -> int | None:
+    return cast("int", json.loads(request.body)["page"]) if request.method == "POST" else None
+
+
 # Por portal: registro das respostas, leitura da página pedida e uma página
 # além do total da busca do sample (no TJBA e no TJRO, a do próprio sample).
 PORTAIS = {
     "tjba": (_registrar_json("tjba", "alem_do_total"), _pagina_tjba, 901),
+    "tjes": (_registrar_busca("tjes"), _pagina_da_query, 10**6),
     "tjpa": (_registrar_json("tjpa", "results_normal_page_02"), _pagina_tjpa, 10**6),
+    "tjpb": (_registrar_busca("tjpb"), _pagina_tjpb, 10**6),
+    "tjpi": (_registrar_busca("tjpi"), _pagina_da_query, 10**6),
     "tjrn": (_registrar_tjrn, _pagina_tjrn, 10**6),
     "tjro": (_registrar_json("tjro", "alem_do_total"), _pagina_tjro, 501),
     "tjsc": (_registrar_tjsc, _pagina_tjsc, 10**6),
@@ -96,7 +139,9 @@ PORTAIS = {
 
 
 def _paginas_pedidas(tribunal: str) -> list[int]:
-    return [PORTAIS[tribunal][1](chamada.request) for chamada in responses.calls]
+    """As páginas das buscas, na ordem dos pedidos; o GET do token do TJPB fica de fora."""
+    paginas = (PORTAIS[tribunal][1](chamada.request) for chamada in responses.calls)
+    return [pagina for pagina in paginas if pagina is not None]
 
 
 @pytest.mark.parametrize("tribunal", list(PORTAIS))
@@ -147,6 +192,39 @@ def test_menor_pagina_volta_na_posicao_pedida(tribunal, mocker):
 
     assert _paginas_pedidas(tribunal) == [2, 5, 4]
     assert brutos == [json.loads(outra), json.loads(pagina_2), json.loads(outra)]
+
+
+@pytest.mark.parametrize("tribunal", list(BUSCAS))
+@responses.activate
+def test_menor_pagina_volta_na_posicao_pedida_tjes_tjpb_tjpi(tribunal, mocker):
+    mocker.patch("time.sleep")
+    extensao = BUSCAS[tribunal][2]
+    pagina_2 = load_sample(tribunal, f"cjsg/results_normal_page_02.{extensao}")
+    outra = load_sample(tribunal, f"cjsg/results_normal_page_01.{extensao}")
+    _registrar_busca(tribunal, lambda pagina: pagina_2 if pagina == 2 else outra)()
+
+    brutos = jus.scraper(tribunal).cjsg_download("dano moral", paginas=[5, 2, 4])
+
+    esperado = [outra, pagina_2, outra]
+    assert _paginas_pedidas(tribunal) == [2, 5, 4]
+    assert brutos == (esperado if extensao == "html" else [json.loads(corpo) for corpo in esperado])
+
+
+@responses.activate
+def test_tjes_cjpg_segue_o_mesmo_contrato(mocker, caplog):
+    """O ``cjpg`` do TJES usa o download do ``cjsg``, com ``core=pje1g``."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.GET, BUSCAS["tjes"][1], body=load_sample("tjes", "cjpg/results_normal_page_02.json"),
+        content_type="application/json",
+    )
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjes"):
+        brutos = jus.scraper("tjes").cjpg_download("dano moral", paginas=[3, 2, 3, 10**6])
+
+    assert _paginas_pedidas("tjes") == [2, 3]
+    assert len(brutos) == 2
+    assert "TJES: página 1000000 fora do intervalo" in caplog.text
 
 
 @pytest.mark.parametrize("tribunal", list(MODULOS_COM_TETO))

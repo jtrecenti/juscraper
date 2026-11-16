@@ -3,9 +3,8 @@ import math
 import time
 from urllib.parse import unquote
 
-from tqdm import tqdm
-
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 CLASSES_URL = f"{BASE_URL}/api/pje/classes/list"
@@ -105,19 +104,8 @@ def cjsg_download_manager(
         time.sleep(1)
         return data
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        total = first.get("total", 0)
-        n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJPB"):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_get_page(pagina))  # noqa: PERF401
-        return resultados
+    def _n_pags(first: dict) -> int:
+        total: int = first.get("total", 0)
+        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJPB"):
-        resultados.append(_get_page(pagina_1based))
-    return resultados
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB")
