@@ -158,6 +158,7 @@ O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/j
 - [Exemplo TRF5](docs/notebooks/trf5.ipynb)
 - [Exemplo TRF6](docs/notebooks/trf6.ipynb)
 - [Exemplo TSE](docs/notebooks/tse.ipynb)
+- [Exemplo STM](docs/notebooks/stm.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Falcao](docs/notebooks/falcao.ipynb)
 - [Exemplo JusBR](docs/notebooks/jusbr.ipynb)

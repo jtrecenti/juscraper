@@ -154,6 +154,7 @@ These notebooks send live requests to external services and are not guaranteed t
 - [TRF5 example](notebooks/trf5.ipynb)
 - [TRF6 example](notebooks/trf6.ipynb)
 - [TSE example](notebooks/tse.ipynb)
+- [STM example](notebooks/stm.ipynb)
 - [Datajud example](notebooks/datajud.ipynb)
 - [Falcao example](notebooks/falcao.ipynb)
 - [JusBR example](notebooks/jusbr.ipynb)

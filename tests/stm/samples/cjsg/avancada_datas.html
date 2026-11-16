@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<!-- Head -->
+<head>
+    <title>Consulta Judicial Unificada | JMU</title>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Indexing -->
+    <meta name="title" content="Consulta Judicial Unificada | JMU">
+    <meta name="description" content="A Justiça Militar da União é uma justiça especializada que julga os crimes militares previstos no Código Penal Militar (CPM), tendo como principais jurisdicionados os militares das Forças Armadas e, em certos casos, até civis.">
+    <meta name="keywords" content="stm, jmu, justiça militar da união, superior tribunal militar, justiça militar, consulta processual, jurisprudência, jmu consulta processual, stm consulta processual, jmu jurisprudência, stm jurisprudência, ministros jmu">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="language" content="Portuguese">
+    <meta name="author" content="Justiça Militar da União">
+
+    <!-- Icon -->
+    <link rel="shortcut icon" href="images/jmu.ico" type="image/x-icon" />
+
+    <!-- CSS -->
+    <link href="/css/bootstrap-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-theme-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-chosen.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-datepicker.standalone.css" rel="stylesheet" type="text/css" media="screen">
+
+    <link href="/css/open-iconic-bootstrap.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/fonte.css" rel='stylesheet' type='text/css' media="screen">
+    <link href="/css/introjs.css" rel='stylesheet' type='text/css' media="screen">
+    
+        <link href="/css/style.css?v=20210903" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/print.css?v=20210903" rel="stylesheet" type="text/css" media="print">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Scripts Javascript -->
+    <!-- jQuery -->
+<script src="/js/jquery-3.2.1.min.js"></script>
+
+<!-- jQuery Select -->
+<script src="/js/chosen.jquery.min.js"></script>
+
+<!-- jQuery Mask -->
+<script src="/js/jquery.mask.min.js"></script>
+
+<!-- Bootstrap Collapse -->
+<script src="/js/collapse-3.3.7.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap-3.3.7.js"></script>
+
+<!-- Bootstrap Datepicker -->
+<script src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/bootstrap-datepicker.pt-BR.js"></script>
+
+<!-- Intro.js -->
+<script src="/js/intro.js"></script>
+
+<!-- Scripts -->
+<script src="/js/init.js?v=20210903"></script>
+<script src="/js/cpfcnpj.js?v=20210903"></script>
+<script src="/js/util.js?v=20210903"></script>
+<script src="/js/funcoes.js?v=20210903"></script>
+<script src="/js/controller.js?v=20210903"></script>
+
+<!-- <script src="js/google_analytics.js"></script>  -->
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WP8V5XK0S4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-WP8V5XK0S4');
+    </script>
+</head>
+<body>
+
+<!-- Header -->
+<header class="container-fluid">
+    <div class="row">
+        <p>
+            <a id="header-url" href="https://jurisprudencia.stm.jus.br"><img src="images/jmu-sistemas.png" alt=""><span id="header-title"></span> </a>
+            <span class="pull-right header-menu hidden-xs">
+                            <a href="https://tesjmu.stm.jus.br/portalthes/" target="_blank"><span class="oi oi-sun" aria-hidden="true"></span> Tesauro</a>
+                <a href="javascript:void(0);" onclick="tracker.functions.faleConosco(this);"><span class="oi oi-thumb-up" aria-hidden="true"></span> Pesquisa de Satisfação</a>
+            </span>
+        </p> 
+    </div>
+</header>
+<script>
+    localStorage.setItem('URL_PROCESSOS', 'https://processos.stm.jus.br');
+    localStorage.setItem('URL_JURISPRUDENCIA', 'https://jurisprudencia.stm.jus.br');
+</script>
+<div class="topo">
+    <div class="gridbox">
+        
+<script>
+    // Scripts de inicialização
+    start_scripts();
+</script>
+
+<!--Dicas -->
+<!-- Dicas de Busca -->
+<div class="container collapse" id="tips">
+	<br/>
+	<button type="button" class="close" id="button_close_tips"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+	<div class="row space-h3">
+		<h3>Dicas de Uso dos Operadores</h3>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col-md-12">
+			<p>Ao solicitar a pesquisa por 'Todos os Campos', é possível que o usuário utilize operadores: palavras e símbolos que permitem ampliar ou restringir o alcance da pesquisa. Os seguintes operadores podem ser utilizados:</p>
+		</div>
+	</div>
+
+	<!-- Carousel -->
+	<div id="quote-carousel" class="carousel slide" data-ride="carousel"  data-interval="false">
+		<!-- Indicators -->
+		<ol class="carousel-indicators">
+			<li data-target="#quote-carousel" data-slide-to="0" class="active"></li>
+			<li data-target="#quote-carousel" data-slide-to="1"></li>
+			<li data-target="#quote-carousel" data-slide-to="2"></li>
+			<li data-target="#quote-carousel" data-slide-to="3"></li>
+		</ol>
+
+		<!-- Wrapper for slides -->
+		<div class="carousel-inner">
+			<div class="item active">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>E</b></h4>
+							<p>Todas as palavras ligadas pelo operador "e" devem estar necessariamente contidas no documento. O "e" é o operador padrão da ferramenta de pesquisa. Portanto, quando a expressão de busca é composta por mais de uma palavra, pressupõe-se que todas elas devam aparecer no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>militar furto caserna</span> é o mesmo que <span>militar e furto e caserna</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham as palavras <span>militar</span>, <span>furto</span> e <span>caserna</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>OU</b></h4>
+							<p>O operador "ou" é empregado para pesquisar palavras alternativas. Ao utilizá-lo, o usuário indica que basta que uma das palavras esteja presente no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto ou recurso</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> ou que possuam a palavra <span>recurso</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>NÃO</b></h4>
+							<p>O operador "não" tem a função de descartar documentos que contenham determinadas palavras. Para tanto, deve-se posicionar o operador imediatamente antes da palavra que se pretende excluir.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto não infração</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> e não contenham a palavra <span>infração</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "</b></h4>
+							<p>Utilizado para agrupar dois ou mais termos a serem pesquisados ou para transformar um operador em palavra a ser pesquisada.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>"direito constitucional"</span></p>
+							<p><b>Retorno do Exemplo 1:<br/></b>Todos os documentos que contenham o termo <span>direito constitucional</span></p>
+							<p><b>Exemplo 2:<br/></b> <span>acordo "não" previsto</span></p>
+							<p><b>Retorno do Exemplo 2:<br/></b>Todos os documentos que contenham as palavras <span>acordo</span>, <span>não</span> e <span>previsto</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "~n</b></h4>
+							<p>Os operadores til e aspas duplas, quando combinados, permitem ao usuário especificar a distância máxima admitida entre as palavras buscadas. Para tanto, é preciso colocar as palavras (duas ou mais) entre aspas duplas, acrescentar o til logo após e, por fim, indicar imediatamente o número máximo de palavras interpostas.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>"detenção civil"~2</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span> e a palavra <span>civil</span> com a quantidade máxima de 2 termos entre <span>detenção</span> e <span>civil</span>. <a href="#" class="link" data-original-title="No texto DETENÇÃO PARA O CIVIL a distância é 2, no texto DETENÇÃO DO CIVIL, a distância é 1 e no texto DETENÇÃO CIVIL a distância é 1. Todos os documentos com esses textos serão retornados. Já no texto DETENÇÃO JUNTO COM O CIVIL, a distância é 3 e os documentos com esse texto não serão retornados." data-toggle="tooltip" data-placement="top">Mais detalhes...</a></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>( )</b></h4>
+							<p>Os parênteses servem para especificar a ordem de execução das operações caso o usuário utilize vários operadores distintos, de forma simultânea, em uma mesma expressão de busca.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>detenção ou (codigo NÃO penal)</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span>ou que contenham a palavra <span>código</span> e, ao mesmo tempo, não contenham a palavra <span>penal</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>*</b></h4>
+							<p>Substitui caracteres desconhecidos ou que não se deseja determinar. Pode ser utilizado no início, meio ou no fim da palavra.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>de*cao</span> (deserção, descrição, designação...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>constitui*</span> (constitui, constituir, constituído, constituição...)</p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>?</b></h4>
+							<p>Substitui um único caractere que deverá estar na palavra. Pode ser utilizado no início, meio e/ou no fim da palavra. Cada interrogação corresponde a um caractere.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>constituíd?</span> (constituído, constituída...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>em?argos</span> (embargos...)</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Left and right controls -->
+		<a class="left carousel-control" href="#quote-carousel" data-slide="prev">
+			<span class="glyphicon glyphicon-chevron-left"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control" href="#quote-carousel" data-slide="next">
+			<span class="glyphicon glyphicon-chevron-right"></span>
+			<span class="sr-only">Next</span>
+		</a>
+    </div>
+</div>
+<div class="container" style="background-color: #fff; margin-bottom: -2px; color: #444; background-color: #fff; border-radius: 6px 6px 0 0;">
+    <!-- Escolher Filtros -->
+        <nav class="container" style="padding-top: 1rem;">
+        <div class="container-fluid">
+        <!-- Menu para dispositivos móveis -->
+        <div class="navbar-header" role="menu" >
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+
+        <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav navbar-left">
+            <li>
+                <span class="dropdown-filter"><strong>Filtrar por:</strong></span>
+            </li>
+        </ul>
+                                    <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classe <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_classe=RECURSO DE OFÍCIO" role="menuitem">
+                                        RECURSO DE OFÍCIO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Assunto <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=CRIMES CONTRA A PESSOA" role="menuitem">
+                                        CRIMES CONTRA A PESSOA (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=DIREITO PENAL MILITAR" role="menuitem">
+                                        DIREITO PENAL MILITAR (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=EXTINÇÃO DA PUNIBILIDADE" role="menuitem">
+                                        EXTINÇÃO DA PUNIBILIDADE (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=MAUS TRATOS" role="menuitem">
+                                        MAUS TRATOS (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=PARTE GERAL" role="menuitem">
+                                        PARTE GERAL (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=PERICLITAÇÃO DA VIDA OU DA SAÚDE" role="menuitem">
+                                        PERICLITAÇÃO DA VIDA OU DA SAÚDE (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_assunto_pesquisa=REABILITAÇÃO" role="menuitem">
+                                        REABILITAÇÃO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown  dropdown-filter-active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Relator <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  class="active" >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;" role="menuitem">
+                                        CLAUDIO PORTUGAL DE VIVEIROS (01) <span class='glyphicon glyphicon-remove'></span>
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                                                        <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Autuação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_data_autuacao=d(2021/08)" role="menuitem">
+                                        Agosto/2021 (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Publicação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_data_publicacao=d(2021/10)" role="menuitem">
+                                        Outubro/2021 (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Julgamento <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;fq_data_decisao__1=d(2021/09)" role="menuitem">
+                                        Setembro/2021 (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                            </div>
+        </div>
+    </nav>
+
+    <!-- Filtros Ativos e Paginação -->
+                <div class="container">
+        <div class="row">
+            <p class="filter-list">
+                <span class="title">Filtros Aplicados:</span>
+                                    <span class="pill">Relator = CLAUDIO PORTUGAL DE VIVEIROS<a
+                                href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;"><span class='glyphicon glyphicon-remove'></span></a></span>
+                            </p>
+        </div>
+    </div>
+        <div class="container-fluid">
+    <div class="row message">
+        <!-- Quantidade de documentos -->
+        <div class="col-xs-4"><b>1</b> - <b>1</b> de <b>1</b></u> <span class="hidden-xs">documentos</span></div>
+                <div class="col-xs-4 text-center"></div>
+                <!-- Documentos por página e ordenação -->
+        <div class="col-xs-4 text-right">
+                            <select id="docs-page"><option value="25" >25 por página</option><option value="50" >50 por página</option><option value="100"  selected>100 por página</option></select>
+                <select id="order-page"><option value='1'  selected>julgamento mais recente</option><option value='2' >julgamento mais antigo</option></select>
+                    </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row pagination-block">
+        <!-- Paginas -->
+        <div class="col-xs-12 text-center">
+                <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;start=0&amp;rows=100"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+        </div>
+    </div>
+</div>    
+</div>    </div>
+</div>
+
+<!-- Resultado da pesquisa - Jurisprudência -->
+<div class="container container-fluid">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="btn-group">
+                                <button class="btn btn-default" title="Exibir Inteiro Teor"
+                        onclick="tracker.functions.openInteiroTeor('https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao&uuid=a793107bff03b35d2627c9140ed6aaf6b0bcff2299016410833318fcb7b98d81')">
+                    Inteiro Teor
+                </button>
+                                                <button class="btn btn-default" data-toggle="modal" data-target="#modal_data"
+                        title="Exibir Referência Legislativa" data-processo="7000588-60.2021.7.00.0000"
+                        data-uuid="21f48fbbe335b324b7829992e41021d9" data-type="referencia_legislativa" data-title="Referência Legislativa"
+                        onclick="tracker.functions.carregarModal(this, 'jurisprudencia')">
+                    Referência Legislativa
+                </button>
+                                                <button class="btn btn-default" data-toggle="modal" data-target="#modal_data" title="Exibir Notas"
+                        data-processo="7000588-60.2021.7.00.0000" data-uuid="21f48fbbe335b324b7829992e41021d9"
+                        data-type="notas" data-title="Notas"
+                        onclick="tracker.functions.carregarModal(this, 'jurisprudencia')">
+                    Notas
+                </button>
+                                                <button class="btn btn-default" data-toggle="modal" data-target="#modal_data" title="Exibir Indexação"
+                        data-processo="7000588-60.2021.7.00.0000" data-uuid="21f48fbbe335b324b7829992e41021d9"
+                        data-type="thesaurus" data-title="Indexação"
+                        onclick="tracker.functions.carregarModal(this, 'jurisprudencia')">
+                    Indexação
+                </button>
+                            </div>
+                        <span class="label-processo hidden-xs">
+		  		<a href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_jurisprudencia&amp;num_processo=70005886020217000000"
+                   title="Abrir o processo eletrônico '7000588-60.2021.7.00.0000'" target="_blank">
+		  		7000588-60.2021.7.00.0000
+		  		</a>
+	  		</span>
+                    </div>
+
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+                <span data-id="id" class="hidden">21f48fbbe335b324b7829992e41021d9</span>
+                <span data-id="numero_processo" class="hidden">7000588-60.2021.7.00.0000</span>
+                <span data-id="classe" class="hidden">RECURSO DE OFÍCIO</span>
+
+                                <div class="row-descrition text-center title">RECURSO DE OFÍCIO N.º 7000588-60.2021.7.00.0000</div>
+                
+                                <dt>Relator(a):</dt>
+                <dd data-id="ministro_relator">CLAUDIO PORTUGAL DE VIVEIROS</dd>
+                
+                
+                
+                                <dt>Assuntos:</dt>
+                                <dd style="text-align: justify;"> 1) DIREITO PENAL MILITAR,CRIMES CONTRA A PESSOA,PERICLITAÇÃO DA VIDA OU DA SAÚDE,MAUS TRATOS.  2) DIREITO PENAL MILITAR,PARTE GERAL ,EXTINÇÃO DA PUNIBILIDADE,REABILITAÇÃO. </dd>
+                
+                <div class="row">
+                                        <div class="col-sm-4">
+                        <dt>Data de Autuação:</dt>
+                        <dd data-id="data_autuacao">23/08/2021</dd>
+                    </div>
+                    
+                                        <div class="col-sm-4">
+                        <dt>Data de Julgamento:</dt>
+                        <dd data-id="data_julgamento">23/09/2021</dd>
+                    </div>
+                    
+                                        <div class="col-sm-4">
+                        <dt>Data de Publicação:</dt>
+                        <dd data-id="data_publicacao">08/10/2021</dd>
+                    </div>
+                                    </div>
+            </dl>
+
+                        <blockquote data-id="ementa">
+EMENTA: RECURSO DE OFÍCIO. REABILITAÇÃO. CRIME DE MAUS TRATOS QUALIFICADO (ART. 213, 
+
+§ 2º, CPM). REPARAÇÃO CIVIL IGNORADA E, PORTANTO, ATINGIDA PELA PRESCRIÇÃO. 
+
+CUMPRIMENTO DOS REQUISITOS DO ART. 652 DO CPPM. REJEIÇÃO DO RECURSO. UNÂNIME.  
+
+Recurso de ofício em face da Decisão que concedeu a Reabilitação a Oficial sentenciado pelo 
+
+crime de maus tratos qualificado pelo resultado morte. Punibilidade extinta em face do total 
+
+cumprimento da pena aplicada.  
+
+Juntada de suficiente documentação comprobatória dos requisitos dispostos nas alíneas 'a', 'b' e 
+
+'c' do art. 652 da Lei Adjetiva Castrense, como Certidões Negativas dos Juízos e Atestados de bom 
+
+comportamento público e privado nos locais de residência, tudo do último quinquênio.  
+
+No pertinente à alínea 'd' do dispositivo da Lei Processual, o Reabilitando há de promover o 
+
+ressarcimento do dano causado pelo crime. Mitigação do ônus de demonstrar a reparação civil 
+
+nas hipóteses em que não há notícia de que tenha sido manejada ação de reparação civil ou 
+
+quando transcorreu o prazo prescricional de 3 (três) anos a partir da data da condenação, nos 
+
+termos do art. 206, § 3º, inciso V, do Código Civil. Hipótese dos autos. Precedentes desta Corte 
+
+Castrense.  
+
+Atendidas as exigências do art. 652 do CPPM, pode ser reconhecido, no presente processo, o 
+
+direito à reabilitação.  
+
+Negado provimento ao recurso, mantendo íntegra a Decisão que concedeu reabilitação ao Oficial. 
+
+Unânime. 
+
+
+</blockquote>
+            <div style="text-align: right;">
+                <span class="glyphicon glyphicon-copy copy" data-toggle="tooltip" title="Ementa sem Formatação"></span>
+            </div>
+            
+            
+        </div>
+        <hr/>
+    </div>
+    </div>
+
+    <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=&amp;search_filter_option=jurisprudencia&amp;search_filter=busca_avancada&amp;q=(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])&amp;start=0&amp;rows=100&amp;fq_ministro_relator=CLAUDIO PORTUGAL DE VIVEIROS&amp;&amp;start=0&amp;rows=100"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal_data" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modal_label"><strong>Titulo</strong></h4>
+      </div>
+      <div class="modal-body" id="modal_content">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid">
+    <div class="row footer">
+        <legend></legend>
+        <p><img src="images/jmu-sistemas-rodape.png" alt="JMU"> Consulta Judicial Unificada<span class="pull-right"> <a href="https://www.stm.jus.br/" class="link">stm.jus.br</a></span></p>
+    </div>
+</div>
+
+</body>
+
+</html>

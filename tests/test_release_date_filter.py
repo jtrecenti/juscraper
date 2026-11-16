@@ -48,7 +48,7 @@ TRIBUNAIS = [
     "tjac", "tjal", "tjam", "tjap", "tjba", "tjce", "tjdft", "tjes",
     "tjgo", "tjmg", "tjms", "tjmt", "tjpa", "tjpb", "tjpe", "tjpi",
     "tjpr", "tjrj", "tjrn", "tjro", "tjrr", "tjrs", "tjsc", "tjsp",
-    "tjto",
+    "tjto", "stm",
 ]
 
 _TJGO_TURNSTILE = (

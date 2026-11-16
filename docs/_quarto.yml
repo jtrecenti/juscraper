@@ -104,6 +104,8 @@ website:
                   text: "TRF6"
                 - href: notebooks/tse.ipynb
                   text: "TSE"
+                - href: notebooks/stm.ipynb
+                  text: "STM"
             - section: "Agregadores"
               contents:
                 - href: notebooks/datajud.ipynb
