@@ -167,7 +167,7 @@ def test_pesquisa_que_nao_e_texto_levanta_validation_error():
 
 
 def test_secao_fora_da_capa_nao_vaza_para_as_colunas():
-    """"Feitos Relacionados" vem depois das partes no portal; se viesse antes, não pode virar ``situacao``."""
+    """A seção "Feitos Relacionados" vem depois das partes; se viesse antes, não pode virar ``situacao``."""
     html = load_sample("stm", "processos/processos_fisicos.html")
     assert html.count('<div class="row-title">Partes</div>') == 3
     sem_partes = html.replace('<div class="row-title">Partes</div>', '<div class="row-title">Feitos Relacionados</div>')

@@ -289,9 +289,10 @@ class STMScraper(HTTPScraper):
         """
         # Sem o pipeline das buscas de jurisprudência: ele consome os aliases
         # de ``pesquisa`` e de datas, que este método não tem.
+        paginas_pedidas = normalize_paginas(paginas)
         try:
             inp = InputListarProcessosSTM(
-                pesquisa="" if pesquisa is None else pesquisa, paginas=normalize_paginas(paginas), **kwargs
+                pesquisa="" if pesquisa is None else pesquisa, paginas=paginas_pedidas, **kwargs
             )
         except ValidationError as erro:
             raise_on_extra_kwargs(erro, "STMScraper.listar_processos_download()", schema_cls=InputListarProcessosSTM)
@@ -304,7 +305,7 @@ class STMScraper(HTTPScraper):
                 f"({', '.join(filtros)})."
             )
         return processos_download_manager(
-            termo, inp.paginas, request_fn=self._request_with_retry, sleep_time=self.sleep_time, **filtros
+            termo, paginas_pedidas, request_fn=self._request_with_retry, sleep_time=self.sleep_time, **filtros
         )
 
     def listar_processos_parse(self, resultados_brutos: list[str]) -> pd.DataFrame:
