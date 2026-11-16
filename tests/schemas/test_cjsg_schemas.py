@@ -153,7 +153,7 @@ class TestInputCJPGEsaj:
 
 
 class TestAutoChunkMixin:
-    """`auto_chunk` so deve estar declarado em schemas eSAJ com teto (#130).
+    """`auto_chunk` so deve estar declarado em schemas de busca com teto (#130).
 
     Tribunais sem teto **nao devem herdar** o mixin — ``extra='forbid'`` da
     classe concreta rejeita o flag e o usuario entende que a busca nao tem
@@ -175,6 +175,16 @@ class TestAutoChunkMixin:
     def test_tjsp_cjpg_accepts_auto_chunk(self):
         model = InputCJPGEsaj(auto_chunk=False)
         assert model.auto_chunk is False
+
+    @pytest.mark.parametrize("tribunal", ["tjba", "tjro"])
+    def test_portal_com_teto_de_resultados_aceita_auto_chunk(self, tribunal):
+        """TJBA e TJRO cortam a busca em 10.000 resultados e a dividem por data."""
+        import importlib
+
+        schemas = importlib.import_module(f"juscraper.courts.{tribunal}.schemas")
+        input_cls = getattr(schemas, f"InputCJSG{tribunal.upper()}")
+        assert input_cls(pesquisa="x").auto_chunk is True
+        assert input_cls(pesquisa="x", auto_chunk=False).auto_chunk is False
 
     def test_non_esaj_schema_rejects_auto_chunk(self):
         """Schemas sem teto rejeitam o flag (1C-a/1C-b sem o mixin)."""
