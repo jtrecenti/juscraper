@@ -20,15 +20,15 @@ def _scraper(agregador):
     return scraper
 
 
-def _add_lista(agregador, corpo, content_type):
+def _add_lista(agregador, corpo, content_type, *, status=200):
     if agregador == "jusbr":
         responses.add(
-            responses.GET, JUSBR_URL, body=corpo, status=200, content_type=content_type,
+            responses.GET, JUSBR_URL, body=corpo, status=status, content_type=content_type,
             match=[query_param_matcher({"numeroProcesso": CNJ})],
         )
     else:
         responses.add(
-            responses.GET, f"{PDPJ_BASE_URL}/processos/{CNJ}", body=corpo, status=200,
+            responses.GET, f"{PDPJ_BASE_URL}/processos/{CNJ}", body=corpo, status=status,
             content_type=content_type,
         )
 
@@ -64,12 +64,14 @@ def test_pdpj_existe_escalar_preserva_excecao_publica_em_200_vazio():
     assert len(responses.calls) == 1
 
 
-@pytest.mark.parametrize(("agregador", "corpo"), [("jusbr", '{"content": []}'), ("pdpj", "[]")])
+@pytest.mark.parametrize(
+    ("agregador", "status", "corpo"), [("jusbr", 404, ""), ("pdpj", 200, "[]")],
+)
 @responses.activate
-def test_lista_json_vazia_legitima_nao_vira_falha(agregador, corpo):
-    """JSON com a forma de lista vazia do portal é diferente de corpo vazio."""
+def test_ausencia_legitima_nao_vira_falha(agregador, status, corpo):
+    """JusBR usa 404; PDPJ usa lista JSON vazia em 200 para ausência."""
     scraper = _scraper(agregador)
-    _add_lista(agregador, corpo, "application/json")
+    _add_lista(agregador, corpo, "application/json", status=status)
 
     tabela = scraper.cpopg(CNJ)
 
