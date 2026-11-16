@@ -56,6 +56,7 @@ dados.head()
 |----------|-----------------------------|
 | STF      | contar_decisoes, listar_decisoes |
 | TSE      | baixar_inteiro_teor |
+| STM      | cjsg |
 | TJAC     | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL     | cjsg |
 | TJAM     | cjsg |
@@ -103,6 +104,8 @@ dados.head()
 > ⚠️ **TJGO — `cjsg` sem resultados:** desde 12/11/2026 (Projudi 3.194.1) a busca de jurisprudência do TJGO valida no servidor o token [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), que o raspador não envia. Sem ele, o portal devolve a busca vazia, sem mensagem de erro, e `cjsg`/`cjsg_download` emitem `UserWarning` explicando o bloqueio. O portal responde do mesmo jeito a uma busca que de fato não tem resultados, por isso o aviso sai em toda busca vazia.
 
 > ⚠️ **TSE — sem busca de jurisprudência:** a pesquisa do [portal de jurisprudência do TSE](https://jurisprudencia.tse.jus.br/) exige um token de CAPTCHA validado no servidor, que o raspador, por fazer requisições HTTP puras (sem navegador), não tem como gerar; sem ele, a API responde `"Falha na verificação antirrobô."` (sonda de 16/11/2026). O raspador cobre o que o portal entrega sem CAPTCHA: `baixar_inteiro_teor(codigo_decisao)`, que baixa o PDF de uma decisão pelo código dela, e os catálogos do formulário (`listar_classes`, `listar_relatores`, `listar_eleicoes` e `listar_normas`). `cjsg` levanta `NotImplementedError` com essa explicação. Ver [issue #378](https://github.com/jtrecenti/juscraper/issues/378).
+
+> ⚠️ **STM — bloqueio por IP:** o [portal de jurisprudência do STM](https://jurisprudencia.stm.jus.br/) fica atrás de um WAF que recusou todos os pedidos de um IP de datacenter fora do Brasil, com uma página "Request Rejected" em HTTP 200 (sonda de 16/11/2026). Nesse caso `cjsg` levanta `BotChallengeBlockedError`; tente de outra conexão, como uma residencial no Brasil.
 
 #### Autenticação no JusBR e no PDPJ
 

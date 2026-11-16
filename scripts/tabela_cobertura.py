@@ -150,8 +150,8 @@ def cobertura() -> dict[str, dict[str, list[str]]]:
 
 
 def _chave_tribunal(sigla: str) -> tuple[int, str]:
-    # STF e TSE, depois os TJs e por fim os TRFs; sigla de outro ramo vai para o fim.
-    prefixos = ("stf", "tse", "tj", "trf")
+    # STF, TSE e STM, depois os TJs e por fim os TRFs; sigla de outro ramo vai para o fim.
+    prefixos = ("stf", "tse", "stm", "tj", "trf")
     for posicao, prefixo in enumerate(prefixos):
         if sigla.startswith(prefixo):
             return (posicao, sigla)
