@@ -627,7 +627,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(listagem.shape)</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>listagem.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-8" class="cell">
+<div id="cell-8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T21:24:34.078397Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T21:24:34.078228Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T21:25:26.109602Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T21:25:26.109119Z&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>listagem <span class="op">=</span> datajud.listar_processos(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    assunto<span class="op">=</span>[<span class="dv">12503</span>],</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    mostrar_movs<span class="op">=</span><span class="va">False</span>,</span>
@@ -637,6 +637,83 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>listagem.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">numeroProcesso</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">sistema</th>
+<th data-quarto-table-cell-role="th">formato</th>
+<th data-quarto-table-cell-role="th">tribunal</th>
+<th data-quarto-table-cell-role="th">dataHoraUltimaAtualizacao</th>
+<th data-quarto-table-cell-role="th">grau</th>
+<th data-quarto-table-cell-role="th">@timestamp</th>
+<th data-quarto-table-cell-role="th">dataAjuizamento</th>
+<th data-quarto-table-cell-role="th">id</th>
+<th data-quarto-table-cell-role="th">nivelSigilo</th>
+<th data-quarto-table-cell-role="th">orgaoJulgador</th>
+<th data-quarto-table-cell-role="th">assuntos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>19624280720218130000</td>
+<td>{'codigo': 1032, 'nome': 'Recurso Especial'}</td>
+<td>{'codigo': -1, 'nome': 'Inválido'}</td>
+<td>{'codigo': 1, 'nome': 'Eletrônico'}</td>
+<td>TJMG</td>
+<td>2023-07-30T01:23:45.279000Z</td>
+<td>G2</td>
+<td>2023-07-30T01:23:45.279000Z</td>
+<td>20220113111711</td>
+<td>TJMG_1032_G2_45131_19624280720218130000</td>
+<td>0</td>
+<td>{'codigoMunicipioIBGE': 3123908, 'codigo': 451...</td>
+<td>[{'codigo': 12501, 'nome': 'Cirurgia'}, {'codi...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>47248195420208130000</td>
+<td>{'codigo': 1032, 'nome': 'Recurso Especial'}</td>
+<td>{'codigo': -1, 'nome': 'Inválido'}</td>
+<td>{'codigo': 1, 'nome': 'Eletrônico'}</td>
+<td>TJMG</td>
+<td>2023-07-30T01:14:44.843000Z</td>
+<td>G2</td>
+<td>2023-07-30T01:14:44.843000Z</td>
+<td>20210212141120</td>
+<td>TJMG_1032_G2_45131_47248195420208130000</td>
+<td>0</td>
+<td>{'codigoMunicipioIBGE': 3106200, 'codigo': 451...</td>
+<td>[{'codigo': 12503, 'nome': 'Urgência'}, {'codi...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>50006070320228130362</td>
+<td>{'codigo': 1032, 'nome': 'Recurso Especial'}</td>
+<td>{'codigo': -1, 'nome': 'Inválido'}</td>
+<td>{'codigo': 1, 'nome': 'Eletrônico'}</td>
+<td>TJMG</td>
+<td>2024-04-23T07:23:31.135000Z</td>
+<td>G2</td>
+<td>2024-04-23T07:23:31.135000Z</td>
+<td>20231122110334</td>
+<td>TJMG_1032_G2_45131_50006070320228130362</td>
+<td>0</td>
+<td>{'codigoMunicipioIBGE': 3136207, 'codigo': 451...</td>
+<td>[{'codigo': 12503, 'nome': 'Urgência'}]</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 
 
