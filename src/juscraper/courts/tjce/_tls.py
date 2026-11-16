@@ -2,7 +2,7 @@
 from typing import Any
 
 from requests.adapters import HTTPAdapter
-from urllib3 import ProxyManager
+from urllib3 import PoolManager
 from urllib3.util.ssl_ import create_urllib3_context
 
 
@@ -24,10 +24,10 @@ class _TJCETLSAdapter(HTTPAdapter):
         kwargs["ssl_context"] = _contexto_ssl()
         return super().init_poolmanager(*args, **kwargs)
 
-    def proxy_manager_for(self, proxy: str, **proxy_kwargs: Any) -> ProxyManager:
+    def proxy_manager_for(self, proxy: str, **proxy_kwargs: Any) -> PoolManager:
         # O requests chama este método a cada requisição e guarda o manager por proxy em
         # self.proxy_manager; só o primeiro uso de cada proxy precisa montar o contexto.
         if proxy not in self.proxy_manager:
             proxy_kwargs.setdefault("ssl_context", _contexto_ssl())
-        manager: ProxyManager = super().proxy_manager_for(proxy, **proxy_kwargs)
+        manager: PoolManager = super().proxy_manager_for(proxy, **proxy_kwargs)
         return manager
