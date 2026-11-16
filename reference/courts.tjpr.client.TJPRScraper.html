@@ -319,6 +319,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>ValueError</code></td>
 <td>Com <code>paginas=None</code>, quando a primeira página não permite fixar o total de páginas; ver <a href="../reference/courts.tjpr.client.TJPRScraper.html#juscraper.courts.tjpr.client.TJPRScraper.cjsg_download"><code>cjsg_download</code></a>.</td>
 </tr>
+<tr class="even">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Uma página falhou (prazo estourado, erro HTTP depois das tentativas) quando outras já tinham sido baixadas. A busca para ali: <code>resultado</code> traz as páginas anteriores, já lidas, e a mensagem diz as que faltam, para pedir de novo com <code>paginas=</code>. Nesse parcial as ementas longas ficam truncadas em “Leia mais..”, porque completá-las custaria uma requisição por linha a um portal que acabou de falhar. Se a falha é na primeira requisição, sobe a exceção original.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -443,6 +448,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><code>ValueError</code></td>
 <td>Com <code>paginas=None</code>, quando a primeira página não permite fixar o total de páginas; os casos estão em <code>juscraper.courts.tjpr.download.extract_total_pages</code>. O scraper levanta depois da primeira página, em vez de estimar.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Uma página falhou depois de outras já baixadas, como em <a href="../reference/courts.tjpr.client.TJPRScraper.html#juscraper.courts.tjpr.client.TJPRScraper.cjsg"><code>cjsg</code></a>; <code>resultado</code> traz as baixadas já lidas, em DataFrame, sem as linhas da Corte IDH e com as ementas longas truncadas.</td>
 </tr>
 </tbody>
 </table>
