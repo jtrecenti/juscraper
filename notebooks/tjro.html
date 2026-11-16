@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -422,6 +422,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
   <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
   <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
+  <li><a href="#repeated-rows" id="toc-repeated-rows" class="nav-link" data-scroll-target="#repeated-rows">Repeated rows</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjro.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -584,6 +585,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+</section>
+<section id="repeated-rows" class="level2">
+<h2 class="anchored" data-anchor-id="repeated-rows">Repeated rows</h2>
+<p>The portal sometimes indexes the same decision twice, as two documents with different ids (<code>_id</code> and <code>id_processo_documento</code> in the raw response) and identical content. Both come back in the search, next to each other, so <code>cjsg</code> can return rows that are equal in every column; when the pair falls on a page boundary, the repeated row shows up on two consecutive pages. Measured on 2026-11-16: 4 such pairs in the first 400 results of <code>'dano moral'</code>, with no repeated <code>_id</code>. The scraper returns what the portal returns; drop the repeated rows with <code>df.drop_duplicates()</code> if you need one row per decision.</p>
 
 
 </section>
