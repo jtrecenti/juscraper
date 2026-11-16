@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 # (cenario, numero consultado, {numero TJMG do recurso: nome do sample de partes})
 CASOS: list[tuple[str, str, dict[str, str]]] = [
     ("single", "0000359-79.2020.8.13.0205", {"10000264083767001": "partes_single"}),
+    # O mesmo recurso do ``single``, consultado pelo numero TJMG em vez do CNJ.
+    ("numero_tjmg", "1.0000.26.408376-7/001", {"10000264083767001": "partes_numero_tjmg"}),
     (
         "multi",
         "5000344-57.2025.8.13.0461",

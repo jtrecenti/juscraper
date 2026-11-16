@@ -7,6 +7,9 @@ Samples capturados de ``www4.tjmg.jus.br/juridico/sf`` em 26/09/2026:
 * ``resultado_segredo`` — todos os recursos em segredo de justica.
 * ``resultado_baixado`` — processo fisico antigo (2010), sem "NUMERO TJMG".
 * ``resultado_not_found`` — "Nenhum processo encontrado".
+* ``resultado_numero_tjmg`` e ``partes_numero_tjmg`` — o recurso do ``single``
+  consultado pelo numero TJMG (``listaProcessos=10000264083767001``),
+  capturados em 16/11/2026, ja baixado e com os nomes anonimizados.
 * ``partes_*`` — pagina "Todas as Partes/Advogados" de cada recurso
   (``partes_baixado`` e o recurso ``/002``; ``partes_baixado_1``, o agravo
   ``/001``, capturado em 14/11/2026 pelo script abaixo).
@@ -117,12 +120,22 @@ def test_cposg_multi_recursos_one_row_each(scraper):
 
 @responses.activate
 def test_cposg_accepts_numero_tjmg(scraper):
-    _add(RESULTADO_URL, "10000264083767001", "resultado_single")
-    _add(PARTES_URL, "10000264083767001", "partes_single")
+    _add(RESULTADO_URL, "10000264083767001", "resultado_numero_tjmg")
+    _add(PARTES_URL, "10000264083767001", "partes_numero_tjmg")
 
     df = scraper.cposg("1.0000.26.408376-7/001")
 
-    assert df.iloc[0]["processo"] == "0000359-79.2020.8.13.0205"
+    assert len(df) == 1
+    row = df.iloc[0]
+    assert row["id_cnj"] == "10000264083767001"
+    assert row["processo"] == "0000359-79.2020.8.13.0205"
+    assert row["processo_interno"] == "1.0000.26.408376-7/001"
+    assert row["situacao"] == "BAIXADO"
+    assert [(p["tipo"], p["nome"]) for p in row["partes"]] == [
+        ("Apelante", "L.S.D."),
+        ("Apelado", "M.P.M."),
+        ("Vítima", "M.F.S."),
+    ]
 
 
 @responses.activate
