@@ -10,7 +10,9 @@ HTML flow: GET ``cpopg/search.do?…`` → scraper extracts one
 the process details directly when the CNJ is unique).
 """
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
 
 import numpy as np
 import pandas as pd
@@ -20,6 +22,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
+from juscraper.courts.tjsp.cpopg_parse import cpopg_parse_manager
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
@@ -700,3 +703,32 @@ def test_cpopg_com_diretorio_apaga_raiz_temporaria_criada_na_validacao(tmp_path,
         assert not Path(scraper.download_path).exists()
     else:
         assert scraper.__dict__["_download_path"] is None
+
+
+def test_duas_chamadas_compostas_limpam_raiz_apos_a_ultima(mocker):
+    """Se a segunda termina por último, ela remove a raiz criada pela primeira."""
+    scraper = jus.scraper("tjsp")
+    primeira_pronta, segunda_pronta = Event(), Event()
+    liberar_primeira, liberar_segunda = Event(), Event()
+    chamadas = iter([(primeira_pronta, liberar_primeira), (segunda_pronta, liberar_segunda)])
+
+    def parse_com_pausa(*args, **kwargs):
+        pronta, liberar = next(chamadas)
+        pronta.set()
+        assert liberar.wait(5)
+        return cpopg_parse_manager(*args, **kwargs)
+
+    mocker.patch("juscraper.courts.tjsp.client.cpopg_parse_manager", side_effect=parse_com_pausa)
+    with warnings.catch_warnings(), ThreadPoolExecutor(max_workers=2) as executor:
+        warnings.simplefilter("ignore", UserWarning)
+        primeira = executor.submit(scraper.cpopg, [None])
+        assert primeira_pronta.wait(5)
+        segunda = executor.submit(scraper.cpopg, [None])
+        assert segunda_pronta.wait(5)
+        raiz = Path(scraper.download_path)
+        liberar_primeira.set()
+        primeira.result(timeout=5)
+        assert raiz.exists()
+        liberar_segunda.set()
+        segunda.result(timeout=5)
+    assert not raiz.exists()
