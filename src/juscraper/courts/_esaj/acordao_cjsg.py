@@ -21,9 +21,9 @@ from pathlib import Path
 
 import pandas as pd
 
+from ...core.lote import DownloadEmLote, baixar_em_lote
 from .acordao import COLUNA_CAMINHO_ACORDAO, EntradaInvalidaError, codigo_da_linha
 from .base import EsajSearchScraper
-from .lote import DownloadEmLote, baixar_em_lote
 from .pasta import DocumentoIndisponivelError, DocumentoNaoPdfError, conteudo_pdf, gravar_pdf
 
 logger = logging.getLogger("juscraper._esaj.acordao_cjsg")

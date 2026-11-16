@@ -4,23 +4,44 @@ O portal de jurisprudência (``jurisprudencia.tse.jus.br``) fala com dois
 serviços. O de pesquisa (``sjur-pesquisa-api``) exige um token de captcha na
 busca, mas entrega sem ele os catálogos do formulário. O de documentos
 (``sjur-servicos``) entrega o PDF do inteiro teor pelo código da decisão.
-Sondas de 16/11/2026.
+
+O portal dos TREs (``jurisprudencia-tres.tse.jus.br``) usa os mesmos serviços.
+No de pesquisa, o primeiro segmento do caminho escolhe o tribunal: ``tse``,
+``tre-<uf>`` ou ``tres`` (os 27 TREs juntos); a busca pede o mesmo captcha. O
+de documentos não tem esse segmento: o código de uma decisão de TRE baixa
+pela mesma rota. Sondas de 16/11/2026.
 """
 
 from __future__ import annotations
 
 import numbers
-from typing import Any
+from typing import Any, ClassVar
 
 import requests
 
 from juscraper.core.exceptions import _RecriaSemInit
+from juscraper.core.failures import MOTIVO_LIMITE_DE_REQUISICOES, MOTIVO_NAO_PDF
 
-PESQUISA_URL = "https://sjur-pesquisa-api.tse.jus.br/tse/sjur-pesquisa-backend/rest/public/pesquisa"
+PESQUISA_API = "https://sjur-pesquisa-api.tse.jus.br"
+PESQUISA_ROTA = "sjur-pesquisa-backend/rest/public/pesquisa"
+PESQUISA_URL = f"{PESQUISA_API}/tse/{PESQUISA_ROTA}"
 INTEIRO_TEOR_URL = "https://sjur-servicos.tse.jus.br/sjur-servicos/rest/download/pdf"
 
 CATALOGOS = ("classes", "relatorias", "eleicoes", "normas")
 """Sub-rotas de ``PESQUISA_URL`` que devolvem um catálogo do formulário."""
+
+TRIBUNAIS = (
+    "tse",
+    "tres",
+    *(
+        f"tre-{uf}"
+        for uf in (
+            "ac", "al", "am", "ap", "ba", "ce", "df", "es", "go", "ma", "mg", "ms", "mt", "pa",
+            "pb", "pe", "pi", "pr", "rj", "rn", "ro", "rr", "rs", "sc", "se", "sp", "to",
+        )
+    ),
+)
+"""Valores de ``tribunal`` nos catálogos: o TSE, cada TRE e ``tres``, os 27 TREs juntos."""
 
 # Sem o corpo ``[]`` a rota responde HTTP 500.
 CATALOGO_BODY: list[Any] = []
@@ -35,9 +56,14 @@ EXCESSO_DE_REQUISICOES = "Excesso de requisições"
 class InteiroTeorIndisponivelError(_RecriaSemInit):
     """O serviço respondeu, mas não entregou o PDF do inteiro teor; nada é gravado.
 
+    ``motivo`` é o valor de :data:`~juscraper.core.failures.COLUNA_MOTIVO_FALHA`
+    da linha em ``baixar_inteiros_teores``.
+
     Attributes:
         codigo_decisao: Código pedido.
     """
+
+    motivo: ClassVar[str] = MOTIVO_NAO_PDF
 
     def __init__(self, codigo_decisao: str, mensagem: str) -> None:
         """Guarda o código e prefixa a mensagem com ele."""
@@ -48,10 +74,24 @@ class InteiroTeorIndisponivelError(_RecriaSemInit):
 class LimiteDeRequisicoesError(InteiroTeorIndisponivelError):
     """O serviço recusou o pedido com "Excesso de requisições"; basta esperar e pedir de novo."""
 
+    motivo = MOTIVO_LIMITE_DE_REQUISICOES
 
-def catalogo_url(catalogo: str) -> str:
-    """URL do ``catalogo`` (um de :data:`CATALOGOS`)."""
-    return f"{PESQUISA_URL}/{catalogo}"
+
+def normalizar_tribunal(tribunal: object) -> str:
+    """Devolve ``tribunal`` em minúsculas; recusa o que não está em :data:`TRIBUNAIS`.
+
+    Raises:
+        ValueError: Tribunal desconhecido, antes de qualquer pedido.
+    """
+    sigla = tribunal.strip().lower() if isinstance(tribunal, str) else tribunal
+    if sigla not in TRIBUNAIS:
+        raise ValueError(f"tribunal deve ser 'tse', 'tres' ou 'tre-<uf>' (como 'tre-sp'), recebido {tribunal!r}.")
+    return str(sigla)
+
+
+def catalogo_url(catalogo: str, tribunal: str = "tse") -> str:
+    """URL do ``catalogo`` (um de :data:`CATALOGOS`) de ``tribunal`` (um de :data:`TRIBUNAIS`)."""
+    return f"{PESQUISA_API}/{tribunal}/{PESQUISA_ROTA}/{catalogo}"
 
 
 def inteiro_teor_url(codigo_decisao: str) -> str:

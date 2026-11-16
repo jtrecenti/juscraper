@@ -2,16 +2,25 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
+from juscraper.core.intervalo import IntervaloEntrePedidos
+from juscraper.courts.tse.client import TSEScraper
 from juscraper.courts.tse.download import INTEIRO_TEOR_URL, InteiroTeorIndisponivelError, LimiteDeRequisicoesError
 from tests._helpers import load_sample_bytes
 
 PDF_PURO = load_sample_bytes("tse", "inteiro_teor/pdf_puro.bin")
 ENVELOPE = load_sample_bytes("tse", "inteiro_teor/envelope_multipart.bin")
 TEXTO = "text/plain;charset=UTF-8"
+
+
+@pytest.fixture(autouse=True)
+def _intervalo_novo(monkeypatch):
+    """O intervalo de inteiro teor é da classe: sem isto, um teste esperaria pelo pedido do anterior."""
+    monkeypatch.setattr(TSEScraper, "_intervalo_inteiro_teor", IntervaloEntrePedidos())
 
 
 def _registrar(codigo: str, corpo: bytes, content_type: str = "application/pdf") -> None:
@@ -124,8 +133,8 @@ def test_codigo_invalido_e_recusado_antes_do_pedido(codigo, tmp_path):
 def test_pedidos_seguidos_guardam_sleep_time(mocker, tmp_path):
     _registrar("2972172", PDF_PURO)
     _registrar("3522031", ENVELOPE)
-    relogio = mocker.patch("juscraper.courts.tse.client.time.monotonic", side_effect=[100.0, 103.0, 110.0])
-    espera = mocker.patch("juscraper.courts.tse.client.time.sleep")
+    relogio = mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[100.0, 103.0, 110.0])
+    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
     tse = jus.scraper("tse")
 
     tse.baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
@@ -141,8 +150,8 @@ def test_pedidos_seguidos_guardam_sleep_time(mocker, tmp_path):
 def test_pedido_que_falha_tambem_conta_para_o_intervalo(mocker, tmp_path):
     _registrar("1", load_sample_bytes("tse", "inteiro_teor/codigo_inexistente.txt"), TEXTO)
     _registrar("2972172", PDF_PURO)
-    mocker.patch("juscraper.courts.tse.client.time.monotonic", side_effect=[50.0, 51.0, 60.0])
-    espera = mocker.patch("juscraper.courts.tse.client.time.sleep")
+    mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[50.0, 51.0, 60.0])
+    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
     tse = jus.scraper("tse", sleep_time=4)
 
     with pytest.raises(InteiroTeorIndisponivelError):
@@ -150,6 +159,100 @@ def test_pedido_que_falha_tambem_conta_para_o_intervalo(mocker, tmp_path):
     tse.baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
 
     espera.assert_called_once_with(3.0)
+
+
+@responses.activate
+def test_instancias_diferentes_dividem_o_intervalo(mocker, tmp_path):
+    # O serviço não distingue as instâncias: a segunda espera pelo pedido da primeira.
+    _registrar("2972172", PDF_PURO)
+    _registrar("3522031", ENVELOPE)
+    mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[100.0, 103.0, 110.0])
+    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
+
+    jus.scraper("tse").baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
+    jus.scraper("tse", sleep_time=5).baixar_inteiro_teor(3522031, diretorio=str(tmp_path))
+
+    # Vale o ``sleep_time`` da instância que faz o pedido: faltam 2 dos 5 s.
+    espera.assert_called_once_with(2.0)
+
+
+@pytest.fixture
+def sem_espera(mocker):
+    return mocker.patch("juscraper.core.intervalo.time.sleep")
+
+
+@responses.activate
+@pytest.mark.usefixtures("sem_espera")
+def test_lote_devolve_uma_linha_por_codigo_com_o_motivo_da_falha(tmp_path):
+    _registrar("2972172", PDF_PURO)
+    _registrar("1", load_sample_bytes("tse", "inteiro_teor/codigo_inexistente.txt"), TEXTO)
+    _registrar("3522031", load_sample_bytes("tse", "inteiro_teor/excesso_requisicoes.txt"), TEXTO)
+    responses.add(responses.GET, f"{INTEIRO_TEOR_URL}/7", status=404)
+    _registrar("8", ENVELOPE)
+
+    with pytest.warns(UserWarning, match=r"3 download\(s\) de inteiro teor falharam.*1: nao_pdf") as avisos:
+        df = jus.scraper("tse").baixar_inteiros_teores([2972172, "1", np.int64(3522031), 7, 8], diretorio=str(tmp_path))
+
+    assert len(avisos) == 1
+    assert list(df.columns) == ["codigo_decisao", "caminho_inteiro_teor", "motivo_falha"]
+    assert df["codigo_decisao"].tolist() == ["2972172", "1", "3522031", "7", "8"]
+    assert df["motivo_falha"].tolist() == [None, "nao_pdf", "limite_de_requisicoes", "http_404", None]
+    assert df["caminho_inteiro_teor"].tolist() == [
+        str(tmp_path / "inteiro_teor" / "2972172.pdf"), None, None, None, str(tmp_path / "inteiro_teor" / "8.pdf"),
+    ]
+    assert sorted(arquivo.name for arquivo in _pdfs(tmp_path)) == ["2972172.pdf", "8.pdf"]
+
+
+@responses.activate
+def test_lote_guarda_sleep_time_entre_os_pedidos(mocker, tmp_path):
+    _registrar("2972172", PDF_PURO)
+    _registrar("3522031", ENVELOPE)
+    mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[100.0, 100.5, 111.0])
+    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
+
+    df = jus.scraper("tse").baixar_inteiros_teores(["2972172", "3522031"], diretorio=str(tmp_path))
+
+    espera.assert_called_once_with(9.5)
+    assert df["motivo_falha"].isna().all()
+
+
+@responses.activate
+def test_lote_sem_falha_nao_avisa(tmp_path, recwarn):
+    _registrar("2972172", PDF_PURO)
+
+    df = jus.scraper("tse", download_path=str(tmp_path)).baixar_inteiros_teores(pd.Series([2972172]))
+
+    assert df["caminho_inteiro_teor"].tolist() == [str(tmp_path / "inteiro_teor" / "2972172.pdf")]
+    assert [aviso for aviso in recwarn if issubclass(aviso.category, UserWarning)] == []
+
+
+@responses.activate
+def test_lote_vazio_devolve_as_colunas_sem_pedido():
+    df = jus.scraper("tse").baixar_inteiros_teores([])
+
+    assert list(df.columns) == ["codigo_decisao", "caminho_inteiro_teor", "motivo_falha"]
+    assert df.empty
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_lote_confere_todos_os_codigos_antes_do_primeiro_pedido(tmp_path):
+    _registrar("2972172", PDF_PURO)
+
+    with pytest.raises(ValueError, match="codigo_decisao"):
+        jus.scraper("tse").baixar_inteiros_teores([2972172, "abc"], diretorio=str(tmp_path))
+
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+@pytest.mark.parametrize("codigo", ["2972172", 2972172, np.int64(2972172)])
+def test_lote_recusa_um_codigo_solto(codigo):
+    # Um texto seria percorrido caractere a caractere, um pedido por dígito.
+    with pytest.raises(TypeError, match="baixar_inteiro_teor"):
+        jus.scraper("tse").baixar_inteiros_teores(codigo)
+
+    assert len(responses.calls) == 0
 
 
 def test_cjsg_e_stub_que_explica_o_captcha():

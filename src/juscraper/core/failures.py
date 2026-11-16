@@ -18,6 +18,8 @@ dela; cada scraper documenta que sinal é esse.
 ``bloqueio_anti_bot`` é o desafio ou bloqueio de um bot manager (Akamai,
 CloudFront, AWS WAF, F5) que derrubou a requisição da linha.
 ``captcha_esgotado`` é o captcha que o portal recusou em todas as tentativas.
+``limite_de_requisicoes`` é a recusa por excesso de requisições que não vem em
+status HTTP retentável.
 """
 from __future__ import annotations
 
@@ -85,6 +87,13 @@ sistematicamente: o scraper pode encerrar o lote, e as linhas seguintes saem
 com este motivo sem nova consulta.
 """
 
+MOTIVO_LIMITE_DE_REQUISICOES = "limite_de_requisicoes"
+"""O serviço recusou o pedido por excesso de requisições, em resposta que não é status retentável.
+
+Usado pelo inteiro teor do TSE, que recusa em HTTP 200 com texto. Basta
+esperar e pedir de novo só as linhas que falharam.
+"""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -98,6 +107,7 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     MOTIVO_ENTRADA_INVALIDA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
     MOTIVO_CAPTCHA_ESGOTADO,
+    MOTIVO_LIMITE_DE_REQUISICOES,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 

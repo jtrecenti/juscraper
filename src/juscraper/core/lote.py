@@ -1,4 +1,7 @@
-"""Laço comum dos downloads em lote do eSAJ (``baixar_acordaos``, ``baixar_sentencas``).
+"""Laço comum dos downloads em lote.
+
+Usado por ``baixar_acordaos`` e ``baixar_sentencas`` do eSAJ e por
+``baixar_inteiros_teores`` do TSE.
 
 Uma linha de entrada vira uma linha de saída, com o caminho do arquivo ou o
 motivo da falha. O bloqueio anti-bot vale para a sessão inteira: a primeira
@@ -16,7 +19,7 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 
-from ...core.failures import (
+from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
