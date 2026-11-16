@@ -32,6 +32,7 @@ from ._util import (
     TJSP_CHROME_HEADERS,
     build_session,
     capture_acordao_samples,
+    capture_cjsg_monocratica_sample,
     capture_cjsg_samples,
     dump,
     fetch_cjsg_pages,
@@ -82,22 +83,11 @@ def capture_cjsg() -> None:
 
 
 def capture_cjsg_monocratica() -> None:
-    """Capture the 1st cjsg page of a monocratic-decision search.
-
-    A página de decisões monocráticas traz o total no input
-    ``totalResultadoAbaRetornoFiltro-D``, e não no ``-A`` dos acórdãos.
-    """
-    _, resps = fetch_cjsg_pages(
-        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE,
-        "usucapiao extraordinario predio rural familia",
-        tipo_decisao="monocratica", body_builder=make_tjsp_cjsg_body,
+    """Capture the 1st cjsg page of a monocratic-decision search."""
+    capture_cjsg_monocratica_sample(
+        "tjsp", ESAJ_BASE, "usucapiao extraordinario predio rural familia",
+        headers=TJSP_CHROME_HEADERS, body_builder=make_tjsp_cjsg_body,
     )
-    if "totalResultadoAbaRetornoFiltro-D" not in resps[0].text:
-        # Sem o input ``-D``, o sample deixaria de cobrir a aba de monocráticas.
-        print("[tjsp] cjsg monocratica_single_page: sem o input -D; sample mantido")
-        return
-    dump(samples_dir_for("tjsp", "cjsg") / "monocratica_single_page.html", resps[0].content)
-    print("[tjsp] cjsg monocratica_single_page → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------

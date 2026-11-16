@@ -20,6 +20,7 @@ import requests
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
+from juscraper.courts._esaj.parse import cjsg_n_results
 
 ESAJ_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -335,6 +336,40 @@ def capture_cjsg_samples(
     print(f"[{tribunal}] no_results ({no_results_query!r}) → saved")
 
     print(f"[{tribunal}] ALL samples written to {dest}")
+
+
+def capture_cjsg_monocratica_sample(
+    tribunal: str,
+    base_url: str,
+    pesquisa: str,
+    *,
+    adapters: dict | None = None,
+    headers: dict | None = None,
+    body_builder=None,
+) -> None:
+    """Capture the 1st cjsg page of a monocratic-decision search.
+
+    Grava ``tests/<tribunal>/samples/cjsg/monocratica_single_page.html``. A
+    página de decisões monocráticas traz o total no input
+    ``totalResultadoAbaRetornoFiltro-D``, e não no ``-A`` dos acórdãos.
+    ``pesquisa`` precisa dar de 1 a 20 resultados (uma página); fora disso,
+    ou sem o input ``-D``, o sample atual é mantido.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(adapters=adapters, headers=headers), base_url, pesquisa,
+        tipo_decisao="monocratica", body_builder=body_builder,
+    )
+    html = resps[0].text
+    if "totalResultadoAbaRetornoFiltro-D" not in html:
+        # Sem o input ``-D``, o sample deixaria de cobrir a aba de monocráticas.
+        print(f"[{tribunal}] cjsg monocratica_single_page: sem o input -D; sample mantido")
+        return
+    n_results = cjsg_n_results(html)
+    if not 1 <= n_results <= 20:
+        print(f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}): {n_results} resultados; sample mantido")
+        return
+    dump(samples_dir_for(tribunal, "cjsg") / "monocratica_single_page.html", resps[0].content)
+    print(f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}, {n_results} resultados) → saved")
 
 
 def capture_acordao_samples(

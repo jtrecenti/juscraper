@@ -16,25 +16,25 @@ BASE = "https://www2.tjal.jus.br/cjsg"
 CJSG_MIN_COLUMNS = {"processo", "cd_acordao", "cd_foro", "ementa"}
 
 
-def _add_post(pesquisa: str) -> None:
+def _add_post(pesquisa: str, tipo_decisao: str = "acordao") -> None:
     responses.add(
         responses.POST,
         f"{BASE}/resultadoCompleta.do",
         body=load_sample_bytes("tjal", "cjsg/post_initial.html"),
         status=200,
         content_type="text/html; charset=latin-1",
-        match=[urlencoded_params_matcher(make_esaj_body(pesquisa), allow_blank=True)],
+        match=[urlencoded_params_matcher(make_esaj_body(pesquisa, tipo_decisao=tipo_decisao), allow_blank=True)],
     )
 
 
-def _add_get(pagina: int, sample_path: str) -> None:
+def _add_get(pagina: int, sample_path: str, tipo: str = "A") -> None:
     responses.add(
         responses.GET,
         f"{BASE}/trocaDePagina.do",
         body=load_sample_bytes("tjal", sample_path),
         status=200,
         content_type="text/html; charset=latin-1",
-        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": str(pagina)})],
+        match=[query_param_matcher({"tipoDeDecisao": tipo, "pagina": str(pagina)})],
     )
 
 
@@ -84,3 +84,24 @@ def test_cjsg_no_results(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_monocratica_single_page(tmp_path, mocker):
+    """Busca de monocráticas: ``D`` no POST e no GET, e o total vem do input ``-D``.
+
+    O formulário do TJAL só mostra a caixa de acórdãos, mas o eSAJ responde à
+    busca com ``tipoDecisaoSelecionados=D`` com a aba de monocráticas.
+    """
+    mocker.patch("time.sleep")
+    _add_post("usucapiao predio rural", tipo_decisao="monocratica")
+    _add_get(1, "cjsg/monocratica_single_page.html", tipo="D")
+
+    df = jus.scraper("tjal", download_path=str(tmp_path)).cjsg(
+        "usucapiao predio rural", tipo_decisao="monocratica"
+    )
+
+    assert isinstance(df, pd.DataFrame)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+    assert len(df) == 2  # totalResultadoAbaRetornoFiltro-D no sample
+    assert len(responses.calls) == 2  # POST + 1 GET: o total cabe em uma página
