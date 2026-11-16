@@ -6,9 +6,15 @@ repetitivos no resultado. As duas viravam um DataFrame vazio, sem aviso. O
 erro do banco levanta logo depois da página 1; a busca categorizada é seguida
 nas listas de cada categoria. Samples capturados ao vivo por
 ``python -m tests.fixtures.capture.tjmg``.
+
+A busca comum com resultados demais também volta sem lista, com o aviso
+"muitos resultados" (11.170 no sample; 1.905 ainda são listados). Esse é um
+limite do portal à consulta, não um erro disfarçado, e o download o checa
+à parte, com ``ValueError``.
 """
 from __future__ import annotations
 
+import re
 from urllib.parse import parse_qs, urlsplit
 
 import pandas as pd
@@ -68,6 +74,22 @@ def test_erro_ora_levanta_logo_depois_da_pagina_1(mocker, metodo):
 
     assert "DRG-10599: a coluna não está indexada" in str(exc.value)
     assert isinstance(exc.value, HTTPSemanticError)
+    assert len(_consultas_da_busca()) == 1
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.usefixtures("mock_txtcaptcha")
+@responses.activate(registry=OrderedRegistry)
+def test_muitos_resultados_levanta_value_error_logo_depois_da_pagina_1(mocker, metodo):
+    """O aviso "muitos resultados" da busca comum levanta ``ValueError`` sem pedir outras páginas."""
+    mocker.patch("time.sleep")
+    _add_sessao()
+    _add_busca("muitos_resultados.html")
+
+    mensagem = "TJMG returned 'muitos resultados' — refine the search (add date range or narrower terms)."
+    with pytest.raises(ValueError, match=f"^{re.escape(mensagem)}$"):
+        getattr(jus.scraper("tjmg"), metodo)("dano moral", paginas=range(1, 4), **_DATAS)
+
     assert len(_consultas_da_busca()) == 1
 
 

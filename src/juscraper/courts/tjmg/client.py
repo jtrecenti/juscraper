@@ -106,9 +106,10 @@ class TJMGScraper(HTTPScraper):
             Free-text search term.
         paginas : int, list, range or None
             Pages to download (1-based). ``None`` downloads every page. A
-            common search above 400 results raises ``ValueError`` ("muitos
-            resultados"); the lists of the categorized search have no such
-            cap. In the categorized search, ``paginas`` applies to each list.
+            common search with too many results raises ``ValueError``
+            ("muitos resultados"); the lists of the categorized search have
+            no such cap. In the categorized search, ``paginas`` applies to
+            each list.
         pesquisar_por : str
             Field to search in: ``"ementa"`` or ``"acordao"``
             (inteiro teor).
@@ -176,8 +177,8 @@ class TJMGScraper(HTTPScraper):
         Args:
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
-                todas. Default ``None``. A busca comum com mais de 400
-                resultados levanta ``ValueError`` ("muitos resultados").
+                todas. Default ``None``. A busca comum com resultados demais
+                levanta ``ValueError`` ("muitos resultados").
                 Quando ha acordaos de repetitivos no resultado, o portal
                 responde com a busca categorizada, uma lista por categoria
                 (repetitivos e demais acordaos), sem esse limite; o ``cjsg``
@@ -210,7 +211,7 @@ class TJMGScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: A busca comum passou de 400 resultados ("muitos
+            ValueError: A busca comum teve resultados demais ("muitos
                 resultados"); restrinja as datas ou os termos.
             ColetaParcialError: Uma pagina falhou depois das tentativas do
                 perfil ``"cjsg"``, com outra ja baixada antes dela. A busca

@@ -17,6 +17,9 @@ Saves raw responses for the four endpoints TJMG hits per ``cjsg`` call:
 - ``no_results.html`` — zero-hit scenario.
 - ``erro_ora.html`` — search without a date filter: the portal answers with
   ``ORA-20000 ... DRG-10599`` instead of results.
+- ``muitos_resultados.html`` — a common search with too many hits (11,170;
+  1,905 are still listed): the portal answers "Sua pesquisa encontrou muitos
+  resultados (N) e não pode ser exibida" instead of results.
 - ``categorizada.html`` — "Resultado da busca (Categorizada)": with
   repetitive-appeal rulings among the hits, the portal lists only the count
   per category, with a link to each category's list.
@@ -96,7 +99,7 @@ def main() -> None:
     scraper.session.hooks["response"].append(hook)
 
     # Typical: 2-page pagination, with date filter to avoid the
-    # "muitos resultados" cap (TJMG rejects >400 hits).
+    # "muitos resultados" cap (see ``muitos_resultados`` below).
     state["scenario"] = "typical"
     counters.clear()
     df = scraper.cjsg(
@@ -137,6 +140,19 @@ def main() -> None:
         scraper.cjsg_download("dano moral", paginas=1)
     except TJMGBuscaSemListaError as exc:
         print(f"[tjmg/erro_ora] {exc}")
+    # A common search with too many hits: the download raises ValueError.
+    state["scenario"] = "muitos_resultados"
+    try:
+        scraper.cjsg_download(
+            "dano moral",
+            paginas=1,
+            data_julgamento_inicio="01/01/2025",
+            data_julgamento_fim="31/03/2025",
+        )
+    except ValueError as exc:
+        print(f"[tjmg/muitos_resultados] {exc}")
+    else:
+        raise SystemExit("[tjmg/muitos_resultados] the portal listed the hits; pick a broader search")
     # The categorized search, followed into each category's list.
     state["scenario"] = "categorizada"
     counters.clear()
