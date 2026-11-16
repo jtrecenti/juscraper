@@ -10,7 +10,7 @@ Examples
 >>> html = load_sample("tjsp", "cjsg/results_normal.html")
 """
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from urllib.parse import parse_qs, parse_qsl, urlparse
 
@@ -112,10 +112,11 @@ def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
 
 def assert_unknown_kwarg_raises(
     method: Callable,
-    kwarg: str,
+    kwarg: str | Sequence[str],
     *args,
     valor: str = "x",
     rotulo: str | None = None,
+    exata: bool = False,
     **extra_kwargs,
 ) -> None:
     """Confirma que ``kwarg`` dispara ``TypeError`` canonico no endpoint.
@@ -139,28 +140,35 @@ def assert_unknown_kwarg_raises(
     Args:
         method (callable): Bound method publico do scraper (e.g.,
             ``jus.scraper("tjmt").cjsg``).
-        kwarg (str): Nome do kwarg que deve ser rejeitado (e.g.,
-            ``"data_publicacao_inicio"`` para datas, ``"parametro_bobo"``
-            para typos genericos).
+        kwarg (str | Sequence[str]): Nome do kwarg que deve ser rejeitado
+            (e.g., ``"data_publicacao_inicio"`` para datas,
+            ``"parametro_bobo"`` para typos genericos), ou uma sequencia de
+            nomes, que a mensagem deve listar na mesma ordem.
         *args: Argumentos posicionais propagados para ``method``
             (tipicamente ``"pesquisa"``).
-        valor (str): Valor passado em ``kwarg``. Cosmetico — o
+        valor (str): Valor passado em cada ``kwarg``. Cosmetico — o
             ``TypeError`` e emitido pelo pydantic *antes* de qualquer
             validacao de formato, entao qualquer string serve. Default
             ``"x"``.
         rotulo (str | None): Rotulo do metodo que deve abrir a mensagem
             (ex.: ``"TJPIScraper.cjsg()"``). Default ``None`` (confere so o
             sufixo canonico).
+        exata (bool): Se ``True``, a mensagem termina nos nomes, sem sugestao
+            ``(você quis dizer ...)`` nem outro sufixo. Default ``False``.
         **extra_kwargs: Kwargs extras propagados para ``method`` — util
             para cenarios que precisam de filtros adicionais (ex.: TJSP
             auto_chunk exige uma janela longa de ``data_julgamento_*``
             para acionar o sniff; eSAJ exige ``paginas=1``).
     """
-    pattern = rf"got unexpected keyword argument\(s\): '{re.escape(kwarg)}'"
+    nomes = [kwarg] if isinstance(kwarg, str) else list(kwarg)
+    listados = ", ".join(re.escape(repr(nome)) for nome in nomes)
+    pattern = rf"got unexpected keyword argument\(s\): {listados}"
     if rotulo is not None:
         pattern = rf"^{re.escape(rotulo)} {pattern}"
+    if exata:
+        pattern += r"\Z"
     with pytest.raises(TypeError, match=pattern):
-        method(*args, **{kwarg: valor, **extra_kwargs})
+        method(*args, **{**dict.fromkeys(nomes, valor), **extra_kwargs})
 
 
 _MOJIBAKE_RE = re.compile("[\u00c3\u00c2][\u0080-\u00bf]")

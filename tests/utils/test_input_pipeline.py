@@ -75,12 +75,7 @@ def test_apply_input_pipeline_unknown_kwarg_raises_typeerror():
 
 
 def test_apply_input_pipeline_multiple_unknown_kwargs_listed():
-    with pytest.raises(TypeError) as exc_info:
-        _pipeline_simples(foo="1", bar="2")
-
-    assert str(exc_info.value) == (
-        f"{_ROTULO} got unexpected keyword argument(s): 'foo', 'bar'"
-    )
+    assert_unknown_kwarg_raises(_pipeline_simples, ["foo", "bar"], rotulo=_ROTULO, exata=True)
 
 
 def test_apply_input_pipeline_data_inicio_alias_emits_deprecation_warning():
@@ -243,14 +238,13 @@ def test_raise_on_extra_kwargs_raises_typeerror_for_pure_extra_forbidden():
     class _S(SearchBase):
         model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
-    try:
+    with pytest.raises(ValidationError) as erro:
         _S(pesquisa="x", extra="y")
-    except ValidationError as exc:
-        with pytest.raises(TypeError) as exc_info:
-            raise_on_extra_kwargs(exc, "Test")
-        assert str(exc_info.value) == "Test got unexpected keyword argument(s): 'extra'"
-    else:
-        pytest.fail("Schema should have raised ValidationError")
+
+    # Sem ``schema_cls``, nenhuma sugestão: a mensagem termina no nome.
+    assert_unknown_kwarg_raises(
+        lambda **_: raise_on_extra_kwargs(erro.value, "Test"), "extra", rotulo="Test", exata=True
+    )
 
 
 # --- Cobertura adicional pos-review do PR #135 ---------------------------
