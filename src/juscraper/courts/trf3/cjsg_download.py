@@ -437,15 +437,16 @@ def cjsg_n_results(html: str) -> int | None:
     contador ``i/TOTAL)`` do primeiro item. Página com "Nenhum Resultado
     Encontrado" vale 0. Devolve ``None`` quando nenhum formato casa.
     """
+    soup = BeautifulSoup(html, "html.parser")
     total = extract_count_with_cascade(
-        html,
+        soup,
         css_selectors=_TOTAL_SELECTORS,
         regex_patterns=_TOTAL_PATTERNS,
     )
     if total is not None:
         return total
     return extract_count_with_cascade(
-        html,
+        soup,
         css_selectors=_CONTAGEM_SELECTORS,
         regex_patterns=_CONTAGEM_PATTERNS,
         zero_markers=_ZERO_MARKERS,
