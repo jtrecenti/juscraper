@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import juscraper as jus
+from tests.tjsp.test_arvore_integration import ARVORE_COLUNAS
 
 
 @pytest.mark.integration
@@ -39,14 +40,13 @@ def test_baixar_sentencas_da_primeira_linha_do_cjpg(tmp_path):
 def test_arvores_de_primeiro_grau():
     """As árvores do formulário do cjpg respondem no TJMS, no formato das do TJSP."""
     scraper = jus.scraper("tjms")
-    colunas = {"id", "nome", "id_pai", "nivel", "selecionavel", "caminho"}
 
     classes = scraper.listar_classes(grau="1")
     assuntos = scraper.listar_assuntos(grau="1")
     varas = scraper.listar_varas()
 
     for arvore in (classes, assuntos, varas):
-        assert set(arvore.columns) == colunas
+        assert set(arvore.columns) == ARVORE_COLUNAS
         assert arvore["selecionavel"].sum() > 0
     assert len(classes) > 50
     assert varas["caminho"].str.contains("Campo Grande").any()

@@ -273,8 +273,8 @@ class EsajSearchScraper(HTTPScraper):
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
     # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite a
-    # base do cjpg (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`, de
-    # TJSP e TJMS) estender com as arvores de 1o grau sem if/else. Todos os
+    # base do cjpg (``EsajCjpgScraper``) estender com as arvores de 1o grau
+    # sem if/else. Todos os
     # tribunais eSAJ expoem as arvores de cjsg (2o grau). Refs #228, #487.
     TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
         "classes_2": "cjsg/classesTreeSelect.do?campoId=classes",
@@ -721,7 +721,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Args:
             grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
-                grau / cjpg). Só TJSP e TJMS, que têm ``cjpg``, expõem ``grau="1"``.
+                grau / cjpg), só nos tribunais com ``cjpg`` (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`).
 
         Raises:
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
@@ -747,7 +747,7 @@ class EsajSearchScraper(HTTPScraper):
 
         Args:
             grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
-                grau / cjpg). Só TJSP e TJMS, que têm ``cjpg``, expõem ``grau="1"``.
+                grau / cjpg), só nos tribunais com ``cjpg`` (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`).
 
         Raises:
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
