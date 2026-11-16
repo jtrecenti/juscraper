@@ -170,7 +170,7 @@ def _baixar_paginas(
             time.sleep(sleep_time)
         try:
             resultados.append(get_page((page_num - 1) * RESULTS_PER_PAGE))
-        except Exception as exc:  # noqa: BLE001 - vai para ColetaParcialError
+        except Exception as exc:  # vai para ColetaParcialError
             if not resultados:
                 raise
             raise _coleta_parcial(resultados, paginas[posicao:], exc) from exc

@@ -222,33 +222,54 @@ def test_rejeita_topo_alterado_no_arquivo_de_dispensas(repositorio, original, al
     assert "Política de lint inválida" in resultado.stderr
 
 
-@pytest.fixture
-def primeira_adocao(repositorio):
+def test_base_sem_ruff_toml_falha_com_orientacao(repositorio):
+    # Base anterior à adoção da régua: referência desatualizada ou branch que não integrou a main.
     (repositorio / "ruff.toml").unlink()
     registrar_base(repositorio)
     gravar_excecoes(repositorio, {"src/antigo.py": ["ANN201"]})
-    return repositorio
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "não tem ruff.toml" in resultado.stderr
+    assert "git fetch" in resultado.stderr
+    assert "merge ou rebase" in resultado.stderr
 
 
-def test_primeira_adocao_mede_a_base_sem_lista_anterior(primeira_adocao):
-    resultado = executar_gate(primeira_adocao)
+def gravar_modulo_novo(raiz, linha):
+    (raiz / "src/novo.py").write_text(f'"""Módulo novo."""\n\n{linha}\n', encoding="utf-8")
+
+
+@pytest.mark.parametrize(("linha", "codigo"), [
+    ("VALOR = 1  # noqa: BLE001", "RUF100"),
+    # FBT e ERA começam como os códigos do flake8 (F e E) que o RUF100 preserva.
+    ("VALOR = 1  # noqa: FBT003", "RUF100"),
+    ("VALOR = 1  # noqa: ERA001", "RUF100"),
+    ('print("problema")  # noqa', "PGH004"),
+])
+def test_noqa_obsoleto_ou_sem_codigo_falha(repositorio, linha, codigo):
+    gravar_modulo_novo(repositorio, linha)
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert f"src/novo.py:3: {codigo}" in resultado.stderr
+
+
+@pytest.mark.parametrize("linha", [
+    'print("diagnóstico")  # noqa: T201 - saída de diagnóstico',
+    # O flake8 roda no pre-commit; o Ruff não seleciona os códigos dele e não deve tratá-los como obsoletos.
+    'VALOR = f"{1:02d}"  # noqa: E231',
+])
+def test_noqa_com_codigo_usado_ou_do_flake8_passa(repositorio, linha):
+    gravar_modulo_novo(repositorio, linha)
+    resultado = executar_gate(repositorio)
     assert resultado.returncode == 0, resultado.stderr
 
 
-def test_primeira_adocao_nao_autoriza_arquivo_novo(primeira_adocao):
-    (primeira_adocao / "src/novo.py").write_text(CODIGO_ANTIGO, encoding="utf-8")
-    gravar_excecoes(primeira_adocao, {"src/antigo.py": ["ANN201"], "src/novo.py": ["ANN201"]})
-    resultado = executar_gate(primeira_adocao)
+def test_noqa_redundante_com_dispensa_do_arquivo_falha_no_ruff(repositorio):
+    # Enquanto ruff.toml dispensa a regra no arquivo, a supressão em linha dela não silencia nada.
+    caminho = repositorio / "src/antigo.py"
+    caminho.write_text(CODIGO_ANTIGO.replace("obter_numero():", "obter_numero():  # noqa: ANN201"), encoding="utf-8")
+    resultado = executar_ruff(repositorio, "--config", "ruff.toml", "src", "tests")
     assert resultado.returncode == 1
-    assert "Nova dispensa proibida: src/novo.py: ANN201" in resultado.stderr
-
-
-def test_primeira_adocao_nao_autoriza_regra_nova(primeira_adocao):
-    (primeira_adocao / "src/antigo.py").write_text(CODIGO_ANTIGO + '\nprint("problema")\n', encoding="utf-8")
-    gravar_excecoes(primeira_adocao, {"src/antigo.py": ["ANN201", "T201"]})
-    resultado = executar_gate(primeira_adocao)
-    assert resultado.returncode == 1
-    assert "Nova dispensa proibida: src/antigo.py: T201" in resultado.stderr
+    assert "RUF100" in resultado.stdout
 
 
 def test_politica_de_testes_dispensa_anotacao_docstring_e_assert(repositorio):
