@@ -4,6 +4,11 @@ from typing import Literal, overload
 
 _NON_DIGIT_RE = re.compile(r"\D")
 
+#: Número CNJ formatado (``NNNNNNN-DD.AAAA.J.TR.OOOO``), sem âncoras nem grupos,
+#: para compor regexes de parsers (ex.: com prefixo ou grupo de captura).
+CNJ_FORMATADO = r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}"
+CNJ_FORMATADO_RE = re.compile(CNJ_FORMATADO)
+
 
 def clean_cnj(numero: str) -> str:
     """Limpa o número do processo, mantendo apenas dígitos.

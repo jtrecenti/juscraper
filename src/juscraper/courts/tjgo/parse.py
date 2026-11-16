@@ -8,6 +8,8 @@ from typing import Any
 
 import pandas as pd
 
+from juscraper.utils.cnj import CNJ_FORMATADO_RE
+
 # Abertura de cada resultado. No HTML atual do portal a div traz atributos
 # (``data-realizador``, ``data-id-arquivo``) depois da classe; o literal
 # ``<div class="search-result">`` deixava de casar e o cjsg voltava vazio.
@@ -17,7 +19,6 @@ _RESULT_OPEN_RE = re.compile(
     r'<div class="search-result"'
     r"""(?:\s+[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?)*\s*>"""
 )
-_PROC_RE = re.compile(r"(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
 _ID_ARQUIVO_RE = re.compile(
     r"abrirArquivo\('ConsultaJurisprudencia',\s*'(\d+)'\)"
 )
@@ -71,8 +72,8 @@ def _split_blocks(html: str) -> list:
 
 
 def _parse_block(block: str) -> dict:
-    proc_match = _PROC_RE.search(block)
-    processo = proc_match.group(1) if proc_match else None
+    proc_match = CNJ_FORMATADO_RE.search(block)
+    processo = proc_match.group(0) if proc_match else None
 
     id_arquivo_match = _ID_ARQUIVO_RE.search(block)
     id_arquivo = id_arquivo_match.group(1) if id_arquivo_match else None

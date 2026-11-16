@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from ...core.avisos import avisar
 from ...core.failures import COLUNA_MOTIVO_FALHA, MOTIVO_RESPOSTA_INESPERADA
+from ...utils.cnj import CNJ_FORMATADO_RE
 from .._esaj.pasta import documento_vinculado
 from ._falhas import arquivos_e_falhas, avisar_falhas_de_processo, cnj_da_pasta, com_linhas_de_falha
 from .cpopg_download import caminho_do_documento, listagem_de_processos
@@ -28,7 +29,6 @@ _CANONICAL_KEYS = {
 }
 
 # Regex for CNJ process number format: NNNNNNN-DD.YYYY.J.TR.OOOO
-_CNJ_PATTERN = re.compile(r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}')
 
 _BASIC_SELECTORS = (
     ('id_processo', 'span', 'numeroProcesso'),
@@ -242,7 +242,7 @@ def _split_incident_header(text: str) -> tuple[str | None, str | None]:
     Usado pelos parsers do cpopg e do cposg; a parte ausente vem ``None``. A
     classe é o texto antes do CNJ, então um número sozinho não gera classe.
     """
-    match = _CNJ_PATTERN.search(text)
+    match = CNJ_FORMATADO_RE.search(text)
     head = text[:match.start()] if match else text
     classe = re.sub(r'\s*\(.*$', '', head).replace('\xa0', ' ').strip()
     return (match.group(0) if match else None), (classe or None)

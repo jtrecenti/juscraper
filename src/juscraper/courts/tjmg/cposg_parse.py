@@ -18,9 +18,10 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.utils.cnj import CNJ_FORMATADO
 
 _BLOCK_SEP = re.compile(r'<table width="100%" class="tabela_formulario">')
-_CNJ_RE = re.compile(r"NUMERA\S*O \S*NICA:\s*(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})")
+_CNJ_RE = re.compile(rf"NUMERA\S*O \S*NICA:\s*({CNJ_FORMATADO})")
 _PARTES_LINK_RE = re.compile(r"proc_partes_advogados2\.jsp\?listaProcessos=(\d{17})")
 _SEGREDO_RE = re.compile(r"segredo de justi", re.IGNORECASE)
 _NOT_FOUND_RE = re.compile(r"Nenhum processo encontrado", re.IGNORECASE)
