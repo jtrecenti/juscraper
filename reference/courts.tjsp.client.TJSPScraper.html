@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1132,7 +1132,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando <code>method</code> nao e suportado, quando ha arquivos baixados e nenhum pode ser lido (nesse caso o diretorio de download nao e apagado), ou quando <code>download_pecas</code> e <code>diretorio</code> nao combinam com os demais argumentos.</td>
+<td>Quando <code>method</code> nao e suportado, quando ha arquivos baixados, nenhum pode ser lido e nenhum outro processo do lote falhou no download (nesse caso o diretorio de download nao e apagado), ou quando <code>download_pecas</code> e <code>diretorio</code> nao combinam com os demais argumentos.</td>
 </tr>
 </tbody>
 </table>
@@ -1151,7 +1151,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>dict</code>[<code>str</code>, <code>pd</code>.<code>DataFrame</code>]</td>
-<td>Tabelas <code>basicos</code>, <code>partes</code>, <code>movimentacoes</code> e <code>peticoes_diversas</code>. <code>basicos</code> traz a <code>situacao</code> do cabecalho (“Extinto”, “Suspenso” etc.) e <code>movimentacoes</code> traz a lista completa, que o download busca pagina a pagina. Em <code>movimentacoes</code>, <code>cd_documento</code> e <code>documento_publico</code> dizem se a linha tem documento e se ele abre sem senha; <code>caminho_documento</code> traz o PDF baixado, ou <code>None</code> sem <code>download_pecas</code>, para documento com senha e para o que falhou (as falhas saem num <code>UserWarning</code>). Todo CNJ pedido aparece em <code>basicos</code>. A coluna <code>motivo_falha</code> e <code>None</code> no processo lido; o CNJ que nao foi baixado ganha uma linha so com <code>id_processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta diz nao ter o numero, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que nao pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num unico <code>UserWarning</code>.</td>
+<td>Tabelas <code>basicos</code>, <code>partes</code>, <code>movimentacoes</code> e <code>peticoes_diversas</code>. <code>basicos</code> traz a <code>situacao</code> do cabecalho (“Extinto”, “Suspenso” etc.) e <code>movimentacoes</code> traz a lista completa, que o download busca pagina a pagina. Em <code>movimentacoes</code>, <code>cd_documento</code> e <code>documento_publico</code> dizem se a linha tem documento e se ele abre sem senha; <code>caminho_documento</code> traz o PDF baixado, ou <code>None</code> sem <code>download_pecas</code>, para documento com senha e para o que falhou (as falhas saem num <code>UserWarning</code>). Todo CNJ pedido, e so ele, aparece em <code>basicos</code>: o que um <code>cpopg_download</code> anterior deixou em <code>download_path</code> fica de fora. A coluna <code>motivo_falha</code> e <code>None</code> no processo lido; o CNJ que nao foi baixado ganha uma linha so com <code>id_processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta diz nao ter o numero, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que nao pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num unico <code>UserWarning</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1252,7 +1252,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando <code>path</code> e um diretorio e nenhum arquivo dele pode ser lido, ou quando <code>path</code> e um arquivo com extensao diferente de <code>.html</code>. Ver <code>cpopg_parse_manager</code>.</td>
+<td>Quando <code>path</code> e um diretorio sem falha de download registrada e nenhum arquivo dele pode ser lido, ou quando <code>path</code> e um arquivo com extensao diferente de <code>.html</code>. Ver <code>cpopg_parse_manager</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1263,7 +1263,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>courts.tjsp.client.TJSPScraper.cposg(id_cnj, method<span class="op">=</span><span class="st">'html'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Fetch a second-degree process by CNJ and return a DataFrame.</p>
 <p><code>method</code> aceita só <code>"html"</code>, o default; o <code>"api"</code> foi removido e levanta <code>ValueError</code>.</p>
-<p>Todo CNJ pedido aparece no DataFrame. A coluna <code>motivo_falha</code> é <code>None</code> no processo lido; o CNJ que não foi baixado ganha uma linha só com <code>processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta de 2º grau não mostra o número, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que não pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num único <code>UserWarning</code>.</p>
+<p>Todo CNJ pedido, e só ele, aparece no DataFrame: o que um <code>cposg_download</code> anterior deixou em <code>download_path</code> fica de fora. A coluna <code>motivo_falha</code> é <code>None</code> no processo lido; o CNJ que não foi baixado ganha uma linha só com <code>processo</code> e o motivo (<code>nao_encontrado</code> quando a consulta de 2º grau não mostra o número, <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> ou <code>resposta_inesperada</code>), e o arquivo baixado que não pode ser lido sai <code>resposta_inesperada</code>. As falhas de download e as de leitura saem juntas num único <code>UserWarning</code>.</p>
 </section>
 <section id="juscraper.courts.tjsp.client.TJSPScraper.cposg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsp.client.TJSPScraper.cposg_download">cposg_download</h3>
