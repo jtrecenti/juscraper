@@ -19,7 +19,7 @@ import functools
 import logging
 import shutil
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
@@ -27,7 +27,7 @@ import requests
 from pydantic import BaseModel, ValidationError
 
 from ...core.avisos import avisar
-from ...core.http import HTTPScraper
+from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -282,6 +282,12 @@ class EsajSearchScraper(HTTPScraper):
         "orgaos_2": "cjsg/secaoTreeSelect.do?campoId=secoes",
     }
 
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30),
+        "documento": RequestPolicy(timeout=60),
+        "arvore": RequestPolicy(timeout=60),
+    }
+
     def __init__(
         self,
         verbose: int = 0,
@@ -315,7 +321,7 @@ class EsajSearchScraper(HTTPScraper):
                 time.sleep(espera)
         headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
         try:
-            return self._request_with_retry("GET", url, headers=headers, timeout=60, **kwargs)
+            return self._request_with_retry("GET", url, headers=headers, perfil="documento", **kwargs)
         finally:
             self._ultimo_pedido = time.monotonic()
 
@@ -709,7 +715,7 @@ class EsajSearchScraper(HTTPScraper):
                 f"Arvores disponiveis: {disponiveis}."
             )
         headers = _CHROME_HEADERS if self.CJSG_CHROME_UA else _ESAJ_HEADERS
-        resp = self._request_with_retry("GET", f"{self.BASE_URL}{rel}", headers=headers, timeout=60)
+        resp = self._request_with_retry("GET", f"{self.BASE_URL}{rel}", headers=headers, perfil="arvore")
         # Os endpoints *TreeSelect.do mandam UTF-8 no header (diferente das
         # paginas de resultado do cjsg, que sao latin-1). Respeita o header e,
         # se faltar charset, cai no sniff do chardet. Refs #228.

@@ -202,7 +202,7 @@ def _init_session(
     vira o ano mais antigo da origem. Valor que o combo da origem nao oferece
     levanta ``ValueError``.
     """
-    resp = request_fn("GET", FORM_URL, timeout=30)
+    resp = request_fn("GET", FORM_URL, perfil="formulario")
     html = resp.text
     # Anos e competencia aqui sao os padroes do form inicial e so alimentam o
     # postback de origem; os da busca saem do form da origem, mais abaixo. O
@@ -228,7 +228,7 @@ def _init_session(
         # anos e a competencia padrao do form inicial: a ``"3"`` (Fazendaria),
         # por exemplo, so existe depois que a Turma Recursal carrega.
         postback = dict(data, __EVENTTARGET=f"{_FIELD_PREFIX}cmbOrigem")
-        html = request_fn("POST", FORM_URL, data=postback, timeout=30).text
+        html = request_fn("POST", FORM_URL, data=postback, perfil="formulario").text
         data.update(extract_viewstate_fields(html))
     # Cada origem tem seus combos: os Tribunais de Alcada vao de 1975 a 1998,
     # o de Alcada Criminal so tem a competencia "2" e o Conselho da
@@ -245,7 +245,7 @@ def _init_session(
         ("cmbCompetencia", "competencia", competencia, "1"),
     ):
         data[_FIELD_PREFIX + campo] = _valor_do_form(html, campo, nome, valor, origem, fallback)
-    resp = request_fn("POST", FORM_URL, data=data, allow_redirects=True, timeout=30)
+    resp = request_fn("POST", FORM_URL, data=data, allow_redirects=True, perfil="formulario")
     page_seq = parse_qs(urlparse(resp.url).query).get("PageSeq")
     if not page_seq:
         raise RuntimeError(
@@ -265,7 +265,7 @@ def _fetch_page(request_fn: RequestFn, num_pagina_0: int, page_seq: str) -> dict
             "Content-Type": "application/json; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
         },
-        timeout=60,
+        perfil="cjsg",
     )
     resp.encoding = "utf-8"
     data: dict = resp.json().get("d", {})

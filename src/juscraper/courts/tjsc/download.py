@@ -94,7 +94,7 @@ def cjsg_download_manager(
         # Seguir um redirecionamento transformaria o POST em GET sem o
         # formulário: a busca voltaria sem termo nem filtros, sem erro (#495).
         resp = request_fn(
-            "POST", url, data=data, timeout=60, allow_redirects=False, perfil=PERFIL_CJSG,
+            "POST", url, data=data, allow_redirects=False, perfil=PERFIL_CJSG,
         )
         if 300 <= resp.status_code < 400:
             raise RuntimeError(

@@ -1,12 +1,13 @@
 """Scraper for the Tribunal de Justica de Roraima (TJRR)."""
 
+from collections.abc import Mapping
 from datetime import date
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 from requests.cookies import remove_cookie_by_name
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download_manager
@@ -21,6 +22,11 @@ class TJRRScraper(HTTPScraper):
     """
 
     BASE_URL = "https://jurisprudencia.tjrr.jus.br"
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "formulario": RequestPolicy(timeout=30),
+        "cjsg": RequestPolicy(timeout=60),
+    }
 
     def __init__(
         self,

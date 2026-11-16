@@ -2,9 +2,12 @@
 Module for the scraper of the Court of Justice of the Federal District and Territories (TJDFT).
 """
 
+from collections.abc import Mapping
+from typing import Any, ClassVar
+
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
@@ -18,8 +21,12 @@ class TJDFTScraper(HTTPScraper):
 
     BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 
-    def __init__(self):
-        super().__init__("TJDFT")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=10),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJDFT", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub for compatibility with BaseScraper."""

@@ -22,7 +22,7 @@ class TJSCScraper(HTTPScraper):
 
     #: O portal derruba às vezes a conexão keep-alive reaproveitada.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
-        PERFIL_CJSG: RequestPolicy(retry_on_connection_error=True),
+        PERFIL_CJSG: RequestPolicy(timeout=60, retry_on_connection_error=True),
     }
 
     def __init__(

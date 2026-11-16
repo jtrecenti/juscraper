@@ -1,10 +1,12 @@
 """Scraper for the Tribunal de Justica do Espirito Santo (TJES)."""
 
+from collections.abc import Mapping
 from datetime import date
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
@@ -17,8 +19,12 @@ class TJESScraper(HTTPScraper):
 
     BASE_URL = "https://sistemas.tjes.jus.br/consulta-jurisprudencia/api"
 
-    def __init__(self):
-        super().__init__("TJES")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30, expect_json=True),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJES", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case lookup not implemented for TJES."""

@@ -153,7 +153,7 @@ def cjsg_download_manager(
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
-        resp = request_fn("GET", BASE_URL, params=params, timeout=30)
+        resp = request_fn("GET", BASE_URL, params=params, perfil="cjsg")
         resp.encoding = "utf-8"
         return resp.text
 

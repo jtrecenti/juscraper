@@ -2,11 +2,13 @@
 Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
 
+from collections.abc import Mapping
 from datetime import date
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, pop_deprecated_alias, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -19,8 +21,12 @@ class TJBAScraper(HTTPScraper):
 
     BASE_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
 
-    def __init__(self):
-        super().__init__("TJBA")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=60),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJBA", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case consultation not implemented for TJBA."""

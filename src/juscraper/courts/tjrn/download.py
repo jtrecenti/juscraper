@@ -83,7 +83,7 @@ def cjsg_download_manager(
     """
     def _get_page(pagina_1based):
         payload = build_cjsg_payload(pesquisa, page=pagina_1based, **kwargs)
-        resp = request_fn("POST", BASE_URL, json=payload, timeout=30)
+        resp = request_fn("POST", BASE_URL, json=payload, perfil="cjsg")
         data: dict = resp.json()
         return data
 

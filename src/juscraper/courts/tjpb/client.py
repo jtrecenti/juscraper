@@ -1,9 +1,11 @@
 """Scraper for the Tribunal de Justica da Paraiba (TJPB)."""
+from collections.abc import Mapping
 from datetime import date, datetime
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, coerce_brazilian_date, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
@@ -49,8 +51,13 @@ class TJPBScraper(HTTPScraper):
 
     BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 
-    def __init__(self):
-        super().__init__("TJPB")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "classes": RequestPolicy(timeout=30),
+        "cjsg": RequestPolicy(timeout=30),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJPB", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPB."""

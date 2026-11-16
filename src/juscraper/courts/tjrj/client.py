@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download as _cjsg_download
@@ -29,8 +31,13 @@ class TJRJScraper(HTTPScraper):
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
     )
 
-    def __init__(self, sleep_time: float = 1.0):
-        super().__init__("TJRJ", sleep_time=sleep_time)
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "formulario": RequestPolicy(timeout=30),
+        "cjsg": RequestPolicy(timeout=60),
+    }
+
+    def __init__(self, sleep_time: float = 1.0, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJRJ", sleep_time=sleep_time, politica=politica)
 
     def _configure_session(self, session: requests.Session) -> None:
         session.headers["User-Agent"] = self.USER_AGENT

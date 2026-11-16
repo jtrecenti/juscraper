@@ -152,7 +152,7 @@ def cjsg_download(
             },
             "query": FILTER_QUERY,
         }
-        resp = request_fn("POST", GRAPHQL_URL, json=payload, timeout=60)
+        resp = request_fn("POST", GRAPHQL_URL, json=payload, perfil="cjsg")
         data: dict = resp.json()
         if "errors" in data:
             raise ValueError(f"GraphQL errors: {data['errors']}")

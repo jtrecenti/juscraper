@@ -1,14 +1,15 @@
 """
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
+from collections.abc import Mapping
 from datetime import date
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 import requests
 
 from juscraper.core.exceptions import BotChallengeBlockedError
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.waf import USER_AGENT, eh_desafio_waf
 from juscraper.utils.params import apply_input_pipeline_search
 
@@ -21,6 +22,11 @@ class TJTOScraper(HTTPScraper):
     """Scraper for the Tribunal de Justica do Tocantins."""
 
     BASE_URL = "https://jurisprudencia.tjto.jus.br/consulta.php"
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "ementa": RequestPolicy(timeout=30),
+        "cjsg": RequestPolicy(timeout=60),
+    }
 
     def __init__(
         self,

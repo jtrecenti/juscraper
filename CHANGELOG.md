@@ -45,6 +45,9 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 ### Changed
 
+- Os scrapers HTTP de STF, TJAP, TJBA, TJDFT, TJES, TJGO, TJMT, TJPA, TJPB, TJPE, TJPI, TJRJ, TJRN, TJRO, TJRR, TJSC, TJTO, TRF1, TRF5, eSAJ, ComunicaCNJ e Falcão passam a aceitar `politica=` para ajustar por perfil o timeout e as tentativas das requisições. Os timeouts padrão e a política de retry de cada portal permanecem iguais (#360).
+
+
 #### TJSP
 
 - **BREAKING:** `cjpg`, `cpopg` e `cposg`: o processo ou a página que falha no download ou na leitura deixa de sumir do resultado com registro só no log (ou num `print`, no `cpopg_parse`). Antes, um DataFrame com 980 de 1000 processos não se distinguia de uma busca que trouxe 980; só havia erro quando todas as unidades falhavam (#460).

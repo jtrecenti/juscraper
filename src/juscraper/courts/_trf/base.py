@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, ClassVar, NamedTuple
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError
@@ -34,7 +35,7 @@ from ...core.failures import (
     linhas_de_processos,
     motivo_falha_ou_inesperada,
 )
-from ...core.http import HTTPScraper
+from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import (
     BROWSER_HEADERS,
@@ -106,6 +107,10 @@ class TRFConsultaScraper(HTTPScraper):
     #: PJe classe form field. Every current deployment uses the ``classeJudicial``
     #: autocomplete; a deployment with another component overrides it.
     CLASSE_FIELD_NAME: str = "classeJudicial"
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cpopg": RequestPolicy(timeout=30),
+    }
 
     def __init__(
         self,

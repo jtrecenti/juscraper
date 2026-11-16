@@ -91,7 +91,7 @@ def cjsg_download(
             quantidade_por_pagina=quantidade_por_pagina,
             termos_acessorios=termos_acessorios,
         )
-        resp = request_fn("POST", base_url, json=payload, headers=headers, timeout=10)
+        resp = request_fn("POST", base_url, json=payload, headers=headers, perfil="cjsg")
         return resp.json()
 
     resultados = []

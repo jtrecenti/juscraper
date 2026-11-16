@@ -151,7 +151,7 @@ def _validate_api_config(config: dict[str, str]) -> dict[str, str]:
 
 def _get_api_config(request_fn: RequestFn) -> dict:
     """Descobre e valida a configuração pública atual da API."""
-    home = request_fn("GET", PORTAL_URL, timeout=30).text
+    home = request_fn("GET", PORTAL_URL, perfil="configuracao").text
     initial_resources = _SCRIPT_SRC_RE.findall(home) + _MODULE_PRELOAD_RE.findall(home)
     resources = deque(urljoin(PORTAL_URL, src) for src in initial_resources)
     visited: set[str] = set()
@@ -162,7 +162,7 @@ def _get_api_config(request_fn: RequestFn) -> dict:
         if parsed.scheme != "https" or parsed.hostname != PORTAL_HOST or resource in visited:
             continue
         visited.add(resource)
-        script = request_fn("GET", resource, timeout=30).text
+        script = request_fn("GET", resource, perfil="configuracao").text
         config = _extract_api_config(script)
         if config is not None:
             return _validate_api_config(config)
@@ -370,7 +370,7 @@ def _request_api_page(
     muda na renovação, porque ``_validate_api_config`` só aceita
     ``PRODUCTION_API_URL``.
     """
-    request_kwargs = {"params": params, "timeout": 60, "expect_json": True}
+    request_kwargs = {"params": params, "perfil": "busca"}
     if api_config_provider is None:
         return request_fn("GET", f"{api_url}/consulta", **request_kwargs)
 

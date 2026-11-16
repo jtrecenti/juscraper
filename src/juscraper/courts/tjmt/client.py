@@ -2,12 +2,14 @@
 Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 """
 
+from collections.abc import Mapping
 from datetime import date
 from functools import partial
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import PRODUCTION_API_URL, _get_api_config, cjsg_download
@@ -20,8 +22,13 @@ class TJMTScraper(HTTPScraper):
 
     BASE_URL = PRODUCTION_API_URL
 
-    def __init__(self):
-        super().__init__("TJMT")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "configuracao": RequestPolicy(timeout=30),
+        "busca": RequestPolicy(timeout=60, expect_json=True),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJMT", politica=politica)
         self._api_config: dict[str, str] | None = None
 
     def _get_cached_api_config(self, *, force_refresh: bool = False) -> dict[str, str]:
