@@ -286,7 +286,10 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, 
 
     mocker.patch.object(Path, "write_bytes", autospec=True, side_effect=disco_cheio_na_segunda)
 
-    with caplog.at_level("WARNING", logger="juscraper._trf"), pytest.warns(UserWarning) as avisos:
+    with (
+        caplog.at_level("WARNING", logger="juscraper._trf"),
+        pytest.warns(UserWarning, match="resposta_inesperada") as avisos,
+    ):
         df = tjpe.cpopg([CNJ, OUTRO_CNJ], download_pecas=True, diretorio=str(tmp_path))
 
     primeiro, segundo = df.iloc[0], df.iloc[1]

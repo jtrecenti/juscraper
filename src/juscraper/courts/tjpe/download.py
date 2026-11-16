@@ -119,7 +119,8 @@ def _rotulo_da_linha(linha: Tag) -> str:
     """Texto do ``<label>`` da primeira célula da linha da escolha; vazio sem ele."""
     celula_rotulo = linha.find("td")
     rotulo = celula_rotulo.find("label") if celula_rotulo else None
-    return rotulo.get_text(strip=True) if rotulo else ""
+    texto: str = rotulo.get_text(strip=True) if rotulo else ""
+    return texto
 
 
 def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
