@@ -270,3 +270,25 @@ def test_lint_roda_o_pre_commit_e_falha_antes_de_alterar_a_versao(repo_com_origi
     _main_para_sem_alterar(repo_com_origin, monkeypatch, capsys, ["0.8.0"])
 
     assert [cmd for cmd in comandos if not cmd.startswith("git ")] == ["SKIP=pytest uv run pre-commit run --all-files"]
+
+
+def test_testes_do_release_usam_dois_workers_e_falham_antes_da_versao(repo_com_origin, monkeypatch, capsys):
+    """O teste falha num repo temporário; nenhuma versão, tag ou commit muda."""
+    executar = release.run_command
+    comandos = []
+
+    def run_command(cmd, *, check=True):
+        comandos.append(cmd)
+        if "pre-commit" in cmd:
+            return executar("true", check=check)
+        if cmd.startswith("uv run pytest"):
+            return executar("false", check=check)
+        return executar(cmd, check=check)
+
+    monkeypatch.setattr(release, "run_command", run_command)
+
+    _main_para_sem_alterar(repo_com_origin, monkeypatch, capsys, ["0.8.0"])
+
+    assert [cmd for cmd in comandos if not cmd.startswith("git ")] == [
+        "SKIP=pytest uv run pre-commit run --all-files", "uv run pytest -n 2 tests/ -v",
+    ]
