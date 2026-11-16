@@ -359,6 +359,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">TRF6</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./notebooks/tse.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TSE</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -511,118 +517,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>contar_decisoes, listar_decisoes</td>
 </tr>
 <tr class="even">
+<td>TSE</td>
+<td>baixar_inteiro_teor</td>
+</tr>
+<tr class="odd">
 <td>TJAC</td>
 <td>cjsg, baixar_acordao, baixar_acordaos</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJAL</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJAM</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJAP</td>
 <td>cjsg ⚠️</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJBA</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJCE</td>
 <td>cjsg, baixar_acordao, baixar_acordaos</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJDFT</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJES</td>
 <td>cjsg, cjpg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJGO</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJMG</td>
 <td>cposg, cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJMS</td>
 <td>cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJMT</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJPA</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJPB</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJPE</td>
 <td>cpopg, cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJPI</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJPR</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRJ</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRN</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRO</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRR</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRS</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJSC</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJSP</td>
 <td>cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJTO</td>
 <td>cjsg, cjpg, cjsg_ementa</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TRF1</td>
 <td>cpopg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TRF3</td>
 <td>cpopg, cposg, cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TRF5</td>
 <td>cpopg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TRF6</td>
 <td>cpopg</td>
 </tr>
@@ -671,6 +681,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <blockquote class="blockquote">
 <p>⚠️ <strong>TJGO — <code>cjsg</code> returns no results:</strong> since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a <a href="https://www.cloudflare.com/products/turnstile/">Cloudflare Turnstile</a> token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and <code>cjsg</code>/<code>cjsg_download</code> emit a <code>UserWarning</code> explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>⚠️ <strong>TSE — no jurisprudence search:</strong> the search of the <a href="https://jurisprudencia.tse.jus.br/">TSE jurisprudence portal</a> requires a CAPTCHA token validated server-side, which the scraper, issuing plain HTTP requests (no browser), cannot produce; without it the API replies <code>"Falha na verificação antirrobô."</code> (probed on 16 November 2026). The scraper covers what the portal serves without a CAPTCHA: <code>baixar_inteiro_teor(codigo_decisao)</code>, which downloads the PDF of a decision given its code, and the catalogs of the search form (<code>listar_classes</code>, <code>listar_relatores</code>, <code>listar_eleicoes</code> and <code>listar_normas</code>). <code>cjsg</code> raises <code>NotImplementedError</code> with this explanation. See <a href="https://github.com/jtrecenti/juscraper/issues/378">issue #378</a>.</p>
 </blockquote>
 <p>Falcao covers national labor jurisprudence (TST and TRTs).</p>
 <section id="jusbr-and-pdpj-authentication" class="level4">
@@ -722,6 +735,7 @@ Notebook runtime and Google Colab
 <li><a href="./notebooks/trf3.html">TRF3 example</a></li>
 <li><a href="./notebooks/trf5.html">TRF5 example</a></li>
 <li><a href="./notebooks/trf6.html">TRF6 example</a></li>
+<li><a href="./notebooks/tse.html">TSE example</a></li>
 <li><a href="./notebooks/datajud.html">Datajud example</a></li>
 <li><a href="./notebooks/falcao.html">Falcao example</a></li>
 <li><a href="./notebooks/jusbr.html">JusBR example</a></li>
