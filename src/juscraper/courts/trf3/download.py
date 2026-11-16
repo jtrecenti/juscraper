@@ -168,7 +168,6 @@ def _get_json(
         params=params,
         headers=build_pagina_origem_headers(base_url, rota),
         perfil="api",
-        expect_json=True,
         on_response=guarda_akamai,
     )
     data: dict[str, Any] = resp.json()

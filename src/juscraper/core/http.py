@@ -121,8 +121,8 @@ class RequestPolicy:
     guarda estado na sessão pode duplicar o efeito (decisão sobre #440).
 
     Os nomes dos campos são os mesmos dos kwargs aceitos por chamada
-    (``timeout=``, ``max_retries=``, ``base_backoff=``), e o kwarg explícito
-    vence o campo da política.
+    (``timeout=``, ``max_retries=``, ``base_backoff=``, ``expect_json=``), e
+    o kwarg explícito vence o campo da política.
 
     Attributes:
         timeout: Repassado a ``session.request`` quando a chamada não traz
@@ -133,7 +133,11 @@ class RequestPolicy:
         max_backoff: Teto, em segundos, da espera do backoff exponencial
             (default 300). Sem ele, ``base_backoff`` alto ou muitas tentativas
             esperariam horas, ou estourariam o ``float`` no primeiro recuo. Não
-            limita o ``Retry-After`` que o servidor manda.
+            limita o ``Retry-After`` que o servidor manda; ver ``max_retry_after``.
+        max_retry_after: Teto, em segundos, da espera pedida pelo
+            ``Retry-After`` numérico do servidor (default 300). Acima dele, a
+            nova tentativa sai depois do teto: um ``Retry-After: 86400``
+            prenderia a coleta por um dia.
         retryable_statuses: Status HTTP que disparam nova tentativa.
         retry_on_timeout: Retenta ``requests.Timeout`` de leitura.
         retry_on_connection_error: Retenta ``requests.ConnectionError`` e
@@ -141,15 +145,21 @@ class RequestPolicy:
             meio do corpo). Inclui ``requests.ConnectTimeout``, que herda das
             duas classes e é tratado como falha de conexão: estourar o prazo de
             conexão indica host inalcançável, não resposta lenta.
+        expect_json: Exige corpo JSON nas respostas com status < 400; ver o
+            argumento de mesmo nome de ``HTTPScraper._request_with_retry``.
+            Declarado no perfil cujas respostas são todas JSON, em vez de
+            repetido em cada chamada.
     """
 
     timeout: float | tuple[float, float] | None = None
     max_retries: int = 3
     base_backoff: float = 2.0
     max_backoff: float = 300.0
+    max_retry_after: float = 300.0
     retryable_statuses: frozenset[int] = RETRYABLE_STATUSES
     retry_on_timeout: bool = False
     retry_on_connection_error: bool = False
+    expect_json: bool = False
 
     def __post_init__(self) -> None:
         """Valida os campos numéricos e congela ``retryable_statuses`` e ``timeout``.
@@ -163,10 +173,12 @@ class RequestPolicy:
         """
         if not _max_retries_valido(self.max_retries):
             raise ValueError(f"max_retries deve ser um inteiro >= 1, recebido {self.max_retries!r}")
-        for campo in ("base_backoff", "max_backoff"):
+        for campo in ("base_backoff", "max_backoff", "max_retry_after"):
             valor = getattr(self, campo)
             if not numero_positivo(valor):
                 raise ValueError(f"{campo} deve ser um número positivo e finito, recebido {valor!r}")
+        if not isinstance(self.expect_json, bool):
+            raise ValueError(f"expect_json deve ser bool, recebido {self.expect_json!r}")
         if not timeout_valido(self.timeout):
             raise ValueError(
                 "timeout deve ser None, um número positivo e finito de segundos ou o par "
@@ -228,7 +240,7 @@ via ``raise_for_status``; 5xx/429 ja esgotou ``max_retries`` ->
 ``RetryExhaustedError``). O caller pode chamar ``.json()`` / ler ``.text``
 sem se preocupar com retry de transitorios.
 
-Com ``expect_json=True``, a response retornada tem ainda corpo JSON valido
+Com ``expect_json=True``, na chamada ou no perfil, a response retornada tem ainda corpo JSON valido
 garantido: 200 com corpo vazio/nao-JSON e tratado como transitorio (retry com
 backoff) e, persistindo, levanta ``InvalidJSONResponseError`` em vez do
 ``json.JSONDecodeError`` opaco. Ver #275.
@@ -313,7 +325,7 @@ class HTTPScraper(BaseScraper):
         return perfis
 
     def _resolve_policy(
-        self, perfil: str | None, max_retries: int | None, base_backoff: float | None
+        self, perfil: str | None, max_retries: int | None, base_backoff: float | None, *, expect_json: bool | None,
     ) -> RequestPolicy:
         """Política efetiva da chamada: perfil (ou default) com os kwargs explícitos por cima."""
         if perfil is None:
@@ -325,11 +337,12 @@ class HTTPScraper(BaseScraper):
                 f"Perfil HTTP desconhecido em {type(self).__name__}: {perfil!r}. "
                 f"Perfis declarados: {sorted(self._perfis_http)}."
             )
-        if max_retries is not None:
-            policy = replace(policy, max_retries=max_retries)
-        if base_backoff is not None:
-            policy = replace(policy, base_backoff=base_backoff)
-        return policy
+        # Um ``replace`` só, que valida os kwargs juntos; nenhum sem kwarg explícito.
+        explicitos: dict[str, Any] = {
+            "max_retries": max_retries, "base_backoff": base_backoff, "expect_json": expect_json,
+        }
+        ajustes = {campo: valor for campo, valor in explicitos.items() if valor is not None}
+        return replace(policy, **ajustes) if ajustes else policy
 
     @staticmethod
     def _send_once(
@@ -382,7 +395,7 @@ class HTTPScraper(BaseScraper):
         perfil: str | None = None,
         max_retries: int | None = None,
         base_backoff: float | None = None,
-        expect_json: bool = False,
+        expect_json: bool | None = None,
         on_response: Callable[[requests.Response], None] | None = None,
         **kwargs: Any,
     ) -> requests.Response:
@@ -405,9 +418,10 @@ class HTTPScraper(BaseScraper):
             expect_json: Se ``True``, valida que o corpo de uma resposta com
                 status < 400 é JSON. Corpo vazio/não-JSON é tratado como
                 transitório (retry com backoff); persistindo, levanta
-                ``InvalidJSONResponseError``. Default ``False`` — o caller chama
-                ``.json()`` por conta própria e um corpo inválido propaga
-                ``json.JSONDecodeError`` na primeira ocorrência (#275).
+                ``InvalidJSONResponseError``. ``None`` usa o valor da política,
+                ``False`` no default: o caller chama ``.json()`` por conta
+                própria e um corpo inválido propaga ``json.JSONDecodeError`` na
+                primeira ocorrência (#275).
             on_response: Callback opcional invocado em cada resposta crua, antes
                 de qualquer decisão de retry/``raise_for_status``. Use para
                 inspeção que precisa curto-circuitar o retry — se o callback
@@ -432,7 +446,7 @@ class HTTPScraper(BaseScraper):
             requests.ConnectionError: Na primeira ocorrência, ou na última tentativa se a política o retenta.
             requests.exceptions.ChunkedEncodingError: Na primeira ocorrência, ou na última tentativa
                 se a política o retenta.
-            InvalidJSONResponseError: Quando ``expect_json=True`` e o corpo permanece
+            InvalidJSONResponseError: Quando ``expect_json`` vale (na chamada ou no perfil) e o corpo permanece
                 vazio/não-JSON após ``max_retries``.
             requests.HTTPError: Para 4xx não-retryable (via ``raise_for_status``).
         """
@@ -440,7 +454,7 @@ class HTTPScraper(BaseScraper):
             raise TypeError(
                 f"session deve ser requests.Session, recebido {type(session).__name__}"
             )
-        policy = self._resolve_policy(perfil, max_retries, base_backoff)
+        policy = self._resolve_policy(perfil, max_retries, base_backoff, expect_json=expect_json)
         max_retries = policy.max_retries
 
         sess = session if session is not None else self.session
@@ -452,7 +466,7 @@ class HTTPScraper(BaseScraper):
             if on_response is not None:
                 on_response(resp)
             if resp.status_code < 400:
-                if expect_json and not self._response_is_json(resp):
+                if policy.expect_json and not self._response_is_json(resp):
                     if attempt == max_retries:
                         raise InvalidJSONResponseError(
                             url,
@@ -508,12 +522,13 @@ class HTTPScraper(BaseScraper):
     def _status_wait(cls, resp: requests.Response, attempt: int, policy: RequestPolicy) -> float:
         """Espera antes de retentar um status: ``Retry-After`` numérico ou :meth:`RequestPolicy.espera`.
 
-        O clamp em 0 tolera ``Retry-After`` negativo de servidores mal-comportados.
+        O ``Retry-After`` vai de 0 (o negativo de servidores mal-comportados)
+        até ``max_retry_after`` da política.
         """
         wait = cls._parse_retry_after(resp.headers.get("Retry-After"))
         if wait is None:
-            wait = policy.espera(attempt)
-        return max(0.0, wait)
+            return policy.espera(attempt)
+        return min(max(0.0, wait), float(policy.max_retry_after))
 
     @staticmethod
     def _parse_retry_after(header: str | None) -> float | None:
@@ -521,11 +536,13 @@ class HTTPScraper(BaseScraper):
 
         Decisão da issue #201: backends brasileiros não usam HTTP-date; suporte
         a esse formato fica fora do escopo. Header inválido/ausente → ``None``
-        (caller cai no backoff exponencial).
+        (caller cai no backoff exponencial), inclusive ``inf`` e ``nan``, que o
+        ``float`` aceita e o ``time.sleep`` recusa.
         """
         if header is None:
             return None
         try:
-            return float(header)
+            segundos = float(header)
         except (TypeError, ValueError):
             return None
+        return segundos if math.isfinite(segundos) else None

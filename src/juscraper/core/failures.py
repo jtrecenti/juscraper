@@ -6,8 +6,9 @@ preenchida por :func:`motivo_falha` a partir da exceção capturada. Linha sem
 falha leva ``None``.
 
 O vocabulário separa ``timeout`` (leitura lenta: o ``timeout`` do perfil pode
-estar curto) de ``conexao`` (host inalcançável) e de ``retry_esgotado_<status>``
-(o servidor respondeu, mas com status retentável até o fim das tentativas).
+estar curto) de ``conexao`` (host inalcançável, ou conexão que cai no meio do
+corpo) e de ``retry_esgotado_<status>`` (o servidor respondeu, mas com status
+retentável até o fim das tentativas).
 ``json_invalido`` cobre o corpo que não é o JSON esperado: corpo que não é
 JSON (``InvalidJSONResponseError`` e o ``requests.JSONDecodeError`` de
 ``Response.json()``) e JSON na forma errada (lista no lugar de objeto,
@@ -105,6 +106,7 @@ EXCECOES_DE_FALHA_POR_LINHA: tuple[type[BaseException], ...] = (
     InvalidJSONResponseError,
     requests.HTTPError,
     requests.ConnectionError,
+    requests.exceptions.ChunkedEncodingError,
     requests.Timeout,
     BotChallengeBlockedError,
 )
@@ -180,7 +182,8 @@ def motivo_falha(exc: BaseException) -> str:
         if exc.response is None:
             raise TypeError("HTTPError sem resposta não tem motivo de falha.") from exc
         return f"http_{exc.response.status_code}"
-    if isinstance(exc, requests.ConnectionError):
+    # A conexão que cai no meio do corpo é a mesma falha da que não se abre.
+    if isinstance(exc, (requests.ConnectionError, requests.exceptions.ChunkedEncodingError)):
         return "conexao"
     if isinstance(exc, requests.Timeout):
         return "timeout"

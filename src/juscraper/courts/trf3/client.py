@@ -66,6 +66,7 @@ _PERFIS_HTTP: dict[str, RequestPolicy] = {
         max_retries=4,
         retry_on_timeout=True,
         retry_on_connection_error=True,
+        expect_json=True,
     ),
     "documento": RequestPolicy(
         timeout=(10.0, 60.0),

@@ -220,11 +220,13 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     # ``JUSBR_JWT`` segue aceita porque o script de captura de fixtures ja a usa.
     NOMES_ENV_TOKEN = ("PDPJ_JWT", "JUSBR_JWT")
 
-    # "listagem" serve à lista de processos e aos detalhes; "documento", ao
-    # texto e ao binário, que são maiores e mais lentos. O usuário ajusta
-    # qualquer campo com ``politica=`` no construtor.
+    # "listagem" serve à lista de processos e aos detalhes, que são JSON;
+    # "documento", ao texto e ao binário, que são maiores e mais lentos. O
+    # usuário ajusta qualquer campo com ``politica=`` no construtor.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
-        "listagem": RequestPolicy(timeout=15, retryable_statuses=_STATUS_RETENTAVEIS, retry_on_timeout=True),
+        "listagem": RequestPolicy(
+            timeout=15, retryable_statuses=_STATUS_RETENTAVEIS, retry_on_timeout=True, expect_json=True,
+        ),
         "documento": RequestPolicy(timeout=30, retryable_statuses=_STATUS_RETENTAVEIS, retry_on_timeout=True),
     }
 
@@ -253,8 +255,9 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
             ValueError: Quando ``token`` é inválido ou está expirado, ou quando
                 ``politica`` cita perfil ou campo desconhecido ou traz valor
                 inválido (``max_retries`` que não é inteiro >= 1,
-                ``base_backoff`` ou ``max_backoff`` que não é número positivo
-                e finito, ``timeout`` que não é ``None``, número positivo e
+                ``base_backoff``, ``max_backoff`` ou ``max_retry_after`` que
+                não é número positivo e finito, ``expect_json`` que não é
+                ``bool``, ``timeout`` que não é ``None``, número positivo e
                 finito nem o par ``(conexão, leitura)``).
         """
         super().__init__(

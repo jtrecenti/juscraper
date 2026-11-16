@@ -377,8 +377,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         Raises:
             ValueError: Quando ``politica`` cita perfil ou campo desconhecido
                 ou traz valor inválido (``max_retries`` que não é inteiro >= 1,
-                ``base_backoff`` ou ``max_backoff`` que não é número positivo
-                e finito, ``timeout`` que não é ``None``, número positivo e
+                ``base_backoff``, ``max_backoff`` ou ``max_retry_after`` que
+                não é número positivo e finito, ``expect_json`` que não é
+                ``bool``, ``timeout`` que não é ``None``, número positivo e
                 finito nem o par ``(conexão, leitura)``), ou quando ``token``
                 é inválido ou está expirado.
         """
