@@ -8,7 +8,7 @@ import logging
 import tempfile
 import threading
 from abc import ABC
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, ClassVar, ParamSpec, TypeVar, cast
@@ -138,6 +138,17 @@ def _embrulhar_atributo(atributo: object) -> object | None:
     if inspect.isfunction(atributo) and not getattr(atributo, _MARCA_SAIDA_NORMALIZADA, False):
         return _com_saida_normalizada(atributo)
     return None
+
+
+def recusar_argumentos_desconhecidos(classe: type, kwargs: Mapping[str, Any], dica: str = "") -> None:
+    """Levanta ``TypeError`` quando o construtor de ``classe`` recebeu argumento que não conhece.
+
+    Um nome digitado errado (``sleep_tim=``) passaria calado se fosse guardado.
+    ``dica`` entra depois da mensagem, com a opção a usar no lugar.
+    """
+    if kwargs:
+        nomes = ", ".join(repr(nome) for nome in kwargs)
+        raise TypeError(f"{classe.__name__}() não aceita o(s) argumento(s) {nomes}.{dica}")
 
 
 class BaseScraper(ABC):

@@ -32,7 +32,7 @@ from typing import Any, ClassVar, TypeAlias, TypeVar
 import requests
 
 from juscraper import __version__
-from juscraper.core.base import BaseScraper
+from juscraper.core.base import BaseScraper, recusar_argumentos_desconhecidos
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 logger = logging.getLogger("juscraper.core.http")
@@ -281,10 +281,10 @@ class HTTPScraper(BaseScraper):
         politica: Mapping[str, Mapping[str, Any]] | None = None,
         **kwargs: Any,
     ):
-        if kwargs:
-            # Recusa em vez de guardar: um nome digitado errado (``sleep_tim=``) passava calado.
-            nomes = ", ".join(repr(nome) for nome in kwargs)
-            raise TypeError(f"{type(self).__name__}() não aceita o(s) argumento(s) {nomes}.")
+        de_politica = self.perfis_http and _POLICY_FIELDS.intersection(kwargs)
+        recusar_argumentos_desconhecidos(
+            type(self), kwargs, " Tentativas e prazos são ajustados por perfil, com politica=." if de_politica else "",
+        )
         super().__init__(tribunal_name or type(self).__name__)
         self._perfis_http = self._merge_politica(politica)
         self.session = requests.Session()
