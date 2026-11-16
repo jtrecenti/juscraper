@@ -16,6 +16,11 @@ from tests.falcao.test_falcao_contract import _paginas_pedidas, _register, _samp
 
 _POR_PAGINA = len(_sample("acordaos")["documentos"])
 
+_AVISO_DE_ORDEM = "A ordem padrão do Falcao"
+
+# A maioria dos contratos usa a ordem padrão, que avisa; o aviso tem contratos próprios.
+pytestmark = pytest.mark.filterwarnings(f"ignore:{_AVISO_DE_ORDEM}:UserWarning")
+
 
 @pytest.fixture
 def falcao():
@@ -252,3 +257,50 @@ def test_pagina_interrompida_na_gravacao_e_requisitada_de_novo(falcao, tmp_path)
 
     assert _paginas_pedidas() == [3]
     assert len(df) == 3 * _POR_PAGINA
+
+
+@responses.activate
+@pytest.mark.filterwarnings("error")
+@pytest.mark.parametrize("ordem", [{}, {"ordenacao": "mais_relevante"}])
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
+def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo, ordem):
+    """Medido ao vivo: a mesma página veio em três versões em três minutos."""
+    _register("acordaos", pagina=1, **ordem)
+
+    with pytest.warns(UserWarning, match=f"{_AVISO_DE_ORDEM}.*menos_recente"):
+        getattr(falcao, metodo)("dano moral", checkpoint_dir=tmp_path / "coleta", **ordem)
+
+    assert _paginas_pedidas() == [1]
+
+
+@responses.activate
+@pytest.mark.filterwarnings("error")
+@pytest.mark.parametrize("ordenacao", ["menos_recente", "mais_recente"])
+def test_checkpoint_com_ordem_por_data_nao_avisa(falcao, tmp_path, ordenacao):
+    _register("acordaos", pagina=1, ordenacao=ordenacao)
+
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path / "coleta", ordenacao=ordenacao)
+
+
+@responses.activate
+@pytest.mark.filterwarnings("error")
+def test_coleta_sem_checkpoint_nao_avisa_da_ordem(falcao, tmp_path):
+    _register("acordaos", pagina=1)
+
+    falcao.listar_decisoes_download("dano moral", diretorio=str(tmp_path))
+
+
+@responses.activate
+def test_retomada_aceita_lista_de_filtro_em_outra_ordem(falcao, tmp_path):
+    """A mesma lista em outra ordem é a mesma busca; a requisição segue a ordem passada."""
+    checkpoint = tmp_path / "coleta"
+    _register("acordaos", total=20, pagina=1, tribunais="TST,TRT3")
+    _bloquear_por_cota()
+    with pytest.raises(requests.HTTPError):
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, tribunais=["TST", "TRT3"])
+    responses.reset()
+
+    _register("acordaos", total=20, pagina=2, tribunais="TRT3,TST")
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, tribunais=["TRT3", "TST"])
+
+    assert _paginas_pedidas() == [2]
