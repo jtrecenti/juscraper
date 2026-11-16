@@ -57,7 +57,7 @@ Para cjsg, os arquivos gerados são:
 | `cjsg/results_normal_page_02.html` | idem página 2 |
 | `cjsg/single_page.html` | GET `?pagina=1` para busca cujos resultados cabem em 1 página (`n_pags == 1`) |
 | `cjsg/no_results.html` | GET `?pagina=1` para busca sem resultados |
-| `cjsg/monocratica_single_page.html` | GET `?tipoDeDecisao=D&pagina=1` para busca de decisões monocráticas com 1 a 20 resultados (`capture_cjsg_monocratica_sample`) |
+| `cjsg/monocratica_single_page.html` | GET `?tipoDeDecisao=D&pagina=1` para busca de decisões monocráticas com 1 a 20 resultados (`monocratica_query` de `capture_cjsg_samples`) |
 
 Ao mudar a convenção, atualizar este README e os contratos em conjunto.
 

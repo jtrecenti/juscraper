@@ -32,7 +32,6 @@ from ._util import (
     TJSP_CHROME_HEADERS,
     build_session,
     capture_acordao_samples,
-    capture_cjsg_monocratica_sample,
     capture_cjsg_samples,
     dump,
     fetch_cjsg_pages,
@@ -65,6 +64,7 @@ def capture_cjsg() -> None:
         base_url=ESAJ_BASE,
         headers=TJSP_CHROME_HEADERS,
         body_builder=make_tjsp_cjsg_body,
+        monocratica_query="usucapiao extraordinario predio rural familia",
     )
     # Ementa curta com a palavra "resultados" na 1a página (observado em
     # 14/11/2026 com "direito" e baixar_sg=False): a contagem não pode tomar
@@ -79,15 +79,6 @@ def capture_cjsg() -> None:
     else:
         dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
         print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
-    capture_cjsg_monocratica()
-
-
-def capture_cjsg_monocratica() -> None:
-    """Capture the 1st cjsg page of a monocratic-decision search."""
-    capture_cjsg_monocratica_sample(
-        "tjsp", ESAJ_BASE, "usucapiao extraordinario predio rural familia",
-        headers=TJSP_CHROME_HEADERS, body_builder=make_tjsp_cjsg_body,
-    )
 
 
 # ---------- cjpg ---------------------------------------------------------

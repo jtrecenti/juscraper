@@ -4,7 +4,7 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjam
 """
-from ._util import capture_cjsg_monocratica_sample, capture_cjsg_samples
+from ._util import capture_cjsg_samples
 
 
 def main() -> None:
@@ -12,8 +12,8 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjam",
         base_url="https://consultasaj.tjam.jus.br/",
+        monocratica_query="usucapiao predio rural",
     )
-    capture_cjsg_monocratica_sample("tjam", "https://consultasaj.tjam.jus.br/", "usucapiao predio rural")
 
 
 if __name__ == "__main__":

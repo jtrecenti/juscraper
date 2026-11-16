@@ -10,14 +10,7 @@ import time
 
 from bs4 import BeautifulSoup
 
-from ._util import (
-    build_session,
-    capture_cjsg_monocratica_sample,
-    capture_cjsg_samples,
-    dump,
-    make_tjsp_cjpg_params,
-    samples_dir_for,
-)
+from ._util import build_session, capture_cjsg_samples, dump, make_tjsp_cjpg_params, samples_dir_for
 
 ESAJ_BASE = "https://esaj.tjms.jus.br/"
 
@@ -77,8 +70,8 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjms",
         base_url="https://esaj.tjms.jus.br/",
+        monocratica_query="usucapiao predio rural",
     )
-    capture_cjsg_monocratica_sample("tjms", ESAJ_BASE, "usucapiao predio rural")
     capture_cjpg()
 
 

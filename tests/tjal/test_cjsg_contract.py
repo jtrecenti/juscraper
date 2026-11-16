@@ -27,7 +27,8 @@ def _add_post(pesquisa: str, tipo_decisao: str = "acordao") -> None:
     )
 
 
-def _add_get(pagina: int, sample_path: str, tipo: str = "A") -> None:
+def _add_get(pagina: int, sample_path: str, tipo_decisao: str = "acordao") -> None:
+    tipo = "A" if tipo_decisao == "acordao" else "D"
     responses.add(
         responses.GET,
         f"{BASE}/trocaDePagina.do",
@@ -88,14 +89,16 @@ def test_cjsg_no_results(tmp_path, mocker):
 
 @responses.activate
 def test_cjsg_monocratica_single_page(tmp_path, mocker):
-    """Busca de monocráticas: ``D`` no POST e no GET, e o total vem do input ``-D``.
+    """Busca de monocráticas: ``D`` no POST e no GET, colunas e uma única página.
+
+    A contagem pelo input ``-D`` está em ``TestCJSGNResultsInputDeclarado``.
 
     O formulário do TJAL só mostra a caixa de acórdãos, mas o eSAJ responde à
     busca com ``tipoDecisaoSelecionados=D`` com a aba de monocráticas.
     """
     mocker.patch("time.sleep")
     _add_post("usucapiao predio rural", tipo_decisao="monocratica")
-    _add_get(1, "cjsg/monocratica_single_page.html", tipo="D")
+    _add_get(1, "cjsg/monocratica_single_page.html", tipo_decisao="monocratica")
 
     df = jus.scraper("tjal", download_path=str(tmp_path)).cjsg(
         "usucapiao predio rural", tipo_decisao="monocratica"
@@ -103,5 +106,5 @@ def test_cjsg_monocratica_single_page(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert len(df) == 2  # totalResultadoAbaRetornoFiltro-D no sample
+    assert len(df) == 2  # todas as linhas do sample
     assert len(responses.calls) == 2  # POST + 1 GET: o total cabe em uma página

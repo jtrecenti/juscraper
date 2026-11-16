@@ -11,7 +11,7 @@ Run from repo root::
 import juscraper as jus
 from juscraper.courts.tjce.cjsg_download import _TJCETLSAdapter
 
-from ._util import capture_cjsg_monocratica_sample, capture_cjsg_samples, dump, samples_dir_for
+from ._util import capture_cjsg_samples, dump, samples_dir_for
 
 
 def main() -> None:
@@ -20,9 +20,7 @@ def main() -> None:
         tribunal="tjce",
         base_url="https://esaj.tjce.jus.br/",
         adapters={"https://": _TJCETLSAdapter()},
-    )
-    capture_cjsg_monocratica_sample(
-        "tjce", "https://esaj.tjce.jus.br/", "usucapiao predio rural", adapters={"https://": _TJCETLSAdapter()}
+        monocratica_query="usucapiao predio rural",
     )
     capture_acordao_samples()
 

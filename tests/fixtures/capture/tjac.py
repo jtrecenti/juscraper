@@ -6,7 +6,7 @@ Run from repo root::
 """
 import juscraper as jus
 
-from ._util import capture_acordao_samples, capture_cjsg_monocratica_sample, capture_cjsg_samples, dump, samples_dir_for
+from ._util import capture_acordao_samples, capture_cjsg_samples, dump, samples_dir_for
 
 # Processo com dois acórdãos: apelação (julgada em 13/04/2026) e embargos
 # (27/10/2026), este tipado como "Embargos de Declaração" na pasta. Com
@@ -23,8 +23,8 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjac",
         base_url="https://esaj.tjac.jus.br/",
+        monocratica_query="usucapiao rural familia",
     )
-    capture_cjsg_monocratica_sample("tjac", "https://esaj.tjac.jus.br/", "usucapiao rural familia")
     capture_acordao_samples("tjac", ACORDAO_CASOS)
     capture_getarquivo_recaptcha()
 
