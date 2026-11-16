@@ -9,7 +9,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.core.exceptions import BotChallengeBlockedError
+from juscraper.core.exceptions import BotChallengeBlockedError, RetryExhaustedError
 from juscraper.courts.stm.inteiro_teor import InteiroTeorIndisponivelError
 from tests._helpers import load_sample_bytes
 
@@ -97,6 +97,18 @@ def test_erro_http_levanta_o_erro_do_inteiro_teor(tmp_path):
     responses.add(responses.GET, URL_WWW2, status=404)
 
     with pytest.raises(InteiroTeorIndisponivelError, match="404"):
+        jus.scraper("stm").baixar_inteiro_teor(URL_WWW2, diretorio=str(tmp_path))
+
+    assert _arquivos(tmp_path) == []
+
+
+@responses.activate
+def test_status_passageiro_esgotado_nao_vira_documento_indisponivel(mocker, tmp_path):
+    """503 persistente é falha do serviço, não do documento: sobe o erro das tentativas esgotadas."""
+    mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, URL_WWW2, status=503)
+
+    with pytest.raises(RetryExhaustedError):
         jus.scraper("stm").baixar_inteiro_teor(URL_WWW2, diretorio=str(tmp_path))
 
     assert _arquivos(tmp_path) == []
