@@ -3,6 +3,7 @@ Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
 
 from datetime import date
+from functools import partial
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
@@ -100,6 +101,22 @@ def _to_iso(date_str: str | None) -> str | None:
     return f"{iso}T03:00:00.000Z"
 
 
+def _chave_da_decisao(decisao: dict) -> tuple:
+    """Identifica a linha de uma decisão, para retirar a que o portal devolver em duas janelas de data.
+
+    O ``hash`` sozinho não serve: é do texto. Medido em 16/11/2026, em "dano
+    moral" de 01/01 a 20/02/2024: 444 das 11.361 linhas repetem o ``hash`` de
+    outra, com outro órgão julgador, outra data de publicação ou outro
+    processo, e 3 vêm sem ``hash``.
+    """
+    return (
+        decisao.get("hash"),
+        decisao.get("numeroProcesso"),
+        decisao.get("dataPublicacao"),
+        (decisao.get("orgaoJulgador") or {}).get("id"),
+    )
+
+
 def cjsg_download(
     pesquisa: str = "",
     paginas=None,
@@ -146,24 +163,25 @@ def cjsg_download(
     list
         List of raw GraphQL response dicts (one per page).
     """
+    filtro_da_janela = partial(
+        _build_filter,
+        pesquisa=pesquisa,
+        numero_recurso=numero_recurso,
+        orgaos=orgaos,
+        relatores=relatores,
+        classes=classes,
+        segundo_grau=segundo_grau,
+        turmas_recursais=turmas_recursais,
+        tipo_acordaos=tipo_acordaos,
+        tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
+        ordenado_por=ordenado_por,
+    )
+
     def _fetch_page(page_number: int, inicio: str | None, fim: str | None) -> dict:
         payload = {
             "operationName": "filter",
             "variables": {
-                "decisaoFilter": _build_filter(
-                    pesquisa=pesquisa,
-                    numero_recurso=numero_recurso,
-                    orgaos=orgaos,
-                    relatores=relatores,
-                    classes=classes,
-                    data_publicacao_inicio=inicio,
-                    data_publicacao_fim=fim,
-                    segundo_grau=segundo_grau,
-                    turmas_recursais=turmas_recursais,
-                    tipo_acordaos=tipo_acordaos,
-                    tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
-                    ordenado_por=ordenado_por,
-                ),
+                "decisaoFilter": filtro_da_janela(data_publicacao_inicio=inicio, data_publicacao_fim=fim),
                 "pageNumber": page_number,
                 "itemsPerPage": items_per_page,
             },
@@ -188,7 +206,7 @@ def cjsg_download(
             buscar=lambda inicio, fim, pagina: _fetch_page(pagina - 1, inicio, fim),
             contar_resultados=lambda first: _filter(first).get("itemCount") or 0,
             itens=lambda pagina: _filter(pagina).get("decisoes") or [],
-            chave=lambda decisao: decisao["hash"],
+            chave=_chave_da_decisao,
             parse=cjsg_parse,
             sleep_time=1,
         )

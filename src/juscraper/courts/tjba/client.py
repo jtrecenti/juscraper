@@ -101,8 +101,9 @@ class TJBAScraper(HTTPScraper):
             resultados é dividida em janelas de data de publicação que cabem
             no teto do portal, da mais recente para a mais antiga, e todas são
             baixadas; a soma pode diferir do total inicial, porque o portal
-            segue indexando. O dia que sozinho passa do teto vem até o teto,
-            com ``UserWarning``. Coleta longa: ~1 s por página. Se uma
+            segue indexando. A primeira divisão emite ``UserWarning`` com o
+            total e o número aproximado de requisições (~1 s cada). O dia que
+            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
             requisição falha depois da divisão, levanta
             ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
             baixado (também em ``cjsg_download``), e a mensagem diz o
@@ -233,8 +234,9 @@ class TJBAScraper(HTTPScraper):
             resultados é dividida em janelas de data de publicação que cabem
             no teto do portal, da mais recente para a mais antiga, e todas são
             baixadas; a soma pode diferir do total inicial, porque o portal
-            segue indexando. O dia que sozinho passa do teto vem até o teto,
-            com ``UserWarning``. Coleta longa: ~1 s por página. Se uma
+            segue indexando. A primeira divisão emite ``UserWarning`` com o
+            total e o número aproximado de requisições (~1 s cada). O dia que
+            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
             requisição falha depois da divisão, levanta
             ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
             baixado (também em ``cjsg_download``), e a mensagem diz o

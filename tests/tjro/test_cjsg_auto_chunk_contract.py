@@ -21,6 +21,9 @@ from tests._helpers import load_sample
 
 TETO = 10
 
+# O aviso da primeira divisão tem teste próprio; nos demais é esperado.
+pytestmark = pytest.mark.filterwarnings("ignore:.*Ela será dividida por:UserWarning")
+
 
 def _hits() -> list[dict]:
     paginas = [json.loads(load_sample("tjro", f"cjsg/results_normal_page_0{n}.json")) for n in (1, 2)]
@@ -60,16 +63,17 @@ def portal(mocker):
         yield estado
 
 
-def test_busca_acima_do_teto_e_dividida_por_data_de_julgamento_e_vem_inteira(portal, recwarn):
-    df = jus.scraper("tjro").cjsg("dano moral")
+def test_busca_acima_do_teto_e_dividida_por_data_de_julgamento_e_vem_inteira(portal):
+    with pytest.warns(UserWarning, match="TJRO: a busca tem 20 resultados.*dividida por data_julgamento") as avisos:
+        df = jus.scraper("tjro").cjsg("dano moral")
 
     assert len(df) == 20
     assert not df.duplicated(subset=["processo", "data_julgamento", "ementa"]).any()
-    assert not [aviso for aviso in recwarn.list if issubclass(aviso.category, UserWarning)]
-    # A busca original vai sem data; a divisão começa do piso até hoje, em ISO.
+    assert len(avisos) == 1
+    # A busca original vai sem data; a divisão vai do piso até hoje, em ISO.
     assert "dtjulgamento_inicio" not in portal.pedidos[0]["fields"]
-    assert portal.pedidos[1]["fields"]["dtjulgamento_inicio"] == "1900-01-01"
     assert portal.pedidos[1]["fields"]["dtjulgamento_fim"] == HOJE
+    assert min(pedido["fields"]["dtjulgamento_inicio"] for pedido in portal.pedidos[1:]) == "1990-01-01"
     assert all(pedido["fields"]["query"] == "dano moral" for pedido in portal.pedidos)
 
 

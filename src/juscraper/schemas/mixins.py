@@ -133,11 +133,13 @@ class AutoChunkMixin(BaseModel):
     busca que passa disso (``juscraper.utils.divisao_por_data``);
     ``auto_chunk=False`` baixa ate o teto e avisa.
 
-    Nota: o flag ``auto_chunk`` e popado pelos metodos publicos
-    (``cjsg``/``cjpg``) **antes** da validacao do schema, entao em runtime
-    o mixin nao bloqueia nada — ele serve como **documentacao executavel**
-    (cobertura via ``tests/schemas/test_cjsg_schemas.py::TestAutoChunkMixin``)
-    e como rede de seguranca caso algum chamador interno bypassem o pop.
+    Nota: na familia eSAJ o flag ``auto_chunk`` e popado pelos metodos
+    publicos (``cjsg``/``cjpg``) **antes** da validacao do schema, entao em
+    runtime o mixin nao bloqueia nada — ele serve como **documentacao
+    executavel** (cobertura via
+    ``tests/schemas/test_cjsg_schemas.py::TestAutoChunkMixin``) e como rede de
+    seguranca caso algum chamador interno bypassem o pop. No TJBA e no TJRO o
+    flag passa pelo schema e e lido dele.
     """
 
     auto_chunk: bool = True

@@ -93,9 +93,11 @@ class TJROScraper(HTTPScraper):
                 julgamento que cabem no teto do portal, da mais recente para a
                 mais antiga, e todas sao baixadas: a ordem por relevancia vale
                 dentro de cada janela, nao entre elas, e a soma pode diferir
-                do total inicial, porque o portal segue indexando. O dia que
-                sozinho passa do teto vem ate o teto, com ``UserWarning``.
-                Coleta longa: ~1 s por pagina de 10 resultados. Com ``False``,
+                do total inicial, porque o portal segue indexando. A
+                primeira divisao emite ``UserWarning`` com o total e o numero
+                aproximado de requisicoes (~1 s cada, 10 resultados por
+                pagina). O dia que sozinho passa do teto vem ate o teto, com
+                ``UserWarning``. Com ``False``,
                 ``None`` baixa as 1000 primeiras paginas e emite
                 ``UserWarning``. Sem efeito com ``paginas`` explicito.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRO`.

@@ -354,23 +354,29 @@ What to expect from a split search:
 
 - Windows come from the most recent to the oldest. The portal order
   (relevance in TJRO) holds inside each window, not across them.
-- An open date bound becomes 01/01/1900 (TJRO) or 01/02/1980 (TJBA) at the
-  start and today at the end. If some records lack the filter date or fall
-  outside that range, a `UserWarning` says how many were left out.
+- The first split emits a `UserWarning` with the total and the approximate
+  number of requests, so a long collection does not start unnoticed.
+- A search without dates is split from 01/01/1990 (TJRO) or 01/02/1980
+  (TJBA) to today. Records without
+  the filter date, or dated outside that range, fall in no window: when the
+  windows add up to less than the total the portal first reported, a
+  `UserWarning` at the end gives both numbers.
 - A single day above the cap cannot be split: its first 10,000 results are
   returned, with a `UserWarning`.
-- Rows the portal returns in two different windows are kept once (by
-  document id in TJRO and `hash` in TJBA). Repetitions inside one window are
-  kept as the portal sends them.
+- A row the portal returns in two different windows is kept once (by
+  document id in TJRO; by `hash`, case number, publication date and court
+  body in TJBA, where `hash` alone repeats across distinct rows). Repetitions
+  inside one window are kept as the portal sends them.
 - The portal keeps indexing during a long collection, so the number of rows
-  can differ from the total the first page reported.
-- It is slow: one request per second, 10 results per page in TJRO (10,000
-  results take about 17 minutes). In TJBA, `tamanho_pagina` reduces the number
-  of requests.
+  can exceed the total the first page reported.
+- It is slow and held in memory: one request per second, 10 results per page
+  in TJRO (10,000 results take about 17 minutes; "dano moral", with more than
+  120,000, takes hours). In TJBA, `tamanho_pagina` reduces the number of
+  requests. Narrow the search by date when you do not need everything.
 - If a request fails after the split, the collection stops and raises
   `ColetaParcialError`. `.resultado` holds the DataFrame of what was
-  downloaded (also in `cjsg_download`), and the message gives the end date of
-  the interval still missing, to resume with `data_*_fim`.
+  downloaded (also in `cjsg_download`), and the message gives the interval
+  still missing, to resume with `data_*_inicio` and `data_*_fim`.
 
 With `auto_chunk=False`, `paginas=None` downloads the pages up to the cap
 and emits a `UserWarning`. An explicit `paginas` never splits: page numbers

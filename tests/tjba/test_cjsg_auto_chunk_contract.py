@@ -22,6 +22,9 @@ from tests._helpers import load_sample
 TETO = 15
 POR_PAGINA = 5
 
+# O aviso da primeira divisão tem teste próprio; nos demais é esperado.
+pytestmark = pytest.mark.filterwarnings("ignore:.*Ela será dividida por:UserWarning")
+
 
 def _decisoes() -> list[dict]:
     paginas = [json.loads(load_sample("tjba", f"cjsg/results_normal_page_0{n}.json")) for n in (1, 2)]
@@ -70,14 +73,14 @@ def test_busca_acima_do_teto_e_dividida_por_data_de_publicacao(portal):
     with pytest.warns(UserWarning, match=r"o dia 2025-12-29 tem 19 resultados.*só entrega os 15 primeiros") as avisos:
         df = jus.scraper("tjba").cjsg("dano moral", tamanho_pagina=POR_PAGINA)
 
-    assert len([aviso for aviso in avisos if issubclass(aviso.category, UserWarning)]) == 1
+    assert len(avisos) == 2  # o da primeira divisão e o do dia acima do teto
     # O dia 30 inteiro (1 decisão) e as 15 primeiras do dia 29, da janela mais recente para a mais antiga.
     assert len(df) == 16
     assert df["data_publicacao"].is_monotonic_decreasing
     # A busca original vai como sempre foi; a divisão manda as duas datas no formato do portal.
     assert "dataFinal" not in portal.pedidos[0]["decisaoFilter"]
-    assert portal.pedidos[1]["decisaoFilter"]["dataInicial"] == "1980-02-01T03:00:00.000Z"
     assert portal.pedidos[1]["decisaoFilter"]["dataFinal"] == f"{HOJE}T03:00:00.000Z"
+    assert min(pedido["decisaoFilter"]["dataInicial"] for pedido in portal.pedidos) == "1980-02-01T03:00:00.000Z"
     assert all(pedido["decisaoFilter"]["assunto"] == "dano moral" for pedido in portal.pedidos)
 
 
@@ -96,6 +99,21 @@ def test_decisao_que_o_portal_repete_na_mesma_janela_fica_como_veio():
     ][:TETO]
 
 
+@pytest.mark.usefixtures("portal")
+def test_mesmo_hash_em_datas_diferentes_sao_duas_linhas(mocker):
+    """Visto ao vivo em 16/11/2026: o ``hash`` é do texto, e o portal lista a decisão em duas datas."""
+    decisoes = _decisoes()
+    republicada = {**decisoes[1], "dataPublicacao": "2025-12-30T03:00:00Z"}
+    mocker.patch(f"{__name__}._decisoes", return_value=[republicada, *decisoes])
+
+    with pytest.warns(UserWarning, match="só entrega os 15 primeiros"):
+        df = jus.scraper("tjba").cjsg("dano moral", tamanho_pagina=POR_PAGINA)
+
+    assert len(df) == 17
+    assert (df["hash"] == republicada["hash"]).sum() == 2
+    assert len(df[df["data_publicacao"] == date(2025, 12, 30)]) == 2
+
+
 def test_auto_chunk_false_para_no_teto_com_aviso(portal):
     with pytest.warns(UserWarning, match="o portal só entrega as 3 primeiras"):
         df = jus.scraper("tjba").cjsg("dano moral", tamanho_pagina=POR_PAGINA, auto_chunk=False)
@@ -107,7 +125,7 @@ def test_auto_chunk_false_para_no_teto_com_aviso(portal):
 def test_falha_depois_da_divisao_levanta_coleta_parcial_com_dataframe(portal):
     portal.falhar = lambda filtro: filtro["dataInicial"][:10] == filtro.get("dataFinal", "")[:10] == "2025-12-29"
 
-    with pytest.raises(ColetaParcialError, match="Falta o intervalo que termina em 2025-12-29") as erro:
+    with pytest.raises(ColetaParcialError, match="Falta o intervalo de 1980-02-01 a 2025-12-29") as erro:
         jus.scraper("tjba").cjsg_download("dano moral", tamanho_pagina=POR_PAGINA)
 
     assert len(erro.value.resultado) == 1

@@ -1,10 +1,11 @@
 """Downloads raw results from the TJRO jurisprudence search (Elasticsearch API)."""
 import math
-from datetime import date
+from datetime import datetime
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
 from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+from juscraper.utils.params import OPEN_ENDED_DATE_FLOOR
 
 from .parse import cjsg_parse_manager
 
@@ -16,10 +17,10 @@ RESULTS_PER_PAGE = 10
 # embora ``hits.total`` informe o total inteiro (123.574 em "dano moral").
 MAX_RESULTS = 10_000
 # Início das janelas quando a busca dividida por data não informa
-# ``data_julgamento_inicio``. Medido em 16/11/2026: em "dano moral", os
-# 123.585 resultados têm data de julgamento entre 1990 e o dia da medição; o
-# piso anterior a isso custa uma requisição a mais na divisão.
-PISO_DATA_JULGAMENTO = date(1900, 1, 1)
+# ``data_julgamento_inicio``: o mesmo piso que a biblioteca dá à busca que só
+# informa a data final. Medido em 16/11/2026: em "dano moral", os 123.585
+# resultados têm data de julgamento entre 1990 e o dia da medição.
+PISO_DATA_JULGAMENTO = datetime.strptime(OPEN_ENDED_DATE_FLOOR, "%d/%m/%Y").date()  # noqa: DTZ007 - data sem hora
 
 
 def build_cjsg_payload(
@@ -120,7 +121,7 @@ def cjsg_download_manager(
     def _total(first: dict) -> int:
         total_info = first.get("hits", {}).get("total", {})
         total: int = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
-        return total
+        return total or 0
 
     def _n_pags(first: dict) -> int:
         return math.ceil(_total(first) / RESULTS_PER_PAGE) or 1
