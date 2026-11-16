@@ -102,6 +102,8 @@ website:
                   text: "TRF5"
                 - href: notebooks/trf6.ipynb
                   text: "TRF6"
+                - href: notebooks/tse.ipynb
+                  text: "TSE"
             - section: "Agregadores"
               contents:
                 - href: notebooks/datajud.ipynb
@@ -208,3 +210,4 @@ quartodoc:
         - courts.trf3.client.TRF3Scraper
         - courts.trf5.client.TRF5Scraper
         - courts.trf6.client.TRF6Scraper
+        - courts.tse.client.TSEScraper

@@ -42,6 +42,7 @@ _SCRAPERS: dict[str, str] = {
     "trf5":  "juscraper.courts.trf5.client:TRF5Scraper",
     "trf6":  "juscraper.courts.trf6.client:TRF6Scraper",
     "stf":   "juscraper.courts.stf.client:STFScraper",
+    "tse":   "juscraper.courts.tse.client:TSEScraper",
     "datajud": "juscraper.aggregators.datajud.client:DatajudScraper",
     "jusbr": "juscraper.aggregators.jusbr.client:JusbrScraper",
     "pdpj": "juscraper.aggregators.pdpj.client:PdpjScraper",

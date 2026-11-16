@@ -55,6 +55,7 @@ dados.head()
 | Tribunal | Funcionalidades Disponíveis |
 |----------|-----------------------------|
 | STF      | contar_decisoes, listar_decisoes |
+| TSE      | baixar_inteiro_teor |
 | TJAC     | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL     | cjsg |
 | TJAM     | cjsg |
@@ -100,6 +101,8 @@ dados.head()
 > ⚠️ **TJAP — `cjsg` indisponível:** desde ~2026 a busca de jurisprudência do TJAP (plataforma Tucujuris) passou a exigir um CAPTCHA [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), validado no servidor. Como o raspador faz requisições HTTP puras (sem navegador), não há como gerar o token e o backend responde `"A verificação de segurança falhou"`. Nesse caso `cjsg` levanta `TJAPSecurityCheckError` com a explicação, em vez de retornar vazio silenciosamente. Não há solução pela API pública. Ver [issue #279](https://github.com/jtrecenti/juscraper/issues/279).
 
 > ⚠️ **TJGO — `cjsg` sem resultados:** desde 12/11/2026 (Projudi 3.194.1) a busca de jurisprudência do TJGO valida no servidor o token [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), que o raspador não envia. Sem ele, o portal devolve a busca vazia, sem mensagem de erro, e `cjsg`/`cjsg_download` emitem `UserWarning` explicando o bloqueio. O portal responde do mesmo jeito a uma busca que de fato não tem resultados, por isso o aviso sai em toda busca vazia.
+
+> ⚠️ **TSE — sem busca de jurisprudência:** a pesquisa do [portal de jurisprudência do TSE](https://jurisprudencia.tse.jus.br/) exige um token de CAPTCHA validado no servidor, que o raspador, por fazer requisições HTTP puras (sem navegador), não tem como gerar; sem ele, a API responde `"Falha na verificação antirrobô."` (sonda de 16/11/2026). O raspador cobre o que o portal entrega sem CAPTCHA: `baixar_inteiro_teor(codigo_decisao)`, que baixa o PDF de uma decisão pelo código dela, e os catálogos do formulário (`listar_classes`, `listar_relatores`, `listar_eleicoes` e `listar_normas`). `cjsg` levanta `NotImplementedError` com essa explicação. Ver [issue #378](https://github.com/jtrecenti/juscraper/issues/378).
 
 #### Autenticação no JusBR e no PDPJ
 
@@ -151,6 +154,7 @@ O token fica em `~/.config/juscraper/pdpj_token.json` (ou em `$XDG_CONFIG_HOME/j
 - [Exemplo TRF3](docs/notebooks/trf3.ipynb)
 - [Exemplo TRF5](docs/notebooks/trf5.ipynb)
 - [Exemplo TRF6](docs/notebooks/trf6.ipynb)
+- [Exemplo TSE](docs/notebooks/tse.ipynb)
 - [Exemplo Datajud](docs/notebooks/datajud.ipynb)
 - [Exemplo Falcao](docs/notebooks/falcao.ipynb)
 - [Exemplo JusBR](docs/notebooks/jusbr.ipynb)

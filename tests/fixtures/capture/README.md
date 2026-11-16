@@ -31,6 +31,7 @@ python -m tests.fixtures.capture.tjap
 python -m tests.fixtures.capture.tjes
 python -m tests.fixtures.capture.tjrs
 python -m tests.fixtures.capture.datajud
+python -m tests.fixtures.capture.tse
 ```
 
 Cada script eSAJ:
