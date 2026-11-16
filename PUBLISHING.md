@@ -43,6 +43,8 @@ git push origin main
 git push origin v0.1.0
 ```
 
+O script insere a seção da versão nova no topo do `CHANGELOG.md`, antes da introdução, com itens vazios, e não move as entradas de `[Unreleased]` nem atualiza os links de comparação do fim do arquivo. Até isso ser corrigido, prefira o método 2.
+
 ### Método 2: Manual
 
 1. **Atualizar versão no `pyproject.toml`**:
@@ -50,7 +52,7 @@ git push origin v0.1.0
    version = "0.1.0"
    ```
 
-2. **Atualizar CHANGELOG.md** com as mudanças da nova versão
+2. **Atualizar CHANGELOG.md**: renomear `[Unreleased]` para `[0.1.0] - AAAA-MM-DD`, abrir um `[Unreleased]` vazio acima dela e, nos links do fim do arquivo, apontar `[Unreleased]` para `compare/v0.1.0...HEAD` e acrescentar `[0.1.0]` (`compare/<tag anterior>...v0.1.0`).
 
 3. **Commit e tag**:
    ```bash

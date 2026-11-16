@@ -569,6 +569,57 @@ The `juscraper.utils.params` module provides normalization functions used intern
 - `run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)` — drives a search across windows, concatenates and deduplicates
 - `warn_unsupported(param_name, tribunal)` — warns about unsupported parameters
 
+## Per-row failures
+
+Batch methods keep one row per requested item even when the item fails, and
+say why in the `motivo_falha` column (`None` when the item was read). This
+holds for TJSP `cpopg` (table `basicos`) and `cposg`; for `cpopg` of TRF1,
+TRF3, TRF5, TRF6 and TJPE, and `cposg` of TRF3; for `baixar_acordaos` and
+`baixar_sentencas` in the eSAJ courts; and for the batch methods of JusBR and
+PDPJ. DataJud `contar_processos` uses the same values in its `error` column.
+The failures of a call go into a single `UserWarning` at the end.
+
+| `motivo_falha` | Meaning |
+|---|---|
+| `nao_encontrado` | The source says the item does not exist (each scraper documents the signal it reads). |
+| `entrada_invalida` | The input row has no usable value (CNJ, date, code); nothing was requested. |
+| `http_<status>` | The request failed with that HTTP status. |
+| `retry_esgotado_<status>` | The server answered a retryable status until the attempts ran out. |
+| `timeout` | The response did not arrive in time; the profile timeout may be too short. |
+| `conexao` | The connection failed or dropped, also in the middle of the body. |
+| `json_invalido` | The body is not the expected JSON. |
+| `resposta_inesperada` | A page outside the known format, or another error without its own reason. |
+| `nao_pdf` | The PDF endpoint answered with something else; nothing was written. |
+| `sem_acordao` | The process was found, but without an accessible acórdão on that date. |
+| `bloqueio_anti_bot` | A bot manager (Akamai, CloudFront, AWS WAF, F5) challenged or blocked the request. |
+| `captcha_esgotado` | The portal refused the solved captcha in every attempt. |
+
+An anti-bot block holds for the whole session. In the PJe `cpopg`/`cposg`
+(TRF1, TRF3, TRF5, TRF6 and TJPE) and in the eSAJ `baixar_acordaos` and
+`baixar_sentencas`, the first `bloqueio_anti_bot` ends the batch: the
+following rows get the same reason without a request, and the rows already
+read stay in the result. The JusBR and PDPJ batch methods go on with the next
+item. Whenever a row has `bloqueio_anti_bot`, the warning comes as
+`juscraper.core.exceptions.BloqueioAntiBotWarning`, a `UserWarning`
+subclass. Wait a few minutes or switch networks, and ask again
+only for the failed rows. The values live in
+`juscraper.core.failures.MOTIVOS_FALHA`.
+
+TRF1, TRF3, TRF5 and TJPE `cpopg(..., download_pecas=True)`, and TRF3
+`cposg(..., download_pecas=True)`, also add
+`pecas_falhas`, a list per process of `{"id": ..., "motivo_falha": ...}` for
+the documents that failed; a failed document does not change the process's
+`motivo_falha`.
+
+Methods whose unit of work has no row to carry the reason (a page, a date
+window, an alias) raise `juscraper.core.exceptions.ColetaParcialError`
+instead of returning a partial result as if it were complete: the eSAJ
+auto-chunk, TJSP and TJMS `cjpg`, TJMG `cjsg`, TJTO `cjsg` and `cjpg`, and
+DataJud `listar_processos`.
+`erro.resultado` has what was collected, in the same format as the full
+return, and `erro.falhas` the failed units with their exceptions (see the
+`cjpg` example in the migration guide above).
+
 ## Rate limiting and retry behaviour
 
 All HTTP scrapers that inherit from `juscraper.core.http.HTTPScraper`
