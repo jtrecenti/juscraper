@@ -66,16 +66,17 @@ def _extract_class(value: Tag) -> str | None:
 
 
 def _raw_process_number(value) -> str | None:
-    """Return the process number without the ``/TJSC`` suffix, or ``None``.
+    """Return the process number without the ``/TJSC`` or ``/SC`` suffix, or ``None``.
 
-    O número costuma vir no link ``a.numero-processo``. Alguns registros (acórdãos
-    do Conselho da Magistratura, por exemplo) trazem só o texto ``<número>/TJSC``,
-    sem link. Tirar o sufixo antes de formatar vale também para números antigos
-    fora do padrão CNJ, que format_cnj devolve crus.
+    O número costuma vir no link ``a.numero-processo``, com o sufixo ``/TJSC``
+    ou ``/SC``. Alguns registros (acórdãos do Conselho da Magistratura, por
+    exemplo) trazem só o texto ``<número>/TJSC``, sem link; ``/SC`` sem link não
+    foi observado no portal. Tirar o sufixo antes de formatar vale também para
+    números antigos fora do padrão CNJ, que format_cnj devolve crus.
     """
     link = value.find("a", class_="numero-processo")
     if link:
-        return str(link.get_text(strip=True)).removesuffix("/TJSC")
+        return str(link.get_text(strip=True)).removesuffix("/TJSC").removesuffix("/SC")
     for text in value.stripped_strings:
         if text.endswith("/TJSC"):
             return str(text).removesuffix("/TJSC")

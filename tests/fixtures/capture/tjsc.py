@@ -57,6 +57,12 @@ def main() -> None:
         session, dest, "", 1, "processo_sem_link.html",
         dt_decisao_inicio="09/07/2027", dt_decisao_fim="09/07/2027",
     )
+    # Número com o sufixo ``/SC`` no link, em vez de ``/TJSC`` (16/11/2026):
+    # a página traz números antigos com os dois sufixos.
+    _capture(
+        session, dest, "habeas corpus", 1, "processo_sufixo_sc.html",
+        dt_decisao_inicio="12/12/2006", dt_decisao_fim="19/12/2006",
+    )
 
 
 if __name__ == "__main__":
