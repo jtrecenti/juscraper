@@ -808,7 +808,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>TRF6 <code>cpopg</code> does not inherit from <code>HTTPScraper</code> (its lookup is a captcha loop on its own session) and has no HTTP profiles: its request deadline is the constructor argument <code>timeout</code> (default 30 s), as in <code>jus.scraper("trf6", timeout=90)</code>, and <code>politica=</code>, like any other unknown constructor argument, raises <code>TypeError</code>.</p>
+<p>TRF6 <code>cpopg</code> does not inherit from <code>HTTPScraper</code> (its lookup is a captcha loop on its own session) and has no HTTP profiles: its request deadline is the constructor argument <code>timeout</code> (default 30 s), as in <code>jus.scraper("trf6", timeout=90)</code>, and <code>politica=</code> raises <code>TypeError</code>.</p>
+<p>Every scraper rejects an unknown constructor argument with <code>TypeError</code>, so a mistyped name such as <code>sleep_tim=</code> fails at construction instead of being silently ignored.</p>
 <p>The exponential backoff (<code>2s</code> then <code>4s</code> across the three default attempts) resolves transient WAF blocks but does <strong>not</strong> always escape longer cooldowns. If you see <code>RetryExhaustedError(status_code=403)</code> (or <code>429</code>) repeatedly on the same scraper:</p>
 <ul>
 <li><strong>First</strong>, increase <code>sleep_time</code> in the constructor so the pause between requests becomes longer than the WAF window. Doubling it (<code>sleep_time=2.0</code>) is usually enough for the TJSP eSAJ WAF.</li>
