@@ -538,6 +538,25 @@ class TJXXScraper(EsajSearchScraper):
         session.mount("https://", CustomTLSAdapter())
 ```
 
+O adaptador herda de `juscraper.core.tls.ContextoTLSAdapter` e define só o contexto. A base o aplica na conexão direta (`init_poolmanager`) e na conexão via proxy (`proxy_manager_for`): com `HTTPS_PROXY` definido, o `requests` não usa o pool de `init_poolmanager`, e um adaptador que sobrescreva só esse método perde o contexto atrás de proxy.
+
+```python
+import ssl
+
+from urllib3.util.ssl_ import create_urllib3_context
+
+from juscraper.core.tls import ContextoTLSAdapter
+
+
+class CustomTLSAdapter(ContextoTLSAdapter):
+    def contexto_ssl(self) -> ssl.SSLContext:
+        ctx = create_urllib3_context()
+        ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+        return ctx
+```
+
+O teste do adaptador confere o contexto nos dois caminhos, como `tests/tjce/test_tls_granular.py`.
+
 ### 3. API divergente (TJSP)
 
 ```python

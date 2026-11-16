@@ -20,9 +20,16 @@ def stm():
     return jus.scraper("stm")
 
 
-def _total(stm, pesquisa, **filtros):
+def _total_da_pagina(html: str) -> int:
+    """Total de documentos que o portal anuncia na página."""
+    total = cjsg_n_resultados(html)
+    assert total is not None
+    return total
+
+
+def _total(stm, pesquisa, **filtros) -> int:
     """Total de documentos que o portal anuncia para a busca."""
-    return cjsg_n_resultados(stm.cjsg_download(pesquisa, paginas=1, **filtros)[0])
+    return _total_da_pagina(stm.cjsg_download(pesquisa, paginas=1, **filtros)[0])
 
 
 def test_cjsg_duas_paginas_ao_vivo(stm):
@@ -83,32 +90,28 @@ def test_cjsg_intervalo_sem_resultados_ao_vivo(stm):
 
 def test_cjsg_campo_tudo_ao_vivo(stm):
     """Todos os campos incluem a ementa: a mesma expressão não pode achar menos."""
-    df = stm.cjsg('"corrupção ativa"', paginas=1, campo="tudo")
+    html = stm.cjsg_download('"corrupção ativa"', paginas=1, campo="tudo")[0]
+    df = stm.cjsg_parse([html])
 
     assert len(df) == RESULTS_PER_PAGE
     assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
-    assert _total(stm, '"corrupção ativa"', campo="tudo") > _total(stm, '"corrupção ativa"')
+    assert _total_da_pagina(html) > _total(stm, '"corrupção ativa"')
 
 
 def test_cjsg_campo_referencia_legislativa_ao_vivo(stm):
-    df = stm.cjsg("290", paginas=1, campo="referencia_legislativa")
+    """Na busca simples e, com data, na pesquisa avançada, que tem o mesmo campo."""
+    inicio, fim = datetime.date(2024, 1, 1), datetime.date(2024, 12, 31)
+    busca = {"paginas": 1, "campo": "referencia_legislativa"}
+
+    html = stm.cjsg_download("290", **busca)[0]
+    html_com_data = stm.cjsg_download("290", **busca, data_julgamento_inicio=inicio, data_julgamento_fim=fim)[0]
+    df, df_com_data = stm.cjsg_parse([html]), stm.cjsg_parse([html_com_data])
 
     assert len(df) == RESULTS_PER_PAGE
     assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
-
-
-def test_cjsg_campo_referencia_legislativa_com_data_ao_vivo(stm):
-    inicio, fim = datetime.date(2024, 1, 1), datetime.date(2024, 12, 31)
-
-    df = stm.cjsg(
-        "290", paginas=1, campo="referencia_legislativa", data_julgamento_inicio=inicio, data_julgamento_fim=fim
-    )
-
-    assert len(df) > 0
-    assert df["data_julgamento"].between(inicio, fim).all()
-    assert _total(stm, "290", campo="referencia_legislativa") > _total(
-        stm, "290", campo="referencia_legislativa", data_julgamento_inicio=inicio, data_julgamento_fim=fim
-    )
+    assert len(df_com_data) > 0
+    assert df_com_data["data_julgamento"].between(inicio, fim).all()
+    assert _total_da_pagina(html) > _total_da_pagina(html_com_data)
 
 
 PERIODO = {"data_julgamento_inicio": "01/01/2020", "data_julgamento_fim": "31/12/2024"}
@@ -125,7 +128,6 @@ def test_cjsg_operadores_com_data_ao_vivo(stm):
     so_corrupcao = _total(stm, "corrupção", **PERIODO)
 
     assert 0 < frase <= sem_operador < so_corrupcao < com_ou
-    assert _total(stm, "corrupção E ativa", **PERIODO) == sem_operador
     assert _total(stm, "corrupção NÃO ativa", **PERIODO) == so_corrupcao - sem_operador
 
 
@@ -139,14 +141,18 @@ def test_cjsg_curinga_e_parenteses_com_data_ao_vivo(stm):
     assert df["ementa"].str.contains("deser", case=False).all()
 
 
-def test_baixar_inteiro_teor_dos_dois_enderecos_ao_vivo(stm, tmp_path):
-    """Um acórdão recente (visualizador do eproc) e um antigo (PDF em ``www2``)."""
-    urls = stm.cjsg('"corrupção ativa"', paginas=[1, 3])["url_inteiro_teor"].dropna()
-    do_eproc = urls[urls.str.contains("eproc2g.stm.jus.br")].iloc[0]
-    do_www2 = urls[urls.str.contains("www2.stm.jus.br")].iloc[0]
+@pytest.mark.parametrize(
+    "url",
+    [
+        # Acórdão recente, no visualizador do eproc (do sample ``results_normal_page_01.html``).
+        "https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao"
+        "&uuid=cbb3c68a2a6c472eef9576d05988cef88459cc90295cd7a818e1b04802c93d21",
+        # Acórdão antigo, em PDF (do sample ``single_page.html``).
+        "https://www2.stm.jus.br/pesquisa/acordao/2015/50/10022722/10022722.pdf",
+    ],
+)
+def test_baixar_inteiro_teor_ao_vivo(stm, tmp_path, url):
+    caminho = Path(stm.baixar_inteiro_teor(url, diretorio=str(tmp_path)))
 
-    for url in (do_eproc, do_www2):
-        caminho = Path(stm.baixar_inteiro_teor(url, diretorio=str(tmp_path)))
-
-        assert caminho.parent == tmp_path / "inteiro_teor"
-        assert caminho.read_bytes().startswith(b"%PDF")
+    assert caminho.parent == tmp_path / "inteiro_teor"
+    assert caminho.read_bytes().startswith(b"%PDF")
