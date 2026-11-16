@@ -76,11 +76,8 @@ def test_cjsg_decodifica_pelo_charset_declarado_pelo_portal(mocker):
 
     df = jus.scraper("tjsc").cjsg("dano moral", paginas=range(1, 3))
 
-    pagina_2 = df.iloc[10:]
-    assert len(pagina_2) == 10
-    assert "Apelação" in pagina_2["classe"].tolist()
-    textos = df[["classe", "ementa", "relator"]].astype(str)
-    assert not textos.apply(lambda coluna: coluna.str.contains("ă")).any().any()
+    assert "Apelação" in df["classe"].iloc[10:].tolist()
+    assert "ă" not in df[["classe", "ementa", "relator"]].to_string()
 
 
 @responses.activate

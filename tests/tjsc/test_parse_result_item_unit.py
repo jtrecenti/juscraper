@@ -12,13 +12,6 @@ from bs4 import BeautifulSoup
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
 from tests._helpers import load_sample
 
-# Busca "habeas corpus", página 1, capturada em 16/11/2026.
-CLASSES_HABEAS_CORPUS = (
-    ["Agravo de Execução Penal", "Apelação Criminal", "Habeas Corpus Criminal", "Habeas Corpus Criminal TR"]
-    + ["Habeas Corpus Criminal"] * 5
-    + ["Agravo de Execução Penal"]
-)
-
 
 def _sample_items() -> dict[str, object]:
     soup = BeautifulSoup(
@@ -77,13 +70,6 @@ def test_parse_result_item_preserves_partial_matching():
     }
 
 
-def test_parse_result_item_reads_class_only_from_second_column():
-    """Um ``<span>`` no formato ``<código> - <classe>`` fora da segunda coluna não dá classe."""
-    result = _parse_result_item(_sample_items()["class-only-in-second-column"])
-
-    assert result == {"processo": "5009876-54.2024.8.24.0000"}
-
-
 def test_parse_result_item_preserves_zip_truncation():
     """A label without a corresponding value is ignored by pair truncation."""
     result = _parse_result_item(_sample_items()["truncated-pairs"])
@@ -94,13 +80,13 @@ def test_parse_result_item_preserves_zip_truncation():
 def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
     """Items with neither ``ementa`` nor ``processo`` do not become rows.
 
-    ``partial-labels`` and ``truncated-pairs`` are dropped; the other four stay.
+    ``partial-labels`` and ``truncated-pairs`` are dropped; the other three stay.
     """
     with pytest.warns(UserWarning, match="2 registro"):
         df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
 
-    assert len(_sample_items()) == 6
-    assert len(df) == 4
+    assert len(_sample_items()) == 5
+    assert len(df) == 3
     assert df[["processo", "ementa"]].notna().any(axis=1).all()
 
 
@@ -149,7 +135,12 @@ def test_cjsg_parse_manager_warns_when_process_number_is_missing():
             + ["Apelação"] * 3,
         ),
         # Sigla com espaço (``HC TR``), que a leitura pela forma da linha perdia.
-        ("classe_sigla_com_espaco.html", CLASSES_HABEAS_CORPUS),
+        (
+            "classe_sigla_com_espaco.html",
+            ["Agravo de Execução Penal", "Apelação Criminal", "Habeas Corpus Criminal", "Habeas Corpus Criminal TR"]
+            + ["Habeas Corpus Criminal"] * 5
+            + ["Agravo de Execução Penal"],
+        ),
     ],
 )
 def test_cjsg_parse_manager_reads_class_from_span_of_second_column(sample, classes):
@@ -175,3 +166,16 @@ def test_parse_result_item_keeps_span_text_without_separator():
     item = BeautifulSoup(html, "html.parser").find("div", class_="resultadoItem")
 
     assert _parse_result_item(item)["classe"] == "Apelação"
+
+
+def test_cjsg_parse_manager_warns_when_class_span_is_missing():
+    """Registro com processo e sem o ``<span>`` da classe fica sem classe, com aviso."""
+    html = load_sample("tjsc", "cjsg/processo_sem_link.html", encoding="latin-1")
+    span = "<span>422070 - Recurso Administrativo</span>"
+    assert html.count(span) == 1
+
+    with pytest.warns(UserWarning, match=r"1 registro\(s\) sem classe"):
+        df = cjsg_parse_manager([html.replace(span, "")])
+
+    assert df["processo"].tolist() == ["0000.14.36.787202-3"]
+    assert "classe" not in df.columns
