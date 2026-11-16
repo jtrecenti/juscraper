@@ -199,15 +199,16 @@ def extract_total_pages(html: str) -> int:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
             e de :func:`~juscraper.utils.pagination.parse_page_number`.
     """
+    soup = BeautifulSoup(html, "html.parser")
     n_resultados = extract_count_with_cascade(
-        html,
+        soup,
         css_selectors=_COUNT_SELECTORS,
         regex_patterns=_COUNT_PATTERNS,
     )
     return resolve_total_pages(
         n_resultados,
         resultados_por_pagina=RESULTS_PER_PAGE,
-        totais_links=_last_page_links(BeautifulSoup(html, "html.parser")),
+        totais_links=_last_page_links(soup),
         tribunal="TJPR",
     )
 

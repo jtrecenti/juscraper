@@ -109,7 +109,7 @@ def _get_total_pages(html: str) -> int:
     """
     soup = BeautifulSoup(html, "html.parser")
     n_resultados = extract_count_with_cascade(
-        html,
+        soup,
         css_selectors=_COUNT_SELECTORS,
         regex_patterns=_COUNT_PATTERNS,
     )
