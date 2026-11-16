@@ -253,26 +253,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>classe</td>
-<td><code>str</code> | None</td>
-<td>Classe processual.</td>
+<td><code>int</code> | <code>str</code> | None</td>
+<td>Código da classe processual (coluna <code>cod_classe_cnj</code> do resultado; <code>460</code> é Recurso Inominado).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>assunto</td>
-<td><code>str</code> | None</td>
-<td>Assunto.</td>
+<td><code>int</code> | <code>str</code> | None</td>
+<td>Código do assunto (coluna <code>cod_assunto_cnj</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>orgao_julgador</td>
-<td><code>str</code> | None</td>
-<td>Órgão julgador.</td>
+<td><code>int</code> | <code>str</code> | None</td>
+<td>Código do órgão julgador (coluna <code>cod_org_julg</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>relator</td>
-<td><code>str</code> | None</td>
-<td>Nome do relator.</td>
+<td><code>int</code> | <code>str</code> | None</td>
+<td>Código do relator (coluna <code>cod_relator</code>); casa com o relator ou com o redator do acórdão. Nestes quatro filtros, o portal aceita só o código: um nome levanta <code>ValidationError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
