@@ -91,3 +91,23 @@ def test_bloqueio_na_primeira_pagina_pedida_sobe_sem_parcial(tjto):
         tjto.cjsg("dano moral", paginas=[2, 3])
 
     assert len(responses.calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("paginas", "faltam"), [([2, 3, 4], r"\[3, 4\]"), ([3, 2], r"\[3\]")], ids=["retomada", "fora-de-ordem"]
+)
+@responses.activate(registry=OrderedRegistry)
+def test_bloqueio_sem_a_pagina_1_guarda_a_menor_pagina_pedida(tjto, paginas, faltam):
+    """Sem a página 1, a menor página pedida sai antes, para o total, e fica no ``.resultado`` do bloqueio.
+
+    Vale também quando ela viria depois na ordem pedida (``[3, 2]``).
+    """
+    bruto = load_sample("tjto", "cjsg/results_normal_page_02.html")
+    responses.add(responses.POST, BASE_URL, body=bruto, content_type="text/html; charset=utf-8")
+    responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
+
+    with pytest.raises(ColetaParcialError, match=rf"página 3 falhou.*faltam as páginas {faltam}") as erro:
+        tjto.cjsg("dano moral", paginas=paginas)
+
+    pd.testing.assert_frame_equal(erro.value.resultado, tjto.cjsg_parse([bruto]))
+    assert len(responses.calls) == 2

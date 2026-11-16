@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
 from juscraper.utils.params import to_br_date
 
 from .parse import cjsg_parse_manager
@@ -36,16 +36,19 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
     re.compile(r"\(([\d.]+)\)"),
 )
-_ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
 
 
 def _get_total_results(html: str) -> int:
-    """Extract the total number of results from the active tab's count."""
+    """Extract the total number of results from the active tab's count.
+
+    Sem ``zero_markers``: a página além do total também diz "Nenhum documento
+    encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
+    a busca sem resultados traz ``(0)`` na aba.
+    """
     n = extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
-        zero_markers=_ZERO_MARKERS,
         fallback_max_int=False,
     )
     return n if n is not None else 0
@@ -120,7 +123,9 @@ def cjsg_download_manager(
 
     Args:
         termo: Search term.
-        paginas: Pages to download (1-based). None = all.
+        paginas: Pages to download (1-based). None = all. A menor página pedida
+            sai antes, e o total dela descarta, sem requisição e com aviso no
+            logger ``juscraper.tjto``, as páginas além do fim da busca.
         request_fn: HTTP callable that handles retry + raise_for_status — em
             uso normal e ``TJTOScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
@@ -142,38 +147,48 @@ def cjsg_download_manager(
         "soementa": soementa,
     }
 
-    def _get_page(start: int) -> str:
-        payload = build_cjsg_payload(termo, start=start, **fetch_kwargs)
+    def _get_page(pagina: int) -> str:
+        payload = build_cjsg_payload(termo, start=(pagina - 1) * RESULTS_PER_PAGE, **fetch_kwargs)
         resp = request_fn("POST", BASE_URL, data=payload, timeout=60)
         return resp.text
 
-    if paginas is None:
-        first_html = _get_page(0)
-        total = _get_total_results(first_html)
-        n_pages = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        return _baixar_paginas(_get_page, list(range(2, n_pages + 1)), [first_html], sleep_time)
-    return _baixar_paginas(_get_page, list(paginas), [], sleep_time)
+    # A menor página pedida é a única baixada antes de saber o total: se ela
+    # passa do total, as demais também passam, e todas caem no aviso.
+    primeira = 1 if paginas is None else paginas.start if isinstance(paginas, range) else min(paginas)
+    html_primeira = _get_page(primeira)
+    total = _get_total_results(html_primeira)
+    n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
+    validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
+    return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
 
 
 def _baixar_paginas(
-    get_page: Callable[[int], str], paginas: list[int], resultados: list[str], sleep_time: float
+    get_page: Callable[[int], str], paginas: list[int], primeira: int, html_primeira: str, sleep_time: float
 ) -> list:
-    """Acrescenta a ``resultados`` as ``paginas`` (1-based), com ``sleep_time`` entre elas.
+    """Baixa as ``paginas`` (1-based), com ``sleep_time`` antes de cada requisição.
 
-    A página que falha com outra já baixada levanta :class:`ColetaParcialError`,
-    com as anteriores lidas em ``.resultado``, como no TJMG: o bloqueio do AWS
-    WAF, que chega depois de algumas buscas seguidas, não descarta o que já
-    veio. Sem página baixada antes, a exceção original sobe.
+    ``primeira`` já foi baixada, para ler o total, e entra na sua posição sem
+    nova requisição. Por isso a página que falha aqui sempre tem outra baixada
+    e levanta :class:`ColetaParcialError`, com as baixadas lidas em
+    ``.resultado`` (``primeira`` também, se viria depois na ordem pedida), como
+    no TJMG: o bloqueio do AWS WAF, que chega depois de algumas buscas
+    seguidas, não descarta o que já veio. A falha na própria ``primeira`` sobe
+    antes, como a exceção original.
     """
+    resultados: list[str] = []
     for posicao, page_num in enumerate(tqdm(paginas, desc="Baixando páginas TJTO")):
-        if resultados:
-            time.sleep(sleep_time)
+        if page_num == primeira:
+            resultados.append(html_primeira)
+            continue
+        time.sleep(sleep_time)
         try:
-            resultados.append(get_page((page_num - 1) * RESULTS_PER_PAGE))
+            resultados.append(get_page(page_num))
         except Exception as exc:  # vai para ColetaParcialError
-            if not resultados:
-                raise
-            raise _coleta_parcial(resultados, paginas[posicao:], exc) from exc
+            faltando = paginas[posicao:]
+            if primeira in faltando:
+                resultados.append(html_primeira)
+                faltando.remove(primeira)
+            raise _coleta_parcial(resultados, faltando, exc) from exc
     return resultados
 
 
