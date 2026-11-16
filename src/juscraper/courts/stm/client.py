@@ -342,8 +342,12 @@ class STMScraper(HTTPScraper):
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
             InteiroTeorIndisponivelError: O portal respondeu sem PDF ou com
-                erro HTTP (o 404 de um arquivo que saiu do ar, por exemplo);
-                nada é gravado. Fica em ``juscraper.courts.stm.inteiro_teor``.
+                erro HTTP que não se resolve pedindo de novo (o 404 de um
+                arquivo que saiu do ar, por exemplo); nada é gravado. Fica em
+                ``juscraper.courts.stm.inteiro_teor``.
+            RetryExhaustedError: O portal seguiu respondendo com status
+                passageiro (429, 503) depois de todas as tentativas; vale
+                pedir de novo mais tarde.
 
         Returns:
             Caminho do PDF gravado.
