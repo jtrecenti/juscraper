@@ -321,6 +321,7 @@ def test_builds_normalized_filters_and_inclusive_publication_interval(mocker):
         relator="  João   D'Ávila-Silva ",
         orgao_julgador=" Câmara   Cível ",
         tipo_processo="Cível",
+        classe=" Apelação   Cível ",
         data_publicacao_inicio="19/07/2024",
         data_publicacao_fim="19/07/2024",
         request_fn=request,
@@ -343,6 +344,7 @@ def test_builds_normalized_filters_and_inclusive_publication_interval(mocker):
         "fqRelator": "JOAO D'AVILA-SILVA",
         "fqOrgaoJulgador": "CAMARA CIVEL",
         "tipoProcesso": "2",
+        "fqTipoProcesso": "APELACAO CIVEL",
     }
 
 
@@ -462,7 +464,44 @@ def test_public_integer_pages_downloads_from_first_page_through_requested_page(m
     assert [call[2]["params"]["indicePagina"] for call in api_calls] == [0, 1, 2]
 
 
-@pytest.mark.parametrize("filter_name", ["relator", "orgao_julgador"])
+@pytest.mark.parametrize("tipo_consulta", ["Acordao", "DecisaoMonocratica"])
+def test_classe_vai_como_fq_tipo_processo_nos_dois_tipos_de_consulta(tipo_consulta, mocker):
+    mocker.patch("time.sleep")
+    request = _RequestRecorder([_page([])])
+
+    cjsg_download(
+        "dano moral",
+        paginas=range(1, 2),
+        tipo_consulta=tipo_consulta,
+        classe="Agravo de Instrumento",
+        request_fn=request,
+        session=requests.Session(),
+    )
+
+    api_call = next(call for call in request.calls if call[1].endswith("/consulta"))
+    assert api_call[2]["params"]["fqTipoProcesso"] == "AGRAVO DE INSTRUMENTO"
+
+
+def test_normalizacao_preserva_indicador_ordinal(mocker):
+    """Os nomes da API mantêm "ª" e "º"; trocá-los por "A" e "O" zerava a busca."""
+    mocker.patch("time.sleep")
+    request = _RequestRecorder([_page([], acordaos=0)])
+
+    cjsg_download(
+        "dano moral",
+        paginas=range(1, 2),
+        orgao_julgador="Regime de Cooperação da 2ª Câmara de Direito Público",
+        request_fn=request,
+        session=requests.Session(),
+    )
+
+    api_call = next(call for call in request.calls if call[1].endswith("/consulta"))
+    assert api_call[2]["params"]["fqOrgaoJulgador"] == (
+        "REGIME DE COOPERACAO DA 2ª CAMARA DE DIREITO PUBLICO"
+    )
+
+
+@pytest.mark.parametrize("filter_name", ["relator", "orgao_julgador", "classe"])
 def test_public_rejects_numeric_filter_ids_before_network(filter_name, mocker):
     request = _NoNetwork()
     scraper = TJMTScraper()
@@ -529,6 +568,9 @@ def test_maps_tipo_processo(tipo_processo, expected, mocker):
         ("relator", "123", ValueError),
         ("orgao_julgador", 123, TypeError),
         ("orgao_julgador", "123", ValueError),
+        ("classe", 123, TypeError),
+        ("classe", "123", ValueError),
+        ("classe", "Exceção de Incompetência, Suspeição e Impedimento", ValueError),
         ("tipo_processo", "942", ValueError),
         ("tipo_processo", "Cível Criminal", ValueError),
         ("data_publicacao_inicio", "2024-99-99", ValueError),
@@ -554,6 +596,7 @@ def test_accepts_empty_filter_values():
         relator="",
         orgao_julgador="",
         tipo_processo="",
+        classe="",
         request_fn=request,
         session=requests.Session(),
     )

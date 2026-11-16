@@ -62,6 +62,7 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_publicacao_inicio: str | date | None = None,
         data_publicacao_fim: str | date | None = None,
+        classe: str | None = None,
         **kwargs,
     ) -> list:
         """Baixa as respostas JSON brutas da API de jurisprudência do TJMT.
@@ -89,6 +90,7 @@ class TJMTScraper(HTTPScraper):
             relator=relator,
             orgao_julgador=orgao_julgador,
             tipo_processo=tipo_processo,
+            classe=classe,
             thesaurus=thesaurus,
             tamanho_pagina=tamanho_pagina,
         )
@@ -101,6 +103,7 @@ class TJMTScraper(HTTPScraper):
             relator=inp.relator,
             orgao_julgador=inp.orgao_julgador,
             tipo_processo=inp.tipo_processo,
+            classe=inp.classe,
             thesaurus=inp.thesaurus,
             quantidade_por_pagina=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
@@ -136,6 +139,7 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_publicacao_inicio: str | date | None = None,
         data_publicacao_fim: str | date | None = None,
+        classe: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).
@@ -181,9 +185,16 @@ class TJMTScraper(HTTPScraper):
                 publicação, nos mesmos formatos, inclusivo: o dia informado
                 entra inteiro. Com só ``data_publicacao_inicio``, assume a
                 data de hoje e emite ``UserWarning``.
+            classe (str | None): Nome da classe processual, como aparece na
+                coluna ``classe`` (ex.: ``"Apelação Cível"``), com a mesma
+                normalização de ``relator``. A API casa só o nome exato:
+                ``"Apelação"`` e ``"Apelação Cível"`` são classes
+                distintas, e nome que não existe devolve busca vazia.
+                Nome com vírgula levanta ``ValueError``, porque a API a lê
+                como separador de classes. ``None`` não filtra.
             **kwargs: Só os aliases deprecados abaixo. Qualquer outro nome,
-                inclusive ``data_julgamento_inicio``/``data_julgamento_fim``
-                e ``classe``, que a API não filtra, levanta ``TypeError``.
+                inclusive ``data_julgamento_inicio``/``data_julgamento_fim``,
+                que a API não filtra, levanta ``TypeError``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -194,13 +205,15 @@ class TJMTScraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido ou sem suporte na API
-                (``data_julgamento_*``, ``classe``).
+                (``data_julgamento_*``).
             ValidationError: Para os demais erros de validação do schema,
-                como ``relator`` ou ``orgao_julgador`` passados como número,
+                como ``relator``, ``orgao_julgador`` ou ``classe`` passados
+                como número,
                 ``tipo_consulta`` desconhecido e ``tamanho_pagina`` menor que 1
                 ou booleano.
-            ValueError: Data inválida ou início depois do fim; ``relator``
-                ou ``orgao_julgador`` só com dígitos; ``tipo_processo``
+            ValueError: Data inválida ou início depois do fim; ``relator``,
+                ``orgao_julgador`` ou ``classe`` só com dígitos; ``classe``
+                com vírgula; ``tipo_processo``
                 desconhecido; ``tamanho_pagina`` acima de
                 10.000; página além do teto de 10.000 resultados.
             TJMTConfigError: A configuração pública do portal não foi
@@ -249,6 +262,7 @@ class TJMTScraper(HTTPScraper):
             tamanho_pagina=tamanho_pagina,
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
+            classe=classe,
             **kwargs,
         )
         dados = self.cjsg_parse(brutos, tipo_consulta=tipo_consulta)

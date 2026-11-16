@@ -25,6 +25,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         relator="Relator Teste",
         orgao_julgador="Camara Teste",
         tipo_processo="Cível",
+        classe="Classe Teste",
         thesaurus=True,
     )
 
@@ -38,6 +39,7 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
         relator="Relator Teste",
         orgao_julgador="Camara Teste",
         tipo_processo="Cível",
+        classe="Classe Teste",
         thesaurus=True,
     )
 
@@ -48,7 +50,6 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
 @pytest.mark.parametrize(
     "filtro",
     [
-        {"classe": "Apelacao"},
         {"data_julgamento_inicio": "01/01/2024"},
         {"data_julgamento_fim": "31/03/2024"},
         {"data_julgamento_inicio": "01/01/2024", "data_julgamento_fim": "31/03/2024"},
@@ -56,13 +57,49 @@ def test_cjsg_all_supported_filters_land_in_query_params(mocker):
 )
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_filtros_sem_suporte_na_api_levantam_typeerror_sem_rede(metodo, filtro):
-    """A API não filtra por classe nem por data de julgamento: o schema os
-    rejeita com ``TypeError`` antes de qualquer requisição."""
+    """A API não filtra por data de julgamento: o schema a rejeita com
+    ``TypeError`` antes de qualquer requisição."""
     nome = next(iter(filtro))
     with pytest.raises(TypeError, match=nome):
         getattr(jus.scraper("tjmt"), metodo)("dano moral", paginas=1, **filtro)
 
     assert len(responses.calls) == 0
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_classe_vai_como_fq_tipo_processo(metodo, mocker):
+    """``classe`` chega à API em ``fqTipoProcesso``, a faceta de classe do
+    portal, sem acento e em maiúsculas; o sample é a resposta real dessa
+    busca, só com a classe pedida (#493)."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page(
+        "dano moral",
+        1,
+        "cjsg/filtro_classe.json",
+        tamanho_pagina=2,
+        data_publicacao_inicio="2025-03-10",
+        data_publicacao_fim="2025-03-10T23:59:59",
+        classe="APELACAO CIVEL",
+    )
+
+    resultado = getattr(jus.scraper("tjmt"), metodo)(
+        "dano moral",
+        paginas=1,
+        tamanho_pagina=2,
+        data_publicacao_inicio="2025-03-10",
+        data_publicacao_fim="2025-03-10",
+        classe="  Apelação   Cível ",
+    )
+
+    if metodo == "cjsg":
+        assert resultado["classe"].tolist() == ["APELAÇÃO CÍVEL", "APELAÇÃO CÍVEL"]
+    else:
+        assert [r["nomeClasse"] for r in resultado[0]["value"]["resultados"]] == [
+            "APELAÇÃO CÍVEL",
+            "APELAÇÃO CÍVEL",
+        ]
 
 
 @responses.activate(registry=OrderedRegistry)
