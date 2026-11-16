@@ -1,6 +1,5 @@
 """Downloads raw results from the TJPB jurisprudence search (Laravel API)."""
 import math
-import time
 from urllib.parse import unquote
 
 from juscraper.core.http import RequestFn
@@ -101,11 +100,10 @@ def cjsg_download_manager(
             perfil="cjsg",
         )
         data: dict = resp.json()
-        time.sleep(1)
         return data
 
     def _n_pags(first: dict) -> int:
         total: int = first.get("total", 0)
         return math.ceil(total / RESULTS_PER_PAGE) if total else 1
 
-    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB")
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB", sleep_time=1)

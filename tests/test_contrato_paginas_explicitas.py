@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
+from functools import partial
 from typing import cast
 from urllib.parse import parse_qs, urlparse
 
@@ -60,23 +62,6 @@ def _pagina_tjsc(request) -> int:
     return int(parse_qs(request.body)["hdnPaginaAtual"][0])
 
 
-URLS = {
-    "tjba": tjba_download.GRAPHQL_URL,
-    "tjpa": tjpa_download.BASE_URL,
-    "tjro": tjro_download.BASE_URL,
-}
-MODULOS_COM_TETO = {"tjba": tjba_download, "tjro": tjro_download}
-
-
-def _registrar_json(tribunal: str, sample: str):
-    def registrar() -> None:
-        responses.add(
-            responses.POST, URLS[tribunal], body=load_sample(tribunal, f"cjsg/{sample}.json"),
-            content_type="application/json",
-        )
-    return registrar
-
-
 def _pagina_tjba(request) -> int:
     return cast("int", json.loads(request.body)["variables"]["pageNumber"]) + 1
 
@@ -85,61 +70,66 @@ def _pagina_tjpa(request) -> int:
     return cast("int", json.loads(request.body)["page"]) + 1
 
 
+def _pagina_tjpb(request) -> int | None:
+    """O GET do token, que antecede as buscas, não é página."""
+    return cast("int", json.loads(request.body)["page"]) if request.method == "POST" else None
+
+
 def _pagina_tjro(request) -> int:
     return cast("int", json.loads(request.body)["from"]) // tjro_download.RESULTS_PER_PAGE + 1
-
-
-# TJES (GET, JSON), TJPB (POST, JSON, depois do GET do token) e TJPI (GET,
-# HTML): método, URL, extensão do sample e tipo da resposta da busca.
-BUSCAS = {
-    "tjes": (responses.GET, f"{tjes_download.BASE_URL}/search", "json", "application/json"),
-    "tjpb": (responses.POST, tjpb_download.SEARCH_URL, "json", "application/json"),
-    "tjpi": (responses.GET, tjpi_download.BASE_URL, "html", "text/html; charset=utf-8"),
-}
-
-
-def _registrar_busca(tribunal: str, corpo_de=None):
-    """Registra a busca do portal; ``corpo_de(pagina)`` escolhe o corpo, e o default é a página 2."""
-    def registrar() -> None:
-        metodo, url, extensao, tipo = BUSCAS[tribunal]
-        pagina_2 = load_sample(tribunal, f"cjsg/results_normal_page_02.{extensao}")
-        if tribunal == "tjpb":
-            add_get_classes()
-        responses.add_callback(
-            metodo,
-            url,
-            callback=lambda request: (
-                200, {}, corpo_de(PORTAIS[tribunal][1](request)) if corpo_de else pagina_2,
-            ),
-            content_type=tipo,
-        )
-    return registrar
 
 
 def _pagina_da_query(request) -> int:
     return int(parse_qs(urlparse(request.url).query)["page"][0])
 
 
-def _pagina_tjpb(request) -> int | None:
-    return cast("int", json.loads(request.body)["page"]) if request.method == "POST" else None
+# Busca de cada portal de uma URL só: método, URL, extensão dos samples e
+# leitura da página pedida.
+BUSCAS = {
+    "tjba": (responses.POST, tjba_download.GRAPHQL_URL, "json", _pagina_tjba),
+    "tjes": (responses.GET, f"{tjes_download.BASE_URL}/search", "json", _pagina_da_query),
+    "tjpa": (responses.POST, tjpa_download.BASE_URL, "json", _pagina_tjpa),
+    "tjpb": (responses.POST, tjpb_download.SEARCH_URL, "json", _pagina_tjpb),
+    "tjpi": (responses.GET, tjpi_download.BASE_URL, "html", _pagina_da_query),
+    "tjro": (responses.POST, tjro_download.BASE_URL, "json", _pagina_tjro),
+}
+MODULOS_COM_TETO = {"tjba": tjba_download, "tjro": tjro_download}
+
+
+def _sample(tribunal: str, nome: str) -> str:
+    return load_sample(tribunal, f"cjsg/{nome}.{BUSCAS[tribunal][2]}")
+
+
+def _registrar_busca(tribunal: str, sample: str = "results_normal_page_02", corpo_de=None) -> None:
+    """Registra a busca do portal: responde ``sample`` a toda página, ou ``corpo_de(pagina)``."""
+    metodo, url, extensao, pagina_de = BUSCAS[tribunal]
+    corpo = _sample(tribunal, sample)
+    if tribunal == "tjpb":
+        add_get_classes()
+    responses.add_callback(
+        metodo,
+        url,
+        callback=lambda request: (200, {}, corpo_de(pagina_de(request)) if corpo_de else corpo),
+        content_type="text/html; charset=utf-8" if extensao == "html" else "application/json",
+    )
 
 
 # Por portal: registro das respostas, leitura da página pedida e uma página
 # além do total da busca do sample (no TJBA e no TJRO, a do próprio sample).
-PORTAIS = {
-    "tjba": (_registrar_json("tjba", "alem_do_total"), _pagina_tjba, 901),
-    "tjes": (_registrar_busca("tjes"), _pagina_da_query, 10**6),
-    "tjpa": (_registrar_json("tjpa", "results_normal_page_02"), _pagina_tjpa, 10**6),
-    "tjpb": (_registrar_busca("tjpb"), _pagina_tjpb, 10**6),
-    "tjpi": (_registrar_busca("tjpi"), _pagina_da_query, 10**6),
+PORTAIS: dict[str, tuple[Callable[[], None], Callable[..., int | None], int]] = {
+    "tjba": (partial(_registrar_busca, "tjba", "alem_do_total"), _pagina_tjba, 901),
+    "tjes": (partial(_registrar_busca, "tjes"), _pagina_da_query, 10**6),
+    "tjpa": (partial(_registrar_busca, "tjpa"), _pagina_tjpa, 10**6),
+    "tjpb": (partial(_registrar_busca, "tjpb"), _pagina_tjpb, 10**6),
+    "tjpi": (partial(_registrar_busca, "tjpi"), _pagina_da_query, 10**6),
     "tjrn": (_registrar_tjrn, _pagina_tjrn, 10**6),
-    "tjro": (_registrar_json("tjro", "alem_do_total"), _pagina_tjro, 501),
+    "tjro": (partial(_registrar_busca, "tjro", "alem_do_total"), _pagina_tjro, 501),
     "tjsc": (_registrar_tjsc, _pagina_tjsc, 10**6),
 }
 
 
 def _paginas_pedidas(tribunal: str) -> list[int]:
-    """As páginas das buscas, na ordem dos pedidos; o GET do token do TJPB fica de fora."""
+    """As páginas das buscas, na ordem dos pedidos."""
     paginas = (PORTAIS[tribunal][1](chamada.request) for chamada in responses.calls)
     return [pagina for pagina in paginas if pagina is not None]
 
@@ -173,41 +163,20 @@ def test_so_paginas_alem_do_total_pede_so_a_menor(tribunal, mocker):
     assert brutos == []
 
 
-@pytest.mark.parametrize("tribunal", list(URLS))
+@pytest.mark.parametrize("tribunal", list(BUSCAS))
 @responses.activate
 def test_menor_pagina_volta_na_posicao_pedida(tribunal, mocker):
     """A menor página é pedida antes das outras, mas o retorno segue a ordem de ``paginas``."""
     mocker.patch("time.sleep")
-    pagina_de = PORTAIS[tribunal][1]
-    pagina_2 = load_sample(tribunal, "cjsg/results_normal_page_02.json")
-    outra = load_sample(tribunal, "cjsg/results_normal_page_01.json")
-    responses.add_callback(
-        responses.POST,
-        URLS[tribunal],
-        callback=lambda request: (200, {}, pagina_2 if pagina_de(request) == 2 else outra),
-        content_type="application/json",
-    )
-
-    brutos = jus.scraper(tribunal).cjsg_download("dano moral", paginas=[5, 2, 4])
-
-    assert _paginas_pedidas(tribunal) == [2, 5, 4]
-    assert brutos == [json.loads(outra), json.loads(pagina_2), json.loads(outra)]
-
-
-@pytest.mark.parametrize("tribunal", list(BUSCAS))
-@responses.activate
-def test_menor_pagina_volta_na_posicao_pedida_tjes_tjpb_tjpi(tribunal, mocker):
-    mocker.patch("time.sleep")
-    extensao = BUSCAS[tribunal][2]
-    pagina_2 = load_sample(tribunal, f"cjsg/results_normal_page_02.{extensao}")
-    outra = load_sample(tribunal, f"cjsg/results_normal_page_01.{extensao}")
-    _registrar_busca(tribunal, lambda pagina: pagina_2 if pagina == 2 else outra)()
+    pagina_2 = _sample(tribunal, "results_normal_page_02")
+    outra = _sample(tribunal, "results_normal_page_01")
+    _registrar_busca(tribunal, corpo_de=lambda pagina: pagina_2 if pagina == 2 else outra)
 
     brutos = jus.scraper(tribunal).cjsg_download("dano moral", paginas=[5, 2, 4])
 
     esperado = [outra, pagina_2, outra]
     assert _paginas_pedidas(tribunal) == [2, 5, 4]
-    assert brutos == (esperado if extensao == "html" else [json.loads(corpo) for corpo in esperado])
+    assert brutos == (esperado if BUSCAS[tribunal][2] == "html" else [json.loads(corpo) for corpo in esperado])
 
 
 @responses.activate
@@ -244,7 +213,7 @@ def test_todas_as_paginas_param_no_teto_com_aviso(tribunal, mocker):
     """``paginas=None`` numa busca acima do teto baixa até ele e avisa; o teto é reduzido para o teste."""
     mocker.patch("time.sleep")
     mocker.patch.object(MODULOS_COM_TETO[tribunal], "MAX_RESULTS", 30)
-    _registrar_json(tribunal, "results_normal_page_02")()
+    _registrar_busca(tribunal)
 
     with pytest.warns(UserWarning, match=r"só entrega as 3 primeiras"):
         brutos = jus.scraper(tribunal).cjsg_download("dano moral")
@@ -257,7 +226,7 @@ def test_todas_as_paginas_param_no_teto_com_aviso(tribunal, mocker):
 @responses.activate
 def test_ultima_pagina_do_teto_e_pedida(tribunal, mocker):
     mocker.patch("time.sleep")
-    _registrar_json(tribunal, "results_normal_page_02")()
+    _registrar_busca(tribunal)
 
     brutos = jus.scraper(tribunal).cjsg_download("dano moral", paginas=[1000])
 
