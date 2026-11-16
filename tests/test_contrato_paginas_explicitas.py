@@ -8,9 +8,9 @@ TJMG, TJRJ, TJTO e o eSAJ. A menor página pedida sai primeiro, porque é dela
 que vem o total (como no TJTO); as demais saem na ordem pedida. Os samples são
 respostas reais: a busca "dano moral" tem 69.440 resultados no TJRN e 23.109
 no TJSC, 10 por página, e 400 páginas no TJPA. Os ``alem_do_total`` de TJBA e
-TJRO são a resposta a uma página além do total (65 e 72 páginas) e dentro do
-teto de 10.000 resultados desses portais, que tem os contratos no fim do
-arquivo.
+TJPB e TJRO são a resposta a uma página além do total (65, 40 e 72 páginas) e
+dentro do teto de 10.000 resultados desses portais, que tem os contratos no fim
+do arquivo.
 """
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ BUSCAS = {
     "tjpi": (responses.GET, tjpi_download.BASE_URL, "html", _pagina_da_query),
     "tjro": (responses.POST, tjro_download.BASE_URL, "json", _pagina_tjro),
 }
-MODULOS_COM_TETO = {"tjba": tjba_download, "tjro": tjro_download}
+MODULOS_COM_TETO = {"tjba": tjba_download, "tjpb": tjpb_download, "tjro": tjro_download}
 
 
 def _sample(tribunal: str, nome: str) -> str:
@@ -115,12 +115,12 @@ def _registrar_busca(tribunal: str, sample: str = "results_normal_page_02", corp
 
 
 # Por portal: registro das respostas, leitura da página pedida e uma página
-# além do total da busca do sample (no TJBA e no TJRO, a do próprio sample).
+# além do total da busca do sample (no TJBA, no TJPB e no TJRO, a do próprio sample).
 PORTAIS: dict[str, tuple[Callable[[], None], Callable[..., int | None], int]] = {
     "tjba": (partial(_registrar_busca, "tjba", "alem_do_total"), _pagina_tjba, 901),
     "tjes": (partial(_registrar_busca, "tjes"), _pagina_da_query, 10**6),
     "tjpa": (partial(_registrar_busca, "tjpa"), _pagina_tjpa, 10**6),
-    "tjpb": (partial(_registrar_busca, "tjpb"), _pagina_tjpb, 10**6),
+    "tjpb": (partial(_registrar_busca, "tjpb", "alem_do_total"), _pagina_tjpb, 901),
     "tjpi": (partial(_registrar_busca, "tjpi"), _pagina_da_query, 10**6),
     "tjrn": (_registrar_tjrn, _pagina_tjrn, 10**6),
     "tjro": (partial(_registrar_busca, "tjro", "alem_do_total"), _pagina_tjro, 501),
@@ -200,7 +200,7 @@ def test_tjes_cjpg_segue_o_mesmo_contrato(mocker, caplog):
 @pytest.mark.parametrize("paginas", [[1, 1001], range(1, 10**7), 1001])
 @responses.activate
 def test_pagina_alem_do_teto_levanta_sem_pedido(tribunal, paginas):
-    """TJBA e TJRO respondem com erro além dos 10.000 resultados; a página não chega a ser pedida."""
+    """TJBA, TJPB e TJRO respondem com erro além dos 10.000 resultados; a página não chega a ser pedida."""
     with pytest.raises(ValueError, match=r"só entrega as 1000 primeiras páginas"):
         jus.scraper(tribunal).cjsg_download("dano moral", paginas=paginas)
 

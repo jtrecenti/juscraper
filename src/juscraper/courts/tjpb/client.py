@@ -84,7 +84,11 @@ class TJPBScraper(HTTPScraper):
         Args:
             pesquisa (str): Termo de busca livre (busca na ementa).
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
-                todas. Default ``None``.
+                todas. Default ``None``. O portal so entrega os 10.000
+                primeiros resultados de uma busca (1000 paginas): pagina
+                pedida alem da 1000 levanta ``ValueError`` antes de qualquer
+                requisicao, e ``None`` numa busca maior baixa as 1000
+                primeiras e emite ``UserWarning``.
             numero_processo (str): Numero CNJ do processo. Aceita o alias
                 deprecado ``nr_processo``.
             id_classe (str): ID da classe judicial. Aceita o alias deprecado

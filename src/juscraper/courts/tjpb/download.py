@@ -3,12 +3,18 @@ import math
 from urllib.parse import unquote
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 CLASSES_URL = f"{BASE_URL}/api/pje/classes/list"
 SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
+# O backend entrega só os 10.000 primeiros resultados de uma busca. Medido em
+# 16/11/2026, em "dano moral" (``total`` 49.220): a página 1000 responde e a
+# 1001 dá HTTP 500 ("Whoops, looks like something went wrong."), assim como a
+# 1.000.000. Dentro do teto, a página além do total responde 200 com ``hits``
+# vazio e o ``total`` da busca.
+MAX_RESULTS = 10_000
 
 
 def fetch_csrf_token(request_fn: RequestFn) -> str:
@@ -84,6 +90,12 @@ def cjsg_download_manager(
             para 429/5xx.
         **kwargs: Additional filter parameters.
     """
+    def _n_pags(first: dict) -> int:
+        total: int = first.get("total", 0)
+        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
+
+    # Antes do token: a página além do teto é recusada sem nenhuma requisição.
+    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJPB")
     xsrf_token = fetch_csrf_token(request_fn)
     headers = {
         "X-Requested-With": "XMLHttpRequest",
@@ -102,8 +114,4 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    def _n_pags(first: dict) -> int:
-        total: int = first.get("total", 0)
-        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
-
-    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB", sleep_time=1)
+    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJPB", sleep_time=1)
