@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import ColetaParcialError
+from juscraper.utils.deprecacao import resolve_deprecated_value
 from juscraper.utils.params import (
     iter_date_windows,
     normalize_datas,
@@ -432,6 +433,29 @@ class TestResolveDeprecatedAlias:
                 kwargs, "nr_processo", "numero_processo", "", sentinel=""
             )
         assert result == "X"
+
+
+# --- resolve_deprecated_value ---
+
+_SUBSTITUTOS = {"2": 151}
+_MENSAGEM = "x={antigo!r} esta deprecado; use x={novo}."
+
+
+class TestResolveDeprecatedValue:
+
+    @pytest.mark.parametrize("valor", [0, "151", None, [2], 2.0, True])
+    def test_valor_fora_do_mapa_volta_sem_aviso(self, valor):
+        """A busca e por ``str(valor)``: ``2.0`` e ``[2]`` nao casam com ``"2"``."""
+        assert resolve_deprecated_value(valor, _SUBSTITUTOS, _MENSAGEM) is valor
+
+    @pytest.mark.parametrize("valor", [2, "2", np.int64(2)])
+    def test_valor_deprecado_vira_o_novo_com_aviso(self, valor):
+        with pytest.warns(DeprecationWarning, match="esta deprecado") as avisos:
+            resultado = resolve_deprecated_value(valor, _SUBSTITUTOS, _MENSAGEM)
+        assert resultado == 151
+        assert len(avisos) == 1
+        assert str(avisos[0].message) == f"x={valor!r} esta deprecado; use x=151."
+        assert avisos[0].filename == __file__
 
 
 # --- iter_date_windows ---

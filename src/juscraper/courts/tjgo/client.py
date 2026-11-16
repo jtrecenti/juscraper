@@ -10,6 +10,7 @@ import requests
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.deprecacao import resolve_deprecated_value
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
@@ -211,25 +212,27 @@ class TJGOScraper(HTTPScraper):
 # Valores que a docstring indicava ate a 0.5.0 ("1 1o grau", "2 recursal",
 # "3 tribunal"), fora das opcoes do seletor "Instancia" do Projudi, e a opcao
 # equivalente. O formulario atual nao tem o 1o grau: ``1`` vai como esta.
-_ID_INSTANCIA_DEPRECADO = {"2": 151, "3": 15}
+_ID_INSTANCIA_DEPRECADO: dict[str, int | str] = {"2": 151, "3": 15}
+_SO_OPCOES_DO_FORM = (
+    "o formulario do Projudi so oferece 0 (todas), 15 (Tribunal) e 151 (Turmas Recursais)."
+)
 
 
 def _resolver_id_instancia(id_instancia: int | str) -> int | str:
     """Troca ``2``/``3`` pela opcao do formulario e avisa de ``1``, com ``DeprecationWarning``."""
-    chave = str(id_instancia)
-    if chave not in {"1", *_ID_INSTANCIA_DEPRECADO}:
+    if str(id_instancia) == "1":
+        avisar(
+            f"id_instancia={id_instancia!r} esta deprecado: {_SO_OPCOES_DO_FORM} "
+            "O valor (1o grau) vai ao portal como esta, sem garantia de filtro.",
+            DeprecationWarning,
+        )
         return id_instancia
-    novo = _ID_INSTANCIA_DEPRECADO.get(chave, id_instancia)
-    if chave == "1":
-        destino = "O valor (1o grau) vai ao portal como esta, sem garantia de filtro."
-    else:
-        destino = f"O juscraper passa a enviar {novo}; use id_instancia={novo}."
-    avisar(
-        f"id_instancia={id_instancia!r} esta deprecado: o formulario do Projudi so "
-        f"oferece 0 (todas), 15 (Tribunal) e 151 (Turmas Recursais). {destino}",
-        DeprecationWarning,
+    return resolve_deprecated_value(
+        id_instancia,
+        _ID_INSTANCIA_DEPRECADO,
+        "id_instancia={antigo!r} esta deprecado: " + _SO_OPCOES_DO_FORM
+        + " O juscraper passa a enviar {novo}; use id_instancia={novo}.",
     )
-    return novo
 
 
 def _br_date(value) -> str:
