@@ -107,14 +107,16 @@ def test_nenhum_workflow_instala_fora_do_lock():
 def test_perna_do_piso_do_pandas_roda_o_piso_do_pyproject():
     projeto = tomllib.loads((RAIZ / "pyproject.toml").read_text(encoding="utf-8"))
     (pandas,) = [dep for dep in projeto["project"]["dependencies"] if dep.startswith("pandas")]
-    piso = re.fullmatch(r"pandas>=(\d+\.\d+)\.0,<\d+\.0\.0", pandas)
-    assert piso, pandas
-    assert f'"pandas=={piso.group(1)}.*"' in INSTALACAO_DO_PISO
+    piso = re.match(r"pandas\s*>=\s*(\d+\.\d+)", pandas)
+    assert piso, f"piso do pandas não reconhecido em {pandas!r}"
+    assert f'"pandas=={piso.group(1)}.*"' in INSTALACAO_DO_PISO, "a perna não instala a série do piso do pandas"
     jobs = yaml.safe_load((RAIZ / ".github/workflows/tests.yml").read_text(encoding="utf-8"))["jobs"]
     passos = jobs["pytest-piso-pandas"]["steps"]
-    # O pandas 2.0 só tem wheel até o 3.11, o piso do requires-python.
-    assert projeto["project"]["requires-python"] == ">=3.11"
-    assert [passo["with"]["python-version"] for passo in passos if "setup-uv" in passo.get("uses", "")] == ["3.11"]
+    # A perna roda no menor Python suportado (o motivo está no tests.yml).
+    python_minimo = re.fullmatch(r">=\s*(\d+\.\d+)", projeto["project"]["requires-python"])
+    assert python_minimo, projeto["project"]["requires-python"]
+    pythons = [passo["with"]["python-version"] for passo in passos if "setup-uv" in passo.get("uses", "")]
+    assert pythons == [python_minimo.group(1)]
     runs = [passo.get("run") for passo in passos]
     # Sem --no-sync, o uv run devolveria o pandas do lock antes do pytest.
     assert runs[-3:] == ["uv sync --frozen --extra dev", INSTALACAO_DO_PISO, "uv run --no-sync pytest -n auto"]

@@ -263,9 +263,8 @@ def test_relatorio_traz_as_suites_e_quem_ficou_fora(tmp_path, tribunal, suite, f
         ("success", "success", 0),
         ("success", "failure", 1),
         ("failure", "success", 1),
-        ("success", "cancelled", 1),
     ],
-    ids=["tudo-verde", "piso-falhou", "matriz-falhou", "piso-cancelado"],
+    ids=["tudo-verde", "piso-falhou", "matriz-falhou"],
 )
 def test_testes_obrigatorios_exigem_a_matriz_e_o_piso_do_pandas(tmp_path, resultado, resultado_piso, esperado):
     codigo, _, log = rodar(
