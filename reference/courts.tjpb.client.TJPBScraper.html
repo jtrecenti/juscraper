@@ -245,7 +245,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. O portal so entrega os 10.000 primeiros resultados de uma busca (1000 paginas): pagina pedida alem da 1000 levanta <code>ValueError</code> antes de qualquer requisicao, e <code>None</code> numa busca maior baixa as 1000 primeiras e emite <code>UserWarning</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">

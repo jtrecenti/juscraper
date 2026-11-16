@@ -228,8 +228,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    instancia<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    termo_exato<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Busca jurisprudencia no TJRO.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
@@ -252,7 +253,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. O portal so entrega os 10.000 primeiros resultados de uma busca (1000 paginas): pagina pedida alem da 1000 levanta <code>ValueError</code> antes de qualquer requisicao, e <code>None</code> numa busca maior baixa as 1000 primeiras e emite <code>UserWarning</code>.</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. O portal so entrega os 10.000 primeiros resultados de uma busca (1000 paginas): pagina pedida alem da 1000 levanta <code>ValueError</code> antes de qualquer requisicao, e <code>None</code> numa busca maior divide a busca por data de julgamento (ver <code>auto_chunk</code>).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
@@ -304,6 +305,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>False</code></td>
 </tr>
 <tr class="odd">
+<td>auto_chunk</td>
+<td><code>bool</code></td>
+<td>Default <code>True</code>. Com <code>paginas=None</code>, a busca com mais de 10.000 resultados e dividida em janelas de data de julgamento que cabem no teto do portal, da mais recente para a mais antiga, e todas sao baixadas: a ordem por relevancia vale dentro de cada janela, nao entre elas, e a soma pode diferir do total inicial, porque o portal segue indexando. A primeira divisao emite <code>UserWarning</code> com o total e o numero aproximado de requisicoes (~1 s cada, 10 resultados por pagina). O dia que sozinho passa do teto vem ate o teto, com <code>UserWarning</code>. Com <code>False</code>, <code>None</code> baixa as 1000 primeiras paginas e emite <code>UserWarning</code>. Sem efeito com <code>paginas</code> explicito.</td>
+<td><code>True</code></td>
+</tr>
+<tr class="even">
 <td>**kwargs</td>
 <td></td>
 <td>Filtros aceitos pelo schema <code>InputCJSGTJRO</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>.</td>
@@ -338,6 +345,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Quando uma requisicao falha depois de a busca ter sido dividida por data. <code>.resultado</code> traz o DataFrame do que foi baixado, tambem em <code>cjsg_download</code>, e a mensagem diz o intervalo que falta.</td>
 </tr>
 </tbody>
 </table>
@@ -379,8 +391,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    instancia<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    termo_exato<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw CJSG JSON responses from TJRO.</p>
 <p>Aceita os mesmos filtros de <a href="../reference/courts.tjro.client.TJROScraper.html#juscraper.courts.tjro.client.TJROScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">

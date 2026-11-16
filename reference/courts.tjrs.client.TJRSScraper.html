@@ -355,6 +355,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>ValidationError</code></td>
 <td>Para os demais erros de validação do schema.</td>
 </tr>
+<tr class="even">
+<td></td>
+<td><code>TJRSBuscaError</code></td>
+<td>Quando o portal responde com erro do Solr no lugar dos resultados, como em <code>pesquisa</code> com aspas sem fechar (<code>juscraper.courts.tjrs.download.TJRSBuscaError</code>).</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -376,7 +381,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Uma linha por decisão, com <code>processo</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>classe</code>, <code>assunto</code> e <code>ementa</code>, entre outras colunas.</td>
+<td>Uma linha por decisão, com <code>processo</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code>, <code>classe</code>, <code>assunto</code> e <code>ementa</code>, entre outras colunas. <code>relator</code> é o relator do processo; quando o redator do acórdão é outra pessoa, o nome dela vem em <code>nome_redator</code>.</td>
 </tr>
 </tbody>
 </table>
