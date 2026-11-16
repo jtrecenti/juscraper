@@ -9,8 +9,8 @@ import pandas as pd
 
 from juscraper.core.exceptions import HTTPSemanticError
 from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.utils.cnj import CNJ_FORMATADO_RE
 
-_CNJ_RE = re.compile(r"\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}")
 _INTERNAL_RE = re.compile(r"(\d\.\d{4}\.\d{2}\.\d{6}-\d/\d{3})")
 _TIPO_RE = re.compile(r"\d+\s*-\s*Processo:\s*([^<\n]+?)(?:<br|</)", re.IGNORECASE)
 _RELATOR_RE = re.compile(
@@ -116,7 +116,7 @@ def _split_blocks(html: str) -> list:
 
 
 def _parse_block(block: str) -> dict:
-    cnj_match = _CNJ_RE.search(block)
+    cnj_match = CNJ_FORMATADO_RE.search(block)
     internal_match = _INTERNAL_RE.search(block)
     tipo_match = _TIPO_RE.search(block)
     relator_match = _RELATOR_RE.search(block)

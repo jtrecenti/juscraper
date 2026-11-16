@@ -1,7 +1,7 @@
 """Testes para utilitários de número CNJ."""
 import pytest
 
-from juscraper.utils.cnj import clean_cnj, format_cnj, split_cnj
+from juscraper.utils.cnj import CNJ_FORMATADO_RE, clean_cnj, format_cnj, split_cnj
 
 
 class TestCleanCnj:
@@ -76,3 +76,13 @@ class TestFormatCnj:
     def test_lenient_formats_valid_number(self):
         # Caminho feliz com strict=False ainda formata.
         assert format_cnj("00033258820148010001", strict=False) == "0003325-88.2014.8.01.0001"
+
+
+class TestCnjFormatadoRe:
+    def test_acha_cnj_formatado_no_meio_do_texto(self):
+        match = CNJ_FORMATADO_RE.search("Apelação Cível (0003325-88.2014.8.01.0001) - Digital")
+        assert match is not None
+        assert match.group(0) == "0003325-88.2014.8.01.0001"
+
+    def test_ignora_numero_sem_mascara(self):
+        assert CNJ_FORMATADO_RE.search("00033258820148010001") is None
