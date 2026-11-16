@@ -16,7 +16,7 @@ from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import paginas_no_intervalo
 
-from .parse import cjsg_parse, levantar_se_sem_lista, listas_da_busca_categorizada
+from .parse import cjsg_parse, levantar_se_muitos_resultados, levantar_se_sem_lista, listas_da_busca_categorizada
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -32,7 +32,6 @@ PERFIL_CJSG = "cjsg"
 """Perfil HTTP de todas as requisicoes do ``cjsg`` (formulario, captcha e busca)."""
 
 RESULTS_PER_PAGE = 10
-MAX_RESULTS = 400  # TJMG caps result lists at 400 entries.
 
 _TOTAL_RE = re.compile(r"totalLinhas=(\d+)")
 _MUITOS_RE = re.compile(r"muitos resultados\s*\(([\d.,]+)\)", re.IGNORECASE)
@@ -258,11 +257,7 @@ def cjsg_download(
 
     base = params(1, 1, {})
     first_html = _fetch_page(request_fn, base)
-    if "muitos resultados" in first_html:
-        raise ValueError(
-            "TJMG returned 'muitos resultados' — refine the search "
-            "(add date range or narrower terms)."
-        )
+    levantar_se_muitos_resultados(first_html)
     listas = _listas(first_html, base)
     results: list = []
     for posicao, (nome, extra) in enumerate(listas):

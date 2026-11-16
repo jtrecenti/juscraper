@@ -5,22 +5,80 @@ endpoint entra, sai ou vira stub, ``test_documentacao_em_dia`` reprova até o
 script ser rodado de novo.
 """
 
-import importlib.util
 import json
 from pathlib import Path
 
 import pytest
 
+from tests._tooling import carregar_script
+
 RAIZ = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location("tabela_cobertura", RAIZ / "scripts" / "tabela_cobertura.py")
-assert _spec is not None
-assert _spec.loader is not None
-tabela_cobertura = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(tabela_cobertura)
+tabela_cobertura = carregar_script("tabela_cobertura", RAIZ / "scripts" / "tabela_cobertura.py")
 
 
 def test_documentacao_em_dia():
     assert tabela_cobertura.main(["--check"]) == 0, "rode `uv run python scripts/tabela_cobertura.py`"
+
+
+@pytest.mark.parametrize("sigla", ["tjac", "tjce"])
+@pytest.mark.parametrize("alteracao", ["metodo_vira_stub", "metodo_novo_em_linha_no"])
+def test_notebook_manual_detecta_divergencia_da_cobertura(sigla, alteracao, monkeypatch, capsys):
+    """A tabela manual não pode afirmar disponibilidade contrária ao código."""
+    grupos = tabela_cobertura.cobertura()
+    metodos = grupos["tribunais"][sigla]
+    if alteracao == "metodo_vira_stub":
+        metodos.remove("baixar_acordaos")
+    else:
+        metodos.append("cpopg")
+    # Isola a prova dos notebooks: o bloco gerado de README/docs também mudaria.
+    monkeypatch.setattr(tabela_cobertura, "cobertura", lambda: grupos)
+    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", {})
+
+    assert tabela_cobertura.main(["--check"]) == 1
+    assert f"docs/notebooks/{sigla}.ipynb" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("sigla", ["tjac", "tjce"])
+def test_notebook_manual_detecta_linha_omitida(sigla, tmp_path, monkeypatch, capsys):
+    """Nestas duas tabelas completas, omitir um método disponível reprova."""
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS[sigla]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"] = [
+        linha for linha in notebook["cells"][0]["source"] if "baixar_acordao / baixar_acordaos" not in linha
+    ]
+    alterado = tmp_path / f"{sigla}.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {sigla: alterado})
+    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", {})
+    monkeypatch.setattr(tabela_cobertura, "RAIZ", tmp_path)
+
+    assert tabela_cobertura.main(["--check"]) == 1
+    assert sigla in capsys.readouterr().err
+
+
+def test_notebook_manual_ignora_exemplo_fora_da_tabela(tmp_path, monkeypatch):
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS["tjac"]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"].append("\nExample prose: | cjsg | No |\n")
+    alterado = tmp_path / "tjac.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {"tjac": alterado})
+
+    assert tabela_cobertura.notebooks_divergentes(tabela_cobertura.cobertura()) == []
+
+
+def test_notebook_manual_reprova_linha_com_disponibilidade_invalida(tmp_path, monkeypatch):
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS["tjac"]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"] = [
+        linha.replace("| cpopg   | No", "| cpopg   | Maybe") for linha in notebook["cells"][0]["source"]
+    ]
+    assert any("Maybe" in linha for linha in notebook["cells"][0]["source"])
+    alterado = tmp_path / "tjac.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {"tjac": alterado})
+
+    assert tabela_cobertura.notebooks_divergentes(tabela_cobertura.cobertura()) == [alterado]
 
 
 class _Exemplos:

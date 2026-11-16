@@ -107,6 +107,7 @@ EXCECOES_DE_FALHA_POR_LINHA: tuple[type[BaseException], ...] = (
     requests.HTTPError,
     requests.ConnectionError,
     requests.exceptions.ChunkedEncodingError,
+    requests.exceptions.ContentDecodingError,
     requests.Timeout,
     BotChallengeBlockedError,
 )
@@ -153,6 +154,19 @@ EXEMPLOS_NO_AVISO = 3
 """Quantas falhas o aviso agregado e a nota do 401 citam; as demais entram só na contagem."""
 
 
+_MOTIVO_POR_TIPO: tuple[tuple[tuple[type[BaseException], ...], str], ...] = (
+    ((InvalidJSONResponseError, requests.JSONDecodeError), "json_invalido"),
+    # A conexão que cai no meio do corpo é a mesma falha da que não se abre.
+    ((requests.ConnectionError, requests.exceptions.ChunkedEncodingError), "conexao"),
+    ((requests.Timeout,), "timeout"),
+    ((BotChallengeBlockedError,), MOTIVO_BLOQUEIO_ANTI_BOT),
+    # Corpo comprimido que não descomprime: a conexão entregou tudo (a queda
+    # no meio do gzip sai ChunkedEncodingError), mas a resposta é inválida.
+    ((requests.exceptions.ContentDecodingError,), MOTIVO_RESPOSTA_INESPERADA),
+)
+"""Motivo das exceções sem status, na ordem em que :func:`motivo_falha` testa."""
+
+
 def motivo_falha(exc: BaseException) -> str:
     """Traduz a exceção de uma requisição no motivo de falha da linha.
 
@@ -176,19 +190,13 @@ def motivo_falha(exc: BaseException) -> str:
         if exc.status_code is None:
             raise TypeError("RetryExhaustedError sem status não tem motivo de falha.") from exc
         return f"retry_esgotado_{exc.status_code}"
-    if isinstance(exc, (InvalidJSONResponseError, requests.JSONDecodeError)):
-        return "json_invalido"
     if isinstance(exc, requests.HTTPError):
         if exc.response is None:
             raise TypeError("HTTPError sem resposta não tem motivo de falha.") from exc
         return f"http_{exc.response.status_code}"
-    # A conexão que cai no meio do corpo é a mesma falha da que não se abre.
-    if isinstance(exc, (requests.ConnectionError, requests.exceptions.ChunkedEncodingError)):
-        return "conexao"
-    if isinstance(exc, requests.Timeout):
-        return "timeout"
-    if isinstance(exc, BotChallengeBlockedError):
-        return MOTIVO_BLOQUEIO_ANTI_BOT
+    for tipos, motivo in _MOTIVO_POR_TIPO:
+        if isinstance(exc, tipos):
+            return motivo
     raise TypeError(f"Exceção sem motivo de falha no vocabulário: {type(exc).__name__}.") from exc
 
 

@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from tests._tooling import git_saida as git
+
 RAIZ = Path(__file__).resolve().parents[2]
 
 
@@ -31,12 +33,6 @@ def em_cadeia(nome, termos):
 
 def gravar(raiz, *funcoes):
     (raiz / "src/modulo.py").write_text("\n\n".join(funcoes), encoding="utf-8")
-
-
-def git(raiz, *argumentos):
-    return subprocess.run(
-        ["git", *argumentos], cwd=raiz, check=True, capture_output=True, text=True,
-    ).stdout.strip()
 
 
 def registrar_base(raiz):

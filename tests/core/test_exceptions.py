@@ -12,6 +12,9 @@ from juscraper.core.exceptions import (
     RetryExhaustedError,
     WafChallengeError,
 )
+from juscraper.courts._esaj.acordao import AcordaoNaoEncontradoError, ProcessoNaoEncontradoError
+from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, PastaInesperadaError
+from juscraper.courts.tjap.exceptions import TJAPApiError, TJAPSecurityCheckError
 from juscraper.courts.trf6.download import DesafioF5Error
 
 URL = "https://example.test/consulta"
@@ -60,8 +63,15 @@ def test_desafio_f5_passa_a_propria_mensagem():
         DesafioF5Error(URL),
         InvalidJSONResponseError(URL, 200, 3, content_type="text/html", snippet="<html>"),
         RetryExhaustedError(503, 3),
+        ProcessoNaoEncontradoError("1000000-00.2024.8.26.0001", "não existe"),
+        AcordaoNaoEncontradoError("1000000-00.2024.8.26.0001", "sem acórdão"),
+        DocumentoNaoPdfError("123", "não é PDF"),
+        PastaInesperadaError("123", "sem parametros"),
+        TJAPApiError("falhou", detalhe="banco fora"),
+        TJAPSecurityCheckError("A verificação de segurança falhou"),
     ],
-    ids=["padrao", "mensagem", "waf", "f5", "json", "retry"],
+    ids=["padrao", "mensagem", "waf", "f5", "json", "retry", "esaj-processo", "esaj-acordao",
+         "esaj-nao-pdf", "esaj-pasta", "tjap", "tjap-captcha"],
 )
 @pytest.mark.parametrize("copiar", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
 def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
@@ -70,3 +80,23 @@ def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
     assert type(copia) is type(erro)
     assert copia.args == erro.args
     assert vars(copia) == vars(erro)
+    assert str(copia) == str(erro)
+
+
+@pytest.mark.parametrize(
+    "erro",
+    [ProcessoNaoEncontradoError("1000000-00.2024.8.26.0001", "não existe"), TJAPApiError("falhou")],
+    ids=["esaj", "tjap"],
+)
+@pytest.mark.parametrize("copiar", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
+def test_erro_com_init_proprio_preserva_causa(erro, copiar):
+    try:
+        raise erro from ValueError("causa original")
+    except type(erro) as capturado:
+        copia = copiar(capturado)
+
+    assert type(copia) is type(erro)
+    assert copia.args == erro.args
+    assert vars(copia) == vars(erro)
+    assert type(copia.__cause__) is ValueError
+    assert copia.__cause__.args == ("causa original",)

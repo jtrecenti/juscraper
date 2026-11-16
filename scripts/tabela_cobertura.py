@@ -26,6 +26,7 @@ import ast
 import importlib
 import inspect
 import json
+import re
 import sys
 import textwrap
 from pathlib import Path
@@ -41,6 +42,13 @@ ARQUIVOS: dict[Path, tuple[str, str, str, str, str]] = {
     ),
     RAIZ / "docs" / "index.qmd": ("Available courts", "Available aggregators", "Court", "Name", "Available methods"),
 }
+# Só as tabelas manuais com o mesmo contrato de métodos e disponibilidade.
+# As demais incluem filtros, notas ou listas parciais e exigem regra própria.
+NOTEBOOKS_MANUAIS = {
+    "tjac": RAIZ / "docs" / "notebooks" / "tjac.ipynb",
+    "tjce": RAIZ / "docs" / "notebooks" / "tjce.ipynb",
+}
+_LINHA_METODO = re.compile(r"\|\s*([a-z_]+(?:\s*/\s*[a-z_]+)*)\s*\|\s*(Yes|No)\s*\|")
 # Sem prosa no marcador: ele fica igual no README, em português, e em ``docs/``, em inglês.
 INICIO = "<!-- tabela-cobertura:inicio | scripts/tabela_cobertura.py -->"
 FIM = "<!-- tabela-cobertura:fim -->"
@@ -218,6 +226,35 @@ def substituir(texto: str, novo_bloco: str, caminho: Path) -> str:
     return antes + novo_bloco + depois
 
 
+def notebooks_divergentes(grupos: dict[str, dict[str, list[str]]]) -> list[Path]:
+    """Confere as linhas de métodos das tabelas manuais de TJAC e TJCE."""
+    divergentes = []
+    for sigla, caminho in NOTEBOOKS_MANUAIS.items():
+        notebook = json.loads(caminho.read_text(encoding="utf-8"))
+        inicio = "".join(notebook["cells"][0]["source"])
+        linhas_texto = inicio.splitlines()
+        cabecalho = next((i for i, linha in enumerate(linhas_texto) if linha.startswith("| Feature |")), None)
+        if cabecalho is None:
+            divergentes.append(caminho)
+            continue
+        linhas = []
+        linha_invalida = False
+        for linha in linhas_texto[cabecalho + 2:]:
+            if not linha.startswith("|"):
+                break
+            match = _LINHA_METODO.fullmatch(linha)
+            if match is None:
+                linha_invalida = True
+                break
+            linhas.append(match.groups())
+        metodos = set(grupos["tribunais"][sigla])
+        positivos = {metodo.strip() for nomes, estado in linhas if estado == "Yes" for metodo in nomes.split("/")}
+        negativos = {metodo.strip() for nomes, estado in linhas if estado == "No" for metodo in nomes.split("/")}
+        if linha_invalida or not linhas or positivos != metodos or negativos & metodos:
+            divergentes.append(caminho)
+    return divergentes
+
+
 def main(argumentos: list[str] | None = None) -> int:
     """Reescreve as tabelas, ou só confere com ``--check``."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -238,13 +275,22 @@ def main(argumentos: list[str] | None = None) -> int:
         divergentes.append(caminho.relative_to(RAIZ))
         if not opcoes.check:
             caminho.write_text(atualizado, encoding="utf-8")
-    if opcoes.check and divergentes:
-        sys.stderr.write(
-            "Tabela de cobertura desatualizada em: "
-            + ", ".join(map(str, divergentes))
-            + ". Rode `uv run python scripts/tabela_cobertura.py`.\n"
-        )
-        return 1
+    if opcoes.check:
+        notebooks = notebooks_divergentes(grupos)
+        if divergentes:
+            sys.stderr.write(
+                "Tabela de cobertura desatualizada em: "
+                + ", ".join(map(str, divergentes))
+                + ". Rode `uv run python scripts/tabela_cobertura.py`.\n"
+            )
+        if notebooks:
+            sys.stderr.write(
+                "Tabela manual de notebook divergente em: "
+                + ", ".join(str(caminho.relative_to(RAIZ)) for caminho in notebooks)
+                + ". Corrija só as linhas dos métodos afetados.\n"
+            )
+        if divergentes or notebooks:
+            return 1
     return 0
 
 

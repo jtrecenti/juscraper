@@ -8,15 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from tests._tooling import git_saida as git
+
 RAIZ = Path(__file__).resolve().parents[2]
 CODIGO_ANTIGO = '"""Módulo de exemplo."""\n\ndef obter_numero():\n    """Retorna o número."""\n    return 1\n'
 CODIGO_CORRIGIDO = CODIGO_ANTIGO.replace("obter_numero():", "obter_numero() -> int:")
-
-
-def git(raiz, *argumentos):
-    return subprocess.run(
-        ["git", *argumentos], cwd=raiz, check=True, capture_output=True, text=True,
-    ).stdout.strip()
 
 
 def gravar_excecoes(raiz, excecoes):

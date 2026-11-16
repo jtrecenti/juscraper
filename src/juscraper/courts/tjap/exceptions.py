@@ -9,10 +9,10 @@ de erro disfarçada").
 """
 from __future__ import annotations
 
-from juscraper.core.exceptions import HTTPSemanticError
+from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
 
 
-class TJAPApiError(HTTPSemanticError):
+class TJAPApiError(_RecriaSemInit, HTTPSemanticError):
     """Envelope de erro do Tucujuris (``status == "ERRO"``) numa resposta HTTP-200.
 
     Carrega a ``mensagem`` e o ``detalhe`` brutos do backend para o usuário

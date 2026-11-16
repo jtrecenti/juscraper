@@ -9,7 +9,9 @@ from __future__ import annotations
 import re
 
 import pytest
+from bs4 import BeautifulSoup
 
+from juscraper.courts.trf3 import cjsg_download
 from juscraper.courts.trf3.cjsg_download import (
     PAGE_URL,
     _check_lista,
@@ -19,6 +21,7 @@ from juscraper.courts.trf3.cjsg_download import (
     cjsg_n_results,
 )
 from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3
+from juscraper.utils import pagination
 from tests._helpers import load_sample
 
 
@@ -55,6 +58,21 @@ def _sem_resumo(html: str) -> str:
 
 def test_cjsg_n_results_fallback_pelo_contador_do_item():
     assert cjsg_n_results(_sem_resumo(_sample("results_normal_page_01.html"))) == 591
+
+
+def test_cjsg_n_results_fallback_parseia_html_uma_vez(mocker):
+    """Sem resumo, a cascata do contador usa a árvore já criada."""
+    chamadas = []
+
+    def contar_parse(html, parser):
+        chamadas.append(html)
+        return BeautifulSoup(html, parser)
+
+    mocker.patch.object(cjsg_download, "BeautifulSoup", side_effect=contar_parse)
+    mocker.patch.object(pagination, "BeautifulSoup", side_effect=contar_parse)
+
+    assert cjsg_n_results(_sem_resumo(_sample("results_normal_page_01.html"))) == 591
+    assert len(chamadas) == 1
 
 
 def test_cjsg_n_results_fallback_sem_resultados():

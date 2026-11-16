@@ -44,6 +44,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from ...core.exceptions import _RecriaSemInit
 from ...core.failures import (
     EXCECOES_DE_FALHA_POR_LINHA,
     MOTIVO_ENTRADA_INVALIDA,
@@ -67,7 +68,7 @@ COLUNA_CAMINHO_ACORDAO = "caminho_acordao"
 _SEM_INFORMACOES = "Não existem informações disponíveis"
 
 
-class AcordaoIndisponivelError(Exception):
+class AcordaoIndisponivelError(_RecriaSemInit):
     """Base dos casos em que a rota responde, mas não entrega o acórdão.
 
     ``motivo`` é o valor que :meth:`EsajAcordaoScraper.baixar_acordaos`

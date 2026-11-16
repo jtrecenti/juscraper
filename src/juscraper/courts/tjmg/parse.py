@@ -100,6 +100,19 @@ def _busca_sem_lista(html: str) -> str | None:
     return None
 
 
+def levantar_se_muitos_resultados(html: str) -> None:
+    """Levanta ``ValueError`` se a busca comum teve resultados demais para o portal listar.
+
+    É um limite do portal à consulta, e não um erro disfarçado como os de
+    :func:`levantar_se_sem_lista`: o download e o parse o checam à parte.
+    """
+    if "muitos resultados" in html:
+        raise ValueError(
+            "TJMG returned 'muitos resultados' — refine the search "
+            "(add date range or narrower terms)."
+        )
+
+
 def levantar_se_sem_lista(html: str) -> None:
     """Levanta :class:`TJMGBuscaSemListaError` se ``html`` não traz a lista de resultados."""
     motivo = _busca_sem_lista(html)
@@ -149,6 +162,7 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
+        levantar_se_muitos_resultados(html)
         levantar_se_sem_lista(html)
         rows.extend(_parse_block(block) for block in _split_blocks(html))
     df = pd.DataFrame(rows)

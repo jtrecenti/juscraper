@@ -280,6 +280,22 @@ def test_conexao_caida_vira_motivo_sem_retry():
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
 @responses.activate
+def test_corpo_comprimido_corrompido_no_meio_do_lote_vira_linha(metodo):
+    """Antes, o ``ContentDecodingError`` interrompia o lote e as outras consultas se perdiam."""
+    sufixo, sample = METODOS_DE_LISTA[metodo]
+    _mock(f"/processos/{OUTRO}{sufixo}", body=requests.exceptions.ContentDecodingError("gzip inválido"))
+    _mock_sample(f"/processos/{PROC}{sufixo}", sample)
+
+    with pytest.warns(UserWarning, match=f"processo {OUTRO}: resposta_inesperada"):
+        df = getattr(_mk_scraper(), metodo)([PROC, OUTRO, PROC])
+
+    assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["resposta_inesperada"]
+    assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
+    assert len(_urls()) == 3
+
+
+@pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
+@responses.activate
 def test_desafio_anti_bot_no_meio_do_lote_vira_linha(metodo):
     """Desafio na consulta 2 de 3: a linha sai ``bloqueio_anti_bot`` e as outras ficam (#471)."""
     sufixo, sample = METODOS_DE_LISTA[metodo]
