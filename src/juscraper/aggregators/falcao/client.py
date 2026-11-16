@@ -411,9 +411,7 @@ class FalcaoScraper(HTTPScraper):
         pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
-        # ``paginas`` em lista pode repetir a página; com checkpoint, ``_baixar`` já avisou.
-        if checkpoint is None and len(set(pendentes)) > 1:
-            self._avisar_ordem_instavel(inp)
+        self._avisar_ordem_entre_paginas(inp, pendentes, checkpoint)
         for pagina in tqdm(pendentes, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
                 continue
@@ -497,13 +495,20 @@ class FalcaoScraper(HTTPScraper):
             )
         return inp
 
+    def _avisar_ordem_entre_paginas(
+        self, inp: InputListarDecisoesFalcao, pendentes: list[int], checkpoint: _checkpoint.Checkpoint | None,
+    ) -> None:
+        """Sem checkpoint, avisa da ordem instável só na coleta de mais de uma página.
+
+        Com checkpoint, ``_baixar`` já avisou antes de requisitar, pois as páginas se
+        somam entre sessões. Em lista, ``paginas`` pode repetir a mesma página.
+        """
+        if checkpoint is None and len(set(pendentes)) > 1:
+            self._avisar_ordem_instavel(inp)
+
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa, na ordem padrão, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`).
-
-        Quem chama decide quando: com checkpoint, em toda coleta, pois as páginas se
-        somam entre sessões; sem ele, só na coleta de mais de uma página.
-        """
+        """Avisa, na ordem padrão, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
                 "A ordem padrão do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
