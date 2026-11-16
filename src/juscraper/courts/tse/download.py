@@ -99,7 +99,7 @@ def normalizar_tribunal(tribunal: object) -> str:
     return str(sigla)
 
 
-def catalogo_url(catalogo: str, tribunal: str = "tse") -> str:
+def catalogo_url(catalogo: str, tribunal: str) -> str:
     """URL do ``catalogo`` (um de :data:`CATALOGOS`) de ``tribunal`` (um de :data:`TRIBUNAIS`)."""
     return f"{PESQUISA_API}/{tribunal}/{PESQUISA_ROTA}/{catalogo}"
 

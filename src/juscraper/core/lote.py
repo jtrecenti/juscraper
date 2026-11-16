@@ -8,8 +8,8 @@ motivo da falha. O bloqueio anti-bot vale para a sessão inteira: a primeira
 linha que sai :data:`~juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`
 encerra o lote, e as seguintes saem com o mesmo motivo, sem pedido, por
 :func:`~juscraper.core.failures.consultar_em_lote`. Só o raspador que detecta
-o bloqueio chega a esse motivo (o eSAJ; o TSE não). ``DownloadEmLote.encerrar``
-acrescenta outra condição de parada.
+o bloqueio chega a esse motivo. ``DownloadEmLote.encerrar`` acrescenta outra
+condição de parada.
 """
 
 from __future__ import annotations
@@ -65,6 +65,19 @@ class _Download(NamedTuple):
     motivo: str | None
 
 
+def _pelos_motivos(
+    regra: Callable[[list[str | None]], bool] | None,
+) -> Callable[[list[_Download]], bool] | None:
+    """``regra``, que lê motivos, na forma que :func:`consultar_em_lote` chama."""
+    if regra is None:
+        return None
+
+    def encerrar(feitos: list[_Download]) -> bool:
+        return regra([d.motivo for d in feitos])
+
+    return encerrar
+
+
 def baixar_em_lote(
     tabela: pd.DataFrame,
     baixar: Callable[[Any], str],
@@ -105,10 +118,7 @@ def baixar_em_lote(
         return _Download(None, motivo)
 
     linhas = list(tabela.itertuples(index=False))
-
-    def encerrar(feitos: list[_Download]) -> bool:
-        return lote.encerrar is not None and lote.encerrar([d.motivo for d in feitos])
-
+    encerrar = _pelos_motivos(lote.encerrar)
     downloads = consultar_em_lote(
         linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0, encerrar=encerrar
     )

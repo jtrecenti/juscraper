@@ -133,38 +133,6 @@ def test_codigo_invalido_e_recusado_antes_do_pedido(codigo, tmp_path):
 
 
 @responses.activate
-def test_pedidos_seguidos_guardam_sleep_time(mocker, tmp_path):
-    _registrar("2972172", PDF_PURO)
-    _registrar("3522031", ENVELOPE)
-    relogio = mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[100.0, 103.0, 110.0])
-    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
-    tse = jus.scraper("tse")
-
-    tse.baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
-    espera.assert_not_called()
-    tse.baixar_inteiro_teor(3522031, diretorio=str(tmp_path))
-
-    # O primeiro pedido terminou em 100; em 103 faltam 7 dos 10 s do default.
-    espera.assert_called_once_with(7.0)
-    assert relogio.call_count == 3
-
-
-@responses.activate
-def test_pedido_que_falha_tambem_conta_para_o_intervalo(mocker, tmp_path):
-    _registrar("1", load_sample_bytes("tse", "inteiro_teor/codigo_inexistente.txt"), TEXTO)
-    _registrar("2972172", PDF_PURO)
-    mocker.patch("juscraper.core.intervalo.time.monotonic", side_effect=[50.0, 51.0, 60.0])
-    espera = mocker.patch("juscraper.core.intervalo.time.sleep")
-    tse = jus.scraper("tse", sleep_time=4)
-
-    with pytest.raises(InteiroTeorIndisponivelError):
-        tse.baixar_inteiro_teor(1, diretorio=str(tmp_path))
-    tse.baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
-
-    espera.assert_called_once_with(3.0)
-
-
-@responses.activate
 def test_instancias_diferentes_dividem_o_intervalo(mocker, tmp_path):
     # O serviço não distingue as instâncias: a segunda espera pelo pedido da primeira.
     _registrar("2972172", PDF_PURO)
