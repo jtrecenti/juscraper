@@ -95,6 +95,10 @@ class ComunicaCNJScraper(HTTPScraper):
                   (convertido para ISO antes do schema).
                 * ``data_disponibilizacao_fim`` (str): Fim do intervalo de
                   ``dataDisponibilizacao``. Mesmos formatos aceitos.
+                  Cada limite pode ser usado sozinho: a API aceita
+                  ``dataDisponibilizacaoInicio`` ou
+                  ``dataDisponibilizacaoFim`` sem o outro, e o client
+                  envia só o que foi informado.
                 * ``itens_por_pagina`` (int): Resultados por requisicao
                   (1-100, default 100).
 
