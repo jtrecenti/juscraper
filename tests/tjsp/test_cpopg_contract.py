@@ -456,6 +456,14 @@ def test_method_api_removido_levanta_erro_sem_rede(tmp_path, metodo):
     assert not responses.calls
 
 
+def _pasta_da_chamada_fixa(tmp_path, mocker):
+    """A pasta que o composto cria para a chamada, já existente, para o teste pôr arquivos nela."""
+    pasta = tmp_path / "composto_fixo"
+    pasta.mkdir()
+    mocker.patch("juscraper.courts.tjsp.client.tempfile.mkdtemp", return_value=str(pasta))
+    return pasta
+
+
 @responses.activate
 def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mocker):
     """Lote com falha de download e de leitura avisa uma vez, com as duas, como o composto do TRF.
@@ -464,11 +472,12 @@ def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
     """
     mocker.patch("time.sleep")
     _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
-    # Processos já na pasta de download: um legível e um que o parse recusa.
-    legivel = tmp_path / "cpopg" / "10093677620178260344"
+    # Processos já na pasta da chamada: um legível e um que o parse recusa.
+    pasta = _pasta_da_chamada_fixa(tmp_path, mocker)
+    legivel = pasta / "cpopg" / "10093677620178260344"
     legivel.mkdir(parents=True)
     (legivel / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
-    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel = pasta / "cpopg" / "10001497120248260346"
     ilegivel.mkdir()
     (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
 
@@ -530,7 +539,7 @@ def test_cpopg_arquivos_ilegiveis_com_falha_de_download_devolvem_as_linhas(tmp_p
     """Antes, o lote em que todo arquivo é ilegível levantava ``ValueError`` mesmo com falha de download."""
     mocker.patch("time.sleep")
     _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
-    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel = _pasta_da_chamada_fixa(tmp_path, mocker) / "cpopg" / "10001497120248260346"
     ilegivel.mkdir(parents=True)
     (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
 
@@ -616,3 +625,48 @@ def test_download_devolve_chave_str_para_entrada_que_nao_e_texto(tmp_path, metod
         falhas = getattr(jus.scraper("tjsp", download_path=str(tmp_path)), metodo)([np.int64(123), None])
 
     assert falhas == {"123": "entrada_invalida", "None": "entrada_invalida"}
+
+
+def _arquivos_alheios(pasta):
+    """Um download anterior do mesmo CNJ e um arquivo do usuário, que ``cpopg`` não pode apagar."""
+    anterior = pasta / "cpopg" / "10001497120248260346" / "10001497120248260346_ANTIGO.html"
+    anterior.parent.mkdir(parents=True)
+    anterior.write_text("download anterior", encoding="utf-8")
+    proprio = pasta / "planilha.csv"
+    proprio.write_text("a,b\n", encoding="utf-8")
+    return {anterior: "download anterior", proprio: "a,b\n"}
+
+
+def _pastas_da_chamada(pasta):
+    return [p for p in pasta.iterdir() if p.is_dir() and p.name != "cpopg"]
+
+
+@responses.activate
+def test_cpopg_preserva_arquivos_que_ja_estavam_em_download_path(tmp_path, mocker):
+    """``cpopg`` baixa numa pasta própria e apaga só ela; antes, apagava ``download_path`` inteiro."""
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(
+        CNJ, body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
+    )
+    alheios = _arquivos_alheios(tmp_path)
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ)
+
+    assert result["basicos"]["motivo_falha"].tolist() == [None]
+    assert result["basicos"]["classe"].notna().all()
+    assert {caminho: caminho.read_text(encoding="utf-8") for caminho in alheios} == alheios
+    assert _pastas_da_chamada(tmp_path) == []
+
+
+@responses.activate
+def test_cpopg_com_falha_preserva_arquivos_que_ja_estavam_em_download_path(tmp_path, mocker):
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ, status=503, body="<html>Serviço indisponível</html>")
+    alheios = _arquivos_alheios(tmp_path)
+
+    with pytest.warns(UserWarning, match=f"{CNJ}: http_503"):
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ)
+
+    assert result["basicos"]["motivo_falha"].tolist() == ["http_503"]
+    assert {caminho: caminho.read_text(encoding="utf-8") for caminho in alheios} == alheios
+    assert _pastas_da_chamada(tmp_path) == []

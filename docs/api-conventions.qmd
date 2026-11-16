@@ -503,7 +503,8 @@ resultado["movimentacoes"][["data", "movimento", "cd_documento", "documento_publ
   PDF path, or `None` without `download_pecas`, for password-protected
   documents and for documents whose download failed.
 - **Where files go.** `<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf`.
-  `cpopg` deletes its download folder at the end, so `diretorio` is
+  `cpopg` downloads into a new folder inside `download_path` and deletes
+  that folder at the end, so `diretorio` is
   required with `download_pecas=True`, is only accepted with it, and cannot
   be inside `download_path`. `cpopg_download(..., download_pecas=True)`
   writes the PDFs next to the process HTML.
