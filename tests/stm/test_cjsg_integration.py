@@ -139,14 +139,18 @@ def test_cjsg_curinga_e_parenteses_com_data_ao_vivo(stm):
     assert df["ementa"].str.contains("deser", case=False).all()
 
 
-def test_baixar_inteiro_teor_dos_dois_enderecos_ao_vivo(stm, tmp_path):
-    """Um acórdão recente (visualizador do eproc) e um antigo (PDF em ``www2``)."""
-    urls = stm.cjsg('"corrupção ativa"', paginas=[1, 3])["url_inteiro_teor"].dropna()
-    do_eproc = urls[urls.str.contains("eproc2g.stm.jus.br")].iloc[0]
-    do_www2 = urls[urls.str.contains("www2.stm.jus.br")].iloc[0]
+@pytest.mark.parametrize(
+    "url",
+    [
+        # Acórdão recente, no visualizador do eproc (do sample ``results_normal_page_01.html``).
+        "https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao"
+        "&uuid=cbb3c68a2a6c472eef9576d05988cef88459cc90295cd7a818e1b04802c93d21",
+        # Acórdão antigo, em PDF (do sample ``single_page.html``).
+        "https://www2.stm.jus.br/pesquisa/acordao/2015/50/10022722/10022722.pdf",
+    ],
+)
+def test_baixar_inteiro_teor_ao_vivo(stm, tmp_path, url):
+    caminho = Path(stm.baixar_inteiro_teor(url, diretorio=str(tmp_path)))
 
-    for url in (do_eproc, do_www2):
-        caminho = Path(stm.baixar_inteiro_teor(url, diretorio=str(tmp_path)))
-
-        assert caminho.parent == tmp_path / "inteiro_teor"
-        assert caminho.read_bytes().startswith(b"%PDF")
+    assert caminho.parent == tmp_path / "inteiro_teor"
+    assert caminho.read_bytes().startswith(b"%PDF")
