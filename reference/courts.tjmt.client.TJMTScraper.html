@@ -222,8 +222,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).</p>
 <p>Delega para <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_download"><code>cjsg_download</code></a> e <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg_parse"><code>cjsg_parse</code></a>. Na primeira busca de cada instância, lê a configuração pública do portal (URL da API e token) nos scripts de <code>jurisprudencia.tjmt.jus.br</code> e a reutiliza nas buscas seguintes. Se a API recusar o token (HTTP 401 ou 403), lê a configuração de novo e repete a consulta; se a recusa persistir, propaga <code>requests.HTTPError</code> ou <code>RetryExhaustedError</code>.</p>
 <p>A API devolve no máximo os 10.000 primeiros resultados de uma consulta; páginas além desse teto respondem HTTP 500.</p>
@@ -300,9 +301,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
+<td>classe</td>
+<td><code>str</code> | None</td>
+<td>Nome da classe processual, como aparece na coluna <code>classe</code> (ex.: <code>"Apelação Cível"</code>), com a mesma normalização de <code>relator</code>. A API casa só o nome exato: <code>"Apelação"</code> e <code>"Apelação Cível"</code> são classes distintas, e nome que não existe devolve busca vazia. Nome com vírgula levanta <code>ValueError</code>, porque a API a lê como separador de classes. <code>None</code> não filtra.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
 <td>**kwargs</td>
 <td></td>
-<td>Só os aliases deprecados abaixo. Qualquer outro nome, inclusive <code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code> e <code>classe</code>, que a API não filtra, levanta <code>TypeError</code>.</td>
+<td>Só os aliases deprecados abaixo. Qualquer outro nome, inclusive <code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code>, que a API não filtra, levanta <code>TypeError</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -323,17 +330,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>TypeError</code></td>
-<td>Kwarg desconhecido ou sem suporte na API (<code>data_julgamento_*</code>, <code>classe</code>).</td>
+<td>Kwarg desconhecido ou sem suporte na API (<code>data_julgamento_*</code>).</td>
 </tr>
 <tr class="even">
 <td></td>
 <td><code>ValidationError</code></td>
-<td>Para os demais erros de validação do schema, como <code>relator</code> ou <code>orgao_julgador</code> passados como número, <code>tipo_consulta</code> desconhecido e <code>tamanho_pagina</code> menor que 1 ou booleano.</td>
+<td>Para os demais erros de validação do schema, como <code>relator</code>, <code>orgao_julgador</code> ou <code>classe</code> passados como número, <code>tipo_consulta</code> desconhecido e <code>tamanho_pagina</code> menor que 1 ou booleano.</td>
 </tr>
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Data inválida ou início depois do fim; <code>relator</code> ou <code>orgao_julgador</code> só com dígitos; <code>tipo_processo</code> desconhecido; <code>tamanho_pagina</code> acima de 10.000; página além do teto de 10.000 resultados.</td>
+<td>Data inválida ou início depois do fim; <code>relator</code>, <code>orgao_julgador</code> ou <code>classe</code> só com dígitos; <code>classe</code> com vírgula; <code>tipo_processo</code> desconhecido; <code>tamanho_pagina</code> acima de 10.000; página além do teto de 10.000 resultados.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -400,8 +407,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    classe<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as respostas JSON brutas da API de jurisprudência do TJMT.</p>
 <p>Aceita os mesmos parâmetros, filtros, aliases e exceções de <a href="../reference/courts.tjmt.client.TJMTScraper.html#juscraper.courts.tjmt.client.TJMTScraper.cjsg"><code>cjsg</code></a>; veja lá a lista completa. Cada página baixada é uma resposta da API, sem parsear.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
