@@ -1,5 +1,6 @@
 """Downloads raw results from the TJPI jurisprudence search (HTML scraping)."""
 import re
+import time
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
@@ -8,6 +9,7 @@ from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
     baixar_paginas_pedidas,
     extract_count_with_cascade,
+    menor_pagina,
     parse_page_number,
     resolve_total_pages,
 )
@@ -154,6 +156,10 @@ def cjsg_download_manager(
             não permite fixar o total de páginas; os casos estão em
             :func:`_get_total_pages`. O download para depois da primeira
             requisição, em vez de estimar.
+
+    Quando a menor página pedida passa do total, o portal responde "Sem
+    resultados para:"; a página 1 é então pedida só para ler o total da busca,
+    que vai para o aviso das páginas fora do intervalo.
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
@@ -161,4 +167,14 @@ def cjsg_download_manager(
         resp.encoding = "utf-8"
         return resp.text
 
-    return baixar_paginas_pedidas(paginas, _get_page, _get_total_pages, tribunal="TJPI", sleep_time=sleep_time)
+    primeira = menor_pagina(paginas)
+
+    def _n_pags(html: str) -> int:
+        # A página além do total responde "Sem resultados para:", como a busca
+        # vazia, e não traz a contagem; o total da busca sai da página 1.
+        if primeira > 1 and _sem_resultados(BeautifulSoup(html, "html.parser")):
+            time.sleep(sleep_time)
+            html = _get_page(1)
+        return _get_total_pages(html)
+
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPI", sleep_time=sleep_time)
