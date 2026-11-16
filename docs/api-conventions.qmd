@@ -641,6 +641,11 @@ share the same retry loop via `_request_with_retry`. Defaults:
 | `Retry-After` (HTTP-date) | Ignored — falls back to backoff (#201) | n/a |
 | Inter-request pause | `sleep_time=1.0` from the scraper constructor | `jus.scraper("tjsp", sleep_time=5.0)` |
 
+TRF6 `cpopg` does not inherit from `HTTPScraper` (its lookup is a captcha
+loop on its own session) and has no HTTP profiles: its request deadline is
+the constructor argument `timeout` (default 30 s), as in
+`jus.scraper("trf6", timeout=90)`, and `politica=` raises `TypeError`.
+
 The exponential backoff (`2s` then `4s` across the three default
 attempts) resolves transient WAF blocks but does **not** always escape
 longer cooldowns. If you see `RetryExhaustedError(status_code=403)`

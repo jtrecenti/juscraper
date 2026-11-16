@@ -81,7 +81,7 @@ def _com_prazo(timeout: object) -> None:
 @responses.activate
 @pytest.mark.parametrize(
     ("kwargs", "no_transporte"),
-    [({}, 30.0), ({"timeout": 90}, 90), ({"timeout": (5, 120)}, (5, 120))],
+    [({}, 30.0), ({"timeout": 90}, 90), ({"timeout": (5, 120)}, (5, 120)), ({"timeout": [5, 120]}, (5, 120))],
 )
 def test_timeout_do_construtor_chega_as_duas_requisicoes(fake_captcha_solver, kwargs, no_transporte):
     _com_prazo(no_transporte)
@@ -92,10 +92,16 @@ def test_timeout_do_construtor_chega_as_duas_requisicoes(fake_captcha_solver, kw
     assert len(responses.calls) == 2
 
 
-@pytest.mark.parametrize("timeout", [None, 0, -1, float("inf"), float("nan"), "30", True, (5,), (5, None), [5, 120]])
+@pytest.mark.parametrize("timeout", [None, 0, -1, float("inf"), float("nan"), "30", True, (5,), (5, None)])
 def test_timeout_invalido_e_recusado_no_construtor(timeout):
     with pytest.raises(ValueError, match="timeout"):
         jus.scraper("trf6", timeout=timeout)
+
+
+def test_politica_e_recusada_em_vez_de_ignorada():
+    # Antes caía em ``**kwargs`` sem efeito, e o prazo seguia em 30 s.
+    with pytest.raises(TypeError, match="timeout="):
+        jus.scraper("trf6", politica={"cpopg": {"timeout": 120}})
 
 
 @responses.activate

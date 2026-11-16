@@ -80,7 +80,7 @@ class TRF6Scraper(BaseScraper):
         sleep_time: float = 1.0,
         max_captcha_attempts: int = 3,
         max_captcha_esgotado_seguidos: int | None = 3,
-        timeout: float | tuple[float, float] = 30.0,
+        timeout: float | tuple[float, float] | list[float] = 30.0,
         **kwargs: Any,
     ):
         """Configura a sessão da consulta pública.
@@ -96,24 +96,28 @@ class TRF6Scraper(BaseScraper):
                 errando sempre, e os CNJs restantes saem com o mesmo motivo,
                 sem nova consulta. ``None`` não encerra.
             timeout: Prazo, em segundos, de cada requisição ao portal (o
-                formulário com o captcha e a busca): um número ou a tupla
-                ``(conexão, leitura)``. Default ``30``. O raspador não usa
-                ``politica=``, porque não tem perfis HTTP.
+                formulário com o captcha e a busca): um número ou o par
+                ``(conexão, leitura)``. Default ``30``. O raspador não tem
+                perfis HTTP, e por isso recusa ``politica=``.
             **kwargs: Guardados em ``self.args``.
 
         Raises:
             TypeError: ``max_captcha_attempts`` ou ``max_captcha_esgotado_seguidos``
-                não é ``int`` (nem ``None``, no segundo).
+                não é ``int`` (nem ``None``, no segundo), ou veio ``politica=``.
             ValueError: Um dos dois é menor que 1, ou ``timeout`` não é um
                 número positivo e finito nem um par deles; ``None`` não vale,
                 porque deixaria a consulta sem prazo.
         """
         _exigir_inteiro_positivo("max_captcha_attempts", max_captcha_attempts)
         _exigir_inteiro_positivo("max_captcha_esgotado_seguidos", max_captcha_esgotado_seguidos, aceita_none=True)
-        # ``requests`` só aceita o par em tupla.
-        if isinstance(timeout, list) or not timeout_valido(timeout, aceita_none=False):
+        if "politica" in kwargs:
+            raise TypeError(
+                "TRF6Scraper não tem perfis HTTP e não aceita politica=; "
+                "ajuste o prazo das requisições com timeout=."
+            )
+        if not timeout_valido(timeout, aceita_none=False):
             raise ValueError(
-                "timeout deve ser um número positivo e finito de segundos ou a tupla (conexão, leitura), "
+                "timeout deve ser um número positivo e finito de segundos ou o par (conexão, leitura), "
                 f"recebido {timeout!r}"
             )
         super().__init__("TRF6")
@@ -124,7 +128,10 @@ class TRF6Scraper(BaseScraper):
         self.sleep_time = sleep_time
         self.max_captcha_attempts = max_captcha_attempts
         self.max_captcha_esgotado_seguidos = max_captcha_esgotado_seguidos
-        self.timeout = timeout
+        # ``requests`` só aceita o par em tupla.
+        self.timeout: float | tuple[float, float] = (
+            (timeout[0], timeout[1]) if isinstance(timeout, list) else timeout
+        )
         self.args = kwargs
 
     # --- internal helpers -----------------------------------------------
