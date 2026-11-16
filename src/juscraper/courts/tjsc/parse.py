@@ -1,5 +1,4 @@
 """Parse raw HTML results from the TJSC jurisprudence search (eproc)."""
-import re
 from collections.abc import Iterator
 
 import pandas as pd
@@ -49,28 +48,21 @@ def _resolve_field(label: str) -> str | None:
     return None
 
 
-_CLASS_LINE = re.compile(r"^(?:[A-Z][A-Za-z]*|\d+) - (.+)")
-_UPPERCASE_PREFIX = re.compile(r"^[A-Z]{2,}")
+def _extract_class(value: Tag) -> str | None:
+    """Classe do campo PROCESSO, lida do ``<span>`` da segunda coluna do ``div.row``.
 
-
-def _extract_class(value) -> str | None:
-    """Extrai a classe do campo PROCESSO, quando houver.
-
-    A linha da classe tem a forma ``<código> - <classe>``. O código é uma sigla,
-    às vezes em caixa mista (``AI``, ``ApCiv``), ou um número (``422070``, no
-    Conselho da Magistratura), seguido direto de `` - ``. A linha do número do
-    processo não tem espaço em volta do hífen e fica de fora. Como no parser
-    original, uma linha em maiúsculas com hífen fora dessa forma encerra a busca.
+    O ``<span>`` traz ``<código> - <classe>`` (``ApCiv - Apelação``, ``HC TR -
+    Habeas Corpus Criminal TR``, ``422070 - Recurso Administrativo``). A classe é
+    o texto depois do primeiro `` - ``, como o portal a escreve, ou o texto
+    inteiro sem `` - ``. Sem a segunda coluna ou sem o ``<span>``, não há classe.
     """
-    class_text = str(value.get_text(separator="\n", strip=True))
-    lines = (line.strip() for line in class_text.split("\n") if line.strip())
-    for line in lines:
-        match = _CLASS_LINE.match(line)
-        if match:
-            return match.group(1).strip()
-        if "-" in line and _UPPERCASE_PREFIX.match(line):
-            break
-    return None
+    linha = value.find("div", class_="row")
+    colunas = linha.find_all("div", recursive=False) if linha else []
+    span = colunas[1].find("span") if len(colunas) > 1 else None
+    if span is None:
+        return None
+    texto = " ".join(span.get_text(" ").split())
+    return texto.partition(" - ")[2] or texto or None
 
 
 def _raw_process_number(value) -> str | None:
@@ -132,6 +124,20 @@ def _iter_result_items(resultados_brutos: list) -> Iterator[Tag]:
         yield from soup.find_all("div", class_="resultadoItem")
 
 
+def _avisar_campos_vazios(registros: list[dict]) -> None:
+    """Avisa os registros sem número de processo e os com processo e sem classe."""
+    vazios = {
+        ("número de processo", "processo"): sum("processo" not in r for r in registros),
+        ("classe", "classe"): sum("processo" in r and "classe" not in r for r in registros),
+    }
+    for (descricao, coluna), quantos in vazios.items():
+        if quantos:
+            avisar(
+                f"TJSC cjsg: {quantos} registro(s) sem {descricao} reconhecível; "
+                f"a coluna '{coluna}' fica vazia nessas linhas."
+            )
+
+
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """Extract relevant data from the raw TJSC HTML responses.
 
@@ -146,12 +152,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         if registro and ("ementa" in registro or "processo" in registro):
             registros.append(registro)
 
-    sem_processo = sum("processo" not in registro for registro in registros)
-    if sem_processo:
-        avisar(
-            f"TJSC cjsg: {sem_processo} registro(s) sem número de processo "
-            "reconhecível; a coluna 'processo' fica vazia nessas linhas."
-        )
+    _avisar_campos_vazios(registros)
 
     df = pd.DataFrame(registros)
     if df.empty:

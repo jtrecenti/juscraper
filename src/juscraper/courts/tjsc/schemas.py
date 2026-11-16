@@ -41,7 +41,9 @@ class OutputCJSGTJSC(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
     Reflete ``tjsc.parse.cjsg_parse_manager`` — parser HTML do eproc.
     Quando o item traz apenas a ``decisao`` (e nao a ``ementa``), o parser
-    usa o texto de ``decisao`` como ``ementa``.
+    usa o texto de ``decisao`` como ``ementa``. ``classe`` vem do ``<span>``
+    ``<código> - <classe>`` do campo PROCESSO, sem o código e com a grafia do
+    portal (``ApCiv - Apelação`` vira ``Apelação``).
     """
 
     classe: str | None = None

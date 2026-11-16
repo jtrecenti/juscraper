@@ -101,7 +101,10 @@ def cjsg_download_manager(
                 f"TJSC: busca redirecionada (HTTP {resp.status_code}) para "
                 f"{resp.headers.get('Location')!r}; o portal mudou de endereço."
             )
-        resp.encoding = resp.apparent_encoding
+        # O portal declara ISO-8859-1 em todas as páginas. O palpite de
+        # ``apparent_encoding`` dava windows-1250 nas da paginação AJAX e
+        # trocava "ã" por "ă" ("Apelaçăo").
+        resp.encoding = "ISO-8859-1"
         return resp.text
 
     if paginas is None:
