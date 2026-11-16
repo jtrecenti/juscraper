@@ -31,6 +31,8 @@ Repita o processo acima em [test.pypi.org](https://test.pypi.org) com:
 
 ### Método 1: Usando o Script Automatizado
 
+Prefira o método 2 por enquanto: o script insere a seção da versão nova no topo do `CHANGELOG.md`, antes da introdução e com itens vazios, em vez de fazer o passo 2 do método 2.
+
 ```bash
 # Instalar dependências de desenvolvimento
 uv sync --all-extras
@@ -42,8 +44,6 @@ uv run python scripts/release.py 0.1.0
 git push origin main
 git push origin v0.1.0
 ```
-
-O script insere a seção da versão nova no topo do `CHANGELOG.md`, antes da introdução, com itens vazios, e não move as entradas de `[Unreleased]` nem atualiza os links de comparação do fim do arquivo. Até isso ser corrigido, prefira o método 2.
 
 ### Método 2: Manual
 
