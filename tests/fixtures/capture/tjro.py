@@ -59,6 +59,8 @@ def main() -> None:
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.json")
     _capture(session, dest, "mandado de seguranca", 1, "single_page.json")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
+    # Página 501 de uma busca com 72 páginas: além do total, dentro do teto de 10.000.
+    _capture(session, dest, "usucapião tabular", 501, "alem_do_total.json")
 
 
 if __name__ == "__main__":

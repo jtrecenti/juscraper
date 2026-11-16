@@ -1,13 +1,16 @@
 """Downloads raw results from the TJRO jurisprudence search (Elasticsearch API)."""
 import math
-import time
-
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 
 BASE_URL = "https://juris-back.tjro.jus.br/search/varios_parametros/"
 RESULTS_PER_PAGE = 10
+# O backend Elasticsearch entrega só os 10.000 primeiros resultados de uma
+# busca. Medido em 16/11/2026: ``from`` + ``size`` acima de 10.000 responde
+# HTTP 500 (com 10 por página, ``from=9990`` responde e ``from=10000`` falha),
+# embora ``hits.total`` informe o total inteiro (123.574 em "dano moral").
+MAX_RESULTS = 10_000
 
 
 def build_cjsg_payload(
@@ -101,22 +104,10 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
+    def _n_pags(first: dict) -> int:
         total_info = first.get("hits", {}).get("total", {})
-        total = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
-        n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRO"):
-                time.sleep(sleep_time)
-                resultados.append(_get_page(pagina))
-        return resultados
+        total: int = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
+        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRO"):
-        if resultados:
-            time.sleep(sleep_time)
-        resultados.append(_get_page(pagina_1based))
-    return resultados
+    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJRO")
+    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJRO", sleep_time=sleep_time)

@@ -1,14 +1,18 @@
 """
 Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
-import time
-
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 from juscraper.utils.params import to_iso_date
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
+# O portal entrega só os 10.000 primeiros resultados de uma busca. Medido em
+# 16/11/2026: quando ``(pageNumber + 1) * itemsPerPage`` passa de 10.000, a
+# resposta é HTTP 200 com ``data: null`` e ``errors`` (com 10 por página, o
+# ``pageNumber`` 999 responde e o 1000 falha; com 20, o 499 e o 500), embora
+# ``pageCount`` informe o total inteiro (109.200 páginas em "dano moral").
+MAX_RESULTS = 10_000
 
 FILTER_QUERY = """
 query filter(
@@ -158,20 +162,11 @@ def cjsg_download(
             raise ValueError(f"GraphQL errors: {data['errors']}")
         return data
 
-    if paginas is None:
-        first = _fetch_page(0)
-        resultados = [first]
-        page_count = first.get("data", {}).get("filter", {}).get("pageCount", 1)
-        if page_count > 1:
-            for p in tqdm(range(1, page_count), desc="Baixando paginas TJBA"):
-                resultados.append(_fetch_page(p))
-                time.sleep(1)
-        return resultados
+    def _n_pags(first: dict) -> int:
+        page_count: int = ((first.get("data") or {}).get("filter") or {}).get("pageCount") or 1
+        return page_count
 
-    paginas_list = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_list, desc="Baixando paginas TJBA"):
-        resultados.append(_fetch_page(pagina_1based - 1))
-        if len(paginas_list) > 1:
-            time.sleep(1)
-    return resultados
+    contar = contador_com_teto(paginas, MAX_RESULTS // items_per_page, _n_pags, tribunal="TJBA")
+    return baixar_paginas_pedidas(
+        paginas, lambda pagina: _fetch_page(pagina - 1), contar, tribunal="TJBA", sleep_time=1,
+    )

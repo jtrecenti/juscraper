@@ -67,7 +67,11 @@ class TJROScraper(HTTPScraper):
         Args:
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
-                todas. Default ``None``.
+                todas. Default ``None``. O portal so entrega os 10.000
+                primeiros resultados de uma busca (1000 paginas): pagina
+                pedida alem da 1000 levanta ``ValueError`` antes de qualquer
+                requisicao, e ``None`` numa busca maior baixa as 1000
+                primeiras e emite ``UserWarning``.
             tipo (list | None): Tipos de documento. Default backend
                 ``["EMENTA"]``. O backend compara o valor exato, com acento
                 e em maiusculas: ``"EMENTA"``, ``"ACÓRDÃO"``, ``"DECISÃO"``,
