@@ -5,8 +5,6 @@ HTTP 403 a IPs de datacenter. Medem o limite de data sozinho, que o client
 envia sem o outro (``dataDisponibilizacaoInicio`` ou
 ``dataDisponibilizacaoFim``).
 """
-from datetime import date, timedelta
-
 import pytest
 
 import juscraper as jus
@@ -16,6 +14,7 @@ pytestmark = pytest.mark.integration
 # O sample ``single_page.json`` é desta busca neste dia: 40 comunicações.
 _TERMO = "embargos infringentes"
 _DIA = "2024-06-03"
+_INICIO = "2026-11-01"
 
 
 @pytest.fixture
@@ -33,10 +32,7 @@ def test_so_o_limite_superior_e_respeitado(comunica):
 
 def test_so_o_limite_inferior_e_aceito(comunica):
     """Só confere que a API aceita o limite: a primeira página já vem das mais recentes."""
-    inicio = (date.today() - timedelta(days=7)).isoformat()
-
-    df = comunica.listar_comunicacoes(_TERMO, paginas=1, data_disponibilizacao_inicio=inicio)
+    df = comunica.listar_comunicacoes(_TERMO, paginas=1, data_disponibilizacao_inicio=_INICIO)
 
     assert len(df) > 0
-    assert (df["data_disponibilizacao"] >= inicio).all()
-
+    assert (df["data_disponibilizacao"] >= _INICIO).all()
