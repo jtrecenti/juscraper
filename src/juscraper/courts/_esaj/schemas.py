@@ -1,9 +1,9 @@
-"""Pydantic schemas for eSAJ cjsg (TJAC/TJAL/TJAM/TJCE/TJMS) and cjpg (TJSP/TJMS).
+"""Schemas pydantic do eSAJ: ``cjsg`` (TJAC/TJAL/TJAM/TJCE/TJMS) e ``cjpg`` (TJSP/TJMS).
 
-TJSP has a divergent ``cjsg`` API (``baixar_sg`` vs ``origem``, missing
-``numero_recurso``/``data_publicacao_*``) and gets its own schema in
-``juscraper.courts.tjsp.schemas``. The ``cjpg`` schemas are shared by
-every tribunal built on :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`.
+O ``cjsg`` do TJSP diverge (``baixar_sg`` em vez de ``origem``, sem
+``numero_recurso``/``data_publicacao_*``) e tem schema próprio em
+``juscraper.courts.tjsp.schemas``. Os schemas do ``cjpg`` servem a todo
+tribunal construído sobre :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`.
 """
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
 
 class InputCJPGEsaj(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
-    """Accepted input for eSAJ ``cjpg`` (TJSP and TJMS). Unknown kwargs raise via ``extra='forbid'``.
+    """Entrada aceita pelo ``cjpg`` do eSAJ (TJSP e TJMS); kwarg desconhecido falha por ``extra='forbid'``.
 
     Sobrescreve ``pesquisa`` com default vazio porque o eSAJ permite buscar
     so por filtros (ex.: ``classe=[417]``) sem termo textual.

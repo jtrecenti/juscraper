@@ -4,9 +4,9 @@ TJSP has a divergent public API from the 5 eSAJ-puros:
 
 - ``cjsg``: uses ``baixar_sg: bool`` instead of ``origem: Literal["T","R"]``;
   drops ``numero_recurso`` and ``data_publicacao_*``.
-- ``cjpg``: schemas shared with TJMS, in :mod:`juscraper.courts._esaj.schemas`
-  (``InputCJPGEsaj``/``OutputCJPGEsaj``); ``InputCJPGTJSP`` and
-  ``OutputCJPGTJSP`` are aliases kept for compatibility.
+- ``cjpg``: schemas comuns com o TJMS, em :mod:`juscraper.courts._esaj.schemas`
+  (``InputCJPGEsaj``/``OutputCJPGEsaj``); ``InputCJPGTJSP`` e
+  ``OutputCJPGTJSP`` continuam aqui como aliases.
 - ``cpopg`` / ``cposg``: consulta processual com ``method="html"``, o
   unico aceito (o ``"api"`` foi removido).
 

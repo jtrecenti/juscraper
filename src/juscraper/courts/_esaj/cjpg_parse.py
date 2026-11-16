@@ -179,7 +179,7 @@ def cjpg_parse_single(path: str | Path) -> pd.DataFrame:
 def _parse_diretorio(diretorio: Path) -> pd.DataFrame:
     """Processa cada HTML do diretório; arquivo que falha impede devolver o resto como completo.
 
-    Uma página do CJPG traz até 20 decisões, e a perdida não tem linha onde
+    Uma página do CJPG traz até 10 decisões, e a perdida não tem linha onde
     ser marcada. Por isso a falha parcial levanta
     :class:`~juscraper.core.exceptions.ColetaParcialError`, com as páginas
     lidas em ``.resultado``, como no auto-chunk do eSAJ (#459).
@@ -191,8 +191,9 @@ def _parse_diretorio(diretorio: Path) -> pd.DataFrame:
         try:
             resultados.append(cjpg_parse_single(arquivo))
         except (ValueError, OSError) as e:
-            logger.exception('Error processing %s', arquivo)
             falhas.append((arquivo, e))
+    for arquivo_falho, erro_falho in falhas:
+        logger.error('Error processing %s: %s', arquivo_falho, erro_falho)
     resultado = pd.concat(resultados, ignore_index=True) if resultados else pd.DataFrame()
     if not falhas:
         return resultado

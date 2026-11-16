@@ -384,7 +384,7 @@ Other edge cases:
 
 The underlying helpers `cjsg_n_results(html)` and `cjpg_n_results(html)`
 are exposed from `juscraper.courts._esaj.parse` and
-`juscraper.courts._esaj.cjpg_parse` for callers that already hold the
+`juscraper.courts.tjsp.cjpg_parse` for callers that already hold the
 raw HTML.
 
 ## Full text of acórdãos (eSAJ)
