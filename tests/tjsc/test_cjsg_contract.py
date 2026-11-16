@@ -64,6 +64,26 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 
 @responses.activate
+def test_cjsg_decodifica_pelo_charset_declarado_pelo_portal(mocker):
+    """As páginas da paginação AJAX saem em ISO-8859-1, como o portal declara.
+
+    No ``results_normal_page_02.html``, o palpite de ``apparent_encoding`` é
+    windows-1250, que lê o byte de "ã" como "ă" ("Apelaçăo").
+    """
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    _add_page("dano moral", 2, "cjsg/results_normal_page_02.html")
+
+    df = jus.scraper("tjsc").cjsg("dano moral", paginas=range(1, 3))
+
+    pagina_2 = df.iloc[10:]
+    assert len(pagina_2) == 10
+    assert "Apelação" in pagina_2["classe"].tolist()
+    textos = df[["classe", "ementa", "relator"]].astype(str)
+    assert not textos.apply(lambda coluna: coluna.str.contains("ă")).any().any()
+
+
+@responses.activate
 def test_cjsg_single_page(mocker):
     """Single page scenario only hits ``SEARCH_URL``."""
     mocker.patch("time.sleep")

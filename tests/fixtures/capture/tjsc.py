@@ -44,6 +44,8 @@ def main() -> None:
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.html")
     _capture(session, dest, "plano saude paciente doenca rara", 1, "single_page.html")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.html")
+    # Classe com sigla de duas palavras (``HC TR - Habeas Corpus Criminal TR``), 16/11/2026.
+    _capture(session, dest, "habeas corpus", 1, "classe_sigla_com_espaco.html")
     _capture(
         session, dest, "direito", 1, "filtro_data_julgamento.html",
         dt_decisao_inicio="10/03/2025", dt_decisao_fim="13/03/2025",

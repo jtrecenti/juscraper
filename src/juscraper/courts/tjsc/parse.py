@@ -1,5 +1,4 @@
 """Parse raw HTML results from the TJSC jurisprudence search (eproc)."""
-import re
 from collections.abc import Iterator
 
 import pandas as pd
@@ -49,28 +48,24 @@ def _resolve_field(label: str) -> str | None:
     return None
 
 
-_CLASS_LINE = re.compile(r"^(?:[A-Z][A-Za-z]*|\d+) - (.+)")
-_UPPERCASE_PREFIX = re.compile(r"^[A-Z]{2,}")
+def _extract_class(value: Tag) -> str | None:
+    """Classe do campo PROCESSO, lida do ``<span>`` da segunda coluna.
 
-
-def _extract_class(value) -> str | None:
-    """Extrai a classe do campo PROCESSO, quando houver.
-
-    A linha da classe tem a forma ``<código> - <classe>``. O código é uma sigla,
-    às vezes em caixa mista (``AI``, ``ApCiv``), ou um número (``422070``, no
-    Conselho da Magistratura), seguido direto de `` - ``. A linha do número do
-    processo não tem espaço em volta do hífen e fica de fora. Como no parser
-    original, uma linha em maiúsculas com hífen fora dessa forma encerra a busca.
+    O portal monta o campo como ``div.row`` com duas colunas: a primeira traz o
+    número do processo (com ou sem link) e a segunda, um ``<span>`` com
+    ``<código> - <classe>``, como ``ApCiv - Apelação``, ``HC TR - Habeas Corpus
+    Criminal TR`` ou ``422070 - Recurso Administrativo``. A classe é o texto
+    depois do primeiro `` - ``, como o portal a escreve; sem `` - ``, é o texto
+    inteiro. Sem a segunda coluna ou sem o ``<span>``, não há classe.
     """
-    class_text = str(value.get_text(separator="\n", strip=True))
-    lines = (line.strip() for line in class_text.split("\n") if line.strip())
-    for line in lines:
-        match = _CLASS_LINE.match(line)
-        if match:
-            return match.group(1).strip()
-        if "-" in line and _UPPERCASE_PREFIX.match(line):
-            break
-    return None
+    linha = value.find("div", class_="row")
+    colunas = linha.find_all("div", recursive=False) if linha else []
+    span = colunas[1].find("span") if len(colunas) > 1 else None
+    if span is None:
+        return None
+    texto: str = span.get_text(strip=True)
+    _codigo, separador, classe = texto.partition(" - ")
+    return (classe.strip() if separador else texto) or None
 
 
 def _raw_process_number(value) -> str | None:

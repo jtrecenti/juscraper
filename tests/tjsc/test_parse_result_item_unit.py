@@ -1,8 +1,8 @@
 """Unit tests for the TJSC result-item parser.
 
 Most tests characterize behavior kept from the original parser. The tests on
-the ``/TJSC`` suffix and on ``DECISÃO`` lock fixes: they fail against the
-parser that predates them.
+the ``/TJSC`` suffix, on ``DECISÃO`` and on the class read from the ``<span>``
+lock fixes: they fail against the parser that predates them.
 """
 import datetime
 
@@ -11,6 +11,13 @@ from bs4 import BeautifulSoup
 
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
 from tests._helpers import load_sample
+
+# Busca "habeas corpus", página 1, capturada em 16/11/2026.
+CLASSES_HABEAS_CORPUS = (
+    ["Agravo de Execução Penal", "Apelação Criminal", "Habeas Corpus Criminal", "Habeas Corpus Criminal TR"]
+    + ["Habeas Corpus Criminal"] * 5
+    + ["Agravo de Execução Penal"]
+)
 
 
 def _sample_items() -> dict[str, object]:
@@ -70,12 +77,9 @@ def test_parse_result_item_preserves_partial_matching():
     }
 
 
-def test_parse_result_item_stops_class_search_at_first_hyphenated_line():
-    """An uppercase line with "-" outside the "SIGLA - Classe" shape ends the class search.
-
-    A later line in the "SIGLA - Classe" shape is not read, so no ``classe``.
-    """
-    result = _parse_result_item(_sample_items()["class-stops-at-first-hyphenated-line"])
+def test_parse_result_item_reads_class_only_from_second_column():
+    """Um ``<span>`` no formato ``<código> - <classe>`` fora da segunda coluna não dá classe."""
+    result = _parse_result_item(_sample_items()["class-only-in-second-column"])
 
     assert result == {"processo": "5009876-54.2024.8.24.0000"}
 
@@ -133,7 +137,7 @@ def test_cjsg_parse_manager_warns_when_process_number_is_missing():
 @pytest.mark.parametrize(
     ("sample", "classes"),
     [
-        # Código numérico no lugar da sigla (Conselho da Magistratura).
+        # Código numérico no lugar da sigla (Conselho da Magistratura), sem link no número.
         ("processo_sem_link.html", ["Recurso Administrativo"]),
         # Sigla em caixa mista (ApCiv) ao lado de sigla em maiúsculas (RCIJEF).
         ("results_normal_page_01.html", ["RECURSO CÍVEL"] + ["Apelação"] * 7 + ["RECURSO CÍVEL"] * 2),
@@ -144,24 +148,27 @@ def test_cjsg_parse_manager_warns_when_process_number_is_missing():
             + ["Agravo de Instrumento"] * 4
             + ["Apelação"] * 3,
         ),
+        # Sigla com espaço (``HC TR``), que a leitura pela forma da linha perdia.
+        ("classe_sigla_com_espaco.html", CLASSES_HABEAS_CORPUS),
     ],
 )
-def test_cjsg_parse_manager_reads_class_after_numeric_or_mixed_case_code(sample, classes):
-    """A linha ``<código> - <classe>`` dá a classe também com código numérico ou sigla em caixa mista."""
+def test_cjsg_parse_manager_reads_class_from_span_of_second_column(sample, classes):
+    """A classe vem do ``<span>`` da segunda coluna do campo PROCESSO, nos layouts dos samples reais."""
     df = cjsg_parse_manager([load_sample("tjsc", f"cjsg/{sample}", encoding="latin-1")])
 
     assert df["classe"].tolist() == classes
 
 
-def test_parse_result_item_ignores_prose_line_with_spaced_hyphen():
-    """Texto com `` - `` só vale como classe se o código vier logo antes do hífen."""
+def test_parse_result_item_keeps_span_text_without_separator():
+    """Sem `` - `` no ``<span>``, a classe é o texto inteiro dele."""
     html = """
     <div class="resultadoItem">
       <div class="resLabel">PROCESSO</div>
       <div class="resValue">
-        <span>5000000-00.2024.8.24.0000/TJSC</span>
-        <span>Segredo de Justiça - Sigiloso</span>
-        <span>ApCiv - Apelação</span>
+        <div class="row">
+          <div class="col-12 col-md-auto"><a class="numero-processo">5000000-00.2024.8.24.0000/TJSC</a></div>
+          <div class="col-12 col-md-auto"><span>Apelação</span></div>
+        </div>
       </div>
     </div>
     """
