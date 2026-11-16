@@ -369,7 +369,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. A menor pagina pedida sai primeiro, e o total dela descarta as paginas alem do fim da busca, sem pedi-las ao portal, com aviso no logger <code>juscraper.tjto</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">

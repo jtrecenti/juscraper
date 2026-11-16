@@ -415,13 +415,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#basic-search-2nd-instance" id="toc-basic-search-2nd-instance" class="nav-link active" data-scroll-target="#basic-search-2nd-instance">Basic search (2nd instance)</a></li>
   <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
   <li><a href="#preview-result-fields" id="toc-preview-result-fields" class="nav-link" data-scroll-target="#preview-result-fields">Preview result fields</a></li>
-  <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
-  <li><a href="#querying-different-document-types" id="toc-querying-different-document-types" class="nav-link" data-scroll-target="#querying-different-document-types">Querying different document types</a></li>
-  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
-  <li><a href="#first-instance-search-cjpg" id="toc-first-instance-search-cjpg" class="nav-link" data-scroll-target="#first-instance-search-cjpg">First instance search (cjpg)</a>
-  <ul class="collapse">
-  <li><a href="#first-instance-with-filters" id="toc-first-instance-with-filters" class="nav-link" data-scroll-target="#first-instance-with-filters">First instance with filters</a></li>
-  </ul></li>
+  <li><a href="#filters-and-document-types" id="toc-filters-and-document-types" class="nav-link" data-scroll-target="#filters-and-document-types">Filters and document types</a></li>
+  <li><a href="#first-instance-search-cjpg-downloading-and-parsing-separately" id="toc-first-instance-search-cjpg-downloading-and-parsing-separately" class="nav-link" data-scroll-target="#first-instance-search-cjpg-downloading-and-parsing-separately">First instance search (cjpg), downloading and parsing separately</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/tjto.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -482,21 +477,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<p>The search portal sits behind an AWS WAF that blocks an IP after about 7 searches in a row and lets it through again after 10 minutes or more. Each page is one search, so this notebook asks for a single page per call and reuses each result in several cells. When the WAF blocks before any page, the call raises <code>BotChallengeBlockedError</code>; when it blocks in the middle of a pagination, it raises <code>ColetaParcialError</code>, with the pages already downloaded in <code>.resultado</code>.</p>
 <section id="basic-search-2nd-instance" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search-2nd-instance">Basic search (2nd instance)</h2>
-<div id="459a894e" class="cell" data-execution_count="1">
+<div id="4bd5796a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:22.004196Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:22.004010Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.323830Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.323087Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjto <span class="op">=</span> jus.scraper(<span class="st">'tjto'</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjto.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>dados_cjsg <span class="op">=</span> tjto.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:03&lt;00:00,  1.71s/it]</code></pre>
+<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:03&lt;00:00,  3.31s/it]Baixando páginas TJTO: 100%|██████████| 1/1 [00:03&lt;00:00,  3.31s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
+<pre><code>(20, 10)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="1">
 <div>
@@ -521,41 +517,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0002656-14.2020.8.27.2713</td>
-<td>f3ec3d1a4de006daf1b9dfd61c152156</td>
-<td>Apelação Cível</td>
-<td>Agravo Interno</td>
-<td>PASEP, Contribuições Sociais, Contribuições, D...</td>
-<td>TURMAS DAS CAMARAS CIVEIS</td>
-<td>JACQUELINE ADORNO DE LA CRUZ BARBOSA</td>
-<td>2020-08-24</td>
-<td>2026-03-26</td>
+<td>0017731-25.2026.8.27.2700</td>
+<td>f232618a47906695de76ea1489789d4b</td>
+<td>Conflito de competência cível</td>
+<td>Conflito de Competência</td>
+<td>Divisão e Demarcação, Propriedade, Coisas, DIR...</td>
+<td>TRIBUNAL PLENO</td>
+<td>ANGELA MARIA RIBEIRO PRUDENTE</td>
+<td>2026-08-12</td>
+<td>2026-10-15</td>
 <td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0016145-84.2025.8.27.2700</td>
-<td>c4ad73c51323aab98cf079d95b6fb036</td>
-<td>Mandado de Segurança Cível</td>
+<td>0014832-54.2026.8.27.2700</td>
+<td>a33a5b8cdd8c3ff5f1a94fa64771c720</td>
+<td>Agravo de Instrumento</td>
 <td>Mérito</td>
-<td>Progressão Funcional com Interstício de Doze M...</td>
-<td>TRIBUNAL PLENO</td>
-<td>MARIA CELMA LOUZEIRO TIAGO</td>
-<td>2025-10-09</td>
-<td>2026-03-26</td>
+<td>Adicional de Insalubridade, Sistema Remunerató...</td>
+<td>TURMAS DE DIREITO PÚBLICO</td>
+<td>HÉLVIA TÚLIA SANDES PEDREIRA</td>
+<td>2026-07-08</td>
+<td>2026-10-07</td>
 <td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0015935-33.2025.8.27.2700</td>
-<td>37c2e4ffc3a32766a616b07f6829410c</td>
-<td>Mandado de Segurança Cível</td>
+<td>0025895-92.2025.8.27.2706</td>
+<td>f46c6d2c10eea48862dc798c6f4d6d25</td>
+<td>Apelação Cível</td>
 <td>Mérito</td>
-<td>Ingresso e Concurso, Regime, Militar, DIREITO ...</td>
-<td>TRIBUNAL PLENO</td>
-<td>LUIZ ZILMAR DOS SANTOS PIRES</td>
-<td>2025-10-07</td>
-<td>2026-03-26</td>
+<td>IPTU/ Imposto Predial e Territorial Urbano, Im...</td>
+<td>TURMAS DE DIREITO PÚBLICO</td>
+<td>HÉLVIA TÚLIA SANDES PEDREIRA</td>
+<td>2026-08-19</td>
+<td>2026-10-07</td>
 <td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
 </tr>
 </tbody>
@@ -567,7 +563,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="11dedbf4" class="cell" data-execution_count="2">
+<div id="481173c7" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.325108Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.324973Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.328792Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.328155Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['processo',
@@ -585,7 +581,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-result-fields" class="level2">
 <h2 class="anchored" data-anchor-id="preview-result-fields">Preview result fields</h2>
-<div id="f463559e" class="cell" data-execution_count="3">
+<div id="9e8f2c31" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.329906Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.329783Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.336000Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.335527Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>row <span class="op">=</span> dados_cjsg.iloc[<span class="dv">0</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Processo: </span><span class="sc">{</span>row[<span class="st">'processo'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Classe: </span><span class="sc">{</span>row[<span class="st">'classe'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -593,31 +589,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Competencia: </span><span class="sc">{</span>row[<span class="st">'competencia'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data Julgamento: </span><span class="sc">{</span>row[<span class="st">'data_julgamento'</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Processo: 0002656-14.2020.8.27.2713
-Classe: Apelação Cível
-Relator: JACQUELINE ADORNO DE LA CRUZ BARBOSA
-Competencia: TURMAS DAS CAMARAS CIVEIS
-Data Julgamento: 2026-03-26</code></pre>
+<pre><code>Processo: 0017731-25.2026.8.27.2700
+Classe: Conflito de competência cível
+Relator: ANGELA MARIA RIBEIRO PRUDENTE
+Competencia: TRIBUNAL PLENO
+Data Julgamento: 2026-10-15</code></pre>
 </div>
 </div>
 </section>
-<section id="using-filters" class="level2">
-<h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>You can filter by judgment date range and sort order.</p>
-<div id="26f2c870" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjto.cjsg(</span>
+<section id="filters-and-document-types" class="level2">
+<h2 class="anchored" data-anchor-id="filters-and-document-types">Filters and document types</h2>
+<p>You can filter by judgment date range and choose the document type: <code>acordaos</code> (default), <code>decisoes</code> (monocratic decisions) or <code>sentencas</code> (sentences). The sort order is set with <code>ordenacao</code>: <code>"DESC"</code> (most recent first, the default), <code>"ASC"</code> or <code>"RELEV"</code>.</p>
+<div id="7909313e" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.337473Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.337258Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:27.486197Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:27.485409Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dados_decisoes <span class="op">=</span> tjto.cjsg(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2025'</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2025'</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>dados_filtrados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    tipo_documento<span class="op">=</span><span class="st">'decisoes'</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2025'</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2025'</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisoes.shape)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>dados_decisoes[[<span class="st">'processo'</span>, <span class="st">'classe'</span>, <span class="st">'data_julgamento'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:02&lt;00:00,  1.46s/it]</code></pre>
+<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:00&lt;00:00,  1.12it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:00&lt;00:00,  1.12it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
+<pre><code>(20, 10)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
@@ -628,56 +625,28 @@ Data Julgamento: 2026-03-26</code></pre>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">uuid</th>
 <th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">tipo_julgamento</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">data_autuacao</th>
 <th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">processo_link</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0019143-25.2025.8.27.2700</td>
-<td>28e5df23dc2e2c72911c210a6f7f4a72</td>
-<td>Revisão Criminal</td>
-<td>Mérito</td>
-<td>Tráfico de Drogas e Condutas Afins, Crimes de ...</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2025-11-28</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
+<td>0009807-94.2025.8.27.2700</td>
+<td>Agravo de Instrumento</td>
+<td>2025-06-30</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0020000-08.2024.8.27.2700</td>
-<td>1efbf3958a57ce39eb3fcd14bad83ce9</td>
-<td>Revisão Criminal</td>
-<td>Embargos de Declaração</td>
-<td>Homicídio Qualificado, Crimes contra a vida, D...</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2024-11-28</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
+<td>0010075-51.2025.8.27.2700</td>
+<td>Agravo de Instrumento</td>
+<td>2025-06-30</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0017052-59.2025.8.27.2700</td>
-<td>93f9f65bd4e89cb0fa0cfda3744b5db6</td>
-<td>Revisão Criminal</td>
-<td>Mérito</td>
-<td>Crime Tentado, DIREITO PENAL</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2025-10-22</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
+<td>0009926-55.2025.8.27.2700</td>
+<td>Agravo de Instrumento</td>
+<td>2025-06-30</td>
 </tr>
 </tbody>
 </table>
@@ -686,18 +655,25 @@ Data Julgamento: 2026-03-26</code></pre>
 </div>
 </div>
 </section>
-<section id="querying-different-document-types" class="level2">
-<h2 class="anchored" data-anchor-id="querying-different-document-types">Querying different document types</h2>
-<p>Besides <code>acordaos</code> (default), you can also query <code>decisoes</code> (monocratic decisions) and <code>sentencas</code> (sentences).</p>
-<div id="0b0a1059" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dados_decisoes <span class="op">=</span> tjto.cjsg(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>), tipo_documento<span class="op">=</span><span class="st">'decisoes'</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisoes.shape)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>dados_decisoes.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="first-instance-search-cjpg-downloading-and-parsing-separately" class="level2">
+<h2 class="anchored" data-anchor-id="first-instance-search-cjpg-downloading-and-parsing-separately">First instance search (cjpg), downloading and parsing separately</h2>
+<p>Use <code>cjpg()</code> to search first-instance jurisprudence; it accepts the same parameters as <code>cjsg()</code>. Both are a download followed by a parse, and the two steps are also available on their own: <code>cjpg_download()</code> returns the raw HTML pages and <code>cjpg_parse()</code> turns them into the same DataFrame (<code>cjsg_download()</code> and <code>cjsg_parse()</code> do the same for the 2nd instance).</p>
+<div id="8ce744a0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:27.487795Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:27.487317Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:29.074202Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:29.072610Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjto.cjpg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, tipo_documento<span class="op">=</span><span class="st">'sentencas'</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Raw HTML size (page 1): </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjto.cjpg_parse(brutos)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>dados_cjpg<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:02&lt;00:00,  1.26s/it]</code></pre>
+<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]Baixando páginas TJTO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
+<pre><code>Pages downloaded: 1
+Raw HTML size (page 1): 1537222 chars
+
+Parsed shape: (20, 10)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -722,293 +698,41 @@ Data Julgamento: 2026-03-26</code></pre>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0006819-66.2026.8.27.2700</td>
-<td>06f9d8f2d2e0170805a77a6213350b17</td>
-<td>Habeas Corpus Cível</td>
-<td>Decisão - Concessão - Liminar - Monocrático</td>
-<td>Alimentos, Prisão Civil, Liquidação / Cumprime...</td>
-<td>CAMARAS DE DIREITO PÚBLICO</td>
-<td>GIL DE ARAÚJO CORRÊA</td>
-<td>2026-04-05</td>
-<td>2026-04-05</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0006817-96.2026.8.27.2700</td>
-<td>6b1b8c95df96b101366b0abbab02662d</td>
-<td>Habeas Corpus Criminal</td>
-<td>Decisão - Outras Decisões</td>
-<td>Liberdade Provisória, DIREITO PROCESSUAL PENAL...</td>
-<td>CAMARAS CRIMINAIS</td>
-<td>GIL DE ARAÚJO CORRÊA</td>
-<td>2026-04-04</td>
-<td>2026-04-05</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0006814-44.2026.8.27.2700</td>
-<td>996cf26f0c2cd048c6781c307a506b69</td>
-<td>Habeas Corpus Criminal</td>
-<td>Decisão - Não-Concessão - Liminar - Monocrático</td>
-<td>Crime de Descumprimento de Medida Protetiva de...</td>
-<td>CAMARAS CRIMINAIS</td>
-<td>GIL DE ARAÚJO CORRÊA</td>
-<td>2026-04-04</td>
-<td>2026-04-04</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-</section>
-<section id="download-and-parse-separately" class="level2">
-<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
-<p>You can also download the raw HTML first and parse it later.</p>
-<div id="46406cc8" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjto.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Raw HTML size (page 1): </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>dados <span class="op">=</span> tjto.cjsg_parse(brutos)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>dados<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>dados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:02&lt;00:00,  1.33s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Pages downloaded: 2
-Raw HTML size (page 1): 1123144 chars
-
-Parsed shape: (40, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="6">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">uuid</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">tipo_julgamento</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">data_autuacao</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">processo_link</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>0019143-25.2025.8.27.2700</td>
-<td>28e5df23dc2e2c72911c210a6f7f4a72</td>
-<td>Revisão Criminal</td>
-<td>Mérito</td>
-<td>Tráfico de Drogas e Condutas Afins, Crimes de ...</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2025-11-28</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0020000-08.2024.8.27.2700</td>
-<td>1efbf3958a57ce39eb3fcd14bad83ce9</td>
-<td>Revisão Criminal</td>
-<td>Embargos de Declaração</td>
-<td>Homicídio Qualificado, Crimes contra a vida, D...</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2024-11-28</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0017052-59.2025.8.27.2700</td>
-<td>93f9f65bd4e89cb0fa0cfda3744b5db6</td>
-<td>Revisão Criminal</td>
-<td>Mérito</td>
-<td>Crime Tentado, DIREITO PENAL</td>
-<td>TRIBUNAL PLENO</td>
-<td>SILVANA MARIA PARFIENIUK</td>
-<td>2025-10-22</td>
-<td>2026-03-26</td>
-<td>https://eproc2.tjto.jus.br/consulta_publica/2G...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-</section>
-<section id="first-instance-search-cjpg" class="level2">
-<h2 class="anchored" data-anchor-id="first-instance-search-cjpg">First instance search (cjpg)</h2>
-<p>Use <code>cjpg()</code> to search first-instance jurisprudence. It accepts the same parameters as <code>cjsg()</code>.</p>
-<div id="b47c1344" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dados_cjpg <span class="op">=</span> tjto.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjpg.shape)</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:03&lt;00:00,  1.56s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="7">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">uuid</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">tipo_julgamento</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">data_autuacao</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">processo_link</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>0004882-39.2022.8.27.2707</td>
-<td>1900caffbaab9b318e0b0696597593cd</td>
-<td>Recurso Inominado Cível</td>
-<td>Julgamento Principal</td>
-<td>Promoção / Ascensão, Regime Estatutário, Servi...</td>
-<td>TURMAS RECURSAIS</td>
-<td></td>
-<td>2022-12-07</td>
-<td>2026-03-06</td>
-<td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0002068-17.2020.8.27.2742</td>
-<td>b9ebc5c1e20bdb3bc8f865f56ef94b19</td>
-<td>Recurso Inominado Cível</td>
-<td>Julgamento Principal</td>
-<td>Empréstimo consignado, Bancários, Contratos de...</td>
-<td>TURMAS RECURSAIS</td>
-<td></td>
-<td>2020-01-23</td>
-<td>2026-03-06</td>
-<td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
-</tr>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">2</td>
-<td>0003604-57.2023.8.27.2710</td>
-<td>7f937097e010e1f471dcd70ecb04e342</td>
-<td>Recurso Inominado Cível</td>
-<td>Julgamento Principal</td>
-<td>Práticas Abusivas, DIREITO DO CONSUMIDOR, Forn...</td>
-<td>TURMAS RECURSAIS</td>
-<td></td>
-<td>2023-08-08</td>
-<td>2026-03-06</td>
-<td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-<section id="first-instance-with-filters" class="level3">
-<h3 class="anchored" data-anchor-id="first-instance-with-filters">First instance with filters</h3>
-<div id="588eaa30" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>dados_cjpg_sentencas <span class="op">=</span> tjto.cjpg(</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    tipo_documento<span class="op">=</span><span class="st">'sentencas'</span>,</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjpg_sentencas.shape)</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>dados_cjpg_sentencas.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO: 100%|██████████| 2/2 [00:04&lt;00:00,  2.50s/it]</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>(40, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="8">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">processo</th>
-<th data-quarto-table-cell-role="th">uuid</th>
-<th data-quarto-table-cell-role="th">classe</th>
-<th data-quarto-table-cell-role="th">tipo_julgamento</th>
-<th data-quarto-table-cell-role="th">assunto</th>
-<th data-quarto-table-cell-role="th">competencia</th>
-<th data-quarto-table-cell-role="th">relator</th>
-<th data-quarto-table-cell-role="th">data_autuacao</th>
-<th data-quarto-table-cell-role="th">data_julgamento</th>
-<th data-quarto-table-cell-role="th">processo_link</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td data-quarto-table-cell-role="th">0</td>
-<td>5000173-74.2011.8.27.2701</td>
-<td>574a758833969a66da0792c68a50863c</td>
-<td>Cumprimento de Sentença contra a Fazenda Pública</td>
-<td>Julgamento - Com Resolução do Mérito - Extinçã...</td>
-<td>Pensão por Morte (Art. 74/9), Benefícios em Es...</td>
-<td>CIVEL</td>
-<td></td>
-<td>2011-06-03</td>
-<td>2026-04-06</td>
-<td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
-</tr>
-<tr class="even">
-<td data-quarto-table-cell-role="th">1</td>
-<td>0003673-96.2026.8.27.2706</td>
-<td>5eda7d8e91adf2273bac02016cccc8cb</td>
+<td>0017776-73.2025.8.27.2729</td>
+<td>8c51da6b15e41f86a783d90a16a5e860</td>
 <td>Procedimento do Juizado Especial Cível</td>
-<td>Julgamento - Sem Resolução de Mérito - Extinçã...</td>
+<td>Julgamento - Com Resolução do Mérito - Procedê...</td>
 <td>Perdas e Danos, Inadimplemento, Obrigações, DI...</td>
 <td>JUIZADOS ESPECIAIS CÍVEIS</td>
 <td></td>
-<td>2026-02-25</td>
-<td>2026-04-06</td>
+<td>2025-04-25</td>
+<td>2026-10-20</td>
+<td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0016854-38.2024.8.27.2706</td>
+<td>1ae5c8914a83a163813ddaeae128abe7</td>
+<td>Busca e Apreensão em Alienação Fiduciária</td>
+<td>Julgamento - Sem Resolução de Mérito - Extinçã...</td>
+<td>Alienação Fiduciária, Espécies de Contratos, O...</td>
+<td>CIVEL</td>
+<td></td>
+<td>2024-08-21</td>
+<td>2026-10-20</td>
 <td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0051470-67.2024.8.27.2729</td>
-<td>7377325b349c19526c0c5bda4acaa86b</td>
-<td>Procedimento Comum Cível</td>
-<td>Julgamento - Com Resolução do Mérito - Procedê...</td>
-<td>Exoneração, Alimentos, Família, DIREITO CIVIL</td>
-<td>FAMÍLIA E SUCESSÕES</td>
+<td>0020557-06.2026.8.27.2706</td>
+<td>18492fa1b69e8248548ec787efa6ecaa</td>
+<td>Busca e Apreensão em Alienação Fiduciária</td>
+<td>Julgamento - Sem Resolução de Mérito - Extinçã...</td>
+<td>Alienação Fiduciária, Espécies de Contratos, O...</td>
+<td>CIVEL</td>
 <td></td>
-<td>2024-12-02</td>
-<td>2026-04-06</td>
+<td>2026-09-11</td>
+<td>2026-10-20</td>
 <td>https://eproc1.tjto.jus.br/consulta_publica/1G...</td>
 </tr>
 </tbody>
@@ -1019,7 +743,6 @@ Parsed shape: (40, 10)</code></pre>
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
