@@ -335,6 +335,47 @@ semantics for `paginas` are ambiguous (each window? aggregated budget?)
 and the design prefers to fail explicitly. For short intervals where
 chunking is a no-op, `paginas` works as usual.
 
+### Result caps (TJBA, TJRO)
+
+The `cjsg` of TJBA and TJRO has a different limit: the portal reports the
+full total of a search but only serves its first 10,000 results. With
+`paginas=None` and `auto_chunk=True` (default), a search above that cap is
+split by date (publication date in TJBA, judgment date in TJRO) and every
+window is downloaded. The split follows the count the portal reports: a
+window above the cap is halved until each part fits, so no window size has
+to be guessed. A search that fits the cap is sent exactly as before.
+
+```python
+tjro = jus.scraper("tjro")
+df = tjro.cjsg("servidor público", data_julgamento_inicio="01/01/2024")  # more than 10,000 results
+```
+
+What to expect from a split search:
+
+- Windows come from the most recent to the oldest. The portal order
+  (relevance in TJRO) holds inside each window, not across them.
+- An open date bound becomes 01/01/1900 (TJRO) or 01/02/1980 (TJBA) at the
+  start and today at the end. If some records lack the filter date or fall
+  outside that range, a `UserWarning` says how many were left out.
+- A single day above the cap cannot be split: its first 10,000 results are
+  returned, with a `UserWarning`.
+- Rows the portal returns in two different windows are kept once (by
+  document id in TJRO and `hash` in TJBA). Repetitions inside one window are
+  kept as the portal sends them.
+- The portal keeps indexing during a long collection, so the number of rows
+  can differ from the total the first page reported.
+- It is slow: one request per second, 10 results per page in TJRO (10,000
+  results take about 17 minutes). In TJBA, `tamanho_pagina` reduces the number
+  of requests.
+- If a request fails after the split, the collection stops and raises
+  `ColetaParcialError`. `.resultado` holds the DataFrame of what was
+  downloaded (also in `cjsg_download`), and the message gives the end date of
+  the interval still missing, to resume with `data_*_fim`.
+
+With `auto_chunk=False`, `paginas=None` downloads the pages up to the cap
+and emits a `UserWarning`. An explicit `paginas` never splits: page numbers
+refer to the single search, and a page beyond the cap raises `ValueError`.
+
 ## Pre-scraping count (`count_only`)
 
 Empirical legal research often benefits from a quick estimate of how many

@@ -1,8 +1,12 @@
 """Downloads raw results from the TJRO jurisprudence search (Elasticsearch API)."""
 import math
+from datetime import date
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
 from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+
+from .parse import cjsg_parse_manager
 
 BASE_URL = "https://juris-back.tjro.jus.br/search/varios_parametros/"
 RESULTS_PER_PAGE = 10
@@ -11,6 +15,11 @@ RESULTS_PER_PAGE = 10
 # HTTP 500 (com 10 por página, ``from=9990`` responde e ``from=10000`` falha),
 # embora ``hits.total`` informe o total inteiro (123.574 em "dano moral").
 MAX_RESULTS = 10_000
+# Início das janelas quando a busca dividida por data não informa
+# ``data_julgamento_inicio``. Medido em 16/11/2026: em "dano moral", os
+# 123.585 resultados têm data de julgamento entre 1990 e o dia da medição; o
+# piso anterior a isso custa uma requisição a mais na divisão.
+PISO_DATA_JULGAMENTO = date(1900, 1, 1)
 
 
 def build_cjsg_payload(
@@ -81,6 +90,7 @@ def cjsg_download_manager(
     *,
     request_fn: RequestFn,
     sleep_time: float = 1.0,
+    auto_chunk: bool = True,
     **kwargs,
 ) -> list:
     """Download raw results from the TJRO jurisprudence search.
@@ -95,19 +105,45 @@ def cjsg_download_manager(
             ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
         sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
             normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
+        auto_chunk: Com ``paginas=None``, divide por data de julgamento a
+            busca que passa de ``MAX_RESULTS`` (ver
+            :func:`juscraper.utils.divisao_por_data.baixar_dividindo_por_data`).
         **kwargs: Additional filter parameters forwarded to ``build_cjsg_payload``.
     """
-    def _get_page(pagina_1based):
+    def _get_page(pagina_1based, **datas):
         offset = (pagina_1based - 1) * RESULTS_PER_PAGE
-        payload = build_cjsg_payload(pesquisa, offset=offset, **kwargs)
+        payload = build_cjsg_payload(pesquisa, offset=offset, **{**kwargs, **datas})
         resp = request_fn("POST", BASE_URL, json=payload, perfil="cjsg")
         data: dict = resp.json()
         return data
 
-    def _n_pags(first: dict) -> int:
+    def _total(first: dict) -> int:
         total_info = first.get("hits", {}).get("total", {})
         total: int = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
-        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
+        return total
+
+    def _n_pags(first: dict) -> int:
+        return math.ceil(_total(first) / RESULTS_PER_PAGE) or 1
+
+    if paginas is None and auto_chunk:
+        busca: BuscaComTeto[dict] = BuscaComTeto(
+            tribunal="TJRO",
+            rotulo="data_julgamento",
+            teto=MAX_RESULTS,
+            por_pagina=RESULTS_PER_PAGE,
+            piso=PISO_DATA_JULGAMENTO,
+            buscar=lambda inicio, fim, pagina: _get_page(
+                pagina, data_julgamento_inicio=inicio or "", data_julgamento_fim=fim or ""
+            ),
+            contar_resultados=_total,
+            itens=lambda pagina: pagina.get("hits", {}).get("hits", []),
+            chave=lambda hit: hit["_id"],
+            parse=cjsg_parse_manager,
+            sleep_time=sleep_time,
+        )
+        return baixar_dividindo_por_data(
+            busca, kwargs.get("data_julgamento_inicio") or None, kwargs.get("data_julgamento_fim") or None
+        )
 
     contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJRO")
     return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJRO", sleep_time=sleep_time)

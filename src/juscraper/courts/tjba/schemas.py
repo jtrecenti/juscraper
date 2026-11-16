@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import ClassVar, Literal
 
 from ...schemas import (
+    AutoChunkMixin,
     DataPublicacaoMixin,
     OutputCJSGBase,
     OutputDataPublicacaoMixin,
@@ -18,7 +19,7 @@ from ...schemas import (
 )
 
 
-class InputCJSGTJBA(SearchBase, DataPublicacaoMixin):
+class InputCJSGTJBA(SearchBase, DataPublicacaoMixin, AutoChunkMixin):
     """Accepted input for TJBA ``cjsg`` / ``cjsg_download``.
 
     Endpoint GraphQL. ``pesquisa`` aceita os aliases deprecados ``query`` /

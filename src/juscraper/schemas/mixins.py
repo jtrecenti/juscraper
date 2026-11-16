@@ -126,8 +126,12 @@ class AutoChunkMixin(BaseModel):
 
     Tribunais que aceitam intervalos arbitrarios **nao devem herdar** deste
     mixin — ``extra='forbid'`` da classe concreta rejeita o flag e o usuario
-    entende que a busca nao tem teto a contornar. Hoje so a familia eSAJ
-    (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP) usa.
+    entende que a busca nao tem teto a contornar. Usam a familia eSAJ
+    (cjsg em TJSP/TJAC/TJAL/TJAM/TJCE/TJMS, cjpg em TJSP e TJMS) e, com outro
+    teto, o cjsg do TJBA e do TJRO: la o portal corta a busca em 10.000
+    resultados, e ``auto_chunk=True`` com ``paginas=None`` divide por data a
+    busca que passa disso (``juscraper.utils.divisao_por_data``);
+    ``auto_chunk=False`` baixa ate o teto e avisa.
 
     Nota: o flag ``auto_chunk`` e popado pelos metodos publicos
     (``cjsg``/``cjpg``) **antes** da validacao do schema, entao em runtime
