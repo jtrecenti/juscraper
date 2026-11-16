@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from typing import Literal
 
 import pandas as pd
@@ -51,8 +52,8 @@ class TJGOScraper(HTTPScraper):
         id_serventia_subtipo: str | int = 0,
         numero_processo: str | None = None,
         tamanho_pagina: int = 10,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """Run a TJGO search and return the raw HTML of each page.
@@ -79,8 +80,9 @@ class TJGOScraper(HTTPScraper):
         tamanho_pagina : int
             Items per page (default 10). Aceita ``qtde_itens_pagina`` como
             alias deprecado.
-        data_publicacao_inicio, data_publicacao_fim : str, optional
-            Publication date range in ``dd/mm/yyyy`` or ``yyyy-mm-dd``.
+        data_publicacao_inicio, data_publicacao_fim : str, date or None
+            Publication date range: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -151,8 +153,10 @@ class TJGOScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``DD/MM/AAAA`` ou ``AAAA-MM-DD``. Backend Projudi mapeia
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Backend Projudi mapeia
                   para ``DataInicial`` / ``DataFinal`` no form body.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

@@ -68,11 +68,13 @@ class TJSCScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJSC`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``. Mapeado para
-                  ``dt_decisao_*`` no backend, que recebe ``DD/MM/YYYY``.
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``YYYY-MM-DD`` ou ``DD/MM/YYYY``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Mapeado para ``dt_decisao_*`` no backend, que recebe
+                  ``DD/MM/YYYY``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): nos mesmos formatos.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``

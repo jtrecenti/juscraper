@@ -656,10 +656,13 @@ class TRF3Scraper(HTTPScraper):
                   ``"LEI PELÉ FED LEI 9615 1998"``, o texto que o painel de
                   legislações do formulário escreve). Só na base
                   ``"acordaos"``.
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  Data de julgamento; nas monocráticas, data da decisão.
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  Data de publicação. Não combina com ``data_julgamento_*``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): Data de julgamento; nas monocráticas,
+                  data da decisão. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): Data de publicação, nos mesmos
+                  formatos. Não combina com ``data_julgamento_*``.
                 * ``tamanho_pagina`` (int): 10 (default), 30 ou 50 documentos
                   por página.
 

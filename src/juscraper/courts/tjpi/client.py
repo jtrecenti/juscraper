@@ -68,8 +68,10 @@ class TJPIScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPI`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``. Mapeado para ``data_min``/``data_max`` no
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Mapeado para ``data_min``/``data_max`` no
                   GET (refs #94).
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

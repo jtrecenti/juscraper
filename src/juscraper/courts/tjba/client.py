@@ -2,6 +2,8 @@
 Scraper for the Tribunal de Justica do Estado da Bahia (TJBA).
 """
 
+from datetime import date
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -36,8 +38,8 @@ class TJBAScraper(HTTPScraper):
         orgaos: list | None = None,
         relatores: list | None = None,
         classe: list | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
@@ -65,10 +67,11 @@ class TJBAScraper(HTTPScraper):
         classe : list, optional
             List of class IDs to filter. ``classes`` (plural) e aceito como
             alias deprecado (emite :class:`DeprecationWarning`). Refs #232.
-        data_publicacao_inicio : str, optional
-            Start date for publication filter (YYYY-MM-DD).
-        data_publicacao_fim : str, optional
-            End date for publication filter (YYYY-MM-DD).
+        data_publicacao_inicio : str, date or None
+            Start date for publication filter: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+        data_publicacao_fim : str, date or None
+            End date for publication filter (mesmos formatos).
         segundo_grau : bool
             Include second-instance results (default True).
         turmas_recursais : bool
@@ -164,8 +167,8 @@ class TJBAScraper(HTTPScraper):
         orgaos: list | None = None,
         relatores: list | None = None,
         classe: list | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         segundo_grau: bool = True,
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
@@ -185,10 +188,11 @@ class TJBAScraper(HTTPScraper):
             Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
         paginas : int, list, range, or None
             Pages to download (1-based). None = all pages.
-        data_publicacao_inicio : str, optional
-            Start date (YYYY-MM-DD).
-        data_publicacao_fim : str, optional
-            End date (YYYY-MM-DD).
+        data_publicacao_inicio : str, date or None
+            Start date: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+            ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+        data_publicacao_fim : str, date or None
+            End date (mesmos formatos).
         ordenado_por : str
             ``"dataPublicacao"`` (default) or ``"relevancia"``.
         tamanho_pagina : int
