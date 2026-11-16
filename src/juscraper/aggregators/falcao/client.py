@@ -484,12 +484,12 @@ class FalcaoScraper(HTTPScraper):
             formato=_FORMATO_BACKEND,
         )
         # Só com o fim, a busca envia o piso como ``dataInicio``, e o intervalo sairia invertido.
-        if inp.data_juntada_inicio is None and inp.data_juntada_fim is not None:
-            if _como_data(inp.data_juntada_fim) < _como_data(DATA_INICIO_PISO):
-                raise ValueError(
-                    f"'data_juntada_fim' ({inp.data_juntada_fim}) é anterior a {DATA_INICIO_PISO}, "
-                    "o início que a busca envia quando só o limite superior é informado."
-                )
+        so_fim = inp.data_juntada_inicio is None and inp.data_juntada_fim is not None
+        if so_fim and _como_data(inp.data_juntada_fim) < _como_data(DATA_INICIO_PISO):
+            raise ValueError(
+                f"'data_juntada_fim' ({inp.data_juntada_fim}) é anterior a {DATA_INICIO_PISO}, "
+                "o início que a busca envia quando só o limite superior é informado."
+            )
         return inp
 
     @staticmethod
