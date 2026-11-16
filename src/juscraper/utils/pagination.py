@@ -204,6 +204,20 @@ def resolve_total_pages(
 _PAGINAS_FORA_NO_AVISO = 5
 
 
+def menor_pagina(paginas: Iterable[int] | None) -> int:
+    """A página a pedir primeiro quando o total só vem numa resposta: a menor pedida, ou 1 com ``None``.
+
+    Se ela passa do total, as demais também passam, e
+    :func:`paginas_no_intervalo` descarta todas sem novo pedido. ``range``
+    crescente não é percorrido.
+    """
+    if paginas is None:
+        return 1
+    if isinstance(paginas, range) and paginas.step > 0:
+        return paginas.start
+    return min(paginas)
+
+
 def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
     """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida e sem repetição; as demais vão para o log.
 
