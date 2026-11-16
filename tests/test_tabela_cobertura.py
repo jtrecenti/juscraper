@@ -20,6 +20,24 @@ def test_documentacao_em_dia():
     assert tabela_cobertura.main(["--check"]) == 0, "rode `uv run python scripts/tabela_cobertura.py`"
 
 
+@pytest.mark.parametrize("sigla", ["tjac", "tjce"])
+@pytest.mark.parametrize("alteracao", ["metodo_vira_stub", "metodo_novo_em_linha_no"])
+def test_notebook_manual_detecta_divergencia_da_cobertura(sigla, alteracao, monkeypatch, capsys):
+    """A tabela manual não pode afirmar disponibilidade contrária ao código."""
+    grupos = tabela_cobertura.cobertura()
+    metodos = grupos["tribunais"][sigla]
+    if alteracao == "metodo_vira_stub":
+        metodos.remove("baixar_acordaos")
+    else:
+        metodos.append("cpopg")
+    # Isola a prova dos notebooks: o bloco gerado de README/docs também mudaria.
+    monkeypatch.setattr(tabela_cobertura, "cobertura", lambda: grupos)
+    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", {})
+
+    assert tabela_cobertura.main(["--check"]) == 1
+    assert f"docs/notebooks/{sigla}.ipynb" in capsys.readouterr().err
+
+
 class _Exemplos:
     def stub_com_docstring(self):
         """Não implementado."""
