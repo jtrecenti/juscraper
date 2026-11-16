@@ -611,7 +611,10 @@ TRF1, TRF3, TRF5 and TJPE `cpopg(..., download_pecas=True)`, and TRF3
 `cposg(..., download_pecas=True)`, also add
 `pecas_falhas`, a list per process of `{"id": ..., "motivo_falha": ...}` for
 the documents that failed; a failed document does not change the process's
-`motivo_falha`.
+`motivo_falha`. In TRF1, TRF5 and TJPE, an error writing a document to disk
+(disk full, no permission) stops that process's documents: it and the ones
+not yet requested go to `pecas_falhas`, the row keeps the detail with
+`motivo_falha` `resposta_inesperada`, and the batch goes on.
 
 Methods whose unit of work has no row to carry the reason (a page, a date
 window, an alias) raise `juscraper.core.exceptions.ColetaParcialError`

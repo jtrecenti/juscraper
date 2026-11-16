@@ -9,6 +9,8 @@ precisa entrar no repositório.
 """
 from __future__ import annotations
 
+import errno
+from pathlib import Path
 from urllib.parse import parse_qsl
 
 import pandas as pd
@@ -26,6 +28,7 @@ DETAIL_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/listView.sea
 DOC_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
 CNJ = "00000011220248170001"
 CNJ_FORMATADO = "0000001-12.2024.8.17.0001"
+OUTRO_CNJ = "00000021220248170001"
 
 
 @pytest.fixture
@@ -250,6 +253,51 @@ def test_cjsg_continua_em_sessao_propria():
     assert tjpe._consulta() is consulta
     assert tjpe.session is not consulta.session
     assert tjpe.session.headers["User-Agent"] != USER_AGENT
+
+
+@responses.activate
+def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, mocker, tmp_path, caplog):
+    """Disco cheio na 1ª peça do 1º CNJ: ele sai com detalhe e motivo, sem peça truncada; o 2º sai completo."""
+    from juscraper.courts._trf.download import extract_documento_urls
+
+    detalhe = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    ids = [doc_id for _, doc_id in extract_documento_urls(detalhe.decode("latin-1"))]
+    assert len(ids) > 1
+    _form()
+    for _ in range(2):
+        _busca()
+        _detalhe()
+    doc = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    for _ in range(1 + len(ids)):
+        responses.add(responses.GET, DOC_URL, body=doc, content_type="text/html")
+
+    gravar = Path.write_bytes
+    chamadas = []
+
+    def disco_cheio_na_primeira(caminho, conteudo):
+        chamadas.append(caminho)
+        if len(chamadas) == 1:
+            gravar(caminho, conteudo[:10])  # o disco enche no meio da escrita
+            raise OSError(errno.ENOSPC, "No space left on device")
+        return gravar(caminho, conteudo)
+
+    mocker.patch.object(Path, "write_bytes", autospec=True, side_effect=disco_cheio_na_primeira)
+
+    with caplog.at_level("WARNING", logger="juscraper._trf"), pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = tjpe.cpopg([CNJ, OUTRO_CNJ], download_pecas=True, diretorio=str(tmp_path))
+
+    primeiro, segundo = df.iloc[0], df.iloc[1]
+    assert primeiro["processo"] is not None
+    assert primeiro["motivo_falha"] == "resposta_inesperada"
+    assert primeiro["pecas"] == []
+    assert primeiro["pecas_falhas"] == [{"id": i, "motivo_falha": "resposta_inesperada"} for i in ids]
+    assert not chamadas[0].exists()
+    assert segundo["motivo_falha"] is None
+    assert [Path(p).stem for p in segundo["pecas"]] == ids
+    assert segundo["pecas_falhas"] == []
+    # As peças seguintes do 1º CNJ não são pedidas.
+    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == 1 + len(ids)
+    assert "No space left on device" in caplog.text
 
 
 def test_cpopg_rejeita_kwarg_desconhecido(tjpe):

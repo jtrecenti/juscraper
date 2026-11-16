@@ -12,6 +12,7 @@ diverges, the classe form-field shape). Mirrors ``courts/_esaj/base.py``:
 # pylint: disable=protected-access
 from __future__ import annotations
 
+import contextlib
 import logging
 import time
 from pathlib import Path
@@ -319,7 +320,11 @@ class TRFConsultaScraper(HTTPScraper):
                 ``UserWarning`` próprio ao fim. Num bloqueio anti-bot nas peças,
                 a bloqueada e as seguintes, que não são pedidas, entram em
                 ``pecas_falhas`` com ``bloqueio_anti_bot``; esse bloqueio sai só
-                no aviso dos processos, pelo ``motivo_falha`` da linha.
+                no aviso dos processos, pelo ``motivo_falha`` da linha. Um erro
+                ao gravar uma peça (disco cheio, sem permissão) encerra as peças
+                daquele processo: a peça e as seguintes, que não são pedidas,
+                entram em ``pecas_falhas`` com ``resposta_inesperada``, a linha
+                sai com o detalhe e esse ``motivo_falha``, e o lote segue.
 
                 ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
                 para processo ausente ou sob sigilo (linha só com ``id_cnj``
@@ -385,7 +390,11 @@ class TRFConsultaScraper(HTTPScraper):
     def _pecas_do_processo(
         self, cnj: str, html: str, base_dir: str
     ) -> _Consulta:
-        """A consulta de um processo com as peças; ``bloqueio_anti_bot`` quando o download parou num bloqueio."""
+        """A consulta de um processo com as peças.
+
+        O motivo é ``bloqueio_anti_bot`` quando o download parou num bloqueio, e
+        ``resposta_inesperada`` quando parou num erro ao gravar uma peça.
+        """
         proc_dir = Path(base_dir) / cnj
         proc_dir.mkdir(parents=True, exist_ok=True)
         paths: list[str] = []
@@ -412,6 +421,20 @@ class TRFConsultaScraper(HTTPScraper):
                 falhas.append({"id": doc_id, COLUNA_MOTIVO_FALHA: motivo_falha_ou_inesperada(exc)})
                 continue
             path = proc_dir / f"{doc_id}.html"
-            path.write_bytes(content)
+            try:
+                path.write_bytes(content)
+            except OSError as exc:
+                # Erro de disco (cheio, sem permissão) tende a se repetir nas
+                # peças seguintes: elas não são pedidas, e a falha vai para a
+                # linha do processo, sem derrubar o lote.
+                logger.warning(
+                    "%s: erro ao gravar a peça %s do %s; as peças do processo param aqui: %s",
+                    self.TRIBUNAL_NAME, doc_id, cnj, exc,
+                )
+                with contextlib.suppress(OSError):
+                    path.unlink(missing_ok=True)  # não deixa peça truncada
+                motivo = motivo_falha_ou_inesperada(exc)
+                falhas.extend({"id": d, COLUNA_MOTIVO_FALHA: motivo} for _, d in documentos[i:])
+                return _Consulta(html, motivo, paths, falhas)
             paths.append(str(path))
         return _Consulta(html, None, paths, falhas)
