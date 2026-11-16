@@ -470,7 +470,7 @@ def test_data_fim_isolada_vai_com_piso_de_inicio(falcao):
 @pytest.mark.parametrize("fim", ["1899-12-31", "31/12/1850"])
 def test_data_fim_isolada_anterior_ao_piso_falha_antes_de_requisitar(falcao, fim):
     """Sem início, a busca enviaria ``dataInicio=1900-01-01`` depois do fim."""
-    with pytest.raises(ValueError, match=r"data_juntada_inicio.*1900-01-01.*posterior"):
+    with pytest.raises(ValueError, match=r"data_juntada_fim.*anterior a 1900-01-01"):
         falcao.listar_decisoes("dano moral", paginas=1, data_juntada_fim=fim)
     assert len(responses.calls) == 0
 

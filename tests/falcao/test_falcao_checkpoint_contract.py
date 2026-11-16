@@ -4,6 +4,7 @@ O backend bloqueia o IP por cota diária: a retomada não pode gastar requisiç�
 nas páginas já gravadas, nem misturar buscas diferentes no mesmo diretório.
 """
 import json
+import warnings
 from pathlib import Path
 
 import pytest
@@ -260,7 +261,6 @@ def test_pagina_interrompida_na_gravacao_e_requisitada_de_novo(falcao, tmp_path)
 
 
 @responses.activate
-@pytest.mark.filterwarnings("error")
 @pytest.mark.parametrize("ordem", [{}, {"ordenacao": "mais_relevante"}])
 @pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
 def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo, ordem):
@@ -274,20 +274,30 @@ def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo
 
 
 @responses.activate
-@pytest.mark.filterwarnings("error")
-@pytest.mark.parametrize("ordenacao", ["menos_recente", "mais_recente"])
-def test_checkpoint_com_ordem_por_data_nao_avisa(falcao, tmp_path, ordenacao):
-    _register("acordaos", pagina=1, ordenacao=ordenacao)
+@pytest.mark.parametrize("coleta", [
+    {"checkpoint_dir": "coleta", "ordenacao": "menos_recente"},
+    {"checkpoint_dir": "coleta", "ordenacao": "mais_recente"},
+    {"diretorio": "downloads"},
+])
+def test_ordem_por_data_ou_coleta_sem_checkpoint_nao_avisam(falcao, tmp_path, coleta):
+    coleta = {chave: str(tmp_path / valor) if "dir" in chave else valor for chave, valor in coleta.items()}
+    _register("acordaos", pagina=1)
 
-    falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path / "coleta", ordenacao=ordenacao)
+    with warnings.catch_warnings():
+        # O ``pytestmark`` do módulo ignora o aviso de ordem; aqui ele tem de reprovar.
+        warnings.simplefilter("error")
+        falcao.listar_decisoes_download("dano moral", **coleta)
 
 
 @responses.activate
-@pytest.mark.filterwarnings("error")
-def test_coleta_sem_checkpoint_nao_avisa_da_ordem(falcao, tmp_path):
+def test_checkpoint_ocupado_falha_com_o_erro_do_diretorio_e_nao_com_o_aviso(falcao, tmp_path):
     _register("acordaos", pagina=1)
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path)
 
-    falcao.listar_decisoes_download("dano moral", diretorio=str(tmp_path))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        with pytest.raises(ValueError, match="ocupado"):
+            falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path)
 
 
 @responses.activate
@@ -302,5 +312,25 @@ def test_retomada_aceita_lista_de_filtro_em_outra_ordem(falcao, tmp_path):
 
     _register("acordaos", total=20, pagina=2, tribunais="TRT3,TST")
     falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, tribunais=["TRT3", "TST"])
+
+    assert _paginas_pedidas() == [2]
+
+
+@responses.activate
+def test_retomada_aceita_manifesto_com_lista_de_filtro_fora_de_ordem(falcao, tmp_path):
+    """Manifesto gravado antes de a identidade ordenar os filtros em lista."""
+    checkpoint = tmp_path / "coleta"
+    _register("acordaos", total=20, pagina=1, tribunais="TST,TRT3")
+    _bloquear_por_cota()
+    with pytest.raises(requests.HTTPError):
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, tribunais=["TST", "TRT3"])
+    responses.reset()
+    manifesto = checkpoint / "manifest.json"
+    conteudo = json.loads(manifesto.read_text(encoding="utf-8"))
+    conteudo["identity"]["tribunais"] = "TST,TRT3"
+    manifesto.write_text(json.dumps(conteudo), encoding="utf-8")
+
+    _register("acordaos", total=20, pagina=2, tribunais="TST,TRT3")
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, tribunais=["TST", "TRT3"])
 
     assert _paginas_pedidas() == [2]

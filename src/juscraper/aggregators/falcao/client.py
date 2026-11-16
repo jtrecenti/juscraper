@@ -124,6 +124,8 @@ class FalcaoScraper(HTTPScraper):
         emite ``UserWarning``. Para coleta de vários dias, use
         ``ordenacao="menos_recente"`` com ``data_juntada_fim`` fechado no
         passado, combinação que devolveu a mesma página em três chamadas.
+        ``mais_recente`` não foi medida; nela, cada documento novo desloca
+        as páginas seguintes.
 
         Limites do checkpoint:
 
@@ -355,10 +357,10 @@ class FalcaoScraper(HTTPScraper):
             self._coletar(inp, destino)
             return str(destino)
 
-        self._avisar_ordem_instavel(inp)
         destino = Path(inp.checkpoint_dir)
         identidade = identidade_da_busca(self._params(inp, 1))
         checkpoint = _checkpoint.Checkpoint(destino, identidade, resume=inp.resume)
+        self._avisar_ordem_instavel(inp)
         try:
             self._coletar(inp, destino, checkpoint)
         except BaseException as erro:
@@ -473,16 +475,21 @@ class FalcaoScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, metodo, schema_cls=InputListarDecisoesFalcao)
             raise
-        # Só com o fim, a busca envia o piso como ``dataInicio``: fim anterior a ele inverteria o intervalo.
-        so_fim = inp.data_juntada_inicio is None and inp.data_juntada_fim is not None
         validate_intervalo_datas(
-            DATA_INICIO_PISO if so_fim else inp.data_juntada_inicio,
+            inp.data_juntada_inicio,
             inp.data_juntada_fim,
             rotulo="data_juntada",
             max_dias=None,
             origem="O Falcao",
             formato=_FORMATO_BACKEND,
         )
+        # Só com o fim, a busca envia o piso como ``dataInicio``, e o intervalo sairia invertido.
+        if inp.data_juntada_inicio is None and inp.data_juntada_fim is not None:
+            if _como_data(inp.data_juntada_fim) < _como_data(DATA_INICIO_PISO):
+                raise ValueError(
+                    f"'data_juntada_fim' ({inp.data_juntada_fim}) é anterior a {DATA_INICIO_PISO}, "
+                    "o início que a busca envia quando só o limite superior é informado."
+                )
         return inp
 
     @staticmethod
@@ -492,7 +499,8 @@ class FalcaoScraper(HTTPScraper):
         Medido ao vivo em 16/11/2026: a página 3 de "dano moral" na ordem
         padrão veio em três versões em três minutos; com
         ``ordenacao="menos_recente"`` e ``data_juntada_fim`` fechado, veio
-        igual em três chamadas. ``mais_recente`` não foi medido.
+        igual em três chamadas. ``mais_recente`` não foi medido, e por isso
+        não avisa.
         """
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
@@ -531,6 +539,10 @@ class FalcaoScraper(HTTPScraper):
         return [p for p in paginas if 1 <= p <= total_paginas]
 
 
+def _como_data(valor: str) -> datetime:
+    return datetime.strptime(valor, _FORMATO_BACKEND)
+
+
 def _validar_data(valor, nome: str) -> None:
     """Rejeita a data que ``coerce_brazilian_date`` nao conseguiu converter.
 
@@ -539,7 +551,7 @@ def _validar_data(valor, nome: str) -> None:
     ``"31/02/2024"``) ia para o backend e voltava como HTTP 400 generico.
     """
     try:
-        datetime.strptime(valor, _FORMATO_BACKEND)
+        _como_data(valor)
     except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{nome}' inválida: {valor!r}. Use DD/MM/AAAA, AAAA-MM-DD ou datetime.date."
