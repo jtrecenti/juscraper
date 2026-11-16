@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
+import requests
 
+from juscraper.core.download import gravar_arquivo
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
-from .download import cjsg_download_manager
+from .download import cjsg_download_manager, conferir_bloqueio
+from .inteiro_teor import InteiroTeorIndisponivelError, nome_do_arquivo, pdf_da_resposta
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGSTM
 
@@ -33,12 +37,13 @@ class STMScraper(HTTPScraper):
         sleep_time: Segundos entre duas páginas de resultados (default 1).
         download_path: Pasta de downloads. ``None`` usa um diretório temporário.
         verbose: Nível de detalhe do log.
-        politica: Ajustes do perfil HTTP ``cjsg``, por campo de
+        politica: Ajustes dos perfis HTTP ``cjsg`` e ``inteiro_teor``, por campo de
             :class:`~juscraper.core.http.RequestPolicy`.
     """
 
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "cjsg": RequestPolicy(timeout=60),
+        "inteiro_teor": RequestPolicy(timeout=120),
     }
 
     def __init__(
@@ -193,3 +198,54 @@ class STMScraper(HTTPScraper):
             O DataFrame descrito em :meth:`cjsg`.
         """
         return cjsg_parse_manager(resultados_brutos)
+
+    def baixar_inteiro_teor(self, url_inteiro_teor: str, diretorio: str | None = None) -> str:
+        """Baixa o PDF do inteiro teor de um acórdão do STM.
+
+        Um pedido por acórdão, sem login e sem captcha. Devolve o PDF como o
+        tribunal o publica; a extração de texto fica com quem usa a
+        biblioteca.
+
+        Args:
+            url_inteiro_teor (str): Endereço do inteiro teor, como vem na
+                coluna ``url_inteiro_teor`` do :meth:`cjsg`: o visualizador
+                do eproc (``https://eproc2g.stm.jus.br/...&uuid=...``), nos
+                acórdãos recentes, ou o PDF em
+                ``https://www2.stm.jus.br/pesquisa/acordao/...``, nos antigos.
+            diretorio (str | None): Pasta de destino. Default
+                :attr:`download_path`. O PDF vai para
+                ``<diretorio>/inteiro_teor/<nome>.pdf``, em que ``<nome>`` é
+                o ``uuid`` do endereço do eproc ou, em ``www2``, o ano, a
+                classe e o nome do arquivo (``2015_50_10022722``).
+
+        Raises:
+            ValueError: Endereço fora desses dois formatos (a célula vazia de
+                um acórdão sem inteiro teor, por exemplo), antes de qualquer
+                pedido.
+            BotChallengeBlockedError: Quando o WAF do portal recusa a
+                requisição.
+            InteiroTeorIndisponivelError: O portal respondeu sem PDF ou com
+                erro HTTP que não se resolve pedindo de novo (o 404 de um
+                arquivo que saiu do ar, por exemplo); nada é gravado. Fica em
+                ``juscraper.courts.stm.inteiro_teor``.
+            RetryExhaustedError: O portal seguiu respondendo com status
+                passageiro (429, 503) depois de todas as tentativas; vale
+                pedir de novo mais tarde.
+
+        Returns:
+            Caminho do PDF gravado.
+
+        Examples: Exemplo
+            >>> import juscraper as jus
+            >>> stm = jus.scraper("stm")
+            >>> df = stm.cjsg("deserção", paginas=1)
+            >>> caminho = stm.baixar_inteiro_teor(df["url_inteiro_teor"].dropna().iloc[0])
+        """
+        nome = nome_do_arquivo(url_inteiro_teor)
+        url = url_inteiro_teor.strip()
+        try:
+            resposta = self._request_with_retry("GET", url, perfil="inteiro_teor", on_response=conferir_bloqueio)
+        except requests.HTTPError as erro:
+            raise InteiroTeorIndisponivelError(url, f"o STM respondeu com erro ({erro}); nada foi gravado.") from erro
+        destino = Path(diretorio or self.download_path) / "inteiro_teor" / nome
+        return str(gravar_arquivo(pdf_da_resposta(resposta, url), destino))
