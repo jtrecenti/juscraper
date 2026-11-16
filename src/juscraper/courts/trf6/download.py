@@ -101,7 +101,7 @@ def _texto(resp: requests.Response) -> str:
     return resp.content.decode("latin-1")
 
 
-def fetch_form(session: requests.Session, timeout: float = 30.0) -> str:
+def fetch_form(session: requests.Session, timeout: float | tuple[float, float] = 30.0) -> str:
     """``GET`` the consulta form. Returns latin-1 text with captcha embedded.
 
     Raises:
@@ -174,7 +174,7 @@ def build_search_payload(numero_processo: str, captcha_text: str) -> dict[str, s
 def submit_search(
     session: requests.Session,
     payload: dict[str, str],
-    timeout: float = 30.0,
+    timeout: float | tuple[float, float] = 30.0,
 ) -> str:
     """``POST`` the search payload and return the response as latin-1 text.
 
@@ -221,7 +221,7 @@ def fetch_detail(
     numero_processo: str,
     *,
     max_captcha_attempts: int = 3,
-    timeout: float = 30.0,
+    timeout: float | tuple[float, float] = 30.0,
 ) -> str | None:
     """Run the full captcha-solving lookup for one CNJ.
 
