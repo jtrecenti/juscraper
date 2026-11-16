@@ -368,6 +368,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
             paginas=inp.paginas,
+            tribunal=self.tribunal_name,
         )
         return path
 

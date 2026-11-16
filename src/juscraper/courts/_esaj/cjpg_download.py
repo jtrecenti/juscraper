@@ -53,14 +53,16 @@ def _extract_page_count(
         ) from error
 
 
-def _normalize_pages(paginas: list[int] | range | None, n_pags: int, u_base: str) -> list[int]:
+def _normalize_pages(
+    paginas: list[int] | range | None, n_pags: int, u_base: str, *, tribunal: str | None = None,
+) -> list[int]:
     """Páginas pedidas dentro de ``1..n_pags``, sem repetição; ``None`` vale todas.
 
-    As de fora saem em aviso no logger do tribunal, cuja sigla vem do host de
-    ``u_base`` (``esaj.tjsp.jus.br`` -> ``TJSP``).
+    As de fora saem em aviso no logger de ``tribunal``; chamadas diretas do
+    helper ainda podem derivar a sigla do host de ``u_base``.
     """
-    tribunal = (urlparse(u_base).hostname or "").removesuffix(".jus.br").rsplit(".", 1)[-1].upper()
-    return paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
+    sigla = tribunal or (urlparse(u_base).hostname or "").removesuffix(".jus.br").rsplit(".", 1)[-1].upper()
+    return paginas_no_intervalo(paginas, n_pags, tribunal=sigla)
 
 
 def _save_page(path: Path, page: int, html: str) -> None:
@@ -149,6 +151,7 @@ def cjpg_download(  # noqa: PLR0913 - um parâmetro por filtro do formulário
     data_inicio: str | None = None,
     data_fim: str | None = None,
     paginas: list[int] | range | None = None,
+    tribunal: str | None = None,
 ) -> str:
     """Download cases from the eSAJ first-instance jurisprudence search (TJSP, TJMS).
 
@@ -189,7 +192,7 @@ def cjpg_download(  # noqa: PLR0913 - um parâmetro por filtro do formulário
         _save_page(path, 1, r0.text)
         return str(path)
 
-    paginas_list = _normalize_pages(paginas, n_pags, u_base)
+    paginas_list = _normalize_pages(paginas, n_pags, u_base, tribunal=tribunal)
 
     first_page_in_range = 1 in paginas_list
     if first_page_in_range:
