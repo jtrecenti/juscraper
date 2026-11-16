@@ -13,7 +13,7 @@
     <meta name="title" content="Consulta Judicial Unificada | JMU">
     <meta name="description" content="A Justiça Militar da União é uma justiça especializada que julga os crimes militares previstos no Código Penal Militar (CPM), tendo como principais jurisdicionados os militares das Forças Armadas e, em certos casos, até civis.">
     <meta name="keywords" content="stm, jmu, justiça militar da união, superior tribunal militar, justiça militar, consulta processual, jurisprudência, jmu consulta processual, stm consulta processual, jmu jurisprudência, stm jurisprudência, ministros jmu">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="language" content="Portuguese">
     <meta name="author" content="Justiça Militar da União">
 
@@ -81,7 +81,8 @@
         gtag('js', new Date());
         gtag('config', 'G-WP8V5XK0S4');
     </script>
-</head><body>
+</head>
+<body>
 
 <!-- Header -->
 <header class="container-fluid">
@@ -99,7 +100,6 @@
     localStorage.setItem('URL_PROCESSOS', 'https://processos.stm.jus.br');
     localStorage.setItem('URL_JURISPRUDENCIA', 'https://jurisprudencia.stm.jus.br');
 </script>
-<!-- Conteudo -->
 <div class="topo">
     <div class="gridbox">
         
@@ -108,6 +108,7 @@
     start_scripts();
 </script>
 
+<!--Dicas -->
 <!-- Dicas de Busca -->
 <div class="container collapse" id="tips">
 	<br/>
@@ -240,8 +241,9 @@
 		</a>
     </div>
 </div>
-<!-- Escolher Filtros -->
-    <nav class="navbar container">
+<div class="container" style="background-color: #fff; margin-bottom: -2px; color: #444; background-color: #fff; border-radius: 6px 6px 0 0;">
+    <!-- Escolher Filtros -->
+        <nav class="container" style="padding-top: 1rem;">
         <div class="container-fluid">
         <!-- Menu para dispositivos móveis -->
         <div class="navbar-header" role="menu" >
@@ -255,7 +257,7 @@
         <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav navbar-nav navbar-left">
             <li>
-                <span class="dropdown-filter">Filtrar por:</span>
+                <span class="dropdown-filter"><strong>Filtrar por:</strong></span>
             </li>
         </ul>
                                     <ul class="nav navbar-nav navbar-left">
@@ -369,11 +371,9 @@
                             </div>
         </div>
     </nav>
-    </div>
-</div>
 
-<!-- Filtros Ativos e Paginação -->
-        <div class="container">
+    <!-- Filtros Ativos e Paginação -->
+                <div class="container">
         <div class="row">
             <p class="filter-list">
                 <span class="title">Filtros Aplicados:</span>
@@ -382,7 +382,7 @@
                             </p>
         </div>
     </div>
-    <div class="container">
+        <div class="container-fluid">
     <div class="row message">
         <!-- Quantidade de documentos -->
         <div class="col-xs-4"><b>1</b> - <b>1</b> de <b>1</b></u> <span class="hidden-xs">documentos</span></div>
@@ -395,7 +395,7 @@
     </div>
 </div>
 
-<div class="container">
+<div class="container-fluid">
     <div class="row pagination-block">
         <!-- Paginas -->
         <div class="col-xs-12 text-center">
@@ -409,14 +409,17 @@
     </div>
         </div>
     </div>
+</div>    
+</div>    </div>
 </div>
+
 <!-- Resultado da pesquisa - Jurisprudência -->
 <div class="container container-fluid">
         <div class="panel panel-default">
         <div class="panel-heading">
             <div class="btn-group">
                                 <button class="btn btn-default" title="Exibir Inteiro Teor"
-                        onclick="tracker.functions.openInteiroTeor('https://eproc2g.stm.jus.br/eproc_2g_prod/jurisprudencia/extrator/Documento.php?uuid=a793107bff03b35d2627c9140ed6aaf6b0bcff2299016410833318fcb7b98d81')">
+                        onclick="tracker.functions.openInteiroTeor('https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao&uuid=a793107bff03b35d2627c9140ed6aaf6b0bcff2299016410833318fcb7b98d81')">
                     Inteiro Teor
                 </button>
                                                 <button class="btn btn-default" data-toggle="modal" data-target="#modal_data"
