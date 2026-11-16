@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -594,7 +594,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Filtros aceitos por <code>InputCJPGTJSP</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do eSAJ (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via <code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 1 ano, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so o GET inicial, extrai o total de resultados via <code>cjpg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 1 ano, itera janelas disjuntas e soma — soma bruta (sem dedup por <code>id_processo</code>). <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
+<td>Filtros aceitos por <code>InputCJPGEsaj</code> (todos opcionais; <code>None</code> = sem filtro): * <code>classe</code> (int | str | list[int | str]): ID(s) internos de classe processual. Backend: <code>classeTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str]): ID(s) internos de assunto. Backend: <code>assuntoTreeSelection.values</code> (CSV). * <code>vara</code> (int | str | list[int | str]): ID(s) internos de vara, no formato em arvore do eSAJ (ex.: <code>"1-1-1"</code>). Backend: <code>varasTreeSelection.values</code> (CSV). * <code>id_processo</code> (str): Numero CNJ formatado para filtrar uma instancia especifica. Normalizado via <code>clean_cnj</code> antes do envio. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, <code>DD/MM/AAAA</code>): Intervalo de julgamento. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 1 ano, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>id_processo</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so o GET inicial, extrai o total de resultados via <code>cjpg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 1 ano, itera janelas disjuntas e soma — soma bruta (sem dedup por <code>id_processo</code>). <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -660,7 +660,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code> | <code>int</code></td>
-<td>Resultados parseados (colunas conforme <code>OutputCJPGTJSP</code> — <code>id_processo</code>, <code>cd_processo</code> e campos extras emitidos pelo parser via <code>extra='allow'</code> — <code>classe</code>, <code>assunto</code>, <code>magistrado</code>, <code>comarca</code>, <code>foro</code>, <code>vara</code>, <code>data_disponibilizacao</code>, <code>decisao</code>); <code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
+<td>Resultados parseados (colunas conforme <code>OutputCJPGEsaj</code> — <code>id_processo</code>, <code>cd_processo</code> e campos extras emitidos pelo parser via <code>extra='allow'</code> — <code>classe</code>, <code>assunto</code>, <code>magistrado</code>, <code>comarca</code>, <code>foro</code>, <code>vara</code>, <code>data_disponibilizacao</code>, <code>decisao</code>); <code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -681,7 +681,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
-<p><code>InputCJPGTJSP</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p><code>InputCJPGEsaj</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 <p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de <code>AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 1 ano, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>id_processo</code>. Janela que falha levanta <code>ColetaParcialError</code>, com as janelas que passaram em <code>.resultado</code>. <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 1 ano e <code>ValueError</code>.</p>
 </section>
 </section>
@@ -728,7 +728,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Mesmos filtros aceitos por <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjpg"><code>cjpg</code></a> (validados por <code>InputCJPGTJSP</code>).</td>
+<td>Mesmos filtros aceitos por <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjpg"><code>cjpg</code></a> (validados por <code>InputCJPGEsaj</code>).</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>

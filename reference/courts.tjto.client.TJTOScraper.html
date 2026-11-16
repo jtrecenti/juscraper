@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -447,7 +447,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>BotChallengeBlockedError</code></td>
-<td>Quando o AWS WAF do portal desafia ou pede CAPTCHA, o que acontece depois de algumas buscas seguidas do mesmo IP.</td>
+<td>Quando o AWS WAF do portal desafia ou pede CAPTCHA, o que acontece depois de algumas buscas seguidas do mesmo IP, antes de qualquer pagina pedida.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Uma pagina falhou (o bloqueio do WAF, por exemplo) com outra ja baixada antes dela. A busca para nessa pagina; <code>.resultado</code> traz as anteriores, e a mensagem lista as que faltam.</td>
 </tr>
 </tbody>
 </table>

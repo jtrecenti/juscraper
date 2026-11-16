@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -182,6 +182,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#case-documents-of-the-first-instance-tjsp" id="toc-case-documents-of-the-first-instance-tjsp" class="nav-link" data-scroll-target="#case-documents-of-the-first-instance-tjsp">Case documents of the first instance (TJSP)</a></li>
   <li><a href="#normalization-utilities" id="toc-normalization-utilities" class="nav-link" data-scroll-target="#normalization-utilities">Normalization Utilities</a></li>
+  <li><a href="#per-row-failures" id="toc-per-row-failures" class="nav-link" data-scroll-target="#per-row-failures">Per-row failures</a></li>
   <li><a href="#rate-limiting-and-retry-behaviour" id="toc-rate-limiting-and-retry-behaviour" class="nav-link" data-scroll-target="#rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/api-conventions.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
@@ -654,6 +655,75 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>run_chunked_search(fetch_window, *, data_inicio, data_fim, dedup_key, ...)</code> — drives a search across windows, concatenates and deduplicates</li>
 <li><code>warn_unsupported(param_name, tribunal)</code> — warns about unsupported parameters</li>
 </ul>
+</section>
+<section id="per-row-failures" class="level2">
+<h2 class="anchored" data-anchor-id="per-row-failures">Per-row failures</h2>
+<p>Batch methods keep one row per requested item even when the item fails, and say why in the <code>motivo_falha</code> column (<code>None</code> when the item was read). This holds for TJSP <code>cpopg</code> (table <code>basicos</code>) and <code>cposg</code>; for <code>cpopg</code> of TRF1, TRF3, TRF5, TRF6 and TJPE, and <code>cposg</code> of TRF3; for <code>baixar_acordaos</code> and <code>baixar_sentencas</code> in the eSAJ courts; and for the batch methods of JusBR and PDPJ. DataJud <code>contar_processos</code> uses the same values in its <code>error</code> column. The failures of a call go into a single <code>UserWarning</code> at the end.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>motivo_falha</code></th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>nao_encontrado</code></td>
+<td>The source says the item does not exist (each scraper documents the signal it reads).</td>
+</tr>
+<tr class="even">
+<td><code>entrada_invalida</code></td>
+<td>The input row has no usable value (CNJ, date, code); nothing was requested.</td>
+</tr>
+<tr class="odd">
+<td><code>http_&lt;status&gt;</code></td>
+<td>The request failed with that HTTP status.</td>
+</tr>
+<tr class="even">
+<td><code>retry_esgotado_&lt;status&gt;</code></td>
+<td>The server answered a retryable status until the attempts ran out.</td>
+</tr>
+<tr class="odd">
+<td><code>timeout</code></td>
+<td>The response did not arrive in time; the profile timeout may be too short.</td>
+</tr>
+<tr class="even">
+<td><code>conexao</code></td>
+<td>The connection failed or dropped, also in the middle of the body.</td>
+</tr>
+<tr class="odd">
+<td><code>json_invalido</code></td>
+<td>The body is not the expected JSON.</td>
+</tr>
+<tr class="even">
+<td><code>resposta_inesperada</code></td>
+<td>A page outside the known format, or another error without its own reason.</td>
+</tr>
+<tr class="odd">
+<td><code>nao_pdf</code></td>
+<td>The PDF endpoint answered with something else; nothing was written.</td>
+</tr>
+<tr class="even">
+<td><code>sem_acordao</code></td>
+<td>The process was found, but without an accessible acórdão on that date.</td>
+</tr>
+<tr class="odd">
+<td><code>bloqueio_anti_bot</code></td>
+<td>A bot manager (Akamai, CloudFront, AWS WAF, F5) challenged or blocked the request.</td>
+</tr>
+<tr class="even">
+<td><code>captcha_esgotado</code></td>
+<td>The portal refused the solved captcha in every attempt.</td>
+</tr>
+</tbody>
+</table>
+<p>An anti-bot block holds for the whole session. In the PJe <code>cpopg</code>/<code>cposg</code> (TRF1, TRF3, TRF5, TRF6 and TJPE) and in the eSAJ <code>baixar_acordaos</code> and <code>baixar_sentencas</code>, the first <code>bloqueio_anti_bot</code> ends the batch: the following rows get the same reason without a request, and the rows already read stay in the result. The JusBR and PDPJ batch methods go on with the next item. Whenever a row has <code>bloqueio_anti_bot</code>, the warning comes as <code>juscraper.core.exceptions.BloqueioAntiBotWarning</code>, a <code>UserWarning</code> subclass. Wait a few minutes or switch networks, and ask again only for the failed rows. The values live in <code>juscraper.core.failures.MOTIVOS_FALHA</code>.</p>
+<p>TRF1, TRF3, TRF5 and TJPE <code>cpopg(..., download_pecas=True)</code>, and TRF3 <code>cposg(..., download_pecas=True)</code>, also add <code>pecas_falhas</code>, a list per process of <code>{"id": ..., "motivo_falha": ...}</code> for the documents that failed; a failed document does not change the process’s <code>motivo_falha</code>.</p>
+<p>Methods whose unit of work has no row to carry the reason (a page, a date window, an alias) raise <code>juscraper.core.exceptions.ColetaParcialError</code> instead of returning a partial result as if it were complete: the eSAJ auto-chunk, TJSP and TJMS <code>cjpg</code>, TJMG <code>cjsg</code>, TJTO <code>cjsg</code> and <code>cjpg</code>, and DataJud <code>listar_processos</code>. <code>erro.resultado</code> has what was collected, in the same format as the full return, and <code>erro.falhas</code> the failed units with their exceptions (see the <code>cjpg</code> example in the migration guide above).</p>
 </section>
 <section id="rate-limiting-and-retry-behaviour" class="level2">
 <h2 class="anchored" data-anchor-id="rate-limiting-and-retry-behaviour">Rate limiting and retry behaviour</h2>
