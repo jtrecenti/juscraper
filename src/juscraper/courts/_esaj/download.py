@@ -25,6 +25,7 @@ abaixo no nível de módulo.
 from __future__ import annotations
 
 import logging
+import tempfile
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -153,7 +154,7 @@ def download_cjsg_pages(
             ``_request_with_retry`` usado nos GETs paginados (#203).
         base_url: ``https://esaj.<tribunal>.jus.br/`` (trailing slash).
         download_path: Base directory; actual files land under
-            ``<download_path>/cjsg/<YYYYMMDDHHMMSS>/cjsg_NNNNN.html``.
+            ``<download_path>/cjsg/<YYYYMMDDHHMMSS>_<sufixo>/cjsg_NNNNN.html``.
         body: Form body for ``POST cjsg/resultadoCompleta.do``. Must include
             ``tipoDecisaoSelecionados`` (``A`` or ``D``).
         tipo_decisao: ``"acordao"`` or ``"monocratica"``. Echoed in the
@@ -173,8 +174,9 @@ def download_cjsg_pages(
     """
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    path = Path(download_path) / "cjsg" / timestamp
-    path.mkdir(parents=True, exist_ok=True)
+    raiz = Path(download_path) / "cjsg"
+    raiz.mkdir(parents=True, exist_ok=True)
+    path = Path(tempfile.mkdtemp(prefix=f"{timestamp}_", dir=raiz))
 
     link_cjsg = f"{base_url}cjsg/resultadoCompleta.do"
 

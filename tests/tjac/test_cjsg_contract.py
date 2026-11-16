@@ -4,6 +4,8 @@ Mocks ``resultadoCompleta.do`` + ``trocaDePagina.do`` with captured samples
 (see ``tests/fixtures/capture/tjac.py``) and asserts the public DataFrame
 contract. Covers typical multi-page, single-page, and zero-result scenarios.
 """
+from datetime import UTC, datetime
+
 import pandas as pd
 import pytest
 import responses
@@ -184,3 +186,20 @@ def test_cjsg_paginas_todas_alem_do_total_devolve_vazio(tmp_path, mocker):
 
     assert df.empty
     assert len(responses.calls) == 2  # POST + GET da página 1, para a contagem
+
+
+@responses.activate
+def test_cjsg_downloads_no_mesmo_segundo_nao_misturam_paginas(tmp_path, mocker):
+    """Duas chamadas diretas não reutilizam o diretório nem arquivos da primeira."""
+    mocker.patch("time.sleep")
+    mocker.patch("juscraper.courts._esaj.download.datetime").now.return_value = datetime(2026, 11, 16, tzinfo=UTC)
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+    _add_get(2, "cjsg/results_normal_page_02.html")
+    scraper = jus.scraper("tjac", download_path=str(tmp_path))
+
+    primeira = scraper.cjsg_download("dano moral", paginas=[1])
+    segunda = scraper.cjsg_download("dano moral", paginas=[2])
+
+    assert primeira != segunda
+    assert len(scraper.cjsg_parse(segunda)) == 20
