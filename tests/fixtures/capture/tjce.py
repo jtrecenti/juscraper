@@ -20,6 +20,7 @@ def main() -> None:
         tribunal="tjce",
         base_url="https://esaj.tjce.jus.br/",
         adapters={"https://": _TJCETLSAdapter()},
+        monocratica_query="usucapiao predio rural",
     )
     capture_acordao_samples()
 

@@ -23,6 +23,7 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjac",
         base_url="https://esaj.tjac.jus.br/",
+        monocratica_query="usucapiao rural familia",
     )
     capture_acordao_samples("tjac", ACORDAO_CASOS)
     capture_getarquivo_recaptcha()

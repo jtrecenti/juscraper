@@ -17,9 +17,11 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import requests
+from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
+from juscraper.courts._esaj.parse import _total_declarado
 
 ESAJ_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -295,8 +297,9 @@ def capture_cjsg_samples(
     single_page_query: str = "usucapiao extraordinario predio rural familia",
     no_results_query: str = "juscraper_probe_zero_hits_xyzqwe",
     typical_pages: tuple[int, ...] = (1, 2),
+    monocratica_query: str | None = None,
 ) -> None:
-    """Run three canonical cjsg queries and dump raw HTML.
+    """Run the canonical cjsg queries and dump raw HTML.
 
     Writes to ``tests/<tribunal>/samples/cjsg/``:
 
@@ -304,6 +307,8 @@ def capture_cjsg_samples(
     - ``results_normal_page_NN.html`` — typical multi-page
     - ``single_page.html`` — query whose hits fit in one page (n_pags == 1)
     - ``no_results.html`` — zero-hit page
+    - ``monocratica_single_page.html`` — se ``monocratica_query`` for dada,
+      ver :func:`capture_cjsg_monocratica_sample`
 
     Defaults are hand-picked to yield ≤20 hits across the five eSAJ courts
     in scope (TJAC/TJAL/TJAM/TJCE/TJMS). Override per-script if a layout
@@ -334,7 +339,40 @@ def capture_cjsg_samples(
     dump(dest / "no_results.html", none_resps[0].content)
     print(f"[{tribunal}] no_results ({no_results_query!r}) → saved")
 
+    if monocratica_query is not None:
+        capture_cjsg_monocratica_sample(session, tribunal, base_url, monocratica_query, body_builder=body_builder)
+
     print(f"[{tribunal}] ALL samples written to {dest}")
+
+
+def capture_cjsg_monocratica_sample(
+    session: requests.Session,
+    tribunal: str,
+    base_url: str,
+    pesquisa: str,
+    *,
+    body_builder=None,
+) -> None:
+    """Capture the 1st cjsg page of a monocratic-decision search.
+
+    Grava ``tests/<tribunal>/samples/cjsg/monocratica_single_page.html``. A
+    página de decisões monocráticas traz o total no input
+    ``totalResultadoAbaRetornoFiltro-D``, e não no ``-A`` dos acórdãos.
+    ``pesquisa`` precisa dar de 1 a 20 resultados (uma página); fora disso,
+    ou sem o input ``-D``, nada é gravado.
+    """
+    _, resps = fetch_cjsg_pages(session, base_url, pesquisa, tipo_decisao="monocratica", body_builder=body_builder)
+    soup = BeautifulSoup(resps[0].text, "html.parser")
+    # Mesma leitura de ``cjsg_n_results``: só o input ``-D``, sem a cascata.
+    n_results = _total_declarado(soup) if soup.select_one("input#totalResultadoAbaRetornoFiltro-D") else None
+    if n_results is None or not 1 <= n_results <= 20:
+        print(
+            f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}): sem o input -D "
+            f"com 1 a 20 resultados (lido: {n_results}); nada gravado"
+        )
+        return
+    dump(samples_dir_for(tribunal, "cjsg") / "monocratica_single_page.html", resps[0].content)
+    print(f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}, {n_results} resultados) → saved")
 
 
 def capture_acordao_samples(

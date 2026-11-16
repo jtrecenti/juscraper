@@ -70,6 +70,7 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjms",
         base_url="https://esaj.tjms.jus.br/",
+        monocratica_query="usucapiao predio rural",
     )
     capture_cjpg()
 

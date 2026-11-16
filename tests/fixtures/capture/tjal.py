@@ -12,6 +12,9 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjal",
         base_url="https://www2.tjal.jus.br/",
+        # O formulário do TJAL só mostra a caixa de acórdãos, mas a busca com
+        # ``tipoDecisaoSelecionados=D`` responde com a aba de monocráticas.
+        monocratica_query="usucapiao predio rural",
     )
 
 
