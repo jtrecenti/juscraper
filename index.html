@@ -521,118 +521,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>baixar_inteiro_teor</td>
 </tr>
 <tr class="odd">
+<td>STM</td>
+<td>cjsg</td>
+</tr>
+<tr class="even">
 <td>TJAC</td>
 <td>cjsg, baixar_acordao, baixar_acordaos</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJAL</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJAM</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJAP</td>
 <td>cjsg ⚠️</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJBA</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJCE</td>
 <td>cjsg, baixar_acordao, baixar_acordaos</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJDFT</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJES</td>
 <td>cjsg, cjpg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJGO</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJMG</td>
 <td>cposg, cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJMS</td>
 <td>cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJMT</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJPA</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJPB</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJPE</td>
 <td>cpopg, cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJPI</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJPR</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRJ</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRN</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRO</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJRR</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJRS</td>
 <td>cjsg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJSC</td>
 <td>cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TJSP</td>
 <td>cpopg, cposg, cjsg, cjpg, baixar_acordao, baixar_acordaos, baixar_sentenca, baixar_sentencas</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TJTO</td>
 <td>cjsg, cjpg, cjsg_ementa</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TRF1</td>
 <td>cpopg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TRF3</td>
 <td>cpopg, cposg, cjsg</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>TRF5</td>
 <td>cpopg</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TRF6</td>
 <td>cpopg</td>
 </tr>
@@ -684,6 +688,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <blockquote class="blockquote">
 <p>⚠️ <strong>TSE — no jurisprudence search:</strong> the search of the <a href="https://jurisprudencia.tse.jus.br/">TSE jurisprudence portal</a> requires a CAPTCHA token validated server-side, which the scraper, issuing plain HTTP requests (no browser), cannot produce; without it the API replies <code>"Falha na verificação antirrobô."</code> (probed on 16 November 2026). The scraper covers what the portal serves without a CAPTCHA: <code>baixar_inteiro_teor(codigo_decisao)</code>, which downloads the PDF of a decision given its code, and the catalogs of the search form (<code>listar_classes</code>, <code>listar_relatores</code>, <code>listar_eleicoes</code> and <code>listar_normas</code>). <code>cjsg</code> raises <code>NotImplementedError</code> with this explanation. See <a href="https://github.com/jtrecenti/juscraper/issues/378">issue #378</a>.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>⚠️ <strong>STM — IP-based blocking:</strong> the <a href="https://jurisprudencia.stm.jus.br/">STM jurisprudence portal</a> sits behind a WAF that rejected every request from a datacenter IP address outside Brazil, with a “Request Rejected” page served as HTTP 200 (probe on 2026-11-16). In that case <code>cjsg</code> raises <code>BotChallengeBlockedError</code>; try another connection, such as a residential one in Brazil.</p>
 </blockquote>
 <p>Falcao covers national labor jurisprudence (TST and TRTs).</p>
 <section id="jusbr-and-pdpj-authentication" class="level4">
