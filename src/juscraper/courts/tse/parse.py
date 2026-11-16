@@ -27,10 +27,22 @@ def parse_registros(dados: object, catalogo: str, colunas: dict[str, str] | tupl
 
     ``colunas`` vêm primeiro e existem também no catálogo vazio; um ``dict``
     as renomeia. Chave que o backend acrescentar entra depois delas.
+
+    Raises:
+        CatalogoInesperadoError: Se ``dados`` não for lista de objetos ou se
+            algum item vier sem uma das ``colunas``: chave renomeada no
+            backend não vira coluna vazia.
     """
-    tabela = pd.DataFrame(_itens(dados, catalogo, dict))
+    itens = _itens(dados, catalogo, dict)
+    incompleto = next((item for item in itens if not set(colunas) <= set(item)), None)
+    if incompleto is not None:
+        raise CatalogoInesperadoError(
+            f"Item do catálogo {catalogo!r} do TSE sem as chaves {sorted(colunas)}: {str(incompleto)[:200]!r}"
+        )
+    tabela = pd.DataFrame(itens)
     extras = [coluna for coluna in tabela.columns if coluna not in colunas]
-    tabela = tabela.reindex(columns=[*colunas, *extras])
+    # ``astype``: no catálogo vazio, as colunas criadas pelo ``reindex`` nasceriam ``float64``.
+    tabela = tabela.reindex(columns=[*colunas, *extras]).astype(object)
     return tabela.rename(columns=colunas) if isinstance(colunas, dict) else tabela
 
 

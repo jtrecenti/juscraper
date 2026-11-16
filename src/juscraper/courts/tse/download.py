@@ -9,6 +9,7 @@ Sondas de 16/11/2026.
 
 from __future__ import annotations
 
+import numbers
 from typing import Any
 
 import requests
@@ -66,10 +67,15 @@ def normalizar_codigo_decisao(codigo_decisao: object) -> str:
     Raises:
         ValueError: Se ``codigo_decisao`` não for inteiro nem texto só de dígitos.
     """
-    if isinstance(codigo_decisao, int) and not isinstance(codigo_decisao, bool) and codigo_decisao >= 0:
-        return str(codigo_decisao)
-    if isinstance(codigo_decisao, str) and codigo_decisao.strip().isascii() and codigo_decisao.strip().isdigit():
-        return codigo_decisao.strip()
+    texto = None
+    if isinstance(codigo_decisao, str):
+        texto = codigo_decisao.strip()
+    # ``numbers.Integral`` aceita também os inteiros do numpy, de código lido de um DataFrame.
+    elif not isinstance(codigo_decisao, bool) and isinstance(codigo_decisao, numbers.Integral):
+        texto = str(int(codigo_decisao))
+    # ``isascii`` barra os dígitos de outros alfabetos; o sinal de um negativo não é dígito.
+    if texto and texto.isascii() and texto.isdigit():
+        return texto
     raise ValueError(f"codigo_decisao deve ser um inteiro ou um texto só de dígitos, recebido {codigo_decisao!r}.")
 
 

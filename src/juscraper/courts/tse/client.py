@@ -1,4 +1,4 @@
-"""Scraper for the Tribunal Superior Eleitoral (TSE)."""
+"""Raspador do Tribunal Superior Eleitoral (TSE)."""
 
 from __future__ import annotations
 
@@ -43,7 +43,9 @@ class TSEScraper(HTTPScraper):
 
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "catalogo": RequestPolicy(timeout=60, expect_json=True),
-        "inteiro_teor": RequestPolicy(timeout=120),
+        # Uma nova tentativa só, depois do intervalo que o serviço aceita: o
+        # backoff padrão (2 s) cairia na recusa por excesso de requisições.
+        "inteiro_teor": RequestPolicy(timeout=120, max_retries=2, base_backoff=INTERVALO_INTEIRO_TEOR),
     }
 
     _ultimo_inteiro_teor: float | None = None

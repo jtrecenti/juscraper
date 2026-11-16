@@ -57,6 +57,8 @@ def main() -> None:
     # Dois pedidos seguidos: o segundo volta "Excesso de requisições".
     session.get(inteiro_teor_url(INTEIRO_TEOR[0][1]), timeout=120)
     response = session.get(inteiro_teor_url(INTEIRO_TEOR[1][1]), timeout=120)
+    if "Excesso de requisi" not in response.text[:300]:
+        raise SystemExit("[tse] o segundo pedido seguido não foi recusado; excesso_requisicoes.txt não foi regravado.")
     dump(dest / "excesso_requisicoes.txt", response.content)
     logger.info("wrote inteiro_teor/excesso_requisicoes.txt: %r", response.text[:80])
 

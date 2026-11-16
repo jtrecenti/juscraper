@@ -1,4 +1,4 @@
-"""Scraper for the TSE (Tribunal Superior Eleitoral)."""
+"""Raspador do TSE (Tribunal Superior Eleitoral)."""
 
 from juscraper.courts.tse.client import TSEScraper
 

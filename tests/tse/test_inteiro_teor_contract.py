@@ -1,6 +1,7 @@
 """Contratos offline do download de inteiro teor do TSE."""
 from pathlib import Path
 
+import numpy as np
 import pytest
 import responses
 
@@ -44,6 +45,26 @@ def test_envelope_multipart_e_desembrulhado(tmp_path):
     assert gravado.rstrip().endswith(b"%%EOF")
     assert gravado in ENVELOPE
     assert b"Content-Disposition" not in gravado
+
+
+@responses.activate
+def test_codigo_inteiro_do_numpy_e_aceito(tmp_path):
+    _registrar("2972172", PDF_PURO)
+
+    caminho = jus.scraper("tse").baixar_inteiro_teor(np.int64(2972172), diretorio=str(tmp_path))
+
+    assert Path(caminho).name == "2972172.pdf"
+
+
+@responses.activate
+def test_status_retentavel_ganha_uma_nova_tentativa_depois_do_intervalo(mocker, tmp_path):
+    espera = mocker.patch("juscraper.core.http.time.sleep")
+    responses.add(responses.GET, f"{INTEIRO_TEOR_URL}/2972172", status=503)
+    _registrar("2972172", PDF_PURO)
+
+    jus.scraper("tse").baixar_inteiro_teor(2972172, diretorio=str(tmp_path))
+
+    espera.assert_called_once_with(10.0)
 
 
 @responses.activate

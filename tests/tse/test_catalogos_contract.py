@@ -82,6 +82,7 @@ def test_catalogo_vazio_mantem_as_colunas(metodo, sub_rota, colunas):
 
     assert df.empty
     assert list(df.columns) == colunas
+    assert all(tipo == object for tipo in df.dtypes)
 
 
 @responses.activate
@@ -103,6 +104,14 @@ def test_itens_de_tipo_trocado_sao_recusados():
 
     with pytest.raises(CatalogoInesperadoError, match="relatorias"):
         jus.scraper("tse").listar_relatores()
+
+
+@responses.activate
+def test_chave_renomeada_no_backend_nao_vira_coluna_vazia():
+    _registrar("classes", json=[{"sigla": "RESPE", "descricaoClasse": "Recurso Especial Eleitoral"}])
+
+    with pytest.raises(CatalogoInesperadoError, match="siglaClasse"):
+        jus.scraper("tse").listar_classes()
 
 
 @responses.activate
