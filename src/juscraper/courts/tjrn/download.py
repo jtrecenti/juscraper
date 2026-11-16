@@ -5,6 +5,7 @@ import time
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import menor_pagina, paginas_no_intervalo
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
@@ -87,21 +88,17 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        total = first.get("hits", {}).get("total", 0)
-        n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJRN"):
-                time.sleep(sleep_time)
-                resultados.append(_get_page(pagina))
-        return resultados
-
-    paginas_iter = list(paginas)
+    # A menor página pedida sai primeiro, porque traz o total; as demais, na
+    # ordem pedida, uma vez cada, e as além do total vão para o log.
+    primeira = menor_pagina(paginas)
+    first = _get_page(primeira)
+    total = first.get("hits", {}).get("total", 0)
+    n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
     resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRN"):
-        if resultados:
-            time.sleep(sleep_time)
-        resultados.append(_get_page(pagina_1based))
+    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal="TJRN"), desc="Baixando CJSG TJRN"):
+        if pagina == primeira:
+            resultados.append(first)
+            continue
+        time.sleep(sleep_time)
+        resultados.append(_get_page(pagina))
     return resultados

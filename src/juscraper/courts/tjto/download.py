@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
+from juscraper.utils.pagination import extract_count_with_cascade, menor_pagina, paginas_no_intervalo
 from juscraper.utils.params import to_br_date
 
 from .parse import cjsg_parse_manager
@@ -154,7 +154,7 @@ def cjsg_download_manager(
 
     # A menor página pedida é a única baixada antes de saber o total: se ela
     # passa do total, as demais também passam, e todas caem no aviso.
-    primeira = 1 if paginas is None else paginas.start if isinstance(paginas, range) else min(paginas)
+    primeira = menor_pagina(paginas)
     html_primeira = _get_page(primeira)
     total = _get_total_results(html_primeira)
     n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1

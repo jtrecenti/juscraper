@@ -5,7 +5,7 @@ import time
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, menor_pagina, paginas_no_intervalo
 
 # Host novo; o antigo, eproc1g.tjsc.jus.br/eproc, redireciona para cá (#495).
 CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlador.php"
@@ -107,20 +107,18 @@ def cjsg_download_manager(
         resp.encoding = "ISO-8859-1"
         return resp.text
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        n_pags = _get_total_pages(first)
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJSC"):
-                time.sleep(sleep_time)
-                resultados.append(_get_page(pagina))
-        return resultados
-
-    paginas_iter = list(paginas)
+    # A menor página pedida sai primeiro, porque traz o total (toda página o
+    # traz no cabeçalho); as demais, na ordem pedida, uma vez cada, e as além
+    # do total vão para o log.
+    primeira = menor_pagina(paginas)
+    first = _get_page(primeira)
     resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJSC"):
-        if resultados:
-            time.sleep(sleep_time)
-        resultados.append(_get_page(pagina_1based))
+    for pagina in tqdm(
+        paginas_no_intervalo(paginas, _get_total_pages(first), tribunal="TJSC"), desc="Baixando CJSG TJSC",
+    ):
+        if pagina == primeira:
+            resultados.append(first)
+            continue
+        time.sleep(sleep_time)
+        resultados.append(_get_page(pagina))
     return resultados
