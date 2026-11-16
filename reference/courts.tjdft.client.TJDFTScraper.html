@@ -276,7 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando uma data é inválida, o início é posterior ao fim, ou uma data e seu alias deprecado são passados juntos.</td>
+<td>Quando uma data é inválida, o início é posterior ao fim, ou um parâmetro e seu alias deprecado são passados juntos (uma data, ou <code>tamanho_pagina</code> com <code>quantidade_por_pagina</code>).</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -304,7 +304,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Uma linha por acórdão, com as chaves do JSON da API como estão, entre elas <code>processo</code>, <code>ementa</code>, <code>nomeRelator</code>, <code>descricaoOrgaoJulgador</code>, <code>dataJulgamento</code> e <code>dataPublicacao</code> (texto ISO, como <code>2026-10-28T03:00:00.000Z</code>).</td>
+<td>Uma linha por acórdão, com as chaves do JSON da API como estão, entre elas <code>processo</code>, <code>ementa</code>, <code>nomeRelator</code>, <code>descricaoOrgaoJulgador</code>, <code>dataJulgamento</code> e <code>dataPublicacao</code>. As duas datas saem como <code>datetime.date</code>, a data em UTC do instante que a API devolve (<code>2026-10-28T03:00:00.000Z</code> vira 28/10/2026), a mesma que os filtros <code>data_*</code> usam.</td>
 </tr>
 </tbody>
 </table>
@@ -333,7 +333,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    sinonimos<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    espelho<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    inteiro_teor<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as respostas cruas da pesquisa de jurisprudência do TJDFT.</p>
@@ -382,9 +382,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>tamanho_pagina</td>
-<td><code>int</code></td>
-<td>Resultados por página, de 1 a 40 (acima disso a API responde HTTP 400).</td>
-<td><code>10</code></td>
+<td><code>int</code> | None</td>
+<td>Resultados por página, de 1 a 40 (acima disso a API responde HTTP 400). <code>None</code> usa 10.</td>
+<td><code>None</code></td>
 </tr>
 </tbody>
 </table>
