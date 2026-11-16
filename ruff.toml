@@ -215,7 +215,6 @@ extend = "pyproject.toml"
 "tests/tjsp/test_cjpg_contract.py" = ["D205", "D209", "PT030"]
 "tests/tjsp/test_cjpg_filters_contract.py" = ["D403", "PLC0415"]
 "tests/tjsp/test_cjsg_integration.py" = ["D205", "D212", "PT022"]
-"tests/tjsp/test_cjsg_unit.py" = ["D200", "D212"]
 "tests/tjsp/test_cpopg.py" = ["D205", "D212", "PT022"]
 "tests/tjsp/test_cpopg_download_single_granular.py" = ["PT006"]
 "tests/tjsp/test_cposg.py" = ["D205", "D212", "PT018", "PT022"]
