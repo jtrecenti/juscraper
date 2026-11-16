@@ -46,6 +46,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 from ...core.download import gravar_arquivo
+from ...core.exceptions import _RecriaSemInit
 from ...core.failures import MOTIVO_NAO_PDF, MOTIVO_RESPOSTA_INESPERADA
 
 ROTA_DOCUMENTO_MOVIMENTACAO = "abrirDocumentoVinculadoMovimentacao.do"
@@ -59,7 +60,7 @@ _ACESSO_NAO_VALIDADO = "Não foi possível validar o seu acesso"
 _TITULO = re.compile(r"<title[^>]*>(.*?)</title>", re.IGNORECASE | re.DOTALL)
 
 
-class DocumentoIndisponivelError(Exception):
+class DocumentoIndisponivelError(_RecriaSemInit):
     """A rota respondeu, mas não entregou o PDF do documento.
 
     ``motivo`` é o valor de :data:`~juscraper.core.failures.COLUNA_MOTIVO_FALHA`

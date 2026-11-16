@@ -10,7 +10,7 @@ em ``CLAUDE.md``.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -22,13 +22,24 @@ class _RecriaSemInit(Exception):
     ``args`` só guarda a mensagem: sem o ``__reduce__`` abaixo, pickle e
     ``copy`` chamariam ``__init__(mensagem)`` e quebrariam, o que perderia o
     erro numa coleta rodada em ``ProcessPoolExecutor``. O erro é recriado sem
-    passar pelo ``__init__``, e os atributos voltam pelo ``__dict__``; vale
-    também para as subclasses, cada uma com o próprio ``__init__``.
+    passar pelo ``__init__``, e os atributos e a causa encadeada voltam pelo
+    estado serializado; vale também para as subclasses com ``__init__`` próprio.
     """
 
     def __reduce__(self) -> tuple[object, ...]:
-        """Recria o erro com os mesmos ``args`` e atributos, sem o ``__init__``."""
-        return (_recriar_sem_init, (type(self), *self.args), self.__dict__)
+        """Recria o erro com ``args``, atributos e causa, sem o ``__init__``."""
+        return (_recriar_sem_init, (type(self), *self.args), (self.__dict__, self.__cause__))
+
+    def __setstate__(self, state: object) -> None:
+        """Restaura também pickles anteriores, cujo estado era só o dicionário."""
+        if state is None:
+            return
+        if isinstance(state, dict):
+            self.__dict__.update(state)
+            return
+        atributos, causa = cast("tuple[dict[str, object], BaseException | None]", state)
+        self.__dict__.update(atributos)
+        self.__cause__ = causa
 
 
 def _recriar_sem_init(cls: type[BaseException], *args: object) -> BaseException:
