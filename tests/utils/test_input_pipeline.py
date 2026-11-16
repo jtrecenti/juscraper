@@ -75,7 +75,7 @@ def test_apply_input_pipeline_unknown_kwarg_raises_typeerror():
 
 
 def test_apply_input_pipeline_multiple_unknown_kwargs_listed():
-    assert_unknown_kwarg_raises(_pipeline_simples, ["foo", "bar"], rotulo=_ROTULO)
+    assert_unknown_kwarg_raises(_pipeline_simples, ["foo", "bar"], rotulo=_ROTULO, exata=True)
 
 
 def test_apply_input_pipeline_data_inicio_alias_emits_deprecation_warning():
@@ -243,8 +243,11 @@ def test_raise_on_extra_kwargs_raises_typeerror_for_pure_extra_forbidden():
             _S(pesquisa="x", **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "Test")
+        else:
+            pytest.fail("Schema should have raised ValidationError")
 
-    assert_unknown_kwarg_raises(validar, "extra", rotulo="Test")
+    # Sem ``schema_cls``, nenhuma sugestão: a mensagem termina no nome.
+    assert_unknown_kwarg_raises(validar, "extra", rotulo="Test", exata=True)
 
 
 # --- Cobertura adicional pos-review do PR #135 ---------------------------

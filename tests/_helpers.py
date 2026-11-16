@@ -116,6 +116,7 @@ def assert_unknown_kwarg_raises(
     *args,
     valor: str = "x",
     rotulo: str | None = None,
+    exata: bool = False,
     **extra_kwargs,
 ) -> None:
     """Confirma que ``kwarg`` dispara ``TypeError`` canonico no endpoint.
@@ -152,18 +153,22 @@ def assert_unknown_kwarg_raises(
         rotulo (str | None): Rotulo do metodo que deve abrir a mensagem
             (ex.: ``"TJPIScraper.cjsg()"``). Default ``None`` (confere so o
             sufixo canonico).
+        exata (bool): Se ``True``, a mensagem termina nos nomes, sem sugestao
+            ``(você quis dizer ...)`` nem outro sufixo. Default ``False``.
         **extra_kwargs: Kwargs extras propagados para ``method`` — util
             para cenarios que precisam de filtros adicionais (ex.: TJSP
             auto_chunk exige uma janela longa de ``data_julgamento_*``
             para acionar o sniff; eSAJ exige ``paginas=1``).
     """
-    nomes = [kwarg] if isinstance(kwarg, str) else list(kwarg)
-    listados = ", ".join(f"'{re.escape(nome)}'" for nome in nomes)
+    nomes = list(dict.fromkeys([kwarg] if isinstance(kwarg, str) else kwarg))
+    listados = ", ".join(re.escape(repr(nome)) for nome in nomes)
     pattern = rf"got unexpected keyword argument\(s\): {listados}"
     if rotulo is not None:
         pattern = rf"^{re.escape(rotulo)} {pattern}"
+    if exata:
+        pattern += r"\Z"
     with pytest.raises(TypeError, match=pattern):
-        method(*args, **dict.fromkeys(nomes, valor), **extra_kwargs)
+        method(*args, **{**dict.fromkeys(nomes, valor), **extra_kwargs})
 
 
 _MOJIBAKE_RE = re.compile("[\u00c3\u00c2][\u0080-\u00bf]")
