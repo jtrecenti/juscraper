@@ -26,6 +26,7 @@ CJSG_COLUMNS = (
     "instancia",
     "origem",
     "julgamento",
+    "uuid",
 )
 
 
@@ -80,6 +81,7 @@ def _mapear_resultado(item: dict) -> dict:
         "instancia": item.get("instancia"),
         "origem": item.get("origem"),
         "julgamento": item.get("descricaoJulgamento"),
+        "uuid": item.get("id"),
     }
 
 
