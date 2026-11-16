@@ -94,6 +94,8 @@ BUSCAS = {
     "tjro": (responses.POST, tjro_download.BASE_URL, "json", _pagina_tjro),
 }
 MODULOS_COM_TETO = {"tjba": tjba_download, "tjpb": tjpb_download, "tjro": tjro_download}
+# TJBA e TJRO dividem por data a busca acima do teto; sem a divisão, param nele, como o TJPB.
+SEM_DIVISAO_POR_DATA = {"tjba": {"auto_chunk": False}, "tjro": {"auto_chunk": False}}
 
 
 def _sample(tribunal: str, nome: str) -> str:
@@ -210,7 +212,7 @@ def test_pagina_alem_do_teto_levanta_sem_pedido(tribunal, paginas):
 @pytest.mark.parametrize("tribunal", list(MODULOS_COM_TETO))
 @responses.activate
 def test_todas_as_paginas_param_no_teto_com_aviso(tribunal, mocker):
-    """``paginas=None`` com ``auto_chunk=False`` numa busca acima do teto baixa até ele e avisa.
+    """``paginas=None`` sem divisão por data numa busca acima do teto baixa até ele e avisa.
 
     O teto é reduzido para o teste. Com ``auto_chunk=True`` a busca é dividida por data
     (``tests/<tribunal>/test_cjsg_auto_chunk_contract.py``).
@@ -220,7 +222,7 @@ def test_todas_as_paginas_param_no_teto_com_aviso(tribunal, mocker):
     _registrar_busca(tribunal)
 
     with pytest.warns(UserWarning, match=r"só entrega as 3 primeiras"):
-        brutos = jus.scraper(tribunal).cjsg_download("dano moral", auto_chunk=False)
+        brutos = jus.scraper(tribunal).cjsg_download("dano moral", **SEM_DIVISAO_POR_DATA.get(tribunal, {}))
 
     assert _paginas_pedidas(tribunal) == [1, 2, 3]
     assert len(brutos) == 3
