@@ -211,20 +211,20 @@ def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
     add_home()
     add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
-    add_ementa_completa()
 
-    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*faltam as páginas 2, 3") as info:
+    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*Faltam as páginas 2, 3") as info:
         jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 4))
 
     erro = info.value
     assert isinstance(erro.__cause__, requests.ReadTimeout)
     assert [type(falha[2]) for falha in erro.falhas] == [requests.ReadTimeout]
-    # As 40 linhas do TJ da página 1, lidas como no retorno normal (ementa completa inclusive).
+    # As 40 linhas do TJ da página 1. O parcial é lido sem requisição: nenhuma
+    # ementa completa é pedida ao portal que acabou de falhar (home + 2 buscas).
     assert len(erro.resultado) == 40
     assert set(erro.resultado.columns) >= CJSG_MIN_COLUMNS
-    assert not erro.resultado["ementa"].str.contains("Leia mais|Erro ao buscar").any()
-    buscas = [chamada for chamada in responses.calls if chamada.request.method == "POST"]
-    assert len(buscas) == 2
+    assert erro.resultado["ementa"].str.len().gt(0).all()
+    assert not erro.resultado["ementa"].str.contains("Erro ao buscar").any()
+    assert [chamada.request.method for chamada in responses.calls] == ["GET", "POST", "POST"]
 
 
 @responses.activate
@@ -232,13 +232,13 @@ def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
     add_home()
     add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
-    add_ementa_completa()
 
     with pytest.raises(ColetaParcialError) as info:
         jus.scraper("tjpr").cjsg("dano moral", paginas=2, incluir_corte_idh=True)
 
     assert len(info.value.resultado) == 50
     assert set(info.value.resultado["fonte"]) == {"TJPR", "Corte IDH"}
+    assert not info.value.resultado["ementa"].str.contains("Erro ao buscar").any()
 
 
 @responses.activate
@@ -246,9 +246,8 @@ def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
     add_home()
     add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
-    add_ementa_completa()
 
-    with pytest.raises(ColetaParcialError, match=r"faltam as páginas 2 a \d+,") as info:
+    with pytest.raises(ColetaParcialError, match=r"Faltam as páginas 2 a \d+,") as info:
         jus.scraper("tjpr").cjsg("dano moral")
 
     assert len(info.value.resultado) == 40
@@ -259,7 +258,6 @@ def test_cjsg_download_pagina_que_falha_levanta_coleta_parcial():
     add_home()
     add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
-    add_ementa_completa()
 
     with pytest.raises(ColetaParcialError) as info:
         jus.scraper("tjpr").cjsg_download("dano moral", paginas=2)

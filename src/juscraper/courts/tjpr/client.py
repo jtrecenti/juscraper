@@ -7,11 +7,10 @@ from typing import Any, ClassVar
 import pandas as pd
 import requests
 
-from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
-from .download import BASE_URL, PaginasParciaisError, cjsg_download
+from .download import BASE_URL, cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJPR
 
@@ -92,7 +91,8 @@ class TJPRScraper(HTTPScraper):
                 scraper levanta depois da primeira página, em vez de estimar.
             ColetaParcialError: Uma página falhou depois de outras já
                 baixadas, como em :meth:`cjsg`; ``resultado`` traz as
-                baixadas já lidas, em DataFrame, sem as linhas da Corte IDH.
+                baixadas já lidas, em DataFrame, sem as linhas da Corte IDH
+                e com as ementas longas truncadas.
         """
         if "incluir_corte_idh" in kwargs:
             raise TypeError(
@@ -135,38 +135,19 @@ class TJPRScraper(HTTPScraper):
             data_publicacao_inicio=data_publicacao_inicio,
             data_publicacao_fim=data_publicacao_fim,
         )
-        try:
-            brutos: list = cjsg_download(
-                home_url=BASE_URL,
-                pesquisa=inp.pesquisa,
-                paginas=inp.paginas,
-                data_julgamento_inicio=inp.data_julgamento_inicio,
-                data_julgamento_fim=inp.data_julgamento_fim,
-                data_publicacao_inicio=inp.data_publicacao_inicio,
-                data_publicacao_fim=inp.data_publicacao_fim,
-                request_fn=self._request_with_retry,
-            )
-        except PaginasParciaisError as parcial:
-            raise self._coleta_parcial(
-                    parcial, inp.pesquisa, incluir_corte_idh=incluir_corte_idh
-                ) from parcial.causa
-        return brutos
-
-    def _coleta_parcial(
-        self, parcial: PaginasParciaisError, criterio: str | None, *, incluir_corte_idh: bool
-    ) -> ColetaParcialError:
-        """``ColetaParcialError`` com as páginas baixadas antes da falha, já lidas, em ``resultado``."""
-        causa = parcial.causa
-        faltando = parcial.faltando
-        contiguas = faltando == list(range(faltando[0], faltando[-1] + 1)) and len(faltando) > 2
-        faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
-        mensagem = (
-            f"TJPR cjsg: a página {faltando[0]} falhou ({causa!r}), e a busca parou. "
-            f"As {len(parcial.paginas)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
-            f"faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
+        brutos: list = cjsg_download(
+            home_url=BASE_URL,
+            pesquisa=inp.pesquisa,
+            paginas=inp.paginas,
+            data_julgamento_inicio=inp.data_julgamento_inicio,
+            data_julgamento_fim=inp.data_julgamento_fim,
+            data_publicacao_inicio=inp.data_publicacao_inicio,
+            data_publicacao_fim=inp.data_publicacao_fim,
+            request_fn=self._request_with_retry,
+            # Sem ``request_fn``: a leitura do parcial não faz requisição.
+            ler_parcial=lambda paginas: cjsg_parse(paginas, inp.pesquisa, incluir_corte_idh=incluir_corte_idh),
         )
-        resultado = self.cjsg_parse(parcial.paginas, criterio, incluir_corte_idh=incluir_corte_idh)
-        return ColetaParcialError(mensagem, resultado=resultado, falhas=[(None, None, causa)])
+        return brutos
 
     def cjsg_parse(
         self,
@@ -262,8 +243,10 @@ class TJPRScraper(HTTPScraper):
                 depois das tentativas) quando outras já tinham sido baixadas.
                 A busca para ali: ``resultado`` traz as páginas anteriores, já
                 lidas, e a mensagem diz as que faltam, para pedir de novo com
-                ``paginas=``. Se a falha é na primeira requisição, sobe a
-                exceção original.
+                ``paginas=``. Nesse parcial as ementas longas ficam truncadas
+                em "Leia mais..", porque completá-las custaria uma requisição
+                por linha a um portal que acabou de falhar. Se a falha é na
+                primeira requisição, sobe a exceção original.
 
         Returns:
             Uma linha por decisão, com ``processo``,

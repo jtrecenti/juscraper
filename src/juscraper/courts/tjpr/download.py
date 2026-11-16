@@ -4,10 +4,11 @@ Functions for downloading specific to TJPR
 import re
 from collections.abc import Callable
 
+import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
-from juscraper.core.exceptions import HTTPSemanticError
+from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
@@ -76,27 +77,6 @@ _XHR_HEADERS = {
     'x-prototype-version': '1.5.1.1',
     'x-requested-with': 'XMLHttpRequest',
 }
-
-
-class PaginasParciaisError(Exception):
-    """Uma página da busca falhou depois de outras já baixadas.
-
-    Interna: :class:`~juscraper.courts.tjpr.client.TJPRScraper` a converte em
-    :class:`~juscraper.core.exceptions.ColetaParcialError`, com as páginas
-    lidas, porque a leitura depende do raspador (ementa completa, Corte IDH).
-
-    Attributes:
-        paginas: HTMLs baixados antes da falha, na ordem pedida.
-        faltando: Páginas não baixadas; a primeira é a que falhou.
-        causa: Exceção da página que falhou.
-    """
-
-    def __init__(self, paginas: list[str], faltando: list[int], causa: Exception) -> None:
-        """Guarda as páginas baixadas, as que faltam e a causa."""
-        super().__init__(f"TJPR: a página {faltando[0]} falhou depois de {len(paginas)} baixada(s).")
-        self.paginas = paginas
-        self.faltando = faltando
-        self.causa = causa
 
 
 class TJPREmentaIndisponivelError(HTTPSemanticError):
@@ -245,10 +225,15 @@ def cjsg_download(
     data_publicacao_fim=None,
     *,
     request_fn: RequestFn,
+    ler_parcial: Callable[[list[str]], pd.DataFrame],
 ) -> list:
     """
     Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
     Returns a list of HTMLs (one per page).
+
+    Raises:
+        ColetaParcialError: Uma página falhou depois de outras baixadas;
+            ``resultado`` é ``ler_parcial`` das baixadas. Ver :func:`_baixar_paginas`.
     """
     populate_session(request_fn, home_url)
     url = f"{SEARCH_URL}?actionType=pesquisar"
@@ -277,26 +262,47 @@ def cjsg_download(
         # Download all: fetch first page, extract total, then fetch the rest
         first_html = _fetch_page(1)
         n_pags = extract_total_pages(first_html)
-        return [first_html, *_baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), ja_baixadas=[first_html])]
-    return _baixar_paginas(_fetch_page, list(paginas), ja_baixadas=[])
+        return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first_html], ler_parcial)
+    return _baixar_paginas(_fetch_page, list(paginas), [], ler_parcial)
 
 
-def _baixar_paginas(fetch_page: Callable[[int], str], paginas: list[int], *, ja_baixadas: list[str]) -> list[str]:
-    """Baixa ``paginas`` em ordem; a que falha com outra já baixada levanta :class:`PaginasParciaisError`.
+def _baixar_paginas(
+    fetch_page: Callable[[int], str],
+    paginas: list[int],
+    resultados: list[str],
+    ler_parcial: Callable[[list[str]], pd.DataFrame],
+) -> list[str]:
+    """Acrescenta ``paginas`` a ``resultados``, as páginas já baixadas, e os devolve.
 
-    Como no TJMG e no TJTO, a página que falha encerra a busca sem descartar
-    as anteriores; se nada foi baixado ainda, a falha original sobe.
-    ``ja_baixadas`` são as páginas baixadas antes desta chamada.
+    Como no TJMG e no TJTO, a página que falha com outra já baixada encerra a
+    busca e levanta :class:`ColetaParcialError`, com as baixadas lidas por
+    ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
+    original sobe.
     """
-    resultados: list[str] = []
     if not paginas:
         return resultados
     for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
         try:
             resultados.append(fetch_page(pagina))
         except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
-            baixadas = [*ja_baixadas, *resultados]
-            if not baixadas:
+            if not resultados:
                 raise
-            raise PaginasParciaisError(baixadas, paginas[posicao:], exc) from exc
+            raise _coleta_parcial(ler_parcial(resultados), len(resultados), paginas[posicao:], exc) from exc
     return resultados
+
+
+def _coleta_parcial(resultado: pd.DataFrame, baixadas: int, faltando: list[int], exc: Exception) -> ColetaParcialError:
+    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar.
+
+    ``paginas=None`` pode deixar milhares de páginas por baixar: a sequência
+    sem saltos sai como intervalo.
+    """
+    contiguas = len(faltando) > 2 and faltando == list(range(faltando[0], faltando[-1] + 1))
+    faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
+    mensagem = (
+        f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
+        f"As {baixadas} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
+        "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
+        f"custaria uma requisição por linha. Faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
+    )
+    return ColetaParcialError(mensagem, resultado=resultado, falhas=[(None, None, exc)])
