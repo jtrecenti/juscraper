@@ -366,7 +366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Uma linha por documento, com as colunas de <code>CJSG_COLUMNS</code> em <code>juscraper.courts.tjmt.parse</code> (<code>processo</code>, <code>ementa</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code> e outras, descritas em <code>OutputCJSGTJMT</code>). Datas vêm como <code>datetime.date</code>. Busca sem resultados devolve DataFrame vazio com as mesmas colunas.</td>
+<td>Uma linha por documento, com as colunas de <code>CJSG_COLUMNS</code> em <code>juscraper.courts.tjmt.parse</code> (<code>processo</code>, <code>ementa</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code>, <code>data_publicacao</code> e outras, descritas em <code>OutputCJSGTJMT</code>). Datas vêm como <code>datetime.date</code>. Busca sem resultados devolve DataFrame vazio com as mesmas colunas. <code>id</code> vem <code>0</code> em decisões monocráticas antigas (<code>origem="Proteus"</code>); para deduplicar, use <code>uuid</code>, distinto em cada documento.</td>
 </tr>
 </tbody>
 </table>

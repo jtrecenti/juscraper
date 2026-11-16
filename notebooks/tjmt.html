@@ -472,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="e95d1ce1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:19.681187Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:19.680959Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.404423Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.403832Z&quot;}" data-execution_count="1">
+<div id="e95d1ce1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:34.190759Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:34.187930Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:46.220607Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:46.220162Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjmt <span class="op">=</span> jus.scraper(<span class="st">'tjmt'</span>)</span>
@@ -481,10 +481,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.14it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  2.13it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:02&lt;00:00,  2.92s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:02&lt;00:00,  2.92s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(10, 18)</code></pre>
+<pre><code>(10, 19)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -515,6 +515,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">instancia</th>
 <th data-quarto-table-cell-role="th">origem</th>
 <th data-quarto-table-cell-role="th">julgamento</th>
+<th data-quarto-table-cell-role="th">uuid</th>
 </tr>
 </thead>
 <tbody>
@@ -538,6 +539,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>5c729dc0-2910-4f14-b6e5-0b68309c729c</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -559,6 +561,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>57724ef9-4ff5-4e82-9af0-5013c5abae9e</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -580,6 +583,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Recursal</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>b549e3cd-8a28-4684-8699-2434707570ee</td>
 </tr>
 </tbody>
 </table>
@@ -590,7 +594,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="b441105c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.405835Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.405704Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.408002Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.407580Z&quot;}" data-execution_count="2">
+<div id="b441105c" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:46.235025Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:46.234792Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:46.243631Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:46.243042Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['id',
@@ -610,13 +614,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  'data_publicacao',
  'instancia',
  'origem',
- 'julgamento']</code></pre>
+ 'julgamento',
+ 'uuid']</code></pre>
 </div>
 </div>
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="9b3c4c02" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.409184Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.409098Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:22.410945Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:22.410534Z&quot;}" data-execution_count="3">
+<div id="9b3c4c02" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:46.249779Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:46.249439Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:46.252639Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:46.252087Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>APELAÇÕES - AÇÃO DE INDENIZAÇÃO POR DANO MORAL E MATERIAL - INSCRIÇÃO INDEVIDA NA SERASA - DANO MORAL IN RE IPSA - REDUÇÃO - DEVIDA - DANO MATERIAL - AUSÊNCIA DE PROVA EFETIVA - SENTENÇA REFORMADA PARA REDUZIR O DANO MORAL - RECURSO DOS AUTORES DESPROVIDO - RECURSO DO BANCO - PARCIALMENTE PROVIDO
@@ -627,7 +632,7 @@ O </code></pre>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>You can filter by publication date range (<code>data_publicacao_inicio</code>/<code>data_publicacao_fim</code>, end date inclusive), judge (<code>relator</code>), court chamber (<code>orgao_julgador</code>), and case type (<code>tipo_processo</code>). The API does not filter by judgment date or by case class: passing <code>data_julgamento_*</code> or <code>classe</code> raises <code>TypeError</code>. <code>relator</code> and <code>orgao_julgador</code> take the exact name, not a numeric id.</p>
-<div id="8471d7ac" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:22.411925Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:22.411859Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:25.089263Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:25.088692Z&quot;}" data-execution_count="4">
+<div id="8471d7ac" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:46.255173Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:46.254996Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:50.458649Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:50.458374Z&quot;}" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dados_filtrados <span class="op">=</span> tjmt.cjsg(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
@@ -638,10 +643,10 @@ O </code></pre>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_filtrados.shape)</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>dados_filtrados.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.01it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  1.01it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:04&lt;00:00,  4.15s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:04&lt;00:00,  4.18s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(10, 18)</code></pre>
+<pre><code>(10, 19)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -672,6 +677,7 @@ O </code></pre>
 <th data-quarto-table-cell-role="th">instancia</th>
 <th data-quarto-table-cell-role="th">origem</th>
 <th data-quarto-table-cell-role="th">julgamento</th>
+<th data-quarto-table-cell-role="th">uuid</th>
 </tr>
 </thead>
 <tbody>
@@ -695,6 +701,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>PJe</td>
 <td>Não-Provimento</td>
+<td>d58ffb78-7ac6-4fb4-8989-5f6c3ad3be21</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -716,6 +723,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>PJe</td>
 <td>Provimento em Parte</td>
+<td>32991903-3d93-4990-b85e-bfa01e95014e</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -737,6 +745,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>PJe</td>
 <td>Não-Provimento</td>
+<td>b67c7edb-3305-4dea-b42e-ff81142df701</td>
 </tr>
 </tbody>
 </table>
@@ -748,15 +757,16 @@ O </code></pre>
 <section id="querying-different-types" class="level2">
 <h2 class="anchored" data-anchor-id="querying-different-types">Querying different types</h2>
 <p>Besides <code>Acordao</code> (default), you can also query <code>DecisaoMonocratica</code>.</p>
-<div id="6e3964e0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:25.091052Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:25.090932Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:26.957495Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:26.957032Z&quot;}" data-execution_count="5">
+<p>The <code>id</code> column is the API’s <code>idDocumento</code>, which comes as <code>0</code> for older single-judge decisions (<code>origem == 'Proteus'</code>). To deduplicate, use <code>uuid</code>, which is distinct for every document.</p>
+<div id="6e3964e0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:50.469359Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:50.468916Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:57.551576Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:57.550536Z&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dados_decisao <span class="op">=</span> tjmt.cjsg(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, tipo_consulta<span class="op">=</span><span class="st">'DecisaoMonocratica'</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisao.shape)</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>dados_decisao.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.84it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.82it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:06&lt;00:00,  6.99s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:06&lt;00:00,  6.99s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(10, 18)</code></pre>
+<pre><code>(10, 19)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -787,6 +797,7 @@ O </code></pre>
 <th data-quarto-table-cell-role="th">instancia</th>
 <th data-quarto-table-cell-role="th">origem</th>
 <th data-quarto-table-cell-role="th">julgamento</th>
+<th data-quarto-table-cell-role="th">uuid</th>
 </tr>
 </thead>
 <tbody>
@@ -810,6 +821,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>489c3cab-ef92-46ff-851b-a019c8227548</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -831,6 +843,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>08ced270-9743-4b7e-82ef-dd5806189004</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -852,6 +865,7 @@ O </code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>8338fbe6-b6fb-46f7-af65-f14c4ae9ea4f</td>
 </tr>
 </tbody>
 </table>
@@ -863,7 +877,7 @@ O </code></pre>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p>You can also download the raw data first and parse it later.</p>
-<div id="46926a59" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-14T19:36:26.958929Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-14T19:36:26.958837Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-14T19:36:28.873975Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-14T19:36:28.873543Z&quot;}" data-execution_count="6">
+<div id="46926a59" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T09:30:57.553508Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T09:30:57.553331Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T09:30:58.810368Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T09:30:58.809576Z&quot;}" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjmt.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Keys in response: </span><span class="sc">{</span><span class="bu">list</span>(brutos[<span class="dv">0</span>].keys())<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -874,13 +888,13 @@ O </code></pre>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>df<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.11it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:00&lt;00:00,  4.10it/s]</code></pre>
+<pre><code>Baixando páginas TJMT:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]Baixando páginas TJMT: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Pages downloaded: 1
 Keys in response: ['value', 'errorMessage', 'success']
 
-Parsed shape: (10, 18)</code></pre>
+Parsed shape: (10, 19)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -911,6 +925,7 @@ Parsed shape: (10, 18)</code></pre>
 <th data-quarto-table-cell-role="th">instancia</th>
 <th data-quarto-table-cell-role="th">origem</th>
 <th data-quarto-table-cell-role="th">julgamento</th>
+<th data-quarto-table-cell-role="th">uuid</th>
 </tr>
 </thead>
 <tbody>
@@ -934,6 +949,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>5e1f5584-7bd5-4637-b62e-9de9f5daf3aa</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -955,6 +971,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>1469b61d-5e88-422f-9930-cb9c3dd0895d</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -976,6 +993,7 @@ Parsed shape: (10, 18)</code></pre>
 <td>Segunda</td>
 <td>Proteus</td>
 <td>NÃO INFORMADO</td>
+<td>bc77ebdf-8e52-4f7d-a82f-91fb990faa0b</td>
 </tr>
 </tbody>
 </table>
