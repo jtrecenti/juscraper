@@ -279,9 +279,14 @@ select = [
     "BLE", "TRY", "ARG", "ERA", "T20", "DTZ", "SLF", "S", "ANN", "D", "FBT", "PL", "PT",
     "PGH004", # `# noqa` sem codigo silenciaria todas as regras da linha
 ]
-# Codigos do flake8 (pycodestyle e pyflakes), que roda no pre-commit. O RUF100
-# (`# noqa` obsoleto) preserva os `# noqa` desses codigos, que o Ruff nao seleciona.
-external = ["E", "W", "F"]
+# Codigos do flake8 (pycodestyle E/W e pyflakes F), que roda no pre-commit e que
+# o Ruff nao seleciona: o RUF100 (`# noqa` obsoleto) preserva os `# noqa` deles.
+# Os prefixos levam o digito porque `external` casa por prefixo, e "E" ou "F"
+# sozinhos casariam tambem ERA, EM, FBT e FURB, que o Ruff seleciona.
+external = [
+    "E1", "E2", "E3", "E4", "E5", "E7", "E9", "W1", "W2", "W3", "W5", "W6",
+    "F4", "F5", "F6", "F7", "F8", "F9",
+]
 ignore = [
     # Caracteres "ambiguos" em texto pt-BR sao legitimos. Docstrings e
     # comentarios usam EN DASH (travessao) e afins de proposito; nao

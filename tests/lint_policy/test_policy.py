@@ -223,23 +223,35 @@ def test_rejeita_topo_alterado_no_arquivo_de_dispensas(repositorio, original, al
 
 
 def test_base_sem_ruff_toml_falha_com_orientacao(repositorio):
-    # Base anterior à adoção da régua: só uma referência local desatualizada chega aqui.
+    # Base anterior à adoção da régua: referência desatualizada ou branch que não integrou a main.
     (repositorio / "ruff.toml").unlink()
     registrar_base(repositorio)
     gravar_excecoes(repositorio, {"src/antigo.py": ["ANN201"]})
     resultado = executar_gate(repositorio)
     assert resultado.returncode == 1
-    assert "Falha ao consultar a base Git" in resultado.stderr
+    assert "não tem ruff.toml" in resultado.stderr
     assert "git fetch" in resultado.stderr
+    assert "merge ou rebase" in resultado.stderr
 
 
-def test_noqa_obsoleto_falha(repositorio):
+@pytest.mark.parametrize("codigo", ["BLE001", "FBT003", "ERA001"])
+def test_noqa_obsoleto_falha(repositorio, codigo):
+    # FBT e ERA começam como os códigos do flake8 (F e E) que o RUF100 preserva.
     (repositorio / "src/novo.py").write_text(
-        '"""Módulo novo."""\n\nVALOR = 1  # noqa: BLE001\n', encoding="utf-8",
+        f'"""Módulo novo."""\n\nVALOR = 1  # noqa: {codigo}\n', encoding="utf-8",
     )
     resultado = executar_gate(repositorio)
     assert resultado.returncode == 1
     assert "src/novo.py:3: RUF100" in resultado.stderr
+
+
+def test_noqa_redundante_com_dispensa_do_arquivo_falha_no_ruff(repositorio):
+    # Enquanto ruff.toml dispensa a regra no arquivo, a supressão em linha dela não silencia nada.
+    caminho = repositorio / "src/antigo.py"
+    caminho.write_text(CODIGO_ANTIGO.replace("obter_numero():", "obter_numero():  # noqa: ANN201"), encoding="utf-8")
+    resultado = executar_ruff(repositorio, "--config", "ruff.toml", "src", "tests")
+    assert resultado.returncode == 1
+    assert "RUF100" in resultado.stdout
 
 
 def test_noqa_sem_codigo_falha(repositorio):

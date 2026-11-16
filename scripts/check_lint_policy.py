@@ -54,11 +54,11 @@ def executar_git(raiz: Path, *argumentos: str) -> bytes:
     ).stdout
 
 
-def medir_regras(raiz: Path, configuracao: Path) -> list[dict]:
+def medir_regras(raiz: Path) -> list[dict]:
     """Mede src e tests sem as dispensas temporárias do ruff.toml."""
     # Executa apenas o Ruff instalado no ambiente deste processo, sem shell.
     resultado = subprocess.run(  # noqa: S603
-        [sys.executable, "-m", "ruff", "check", "--config", str(configuracao),
+        [sys.executable, "-m", "ruff", "check", "--config", "pyproject.toml",
          "--no-cache", "--output-format", "json", "src", "tests"],
         cwd=raiz, check=False, capture_output=True, text=True,
     )
@@ -76,7 +76,12 @@ def pares_dos_achados(achados: list[dict]) -> set[tuple[str, str]]:
 
 
 def excecoes_da_base(raiz: Path, revisao: str) -> set[tuple[str, str]]:
-    """Lê as dispensas do ruff.toml da base; a falta dele indica referência desatualizada."""
+    """Lê as dispensas do ruff.toml versionado na base."""
+    if "ruff.toml" not in executar_git(raiz, "ls-tree", "--name-only", revisao).decode().splitlines():
+        raise ValueError(
+            f"A base {revisao[:12]} não tem ruff.toml: é anterior à adoção da régua (#396). "
+            "Atualize a referência com git fetch e integre a main à branch (merge ou rebase).",
+        )
     return ler_excecoes(executar_git(raiz, "show", f"{revisao}:ruff.toml").decode())
 
 
@@ -85,7 +90,7 @@ def conferir(raiz: Path, referencia: str) -> list[str]:
     excecoes = ler_excecoes((raiz / "ruff.toml").read_text(encoding="utf-8"))
     revisao = executar_git(raiz, "merge-base", "HEAD", referencia).decode().strip()
     anteriores = excecoes_da_base(raiz, revisao)
-    achados = medir_regras(raiz, raiz / "pyproject.toml")
+    achados = medir_regras(raiz)
     erros = []
     for caminho, regra in sorted(excecoes - anteriores):
         erros.append(f"Nova dispensa proibida: {caminho}: {regra}")
