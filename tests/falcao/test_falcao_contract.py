@@ -467,6 +467,21 @@ def test_data_fim_isolada_vai_com_piso_de_inicio(falcao):
 
 
 @responses.activate
+@pytest.mark.parametrize("fim", ["1899-12-31", "31/12/1850"])
+def test_data_fim_isolada_anterior_ao_piso_falha_antes_de_requisitar(falcao, fim):
+    """Sem início, a busca enviaria ``dataInicio=1900-01-01`` depois do fim."""
+    with pytest.raises(ValueError, match=r"data_juntada_fim.*anterior a 1900-01-01"):
+        falcao.listar_decisoes("dano moral", paginas=1, data_juntada_fim=fim)
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_data_fim_isolada_igual_ao_piso_e_aceita(falcao):
+    _register("acordaos", dataInicio="1900-01-01", dataFim="1900-01-01")
+    falcao.listar_decisoes("dano moral", paginas=1, data_juntada_fim="1900-01-01")
+
+
+@responses.activate
 def test_waf_cloudfront_nao_e_retentado(falcao):
     responses.add(
         responses.GET, SEARCH_URL, status=403, content_type="text/html",

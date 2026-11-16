@@ -58,7 +58,12 @@ _ESPERA_MAXIMA_RETRY = 60
 # ``dataFim`` sem ``dataInicio`` devolve HTTP 400 (``For input string: ""``,
 # visto em 16/11/2026); ``dataInicio`` sozinho funciona. Quando so o limite
 # superior e pedido, este piso vai como ``dataInicio``.
-_DATA_INICIO_PISO = "1900-01-01"
+#
+# Nao usa ``fill_open_ended_dates`` (``utils/params.py``) de proposito: ele
+# tambem preenche o fim com a data de hoje, que mudaria a identidade do
+# checkpoint a cada dia, e avisa a cada chamada. 1900-01-01 e o valor
+# conferido ao vivo.
+DATA_INICIO_PISO = "1900-01-01"
 
 # Mapeamento nome-canonico (juscraper) -> parametro do backend. Cada valor e
 # uma lista no schema; a querystring espera CSV.
@@ -132,6 +137,20 @@ def verificar_resposta(resp: requests.Response) -> None:
         resp.headers.setdefault("Retry-After", str(max(0, espera)))
 
 
+def identidade_da_busca(params: dict[str, Any]) -> dict[str, Any]:
+    """Parametros que definem a busca de um checkpoint, sem pagina nem sessao.
+
+    Os filtros multivalorados entram com os valores ordenados: a mesma lista
+    em outra ordem e a mesma busca, como no checkpoint do STF. A requisicao
+    segue com a ordem que o usuario passou.
+    """
+    identidade = {k: v for k, v in params.items() if k not in ("sessionId", "page")}
+    for chave in _FILTROS_CSV.values():
+        if chave in identidade:
+            identidade[chave] = ",".join(sorted(identidade[chave].split(",")))
+    return identidade
+
+
 def _as_csv(valor: str | list[str]) -> str:
     """Serializa um filtro (str ou list[str]) para o CSV que o backend espera."""
     if isinstance(valor, (list, tuple)):
@@ -178,7 +197,7 @@ def build_pesquisa_params(
         data_juntada_inicio / data_juntada_fim: Intervalo de ``dataJuntada``
             em ISO ``AAAA-MM-DD`` (``dataInicio`` / ``dataFim`` no backend).
             O backend rejeita ``dataFim`` sozinho: sem ``data_juntada_inicio``,
-            ``dataInicio`` vai com :data:`_DATA_INICIO_PISO`.
+            ``dataInicio`` vai com :data:`DATA_INICIO_PISO`.
     """
     params: dict[str, Any] = {
         "texto": pesquisa,
@@ -207,7 +226,7 @@ def build_pesquisa_params(
     if ordenacao is not None:
         params["ordenacao"] = ordenacao
     if data_juntada_fim is not None:
-        params["dataInicio"] = _DATA_INICIO_PISO if data_juntada_inicio is None else data_juntada_inicio
+        params["dataInicio"] = DATA_INICIO_PISO if data_juntada_inicio is None else data_juntada_inicio
         params["dataFim"] = data_juntada_fim
     elif data_juntada_inicio is not None:
         params["dataInicio"] = data_juntada_inicio
