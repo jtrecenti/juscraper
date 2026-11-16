@@ -74,7 +74,7 @@ def test_bloqueio_no_meio_da_paginacao_guarda_as_paginas_baixadas(tjto, metodo, 
         responses.add(responses.POST, BASE_URL, body=bruto, content_type="text/html; charset=utf-8")
     responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
 
-    falha = r"página 3 falhou.*faltam as páginas \[3, 4\].*depois de pelo menos 10 minutos"
+    falha = r"página 3 falhou.*faltam as páginas \[3, 4\],.*depois de pelo menos 10 minutos"
     with pytest.raises(ColetaParcialError, match=falha) as erro:
         getattr(tjto, metodo)("dano moral", paginas=range(1, 5))
 

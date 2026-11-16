@@ -16,7 +16,7 @@ import math
 import re
 import time
 from collections.abc import Callable, Iterable, Sequence
-from itertools import chain, islice
+from itertools import chain, islice, pairwise
 from typing import TypeVar
 
 from bs4 import BeautifulSoup, Tag
@@ -317,6 +317,22 @@ def contador_com_teto(
         return teto
 
     return contar
+
+
+def descrever_paginas(paginas: Sequence[int]) -> str:
+    """Páginas para uma mensagem, num texto que vale como ``paginas=``.
+
+    A sequência crescente sem saltos de três páginas ou mais sai
+    ``"range(2, 8241)"``; as demais saem como lista, ``"[2, 5, 9]"``. Usado na
+    mensagem do ``ColetaParcialError`` dos raspadores paginados, em que
+    ``paginas=None`` pode deixar milhares de páginas por baixar.
+    """
+    contiguas = (
+        len(paginas) > 2
+        and paginas[-1] - paginas[0] == len(paginas) - 1
+        and all(seguinte - pagina == 1 for pagina, seguinte in pairwise(paginas))
+    )
+    return f"range({paginas[0]}, {paginas[-1] + 1})" if contiguas else str(list(paginas))
 
 
 def _avisar_paginas_fora(primeiras: list[int], n_fora: int, n_pags: int, tribunal: str) -> None:
