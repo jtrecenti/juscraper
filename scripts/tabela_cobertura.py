@@ -238,16 +238,19 @@ def notebooks_divergentes(grupos: dict[str, dict[str, list[str]]]) -> list[Path]
             divergentes.append(caminho)
             continue
         linhas = []
+        linha_invalida = False
         for linha in linhas_texto[cabecalho + 2:]:
             if not linha.startswith("|"):
                 break
             match = _LINHA_METODO.fullmatch(linha)
-            if match is not None:
-                linhas.append(match.groups())
+            if match is None:
+                linha_invalida = True
+                break
+            linhas.append(match.groups())
         metodos = set(grupos["tribunais"][sigla])
         positivos = {metodo.strip() for nomes, estado in linhas if estado == "Yes" for metodo in nomes.split("/")}
         negativos = {metodo.strip() for nomes, estado in linhas if estado == "No" for metodo in nomes.split("/")}
-        if not linhas or positivos != metodos or negativos & metodos:
+        if linha_invalida or not linhas or positivos != metodos or negativos & metodos:
             divergentes.append(caminho)
     return divergentes
 

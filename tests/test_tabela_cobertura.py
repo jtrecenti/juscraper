@@ -67,6 +67,20 @@ def test_notebook_manual_ignora_exemplo_fora_da_tabela(tmp_path, monkeypatch):
     assert tabela_cobertura.notebooks_divergentes(tabela_cobertura.cobertura()) == []
 
 
+def test_notebook_manual_reprova_linha_com_disponibilidade_invalida(tmp_path, monkeypatch):
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS["tjac"]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"] = [
+        linha.replace("| cpopg   | No", "| cpopg   | Maybe") for linha in notebook["cells"][0]["source"]
+    ]
+    assert any("Maybe" in linha for linha in notebook["cells"][0]["source"])
+    alterado = tmp_path / "tjac.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {"tjac": alterado})
+
+    assert tabela_cobertura.notebooks_divergentes(tabela_cobertura.cobertura()) == [alterado]
+
+
 class _Exemplos:
     def stub_com_docstring(self):
         """Não implementado."""
