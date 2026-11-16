@@ -3,11 +3,13 @@ Scraper for the Tribunal de Justica de Pernambuco (TJPE).
 """
 
 
+from collections.abc import Mapping
 from datetime import date
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .._trf.schemas import InputCpopgTRF
@@ -24,15 +26,23 @@ class TJPEScraper(HTTPScraper):
     #: Schema do ``cpopg``, o mesmo da família PJe ConsultaPública dos TRFs.
     INPUT_CPOPG = InputCpopgTRF
 
-    def __init__(self):
-        super().__init__("TJPE")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30),
+        "cpopg": TJPEConsultaPublicaScraper.perfis_http["cpopg"],
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJPE", politica=politica)
         self._consulta_publica: TJPEConsultaPublicaScraper | None = None
+        self._politica_cpopg = (
+            {"cpopg": dict(politica["cpopg"])} if politica and "cpopg" in politica else None
+        )
 
     def _consulta(self) -> TJPEConsultaPublicaScraper:
         # Sessão própria e criada na primeira consulta: o cjsg roda em outro
         # host, sem WAF, e não precisa dos cabeçalhos de navegador do PJe.
         if self._consulta_publica is None:
-            self._consulta_publica = TJPEConsultaPublicaScraper()
+            self._consulta_publica = TJPEConsultaPublicaScraper(politica=self._politica_cpopg)
         return self._consulta_publica
 
     def cpopg(

@@ -218,12 +218,11 @@ def extract_ca_token(search_html: str) -> str | None:
 def fetch_form(
     scraper: "TRFConsultaScraper",
     base_url: str,
-    timeout: float = 30.0,
 ) -> str:
     """``GET`` the form page and return its UTF-8 text."""
     url = base_url + LISTVIEW_PATH
     resp = scraper._request_with_retry(
-        "GET", url, timeout=timeout, on_response=_bot_challenge_guard(scraper)
+        "GET", url, perfil="cpopg", on_response=_bot_challenge_guard(scraper)
     )
     return resp.text
 
@@ -232,7 +231,6 @@ def submit_search(
     scraper: "TRFConsultaScraper",
     base_url: str,
     payload: dict[str, str],
-    timeout: float = 30.0,
 ) -> str:
     """``POST`` the search payload and return the Ajax fragment text (UTF-8)."""
     url = base_url + LISTVIEW_PATH
@@ -240,7 +238,7 @@ def submit_search(
         "POST",
         url,
         data=payload,
-        timeout=timeout,
+        perfil="cpopg",
         headers={
             "Referer": url,
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -255,7 +253,6 @@ def fetch_detail(
     scraper: "TRFConsultaScraper",
     base_url: str,
     ca_token: str,
-    timeout: float = 30.0,
 ) -> str:
     """``GET`` the detail page and return its **latin-1** decoded text.
 
@@ -268,7 +265,7 @@ def fetch_detail(
         "GET",
         url,
         params={"ca": ca_token},
-        timeout=timeout,
+        perfil="cpopg",
         headers={"Referer": base_url + LISTVIEW_PATH},
         on_response=_bot_challenge_guard(scraper),
     )
@@ -363,7 +360,6 @@ def fetch_movs_page(
     info: MovsPagination,
     page: int,
     ca_token: str,
-    timeout: float = 30.0,
 ) -> str:
     """Fetch a single movs page (>=2) as the UTF-8 AJAX fragment.
 
@@ -394,7 +390,7 @@ def fetch_movs_page(
         "POST",
         url,
         data=data,
-        timeout=timeout,
+        perfil="cpopg",
         headers={
             "Referer": f"{url}?ca={ca_token}",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -457,7 +453,6 @@ def fetch_documento(
     base_url: str,
     ca_token: str,
     id_processo_doc: str,
-    timeout: float = 30.0,
 ) -> bytes:
     """``GET`` a peça's HTML viewer and return the raw bytes.
 
@@ -471,7 +466,7 @@ def fetch_documento(
         "GET",
         url,
         params={"ca": ca_token, "idProcessoDoc": id_processo_doc, "codigo": ""},
-        timeout=timeout,
+        perfil="cpopg",
         headers={"Referer": base_url + DETAIL_PATH},
         on_response=_bot_challenge_guard(scraper),
     )

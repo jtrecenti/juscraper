@@ -1,10 +1,11 @@
 """Scraper for the Tribunal de Justica do Piaui (TJPI)."""
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
@@ -20,6 +21,10 @@ class TJPIScraper(HTTPScraper):
     """
 
     BASE_URL = "https://jurisprudencia.tjpi.jus.br"
+
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30),
+    }
 
     def __init__(
         self,

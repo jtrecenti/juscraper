@@ -98,7 +98,7 @@ def build_cjsg_payload(
 
 def _fetch_ementa(request_fn: RequestFn, uuid: str) -> dict[Any, Any]:
     """Fetch ementa JSON for a given document UUID."""
-    resp = request_fn("GET", EMENTA_URL, params={"id": uuid}, timeout=30)
+    resp = request_fn("GET", EMENTA_URL, params={"id": uuid}, perfil="ementa")
     data = resp.json()
     docs = data.get("response", {}).get("docs", [])
     doc: dict[Any, Any] = docs[0] if docs else {}
@@ -149,7 +149,7 @@ def cjsg_download_manager(
 
     def _get_page(pagina: int) -> str:
         payload = build_cjsg_payload(termo, start=(pagina - 1) * RESULTS_PER_PAGE, **fetch_kwargs)
-        resp = request_fn("POST", BASE_URL, data=payload, timeout=60)
+        resp = request_fn("POST", BASE_URL, data=payload, perfil="cjsg")
         return resp.text
 
     # A menor página pedida é a única baixada antes de saber o total: se ela

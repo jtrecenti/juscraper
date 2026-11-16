@@ -11,13 +11,15 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
 from pydantic import ValidationError
 from tqdm.auto import tqdm
 
-from ...core.http import HTTPScraper
+from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
 from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
@@ -45,12 +47,18 @@ class ComunicaCNJScraper(HTTPScraper):
 
     INPUT_LISTAR_COMUNICACOES = InputListarComunicacoesComunicaCNJ
 
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "listagem": RequestPolicy(timeout=30.0),
+    }
+
     def __init__(
         self,
         verbose: int = 1,
         sleep_time: float = 0.5,
+        *,
+        politica: Mapping[str, Mapping[str, Any]] | None = None,
     ):
-        super().__init__("ComunicaCNJ", verbose=verbose, sleep_time=sleep_time)
+        super().__init__("ComunicaCNJ", verbose=verbose, sleep_time=sleep_time, politica=politica)
         logger.info("ComunicaCNJScraper initialized.")
 
     def _configure_session(self, session: requests.Session) -> None:
@@ -163,7 +171,7 @@ class ComunicaCNJScraper(HTTPScraper):
         # Descobrir total de paginas a partir da pagina 1 quando o usuario
         # nao especificou ``paginas`` (ou para fechar o ``range``).
         primeira_resp = self._request_with_retry(
-            "GET", BASE_URL, params=_params_para_pagina(1), timeout=30.0
+            "GET", BASE_URL, params=_params_para_pagina(1), perfil="listagem"
         )
         total = parse_count(primeira_resp)
         total_paginas = max(1, (total + inp.itens_por_pagina - 1) // inp.itens_por_pagina)
@@ -188,7 +196,7 @@ class ComunicaCNJScraper(HTTPScraper):
                 if self.sleep_time:
                     time.sleep(self.sleep_time)
                 resp = self._request_with_retry(
-                    "GET", BASE_URL, params=_params_para_pagina(pagina), timeout=30.0
+                    "GET", BASE_URL, params=_params_para_pagina(pagina), perfil="listagem"
                 )
             rows.extend(parse_items(resp))
 

@@ -22,7 +22,7 @@ def fetch_csrf_token(request_fn: RequestFn) -> str:
     compartilhada pelo ``HTTPScraper``; os POSTs seguintes herdam esses
     cookies e enviam o token decodificado no header ``X-XSRF-TOKEN``.
     """
-    response = request_fn("GET", CLASSES_URL, timeout=30)
+    response = request_fn("GET", CLASSES_URL, perfil="classes")
     response.raise_for_status()
     token = response.cookies.get("XSRF-TOKEN")
     if not token:
@@ -99,7 +99,7 @@ def cjsg_download_manager(
             SEARCH_URL,
             json=payload,
             headers=headers,
-            timeout=30,
+            perfil="cjsg",
         )
         data: dict = resp.json()
         time.sleep(1)

@@ -1,8 +1,11 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
 
+from collections.abc import Mapping
+from typing import Any, ClassVar
+
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.deprecacao import resolve_deprecated_value
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
@@ -20,8 +23,12 @@ class TJAPScraper(HTTPScraper):
 
     BASE_URL = "https://tucujuris.tjap.jus.br"
 
-    def __init__(self):
-        super().__init__("TJAP")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJAP", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJAP."""

@@ -18,8 +18,10 @@ import math
 import shutil
 import tempfile
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
@@ -27,7 +29,7 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
-from ...core.http import HTTPScraper
+from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.params import (
     coerce_brazilian_date,
     normalize_paginas,
@@ -55,17 +57,24 @@ class FalcaoScraper(HTTPScraper):
     INPUT_LISTAR_DECISOES = InputListarDecisoesFalcao
     COLECOES = COLECOES
 
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "listagem": RequestPolicy(timeout=30.0, expect_json=True),
+    }
+
     def __init__(
         self,
         verbose: int = 1,
         download_path: str | None = None,
         sleep_time: float = 1.0,
+        *,
+        politica: Mapping[str, Mapping[str, Any]] | None = None,
     ):
         super().__init__(
             "Falcao",
             verbose=verbose,
             download_path=download_path,
             sleep_time=sleep_time,
+            politica=politica,
         )
         # Um sessionId por instancia, reusado em todas as paginas — espelha o
         # cookie de 30 dias do frontend oficial.
@@ -329,8 +338,7 @@ class FalcaoScraper(HTTPScraper):
             data_juntada_fim=inp.data_juntada_fim,
         )
         resp = self._request_with_retry(
-            "GET", SEARCH_URL, params=params, timeout=30.0,
-            expect_json=True, on_response=verificar_resposta,
+            "GET", SEARCH_URL, params=params, perfil="listagem", on_response=verificar_resposta,
         )
         dados: dict = resp.json()
         return dados

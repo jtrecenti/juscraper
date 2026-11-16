@@ -118,14 +118,14 @@ def fetch_cjsg_first_page(
     # Body do POST descartado: a resposta é só o "ack" do form submit; o HTML
     # com os resultados vem do GET subsequente em ``trocaDePagina.do?pagina=1``.
     scraper._request_with_retry(
-        "POST", link_cjsg, data=body, timeout=30, allow_redirects=True,
+        "POST", link_cjsg, data=body, perfil="cjsg", allow_redirects=True,
     )
 
     time.sleep(sleep_time)
     first_resp = scraper._request_with_retry(
         "GET",
         first_page_url,
-        timeout=30,
+        perfil="cjsg",
         headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
     )
     first_resp.encoding = "latin1"
@@ -223,7 +223,7 @@ def download_cjsg_pages(
             "GET",
             f"{base_url}cjsg/trocaDePagina.do",
             params=query,
-            timeout=30,
+            perfil="cjsg",
             headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
         )
         resp.encoding = "latin1"

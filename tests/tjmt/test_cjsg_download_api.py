@@ -136,7 +136,7 @@ def test_downloads_acordaos_with_zero_based_pagination_and_headers(mocker):
         "exibirArquivados": "true",
     }
     assert [call[2]["params"]["indicePagina"] for call in api_calls] == [0, 1]
-    assert all(call[2]["expect_json"] is True for call in api_calls)
+    assert all(call[2]["perfil"] == "busca" for call in api_calls)
     assert api_calls[0][2]["params"]["tipoConsulta"] == "1"
     assert api_calls[0][2]["params"]["termoDeBusca"] == "dano moral"
     assert session.headers["token"] == TOKEN

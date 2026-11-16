@@ -240,7 +240,7 @@ def build_cjsg_form_body(
 
 def step1_get_session(request_fn: RequestFn) -> tuple[str, str]:
     """GET the search page; return (HTML, ViewState)."""
-    resp = request_fn("GET", CONSULTA_URL, timeout=30)
+    resp = request_fn("GET", CONSULTA_URL, perfil="cjsg")
     resp.encoding = resp.apparent_encoding
     return resp.text, extract_viewstate(resp.text)
 
@@ -276,7 +276,7 @@ def step2_post_search(
         meio_tramitacao=meio_tramitacao,
         tipo_decisao=tipo_decisao,
     )
-    resp = request_fn("POST", CONSULTA_URL, data=data, timeout=30)
+    resp = request_fn("POST", CONSULTA_URL, data=data, perfil="cjsg")
     resp.encoding = resp.apparent_encoding
     return resp.text, extract_viewstate(resp.text)
 
@@ -295,7 +295,7 @@ def step3_choose_tipo(
         "javax.faces.ViewState": viewstate,
         button_id: button_id,
     }
-    resp = request_fn("POST", ESCOLHA_URL, data=data, timeout=30)
+    resp = request_fn("POST", ESCOLHA_URL, data=data, perfil="cjsg")
     resp.encoding = resp.apparent_encoding
     return resp.text, extract_viewstate(resp.text)
 
@@ -321,7 +321,7 @@ def step4_paginate(
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
     }
-    resp = request_fn("POST", RESULTADO_URL, data=data, headers=headers, timeout=30)
+    resp = request_fn("POST", RESULTADO_URL, data=data, headers=headers, perfil="cjsg")
     resp.encoding = resp.apparent_encoding
     return resp.text
 

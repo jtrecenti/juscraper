@@ -118,7 +118,7 @@ def cjsg_download_manager(
     def _get_page(pagina_1based):
         offset = (pagina_1based - 1) * RESULTS_PER_PAGE
         payload = _build_payload(pesquisa, offset=offset, **kwargs)
-        resp = request_fn("POST", BASE_URL, json=payload, headers=_HEADERS, timeout=30)
+        resp = request_fn("POST", BASE_URL, json=payload, headers=_HEADERS, perfil="cjsg")
         resp.encoding = "utf-8"
         data: dict = resp.json()
         _raise_for_error_envelope(data)

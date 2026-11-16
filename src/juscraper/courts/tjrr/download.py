@@ -101,7 +101,7 @@ def _get_form_fields(request_fn: RequestFn) -> dict:
     (``id=consultaAtual`` for the search input) and snapshot every form
     default so the POST matches what a browser would send.
     """
-    resp = request_fn("GET", BASE_URL, timeout=30)
+    resp = request_fn("GET", BASE_URL, perfil="formulario")
     soup = BeautifulSoup(resp.text, "html.parser")
     if not soup.find("form", {"id": "menuinicial"}):
         # Com a sessão JSF de uma busca anterior, o portal devolve a página de
@@ -212,7 +212,7 @@ def _search(
         "Origin": "https://jurisprudencia.tjrr.jus.br",
         "Referer": "https://jurisprudencia.tjrr.jus.br/",
     }
-    resp = request_fn("POST", BASE_URL, data=data, headers=headers, timeout=60)
+    resp = request_fn("POST", BASE_URL, data=data, headers=headers, perfil="cjsg")
     resp.encoding = "utf-8"
     return resp.text
 
@@ -344,7 +344,7 @@ def _paginate(
         "Origin": "https://jurisprudencia.tjrr.jus.br",
         "Referer": "https://jurisprudencia.tjrr.jus.br/",
     }
-    resp = request_fn("POST", BASE_URL, data=data, headers=headers, timeout=60)
+    resp = request_fn("POST", BASE_URL, data=data, headers=headers, perfil="cjsg")
     resp.encoding = "utf-8"
     return _extract_cdata(resp.text)
 

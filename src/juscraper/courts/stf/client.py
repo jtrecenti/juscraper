@@ -1,10 +1,13 @@
 """Scraper for the Brazilian Supreme Court (STF) jurisprudence search."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import ClassVar
+
 import pandas as pd
 import requests
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.params import SEARCH_ALIASES
@@ -47,6 +50,10 @@ class STFScraper(HTTPScraper):
 
     BASE_URL = BASE_URL
 
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=60),
+    }
+
     def __init__(
         self,
         waf_token: str | None = None,
@@ -83,7 +90,7 @@ class STFScraper(HTTPScraper):
 
     def _post(self, payload: dict) -> requests.Response:
         return self._request_with_retry(
-            "POST", BASE_URL, json=payload, timeout=60, on_response=_levantar_limite_da_api
+            "POST", BASE_URL, json=payload, perfil="cjsg", on_response=_levantar_limite_da_api
         )
 
     def _buscar(self, payload: dict) -> dict:

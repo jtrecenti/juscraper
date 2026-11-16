@@ -95,7 +95,7 @@ def build_cjsg_payload(
     return payload
 
 
-def post_cjsg(request_fn: RequestFn, payload: dict, *, timeout: int = 30) -> requests.Response:
+def post_cjsg(request_fn: RequestFn, payload: dict) -> requests.Response:
     """Send the TJPA CJSG search request via ``request_fn``.
 
     Single source of truth for the request shape (URL + body serialization
@@ -104,7 +104,7 @@ def post_cjsg(request_fn: RequestFn, payload: dict, *, timeout: int = 30) -> req
     helper so a change to body/headers can't drift silently.
     """
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    return request_fn("POST", BASE_URL, data=body, headers=CJSG_HEADERS, timeout=timeout)
+    return request_fn("POST", BASE_URL, data=body, headers=CJSG_HEADERS, perfil="cjsg")
 
 
 def cjsg_download_manager(

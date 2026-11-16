@@ -1,11 +1,12 @@
 """
 Scraper for the Tribunal de Justica do Estado do Para (TJPA).
 """
-from typing import Literal
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
@@ -18,8 +19,12 @@ class TJPAScraper(HTTPScraper):
 
     BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 
-    def __init__(self):
-        super().__init__("TJPA")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=30),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJPA", politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPA."""

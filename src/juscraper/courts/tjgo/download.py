@@ -106,7 +106,7 @@ def _fetch_page(
         numero_processo=numero_processo,
         qtde_itens_pagina=qtde_itens_pagina,
     )
-    resp = request_fn("POST", SEARCH_URL, data=payload, timeout=90)
+    resp = request_fn("POST", SEARCH_URL, data=payload, perfil="cjsg")
     resp.encoding = "iso-8859-1"
     return resp.text
 
@@ -133,7 +133,7 @@ def cjsg_download(
             ``core.http.HTTPScraper``).
     """
     # Prime the session (cookies) with a GET on the form.
-    request_fn("GET", SEARCH_URL, timeout=60)
+    request_fn("GET", SEARCH_URL, perfil="formulario")
 
     first = _fetch_page(
         request_fn=request_fn,
