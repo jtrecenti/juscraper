@@ -546,7 +546,6 @@ class TJXXScraper(EsajSearchScraper):
     TRIBUNAL_NAME = "..."
     INPUT_CJSG = InputCJSGTJXX        # pydantic próprio quando a API diverge
     CJSG_CHROME_UA = True              # quando o eSAJ precisa de UA browser
-    CJSG_EXTRACT_CONVERSATION_ID = True  # quando precisa propagar conversationId entre páginas
 
     def _build_cjsg_body(self, inp: BaseModel) -> dict:
         # sobrescrever quando o form body tem shape diferente

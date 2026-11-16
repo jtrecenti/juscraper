@@ -5,9 +5,8 @@ Constrói o payload que o TJSP de fato aceita em
 eSAJ-puro (`juscraper.courts._esaj.forms.build_cjsg_form_body`) em três
 pontos funcionais:
 
-- Não envia ``conversationId`` (TJSP não propaga esse campo no POST
-  inicial; o ID é extraído da resposta e colado só nas requests de
-  paginação subsequentes via ``CJSG_EXTRACT_CONVERSATION_ID``).
+- Não envia ``conversationId``: o TJSP não usa esse campo no cjsg, nem no
+  POST inicial nem na paginação (conferido ao vivo em 16/11/2026).
 - Não envia ``dados.dtPublicacaoInicio/Fim`` (o form do TJSP não tem o
   par de campos de publicação; só filtra por julgamento).
 - Mapeia ``baixar_sg: bool`` em ``dados.origensSelecionadas``

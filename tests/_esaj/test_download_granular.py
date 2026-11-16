@@ -1,8 +1,8 @@
 """Testes granulares do download de cjsg da família eSAJ (``_esaj/download.py``).
 
-Cobrem o que os contratos por tribunal não alcançam: a leitura do
-``conversationId`` da primeira página e os GETs das páginas seguintes na aba de
-decisões monocráticas, cujos samples reais cabem todos em uma página.
+Cobrem o que os contratos por tribunal não alcançam: os GETs das páginas
+seguintes na aba de decisões monocráticas, cujos samples reais cabem todos em
+uma página, e a primeira página gravada em busca sem resultado.
 """
 from __future__ import annotations
 
@@ -13,24 +13,9 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from juscraper.courts._esaj.download import _extract_conversation_id, download_cjsg_pages
+from juscraper.courts._esaj.download import download_cjsg_pages
 
 BASE = "https://esaj.tjac.jus.br/"
-
-@pytest.mark.parametrize(
-    ("html", "esperado"),
-    [
-        pytest.param('<input type="hidden" name="conversationId" value="abc123">', "abc123", id="preenchido"),
-        # Como o eSAJ serve a tag em ``tests/tjac/samples/cjsg/post_initial.html``.
-        pytest.param('<input type="hidden" name="conversationId" value="">', "", id="vazio"),
-        pytest.param('<input type="hidden" name="conversationId">', "", id="sem-value"),
-        pytest.param('<input type="hidden" name="outro" value="x">', "", id="ausente"),
-        pytest.param('<input name="conversationId" value="abc123"', "", id="tag-truncada"),
-        pytest.param("", "", id="html-vazio"),
-    ],
-)
-def test_extract_conversation_id(html, esperado):
-    assert _extract_conversation_id(html) == esperado
 
 
 def _baixar(tmp_path: Path, *, tipo_decisao: str, n_pags: int) -> Path:

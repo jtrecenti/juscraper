@@ -79,7 +79,6 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
     MOVIMENTACOES_AJAX = True
     INPUT_CJSG = InputCJSGTJSP
     CJSG_CHROME_UA = True
-    CJSG_EXTRACT_CONVERSATION_ID = True
 
     def __init__(
         self,

@@ -2,10 +2,8 @@
 
 Absorbs the near-identical ``cjsg_download.py`` modules from the five eSAJ
 puros (TJAC/TJAL/TJAM/TJCE/TJMS) plus TJSP's ``cjsg_download.py``. TJSP
-sends a slightly different form body (handled via ``body_builder``), a
-Chrome-flavoured User-Agent (``chrome_ua``), and extracts a
-``conversationId`` from the first page that is propagated to subsequent
-pages.
+sends a slightly different form body (handled via ``body_builder``) and a
+Chrome-flavoured User-Agent (``chrome_ua``).
 
 Todas as chamadas HTTP — POST inicial (``resultadoCompleta.do``), GET da
 primeira página (``trocaDePagina.do?pagina=1``, usado também para
@@ -32,7 +30,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from ...utils.pagination import paginas_no_intervalo
@@ -62,18 +59,6 @@ _CHROME_HEADERS = {
         "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
     ),
 }
-
-
-def _extract_conversation_id(html: str) -> str:
-    """Extract ``<input name="conversationId" value="...">`` if present."""
-    try:
-        soup = BeautifulSoup(html, "html.parser")
-        elem = soup.find("input", {"name": "conversationId"})
-        if elem is not None:
-            return str(elem.get("value", "") or "")
-    except (ValueError, AttributeError):
-        pass
-    return ""
 
 
 def fetch_cjsg_first_page(
@@ -143,7 +128,6 @@ def download_cjsg_pages(
     get_n_pags_callback: Callable[[str], int],
     sleep_time: float = 1.0,
     chrome_ua: bool = False,
-    extract_conversation_id: bool = False,
     progress_desc: str = "Baixando documentos",
 ) -> str:
     """Execute the eSAJ cjsg two-step flow and save raw HTML files.
@@ -165,8 +149,6 @@ def download_cjsg_pages(
         sleep_time: Seconds between requests.
         chrome_ua: When ``True`` sends the Chrome UA (TJSP). Otherwise sends
             the polite juscraper UA (other 5 eSAJ puros).
-        extract_conversation_id: When ``True`` parses ``conversationId`` from
-            page 1 and appends it to subsequent GETs (TJSP).
         progress_desc: Label passed to tqdm.
 
     Returns:
@@ -198,8 +180,6 @@ def download_cjsg_pages(
         logger.info("Nenhum resultado encontrado para a busca.")
         return str(path)
 
-    conversation_id = _extract_conversation_id(first_html) if extract_conversation_id else ""
-
     # A página 1 vem sempre no primeiro GET, porque dela sai o total, mas só
     # é gravada se foi pedida: o parse lê todos os arquivos do diretório, e
     # ``paginas=[2]`` traria as linhas dela junto. As pedidas além do total
@@ -215,14 +195,10 @@ def download_cjsg_pages(
 
     for pag in tqdm(paginas_list, desc=progress_desc, total=len(validas), initial=int(1 in validas)):
         time.sleep(sleep_time)
-        query: dict[str, object] = {"tipoDeDecisao": tipo_param, "pagina": pag}
-        if conversation_id:
-            query["conversationId"] = conversation_id
-
         resp = scraper._request_with_retry(
             "GET",
             f"{base_url}cjsg/trocaDePagina.do",
-            params=query,
+            params={"tipoDeDecisao": tipo_param, "pagina": pag},
             perfil="cjsg",
             headers={"Accept": "text/html; charset=latin1;", "Referer": link_cjsg},
         )
