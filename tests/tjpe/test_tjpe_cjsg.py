@@ -5,18 +5,8 @@ import pytest
 
 import juscraper as jus
 
-# Em 15/11/2026, a pesquisa do portal respondia "Nenhum documento encontrado" a
-# qualquer termo, também numa busca feita no navegador. O cjsg volta vazio, com
-# ``UserWarning``. Estrito para avisar quando a pesquisa voltar.
-PESQUISA_FORA_DO_AR = pytest.mark.xfail(
-    raises=UserWarning,
-    reason="pesquisa do TJPE responde 'Nenhum documento encontrado' a qualquer termo, também no navegador (15/11/2026)",
-    strict=True,
-)
-
 
 @pytest.mark.integration
-@PESQUISA_FORA_DO_AR
 class TestCJSGTJPE:
     """Tests for cjsg of TJPE."""
 

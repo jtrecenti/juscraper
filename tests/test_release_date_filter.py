@@ -55,15 +55,10 @@ _TJGO_TURNSTILE = (
     "Projudi 3.194.1 (12/11/2026) valida o token Cloudflare Turnstile, que o raspador "
     "não envia: toda busca volta vazia, com UserWarning"
 )
-_TJPE_PESQUISA_FORA_DO_AR = (
-    "pesquisa do TJPE responde 'Nenhum documento encontrado' a qualquer termo, também no navegador "
-    "(15/11/2026): cjsg volta vazio, com UserWarning"
-)
 
 # Tribunals where the date filter itself is broken. Remove once fixed.
 KNOWN_FILTRO_FAILURES = {
     "tjgo": _TJGO_TURNSTILE,
-    "tjpe": _TJPE_PESQUISA_FORA_DO_AR,
     "tjap": "Tucujuris UI/backend does not expose date filtering (no date input exists)",
     "tjrj": "ASP.NET backend exposes only year-level filter (ano_inicio/ano_fim); "
             "InputCJSGTJRJ rejects data_julgamento_*/data_publicacao_* via extra=forbid (refs #143, #220)",
@@ -73,7 +68,6 @@ KNOWN_FILTRO_FAILURES = {
 # bubbling up on page 2). Subset of above for clarity.
 KNOWN_PAGINACAO_FAILURES = {
     "tjgo": _TJGO_TURNSTILE,
-    "tjpe": _TJPE_PESQUISA_FORA_DO_AR,
     "tjap": "Tucujuris UI/backend does not expose date filtering; run_paginacao_data_unica "
             "exhausts every date-filter set and re-raises TypeError (same root cause as "
             "KNOWN_FILTRO_FAILURES).",
