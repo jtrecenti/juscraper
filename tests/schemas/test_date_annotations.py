@@ -1,12 +1,11 @@
 """Datas canonicas nas assinaturas publicas aceitam ``datetime.date``.
 
-O pipeline de input (:func:`juscraper.utils.params.apply_input_pipeline_search`)
-converte ``datetime.date``/``datetime.datetime`` para o formato do backend antes
-do pydantic, entao todo metodo publico que declara ``data_julgamento_*`` ou
-``data_publicacao_*`` aceita ``date`` em runtime. A anotacao precisa dizer o
-mesmo (``str | date | None``), senao o mypy do usuario reprova uma chamada que
-funciona. O schema pydantic fica com ``str | None``: guarda a data ja convertida
-(ver :class:`juscraper.schemas.DataJulgamentoMixin`).
+O pipeline de input converte ``datetime.date``/``datetime.datetime`` para o
+formato do backend antes do pydantic, entao todo metodo publico que declara
+``data_julgamento_*`` ou ``data_publicacao_*`` aceita ``date`` em runtime. A
+anotacao precisa dizer o mesmo (``str | date | None``), senao o mypy do usuario
+reprova uma chamada que funciona. O schema fica com ``str | None``; o motivo
+esta em :class:`juscraper.schemas.DataJulgamentoMixin`.
 """
 from __future__ import annotations
 
@@ -17,16 +16,10 @@ from datetime import date
 
 import pytest
 
+from juscraper.utils.params import DATE_CANONICAL
 from tests.schemas.test_schema_coverage import _iter_aggregator_scrapers, _iter_court_scrapers
 
-DATAS_CANONICAS = frozenset(
-    {
-        "data_julgamento_inicio",
-        "data_julgamento_fim",
-        "data_publicacao_inicio",
-        "data_publicacao_fim",
-    }
-)
+DATAS_CANONICAS = frozenset(DATE_CANONICAL)
 
 
 def _casos() -> list[tuple[str, str, str, Callable[..., object]]]:

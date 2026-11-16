@@ -171,9 +171,9 @@ class TJMTScraper(HTTPScraper):
                 ``data_publicacao_fim``, assume o piso
                 ``OPEN_ENDED_DATE_FLOOR`` e emite ``UserWarning``.
             data_publicacao_fim (str | date | None): Fim do intervalo de
-                publicação, nos mesmos formatos, inclusivo: o dia informado entra inteiro. Com só
-                ``data_publicacao_inicio``, assume a data de hoje e emite
-                ``UserWarning``.
+                publicação, nos mesmos formatos, inclusivo: o dia informado
+                entra inteiro. Com só ``data_publicacao_inicio``, assume a
+                data de hoje e emite ``UserWarning``.
             **kwargs: Só os aliases deprecados abaixo. Qualquer outro nome,
                 inclusive ``data_julgamento_inicio``/``data_julgamento_fim``
                 e ``classe``, que a API não filtra, levanta ``TypeError``.

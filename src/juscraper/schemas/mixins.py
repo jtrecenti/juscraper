@@ -90,9 +90,11 @@ class DataJulgamentoMixin(BaseModel):
 
     O campo guarda a data ja convertida para ``BACKEND_DATE_FORMAT``, por isso
     a anotacao e ``str | None``. O metodo publico aceita tambem
-    ``datetime.date``/``datetime.datetime`` (anotado ``str | date | None``):
-    :func:`~juscraper.utils.params.apply_input_pipeline_search` converte antes
-    do pydantic.
+    ``datetime.date``/``datetime.datetime`` (anotado ``str | date | None``), e
+    o pipeline de input do raspador converte antes do pydantic, com
+    :func:`~juscraper.utils.params.coerce_brazilian_date` (via
+    :func:`~juscraper.utils.params.apply_input_pipeline_search` na maioria
+    dos tribunais).
     """
 
     data_julgamento_inicio: str | None = None
