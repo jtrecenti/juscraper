@@ -234,15 +234,33 @@ def test_base_sem_ruff_toml_falha_com_orientacao(repositorio):
     assert "merge ou rebase" in resultado.stderr
 
 
-@pytest.mark.parametrize("codigo", ["BLE001", "FBT003", "ERA001"])
-def test_noqa_obsoleto_falha(repositorio, codigo):
+def gravar_modulo_novo(raiz, linha):
+    (raiz / "src/novo.py").write_text(f'"""Módulo novo."""\n\n{linha}\n', encoding="utf-8")
+
+
+@pytest.mark.parametrize(("linha", "codigo"), [
+    ("VALOR = 1  # noqa: BLE001", "RUF100"),
     # FBT e ERA começam como os códigos do flake8 (F e E) que o RUF100 preserva.
-    (repositorio / "src/novo.py").write_text(
-        f'"""Módulo novo."""\n\nVALOR = 1  # noqa: {codigo}\n', encoding="utf-8",
-    )
+    ("VALOR = 1  # noqa: FBT003", "RUF100"),
+    ("VALOR = 1  # noqa: ERA001", "RUF100"),
+    ('print("problema")  # noqa', "PGH004"),
+])
+def test_noqa_obsoleto_ou_sem_codigo_falha(repositorio, linha, codigo):
+    gravar_modulo_novo(repositorio, linha)
     resultado = executar_gate(repositorio)
     assert resultado.returncode == 1
-    assert "src/novo.py:3: RUF100" in resultado.stderr
+    assert f"src/novo.py:3: {codigo}" in resultado.stderr
+
+
+@pytest.mark.parametrize("linha", [
+    'print("diagnóstico")  # noqa: T201 - saída de diagnóstico',
+    # O flake8 roda no pre-commit; o Ruff não seleciona os códigos dele e não deve tratá-los como obsoletos.
+    'VALOR = f"{1:02d}"  # noqa: E231',
+])
+def test_noqa_com_codigo_usado_ou_do_flake8_passa(repositorio, linha):
+    gravar_modulo_novo(repositorio, linha)
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 0, resultado.stderr
 
 
 def test_noqa_redundante_com_dispensa_do_arquivo_falha_no_ruff(repositorio):
@@ -252,32 +270,6 @@ def test_noqa_redundante_com_dispensa_do_arquivo_falha_no_ruff(repositorio):
     resultado = executar_ruff(repositorio, "--config", "ruff.toml", "src", "tests")
     assert resultado.returncode == 1
     assert "RUF100" in resultado.stdout
-
-
-def test_noqa_sem_codigo_falha(repositorio):
-    (repositorio / "src/novo.py").write_text(
-        '"""Módulo novo."""\n\nprint("problema")  # noqa\n', encoding="utf-8",
-    )
-    resultado = executar_gate(repositorio)
-    assert resultado.returncode == 1
-    assert "src/novo.py:3: PGH004" in resultado.stderr
-
-
-def test_noqa_com_codigo_usado_passa(repositorio):
-    (repositorio / "src/novo.py").write_text(
-        '"""Módulo novo."""\n\nprint("diagnóstico")  # noqa: T201 - saída de diagnóstico\n', encoding="utf-8",
-    )
-    resultado = executar_gate(repositorio)
-    assert resultado.returncode == 0, resultado.stderr
-
-
-def test_noqa_de_codigo_do_flake8_e_preservado(repositorio):
-    # O flake8 roda no pre-commit; o Ruff não seleciona E/W/F e não deve tratá-los como obsoletos.
-    (repositorio / "src/novo.py").write_text(
-        '"""Módulo novo."""\n\nVALOR = f"{1:02d}"  # noqa: E231\n', encoding="utf-8",
-    )
-    resultado = executar_gate(repositorio)
-    assert resultado.returncode == 0, resultado.stderr
 
 
 def test_politica_de_testes_dispensa_anotacao_docstring_e_assert(repositorio):
