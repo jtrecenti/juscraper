@@ -134,7 +134,8 @@ def _parse_processo(painel: Tag) -> dict[str, Any]:
 
     O painel é uma lista só (``<dl>``), com as seções separadas por
     ``div.row-title``; nas duas últimas, um ``<dt>`` com o tipo vale para os
-    ``<dd>`` que vêm até o próximo.
+    ``<dd>`` que vêm até o próximo. Seção que não é uma dessas quatro
+    ("Feitos Relacionados", nos processos em papel) fica de fora.
     """
     linha: dict[str, Any] = dict.fromkeys(COLUNAS_PROCESSOS)
     linha |= {"partes": [], "representantes": []}
@@ -153,7 +154,7 @@ def _parse_processo(painel: Tag) -> dict[str, Any]:
             linha["partes"].append(_parse_parte(rotulo.rstrip(":"), tag))
         elif secao == "Representantes":
             linha["representantes"].append(_parse_representante(rotulo.rstrip(":"), tag))
-        elif rotulo in _ROTULO_DA_COLUNA:
+        elif secao == "Capa do Processo" and rotulo in _ROTULO_DA_COLUNA:
             linha[_ROTULO_DA_COLUNA[rotulo]] = _texto_corrido(tag)
     # Um texto só, como no ``assunto`` do cjsg; o portal numera os assuntos ("1) ... 2) ...").
     linha["assunto"] = " ".join(filter(None, assuntos)) or None
@@ -172,5 +173,6 @@ def processos_parse_manager(paginas: list[str]) -> pd.DataFrame:
         soup = BeautifulSoup(html, "html.parser")
         linhas.extend(_parse_processo(painel) for painel in soup.select("div.panel:has(dl.dl-horizontal)"))
     df = pd.DataFrame(linhas, columns=COLUNAS_PROCESSOS)
-    df["data_autuacao"] = pd.to_datetime(df["data_autuacao"], format=_FORMATO_DA_AUTUACAO)
+    # Como nas datas do cjsg, o valor fora do formato vira ``NaT`` em vez de derrubar a coleta.
+    df["data_autuacao"] = pd.to_datetime(df["data_autuacao"], format=_FORMATO_DA_AUTUACAO, errors="coerce")
     return df

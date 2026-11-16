@@ -7,6 +7,7 @@ A busca é um GET em ``consulta.php``, na aba de processos do portal
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
@@ -154,8 +155,27 @@ def test_sem_pesquisa_nem_filtro_levanta(pesquisa):
         jus.scraper("stm").listar_processos(pesquisa)
 
 
-def test_kwarg_desconhecido_levanta_type_error():
-    assert_unknown_kwarg_raises(jus.scraper("stm").listar_processos, "parametro_bobo", "7000374-06.2020.7.00.0000")
+@pytest.mark.parametrize("kwarg", ["parametro_bobo", "termo", "query", "data_julgamento_inicio", "data_inicio"])
+def test_kwarg_desconhecido_levanta_type_error(kwarg):
+    """Também os aliases e as datas do cjsg, que este método não tem: nenhum some em silêncio."""
+    assert_unknown_kwarg_raises(jus.scraper("stm").listar_processos, kwarg, "7000374-06.2020.7.00.0000")
+
+
+def test_pesquisa_que_nao_e_texto_levanta_validation_error():
+    with pytest.raises(ValidationError, match="pesquisa"):
+        jus.scraper("stm").listar_processos(70003740620207000000)
+
+
+def test_secao_fora_da_capa_nao_vaza_para_as_colunas():
+    """"Feitos Relacionados" vem depois das partes no portal; se viesse antes, não pode virar ``situacao``."""
+    html = load_sample("stm", "processos/processos_fisicos.html")
+    assert html.count('<div class="row-title">Partes</div>') == 3
+    sem_partes = html.replace('<div class="row-title">Partes</div>', '<div class="row-title">Feitos Relacionados</div>')
+
+    df = jus.scraper("stm").listar_processos_parse([sem_partes])
+
+    assert df["situacao"].tolist() == jus.scraper("stm").listar_processos_parse([html])["situacao"].tolist()
+    assert df["partes"].map(len).sum() == 0
 
 
 @responses.activate

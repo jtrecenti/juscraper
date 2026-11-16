@@ -7,13 +7,15 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
+import requests
+from pydantic import ValidationError
 
 from juscraper.core.download import gravar_arquivo
 from juscraper.core.http import HTTPScraper, RequestPolicy
-from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
+from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search, normalize_paginas, raise_on_extra_kwargs
 
 from .download import cjsg_download_manager, conferir_bloqueio, processos_download_manager
-from .inteiro_teor import nome_do_arquivo, pdf_da_resposta
+from .inteiro_teor import InteiroTeorIndisponivelError, nome_do_arquivo, pdf_da_resposta
 from .parse import cjsg_parse_manager, processos_parse_manager
 from .schemas import InputCJSGSTM, InputListarProcessosSTM
 
@@ -285,21 +287,24 @@ class STMScraper(HTTPScraper):
         Returns:
             O HTML de cada página, na ordem pedida.
         """
-        inp = apply_input_pipeline_search(
-            InputListarProcessosSTM,
-            "STMScraper.listar_processos_download()",
-            pesquisa=(pesquisa or "").strip(),
-            paginas=paginas,
-            kwargs=kwargs,
-        )
+        # Sem o pipeline das buscas de jurisprudência: ele consome os aliases
+        # de ``pesquisa`` e de datas, que este método não tem.
+        try:
+            inp = InputListarProcessosSTM(
+                pesquisa="" if pesquisa is None else pesquisa, paginas=normalize_paginas(paginas), **kwargs
+            )
+        except ValidationError as erro:
+            raise_on_extra_kwargs(erro, "STMScraper.listar_processos_download()", schema_cls=InputListarProcessosSTM)
+            raise
+        termo = inp.pesquisa.strip()
         filtros = inp.model_dump(exclude={"pesquisa", "paginas"})
-        if not inp.pesquisa and not any(filtros.values()):
+        if not termo and not any(filtros.values()):
             raise ValueError(
                 "STM: listar_processos precisa de 'pesquisa' (número do processo) ou de ao menos um filtro "
                 f"({', '.join(filtros)})."
             )
         return processos_download_manager(
-            inp.pesquisa, inp.paginas, request_fn=self._request_with_retry, sleep_time=self.sleep_time, **filtros
+            termo, inp.paginas, request_fn=self._request_with_retry, sleep_time=self.sleep_time, **filtros
         )
 
     def listar_processos_parse(self, resultados_brutos: list[str]) -> pd.DataFrame:
@@ -326,8 +331,8 @@ class STMScraper(HTTPScraper):
             diretorio (str | None): Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/inteiro_teor/<nome>.pdf``, em que ``<nome>`` é
-                o ``uuid`` do endereço do eproc ou o nome do arquivo em
-                ``www2``.
+                o ``uuid`` do endereço do eproc ou, em ``www2``, o ano, a
+                classe e o nome do arquivo (``2015_50_10022722``).
 
         Raises:
             ValueError: Endereço fora desses dois formatos (a célula vazia de
@@ -335,8 +340,9 @@ class STMScraper(HTTPScraper):
                 pedido.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
-            InteiroTeorIndisponivelError: O portal respondeu sem PDF; nada é
-                gravado. Fica em ``juscraper.courts.stm.inteiro_teor``.
+            InteiroTeorIndisponivelError: O portal respondeu sem PDF ou com
+                erro HTTP (o 404 de um arquivo que saiu do ar, por exemplo);
+                nada é gravado. Fica em ``juscraper.courts.stm.inteiro_teor``.
 
         Returns:
             Caminho do PDF gravado.
@@ -349,6 +355,9 @@ class STMScraper(HTTPScraper):
         """
         nome = nome_do_arquivo(url_inteiro_teor)
         url = url_inteiro_teor.strip()
-        resposta = self._request_with_retry("GET", url, perfil="inteiro_teor", on_response=conferir_bloqueio)
+        try:
+            resposta = self._request_with_retry("GET", url, perfil="inteiro_teor", on_response=conferir_bloqueio)
+        except requests.HTTPError as erro:
+            raise InteiroTeorIndisponivelError(url, f"o STM respondeu com erro ({erro}); nada foi gravado.") from erro
         destino = Path(diretorio or self.download_path) / "inteiro_teor" / nome
         return str(gravar_arquivo(pdf_da_resposta(resposta, url), destino))
