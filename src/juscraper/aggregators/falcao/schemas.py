@@ -72,7 +72,9 @@ class InputListarDecisoesFalcao(SearchBase):
         somente_ementa: Busca ``texto`` apenas nas ementas. Backend:
             ``pesquisaSomenteNasEmentas``.
         ordenacao: Ordem dos resultados. Um de :data:`ORDENACOES`. Backend:
-            ``ordenacao``. Default ``None`` (relevancia).
+            ``ordenacao``. Default ``None``, que o client resolve: ``menos_recente``
+            na coleta de todas as paginas e com ``checkpoint_dir``; relevancia
+            do backend nos demais casos.
         data_juntada_inicio: Limite inferior de ``dataJuntada`` (ISO
             ``AAAA-MM-DD``). Backend: ``dataInicio``. Opcional.
         data_juntada_fim: Limite superior de ``dataJuntada`` (ISO
