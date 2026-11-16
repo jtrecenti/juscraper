@@ -18,7 +18,7 @@ from tests.stf._collection_helpers import Source, make_rows
 
 @pytest.fixture
 def stf():
-    return jus.scraper("stf", waf_token="secret-test-token", sleep_time=0, max_retries=0)
+    return jus.scraper("stf", waf_token="secret-test-token", sleep_time=0)
 
 
 def manifest(directory):

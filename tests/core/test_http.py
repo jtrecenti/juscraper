@@ -15,6 +15,7 @@ import pytest
 import requests
 import responses
 
+import juscraper as jus
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 from juscraper.core.failures import motivo_falha
 from juscraper.core.http import DEFAULT_POLICY, RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
@@ -182,6 +183,23 @@ def test_request_with_retry_max_retries_param(probe, mocker):
         probe._request_with_retry("GET", URL, max_retries=2)
 
     assert exc.value.attempts == 2
+
+
+@pytest.mark.parametrize("sigla", sorted(jus._SCRAPERS))
+def test_construtor_recusa_argumento_desconhecido(sigla):
+    # Antes, o ``HTTPScraper`` guardava o nome errado em ``self.args``, sem efeito e sem aviso.
+    with pytest.raises(TypeError, match="'sleep_tim'"):
+        jus.scraper(sigla, sleep_tim=0)
+
+
+def test_recusa_lista_os_argumentos_e_aponta_politica_quando_ha_perfis():
+    with pytest.raises(TypeError, match=r"^_Probe\(\) não aceita o\(s\) argumento\(s\) 'max_retries', 'proxy'\.$"):
+        _Probe(max_retries=0, proxy="http://localhost")
+    # ``max_retries`` é campo de perfil: no raspador com perfis, a mensagem diz onde ajustá-lo.
+    with pytest.raises(TypeError, match=r"'max_retries'.*politica="):
+        jus.scraper("stf", max_retries=0)
+    with pytest.raises(TypeError, match=r"'proxy'\.$"):
+        jus.scraper("stf", proxy="http://localhost")
 
 
 def test_init_sets_user_agent_and_session():

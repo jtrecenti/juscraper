@@ -32,7 +32,7 @@ from typing import Any, ClassVar, TypeAlias, TypeVar
 import requests
 
 from juscraper import __version__
-from juscraper.core.base import BaseScraper
+from juscraper.core.base import BaseScraper, recusar_argumentos_desconhecidos
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 
 logger = logging.getLogger("juscraper.core.http")
@@ -281,6 +281,10 @@ class HTTPScraper(BaseScraper):
         politica: Mapping[str, Mapping[str, Any]] | None = None,
         **kwargs: Any,
     ):
+        de_politica = self.perfis_http and _POLICY_FIELDS.intersection(kwargs)
+        recusar_argumentos_desconhecidos(
+            type(self), kwargs, " Tentativas e prazos são ajustados por perfil, com politica=." if de_politica else "",
+        )
         super().__init__(tribunal_name or type(self).__name__)
         self._perfis_http = self._merge_politica(politica)
         self.session = requests.Session()
@@ -291,7 +295,6 @@ class HTTPScraper(BaseScraper):
         self.set_verbose(verbose)
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
-        self.args = kwargs
 
     @classmethod
     def _merge_politica(

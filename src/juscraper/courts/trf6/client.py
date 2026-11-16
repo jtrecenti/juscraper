@@ -19,7 +19,7 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.avisos import avisar
-from ...core.base import BaseScraper
+from ...core.base import BaseScraper, recusar_argumentos_desconhecidos
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     MOTIVO_CAPTCHA_ESGOTADO,
@@ -116,9 +116,7 @@ class TRF6Scraper(BaseScraper):
                 "TRF6Scraper não tem perfis HTTP e não aceita politica=; "
                 "ajuste o prazo das requisições com timeout=."
             )
-        if kwargs:
-            nomes = ", ".join(repr(nome) for nome in kwargs)
-            raise TypeError(f"TRF6Scraper() não aceita o(s) argumento(s) {nomes}.")
+        recusar_argumentos_desconhecidos(type(self), kwargs)
         if not timeout_valido(timeout, aceita_none=False):
             raise ValueError(
                 "timeout deve ser um número positivo e finito de segundos ou o par (conexão, leitura), "
