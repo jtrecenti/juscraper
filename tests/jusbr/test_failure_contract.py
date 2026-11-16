@@ -411,6 +411,20 @@ def test_conexao_que_cai_no_meio_do_corpo_vira_linha_conexao():
     assert list(df["motivo_falha"]) == ["conexao", None]
 
 
+@responses.activate(registry=OrderedRegistry)
+def test_corpo_comprimido_corrompido_vira_linha_resposta_inesperada():
+    """Antes, o ``ContentDecodingError`` escapava da linha de falha e interrompia o lote."""
+    scraper = _scraper()
+    responses.add(responses.GET, LIST_URL, body=requests.exceptions.ContentDecodingError("gzip inválido"))
+    numero = _add_lista_tipica(CNJ_2)
+    _add_detalhes(numero, status=200, body=load_sample("jusbr", "cpopg/typical_single_details.json"))
+
+    with pytest.warns(UserWarning, match="listagem: resposta_inesperada"):
+        df = scraper.cpopg([CNJ_1, CNJ_2])
+
+    assert list(df["motivo_falha"]) == ["resposta_inesperada", None]
+
+
 # ---------------------------------------------------------------------------
 # Exceção fora do vocabulário propaga
 # ---------------------------------------------------------------------------
