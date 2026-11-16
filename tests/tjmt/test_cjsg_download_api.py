@@ -611,7 +611,7 @@ def test_paginas_none_para_no_teto_de_resultados_e_avisa(mocker):
     mocker.patch("time.sleep")
     request = _RequestRecorder([_page([], acordaos=176269)] * 100)
 
-    with pytest.warns(UserWarning, match=r"176269 resultados.*10000.*os 10000 primeiros"):
+    with pytest.warns(UserWarning, match=r"TJMT: a busca tem 1763 páginas, e o portal só entrega as 100 primeiras"):
         pages = cjsg_download(
             "dano moral",
             paginas=None,
@@ -658,7 +658,8 @@ def test_tamanho_pagina_acima_do_teto_falha_antes_da_rede():
     [(10, [1001], 1000), (100, range(100, 102), 100), (3000, range(1, 5), 3)],
 )
 def test_pagina_alem_do_teto_falha_antes_da_rede(tamanho, paginas, ultima):
-    with pytest.raises(ValueError, match=rf"última página alcançável é a {ultima}\b"):
+    mensagem = rf"TJMT: o portal só entrega as {ultima} primeiras páginas .* foi pedida a página {max(paginas)}\b"
+    with pytest.raises(ValueError, match=mensagem):
         cjsg_download(
             "dano moral",
             paginas=paginas,
@@ -687,7 +688,7 @@ def test_ultima_pagina_dentro_do_teto_e_baixada(mocker):
     ("kwargs", "match"),
     [
         ({"tamanho_pagina": MAX_RESULTS + 1}, "10000"),
-        ({"paginas": [1001]}, "10000"),
+        ({"paginas": [1001]}, "1000 primeiras páginas"),
         # Página 0, negativa ou seleção vazia: recusadas pelo ``PaginasMixin``.
         ({"paginas": 0}, "paginas"),
         ({"paginas": -1}, "paginas"),

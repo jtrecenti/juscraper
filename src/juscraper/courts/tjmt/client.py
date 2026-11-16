@@ -234,7 +234,8 @@ class TJMTScraper(HTTPScraper):
         Avisos:
             ``UserWarning``: com ``paginas=None``, quando a consulta tem mais
             de 10.000 resultados; baixa só os que cabem no teto, e a
-            mensagem traz o total e quantos vieram. Também quando só um dos
+            mensagem traz o total de páginas da busca e quantas a API
+            entrega. Também quando só um dos
             lados do intervalo de publicação é informado.
 
         Returns:
