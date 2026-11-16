@@ -2,11 +2,13 @@
 Functions for downloading specific to TJPR
 """
 import re
+from collections.abc import Callable
 
+import pandas as pd
 from bs4 import BeautifulSoup
 from tqdm.auto import tqdm
 
-from juscraper.core.exceptions import HTTPSemanticError
+from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
 
@@ -223,10 +225,15 @@ def cjsg_download(
     data_publicacao_fim=None,
     *,
     request_fn: RequestFn,
+    ler_parcial: Callable[[list[str]], pd.DataFrame],
 ) -> list:
     """
     Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
     Returns a list of HTMLs (one per page).
+
+    Raises:
+        ColetaParcialError: Uma página falhou depois de outras baixadas;
+            ``resultado`` é ``ler_parcial`` das baixadas. Ver :func:`_baixar_paginas`.
     """
     populate_session(request_fn, home_url)
     url = f"{SEARCH_URL}?actionType=pesquisar"
@@ -255,15 +262,49 @@ def cjsg_download(
         # Download all: fetch first page, extract total, then fetch the rest
         first_html = _fetch_page(1)
         n_pags = extract_total_pages(first_html)
-        resultados = [first_html]
-        if n_pags > 1:
-            for pagina_atual in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJPR'):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_fetch_page(pagina_atual))  # noqa: PERF401
-        return resultados
+        return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first_html], ler_parcial)
+    return _baixar_paginas(_fetch_page, list(paginas), [], ler_parcial)
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_atual in tqdm(paginas_iter, desc='Baixando páginas TJPR'):
-        resultados.append(_fetch_page(pagina_atual))
+
+def _baixar_paginas(
+    fetch_page: Callable[[int], str],
+    paginas: list[int],
+    resultados: list[str],
+    ler_parcial: Callable[[list[str]], pd.DataFrame],
+) -> list[str]:
+    """Acrescenta ``paginas`` a ``resultados``, as páginas já baixadas, e os devolve.
+
+    Como no TJMG e no TJTO, a página que falha com outra já baixada encerra a
+    busca e levanta :class:`ColetaParcialError`, com as baixadas lidas por
+    ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
+    original sobe.
+    """
+    if not paginas:
+        return resultados
+    for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
+        try:
+            resultados.append(fetch_page(pagina))
+        except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
+            if not resultados:
+                raise
+            raise _coleta_parcial(resultados, paginas[posicao:], exc, ler_parcial) from exc
     return resultados
+
+
+def _coleta_parcial(
+    resultados: list[str], faltando: list[int], exc: Exception, ler_parcial: Callable[[list[str]], pd.DataFrame]
+) -> ColetaParcialError:
+    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar, lidas por ``ler_parcial``.
+
+    ``paginas=None`` pode deixar milhares de páginas por baixar: a sequência
+    sem saltos sai como intervalo.
+    """
+    contiguas = len(faltando) > 2 and faltando == list(range(faltando[0], faltando[-1] + 1))
+    faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
+    mensagem = (
+        f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
+        f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
+        "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
+        f"custaria uma requisição por linha. Faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
+    )
+    return ColetaParcialError(mensagem, resultado=ler_parcial(resultados), falhas=[(None, None, exc)])
