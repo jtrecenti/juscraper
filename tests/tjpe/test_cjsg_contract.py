@@ -67,10 +67,15 @@ def _add_get_consulta() -> None:
 
 def _add_post_consulta(sample_path: str) -> None:
     """POST on consulta.xhtml — returns escolha page, results page, or zero hits."""
+    _add_post_consulta_html(load_sample("tjpe", sample_path))
+
+
+def _add_post_consulta_html(body: str) -> None:
+    """POST on consulta.xhtml answered with ``body`` (a sample changed by the test)."""
     responses.add(
         responses.POST,
         CONSULTA_URL,
-        body=load_sample("tjpe", sample_path),
+        body=body,
         status=200,
         content_type="text/html; charset=UTF-8",
     )
@@ -236,13 +241,7 @@ def test_cjsg_todos_escolhe_o_tipo_com_documentos(mocker, botao_zerado, botao_es
     """
     mocker.patch("time.sleep")
     _add_get_consulta()
-    responses.add(
-        responses.POST,
-        CONSULTA_URL,
-        body=_escolha_com_tipo_zerado(botao_zerado),
-        status=200,
-        content_type="text/html; charset=UTF-8",
-    )
+    _add_post_consulta_html(_escolha_com_tipo_zerado(botao_zerado))
     _add_post_escolha(
         "cjsg/step_03_resultado.html",
         match=[urlencoded_body_subset_matcher({"resultadoForm": "resultadoForm", botao_escolhido: botao_escolhido})],
@@ -251,3 +250,20 @@ def test_cjsg_todos_escolhe_o_tipo_com_documentos(mocker, botao_zerado, botao_es
     df = jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")
 
     assert len(df) > 0
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_todos_com_linha_de_acordaos_fora_do_formato_levanta_erro(mocker):
+    """A linha de acórdãos que não diz 'Nenhum documento encontrado' não cede a vez às monocráticas.
+
+    Só o texto do link muda: sem o 'documentos encontrados' que o
+    identifica, a linha sai do formato conhecido, mas não está zerada.
+    """
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    escolha = load_sample("tjpe", "cjsg/step_02_escolha.html")
+    assert escolha.count("953 documentos encontrados") == 1
+    _add_post_consulta_html(escolha.replace("953 documentos encontrados", "953 Documentos encontrados"))
+
+    with pytest.raises(ValueError, match="Could not find escolha button for 'Acórdãos'"):
+        jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")

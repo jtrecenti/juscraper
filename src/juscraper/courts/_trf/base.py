@@ -12,7 +12,6 @@ diverges, the classe form-field shape). Mirrors ``courts/_esaj/base.py``:
 # pylint: disable=protected-access
 from __future__ import annotations
 
-import contextlib
 import logging
 import time
 from pathlib import Path
@@ -22,10 +21,12 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 from tqdm import tqdm
 
+from ...core.download import gravar_arquivo
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_RESPOSTA_INESPERADA,
     avisar_falhas,
     avisar_falhas_de_processos,
     consultar_em_lote,
@@ -68,12 +69,26 @@ def _detalhe_em_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
 
 
 class _Consulta(NamedTuple):
-    """Resultado da consulta de um CNJ (peças só com ``download_pecas``)."""
+    """Resultado da consulta de um CNJ (peças só com ``download_pecas``).
+
+    ``encerradas`` conta as peças do fim de ``pecas_falhas`` que entraram lá
+    porque o download das peças parou (bloqueio ou erro de gravação), com o
+    ``motivo`` do processo.
+    """
 
     html: str | None
     motivo: str | None
     pecas: list[str]
     pecas_falhas: list[dict[str, str]]
+    encerradas: int = 0
+
+
+def _encerrar_pecas(
+    html: str, motivo: str, paths: list[str], falhas: list[dict[str, str]], restantes: list[tuple[str, str]]
+) -> _Consulta:
+    """A consulta cujas peças pararam: a peça da vez e as seguintes, que não são pedidas, também faltam."""
+    falhas = [*falhas, *({"id": d, COLUNA_MOTIVO_FALHA: motivo} for _, d in restantes)]
+    return _Consulta(html, motivo, paths, falhas, encerradas=len(restantes))
 
 
 class TRFConsultaScraper(HTTPScraper):
@@ -315,7 +330,7 @@ class TRFConsultaScraper(HTTPScraper):
                 a lista de caminhos salvos e a coluna ``pecas_falhas`` com as peças
                 que não puderam ser baixadas, cada uma como
                 ``{"id": <id da peça>, "motivo_falha": <motivo>}``, no mesmo
-                vocabulário. A falha de uma peça não afeta ``motivo_falha`` do
+                vocabulário. A falha no download de uma peça não afeta ``motivo_falha`` do
                 processo nem as outras peças, e as falhas de peça saem num
                 ``UserWarning`` próprio ao fim. Num bloqueio anti-bot nas peças,
                 a bloqueada e as seguintes, que não são pedidas, entram em
@@ -324,7 +339,8 @@ class TRFConsultaScraper(HTTPScraper):
                 ao gravar uma peça (disco cheio, sem permissão) encerra as peças
                 daquele processo: a peça e as seguintes, que não são pedidas,
                 entram em ``pecas_falhas`` com ``resposta_inesperada``, a linha
-                sai com o detalhe e esse ``motivo_falha``, e o lote segue.
+                sai com o detalhe e esse ``motivo_falha``, que, como o bloqueio,
+                sai só no aviso dos processos, e o lote segue.
 
                 ``motivo_falha`` é ``None`` quando a consulta respondeu, inclusive
                 para processo ausente ou sob sigilo (linha só com ``id_cnj``
@@ -372,13 +388,13 @@ class TRFConsultaScraper(HTTPScraper):
         return df
 
     def _avisar_pecas(self, cnjs: list[str], consultas: list[_Consulta]) -> None:
-        """Um ``UserWarning`` com as peças que falharam fora do bloqueio anti-bot."""
-        # O bloqueio já está no aviso dos processos, pelo motivo_falha da linha.
+        """Um ``UserWarning`` com as peças que falharam sem encerrar as peças do processo."""
+        # O bloqueio e o erro de gravação, que encerram as peças, já estão no
+        # aviso dos processos, pelo motivo_falha da linha.
         falhas = [
             f"processo {cnj}, peça {f['id']}: {f[COLUNA_MOTIVO_FALHA]}"
             for cnj, c in zip(cnjs, consultas, strict=True)
-            for f in c.pecas_falhas
-            if f[COLUNA_MOTIVO_FALHA] != MOTIVO_BLOQUEIO_ANTI_BOT
+            for f in c.pecas_falhas[: len(c.pecas_falhas) - c.encerradas]
         ]
         avisar_falhas(
             falhas,
@@ -396,7 +412,6 @@ class TRFConsultaScraper(HTTPScraper):
         ``resposta_inesperada`` quando parou num erro ao gravar uma peça.
         """
         proc_dir = Path(base_dir) / cnj
-        proc_dir.mkdir(parents=True, exist_ok=True)
         paths: list[str] = []
         falhas: list[dict[str, str]] = []
         documentos = extract_documento_urls(html)
@@ -411,9 +426,7 @@ class TRFConsultaScraper(HTTPScraper):
                     "%s: bloqueio anti-bot na peça %s do %s; as peças param aqui: %s",
                     self.TRIBUNAL_NAME, doc_id, cnj, exc,
                 )
-                # A bloqueada e as seguintes, que não serão pedidas, também faltam.
-                falhas.extend({"id": d, COLUNA_MOTIVO_FALHA: MOTIVO_BLOQUEIO_ANTI_BOT} for _, d in documentos[i:])
-                return _Consulta(html, MOTIVO_BLOQUEIO_ANTI_BOT, paths, falhas)
+                return _encerrar_pecas(html, MOTIVO_BLOQUEIO_ANTI_BOT, paths, falhas, documentos[i:])
             except ImportError:
                 raise
             except Exception as exc:  # noqa: BLE001 — resiliência por peça
@@ -422,19 +435,14 @@ class TRFConsultaScraper(HTTPScraper):
                 continue
             path = proc_dir / f"{doc_id}.html"
             try:
-                path.write_bytes(content)
+                gravar_arquivo(content, path)
             except OSError as exc:
                 # Erro de disco (cheio, sem permissão) tende a se repetir nas
-                # peças seguintes: elas não são pedidas, e a falha vai para a
-                # linha do processo, sem derrubar o lote.
+                # peças seguintes, então elas param; o lote segue.
                 logger.warning(
                     "%s: erro ao gravar a peça %s do %s; as peças do processo param aqui: %s",
                     self.TRIBUNAL_NAME, doc_id, cnj, exc,
                 )
-                with contextlib.suppress(OSError):
-                    path.unlink(missing_ok=True)  # não deixa peça truncada
-                motivo = motivo_falha_ou_inesperada(exc)
-                falhas.extend({"id": d, COLUNA_MOTIVO_FALHA: motivo} for _, d in documentos[i:])
-                return _Consulta(html, motivo, paths, falhas)
+                return _encerrar_pecas(html, MOTIVO_RESPOSTA_INESPERADA, paths, falhas, documentos[i:])
             paths.append(str(path))
         return _Consulta(html, None, paths, falhas)

@@ -112,12 +112,14 @@ def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
     if not celula:
         return False
     linha = celula.find_parent("tr")
-    if not linha:
-        return False
+    return linha is not None and _rotulo_da_linha(linha) == tipo
+
+
+def _rotulo_da_linha(linha: Tag) -> str:
+    """Texto do ``<label>`` da primeira célula da linha da escolha; vazio sem ele."""
     celula_rotulo = linha.find("td")
     rotulo = celula_rotulo.find("label") if celula_rotulo else None
-    texto_rotulo: str = rotulo.get_text(strip=True) if rotulo else ""
-    return texto_rotulo == tipo
+    return rotulo.get_text(strip=True) if rotulo else ""
 
 
 def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
@@ -133,21 +135,17 @@ def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     raise ValueError(f"Could not find escolha button for '{tipo}'")
 
 
-def escolher_tipo_com_documentos(html: str, tipos: tuple[str, ...]) -> str:
-    """Primeiro dos ``tipos`` que tem documentos na página de escolha.
+def tipo_zerado_na_escolha(html: str, tipo: str) -> bool:
+    """Diz se a linha do ``tipo`` na escolha traz ``Nenhum documento encontrado`` no lugar do link.
 
-    O tipo sem documento traz ``Nenhum documento encontrado`` no lugar do
-    link. Com ``tipo_decisao="todos"``, um tipo zerado e o outro com
-    documentos, vale o que tem. Se nenhum tiver, devolve o primeiro, e
-    :func:`extract_escolha_button_id` levanta o erro.
+    A linha fora do formato conhecido não conta como zerada.
     """
-    for tipo in tipos:
-        try:
-            extract_escolha_button_id(html, tipo)
-        except ValueError:
-            continue
-        return tipo
-    return tipos[0]
+    soup = BeautifulSoup(html, "html.parser")
+    for texto in soup.find_all(string=lambda t: any(m in t.lower() for m in _ZERO_MARKERS)):
+        linha = texto.find_parent("tr")
+        if linha is not None and _rotulo_da_linha(linha) == tipo:
+            return True
+    return False
 
 
 def extract_pagination_ids(html: str) -> tuple[str, str]:
@@ -350,13 +348,10 @@ def cjsg_download(
 
     Returns a list of HTML strings, one per page.
     """
-    # Em "todos", o fluxo escolhe os acórdãos; se não houver nenhum, as
-    # decisões monocráticas.
-    tipos = {
-        "acordaos": ("Acórdãos",),
-        "monocraticas": ("Decisões Monocráticas",),
-    }.get(tipo_decisao, ("Acórdãos", "Decisões Monocráticas"))
-    tipo_label = tipos[0]
+    tipo_label = {
+        "acordaos": "Acórdãos",
+        "monocraticas": "Decisões Monocráticas",
+    }.get(tipo_decisao, "Acórdãos")
 
     # Step 1 - GET search page
     search_html, vs = step1_get_session(request_fn)
@@ -386,8 +381,10 @@ def cjsg_download(
 
     # Step 2 may return results directly (single type) or escolha page (multiple types)
     if is_escolha_page(response_html):
-        # Step 3 - choose result type
-        tipo_label = escolher_tipo_com_documentos(response_html, tipos)
+        # Step 3 - choose result type. Em "todos", vale a monocrática quando
+        # a escolha dá os acórdãos como zerados.
+        if tipo_decisao == "todos" and tipo_zerado_na_escolha(response_html, tipo_label):
+            tipo_label = "Decisões Monocráticas"
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
     elif is_results_page(response_html):
