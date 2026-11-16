@@ -28,8 +28,12 @@ def _arquivos(pasta: Path) -> list[Path]:
     ("url", "nome"),
     [
         (URL_EPROC, f"{UUID}.pdf"),
-        (URL_WWW2, "10022722.pdf"),
-        ("https://www2.stm.jus.br/pesquisa/acordao/2010/40/01.0000012-34/01.0000012-34.pdf", "01.0000012-34.pdf"),
+        (URL_WWW2, "2015_50_10022722.pdf"),
+        # O mesmo nome de arquivo em anos e classes diferentes: são acórdãos distintos.
+        ("https://www2.stm.jus.br/pesquisa/acordao/2007/40/01.0508376/01.0508376.pdf", "2007_40_01.0508376.pdf"),
+        ("https://www2.stm.jus.br/pesquisa/acordao/2008/160/01.0508376/01.0508376.pdf", "2008_160_01.0508376.pdf"),
+        # Sem a pasta do documento, como em alguns endereços do cjsg.
+        ("https://www2.stm.jus.br/pesquisa/acordao/2006/160/01.0000012.34.pdf", "2006_160_01.0000012.34.pdf"),
     ],
 )
 @responses.activate
@@ -49,7 +53,7 @@ def test_sem_diretorio_grava_no_download_path(tmp_path):
 
     caminho = jus.scraper("stm", download_path=str(tmp_path)).baixar_inteiro_teor(URL_WWW2)
 
-    assert Path(caminho) == tmp_path / "inteiro_teor" / "10022722.pdf"
+    assert Path(caminho) == tmp_path / "inteiro_teor" / "2015_50_10022722.pdf"
 
 
 @pytest.mark.parametrize(
@@ -61,6 +65,9 @@ def test_sem_diretorio_grava_no_download_path(tmp_path):
         "http://www2.stm.jus.br/pesquisa/acordao/2015/50/10022722/10022722.pdf",
         "https://www2.stm.jus.br/pesquisa/acordao/2015/50/10022722/",
         "https://www2.stm.jus.br/outra/pasta/10022722.pdf",
+        "https://www2.stm.jus.br/pesquisa/acordao/2015/50/../10022722.pdf",
+        "https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=outra&uuid=abc123",
+        "https://eproc2g.stm.jus.br/outro.php?acao=visualizar_acordao&uuid=abc123",
         "https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao",
         "https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=visualizar_acordao&uuid=../x",
         "https://exemplo.com/pesquisa/acordao/2015/50/10022722/10022722.pdf",
@@ -82,6 +89,16 @@ def test_resposta_sem_pdf_levanta_e_nao_grava(tmp_path):
         jus.scraper("stm").baixar_inteiro_teor(URL_EPROC, diretorio=str(tmp_path))
 
     assert erro.value.url == URL_EPROC
+    assert _arquivos(tmp_path) == []
+
+
+@responses.activate
+def test_erro_http_levanta_o_erro_do_inteiro_teor(tmp_path):
+    responses.add(responses.GET, URL_WWW2, status=404)
+
+    with pytest.raises(InteiroTeorIndisponivelError, match="404"):
+        jus.scraper("stm").baixar_inteiro_teor(URL_WWW2, diretorio=str(tmp_path))
+
     assert _arquivos(tmp_path) == []
 
 
