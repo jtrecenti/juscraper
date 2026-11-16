@@ -64,6 +64,10 @@ class TJBAScraper(HTTPScraper):
         paginas : int, list, range, or None
             Pages to download (1-based). int: paginas=3 downloads pages 1-3.
             range: range(1, 4) downloads pages 1-3. None: downloads all.
+            O portal só entrega os 10.000 primeiros resultados de uma busca
+            (1000 páginas de 10): página pedida além desse teto levanta
+            ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
+            maior baixa as páginas até o teto e emite ``UserWarning``.
         numero_recurso : str, optional
             Case/appeal number filter.
         orgaos : list, optional
@@ -194,6 +198,10 @@ class TJBAScraper(HTTPScraper):
             Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
         paginas : int, list, range, or None
             Pages to download (1-based). None = all pages.
+            O portal só entrega os 10.000 primeiros resultados de uma busca
+            (1000 páginas de 10): página pedida além desse teto levanta
+            ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
+            maior baixa as páginas até o teto e emite ``UserWarning``.
         data_publicacao_inicio : str, date or None
             Start date: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
             ``AAAA/MM/DD``, ``date`` ou ``datetime``.

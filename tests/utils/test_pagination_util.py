@@ -10,9 +10,12 @@ import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.utils.pagination import (
+    baixar_paginas_pedidas,
     extract_count_with_cascade,
+    paginas_ate_o_teto,
     paginas_no_intervalo,
     parse_page_number,
+    recusar_paginas_alem_do_teto,
     resolve_total_pages,
 )
 
@@ -326,3 +329,53 @@ def test_paginas_no_intervalo_aceita_range_e_devolve_lista_vazia_sem_validas():
 
 def test_paginas_no_intervalo_sem_paginas_pedidas_devolve_todas():
     assert paginas_no_intervalo(None, 3, tribunal="TJXX") == [1, 2, 3]
+
+
+class TestBaixarPaginasPedidas:
+    """``baixar_paginas_pedidas``: ordem das requisições e do retorno, e espera entre pedidos."""
+
+    @staticmethod
+    def _baixar(paginas, n_pags=5, **kwargs):
+        pedidas: list[int] = []
+
+        def buscar(pagina: int) -> int:
+            pedidas.append(pagina)
+            return pagina
+
+        brutos = baixar_paginas_pedidas(paginas, buscar, lambda _first: n_pags, tribunal="TJXX", **kwargs)
+        return pedidas, brutos
+
+    def test_todas_as_paginas_na_ordem(self):
+        assert self._baixar(None, n_pags=3) == ([1, 2, 3], [1, 2, 3])
+
+    def test_menor_primeiro_e_retorno_na_ordem_pedida(self):
+        assert self._baixar([4, 2, 4, 9]) == ([2, 4], [4, 2])
+
+    def test_espera_antes_de_cada_pedido_depois_do_primeiro(self, mocker):
+        sleep = mocker.patch("time.sleep")
+        self._baixar([3, 1, 2], sleep_time=0.5)
+        assert sleep.call_args_list == [mocker.call(0.5), mocker.call(0.5)]
+
+    def test_sem_sleep_time_nao_espera(self, mocker):
+        sleep = mocker.patch("time.sleep")
+        self._baixar(None)
+        sleep.assert_not_called()
+
+
+@pytest.mark.parametrize("paginas", [[1, 4], range(1, 10**9), [4]])
+def test_recusar_paginas_alem_do_teto_levanta(paginas):
+    with pytest.raises(ValueError, match=r"TJXX: o portal só entrega as 3 primeiras páginas.*página (4|999999999)\."):
+        recusar_paginas_alem_do_teto(paginas, 3, tribunal="TJXX")
+
+
+@pytest.mark.parametrize("paginas", [None, [3, 1], range(1, 4), range(3, 0, -1)])
+def test_recusar_paginas_alem_do_teto_aceita_ate_o_teto(paginas):
+    recusar_paginas_alem_do_teto(paginas, 3, tribunal="TJXX")
+
+
+def test_paginas_ate_o_teto_avisa_so_quando_baixa_todas(recwarn):
+    assert paginas_ate_o_teto([1, 2], 5, 3, tribunal="TJXX") == 3
+    assert paginas_ate_o_teto(None, 2, 3, tribunal="TJXX") == 2
+    assert len(recwarn) == 0
+    with pytest.warns(UserWarning, match=r"TJXX: a busca tem 5 páginas, e o portal só entrega as 3 primeiras"):
+        assert paginas_ate_o_teto(None, 5, 3, tribunal="TJXX") == 3

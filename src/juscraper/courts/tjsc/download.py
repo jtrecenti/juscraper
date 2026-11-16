@@ -1,11 +1,8 @@
 """Downloads raw results from the TJSC jurisprudence search (eproc PHP)."""
 import re
-import time
-
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import baixar_paginas_pedidas, extract_count_with_cascade
 
 # Host novo; o antigo, eproc1g.tjsc.jus.br/eproc, redireciona para cá (#495).
 CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlador.php"
@@ -107,18 +104,5 @@ def cjsg_download_manager(
         resp.encoding = "ISO-8859-1"
         return resp.text
 
-    # A menor página pedida sai primeiro, porque traz o total (toda página o
-    # traz no cabeçalho); as demais, na ordem pedida, uma vez cada, e as além
-    # do total vão para o log.
-    primeira = menor_pagina(paginas)
-    first = _get_page(primeira)
-    resultados = []
-    for pagina in tqdm(
-        paginas_no_intervalo(paginas, _get_total_pages(first), tribunal="TJSC"), desc="Baixando CJSG TJSC",
-    ):
-        if pagina == primeira:
-            resultados.append(first)
-            continue
-        time.sleep(sleep_time)
-        resultados.append(_get_page(pagina))
-    return resultados
+    # Toda página traz o total no cabeçalho, inclusive as da paginação AJAX.
+    return baixar_paginas_pedidas(paginas, _get_page, _get_total_pages, tribunal="TJSC", sleep_time=sleep_time)

@@ -1,15 +1,19 @@
 """
 Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
-import time
 
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import baixar_paginas_pedidas, paginas_ate_o_teto, recusar_paginas_alem_do_teto
 from juscraper.utils.params import to_iso_date
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
+# O portal entrega só os 10.000 primeiros resultados de uma busca. Medido em
+# 16/11/2026: quando ``(pageNumber + 1) * itemsPerPage`` passa de 10.000, a
+# resposta é HTTP 200 com ``data: null`` e ``errors`` (com 10 por página, o
+# ``pageNumber`` 999 responde e o 1000 falha; com 20, o 499 e o 500), embora
+# ``pageCount`` informe o total inteiro (109.200 páginas em "dano moral").
+MAX_RESULTS = 10_000
 
 FILTER_QUERY = """
 query filter(
@@ -159,16 +163,13 @@ def cjsg_download(
             raise ValueError(f"GraphQL errors: {data['errors']}")
         return data
 
-    # A menor página pedida sai primeiro, porque traz o total; as demais, na
-    # ordem pedida, uma vez cada, e as além do total vão para o log.
-    primeira = menor_pagina(paginas)
-    first = _fetch_page(primeira - 1)
-    n_pags = max(1, first.get("data", {}).get("filter", {}).get("pageCount", 1))
-    resultados = []
-    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal="TJBA"), desc="Baixando paginas TJBA"):
-        if pagina == primeira:
-            resultados.append(first)
-            continue
-        time.sleep(1)
-        resultados.append(_fetch_page(pagina - 1))
-    return resultados
+    teto = MAX_RESULTS // items_per_page
+    recusar_paginas_alem_do_teto(paginas, teto, tribunal="TJBA")
+
+    def _n_pags(first: dict) -> int:
+        page_count = ((first.get("data") or {}).get("filter") or {}).get("pageCount") or 1
+        return paginas_ate_o_teto(paginas, page_count, teto, tribunal="TJBA")
+
+    return baixar_paginas_pedidas(
+        paginas, lambda pagina: _fetch_page(pagina - 1), _n_pags, tribunal="TJBA", sleep_time=1,
+    )

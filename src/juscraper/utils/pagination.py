@@ -14,10 +14,17 @@ from __future__ import annotations
 import logging
 import math
 import re
-from collections.abc import Iterable, Sequence
+import time
+from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice
+from typing import TypeVar
 
 from bs4 import BeautifulSoup, Tag
+from tqdm import tqdm
+
+from ..core.avisos import avisar
+
+_Pagina = TypeVar("_Pagina")
 
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
@@ -240,6 +247,74 @@ def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal
     if n_fora:
         _avisar_paginas_fora(primeiras_fora, n_fora, n_pags, tribunal)
     return validas
+
+
+def baixar_paginas_pedidas(
+    paginas: Iterable[int] | None,
+    buscar: Callable[[int], _Pagina],
+    contar_paginas: Callable[[_Pagina], int],
+    *,
+    tribunal: str,
+    sleep_time: float = 0.0,
+) -> list[_Pagina]:
+    """Baixa as ``paginas`` (1-based) de um portal que informa o total em toda página.
+
+    A menor página pedida sai primeiro, e ``contar_paginas`` lê nela o total;
+    as demais saem na ordem pedida, uma vez cada, com ``sleep_time`` antes de
+    cada requisição, e as além do total vão para o log, sem requisição (ver
+    :func:`paginas_no_intervalo`). A primeira falha de ``buscar`` sobe como
+    veio: portal com coleta parcial (TJMG, TJTO) mantém o laço próprio.
+    """
+    primeira = menor_pagina(paginas)
+    first = buscar(primeira)
+    validas = paginas_no_intervalo(paginas, contar_paginas(first), tribunal=tribunal)
+    resultados = []
+    for pagina in tqdm(validas, desc=f"Baixando CJSG {tribunal}"):
+        if pagina == primeira:
+            resultados.append(first)
+            continue
+        if sleep_time:
+            time.sleep(sleep_time)
+        resultados.append(buscar(pagina))
+    return resultados
+
+
+def recusar_paginas_alem_do_teto(paginas: Iterable[int] | None, teto: int, *, tribunal: str) -> None:
+    """Levanta se alguma página pedida passa de ``teto``, a última que o portal entrega.
+
+    Para o portal que limita os resultados de uma busca (10.000 no TJBA e no
+    TJRO) e responde com erro além do limite: a recusa vem antes de qualquer
+    requisição. ``range`` crescente não é percorrido.
+
+    Raises:
+        ValueError: Quando a maior página pedida passa de ``teto``.
+    """
+    if paginas is None:
+        return
+    maior = paginas[-1] if isinstance(paginas, range) and paginas.step > 0 else max(paginas)
+    if maior > teto:
+        raise ValueError(
+            f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
+            f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
+        )
+
+
+def paginas_ate_o_teto(paginas: Iterable[int] | None, n_pags: int, teto: int, *, tribunal: str) -> int:
+    """O total de páginas que o portal entrega: ``n_pags`` limitado a ``teto``.
+
+    O total que o portal informa não desconta o limite de resultados. Com
+    ``paginas=None`` e total acima de ``teto``, emite ``UserWarning``, porque
+    o download para em ``teto``; páginas explícitas já passaram por
+    :func:`recusar_paginas_alem_do_teto`.
+    """
+    if n_pags <= teto:
+        return n_pags
+    if paginas is None:
+        avisar(
+            f"{tribunal}: a busca tem {n_pags} páginas, e o portal só entrega as {teto} primeiras; "
+            "as demais não foram baixadas. Restrinja a busca para alcançá-las."
+        )
+    return teto
 
 
 def _avisar_paginas_fora(primeiras: list[int], n_fora: int, n_pags: int, tribunal: str) -> None:

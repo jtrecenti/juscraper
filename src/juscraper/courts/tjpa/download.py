@@ -6,10 +6,9 @@ import time
 from datetime import date, timedelta
 
 import requests
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import baixar_paginas_pedidas
 
 BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 SITE_URL = "https://jurisprudencia.tjpa.jus.br"
@@ -133,16 +132,8 @@ def cjsg_download_manager(
         time.sleep(1)
         return data
 
-    # A menor página pedida sai primeiro, porque traz o total; as demais, na
-    # ordem pedida, uma vez cada, e as além do total vão para o log. O BFF
-    # responde a uma página além do total com a última, sem erro.
-    primeira = menor_pagina(paginas)
-    first = _get_page(primeira)
-    n_pags = max(1, first.get("data", {}).get("totalPages", 1))
-    resultados = []
-    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal="TJPA"), desc="Baixando páginas TJPA"):
-        if pagina == primeira:
-            resultados.append(first)
-            continue
-        resultados.append(_get_page(pagina))
-    return resultados
+    # O BFF responde a uma página além do total com a última, sem erro; por
+    # isso o total corta as páginas pedidas antes da requisição.
+    return baixar_paginas_pedidas(
+        paginas, _get_page, lambda first: (first.get("data") or {}).get("totalPages") or 1, tribunal="TJPA",
+    )
