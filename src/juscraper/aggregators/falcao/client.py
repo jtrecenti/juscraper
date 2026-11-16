@@ -59,6 +59,9 @@ _MAX_RESULTADOS = 10000
 
 _FORMATO_BACKEND = "%Y-%m-%d"
 
+# Ordem enviada quando ``ordenacao`` não é informada na coleta integral ou com checkpoint.
+_ORDEM_DE_COLETA = "menos_recente"
+
 
 class FalcaoScraper(HTTPScraper):
     """Scraper para a Jurisprudencia Nacional da Justica do Trabalho (CSJT)."""
@@ -118,15 +121,17 @@ class FalcaoScraper(HTTPScraper):
         cota diária do backend, por exemplo) requisitando só as páginas que
         faltam. O DataFrame traz todas as páginas presentes no checkpoint.
 
-        A ordem padrão (``mais_relevante``) varia entre chamadas da mesma
-        busca (medido em 16/11/2026: três versões da mesma página em três
-        minutos), e páginas requisitadas em momentos diferentes podem
-        repetir ou omitir documentos: nessa ordem, a coleta de mais de uma
-        página, ou com ``checkpoint_dir``, emite ``UserWarning``. Para
-        várias páginas ou vários dias, use ``ordenacao="menos_recente"``
-        com ``data_juntada_fim`` fechado no passado, combinação que devolveu
-        a mesma página em três chamadas. ``mais_recente`` não foi medida;
-        nela, cada documento novo desloca as páginas seguintes.
+        A ordem de relevância do backend (``mais_relevante``) varia entre
+        chamadas da mesma busca (medido em 16/11/2026: três versões da mesma
+        página em três minutos), e páginas requisitadas em momentos
+        diferentes podem repetir ou omitir documentos. Por isso, sem
+        ``ordenacao``, a coleta de todas as páginas (``paginas=None``) e a
+        coleta com ``checkpoint_dir`` usam ``menos_recente``, em que
+        documento novo entra no fim e não desloca as páginas já lidas. Com
+        ``paginas`` explícitas e sem ``checkpoint_dir``, vale a relevância:
+        nela, pedida ou não, a coleta de mais de uma página emite
+        ``UserWarning``, e a coleta com ``checkpoint_dir`` também. Em
+        ``mais_recente``, cada documento novo desloca as páginas seguintes.
 
         Limites do checkpoint:
 
@@ -179,8 +184,11 @@ class FalcaoScraper(HTTPScraper):
                 * ``prioridade`` (str | list[str]): Backend: ``prioridade``.
                 * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
                 * ``somente_ementa`` (bool): Busca ``texto`` so nas ementas.
-                * ``ordenacao`` (str): ``mais_relevante`` (default do backend),
-                  ``mais_recente`` ou ``menos_recente``.
+                * ``ordenacao`` (str): ``mais_relevante``, ``mais_recente``
+                  ou ``menos_recente``. Sem ela, vale ``menos_recente`` na
+                  coleta de todas as páginas (``paginas=None``) e com
+                  ``checkpoint_dir``, e a relevância do backend nos demais
+                  casos.
                 * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
@@ -304,8 +312,8 @@ class FalcaoScraper(HTTPScraper):
             ValueError: Quando ``diretorio`` e ``checkpoint_dir`` vêm juntos.
 
         Avisos:
-            ``UserWarning``: na ordem padrão (``mais_relevante``), que
-            varia entre chamadas, ao coletar mais de uma página ou com
+            ``UserWarning``: na ordem de relevância (``mais_relevante``),
+            que varia entre chamadas, ao coletar mais de uma página ou com
             ``checkpoint_dir``; veja :meth:`listar_decisoes`.
 
         See also:
@@ -493,6 +501,10 @@ class FalcaoScraper(HTTPScraper):
                 f"'data_juntada_fim' ({fim}) é anterior a {DATA_INICIO_PISO}, "
                 "o início que a busca envia quando só o limite superior é informado."
             )
+        # A ordem de relevância varia entre chamadas e embaralha páginas requisitadas em
+        # momentos diferentes: a coleta integral e a retomável usam a ordem por data.
+        if inp.ordenacao is None and (inp.paginas is None or inp.checkpoint_dir is not None):
+            inp = inp.model_copy(update={"ordenacao": _ORDEM_DE_COLETA})
         return inp
 
     def _avisar_ordem_entre_paginas(
@@ -508,10 +520,10 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa, na ordem padrão, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
+        """Avisa, na ordem de relevância, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
-                "A ordem padrão do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
+                "A ordem de relevância do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
                 "páginas requisitadas em momentos diferentes podem repetir ou omitir "
                 "documentos. Para coleta de várias páginas, use ordenacao='menos_recente' com "
                 "data_juntada_fim fechado no passado, ou confira duplicatas no resultado.",

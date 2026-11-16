@@ -13,12 +13,9 @@ import responses
 
 import juscraper as jus
 from juscraper.aggregators.falcao.download import SEARCH_URL
-from tests.falcao.test_falcao_contract import AVISO_DE_ORDEM, _paginas_pedidas, _register, _sample, ordem_padrao_avisa
+from tests.falcao.test_falcao_contract import AVISO_DE_ORDEM, _paginas_pedidas, _register, _sample
 
 _POR_PAGINA = len(_sample("acordaos")["documentos"])
-
-# A maioria dos contratos usa a ordem padrão, que avisa; o aviso tem contratos próprios.
-pytestmark = ordem_padrao_avisa
 
 
 @pytest.fixture
@@ -117,7 +114,7 @@ def test_checkpoint_ocupado_nao_e_sobrescrito_por_coleta_nova(falcao, tmp_path):
     {"pesquisa": "horas extras"},
     {"tribunais": "TST"},
     {"tamanho_pagina": 5},
-    {"ordenacao": "menos_recente"},
+    {"ordenacao": "mais_recente"},
 ])
 def test_retomada_com_busca_diferente_falha_antes_de_requisitar(falcao, tmp_path, mudanca):
     checkpoint = tmp_path / "coleta"
@@ -259,43 +256,50 @@ def test_pagina_interrompida_na_gravacao_e_requisitada_de_novo(falcao, tmp_path)
 
 
 @responses.activate
-@pytest.mark.parametrize("ordem", [{}, {"ordenacao": "mais_relevante"}])
+@pytest.mark.parametrize("paginas", [None, [1]])
 @pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
-def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo, ordem):
-    """Medido ao vivo: a mesma página veio em três versões em três minutos."""
-    _register("acordaos", pagina=1, **ordem)
+def test_checkpoint_sem_ordenacao_coleta_por_data_e_nao_avisa(falcao, tmp_path, metodo, paginas):
+    """As páginas do checkpoint se somam entre sessões, mesmo com ``paginas`` explícitas."""
+    _register("acordaos", pagina=1, ordenacao="menos_recente")
 
-    with pytest.warns(UserWarning, match=f"{AVISO_DE_ORDEM}.*menos_recente"):
-        getattr(falcao, metodo)("dano moral", checkpoint_dir=tmp_path / "coleta", **ordem)
+    # filterwarnings=error: aviso viraria falha
+    getattr(falcao, metodo)("dano moral", paginas=paginas, checkpoint_dir=tmp_path / "coleta")
 
     assert _paginas_pedidas() == [1]
 
 
 @responses.activate
-def test_checkpoint_de_varias_paginas_na_ordem_padrao_avisa_uma_vez(falcao, tmp_path):
-    for pagina in (1, 2):
-        _register("acordaos", total=20, pagina=pagina)
+def test_retomada_sem_ordenacao_e_a_mesma_busca_de_menos_recente(falcao, tmp_path):
+    checkpoint = tmp_path / "coleta"
+    _interromper_na_pagina_3(falcao, checkpoint)
+    for pagina in (3, 4):
+        _register("acordaos", total=40, pagina=pagina, ordenacao="menos_recente")
 
-    with pytest.warns(UserWarning, match=AVISO_DE_ORDEM) as avisos:
-        falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path / "coleta")
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, ordenacao="menos_recente")
 
-    assert len(avisos) == 1
+    assert _paginas_pedidas() == [3, 4]
 
 
 @responses.activate
-@pytest.mark.parametrize("coleta", [
-    {"checkpoint_dir": "coleta", "ordenacao": "menos_recente"},
-    {"checkpoint_dir": "coleta", "ordenacao": "mais_recente"},
-    {"diretorio": "downloads"},
-])
-def test_ordem_por_data_ou_uma_pagina_sem_checkpoint_nao_avisam(falcao, tmp_path, coleta):
-    coleta = {chave: str(tmp_path / valor) if "dir" in chave else valor for chave, valor in coleta.items()}
-    _register("acordaos", pagina=1)
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
+def test_checkpoint_em_mais_relevante_avisa_uma_vez_que_ela_varia(falcao, tmp_path, metodo):
+    """Medido ao vivo: a mesma página veio em três versões em três minutos."""
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina, ordenacao="mais_relevante")
 
-    with warnings.catch_warnings():
-        # O ``pytestmark`` do módulo ignora o aviso de ordem; aqui ele tem de reprovar.
-        warnings.simplefilter("error")
-        falcao.listar_decisoes_download("dano moral", **coleta)
+    with pytest.warns(UserWarning, match=f"{AVISO_DE_ORDEM}.*menos_recente") as avisos:
+        getattr(falcao, metodo)("dano moral", checkpoint_dir=tmp_path / "coleta", ordenacao="mais_relevante")
+
+    assert len(avisos) == 1
+    assert _paginas_pedidas() == [1, 2]
+
+
+@responses.activate
+def test_checkpoint_em_mais_recente_nao_avisa(falcao, tmp_path):
+    _register("acordaos", pagina=1, ordenacao="mais_recente")
+
+    # filterwarnings=error: aviso viraria falha
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path / "coleta", ordenacao="mais_recente")
 
 
 @responses.activate

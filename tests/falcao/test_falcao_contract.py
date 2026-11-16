@@ -28,9 +28,9 @@ from juscraper.aggregators.falcao.download import SEARCH_URL
 from juscraper.core.exceptions import BotChallengeBlockedError
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
-AVISO_DE_ORDEM = "A ordem padrão do Falcao"
+AVISO_DE_ORDEM = "A ordem de relevância do Falcao"
 
-# Para os contratos que coletam mais de uma página na ordem padrão, que avisa; o aviso tem contratos próprios.
+# Para os contratos que pedem mais de uma página explícita sem ``ordenacao``, o que avisa; o aviso tem contratos próprios.
 ordem_padrao_avisa = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
 
 
@@ -280,7 +280,6 @@ def test_listar_decisoes_todos_os_filtros_viram_querystring(falcao):
     assert len(responses.calls) == 1
 
 
-@ordem_padrao_avisa
 @responses.activate
 def test_listar_decisoes_pagina_varias_paginas(falcao, tmp_path):
     # 25 resultados em paginas de 10: tres paginas, a ultima parcial.
@@ -294,9 +293,35 @@ def test_listar_decisoes_pagina_varias_paginas(falcao, tmp_path):
 
 
 @responses.activate
-@pytest.mark.parametrize("ordem", [{}, {"ordenacao": "mais_relevante"}])
 @pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
-def test_mais_de_uma_pagina_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo, ordem):
+def test_coleta_integral_sem_ordenacao_vai_por_data(falcao, tmp_path, metodo):
+    """A ordem de relevância varia entre chamadas; quem pede todas as páginas recebe ordem estável."""
+    falcao.download_path = str(tmp_path)
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina, ordenacao="menos_recente")
+
+    getattr(falcao, metodo)("dano moral")  # filterwarnings=error: aviso viraria falha
+
+    assert _paginas_pedidas() == [1, 2]
+
+
+@responses.activate
+def test_paginas_explicitas_sem_ordenacao_seguem_a_relevancia_do_backend(falcao):
+    _register("acordaos", total=20)
+
+    falcao.listar_decisoes("dano moral", paginas=1)
+
+    assert "ordenacao" not in responses.calls[0].request.params
+
+
+@responses.activate
+@pytest.mark.parametrize("coleta", [
+    {"paginas": 2},
+    {"ordenacao": "mais_relevante"},
+    {"paginas": 2, "ordenacao": "mais_relevante"},
+])
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
+def test_mais_de_uma_pagina_por_relevancia_avisa_que_ela_varia(falcao, tmp_path, metodo, coleta):
     """Medido ao vivo: a mesma página veio em três versões em três minutos.
 
     As páginas de uma coleta saem de chamadas diferentes e podem repetir ou
@@ -304,13 +329,14 @@ def test_mais_de_uma_pagina_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path
     """
     falcao.download_path = str(tmp_path)
     for pagina in (1, 2):
-        _register("acordaos", total=20, pagina=pagina, **ordem)
+        _register("acordaos", total=20, pagina=pagina)
 
     with pytest.warns(UserWarning, match=f"{AVISO_DE_ORDEM}.*menos_recente") as avisos:
-        getattr(falcao, metodo)("dano moral", **ordem)
+        getattr(falcao, metodo)("dano moral", **coleta)
 
     assert len(avisos) == 1
     assert _paginas_pedidas() == [1, 2]
+    assert all(c.request.params.get("ordenacao") == coleta.get("ordenacao") for c in responses.calls)
 
 
 @responses.activate
@@ -404,7 +430,6 @@ def test_listar_decisoes_paginas_coagidas_pelo_schema(falcao, paginas):
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 
-@ordem_padrao_avisa
 @responses.activate
 def test_listar_decisoes_avisa_quando_atinge_o_teto(falcao, monkeypatch):
     # Teto reduzido para 20 para o teste nao precisar de mil paginas.
