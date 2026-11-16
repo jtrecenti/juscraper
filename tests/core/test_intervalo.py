@@ -1,4 +1,7 @@
 """Intervalo mínimo entre pedidos, comum ao eSAJ e ao TSE."""
+import threading
+import time
+
 import pytest
 
 from juscraper.core.intervalo import IntervaloEntrePedidos
@@ -85,3 +88,25 @@ def test_cada_pedido_usa_o_proprio_intervalo(mocker, espera):
         pass
 
     espera.assert_called_once_with(1.0)
+
+
+def test_threads_fazem_um_pedido_por_vez():
+    intervalo = IntervaloEntrePedidos()
+    dentro = 0
+    maximo = 0
+
+    def pedido() -> None:
+        nonlocal dentro, maximo
+        with intervalo.pedido(0):
+            dentro += 1
+            maximo = max(maximo, dentro)
+            time.sleep(0.01)
+            dentro -= 1
+
+    threads = [threading.Thread(target=pedido) for _ in range(5)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert maximo == 1

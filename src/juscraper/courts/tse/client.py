@@ -11,6 +11,7 @@ from typing import Any, ClassVar, NoReturn
 import pandas as pd
 
 from juscraper.core.download import gravar_arquivo
+from juscraper.core.failures import MOTIVO_LIMITE_DE_REQUISICOES
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.intervalo import IntervaloEntrePedidos
 from juscraper.core.lote import DownloadEmLote, baixar_em_lote
@@ -18,6 +19,7 @@ from juscraper.core.lote import DownloadEmLote, baixar_em_lote
 from .download import (
     CATALOGO_BODY,
     INTERVALO_INTEIRO_TEOR,
+    CodigoInvalidoError,
     InteiroTeorIndisponivelError,
     catalogo_url,
     inteiro_teor_url,
@@ -33,14 +35,19 @@ COLUNA_CODIGO_DECISAO = "codigo_decisao"
 COLUNA_CAMINHO_INTEIRO_TEOR = "caminho_inteiro_teor"
 """Coluna do caminho do PDF em :meth:`TSEScraper.baixar_inteiros_teores`."""
 
+# Recusas por excesso de requisições, uma depois da outra, que encerram o
+# lote: insistir num serviço que está recusando só prolonga a recusa.
+RECUSAS_SEGUIDAS = 2
+
 _LOTE_INTEIRO_TEOR = DownloadEmLote(
     origem="codigos_decisao",
     colunas=(COLUNA_CODIGO_DECISAO,),
-    erros_com_motivo=(InteiroTeorIndisponivelError,),
+    erros_com_motivo=(InteiroTeorIndisponivelError, CodigoInvalidoError),
     coluna_caminho=COLUNA_CAMINHO_INTEIRO_TEOR,
     descricao="download(s) de inteiro teor",
     logger=logger,
     rotulo=lambda linha: str(linha.codigo_decisao),
+    encerrar=lambda motivos: motivos[-RECUSAS_SEGUIDAS:] == [MOTIVO_LIMITE_DE_REQUISICOES] * RECUSAS_SEGUIDAS,
 )
 
 
@@ -182,13 +189,13 @@ class TSEScraper(HTTPScraper):
                 ``<diretorio>/inteiro_teor/<codigo_decisao>.pdf``.
 
         Raises:
-            ValueError: Código que não é inteiro nem texto só de dígitos,
-                antes de qualquer pedido.
+            CodigoInvalidoError: Código que não é inteiro nem texto só de
+                dígitos, antes de qualquer pedido. Herda de ``ValueError``.
             LimiteDeRequisicoesError: O serviço recusou o pedido por excesso
                 de requisições; nada é gravado. Herda de
                 ``InteiroTeorIndisponivelError``.
             InteiroTeorIndisponivelError: O serviço respondeu sem PDF, como
-                faz com código que não existe; nada é gravado. As duas
+                faz com código que não existe; nada é gravado. As três
                 exceções ficam em ``juscraper.courts.tse.download``.
 
         Returns:
@@ -212,28 +219,30 @@ class TSEScraper(HTTPScraper):
 
         Chama :meth:`baixar_inteiro_teor` para cada código, na ordem da
         entrada, com ``sleep_time`` entre os pedidos: são 10 s por decisão no
-        default. A falha de uma decisão não interrompe o lote.
+        default. A falha de uma decisão não interrompe o lote; duas recusas
+        seguidas por excesso de requisições, sim, e as linhas seguintes saem
+        ``limite_de_requisicoes`` sem pedido.
 
         Args:
             codigos_decisao (Iterable[int | str]): Códigos das decisões, como
-                em :meth:`baixar_inteiro_teor`. Código repetido é baixado de
-                novo.
+                em :meth:`baixar_inteiro_teor`; uma lista ou a coluna de um
+                DataFrame. Código repetido é baixado de novo.
             diretorio (str | None): Pasta de destino, como em
                 :meth:`baixar_inteiro_teor`.
 
         Raises:
             TypeError: ``codigos_decisao`` é um código só (texto ou inteiro),
                 e não uma coleção deles.
-            ValueError: Algum código não é inteiro nem texto só de dígitos;
-                todos são conferidos antes do primeiro pedido.
 
         Returns:
-            Colunas ``codigo_decisao`` (o código em texto),
+            Colunas ``codigo_decisao`` (como veio na entrada),
                 ``caminho_inteiro_teor`` (``None`` na falha) e
                 ``motivo_falha``: ``None`` no sucesso, ``nao_pdf`` (resposta
                 sem PDF, como a de código que não existe),
                 ``limite_de_requisicoes`` (o serviço recusou o pedido; basta
-                pedir de novo as linhas que falharam) ou um motivo de rede de
+                pedir de novo as linhas que falharam), ``entrada_invalida``
+                (código que não é inteiro nem texto só de dígitos, como a
+                célula vazia; nada é pedido) ou um motivo de rede de
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`. As falhas
                 saem também num único ``UserWarning`` ao fim.
 
@@ -242,13 +251,12 @@ class TSEScraper(HTTPScraper):
             >>> tse = jus.scraper("tse")
             >>> baixados = tse.baixar_inteiros_teores([2972172, 3522031])
         """
-        if isinstance(codigos_decisao, (str, bytes, numbers.Integral)):
+        if isinstance(codigos_decisao, (str, bytes, numbers.Real)):
             raise TypeError(
                 "codigos_decisao deve ser uma coleção de códigos; para um código só, use baixar_inteiro_teor()."
             )
-        codigos = [normalizar_codigo_decisao(codigo) for codigo in codigos_decisao]
         return baixar_em_lote(
-            pd.DataFrame({COLUNA_CODIGO_DECISAO: pd.Series(codigos, dtype=object)}),
+            pd.DataFrame({COLUNA_CODIGO_DECISAO: pd.Series(list(codigos_decisao), dtype=object)}),
             lambda linha: self.baixar_inteiro_teor(linha.codigo_decisao, diretorio),
             _LOTE_INTEIRO_TEOR,
             "TSEScraper.baixar_inteiros_teores",

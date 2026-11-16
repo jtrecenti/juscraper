@@ -1,6 +1,7 @@
 """Intervalo mínimo entre pedidos a um mesmo serviço."""
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -12,12 +13,14 @@ class IntervaloEntrePedidos:
     Quem compartilha o objeto compartilha a espera: um por instância de
     raspador separa só os pedidos dela (eSAJ); um na classe separa os de todas
     as instâncias do processo, para o serviço que limita por cliente (TSE).
-    Sem trava: não coordena threads.
+    Uma trava cobre a espera e o pedido: threads que compartilham o objeto
+    fazem um pedido por vez.
     """
 
     def __init__(self) -> None:
         """Começa sem pedido anterior: o primeiro não espera."""
         self._ultimo: float | None = None
+        self._trava = threading.Lock()
 
     @contextmanager
     def pedido(self, intervalo: float) -> Iterator[None]:
@@ -27,11 +30,12 @@ class IntervaloEntrePedidos:
         outro abate dela, o tempo de resposta não. O pedido que falha também
         conta. ``intervalo`` zero não espera.
         """
-        if self._ultimo is not None and intervalo:
-            espera = intervalo - (time.monotonic() - self._ultimo)
-            if espera > 0:
-                time.sleep(espera)
-        try:
-            yield
-        finally:
-            self._ultimo = time.monotonic()
+        with self._trava:
+            if self._ultimo is not None and intervalo:
+                espera = intervalo - (time.monotonic() - self._ultimo)
+                if espera > 0:
+                    time.sleep(espera)
+            try:
+                yield
+            finally:
+                self._ultimo = time.monotonic()

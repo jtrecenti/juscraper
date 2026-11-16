@@ -598,8 +598,8 @@ partial Elasticsearch response.
 | `limite_de_requisicoes` | The service refused the request for too many requests, in a response that is not a retryable status (the TSE full-text service answers HTTP 200 with a text). Wait and ask again for the failed rows. |
 
 An anti-bot block holds for the whole session. In the PJe `cpopg`/`cposg`
-(TRF1, TRF3, TRF5, TRF6 and TJPE), in the eSAJ `baixar_acordaos` and
-`baixar_sentencas` and in the TSE `baixar_inteiros_teores`, the first `bloqueio_anti_bot` ends the batch: the
+(TRF1, TRF3, TRF5, TRF6 and TJPE) and in the eSAJ `baixar_acordaos` and
+`baixar_sentencas`, the first `bloqueio_anti_bot` ends the batch: the
 following rows get the same reason without a request, and the rows already
 read stay in the result. The JusBR and PDPJ batch methods go on with the next
 item. Whenever a row has `bloqueio_anti_bot`, the warning comes as

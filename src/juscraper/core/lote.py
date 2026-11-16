@@ -7,7 +7,9 @@ Uma linha de entrada vira uma linha de saída, com o caminho do arquivo ou o
 motivo da falha. O bloqueio anti-bot vale para a sessão inteira: a primeira
 linha que sai :data:`~juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`
 encerra o lote, e as seguintes saem com o mesmo motivo, sem pedido, por
-:func:`~juscraper.core.failures.consultar_em_lote`.
+:func:`~juscraper.core.failures.consultar_em_lote`. Só o raspador que detecta
+o bloqueio chega a esse motivo (o eSAJ; o TSE não). ``DownloadEmLote.encerrar``
+acrescenta outra condição de parada.
 """
 
 from __future__ import annotations
@@ -34,7 +36,7 @@ class DownloadEmLote:
     """O que muda entre os downloads em lote.
 
     Attributes:
-        origem: Método que produz a tabela (``"cjsg"``, ``"cjpg"``), para a
+        origem: De onde vem a tabela (``"cjsg"``, ``"cjpg"``), para a
             mensagem da coluna que falta.
         colunas: Colunas que o download de uma linha lê.
         erros_com_motivo: Exceções do download com o atributo de classe
@@ -43,6 +45,9 @@ class DownloadEmLote:
         descricao: O que falhou, no plural, para o aviso agregado.
         logger: Logger do módulo do download, que registra a falha de cada linha.
         rotulo: Identifica a linha (de ``itertuples``) no log e no aviso agregado.
+        encerrar: Recebe os motivos das linhas já processadas (``None`` no
+            sucesso) e diz se o lote acaba; as linhas seguintes saem com o
+            motivo da última, sem pedido.
     """
 
     origem: str
@@ -52,6 +57,7 @@ class DownloadEmLote:
     descricao: str
     logger: logging.Logger
     rotulo: Callable[[Any], str]
+    encerrar: Callable[[list[str | None]], bool] | None = None
 
 
 class _Download(NamedTuple):
@@ -99,7 +105,13 @@ def baixar_em_lote(
         return _Download(None, motivo)
 
     linhas = list(tabela.itertuples(index=False))
-    downloads = consultar_em_lote(linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0)
+
+    def encerrar(feitos: list[_Download]) -> bool:
+        return lote.encerrar is not None and lote.encerrar([d.motivo for d in feitos])
+
+    downloads = consultar_em_lote(
+        linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0, encerrar=encerrar
+    )
     falhas = [f"{lote.rotulo(linha)}: {d.motivo}" for linha, d in zip(linhas, downloads, strict=True) if d.motivo]
     avisar_falhas(falhas, metodo, lote.descricao)
     return tabela.assign(

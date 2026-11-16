@@ -15,12 +15,12 @@ pela mesma rota. Sondas de 16/11/2026.
 from __future__ import annotations
 
 import numbers
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypeGuard
 
 import requests
 
 from juscraper.core.exceptions import _RecriaSemInit
-from juscraper.core.failures import MOTIVO_LIMITE_DE_REQUISICOES, MOTIVO_NAO_PDF
+from juscraper.core.failures import MOTIVO_ENTRADA_INVALIDA, MOTIVO_LIMITE_DE_REQUISICOES, MOTIVO_NAO_PDF
 
 PESQUISA_API = "https://sjur-pesquisa-api.tse.jus.br"
 PESQUISA_ROTA = "sjur-pesquisa-backend/rest/public/pesquisa"
@@ -77,6 +77,16 @@ class LimiteDeRequisicoesError(InteiroTeorIndisponivelError):
     motivo = MOTIVO_LIMITE_DE_REQUISICOES
 
 
+class CodigoInvalidoError(ValueError):
+    """``codigo_decisao`` não é inteiro nem texto só de dígitos; nada é pedido.
+
+    Herda de ``ValueError`` porque é erro de argumento em ``baixar_inteiro_teor``;
+    ``baixar_inteiros_teores`` o converte em linha de falha.
+    """
+
+    motivo: ClassVar[str] = MOTIVO_ENTRADA_INVALIDA
+
+
 def normalizar_tribunal(tribunal: object) -> str:
     """Devolve ``tribunal`` em minúsculas; recusa o que não está em :data:`TRIBUNAIS`.
 
@@ -102,19 +112,30 @@ def inteiro_teor_url(codigo_decisao: str) -> str:
 def normalizar_codigo_decisao(codigo_decisao: object) -> str:
     """Devolve o código como texto de dígitos; recusa o resto antes de qualquer pedido.
 
+    O ``float`` inteiro (``2972172.0``) é aceito: é o que a coluna de códigos
+    vira ao voltar de CSV ou parquet com célula vazia.
+
     Raises:
-        ValueError: Se ``codigo_decisao`` não for inteiro nem texto só de dígitos.
+        CodigoInvalidoError: Se ``codigo_decisao`` não for inteiro nem texto só de dígitos.
     """
     texto = None
     if isinstance(codigo_decisao, str):
         texto = codigo_decisao.strip()
-    # ``numbers.Integral`` aceita também os inteiros do numpy, de código lido de um DataFrame.
-    elif not isinstance(codigo_decisao, bool) and isinstance(codigo_decisao, numbers.Integral):
+    elif _e_inteiro(codigo_decisao):
         texto = str(int(codigo_decisao))
     # ``isascii`` barra os dígitos de outros alfabetos; o sinal de um negativo não é dígito.
     if texto and texto.isascii() and texto.isdigit():
         return texto
-    raise ValueError(f"codigo_decisao deve ser um inteiro ou um texto só de dígitos, recebido {codigo_decisao!r}.")
+    raise CodigoInvalidoError(
+        f"codigo_decisao deve ser um inteiro ou um texto só de dígitos, recebido {codigo_decisao!r}."
+    )
+
+
+def _e_inteiro(valor: object) -> TypeGuard[numbers.Integral | float]:
+    """Inteiro (também os do numpy, de código lido de um DataFrame) ou ``float`` de valor inteiro."""
+    if isinstance(valor, bool):
+        return False
+    return isinstance(valor, numbers.Integral) or (isinstance(valor, float) and valor.is_integer())
 
 
 def extrair_pdf(corpo: bytes) -> bytes | None:

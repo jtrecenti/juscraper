@@ -78,8 +78,10 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="[tse] %(message)s")
     # A sessão do raspador, para capturar com os cabeçalhos que ele manda.
     session = jus.scraper("tse").session
+    if sys.argv[1:] not in ([], ["catalogos"]):
+        raise SystemExit("uso: python -m tests.fixtures.capture.tse [catalogos]")
     capturar_catalogos(session)
-    if sys.argv[1:] != ["catalogos"]:
+    if not sys.argv[1:]:
         capturar_inteiro_teor(session)
 
 

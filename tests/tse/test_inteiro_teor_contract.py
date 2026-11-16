@@ -57,10 +57,11 @@ def test_envelope_multipart_e_desembrulhado(tmp_path):
 
 
 @responses.activate
-def test_codigo_inteiro_do_numpy_e_aceito(tmp_path):
+@pytest.mark.parametrize("codigo", [np.int64(2972172), 2972172.0, np.float64(2972172)])
+def test_codigo_inteiro_do_numpy_e_float_inteiro_sao_aceitos(codigo, tmp_path):
     _registrar("2972172", PDF_PURO)
 
-    caminho = jus.scraper("tse").baixar_inteiro_teor(np.int64(2972172), diretorio=str(tmp_path))
+    caminho = jus.scraper("tse").baixar_inteiro_teor(codigo, diretorio=str(tmp_path))
 
     assert Path(caminho).name == "2972172.pdf"
 
@@ -121,7 +122,9 @@ def test_envelope_cortado_nao_e_gravado(tmp_path):
 
 
 @responses.activate
-@pytest.mark.parametrize("codigo", ["", "abc", "12a", "1/2", "../1", -1, 1.5, None, True, "１２"])
+@pytest.mark.parametrize(
+    "codigo", ["", "abc", "12a", "1/2", "../1", -1, 1.5, float("nan"), float("inf"), None, True, "１２"]
+)
 def test_codigo_invalido_e_recusado_antes_do_pedido(codigo, tmp_path):
     with pytest.raises(ValueError, match="codigo_decisao"):
         jus.scraper("tse").baixar_inteiro_teor(codigo, diretorio=str(tmp_path))
@@ -195,7 +198,7 @@ def test_lote_devolve_uma_linha_por_codigo_com_o_motivo_da_falha(tmp_path):
 
     assert len(avisos) == 1
     assert list(df.columns) == ["codigo_decisao", "caminho_inteiro_teor", "motivo_falha"]
-    assert df["codigo_decisao"].tolist() == ["2972172", "1", "3522031", "7", "8"]
+    assert df["codigo_decisao"].tolist() == [2972172, "1", 3522031, 7, 8]
     assert df["motivo_falha"].tolist() == [None, "nao_pdf", "limite_de_requisicoes", "http_404", None]
     assert df["caminho_inteiro_teor"].tolist() == [
         str(tmp_path / "inteiro_teor" / "2972172.pdf"), None, None, None, str(tmp_path / "inteiro_teor" / "8.pdf"),
@@ -236,17 +239,43 @@ def test_lote_vazio_devolve_as_colunas_sem_pedido():
 
 
 @responses.activate
-def test_lote_confere_todos_os_codigos_antes_do_primeiro_pedido(tmp_path):
+@pytest.mark.usefixtures("sem_espera")
+def test_lote_poe_codigo_invalido_em_linha_sem_pedido(tmp_path):
+    # A coluna de códigos com célula vazia volta do CSV como float, com NaN na vazia.
     _registrar("2972172", PDF_PURO)
+    _registrar("3522031", ENVELOPE)
 
-    with pytest.raises(ValueError, match="codigo_decisao"):
-        jus.scraper("tse").baixar_inteiros_teores([2972172, "abc"], diretorio=str(tmp_path))
+    with pytest.warns(UserWarning, match="2 download"):
+        df = jus.scraper("tse").baixar_inteiros_teores(
+            pd.Series([2972172.0, float("nan"), "abc", 3522031.0]), diretorio=str(tmp_path)
+        )
 
-    assert len(responses.calls) == 0
+    assert df["motivo_falha"].tolist() == [None, "entrada_invalida", "entrada_invalida", None]
+    assert sorted(arquivo.name for arquivo in _pdfs(tmp_path)) == ["2972172.pdf", "3522031.pdf"]
+    assert len(responses.calls) == 2
 
 
 @responses.activate
-@pytest.mark.parametrize("codigo", ["2972172", 2972172, np.int64(2972172)])
+@pytest.mark.usefixtures("sem_espera")
+def test_lote_para_em_duas_recusas_seguidas(tmp_path):
+    recusa = load_sample_bytes("tse", "inteiro_teor/excesso_requisicoes.txt")
+    _registrar("1", recusa, TEXTO)
+    _registrar("2972172", PDF_PURO)
+    _registrar("3", recusa, TEXTO)
+    _registrar("4", recusa, TEXTO)
+
+    with pytest.warns(UserWarning, match="4 download"):
+        df = jus.scraper("tse").baixar_inteiros_teores([1, 2972172, 3, 4, 5], diretorio=str(tmp_path))
+
+    # Uma recusa isolada não para o lote; duas seguidas, sim, e o código 5 não é pedido.
+    assert df["motivo_falha"].tolist() == [
+        "limite_de_requisicoes", None, "limite_de_requisicoes", "limite_de_requisicoes", "limite_de_requisicoes",
+    ]
+    assert len(responses.calls) == 4
+
+
+@responses.activate
+@pytest.mark.parametrize("codigo", ["2972172", 2972172, np.int64(2972172), 2972172.0])
 def test_lote_recusa_um_codigo_solto(codigo):
     # Um texto seria percorrido caractere a caractere, um pedido por dígito.
     with pytest.raises(TypeError, match="baixar_inteiro_teor"):
