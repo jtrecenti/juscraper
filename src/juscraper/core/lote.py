@@ -1,10 +1,15 @@
-"""Laço comum dos downloads em lote do eSAJ (``baixar_acordaos``, ``baixar_sentencas``).
+"""Laço comum dos downloads em lote.
+
+Usado por ``baixar_acordaos`` e ``baixar_sentencas`` do eSAJ e por
+``baixar_inteiros_teores`` do TSE.
 
 Uma linha de entrada vira uma linha de saída, com o caminho do arquivo ou o
 motivo da falha. O bloqueio anti-bot vale para a sessão inteira: a primeira
 linha que sai :data:`~juscraper.core.failures.MOTIVO_BLOQUEIO_ANTI_BOT`
 encerra o lote, e as seguintes saem com o mesmo motivo, sem pedido, por
-:func:`~juscraper.core.failures.consultar_em_lote`.
+:func:`~juscraper.core.failures.consultar_em_lote`. Só o raspador que detecta
+o bloqueio chega a esse motivo. ``DownloadEmLote.encerrar`` acrescenta outra
+condição de parada.
 """
 
 from __future__ import annotations
@@ -16,7 +21,7 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 
-from ...core.failures import (
+from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
@@ -31,7 +36,7 @@ class DownloadEmLote:
     """O que muda entre os downloads em lote.
 
     Attributes:
-        origem: Método que produz a tabela (``"cjsg"``, ``"cjpg"``), para a
+        origem: De onde vem a tabela (``"cjsg"``, ``"cjpg"``), para a
             mensagem da coluna que falta.
         colunas: Colunas que o download de uma linha lê.
         erros_com_motivo: Exceções do download com o atributo de classe
@@ -40,6 +45,9 @@ class DownloadEmLote:
         descricao: O que falhou, no plural, para o aviso agregado.
         logger: Logger do módulo do download, que registra a falha de cada linha.
         rotulo: Identifica a linha (de ``itertuples``) no log e no aviso agregado.
+        encerrar: Recebe os motivos das linhas já processadas (``None`` no
+            sucesso) e diz se o lote acaba; as linhas seguintes saem com o
+            motivo da última, sem pedido.
     """
 
     origem: str
@@ -49,11 +57,25 @@ class DownloadEmLote:
     descricao: str
     logger: logging.Logger
     rotulo: Callable[[Any], str]
+    encerrar: Callable[[list[str | None]], bool] | None = None
 
 
 class _Download(NamedTuple):
     caminho: str | None
     motivo: str | None
+
+
+def _pelos_motivos(
+    regra: Callable[[list[str | None]], bool] | None,
+) -> Callable[[list[_Download]], bool] | None:
+    """``regra``, que lê motivos, na forma que :func:`consultar_em_lote` chama."""
+    if regra is None:
+        return None
+
+    def encerrar(feitos: list[_Download]) -> bool:
+        return regra([d.motivo for d in feitos])
+
+    return encerrar
 
 
 def baixar_em_lote(
@@ -96,7 +118,10 @@ def baixar_em_lote(
         return _Download(None, motivo)
 
     linhas = list(tabela.itertuples(index=False))
-    downloads = consultar_em_lote(linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0)
+    encerrar = _pelos_motivos(lote.encerrar)
+    downloads = consultar_em_lote(
+        linhas, baixar_linha, lambda motivo: _Download(None, motivo), sleep_time=0, encerrar=encerrar
+    )
     falhas = [f"{lote.rotulo(linha)}: {d.motivo}" for linha, d in zip(linhas, downloads, strict=True) if d.motivo]
     avisar_falhas(falhas, metodo, lote.descricao)
     return tabela.assign(

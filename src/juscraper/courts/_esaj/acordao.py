@@ -53,11 +53,11 @@ from ...core.failures import (
     MOTIVO_RESPOSTA_INESPERADA,
     MOTIVO_SEM_ACORDAO,
 )
+from ...core.lote import DownloadEmLote, baixar_em_lote
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import coerce_brazilian_date
 from .base import EsajSearchScraper
-from .lote import DownloadEmLote, baixar_em_lote
 from .pasta import conteudo_pdf, gravar_pdf, parse_parametros_pasta, tipo_documento
 
 logger = logging.getLogger("juscraper._esaj.acordao")
