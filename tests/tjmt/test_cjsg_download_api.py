@@ -170,12 +170,11 @@ def test_integer_pages_downloads_from_first_page_through_requested_page(mocker):
         _page([], acordaos=30),
     ])
 
-    cjsg_download(
-        "dano moral",
-        paginas=3,
-        request_fn=request,
-        session=requests.Session(),
-    )
+    scraper = TJMTScraper()
+    mocker.patch.object(scraper, "_request_with_retry", side_effect=request)
+
+    # O ``int`` vira ``range`` no método público (``normalize_paginas``).
+    scraper.cjsg_download("dano moral", paginas=3)
 
     api_calls = [call for call in request.calls if call[1].endswith("/consulta")]
     assert [call[2]["params"]["indicePagina"] for call in api_calls] == [0, 1, 2]
@@ -223,10 +222,6 @@ def test_exact_multiple_of_page_size_does_not_fetch_extra_page(mocker):
         ({"quantidade_por_pagina": -1}, ValueError, "tamanho_pagina deve ser maior que zero"),
         ({"quantidade_por_pagina": 1.5}, TypeError, "tamanho_pagina deve ser um inteiro"),
         ({"quantidade_por_pagina": True}, TypeError, "tamanho_pagina deve ser um inteiro"),
-        ({"paginas": 0}, ValueError, "paginas"),
-        ({"paginas": -1}, ValueError, "paginas"),
-        ({"paginas": [0]}, ValueError, "paginas"),
-        ({"paginas": [-1]}, ValueError, "paginas"),
         ({"tipo_consulta": "Outro"}, ValueError, "Tipo de consulta"),
     ],
 )
@@ -623,7 +618,7 @@ def test_tamanho_pagina_acima_do_teto_falha_antes_da_rede():
     with pytest.raises(ValueError, match="tamanho_pagina deve ser no máximo 10000"):
         cjsg_download(
             "dano moral",
-            paginas=1,
+            paginas=[1],
             quantidade_por_pagina=MAX_RESULTS + 1,
             request_fn=_NoNetwork(),
             session=requests.Session(),
@@ -632,7 +627,7 @@ def test_tamanho_pagina_acima_do_teto_falha_antes_da_rede():
 
 @pytest.mark.parametrize(
     ("tamanho", "paginas", "ultima"),
-    [(10, [1001], 1000), (100, range(100, 102), 100), (3000, 4, 3)],
+    [(10, [1001], 1000), (100, range(100, 102), 100), (3000, range(1, 5), 3)],
 )
 def test_pagina_alem_do_teto_falha_antes_da_rede(tamanho, paginas, ultima):
     with pytest.raises(ValueError, match=rf"última página alcançável é a {ultima}\b"):
@@ -665,6 +660,12 @@ def test_ultima_pagina_dentro_do_teto_e_baixada(mocker):
     [
         ({"tamanho_pagina": MAX_RESULTS + 1}, "10000"),
         ({"paginas": [1001]}, "10000"),
+        # Página 0, negativa ou seleção vazia: recusadas pelo ``PaginasMixin``.
+        ({"paginas": 0}, "paginas"),
+        ({"paginas": -1}, "paginas"),
+        ({"paginas": [0]}, "paginas"),
+        ({"paginas": [-1]}, "paginas"),
+        ({"paginas": []}, "paginas"),
         # ``bool`` herda de ``int``, mas não é tamanho de página (refs #503).
         ({"tamanho_pagina": True}, "não bool"),
         ({"tamanho_pagina": np.True_}, "não bool"),

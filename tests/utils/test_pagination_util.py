@@ -277,10 +277,45 @@ def test_paginas_no_intervalo_mantem_a_ordem_e_avisa_as_de_fora(caplog):
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
         assert paginas_no_intervalo([3, 0, 1, 5, 2], 3, tribunal="TJXX") == [3, 1, 2]
 
-    # O aviso sai no logger do tribunal, como antes do helper.
+    # O aviso sai no logger do tribunal, como antes do helper, numa linha só.
     assert [(r.name, r.getMessage()) for r in caplog.records] == [
-        ("juscraper.tjxx", "TJXX: página 0 fora do intervalo 1-3"),
-        ("juscraper.tjxx", "TJXX: página 5 fora do intervalo 1-3"),
+        ("juscraper.tjxx", "TJXX: páginas 0, 5 fora do intervalo 1-3"),
+    ]
+
+
+def test_paginas_no_intervalo_tira_repetidas_preservando_a_ordem(caplog):
+    with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+        assert paginas_no_intervalo([2, 1, 2, 9, 1, 9], 3, tribunal="TJXX") == [2, 1]
+
+    assert [r.getMessage() for r in caplog.records] == ["TJXX: página 9 fora do intervalo 1-3"]
+
+
+def test_paginas_no_intervalo_resume_muitas_paginas_de_fora_num_aviso(caplog):
+    # ``paginas=1000`` (``range(1, 1001)``) numa busca de 7 páginas.
+    with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+        assert paginas_no_intervalo(range(1, 1001), 7, tribunal="TJXX") == list(range(1, 8))
+
+    assert [r.getMessage() for r in caplog.records] == [
+        "TJXX: páginas 8, 9, 10, 11, 12 e mais 988 fora do intervalo 1-7",
+    ]
+
+
+def test_paginas_no_intervalo_resume_lista_com_muitas_de_fora(caplog):
+    with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+        assert paginas_no_intervalo([9, 0, 2, 8, 7, 6, 5, 9, 4], 3, tribunal="TJXX") == [2]
+
+    assert [r.getMessage() for r in caplog.records] == [
+        "TJXX: páginas 9, 0, 8, 7, 6 e mais 2 fora do intervalo 1-3",
+    ]
+
+
+def test_paginas_no_intervalo_corta_range_sem_percorrer(caplog):
+    # Como no ``PaginasMixin``: um range enorme não é percorrido página a página.
+    with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+        assert paginas_no_intervalo(range(-1, 10**12, 3), 9, tribunal="TJXX") == [2, 5, 8]
+
+    assert [r.getMessage() for r in caplog.records] == [
+        f"TJXX: páginas -1, 11, 14, 17, 20 e mais {len(range(-1, 10**12, 3)) - 3 - 5} fora do intervalo 1-9",
     ]
 
 

@@ -34,6 +34,8 @@ from typing import TYPE_CHECKING
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from ...utils.pagination import paginas_no_intervalo
+
 if TYPE_CHECKING:
     from ...core.http import HTTPScraper
 
@@ -129,30 +131,6 @@ def fetch_cjsg_first_page(
     return first_resp.text
 
 
-def _pages_to_fetch(
-    paginas: "list | range | None" | None,
-    n_pags: int,
-) -> list[int]:
-    """Return the list of pages >1 that should still be fetched after page 1."""
-    if paginas is None:
-        return list(range(2, n_pags + 1))
-    if isinstance(paginas, range):
-        pag_max = min(paginas.stop, n_pags + 1) if paginas.stop is not None else n_pags + 1
-        start = paginas.start if paginas.start is not None else 1
-        return [p for p in range(start, pag_max) if p > 1]
-    # list
-    return [p for p in paginas if 1 < p <= n_pags]
-
-
-def _page1_in_range(paginas: "list | range | None" | None) -> bool:
-    if paginas is None:
-        return True
-    if isinstance(paginas, range):
-        start = paginas.start if paginas.start is not None else 1
-        return start <= 1
-    return 1 in paginas
-
-
 def download_cjsg_pages(
     *,
     scraper: "HTTPScraper",
@@ -221,17 +199,16 @@ def download_cjsg_pages(
 
     conversation_id = _extract_conversation_id(first_html) if extract_conversation_id else ""
 
-    paginas_list = _pages_to_fetch(paginas, n_pags)
+    # A página 1 já veio no primeiro GET; as pedidas além do total vão para o log.
+    validas = paginas_no_intervalo(paginas, n_pags, tribunal=scraper.tribunal_name)
+    paginas_list = [p for p in validas if p != 1]
     if not paginas_list:
         logger.info("Total de páginas: %s. Baixando apenas a primeira.", n_pags)
         return str(path)
 
     logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(paginas_list) + 1)
 
-    total_pages = len(paginas_list) + (1 if _page1_in_range(paginas) else 0)
-    initial = 1 if _page1_in_range(paginas) else 0
-
-    for pag in tqdm(paginas_list, desc=progress_desc, total=total_pages, initial=initial):
+    for pag in tqdm(paginas_list, desc=progress_desc, total=len(validas), initial=int(1 in validas)):
         time.sleep(sleep_time)
         query: dict[str, object] = {"tipoDeDecisao": tipo_param, "pagina": pag}
         if conversation_id:
