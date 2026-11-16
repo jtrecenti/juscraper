@@ -111,7 +111,9 @@ class FalcaoScraper(HTTPScraper):
         faltam. O DataFrame traz todas as páginas presentes no checkpoint.
         Entre sessões o índice pode mudar: se o total da busca mudar, as
         páginas já gravadas são mantidas e um ``UserWarning`` avisa que elas
-        podem repetir ou omitir documentos em relação às novas.
+        podem repetir ou omitir documentos em relação às novas. Mudança que
+        conserva o total (inclusive acima do teto de 10000) não é detectada.
+        O checkpoint completo não é reaberto: vale o total registrado.
 
         Args:
             pesquisa (str): Termo de busca livre (parametro ``texto``).
@@ -321,8 +323,8 @@ class FalcaoScraper(HTTPScraper):
         except BaseException as erro:
             # Inclui interrupção manual: a cota já foi gasta nas páginas recebidas.
             erro.add_note(
-                f"Páginas recebidas preservadas em {destino}. "
-                "Repita a chamada com resume=True para requisitar só as que faltam."
+                f"Checkpoint da coleta em {destino}. "
+                "Repita a chamada com resume=True para requisitar só as páginas que faltam."
             )
             raise
         return str(destino)
@@ -342,6 +344,8 @@ class FalcaoScraper(HTTPScraper):
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
         primeira = self._primeira_pendente(inp, checkpoint)
         if primeira is None:
+            if checkpoint is not None and checkpoint.total is not None:
+                self._avisar_teto(inp, checkpoint.total)
             return
         primeiro_json = self._buscar_pagina(inp, primeira)
         # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
@@ -357,13 +361,7 @@ class FalcaoScraper(HTTPScraper):
                 inp.colecao, total, _MAX_RESULTADOS, total_paginas,
                 inp.tamanho_pagina,
             )
-        if inp.paginas is None and total >= _MAX_RESULTADOS:
-            avisar(
-                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
-                "backend nao informa o total real e o resultado pode estar incompleto. "
-                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
-                UserWarning,
-            )
+        self._avisar_teto(inp, total)
 
         pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
         if primeira not in pendentes:
@@ -382,14 +380,15 @@ class FalcaoScraper(HTTPScraper):
         """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
         O teto é conhecido antes da consulta: nenhuma página fora dele pode
-        servir de primeira requisição, pois o backend a rejeita. Na coleta
-        integral retomada, o total da sessão anterior diz qual página falta.
+        servir de primeira requisição, pois o backend a rejeita. Na retomada,
+        vale o total da sessão anterior: página além dele não gasta a cota, e
+        o checkpoint completo não requisita nada.
         """
         conhecido = _MAX_RESULTADOS
         gravadas: set[int] = set()
         if checkpoint is not None:
             gravadas = checkpoint.gravadas
-            if inp.paginas is None and checkpoint.total is not None:
+            if checkpoint.total is not None:
                 conhecido = checkpoint.total
         candidatas = self._resolver_paginas(inp.paginas, self._total_paginas(conhecido, inp.tamanho_pagina))
         return next((p for p in candidatas if p not in gravadas), None)
@@ -446,6 +445,16 @@ class FalcaoScraper(HTTPScraper):
             formato=_FORMATO_BACKEND,
         )
         return inp
+
+    @staticmethod
+    def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:
+        if inp.paginas is None and total >= _MAX_RESULTADOS:
+            avisar(
+                f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
+                "backend nao informa o total real e o resultado pode estar incompleto. "
+                "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
+                UserWarning,
+            )
 
     @staticmethod
     def _total_paginas(total: int, tamanho_pagina: int) -> int:

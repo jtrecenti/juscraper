@@ -4,7 +4,8 @@ O backend bloqueia o IP por cota diária, e uma coleta grande atravessa mais de
 um dia. O checkpoint guarda cada página recebida em
 ``{colecao}_{pagina:04d}.json`` e, em :data:`MANIFESTO`, a busca a que as
 páginas pertencem e o último ``quantidadeTotal`` observado. A página concluída
-é o arquivo presente: a retomada requisita só as que faltam.
+é o arquivo presente com a lista ``documentos``: a retomada requisita só as
+que faltam.
 """
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ import json
 from pathlib import Path
 
 from ...core.avisos import avisar
+from ...core.download import gravar_arquivo
 
 MANIFESTO = "manifest.json"
 
@@ -20,9 +22,7 @@ _VERSAO = 1
 
 def gravar_json(arquivo: Path, conteudo: dict) -> None:
     """Grava por troca atômica: arquivo truncado não passa por página concluída."""
-    temporario = arquivo.with_suffix(".tmp")
-    temporario.write_text(json.dumps(conteudo, ensure_ascii=False), encoding="utf-8")
-    temporario.replace(arquivo)
+    gravar_arquivo(json.dumps(conteudo, ensure_ascii=False).encode("utf-8"), arquivo)
 
 
 def gravar_manifesto(diretorio: Path, identidade: dict, total: int | None) -> None:
@@ -33,12 +33,11 @@ def gravar_manifesto(diretorio: Path, identidade: dict, total: int | None) -> No
 def _abrir(diretorio: Path, identidade: dict, *, resume: bool) -> int | None:
     """Cria o checkpoint ou valida o existente; devolve o total da sessão anterior."""
     if not resume:
-        if diretorio.exists() and any(diretorio.iterdir()):
+        if diretorio.exists() and (not diretorio.is_dir() or any(diretorio.iterdir())):
             raise ValueError(
                 f"checkpoint_dir ocupado ({diretorio}); use resume=True para continuar a coleta "
                 "ou outro diretório para uma coleta nova."
             )
-        diretorio.mkdir(parents=True, exist_ok=True)
         gravar_manifesto(diretorio, identidade, None)
         return None
     corrompido = f"Checkpoint inexistente ou corrompido em {diretorio}"
@@ -59,10 +58,26 @@ def _abrir(diretorio: Path, identidade: dict, *, resume: bool) -> int | None:
     return total
 
 
+def _tem_documentos(arquivo: Path) -> bool:
+    try:
+        dados = json.loads(arquivo.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return isinstance(dados, dict) and isinstance(dados.get("documentos"), list)
+
+
 def paginas_gravadas(diretorio: Path, colecao: str) -> set[int]:
-    """Números (1-based) das páginas já presentes no checkpoint."""
-    numeros = (arquivo.stem.rsplit("_", 1)[1] for arquivo in diretorio.glob(f"{colecao}_*.json"))
-    return {int(numero) for numero in numeros if numero.isdigit()}
+    """Números (1-based) das páginas concluídas do checkpoint.
+
+    Resposta gravada sem a lista ``documentos`` (envelope de erro) não conta:
+    a retomada a requisita de novo, em vez de deixar um buraco no resultado.
+    """
+    gravadas = set()
+    for arquivo in diretorio.glob(f"{colecao}_*.json"):
+        numero = arquivo.stem.rsplit("_", 1)[1]
+        if numero.isdigit() and _tem_documentos(arquivo):
+            gravadas.add(int(numero))
+    return gravadas
 
 
 class Checkpoint:

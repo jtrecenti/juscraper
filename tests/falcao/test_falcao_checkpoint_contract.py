@@ -173,6 +173,7 @@ def test_checkpoint_dir_e_diretorio_juntos_levantam(falcao, tmp_path):
 
 @responses.activate
 def test_bloqueio_na_primeira_requisicao_deixa_checkpoint_retomavel(falcao, tmp_path):
+    """Depois de uma chamada com checkpoint que falhou, ``resume=True`` sempre serve."""
     checkpoint = tmp_path / "coleta"
     _bloquear_por_cota()
     with pytest.raises(requests.HTTPError):
@@ -184,6 +185,59 @@ def test_bloqueio_na_primeira_requisicao_deixa_checkpoint_retomavel(falcao, tmp_
 
     assert _paginas_pedidas() == [1]
     assert _paginas_em_disco(checkpoint) == ["acordaos_0001.json"]
+
+
+@responses.activate
+def test_resposta_sem_documentos_e_requisitada_de_novo(falcao, tmp_path):
+    """Envelope de erro gravado não conta como página concluída."""
+    checkpoint = tmp_path / "coleta"
+    _interromper_na_pagina_3(falcao, checkpoint, total=30)
+    (checkpoint / "acordaos_0002.json").write_text('{"userMessage": "erro"}', encoding="utf-8")
+    for pagina in (2, 3):
+        _register("acordaos", total=30, pagina=pagina)
+
+    df = falcao.listar_decisoes("dano moral", checkpoint_dir=checkpoint, resume=True)
+
+    assert _paginas_pedidas() == [2, 3]
+    assert len(df) == 3 * _POR_PAGINA
+
+
+@responses.activate
+def test_checkpoint_completo_nao_requisita_pagina_alem_do_total(falcao, tmp_path):
+    checkpoint = tmp_path / "coleta"
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina)
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint)
+    responses.reset()
+
+    falcao.listar_decisoes_download("dano moral", paginas=range(1, 6), checkpoint_dir=checkpoint, resume=True)
+
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_retomada_de_checkpoint_completo_no_teto_repete_o_aviso(falcao, tmp_path, monkeypatch):
+    monkeypatch.setattr("juscraper.aggregators.falcao.client._MAX_RESULTADOS", 20)
+    checkpoint = tmp_path / "coleta"
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina)
+    with pytest.warns(UserWarning, match="teto"):
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint)
+    responses.reset()
+
+    with pytest.warns(UserWarning, match="teto"):
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True)
+
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_checkpoint_dir_que_e_arquivo_levanta_valueerror(falcao, tmp_path):
+    arquivo = tmp_path / "coleta.json"
+    arquivo.write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="ocupado"):
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=arquivo)
+    assert len(responses.calls) == 0
 
 
 @responses.activate
