@@ -11,9 +11,12 @@ A correcao e substituir ``INTERMEDIARIA_PEM`` pela emissora nova, baixada da URL
 "CA Issuers" do certificado servido (``openssl s_client -connect
 jurisprudencia.stf.jus.br:443 -showcerts`` mostra o emissor).
 """
+import ssl
+
 import certifi
-from requests.adapters import HTTPAdapter
 from urllib3.util.ssl_ import create_urllib3_context
+
+from ...core.tls import ContextoTLSAdapter
 
 # GlobalSign GCC R6 AlphaSSL CA 2025, emitida por GlobalSign Root CA - R6
 # (que ja esta no certifi). Valida ate 21/05/2027.
@@ -53,28 +56,16 @@ h3KcAVCBJWvnOkVwxyU5QJMcnwW95JlOtx+9100GL99jHE5rs3gXp7F4bg8H01QT
 """
 
 
-def _contexto_ssl():
+def _contexto_ssl() -> ssl.SSLContext:
     ctx = create_urllib3_context()
     ctx.load_verify_locations(cafile=certifi.where())
     ctx.load_verify_locations(cadata=INTERMEDIARIA_PEM)
     return ctx
 
 
-class _STFTLSAdapter(HTTPAdapter):
-    """Verifica o certificado do STF contra certifi + a intermediaria omitida pelo servidor.
+class _STFTLSAdapter(ContextoTLSAdapter):
+    """Verifica o certificado do STF contra certifi + a intermediaria omitida pelo servidor."""
 
-    Com ``HTTPS_PROXY`` definido, o ``requests`` nao usa o pool de ``init_poolmanager``:
-    monta um ``ProxyManager`` proprio em ``proxy_manager_for``. Sem o contexto tambem
-    ali, a conexao via proxy volta ao bundle padrao e falha com ``CERTIFICATE_VERIFY_FAILED``.
-    """
-
-    def init_poolmanager(self, *args, **kwargs):
-        kwargs["ssl_context"] = _contexto_ssl()
-        return super().init_poolmanager(*args, **kwargs)
-
-    def proxy_manager_for(self, proxy, **proxy_kwargs):
-        # O requests chama este metodo a cada requisicao e guarda o manager por proxy em
-        # self.proxy_manager; so o primeiro uso de cada proxy precisa montar o contexto.
-        if proxy not in self.proxy_manager:
-            proxy_kwargs.setdefault("ssl_context", _contexto_ssl())
-        return super().proxy_manager_for(proxy, **proxy_kwargs)
+    def contexto_ssl(self) -> ssl.SSLContext:
+        """Contexto com o certifi e a intermediaria."""
+        return _contexto_ssl()
