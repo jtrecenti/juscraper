@@ -156,7 +156,8 @@ def test_json(capsys):
     # Os catálogos ``listar_*`` do TSE são auxiliares e ficam fora da linha.
     metodos_tse = ["baixar_inteiro_teor", "baixar_inteiros_teores"]
     assert saida["tribunais"][1] == {"sigla": "tse", "nome": "TSE", "metodos": metodos_tse}
-    assert saida["tribunais"][2] == {"sigla": "stm", "nome": "STM", "metodos": ["cjsg", "baixar_inteiro_teor"]}
+    metodos_stm = ["cjsg", "baixar_inteiro_teor", "listar_processos"]
+    assert saida["tribunais"][2] == {"sigla": "stm", "nome": "STM", "metodos": metodos_stm}
     assert saida["tribunais"][-1]["sigla"] == "trf6"
     assert {"sigla": "trf3", "nome": "TRF3", "metodos": ["cpopg", "cposg", "cjsg"]} in saida["tribunais"]
     assert {"sigla": "comunica_cnj", "nome": "ComunicaCNJ", "metodos": ["listar_comunicacoes"]} in saida["agregadores"]

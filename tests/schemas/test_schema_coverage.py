@@ -25,7 +25,7 @@ from pydantic import BaseModel
 PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")
 PUBLIC_CONSULTA_ENDPOINTS = ("cpopg", "cposg")
 # Endpoints especificos de um ou poucos tribunais (fora do quarteto canonico).
-CUSTOM_ENDPOINTS = ("cjsg_ementa", "listar_decisoes", "contar_decisoes")
+CUSTOM_ENDPOINTS = ("cjsg_ementa", "listar_decisoes", "contar_decisoes", "listar_processos")
 # Nota: os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
 # ``listar_varas`` da familia eSAJ (refs #228) ficam DE FORA deste regime de
 # schema de proposito — nao recebem input de usuario (so ``grau``, um literal),
@@ -70,6 +70,7 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjpe", "cjsg"): ("juscraper.courts.tjpe.schemas", "InputCJSGTJPE"),
     ("tjpi", "cjsg"): ("juscraper.courts.tjpi.schemas", "InputCJSGTJPI"),
     ("stm", "cjsg"): ("juscraper.courts.stm.schemas", "InputCJSGSTM"),
+    ("stm", "listar_processos"): ("juscraper.courts.stm.schemas", "InputListarProcessosSTM"),
     ("tjpr", "cjsg"): ("juscraper.courts.tjpr.schemas", "InputCJSGTJPR"),
     ("tjrj", "cjsg"): ("juscraper.courts.tjrj.schemas", "InputCJSGTJRJ"),
     ("tjrn", "cjsg"): ("juscraper.courts.tjrn.schemas", "InputCJSGTJRN"),

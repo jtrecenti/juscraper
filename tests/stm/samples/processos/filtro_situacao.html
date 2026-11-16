@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<!-- Head -->
+<head>
+    <title>Consulta Judicial Unificada | JMU</title>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Indexing -->
+    <meta name="title" content="Consulta Judicial Unificada | JMU">
+    <meta name="description" content="A Justiça Militar da União é uma justiça especializada que julga os crimes militares previstos no Código Penal Militar (CPM), tendo como principais jurisdicionados os militares das Forças Armadas e, em certos casos, até civis.">
+    <meta name="keywords" content="stm, jmu, justiça militar da união, superior tribunal militar, justiça militar, consulta processual, jurisprudência, jmu consulta processual, stm consulta processual, jmu jurisprudência, stm jurisprudência, ministros jmu">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Portuguese">
+    <meta name="author" content="Justiça Militar da União">
+
+    <!-- Icon -->
+    <link rel="shortcut icon" href="images/jmu.ico" type="image/x-icon" />
+
+    <!-- CSS -->
+    <link href="/css/bootstrap-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-theme-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-chosen.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-datepicker.standalone.css" rel="stylesheet" type="text/css" media="screen">
+
+    <link href="/css/open-iconic-bootstrap.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/fonte.css" rel='stylesheet' type='text/css' media="screen">
+    <link href="/css/introjs.css" rel='stylesheet' type='text/css' media="screen">
+    
+        <link href="/css/style.css?v=20210903" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/print.css?v=20210903" rel="stylesheet" type="text/css" media="print">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Scripts Javascript -->
+    <!-- jQuery -->
+<script src="/js/jquery-3.2.1.min.js"></script>
+
+<!-- jQuery Select -->
+<script src="/js/chosen.jquery.min.js"></script>
+
+<!-- jQuery Mask -->
+<script src="/js/jquery.mask.min.js"></script>
+
+<!-- Bootstrap Collapse -->
+<script src="/js/collapse-3.3.7.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap-3.3.7.js"></script>
+
+<!-- Bootstrap Datepicker -->
+<script src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/bootstrap-datepicker.pt-BR.js"></script>
+
+<!-- Intro.js -->
+<script src="/js/intro.js"></script>
+
+<!-- Scripts -->
+<script src="/js/init.js?v=20210903"></script>
+<script src="/js/cpfcnpj.js?v=20210903"></script>
+<script src="/js/util.js?v=20210903"></script>
+<script src="/js/funcoes.js?v=20210903"></script>
+<script src="/js/controller.js?v=20210903"></script>
+
+<!-- <script src="js/google_analytics.js"></script>  -->
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WP8V5XK0S4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-WP8V5XK0S4');
+    </script>
+</head><body>
+
+<!-- Header -->
+<header class="container-fluid">
+    <div class="row">
+        <p>
+            <a id="header-url" href="https://processos.stm.jus.br"><img src="images/jmu-sistemas.png" alt=""><span id="header-title"></span> </a>
+            <span class="pull-right header-menu hidden-xs">
+                            <a href="https://tesjmu.stm.jus.br/portalthes/" target="_blank"><span class="oi oi-sun" aria-hidden="true"></span> Tesauro</a>
+                <a href="javascript:void(0);" onclick="tracker.functions.faleConosco(this);"><span class="oi oi-thumb-up" aria-hidden="true"></span> Pesquisa de Satisfação</a>
+            </span>
+        </p> 
+    </div>
+</header>
+<script>
+    localStorage.setItem('URL_PROCESSOS', 'https://processos.stm.jus.br');
+    localStorage.setItem('URL_JURISPRUDENCIA', 'https://jurisprudencia.stm.jus.br');
+</script>
+<div class="topo">
+    <div class="gridbox">
+        
+<script>
+    // Scripts de inicialização
+    start_scripts();
+</script>
+
+<!--Dicas -->
+<!-- Dicas de Busca -->
+<div class="container collapse" id="tips">
+	<br/>
+	<button type="button" class="close" id="button_close_tips"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+	<div class="row space-h3">
+		<h3>Dicas de Uso dos Operadores</h3>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col-md-12">
+			<p>Ao solicitar a pesquisa por 'Todos os Campos', é possível que o usuário utilize operadores: palavras e símbolos que permitem ampliar ou restringir o alcance da pesquisa. Os seguintes operadores podem ser utilizados:</p>
+		</div>
+	</div>
+
+	<!-- Carousel -->
+	<div id="quote-carousel" class="carousel slide" data-ride="carousel"  data-interval="false">
+		<!-- Indicators -->
+		<ol class="carousel-indicators">
+			<li data-target="#quote-carousel" data-slide-to="0" class="active"></li>
+			<li data-target="#quote-carousel" data-slide-to="1"></li>
+			<li data-target="#quote-carousel" data-slide-to="2"></li>
+			<li data-target="#quote-carousel" data-slide-to="3"></li>
+		</ol>
+
+		<!-- Wrapper for slides -->
+		<div class="carousel-inner">
+			<div class="item active">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>E</b></h4>
+							<p>Todas as palavras ligadas pelo operador "e" devem estar necessariamente contidas no documento. O "e" é o operador padrão da ferramenta de pesquisa. Portanto, quando a expressão de busca é composta por mais de uma palavra, pressupõe-se que todas elas devam aparecer no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>militar furto caserna</span> é o mesmo que <span>militar e furto e caserna</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham as palavras <span>militar</span>, <span>furto</span> e <span>caserna</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>OU</b></h4>
+							<p>O operador "ou" é empregado para pesquisar palavras alternativas. Ao utilizá-lo, o usuário indica que basta que uma das palavras esteja presente no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto ou recurso</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> ou que possuam a palavra <span>recurso</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>NÃO</b></h4>
+							<p>O operador "não" tem a função de descartar documentos que contenham determinadas palavras. Para tanto, deve-se posicionar o operador imediatamente antes da palavra que se pretende excluir.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto não infração</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> e não contenham a palavra <span>infração</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "</b></h4>
+							<p>Utilizado para agrupar dois ou mais termos a serem pesquisados ou para transformar um operador em palavra a ser pesquisada.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>"direito constitucional"</span></p>
+							<p><b>Retorno do Exemplo 1:<br/></b>Todos os documentos que contenham o termo <span>direito constitucional</span></p>
+							<p><b>Exemplo 2:<br/></b> <span>acordo "não" previsto</span></p>
+							<p><b>Retorno do Exemplo 2:<br/></b>Todos os documentos que contenham as palavras <span>acordo</span>, <span>não</span> e <span>previsto</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "~n</b></h4>
+							<p>Os operadores til e aspas duplas, quando combinados, permitem ao usuário especificar a distância máxima admitida entre as palavras buscadas. Para tanto, é preciso colocar as palavras (duas ou mais) entre aspas duplas, acrescentar o til logo após e, por fim, indicar imediatamente o número máximo de palavras interpostas.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>"detenção civil"~2</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span> e a palavra <span>civil</span> com a quantidade máxima de 2 termos entre <span>detenção</span> e <span>civil</span>. <a href="#" class="link" data-original-title="No texto DETENÇÃO PARA O CIVIL a distância é 2, no texto DETENÇÃO DO CIVIL, a distância é 1 e no texto DETENÇÃO CIVIL a distância é 1. Todos os documentos com esses textos serão retornados. Já no texto DETENÇÃO JUNTO COM O CIVIL, a distância é 3 e os documentos com esse texto não serão retornados." data-toggle="tooltip" data-placement="top">Mais detalhes...</a></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>( )</b></h4>
+							<p>Os parênteses servem para especificar a ordem de execução das operações caso o usuário utilize vários operadores distintos, de forma simultânea, em uma mesma expressão de busca.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>detenção ou (codigo NÃO penal)</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span>ou que contenham a palavra <span>código</span> e, ao mesmo tempo, não contenham a palavra <span>penal</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>*</b></h4>
+							<p>Substitui caracteres desconhecidos ou que não se deseja determinar. Pode ser utilizado no início, meio ou no fim da palavra.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>de*cao</span> (deserção, descrição, designação...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>constitui*</span> (constitui, constituir, constituído, constituição...)</p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>?</b></h4>
+							<p>Substitui um único caractere que deverá estar na palavra. Pode ser utilizado no início, meio e/ou no fim da palavra. Cada interrogação corresponde a um caractere.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>constituíd?</span> (constituído, constituída...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>em?argos</span> (embargos...)</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Left and right controls -->
+		<a class="left carousel-control" href="#quote-carousel" data-slide="prev">
+			<span class="glyphicon glyphicon-chevron-left"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control" href="#quote-carousel" data-slide="next">
+			<span class="glyphicon glyphicon-chevron-right"></span>
+			<span class="sr-only">Next</span>
+		</a>
+    </div>
+</div>
+<div class="container" style="background-color: #fff; margin-bottom: -2px; color: #444; background-color: #fff; border-radius: 6px 6px 0 0;">
+    <!-- Escolher Filtros -->
+        <nav class="container" style="padding-top: 1rem;">
+        <div class="container-fluid">
+        <!-- Menu para dispositivos móveis -->
+        <div class="navbar-header" role="menu" >
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+
+        <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav navbar-left">
+            <li>
+                <span class="dropdown-filter"><strong>Filtrar por:</strong></span>
+            </li>
+        </ul>
+                                    <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Meio <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_meio=ELETRÔNICO" role="menuitem">
+                                        ELETRÔNICO (02) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">CJM <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_cjm=4ª CIRCUNSCRIÇÃO JUDICIÁRIA MILITAR - MG" role="menuitem">
+                                        4ª CIRCUNSCRIÇÃO JUDICIÁRIA MILITAR - MG (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Orgão <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_orgao=AUDITORIA DA 4ª CJM" role="menuitem">
+                                        AUDITORIA DA 4ª CJM (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_orgao=SUPERIOR TRIBUNAL MILITAR" role="menuitem">
+                                        SUPERIOR TRIBUNAL MILITAR (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Conselho <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_conselho=CONSELHO ESPECIAL DE JUSTIÇA - EXÉRCITO" role="menuitem">
+                                        CONSELHO ESPECIAL DE JUSTIÇA - EXÉRCITO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classe <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_classe=APELAÇÃO CRIMINAL" role="menuitem">
+                                        APELAÇÃO CRIMINAL (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_classe=AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO" role="menuitem">
+                                        AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown  dropdown-filter-active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Assunto <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=ALICIAÇÃO E INCITAMENTO" role="menuitem">
+                                        ALICIAÇÃO E INCITAMENTO (02) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=CRIMES CONTRA A AUTORIDADE OU DISCIPLINA MILITAR" role="menuitem">
+                                        CRIMES CONTRA A AUTORIDADE OU DISCIPLINA MILITAR (02) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=CRIMES CONTRA A HONRA" role="menuitem">
+                                        CRIMES CONTRA A HONRA (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=CRIMES CONTRA A PESSOA" role="menuitem">
+                                        CRIMES CONTRA A PESSOA (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=DEPOIMENTO" role="menuitem">
+                                        DEPOIMENTO (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=DIFAMAÇÃO" role="menuitem">
+                                        DIFAMAÇÃO (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=DIREITO PENAL" role="menuitem">
+                                        DIREITO PENAL (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=DIREITO PENAL MILITAR" role="menuitem">
+                                        DIREITO PENAL MILITAR (02) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=DIREITO PROCESSUAL CIVIL E DO TRABALHO" role="menuitem">
+                                        DIREITO PROCESSUAL CIVIL E DO TRABALHO (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=FATO ATÍPICO" role="menuitem">
+                                        FATO ATÍPICO (01) 
+                                    </a>
+                                </li>
+                                                            <li  class="active" >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;" role="menuitem">
+                                        INCITAMENTO (02) <span class='glyphicon glyphicon-remove'></span>
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=OFENSA ÀS FORÇAS ARMADAS" role="menuitem">
+                                        OFENSA ÀS FORÇAS ARMADAS (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=PROCESSO E PROCEDIMENTO" role="menuitem">
+                                        PROCESSO E PROCEDIMENTO (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_assunto_pesquisa__1=PROVAS" role="menuitem">
+                                        PROVAS (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown  dropdown-filter-active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Situação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  class="active" >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;q=*&amp;" role="menuitem">
+                                        MOVIMENTO (02) <span class='glyphicon glyphicon-remove'></span>
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Autuação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_data_autuacao=d(2024/05)" role="menuitem">
+                                        Maio/2024 (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;fq_data_autuacao=d(2023/06)" role="menuitem">
+                                        Junho/2023 (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                            </div>
+        </div>
+    </nav>
+
+    <!-- Filtros Ativos e Paginação -->
+                <div class="container">
+        <div class="row">
+            <p class="filter-list">
+                <span class="title">Filtros Aplicados:</span>
+                                    <span class="pill">Assunto = INCITAMENTO<a
+                                href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;"><span class='glyphicon glyphicon-remove'></span></a></span>
+                                    <span class="pill">Situação = MOVIMENTO<a
+                                href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;q=*&amp;"><span class='glyphicon glyphicon-remove'></span></a></span>
+                            </p>
+        </div>
+    </div>
+        <div class="container-fluid">
+    <div class="row message">
+        <!-- Quantidade de documentos -->
+        <div class="col-xs-4"><b>1</b> - <b>2</b> de <b>2</b></u> <span class="hidden-xs">documentos</span></div>
+                <div class="col-xs-4 text-center"></div>
+                <!-- Documentos por página e ordenação -->
+        <div class="col-xs-4 text-right">
+                            <select id="docs-page"><option value="25" >25 por página</option><option value="50" >50 por página</option><option value="100"  selected>100 por página</option></select>
+                <select id="order-page"><option value='1'  selected>autuação mais recente</option><option value='2' >autuação mais antigo</option></select>
+                    </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row pagination-block">
+        <!-- Paginas -->
+        <div class="col-xs-12 text-center">
+                <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;start=0&amp;rows=100"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+        </div>
+    </div>
+</div>    
+</div>    </div>
+</div>
+
+<!-- Resultado da pesquisa - Feitos -->
+<div class="container container-fluid">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                        
+                <button class="btn btn-default" title="Exibir Movimentações" data-link="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70000695720247040004"
+                        onclick="tracker.functions.movimentacoes(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		<a class="link" href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70000695720247040004"
+                   title="Abrir o processo eletrônico '7000069-57.2024.7.04.0004'" target="_blank">
+		  		7000069-57.2024.7.04.0004
+		  		</a>
+	  		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                                <div class="text-center hidden-lg">
+                    <a href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70000695720247040004" title="Abrir o processo eletrônico '7000069-57.2024.7.04.0004'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <div class="row-descrition text-center title">AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO N.º 7000069-57.2024.7.04.0004</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                                <div class="eproc-link hidden-md hidden-sm hidden-xs">
+                    <a href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70000695720247040004" title="Abrir o processo eletrônico '7000069-57.2024.7.04.0004'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <dt>Número do Feito:</dt>
+                <dd>7000069-57.2024.7.04.0004</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>AUDITORIA DA 4ª CJM  - MG</dd>
+                
+                                <dt>Conselho:</dt>
+                <dd>CONSELHO ESPECIAL DE JUSTIÇA - EXÉRCITO</dd>
+                
+                                <dt>Juiz(a):</dt>
+                <dd>CELSO VIEIRA DE SOUZA</dd>
+                
+                
+                
+                <div class="row">
+                                        <div class="col-sm-5">
+                        <dt>Data de Autuação:</dt>
+                        <dd>24/05/2024 15:51:37</dd>
+                    </div>
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>MOVIMENTO</dd>
+                    </div>
+                                    </div>
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                                <div class="row-title">Assuntos</div>
+                                                <dd class="dd">1) DIREITO PENAL MILITAR,CRIMES CONTRA A AUTORIDADE OU DISCIPLINA MILITAR,ALICIAÇÃO E INCITAMENTO,INCITAMENTO</dd>
+                                <dd class="dd">2) DIREITO PENAL MILITAR,CRIMES CONTRA A PESSOA,CRIMES CONTRA A HONRA,OFENSA ÀS FORÇAS ARMADAS</dd>
+                                <dd class="dd">3) DIREITO PENAL MILITAR,CRIMES CONTRA A PESSOA,CRIMES CONTRA A HONRA,DIFAMAÇÃO</dd>
+                                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Acusado:</dt>
+                                <dd>ETEVALDO LUIZ CAÇADINI DE VARGAS<img src="/icones/Exercito.png" class="icone-forca" data-toggle="tooltip" data-placement="bottom" title="CORONEL / EXÉRCITO" alt="CORONEL / EXÉRCITO"></dd>
+                                                                    <dt>Autor:</dt>
+                                <dd>MINISTÉRIO PÚBLICO MILITAR</dd>
+                                                
+                                <div class="row-title">Representantes</div>
+                                                                                                    <dt>Advogado:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>RODRIGO SUZANA GUIMARÃES</summary>        
+                                                    <div class="parte col-sm-6">ETEVALDO LUIZ CAÇADINI DE VARGAS</div>                                                                                                  </details>
+                    </dd>
+                                  
+                                                                                                          <dt>Procurador:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>ULYSSES DA SILVA COSTA FILHO</summary>        
+                                                                                                        <div class="parte col-sm-6">MINISTÉRIO PÚBLICO MILITAR</div>                                              </details>
+                    </dd>
+                                  
+                                                                                      
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                        
+                <button class="btn btn-default" title="Exibir Movimentações" data-link="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70004494020237000000"
+                        onclick="tracker.functions.movimentacoes(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		<a class="link" href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70004494020237000000"
+                   title="Abrir o processo eletrônico '7000449-40.2023.7.00.0000'" target="_blank">
+		  		7000449-40.2023.7.00.0000
+		  		</a>
+	  		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                                <div class="text-center hidden-lg">
+                    <a href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70004494020237000000" title="Abrir o processo eletrônico '7000449-40.2023.7.00.0000'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <div class="row-descrition text-center title">APELAÇÃO CRIMINAL N.º 7000449-40.2023.7.00.0000</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                                <div class="eproc-link hidden-md hidden-sm hidden-xs">
+                    <a href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70004494020237000000" title="Abrir o processo eletrônico '7000449-40.2023.7.00.0000'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <dt>Número do Feito:</dt>
+                <dd>7000449-40.2023.7.00.0000</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>APELAÇÃO CRIMINAL</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>SUPERIOR TRIBUNAL MILITAR </dd>
+                
+                
+                                <dt>Relator(a):</dt>
+                <dd>ARTUR VIDIGAL DE OLIVEIRA</dd>
+                
+                
+                                <dt>Revisor(a):</dt>
+                <dd>LOURIVAL CARVALHO SILVA</dd>
+                
+                <div class="row">
+                                        <div class="col-sm-5">
+                        <dt>Data de Autuação:</dt>
+                        <dd>02/06/2023 10:52:53</dd>
+                    </div>
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>MOVIMENTO</dd>
+                    </div>
+                                    </div>
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                                <div class="row-title">Assuntos</div>
+                                                <dd class="dd">1) DIREITO PENAL MILITAR,CRIMES CONTRA A AUTORIDADE OU DISCIPLINA MILITAR,ALICIAÇÃO E INCITAMENTO,INCITAMENTO</dd>
+                                <dd class="dd">2) DIREITO PENAL,FATO ATÍPICO</dd>
+                                <dd class="dd">3) DIREITO PROCESSUAL CIVIL E DO TRABALHO,PROCESSO E PROCEDIMENTO,PROVAS,DEPOIMENTO</dd>
+                                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Apelado:</dt>
+                                <dd>CESAR DE MEDEIROS GARCIA<img src="/icones/Exercito.png" class="icone-forca" data-toggle="tooltip" data-placement="bottom" title="MAJOR / EXÉRCITO" alt="MAJOR / EXÉRCITO"></dd>
+                                                                    <dt>Apelante:</dt>
+                                <dd>MINISTÉRIO PÚBLICO MILITAR</dd>
+                                                
+                                <div class="row-title">Representantes</div>
+                                                                                                    <dt>Advogado:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>LINO MARCELO VIDAL MUNHOZ</summary>        
+                                                    <div class="parte col-sm-6">CESAR DE MEDEIROS GARCIA</div>                                                                                                  </details>
+                    </dd>
+                                  
+                                                                                                          <dt>Procurador:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>ROBERTO COUTINHO</summary>        
+                                                                                                        <div class="parte col-sm-6">MINISTÉRIO PÚBLICO MILITAR</div>                                              </details>
+                    </dd>
+                                  
+                                                                                      
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+    </div>
+
+    <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=&amp;search_filter_option=feitos&amp;search_filter=busca_avancada&amp;fq_assunto_pesquisa=INCITAMENTO&amp;start=0&amp;rows=100&amp;fq_situacao=MOVIMENTO&amp;q=*&amp;&amp;start=0&amp;rows=100"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal_data" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modal_label"><strong>Titulo</strong></h4>
+      </div>
+      <div class="modal-body" id="modal_content">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid">
+    <div class="row footer">
+        <legend></legend>
+        <p><img src="images/jmu-sistemas-rodape.png" alt="JMU"> Consulta Judicial Unificada<span class="pull-right"> <a href="https://www.stm.jus.br/" class="link">stm.jus.br</a></span></p>
+    </div>
+</div>
+
+</body>
+
+</html>

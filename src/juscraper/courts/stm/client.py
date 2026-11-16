@@ -8,25 +8,26 @@ from typing import Any, ClassVar
 
 import pandas as pd
 import requests
+from pydantic import ValidationError
 
 from juscraper.core.download import gravar_arquivo
 from juscraper.core.http import HTTPScraper, RequestPolicy
-from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
+from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search, normalize_paginas, raise_on_extra_kwargs
 
-from .download import cjsg_download_manager, conferir_bloqueio
+from .download import cjsg_download_manager, conferir_bloqueio, processos_download_manager
 from .inteiro_teor import InteiroTeorIndisponivelError, nome_do_arquivo, pdf_da_resposta
-from .parse import cjsg_parse_manager
-from .schemas import InputCJSGSTM
+from .parse import cjsg_parse_manager, processos_parse_manager
+from .schemas import InputCJSGSTM, InputListarProcessosSTM
 
 
 class STMScraper(HTTPScraper):
     """Raspador do Superior Tribunal Militar.
 
     Usa a Consulta Judicial Unificada da Justiça Militar da União
-    (``jurisprudencia.stm.jus.br``), na aba de jurisprudência, que reúne os
-    acórdãos do STM. A aba de processos do mesmo portal, que cobre também as
-    Auditorias das Circunscrições Judiciárias Militares, não está
-    implementada.
+    (``jurisprudencia.stm.jus.br``): a aba de jurisprudência, que reúne os
+    acórdãos do STM (:meth:`cjsg`), e a aba de processos, que cobre também as
+    Auditorias das Circunscrições Judiciárias Militares
+    (:meth:`listar_processos`).
 
     O portal fica atrás de um WAF que recusa pedidos conforme o IP de origem
     (em 16/11/2026, recusou todos os de um IP de datacenter fora do Brasil);
@@ -37,12 +38,13 @@ class STMScraper(HTTPScraper):
         sleep_time: Segundos entre duas páginas de resultados (default 1).
         download_path: Pasta de downloads. ``None`` usa um diretório temporário.
         verbose: Nível de detalhe do log.
-        politica: Ajustes dos perfis HTTP ``cjsg`` e ``inteiro_teor``, por campo de
+        politica: Ajustes dos perfis HTTP ``cjsg``, ``processos`` e ``inteiro_teor``, por campo de
             :class:`~juscraper.core.http.RequestPolicy`.
     """
 
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "cjsg": RequestPolicy(timeout=60),
+        "processos": RequestPolicy(timeout=60),
         "inteiro_teor": RequestPolicy(timeout=120),
     }
 
@@ -198,6 +200,121 @@ class STMScraper(HTTPScraper):
             O DataFrame descrito em :meth:`cjsg`.
         """
         return cjsg_parse_manager(resultados_brutos)
+
+    def listar_processos(
+        self,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Lista processos do STM e das Auditorias da Justiça Militar da União.
+
+        Usa a aba "Processos" do portal, com a capa de cada processo, as
+        partes e os representantes. É preciso informar ``pesquisa`` ou ao
+        menos um filtro.
+
+        Args:
+            pesquisa (str | None): Número do processo, completo ou parcial
+                (``"7000374-06.2020.7.00.0000"``). ``None`` ou vazio lista
+                os processos que os filtros selecionam.
+            paginas (int | list | range | None): Páginas 1-based, de 100
+                processos cada; ``None`` baixa todas. Default ``None``.
+            **kwargs: Filtros aceitos pelo schema
+                :class:`InputListarProcessosSTM`, os da coluna "Filtrar por"
+                do portal: opcionais (``None`` = sem filtro) e comparados com
+                o valor exato que o portal exibe, em maiúsculas.
+
+                * ``cjm`` (str | None): Circunscrição Judiciária Militar
+                  (``"11ª CIRCUNSCRIÇÃO JUDICIÁRIA MILITAR - DF"``).
+                * ``orgao`` (str | None): Órgão (``"SUPERIOR TRIBUNAL
+                  MILITAR"``, ``"AUDITORIA DA 5ª CJM"``).
+                * ``conselho`` (str | None): Conselho de Justiça
+                  (``"CONSELHO PERMANENTE DE JUSTIÇA - EXÉRCITO"``).
+                * ``situacao`` (str | None): Situação do processo
+                  (``"MOVIMENTO"``, ``"BAIXADO"``).
+                * ``classe`` (str | None): Classe processual
+                  (``"INQUÉRITO POLICIAL MILITAR"``).
+                * ``assunto`` (str | None): Assunto (``"INCITAMENTO"``).
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido é passado.
+            ValidationError: Quando um filtro tem valor inválido.
+            ValueError: Quando não há ``pesquisa`` nem filtro; quando a página
+                devolvida não traz o contador de documentos nem o aviso de
+                busca vazia.
+            BotChallengeBlockedError: Quando o WAF do portal recusa a
+                requisição.
+
+        Returns:
+            Uma linha por processo, da autuação mais recente para a mais
+                antiga, com ``processo``, ``classe``, ``orgao``, ``conselho``,
+                ``relator``, ``revisor``, ``juiz``, ``data_autuacao`` (com a
+                hora), ``situacao``, ``assunto`` (os assuntos num texto só,
+                numerados como no portal), ``partes`` (lista de dicionários
+                com ``tipo``, ``nome`` e ``qualificacao``, o posto e a força
+                que o portal mostra),
+                ``representantes`` (lista de dicionários com ``tipo``,
+                ``nome`` e ``partes``, os nomes de quem ele representa) e
+                ``url_processo`` (endereço do processo no eproc). Busca sem
+                resultados devolve o DataFrame vazio com as mesmas colunas.
+
+        Examples: Exemplo
+            >>> import juscraper as jus
+            >>> stm = jus.scraper("stm")
+            >>> df = stm.listar_processos("7000374-06.2020.7.00.0000")
+            >>> df = stm.listar_processos(assunto="INCITAMENTO", situacao="MOVIMENTO")
+
+        See Also:
+            :class:`InputListarProcessosSTM` — schema pydantic é a fonte da
+            verdade dos filtros aceitos.
+        """
+        return self.listar_processos_parse(self.listar_processos_download(
+            pesquisa=pesquisa,
+            paginas=paginas,
+            **kwargs,
+        ))
+
+    def listar_processos_download(
+        self,
+        pesquisa: str | None = None,
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> list[str]:
+        """Baixa as páginas de resultados da busca de processos do STM.
+
+        Aceita os mesmos filtros de :meth:`listar_processos`; veja lá a lista completa.
+
+        Returns:
+            O HTML de cada página, na ordem pedida.
+        """
+        # Sem o pipeline das buscas de jurisprudência: ele consome os aliases
+        # de ``pesquisa`` e de datas, que este método não tem.
+        paginas_pedidas = normalize_paginas(paginas)
+        try:
+            inp = InputListarProcessosSTM(
+                pesquisa="" if pesquisa is None else pesquisa, paginas=paginas_pedidas, **kwargs
+            )
+        except ValidationError as erro:
+            raise_on_extra_kwargs(erro, "STMScraper.listar_processos_download()", schema_cls=InputListarProcessosSTM)
+            raise
+        termo = inp.pesquisa.strip()
+        filtros = inp.model_dump(exclude={"pesquisa", "paginas"})
+        if not termo and not any(filtros.values()):
+            raise ValueError(
+                "STM: listar_processos precisa de 'pesquisa' (número do processo) ou de ao menos um filtro "
+                f"({', '.join(filtros)})."
+            )
+        return processos_download_manager(
+            termo, paginas_pedidas, request_fn=self._request_with_retry, sleep_time=self.sleep_time, **filtros
+        )
+
+    def listar_processos_parse(self, resultados_brutos: list[str]) -> pd.DataFrame:
+        """Extrai os processos das páginas baixadas por :meth:`listar_processos_download`.
+
+        Returns:
+            O DataFrame descrito em :meth:`listar_processos`.
+        """
+        return processos_parse_manager(resultados_brutos)
 
     def baixar_inteiro_teor(self, url_inteiro_teor: str, diretorio: str | None = None) -> str:
         """Baixa o PDF do inteiro teor de um acórdão do STM.

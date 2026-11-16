@@ -1,8 +1,10 @@
 """Schemas pydantic do raspador do STM."""
 from __future__ import annotations
 
-from datetime import date
-from typing import ClassVar, Literal
+from datetime import date, datetime
+from typing import Any, ClassVar, Literal
+
+from pydantic import BaseModel, ConfigDict
 
 from ...schemas import OutputCJSGBase, SearchBase
 from ...schemas.mixins import DataJulgamentoMixin, DataPublicacaoMixin, OutputDataPublicacaoMixin
@@ -47,3 +49,45 @@ class OutputCJSGSTM(OutputCJSGBase, OutputDataPublicacaoMixin):
     assunto: str | None = None
     data_autuacao: date | str | None = None
     url_inteiro_teor: str | None = None
+
+
+class InputListarProcessosSTM(SearchBase):
+    """Filtros aceitos por ``STMScraper.listar_processos`` / ``listar_processos_download``.
+
+    ``pesquisa`` é o número do processo, completo ou parcial; vazia, lista o
+    que os filtros selecionam. Os filtros são os da coluna "Filtrar por" da
+    aba de processos e casam com o valor exato que o portal exibe, em
+    maiúsculas (``"AUDITORIA DA 5ª CJM"``, ``"MOVIMENTO"``).
+    """
+
+    cjm: str | None = None
+    orgao: str | None = None
+    conselho: str | None = None
+    situacao: str | None = None
+    classe: str | None = None
+    assunto: str | None = None
+
+
+class OutputListarProcessosSTM(BaseModel):
+    """Colunas de uma linha do DataFrame de ``STMScraper.listar_processos``.
+
+    Reflete ``stm.parse.processos_parse_manager``. Só ``processo``,
+    ``classe``, ``orgao`` e ``situacao`` vêm em todo processo; ``relator`` e
+    ``revisor`` são do STM, e ``juiz`` e ``conselho``, das Auditorias.
+    """
+
+    processo: str
+    classe: str | None = None
+    orgao: str | None = None
+    conselho: str | None = None
+    relator: str | None = None
+    revisor: str | None = None
+    juiz: str | None = None
+    data_autuacao: datetime | None = None
+    situacao: str | None = None
+    assunto: str | None = None
+    partes: list[dict[str, Any]] = []
+    representantes: list[dict[str, Any]] = []
+    url_processo: str | None = None
+
+    model_config = ConfigDict(extra="allow")
