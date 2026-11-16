@@ -232,7 +232,9 @@ class FalcaoScraper(HTTPScraper):
             >>> import juscraper as jus
             >>> falcao = jus.scraper("falcao")
             >>> df = falcao.listar_decisoes("dano moral", paginas=range(1, 3),
-            ...                  tribunais=["TST", "TRT3"])
+            ...                  tribunais=["TST", "TRT3"],
+            ...                  ordenacao="menos_recente",
+            ...                  data_juntada_fim="2024-12-31")
 
         See also:
             :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
@@ -407,10 +409,11 @@ class FalcaoScraper(HTTPScraper):
         self._avisar_teto(inp, total)
 
         pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
-        if checkpoint is None and len(pendentes) > 1:
-            self._avisar_ordem_instavel(inp)
         if primeira not in pendentes:
             arquivo_inicial.unlink()
+        # Com checkpoint, ``_baixar`` já avisou antes da coleta. ``paginas`` em lista pode repetir a página.
+        if checkpoint is None and len(set(pendentes)) > 1:
+            self._avisar_ordem_instavel(inp)
         for pagina in tqdm(pendentes, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
             if pagina == primeira:
                 continue
@@ -496,10 +499,10 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`).
+        """Avisa, na ordem padrão, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`).
 
-        Com checkpoint, vale para qualquer coleta, pois as páginas se somam entre
-        sessões; sem ele, só para a coleta de mais de uma página.
+        Quem chama decide quando: com checkpoint, em toda coleta, pois as páginas se
+        somam entre sessões; sem ele, só na coleta de mais de uma página.
         """
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(

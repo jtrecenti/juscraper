@@ -13,12 +13,12 @@ import responses
 
 import juscraper as jus
 from juscraper.aggregators.falcao.download import SEARCH_URL
-from tests.falcao.test_falcao_contract import AVISO_DE_ORDEM, _paginas_pedidas, _register, _sample
+from tests.falcao.test_falcao_contract import AVISO_DE_ORDEM, _paginas_pedidas, _register, _sample, ordem_padrao_avisa
 
 _POR_PAGINA = len(_sample("acordaos")["documentos"])
 
 # A maioria dos contratos usa a ordem padrão, que avisa; o aviso tem contratos próprios.
-pytestmark = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
+pytestmark = ordem_padrao_avisa
 
 
 @pytest.fixture
