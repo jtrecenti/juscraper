@@ -20,6 +20,7 @@ CloudFront, AWS WAF, F5) que derrubou a requisição da linha.
 ``captcha_esgotado`` é o captcha que o portal recusou em todas as tentativas.
 ``limite_de_requisicoes`` é a recusa por excesso de requisições que não vem em
 status HTTP retentável.
+``erro_de_gravacao`` é o arquivo que chegou mas não pôde ser gravado em disco.
 """
 from __future__ import annotations
 
@@ -94,6 +95,15 @@ Usado pelo inteiro teor do TSE, que recusa em HTTP 200 com texto. Basta
 esperar e pedir de novo só as linhas que falharam.
 """
 
+MOTIVO_ERRO_DE_GRAVACAO = "erro_de_gravacao"
+"""O arquivo foi baixado, mas gravá-lo falhou (disco cheio, pasta sem permissão).
+
+É o :class:`~juscraper.core.download.ErroDeGravacaoError` nos downloads em
+lote de :mod:`juscraper.core.lote`. O erro de disco tende a se repetir no
+arquivo seguinte, então o lote para na linha que falhou, e as seguintes saem
+com este motivo, sem pedido.
+"""
+
 MOTIVOS_FALHA: tuple[str, ...] = (
     "http_<status>",
     "retry_esgotado_<status>",
@@ -108,6 +118,7 @@ MOTIVOS_FALHA: tuple[str, ...] = (
     MOTIVO_BLOQUEIO_ANTI_BOT,
     MOTIVO_CAPTCHA_ESGOTADO,
     MOTIVO_LIMITE_DE_REQUISICOES,
+    MOTIVO_ERRO_DE_GRAVACAO,
 )
 """Valores possíveis de :data:`COLUNA_MOTIVO_FALHA`; ``<status>`` é o código HTTP."""
 

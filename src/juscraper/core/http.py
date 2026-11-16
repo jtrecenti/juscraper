@@ -27,7 +27,7 @@ import numbers
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, fields, replace
-from typing import Any, ClassVar, TypeAlias
+from typing import Any, ClassVar, TypeAlias, TypeVar
 
 import requests
 
@@ -88,6 +88,18 @@ def timeout_valido(valor: object, *, aceita_none: bool = True) -> bool:
     if isinstance(valor, (list, tuple)):
         return len(valor) == 2 and all(_parte_valida(parte) for parte in valor)
     return _parte_valida(valor)
+
+
+_T = TypeVar("_T")
+
+
+def timeout_em_tupla(valor: _T | list[float]) -> _T | tuple[float, float]:
+    """``valor`` com o par ``(conexão, leitura)`` em tupla, a forma que o ``requests`` aceita.
+
+    A lista chega de ``politica=`` ou de opção lida de JSON, já conferida por
+    :func:`timeout_valido`; o que não é lista volta como veio.
+    """
+    return (valor[0], valor[1]) if isinstance(valor, list) else valor
 
 
 def _max_retries_valido(valor: object) -> bool:
@@ -184,10 +196,7 @@ class RequestPolicy:
                 "timeout deve ser None, um número positivo e finito de segundos ou o par "
                 f"(conexão, leitura), recebido {self.timeout!r}"
             )
-        # ``politica=`` vinda de JSON traz lista; ``requests`` só aceita tupla (connect, read).
-        timeout: Any = self.timeout  # a anotação não cobre a lista que chega em runtime
-        if isinstance(timeout, list):
-            object.__setattr__(self, "timeout", tuple(timeout))
+        object.__setattr__(self, "timeout", timeout_em_tupla(self.timeout))
         # Aceita set/list vindos de ``politica=`` sem deixar a política mutável.
         object.__setattr__(self, "retryable_statuses", frozenset(self.retryable_statuses))
 

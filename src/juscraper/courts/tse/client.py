@@ -221,7 +221,8 @@ class TSEScraper(HTTPScraper):
         entrada, com ``sleep_time`` entre os pedidos: são 10 s por decisão no
         default. A falha de uma decisão não interrompe o lote; duas recusas
         seguidas por excesso de requisições, sim, e as linhas seguintes saem
-        ``limite_de_requisicoes`` sem pedido.
+        ``limite_de_requisicoes`` sem pedido. O erro ao gravar um PDF também
+        encerra o lote: a linha e as seguintes saem ``erro_de_gravacao``.
 
         Args:
             codigos_decisao (Iterable[int | str]): Códigos das decisões, como
@@ -242,7 +243,9 @@ class TSEScraper(HTTPScraper):
                 ``limite_de_requisicoes`` (o serviço recusou o pedido; basta
                 pedir de novo as linhas que falharam), ``entrada_invalida``
                 (código que não é inteiro nem texto só de dígitos, como a
-                célula vazia; nada é pedido) ou um motivo de rede de
+                célula vazia; nada é pedido), ``erro_de_gravacao`` (o PDF
+                chegou, mas não pôde ser gravado: disco cheio, pasta sem
+                permissão) ou um motivo de rede de
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`. As falhas
                 saem também num único ``UserWarning`` ao fim.
 

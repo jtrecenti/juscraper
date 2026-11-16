@@ -10,6 +10,12 @@ encerra o lote, e as seguintes saem com o mesmo motivo, sem pedido, por
 :func:`~juscraper.core.failures.consultar_em_lote`. Só o raspador que detecta
 o bloqueio chega a esse motivo. ``DownloadEmLote.encerrar`` acrescenta outra
 condição de parada.
+
+O erro ao gravar o arquivo (:class:`~juscraper.core.download.ErroDeGravacaoError`:
+disco cheio, pasta sem permissão) tende a se repetir no arquivo seguinte, que
+seria baixado à toa: a linha sai
+:data:`~juscraper.core.failures.MOTIVO_ERRO_DE_GRAVACAO` e encerra o lote do
+mesmo jeito, com as linhas já baixadas no retorno.
 """
 
 from __future__ import annotations
@@ -21,10 +27,12 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 
+from juscraper.core.download import ErroDeGravacaoError
 from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
     MOTIVO_BLOQUEIO_ANTI_BOT,
+    MOTIVO_ERRO_DE_GRAVACAO,
     avisar_falhas,
     consultar_em_lote,
     motivo_falha,
@@ -67,13 +75,13 @@ class _Download(NamedTuple):
 
 def _pelos_motivos(
     regra: Callable[[list[str | None]], bool] | None,
-) -> Callable[[list[_Download]], bool] | None:
-    """``regra``, que lê motivos, na forma que :func:`consultar_em_lote` chama."""
-    if regra is None:
-        return None
+) -> Callable[[list[_Download]], bool]:
+    """O erro de gravação ou ``regra``, que lê motivos, na forma que :func:`consultar_em_lote` chama."""
 
     def encerrar(feitos: list[_Download]) -> bool:
-        return regra([d.motivo for d in feitos])
+        if feitos[-1].motivo == MOTIVO_ERRO_DE_GRAVACAO:
+            return True
+        return regra is not None and regra([d.motivo for d in feitos])
 
     return encerrar
 
@@ -109,10 +117,10 @@ def baixar_em_lote(
             motivo, mensagem = erro.motivo, str(erro)  # type: ignore[attr-defined]
         except EXCECOES_DE_FALHA_POR_LINHA as erro:
             motivo, mensagem = motivo_falha(erro), str(erro)
-        if motivo == MOTIVO_BLOQUEIO_ANTI_BOT:
-            lote.logger.warning(
-                "%s: bloqueio anti-bot em %s; o lote para aqui: %s", metodo, lote.rotulo(linha), mensagem
-            )
+        except ErroDeGravacaoError as erro:
+            motivo, mensagem = MOTIVO_ERRO_DE_GRAVACAO, str(erro)
+        if motivo in (MOTIVO_BLOQUEIO_ANTI_BOT, MOTIVO_ERRO_DE_GRAVACAO):
+            lote.logger.warning("%s: %s em %s; o lote para aqui: %s", metodo, motivo, lote.rotulo(linha), mensagem)
         else:
             lote.logger.info("%s: %s", lote.rotulo(linha), mensagem)
         return _Download(None, motivo)

@@ -99,7 +99,6 @@ extend = "pyproject.toml"
 "src/juscraper/courts/tjto/client.py" = ["ANN001", "ANN003", "ANN201", "ANN204", "D107", "D200", "D212", "D405", "FBT001", "FBT002", "PLR0913"]
 "src/juscraper/courts/tjto/download.py" = ["ANN001", "D200", "D212", "D417", "PLR0913"]
 "src/juscraper/courts/tjto/parse.py" = ["ANN001", "D200", "D212"]
-"src/juscraper/courts/trf6/client.py" = ["ANN204"]
 "src/juscraper/courts/trf6/download.py" = ["PLC0415"]
 "src/juscraper/schemas/types.py" = ["ANN001", "ANN202", "TRY004"]
 "src/juscraper/utils/__init__.py" = ["ANN001"]

@@ -137,7 +137,9 @@ class EsajSentencaScraper(EsajSearchScraper):
                 :data:`~juscraper.core.failures.MOTIVOS_FALHA`; as falhas saem
                 também num único ``UserWarning`` ao fim. O primeiro
                 ``bloqueio_anti_bot`` encerra o lote: as linhas seguintes saem
-                com o mesmo motivo, sem pedido ao tribunal.
+                com o mesmo motivo, sem pedido ao tribunal. O mesmo vale para
+                o ``erro_de_gravacao``, do PDF que chegou e não pôde ser
+                gravado (disco cheio, pasta sem permissão).
         """
         return baixar_em_lote(
             cjpg,
