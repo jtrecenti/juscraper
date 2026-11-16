@@ -65,7 +65,7 @@ def _classify(
             return None
         page_num = int(match.group(2)) // RESULTS_PER_PAGE + 1
         suffix = "_monocraticas" if match.group(1) else ""
-        return f"step_{step_num:02d}_pagina_{page_num:02d}{suffix}.xml"  # noqa: E231
+        return f"step_{step_num:02d}_pagina_{page_num:02d}{suffix}.xml"
 
     # Initial POST.
     if scenario == "typical":

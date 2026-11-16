@@ -374,7 +374,7 @@ def _salvar_resultados_html(
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
                     f"A consulta ao site falhou."
-                    f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"  # noqa: E702
+                    f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"
                     f"Status code {resposta_documento.status_code}.",
                     response=resposta_documento,
                 )
