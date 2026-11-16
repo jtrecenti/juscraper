@@ -377,6 +377,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjmg.client.TJMGScraper.cjsg_parse(raw_pages)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Transform raw TJMG HTML pages into a DataFrame.</p>
+<p>A página “muitos resultados” levanta <code>ValueError</code>, como no <a href="../reference/courts.tjmg.client.TJMGScraper.html#juscraper.courts.tjmg.client.TJMGScraper.cjsg"><code>cjsg</code></a>; a página com erro de busca ou com a busca categorizada levanta <code>TJMGBuscaSemListaError</code>.</p>
 </section>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjmg.client.TJMGScraper.cpopg">cpopg</h3>
