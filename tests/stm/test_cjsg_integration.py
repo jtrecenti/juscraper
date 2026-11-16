@@ -19,9 +19,16 @@ def stm():
     return jus.scraper("stm")
 
 
-def _total(stm, pesquisa, **filtros):
+def _total_da_pagina(html: str) -> int:
+    """Total de documentos que o portal anuncia na página."""
+    total = cjsg_n_resultados(html)
+    assert total is not None
+    return total
+
+
+def _total(stm, pesquisa, **filtros) -> int:
     """Total de documentos que o portal anuncia para a busca."""
-    return cjsg_n_resultados(stm.cjsg_download(pesquisa, paginas=1, **filtros)[0])
+    return _total_da_pagina(stm.cjsg_download(pesquisa, paginas=1, **filtros)[0])
 
 
 def test_cjsg_duas_paginas_ao_vivo(stm):
@@ -87,7 +94,7 @@ def test_cjsg_campo_tudo_ao_vivo(stm):
 
     assert len(df) == RESULTS_PER_PAGE
     assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
-    assert cjsg_n_resultados(html) > _total(stm, '"corrupção ativa"')
+    assert _total_da_pagina(html) > _total(stm, '"corrupção ativa"')
 
 
 def test_cjsg_campo_referencia_legislativa_ao_vivo(stm):
@@ -103,7 +110,7 @@ def test_cjsg_campo_referencia_legislativa_ao_vivo(stm):
     assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
     assert len(df_com_data) > 0
     assert df_com_data["data_julgamento"].between(inicio, fim).all()
-    assert cjsg_n_resultados(html) > cjsg_n_resultados(html_com_data)
+    assert _total_da_pagina(html) > _total_da_pagina(html_com_data)
 
 
 PERIODO = {"data_julgamento_inicio": "01/01/2020", "data_julgamento_fim": "31/12/2024"}
