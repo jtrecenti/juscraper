@@ -2,7 +2,6 @@
 Downloads raw results from the TJPA jurisprudence search.
 """
 import json
-import logging
 import time
 from datetime import date, timedelta
 
@@ -10,8 +9,7 @@ import requests
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-
-logger = logging.getLogger(__name__)
+from juscraper.utils.pagination import menor_pagina, paginas_no_intervalo
 
 BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 SITE_URL = "https://jurisprudencia.tjpa.jus.br"
@@ -135,19 +133,16 @@ def cjsg_download_manager(
         time.sleep(1)
         return data
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        total_pages = first.get("data", {}).get("totalPages", 1)
-        if total_pages > 1:
-            logger.info("TJPA: %d pages found. Downloading all...", total_pages)
-            for pagina in tqdm(range(2, total_pages + 1), desc="Baixando páginas TJPA"):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_get_page(pagina))  # noqa: PERF401
-        return resultados
-
-    paginas_iter = list(paginas)
+    # A menor página pedida sai primeiro, porque traz o total; as demais, na
+    # ordem pedida, uma vez cada, e as além do total vão para o log. O BFF
+    # responde a uma página além do total com a última, sem erro.
+    primeira = menor_pagina(paginas)
+    first = _get_page(primeira)
+    n_pags = max(1, first.get("data", {}).get("totalPages", 1))
     resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando páginas TJPA"):
-        resultados.append(_get_page(pagina_1based))
+    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal="TJPA"), desc="Baixando páginas TJPA"):
+        if pagina == primeira:
+            resultados.append(first)
+            continue
+        resultados.append(_get_page(pagina))
     return resultados

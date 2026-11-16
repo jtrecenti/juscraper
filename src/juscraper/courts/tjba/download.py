@@ -6,6 +6,7 @@ import time
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import menor_pagina, paginas_no_intervalo
 from juscraper.utils.params import to_iso_date
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
@@ -158,20 +159,16 @@ def cjsg_download(
             raise ValueError(f"GraphQL errors: {data['errors']}")
         return data
 
-    if paginas is None:
-        first = _fetch_page(0)
-        resultados = [first]
-        page_count = first.get("data", {}).get("filter", {}).get("pageCount", 1)
-        if page_count > 1:
-            for p in tqdm(range(1, page_count), desc="Baixando paginas TJBA"):
-                resultados.append(_fetch_page(p))
-                time.sleep(1)
-        return resultados
-
-    paginas_list = list(paginas)
+    # A menor página pedida sai primeiro, porque traz o total; as demais, na
+    # ordem pedida, uma vez cada, e as além do total vão para o log.
+    primeira = menor_pagina(paginas)
+    first = _fetch_page(primeira - 1)
+    n_pags = max(1, first.get("data", {}).get("filter", {}).get("pageCount", 1))
     resultados = []
-    for pagina_1based in tqdm(paginas_list, desc="Baixando paginas TJBA"):
-        resultados.append(_fetch_page(pagina_1based - 1))
-        if len(paginas_list) > 1:
-            time.sleep(1)
+    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal="TJBA"), desc="Baixando paginas TJBA"):
+        if pagina == primeira:
+            resultados.append(first)
+            continue
+        time.sleep(1)
+        resultados.append(_fetch_page(pagina - 1))
     return resultados

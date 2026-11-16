@@ -1,11 +1,13 @@
 """``paginas`` explícito no ``cjsg``: página repetida uma vez só e página além do total sem pedido.
 
-Contrato comum de um portal JSON (TJRN, Elasticsearch, total em ``hits.total``)
-e de um HTML (TJSC, total no cabeçalho de toda página), como já valia para
-TJGO, TJMG, TJRJ, TJTO e o eSAJ. A menor página pedida sai primeiro, porque é
-dela que vem o total (como no TJTO); as demais saem na ordem pedida. Os samples
-são respostas reais: a busca "dano moral" tem 69.440 resultados no TJRN e
-23.109 no TJSC, 10 por página.
+Contrato comum dos portais JSON (TJRN e TJRO, Elasticsearch, total em
+``hits.total``; TJPA, ``data.totalPages``; TJBA, GraphQL, ``pageCount``) e de
+um HTML (TJSC, total no cabeçalho de toda página), como já valia para TJGO,
+TJMG, TJRJ, TJTO e o eSAJ. A menor página pedida sai primeiro, porque é dela
+que vem o total (como no TJTO); as demais saem na ordem pedida. Os samples são
+respostas reais: a busca "dano moral" tem 69.440 resultados no TJRN e 23.109
+no TJSC, 10 por página; os de TJBA, TJPA e TJRO são de página 2, com 121.786,
+400 e 11.635 páginas.
 """
 from __future__ import annotations
 
@@ -48,8 +50,38 @@ def _pagina_tjsc(request) -> int:
     return int(parse_qs(request.body)["hdnPaginaAtual"][0])
 
 
+def _registrar_json(tribunal: str):
+    def registrar() -> None:
+        responses.add(
+            responses.POST, URLS[tribunal], body=load_sample(tribunal, "cjsg/results_normal_page_02.json"),
+            content_type="application/json",
+        )
+    return registrar
+
+
+def _pagina_tjba(request) -> int:
+    return cast("int", json.loads(request.body)["variables"]["pageNumber"]) + 1
+
+
+def _pagina_tjpa(request) -> int:
+    return cast("int", json.loads(request.body)["page"]) + 1
+
+
+def _pagina_tjro(request) -> int:
+    return cast("int", json.loads(request.body)["from"]) // 10 + 1
+
+
+URLS = {
+    "tjba": "https://jurisprudenciaws.tjba.jus.br/graphql",
+    "tjpa": "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar",
+    "tjro": "https://juris-back.tjro.jus.br/search/varios_parametros/",
+}
+
 PORTAIS = {
+    "tjba": (_registrar_json("tjba"), _pagina_tjba),
+    "tjpa": (_registrar_json("tjpa"), _pagina_tjpa),
     "tjrn": (_registrar_tjrn, _pagina_tjrn),
+    "tjro": (_registrar_json("tjro"), _pagina_tjro),
     "tjsc": (_registrar_tjsc, _pagina_tjsc),
 }
 
@@ -83,3 +115,24 @@ def test_so_paginas_alem_do_total_pede_so_a_menor(tribunal, mocker):
 
     assert _paginas_pedidas(tribunal) == [10**6]
     assert brutos == []
+
+
+@pytest.mark.parametrize("tribunal", ["tjba", "tjpa", "tjro"])
+@responses.activate
+def test_menor_pagina_volta_na_posicao_pedida(tribunal, mocker):
+    """A menor página é pedida antes das outras, mas o retorno segue a ordem de ``paginas``."""
+    mocker.patch("time.sleep")
+    _, pagina_de = PORTAIS[tribunal]
+    pagina_2 = load_sample(tribunal, "cjsg/results_normal_page_02.json")
+    outra = load_sample(tribunal, "cjsg/results_normal_page_01.json")
+    responses.add_callback(
+        responses.POST,
+        URLS[tribunal],
+        callback=lambda request: (200, {}, pagina_2 if pagina_de(request) == 2 else outra),
+        content_type="application/json",
+    )
+
+    brutos = jus.scraper(tribunal).cjsg_download("dano moral", paginas=[5, 2, 4])
+
+    assert _paginas_pedidas(tribunal) == [2, 5, 4]
+    assert brutos == [json.loads(outra), json.loads(pagina_2), json.loads(outra)]
