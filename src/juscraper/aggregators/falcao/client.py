@@ -340,12 +340,13 @@ class FalcaoScraper(HTTPScraper):
         Sem ``checkpoint``, ``destino`` está vazio e nada é pulado.
         """
         gravadas = checkpoint.gravadas if checkpoint is not None else set()
+        total_anterior = checkpoint.total if checkpoint is not None else None
         # A primeira pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = self._primeira_pendente(inp, checkpoint)
+        primeira = self._primeira_pendente(inp, gravadas, total_anterior)
         if primeira is None:
-            if checkpoint is not None and checkpoint.total is not None:
-                self._avisar_teto(inp, checkpoint.total)
+            if total_anterior is not None:
+                self._avisar_teto(inp, total_anterior)
             return
         primeiro_json = self._buscar_pagina(inp, primeira)
         # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
@@ -375,7 +376,7 @@ class FalcaoScraper(HTTPScraper):
             _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
     def _primeira_pendente(
-        self, inp: InputListarDecisoesFalcao, checkpoint: _checkpoint.Checkpoint | None,
+        self, inp: InputListarDecisoesFalcao, gravadas: set[int], total_anterior: int | None,
     ) -> int | None:
         """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
@@ -384,12 +385,7 @@ class FalcaoScraper(HTTPScraper):
         vale o total da sessão anterior: página além dele não gasta a cota, e
         o checkpoint completo não requisita nada.
         """
-        conhecido = _MAX_RESULTADOS
-        gravadas: set[int] = set()
-        if checkpoint is not None:
-            gravadas = checkpoint.gravadas
-            if checkpoint.total is not None:
-                conhecido = checkpoint.total
+        conhecido = _MAX_RESULTADOS if total_anterior is None else total_anterior
         candidatas = self._resolver_paginas(inp.paginas, self._total_paginas(conhecido, inp.tamanho_pagina))
         return next((p for p in candidatas if p not in gravadas), None)
 

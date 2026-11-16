@@ -25,7 +25,7 @@ def gravar_json(arquivo: Path, conteudo: dict) -> None:
     gravar_arquivo(json.dumps(conteudo, ensure_ascii=False).encode("utf-8"), arquivo)
 
 
-def gravar_manifesto(diretorio: Path, identidade: dict, total: int | None) -> None:
+def _gravar_manifesto(diretorio: Path, identidade: dict, total: int | None) -> None:
     """Registra a busca do checkpoint e o último total observado."""
     gravar_json(diretorio / MANIFESTO, {"version": _VERSAO, "identity": identidade, "total": total})
 
@@ -38,7 +38,7 @@ def _abrir(diretorio: Path, identidade: dict, *, resume: bool) -> int | None:
                 f"checkpoint_dir ocupado ({diretorio}); use resume=True para continuar a coleta "
                 "ou outro diretório para uma coleta nova."
             )
-        gravar_manifesto(diretorio, identidade, None)
+        _gravar_manifesto(diretorio, identidade, None)
         return None
     corrompido = f"Checkpoint inexistente ou corrompido em {diretorio}"
     try:
@@ -66,7 +66,7 @@ def _tem_documentos(arquivo: Path) -> bool:
     return isinstance(dados, dict) and isinstance(dados.get("documentos"), list)
 
 
-def paginas_gravadas(diretorio: Path, colecao: str) -> set[int]:
+def _paginas_gravadas(diretorio: Path, colecao: str) -> set[int]:
     """Números (1-based) das páginas concluídas do checkpoint.
 
     Resposta gravada sem a lista ``documentos`` (envelope de erro) não conta:
@@ -99,12 +99,12 @@ class Checkpoint:
         self.diretorio = diretorio
         self.identidade = identidade
         self.total = _abrir(diretorio, identidade, resume=resume)
-        self.gravadas = paginas_gravadas(diretorio, identidade["colecao"])
+        self.gravadas = _paginas_gravadas(diretorio, identidade["colecao"])
 
     def observar(self, total: int) -> None:
         """Registra o total da sessão e avisa se ele mudou com páginas já gravadas."""
         anterior, self.total = self.total, total
-        gravar_manifesto(self.diretorio, self.identidade, total)
+        _gravar_manifesto(self.diretorio, self.identidade, total)
         if self.gravadas and anterior is not None and total != anterior:
             avisar(
                 f"O total da busca no Falcao mudou de {anterior} para {total} desde a sessão anterior. "
