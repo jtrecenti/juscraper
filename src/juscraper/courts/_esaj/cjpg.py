@@ -137,7 +137,9 @@ class EsajCjpgScraper(EsajSentencaScraper):
                   filtrar uma instancia especifica. Normalizado via
                   :func:`clean_cnj` antes do envio.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                  (str | date | datetime): Intervalo de julgamento.
+                  Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
                   intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e

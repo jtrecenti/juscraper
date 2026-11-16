@@ -190,23 +190,26 @@ def download_cjsg_pages(
 
     n_pags = get_n_pags_callback(first_html)
 
-    with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
-        fp.write(first_html)
-
     if n_pags == 0:
+        with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
+            fp.write(first_html)
         logger.info("Nenhum resultado encontrado para a busca.")
         return str(path)
 
     conversation_id = _extract_conversation_id(first_html) if extract_conversation_id else ""
 
-    # A página 1 já veio no primeiro GET; as pedidas além do total vão para o log.
+    # A página 1 vem sempre no primeiro GET, porque dela sai o total, mas só
+    # é gravada se foi pedida: o parse lê todos os arquivos do diretório, e
+    # ``paginas=[2]`` traria as linhas dela junto. As pedidas além do total
+    # vão para o log.
     validas = paginas_no_intervalo(paginas, n_pags, tribunal=scraper.tribunal_name)
+    if 1 in validas:
+        with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
+            fp.write(first_html)
     paginas_list = [p for p in validas if p != 1]
+    logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(validas))
     if not paginas_list:
-        logger.info("Total de páginas: %s. Baixando apenas a primeira.", n_pags)
         return str(path)
-
-    logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(paginas_list) + 1)
 
     for pag in tqdm(paginas_list, desc=progress_desc, total=len(validas), initial=int(1 in validas)):
         time.sleep(sleep_time)
