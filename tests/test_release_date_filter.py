@@ -90,21 +90,35 @@ def _params(known: dict[str, str]):
     return [_xfail_if_known(t, known) for t in TRIBUNAIS]
 
 
+# Os tribunais vêm por fixture, e não por ``@pytest.mark.parametrize`` no teste:
+# a marca direta grava o atributo ``pytestmark`` na função, o pytest inclui os
+# atributos da função entre as palavras que ``-k`` procura, e ``-k stm`` casava
+# com "pyteSTMark" em todos os casos, rodando a matriz inteira.
+@pytest.fixture(params=_params(KNOWN_FILTRO_FAILURES))
+def tribunal(request: pytest.FixtureRequest) -> str:
+    """Sigla de cada tribunal, com xfail estrito nos de ``KNOWN_FILTRO_FAILURES``."""
+    return str(request.param)
+
+
+@pytest.fixture(params=_params(KNOWN_PAGINACAO_FAILURES))
+def tribunal_paginacao(request: pytest.FixtureRequest) -> str:
+    """Sigla de cada tribunal, com xfail estrito nos de ``KNOWN_PAGINACAO_FAILURES``."""
+    return str(request.param)
+
+
 @pytest.mark.integration
 @pytest.mark.release
 class TestReleaseFiltroDataUnica:
     """Date-window filter must work on every tribunal."""
 
-    @pytest.mark.parametrize("tribunal", _params(KNOWN_FILTRO_FAILURES))
     def test_filtro_data_unica(self, tribunal):
         """cjsg com janela de datas retorna apenas resultados dentro do intervalo."""
         scraper = jus.scraper(tribunal)
         run_filtro_data_unica(scraper)
 
-    @pytest.mark.parametrize("tribunal", _params(KNOWN_PAGINACAO_FAILURES))
-    def test_paginacao_com_data_unica(self, tribunal):
+    def test_paginacao_com_data_unica(self, tribunal_paginacao):
         """Paginação respeita o filtro de data."""
-        scraper = jus.scraper(tribunal)
+        scraper = jus.scraper(tribunal_paginacao)
         df1, df2 = run_paginacao_data_unica(scraper)
         assert isinstance(df1, pd.DataFrame)
         assert isinstance(df2, pd.DataFrame)
@@ -114,7 +128,6 @@ class TestReleaseFiltroDataUnica:
         # non-date-filtered pagination tests already in per-tribunal files.
         assert len(df2) >= len(df1)
 
-    @pytest.mark.parametrize("tribunal", _params(KNOWN_FILTRO_FAILURES))
     def test_fim_da_janela_sem_dia_seguinte(self, tribunal):
         """Busca de um dia só não traz linha do dia seguinte."""
         conferidas = run_fim_da_janela(jus.scraper(tribunal))

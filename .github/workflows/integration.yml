@@ -40,12 +40,21 @@ jobs:
   testes:
     name: Tribunais ao vivo
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # Soma dos prazos dos passos (90 + 60 + 30) mais as duas pausas do TJTO.
+    timeout-minutes: 210
     env:
       # Notebooks que só rodam com credencial de gov.br.
       NOTEBOOKS_COM_CREDENCIAL: "jusbr pdpj"
       # Lista de tribunais separados por espaço; vazia na execução completa.
       TRIBUNAL: ${{ inputs.tribunal }}
+      # Segundos entre dois blocos de testes ao vivo do TJTO (integração,
+      # notebook, release). O AWS WAF do portal desafia quem volta a buscar
+      # logo depois de uma sequência de buscas: de IP residencial, em
+      # 16/11/2026, os três blocos passaram com 600 s e com 900 s entre eles, e
+      # com 300 s o primeiro POST já recebeu o desafio. 900 s deixa folga
+      # sobre o menor valor que passou. De IP de datacenter, como o do runner,
+      # o cooldown não foi medido.
+      PAUSA_TJTO: "900"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -54,9 +63,13 @@ jobs:
         id: alvo
         run: |
           release=""
+          # Preenchida quando o TJTO roda: na execução dirigida que o nomeia e
+          # na completa, se ele não estiver em FORA_DO_CI.
+          pausa_tjto=""
           if [ -z "$TRIBUNAL" ]; then
             testes="tests"
             notebooks="docs/notebooks"
+            if [[ " $FORA_DO_CI " != *" tjto "* ]]; then pausa_tjto="$PAUSA_TJTO"; fi
           else
             testes=""
             notebooks=""
@@ -75,6 +88,7 @@ jobs:
                 notebooks="$notebooks docs/notebooks/$nome.ipynb"
               fi
               release="${release:+$release or }$nome"
+              if [ "$nome" = tjto ]; then pausa_tjto="$PAUSA_TJTO"; fi
             done
             # Valor só com espaços não entra no laço, e o pytest sem caminho
             # rodaria a suíte inteira, sem a lista FORA_DO_CI.
@@ -95,6 +109,7 @@ jobs:
             done
           fi
           {
+            echo "pausa_tjto=$pausa_tjto"
             echo "testes=$testes"
             echo "notebooks=$notebooks"
             echo "ignorar_testes=$ignorar_testes"
@@ -117,6 +132,7 @@ jobs:
       # alvo errado na execução completa; na dirigida é tribunal sem teste de
       # integração, como o Datajud.
       - name: Rodar os testes de integração
+        id: integracao
         timeout-minutes: 90
         env:
           ALVO: ${{ steps.alvo.outputs.testes }}
@@ -132,6 +148,14 @@ jobs:
           echo "pytest saiu com código $codigo"
           if [ -n "$TRIBUNAL" ] && [ "$codigo" -eq 5 ]; then exit 0; fi
           if [ -n "$TRIBUNAL" ] || [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+      - name: Esperar o WAF do TJTO antes dos notebooks
+        # Só espera se o bloco anterior chegou a rodar: sem ele, nada foi pedido ao TJTO.
+        if: ${{ !cancelled() && steps.integracao.conclusion != 'skipped' && steps.alvo.outputs.pausa_tjto != '' && steps.alvo.outputs.notebooks != '' }}
+        env:
+          PAUSA: ${{ steps.alvo.outputs.pausa_tjto }}
+        run: |
+          echo "TJTO: esperando $PAUSA s desde o bloco anterior de testes ao vivo"
+          sleep "$PAUSA"
       - name: Rodar os notebooks
         if: ${{ !cancelled() && steps.alvo.outputs.notebooks != '' }}
         timeout-minutes: 60
@@ -144,6 +168,13 @@ jobs:
           uv run pytest --nbmake $ALVO $IGNORAR --nbmake-timeout=300 -n auto --junitxml=junit-notebooks.xml || codigo=$?
           echo "pytest saiu com código $codigo"
           if [ -n "$TRIBUNAL" ] || [ "$codigo" -gt 1 ]; then exit "$codigo"; fi
+      - name: Esperar o WAF do TJTO antes do teste release
+        if: ${{ !cancelled() && steps.integracao.conclusion != 'skipped' && steps.alvo.outputs.pausa_tjto != '' && steps.alvo.outputs.release != '' }}
+        env:
+          PAUSA: ${{ steps.alvo.outputs.pausa_tjto }}
+        run: |
+          echo "TJTO: esperando $PAUSA s desde o bloco anterior de testes ao vivo"
+          sleep "$PAUSA"
       - name: Rodar o teste release dos tribunais do alvo
         if: ${{ !cancelled() && steps.alvo.outputs.release != '' }}
         timeout-minutes: 30

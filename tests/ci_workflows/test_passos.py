@@ -59,14 +59,59 @@ def uv_falso(tmp_path):
 
 @pytest.fixture
 def arvore(tmp_path):
-    for nome in ("tjmt", "jusbr", "tjrs"):
+    for nome in ("tjmt", "jusbr", "tjrs", "tjto"):
         (tmp_path / "tests" / nome).mkdir(parents=True)
         (tmp_path / "docs" / "notebooks").mkdir(parents=True, exist_ok=True)
         (tmp_path / "docs" / "notebooks" / f"{nome}.ipynb").write_text("{}", encoding="utf-8")
     return tmp_path
 
 
-AMBIENTE_DO_ALVO = {"NOTEBOOKS_COM_CREDENCIAL": "jusbr pdpj", "FORA_DO_CI": "tjrs"}
+AMBIENTE_DO_ALVO = {"NOTEBOOKS_COM_CREDENCIAL": "jusbr pdpj", "FORA_DO_CI": "tjrs", "PAUSA_TJTO": "900"}
+
+
+@pytest.mark.parametrize(
+    ("ambiente", "pausa"),
+    [
+        ({"TRIBUNAL": "tjmt tjto"}, "900"),
+        ({"TRIBUNAL": "tjmt\ttjto"}, "900"),
+        ({"TRIBUNAL": "tjmt"}, ""),
+        # Execução completa: o TJTO roda, a menos que esteja em FORA_DO_CI.
+        ({"TRIBUNAL": ""}, "900"),
+        ({"TRIBUNAL": "", "FORA_DO_CI": "tjrs tjto"}, ""),
+        # A execução dirigida ignora a lista FORA_DO_CI.
+        ({"TRIBUNAL": "tjto", "FORA_DO_CI": "tjrs tjto"}, "900"),
+    ],
+    ids=[
+        "dirigida-com-tjto", "dirigida-com-tab", "dirigida-sem-tjto",
+        "completa", "completa-sem-tjto", "dirigida-ignora-a-lista",
+    ],
+)
+def test_alvo_pede_a_pausa_do_tjto_so_quando_ele_roda(arvore, ambiente, pausa):
+    codigo, saidas, log = rodar(
+        bloco_run("integration.yml", "Resolver o alvo"), arvore, **{**AMBIENTE_DO_ALVO, **ambiente},
+    )
+
+    assert codigo == 0, log
+    assert saidas["pausa_tjto"] == pausa
+
+
+@pytest.mark.parametrize(
+    "passo", ["Esperar o WAF do TJTO antes dos notebooks", "Esperar o WAF do TJTO antes do teste release"]
+)
+def test_pausa_do_tjto_espera_os_segundos_pedidos(tmp_path, passo):
+    pasta = tmp_path / "bin"
+    pasta.mkdir()
+    (pasta / "sleep").write_text('#!/bin/bash\necho "$@" > "$ESPERA"\n', encoding="utf-8")
+    (pasta / "sleep").chmod(0o755)
+    espera = tmp_path / "espera"
+
+    codigo, _, log = rodar(
+        bloco_run("integration.yml", passo), tmp_path,
+        PAUSA="900", ESPERA=str(espera), PATH=f"{pasta}{os.pathsep}{os.environ['PATH']}",
+    )
+
+    assert codigo == 0, log
+    assert espera.read_text(encoding="utf-8").split() == ["900"]
 
 
 def test_alvo_dirigido_monta_testes_notebooks_e_release(arvore):
