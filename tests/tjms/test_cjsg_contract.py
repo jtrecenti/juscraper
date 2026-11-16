@@ -2,7 +2,8 @@
 
 Mocks ``resultadoCompleta.do`` + ``trocaDePagina.do`` with captured samples
 (see ``tests/fixtures/capture/tjms.py``) and asserts the public DataFrame
-contract. Covers typical multi-page, single-page, and zero-result scenarios.
+contract. Covers typical multi-page, single-page, zero-result and monocratic-decision
+scenarios.
 """
 import pandas as pd
 import responses
@@ -16,25 +17,26 @@ BASE = "https://esaj.tjms.jus.br/cjsg"
 CJSG_MIN_COLUMNS = {"processo", "cd_acordao", "cd_foro", "ementa"}
 
 
-def _add_post(pesquisa: str) -> None:
+def _add_post(pesquisa: str, tipo_decisao: str = "acordao") -> None:
     responses.add(
         responses.POST,
         f"{BASE}/resultadoCompleta.do",
         body=load_sample_bytes("tjms", "cjsg/post_initial.html"),
         status=200,
         content_type="text/html; charset=latin-1",
-        match=[urlencoded_params_matcher(make_esaj_body(pesquisa), allow_blank=True)],
+        match=[urlencoded_params_matcher(make_esaj_body(pesquisa, tipo_decisao=tipo_decisao), allow_blank=True)],
     )
 
 
-def _add_get(pagina: int, sample_path: str) -> None:
+def _add_get(pagina: int, sample_path: str, tipo_decisao: str = "acordao") -> None:
+    tipo = "A" if tipo_decisao == "acordao" else "D"
     responses.add(
         responses.GET,
         f"{BASE}/trocaDePagina.do",
         body=load_sample_bytes("tjms", sample_path),
         status=200,
         content_type="text/html; charset=latin-1",
-        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": str(pagina)})],
+        match=[query_param_matcher({"tipoDeDecisao": tipo, "pagina": str(pagina)})],
     )
 
 
@@ -84,3 +86,21 @@ def test_cjsg_no_results(tmp_path, mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_monocratica_single_page(tmp_path, mocker):
+    """Busca de monocráticas: ``D`` no POST e no GET, colunas e uma única página.
+
+    A contagem pelo input ``-D`` está em ``TestCJSGNResultsInputDeclarado``.
+    """
+    mocker.patch("time.sleep")
+    _add_post("usucapiao", tipo_decisao="monocratica")
+    _add_get(1, "cjsg/monocratica_single_page.html", tipo_decisao="monocratica")
+
+    df = jus.scraper("tjms", download_path=str(tmp_path)).cjsg("usucapiao", tipo_decisao="monocratica")
+
+    assert isinstance(df, pd.DataFrame)
+    assert set(df.columns) >= CJSG_MIN_COLUMNS
+    assert len(df) == 6  # todas as linhas do sample
+    assert len(responses.calls) == 2  # POST + 1 GET: o total cabe em uma página

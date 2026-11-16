@@ -212,6 +212,7 @@ class TestCJSGNResultsInputDeclarado:
             ("tjac", "monocratica_single_page.html", 5),
             ("tjal", "monocratica_single_page.html", 2),
             ("tjce", "monocratica_single_page.html", 9),
+            ("tjms", "monocratica_single_page.html", 6),
             ("tjsp", "monocratica_single_page.html", 1),
         ],
     )

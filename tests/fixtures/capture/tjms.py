@@ -70,7 +70,9 @@ def main() -> None:
     capture_cjsg_samples(
         tribunal="tjms",
         base_url="https://esaj.tjms.jus.br/",
-        monocratica_query="usucapiao predio rural",
+        # Sem acento: "usucapiao predio rural" dá 0 monocráticas no TJMS e
+        # "usucapião rural", 340; "usucapiao" dá 6 (16/11/2026).
+        monocratica_query="usucapiao",
     )
     capture_cjpg()
 
