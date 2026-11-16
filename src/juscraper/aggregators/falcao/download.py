@@ -59,13 +59,10 @@ _ESPERA_MAXIMA_RETRY = 60
 # visto em 16/11/2026); ``dataInicio`` sozinho funciona. Quando so o limite
 # superior e pedido, este piso vai como ``dataInicio``.
 #
-# Nao usa ``fill_open_ended_dates`` (``utils/params.py``), o preenchimento
-# comum de limite aberto, de proposito: aquele helper tambem preenche o fim
-# com a data de hoje, que aqui entraria na identidade do checkpoint e faria a
-# retomada do dia seguinte ser "outra busca", e avisa a cada chamada, o que
-# incomodaria o uso recomendado com checkpoint (``data_juntada_fim`` fechado,
-# sem inicio). O valor tambem difere do piso comum (1990): 1900-01-01 e o que
-# foi conferido ao vivo, e um piso mais baixo nao corta juntadas antigas.
+# Nao usa ``fill_open_ended_dates`` (``utils/params.py``) de proposito: ele
+# tambem preenche o fim com a data de hoje, que mudaria a identidade do
+# checkpoint a cada dia, e avisa a cada chamada. 1900-01-01 e o valor
+# conferido ao vivo.
 DATA_INICIO_PISO = "1900-01-01"
 
 # Mapeamento nome-canonico (juscraper) -> parametro do backend. Cada valor e

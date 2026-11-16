@@ -179,9 +179,7 @@ class FalcaoScraper(HTTPScraper):
                 * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
                 * ``somente_ementa`` (bool): Busca ``texto`` so nas ementas.
                 * ``ordenacao`` (str): ``mais_relevante`` (default do backend),
-                  ``mais_recente`` ou ``menos_recente``. Na ordem
-                  ``mais_relevante``, a mesma página pode vir diferente a
-                  cada chamada.
+                  ``mais_recente`` ou ``menos_recente``.
                 * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
@@ -484,8 +482,9 @@ class FalcaoScraper(HTTPScraper):
             formato=_FORMATO_BACKEND,
         )
         # Só com o fim, a busca envia o piso como ``dataInicio``, e o intervalo sairia invertido.
+        # As duas datas já estão validadas em ISO, que ordena como texto.
         fim = inp.data_juntada_fim
-        if inp.data_juntada_inicio is None and fim is not None and _como_data(fim) < _como_data(DATA_INICIO_PISO):
+        if inp.data_juntada_inicio is None and fim is not None and fim < DATA_INICIO_PISO:
             raise ValueError(
                 f"'data_juntada_fim' ({fim}) é anterior a {DATA_INICIO_PISO}, "
                 "o início que a busca envia quando só o limite superior é informado."
@@ -494,14 +493,7 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa que a coleta com checkpoint junta páginas de uma ordem que varia.
-
-        Medido ao vivo em 16/11/2026: a página 3 de "dano moral" na ordem
-        padrão veio em três versões em três minutos; com
-        ``ordenacao="menos_recente"`` e ``data_juntada_fim`` fechado, veio
-        igual em três chamadas. ``mais_recente`` não foi medido, e por isso
-        não avisa.
-        """
+        """Avisa que a coleta com checkpoint junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
                 "A ordem padrão do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
@@ -539,10 +531,6 @@ class FalcaoScraper(HTTPScraper):
         return [p for p in paginas if 1 <= p <= total_paginas]
 
 
-def _como_data(valor: str) -> datetime:
-    return datetime.strptime(valor, _FORMATO_BACKEND)
-
-
 def _validar_data(valor, nome: str) -> None:
     """Rejeita a data que ``coerce_brazilian_date`` nao conseguiu converter.
 
@@ -551,7 +539,7 @@ def _validar_data(valor, nome: str) -> None:
     ``"31/02/2024"``) ia para o backend e voltava como HTTP 400 generico.
     """
     try:
-        _como_data(valor)
+        datetime.strptime(valor, _FORMATO_BACKEND)
     except (ValueError, TypeError) as exc:
         raise ValueError(
             f"'{nome}' inválida: {valor!r}. Use DD/MM/AAAA, AAAA-MM-DD ou datetime.date."

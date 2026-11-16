@@ -14,7 +14,6 @@ from pathlib import Path
 
 from ...core.avisos import avisar
 from ...core.download import gravar_arquivo
-from .download import identidade_da_busca
 
 MANIFESTO = "manifest.json"
 
@@ -49,8 +48,6 @@ def _abrir(diretorio: Path, identidade: dict, *, resume: bool) -> int | None:
         raise ValueError(f"{corrompido}: {exc}") from exc
     if versao != _VERSAO or not isinstance(anterior, dict) or not isinstance(total, (int, type(None))):
         raise ValueError(f"{corrompido}: manifesto fora do formato esperado.")
-    # O manifesto pode ser anterior à ordenação dos filtros em lista na identidade.
-    anterior = identidade_da_busca(anterior)
     if anterior != identidade:
         diferentes = sorted(k for k in anterior.keys() | identidade.keys() if anterior.get(k) != identidade.get(k))
         raise ValueError(

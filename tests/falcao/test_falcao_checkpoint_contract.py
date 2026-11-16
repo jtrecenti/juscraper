@@ -314,23 +314,3 @@ def test_retomada_aceita_lista_de_filtro_em_outra_ordem(falcao, tmp_path):
     falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, tribunais=["TRT3", "TST"])
 
     assert _paginas_pedidas() == [2]
-
-
-@responses.activate
-def test_retomada_aceita_manifesto_com_lista_de_filtro_fora_de_ordem(falcao, tmp_path):
-    """Manifesto gravado antes de a identidade ordenar os filtros em lista."""
-    checkpoint = tmp_path / "coleta"
-    _register("acordaos", total=20, pagina=1, tribunais="TST,TRT3")
-    _bloquear_por_cota()
-    with pytest.raises(requests.HTTPError):
-        falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, tribunais=["TST", "TRT3"])
-    responses.reset()
-    manifesto = checkpoint / "manifest.json"
-    conteudo = json.loads(manifesto.read_text(encoding="utf-8"))
-    conteudo["identity"]["tribunais"] = "TST,TRT3"
-    manifesto.write_text(json.dumps(conteudo), encoding="utf-8")
-
-    _register("acordaos", total=20, pagina=2, tribunais="TST,TRT3")
-    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint, resume=True, tribunais=["TST", "TRT3"])
-
-    assert _paginas_pedidas() == [2]
