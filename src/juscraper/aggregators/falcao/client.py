@@ -153,7 +153,9 @@ class FalcaoScraper(HTTPScraper):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode
-                  ser usado sozinho.
+                  ser usado sozinho; só com o limite superior, a busca
+                  envia ``dataInicio=1900-01-01``, porque o backend
+                  rejeita ``dataFim`` sozinho.
                 * ``checkpoint_dir`` (str | Path): Diretório de páginas e
                   manifesto da coleta retomável. Diretório ocupado exige
                   ``resume=True``; nunca é sobrescrito por coleta nova.
