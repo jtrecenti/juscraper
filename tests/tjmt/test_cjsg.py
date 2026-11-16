@@ -65,11 +65,10 @@ def test_cjsg_filtro_classe(tipo_consulta, total):
     """``classe`` restringe a busca à classe pedida e reduz o total (#493)."""
     scraper = TJMTScraper()
     busca = {"pesquisa": "dano moral", "paginas": 1, "tipo_consulta": tipo_consulta}
-    df = scraper.cjsg(classe="Agravo de Instrumento", **busca)
-    assert not df.empty
-    assert set(df["classe"].str.upper()) == {"AGRAVO DE INSTRUMENTO"}
-    sem_filtro = scraper.cjsg_download(**busca)
     com_filtro = scraper.cjsg_download(classe="Agravo de Instrumento", **busca)
+    classes = {linha["classe"].upper() for linha in scraper.cjsg_parse(com_filtro)}
+    assert classes == {"AGRAVO DE INSTRUMENTO"}
+    sem_filtro = scraper.cjsg_download(tamanho_pagina=1, **busca)
     assert 0 < com_filtro[0]["value"][total] < sem_filtro[0]["value"][total]
 
 

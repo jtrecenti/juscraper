@@ -66,9 +66,8 @@ def test_cjsg_filtros_sem_suporte_na_api_levantam_typeerror_sem_rede(metodo, fil
     assert len(responses.calls) == 0
 
 
-@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_classe_vai_como_fq_tipo_processo(metodo, mocker):
+def test_cjsg_classe_vai_como_fq_tipo_processo(mocker):
     """``classe`` chega à API em ``fqTipoProcesso``, a faceta de classe do
     portal, sem acento e em maiúsculas; o sample é a resposta real dessa
     busca, só com a classe pedida (#493)."""
@@ -84,7 +83,7 @@ def test_cjsg_classe_vai_como_fq_tipo_processo(metodo, mocker):
         classe="APELACAO CIVEL",
     )
 
-    resultado = getattr(jus.scraper("tjmt"), metodo)(
+    df = jus.scraper("tjmt").cjsg(
         "dano moral",
         paginas=1,
         tamanho_pagina=2,
@@ -93,13 +92,7 @@ def test_cjsg_classe_vai_como_fq_tipo_processo(metodo, mocker):
         classe="  Apelação   Cível ",
     )
 
-    if metodo == "cjsg":
-        assert resultado["classe"].tolist() == ["APELAÇÃO CÍVEL", "APELAÇÃO CÍVEL"]
-    else:
-        assert [r["nomeClasse"] for r in resultado[0]["value"]["resultados"]] == [
-            "APELAÇÃO CÍVEL",
-            "APELAÇÃO CÍVEL",
-        ]
+    assert df["classe"].tolist() == ["APELAÇÃO CÍVEL", "APELAÇÃO CÍVEL"]
 
 
 @responses.activate(registry=OrderedRegistry)

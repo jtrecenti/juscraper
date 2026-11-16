@@ -208,14 +208,13 @@ class TJMTScraper(HTTPScraper):
                 (``data_julgamento_*``).
             ValidationError: Para os demais erros de validação do schema,
                 como ``relator``, ``orgao_julgador`` ou ``classe`` passados
-                como número,
-                ``tipo_consulta`` desconhecido e ``tamanho_pagina`` menor que 1
-                ou booleano.
+                como número, ``tipo_consulta`` desconhecido e
+                ``tamanho_pagina`` menor que 1 ou booleano.
             ValueError: Data inválida ou início depois do fim; ``relator``,
                 ``orgao_julgador`` ou ``classe`` só com dígitos; ``classe``
-                com vírgula; ``tipo_processo``
-                desconhecido; ``tamanho_pagina`` acima de
-                10.000; página além do teto de 10.000 resultados.
+                com vírgula; ``tipo_processo`` desconhecido;
+                ``tamanho_pagina`` acima de 10.000; página além do teto de
+                10.000 resultados.
             TJMTConfigError: A configuração pública do portal não foi
                 encontrada ou aponta para outra API.
             TJMTResponseError: A API respondeu com erro ou num formato

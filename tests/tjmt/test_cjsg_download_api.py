@@ -464,24 +464,6 @@ def test_public_integer_pages_downloads_from_first_page_through_requested_page(m
     assert [call[2]["params"]["indicePagina"] for call in api_calls] == [0, 1, 2]
 
 
-@pytest.mark.parametrize("tipo_consulta", ["Acordao", "DecisaoMonocratica"])
-def test_classe_vai_como_fq_tipo_processo_nos_dois_tipos_de_consulta(tipo_consulta, mocker):
-    mocker.patch("time.sleep")
-    request = _RequestRecorder([_page([])])
-
-    cjsg_download(
-        "dano moral",
-        paginas=range(1, 2),
-        tipo_consulta=tipo_consulta,
-        classe="Agravo de Instrumento",
-        request_fn=request,
-        session=requests.Session(),
-    )
-
-    api_call = next(call for call in request.calls if call[1].endswith("/consulta"))
-    assert api_call[2]["params"]["fqTipoProcesso"] == "AGRAVO DE INSTRUMENTO"
-
-
 def test_normalizacao_preserva_indicador_ordinal(mocker):
     """Os nomes da API mantêm "ª" e "º"; trocá-los por "A" e "O" zerava a busca."""
     mocker.patch("time.sleep")
