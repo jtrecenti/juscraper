@@ -686,7 +686,7 @@ def test_composto_apaga_raiz_temporaria_criada_pelo_scraper(metodo):
 
 @pytest.mark.parametrize("ids", [[None], []], ids=["falha_por_linha", "lote_vazio"])
 def test_cpopg_com_diretorio_apaga_raiz_temporaria_criada_na_validacao(tmp_path, ids):
-    """A checagem de ``diretorio`` lê ``download_path`` antes de iniciar o lote."""
+    """A checagem de ``diretorio`` não deixa uma raiz temporária vazia."""
     scraper = jus.scraper("tjsp")
     kwargs = {"baixar_movimentacoes": True, "download_pecas": True, "diretorio": str(tmp_path / "pecas")}
 
@@ -696,4 +696,7 @@ def test_cpopg_com_diretorio_apaga_raiz_temporaria_criada_na_validacao(tmp_path,
     else:
         scraper.cpopg(ids, **kwargs)
 
-    assert not Path(scraper.download_path).exists()
+    if ids:
+        assert not Path(scraper.download_path).exists()
+    else:
+        assert scraper.__dict__["_download_path"] is None

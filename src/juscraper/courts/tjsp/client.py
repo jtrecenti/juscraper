@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import shutil
 import tempfile
+import threading
 from collections.abc import Iterable
 from contextlib import suppress
 from pathlib import Path
@@ -23,6 +24,8 @@ from .cposg_parse import cposg_parse_manager
 from .exceptions import QueryTooLongError, validate_pesquisa_length
 from .forms import build_tjsp_cjsg_body
 from .schemas import InputCJSGTJSP
+
+_TRAVA_PASTAS_COMPOSTAS = threading.Lock()
 
 logger = logging.getLogger("juscraper.tjsp")
 
@@ -69,11 +72,12 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
 
 def _apagar_pasta_da_chamada(pasta: str, *, raiz_criada: bool) -> None:
     """Apaga a pasta da chamada e, se ``download_path`` nasceu com ela e ficou vazio, ele também."""
-    shutil.rmtree(pasta)
-    if raiz_criada:
-        # Se outra chamada gravou na raiz enquanto isso, ela não está vazia e fica.
-        with suppress(OSError):
-            Path(pasta).parent.rmdir()
+    with _TRAVA_PASTAS_COMPOSTAS:
+        shutil.rmtree(pasta)
+        if raiz_criada:
+            # Se outra chamada gravou na raiz enquanto isso, ela não está vazia e fica.
+            with suppress(OSError):
+                Path(pasta).parent.rmdir()
 
 
 def _lista_de_cnjs(id_cnj: str | Iterable) -> list:
@@ -112,15 +116,16 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
 
-    def _pasta_da_chamada(self, *, raiz_temporaria_criada: bool = False) -> tuple[str, bool]:
+    def _pasta_da_chamada(self) -> tuple[str, bool]:
         """Cria pasta própria e registra se a raiz nasceu com esta chamada."""
-        # A propriedade cria a raiz temporária na primeira leitura: registrar
-        # sua origem antes dela para não deixar a raiz vazia após o composto.
-        caminho_atual = self._download_path
-        raiz_criada = raiz_temporaria_criada or caminho_atual is None or not Path(caminho_atual).exists()
-        raiz = Path(self.download_path)
-        raiz.mkdir(parents=True, exist_ok=True)
-        return tempfile.mkdtemp(prefix="composto_", dir=raiz), raiz_criada
+        with _TRAVA_PASTAS_COMPOSTAS:
+            # A propriedade cria a raiz temporária na primeira leitura: registrar
+            # sua origem antes dela para não deixar a raiz vazia após o composto.
+            caminho_atual = self._download_path
+            raiz_criada = caminho_atual is None or not Path(caminho_atual).exists()
+            raiz = Path(self.download_path)
+            raiz.mkdir(parents=True, exist_ok=True)
+            return tempfile.mkdtemp(prefix="composto_", dir=raiz), raiz_criada
 
     def set_method(self, method: str) -> None:
         """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
@@ -371,23 +376,22 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 leitura saem juntas num unico ``UserWarning``.
         """
         self.set_method(method)
-        raiz_temporaria_criada = self._download_path is None
         validar_download_pecas(baixar_movimentacoes, download_pecas)
         if download_pecas != (diretorio is not None):
             raise ValueError(
                 "download_pecas=True exige diretorio, e diretorio so vale com download_pecas=True: "
                 "cpopg apaga ao terminar a pasta em que baixou."
             )
-        if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
+        if (
+            diretorio is not None and self._download_path is not None
+            and Path(diretorio).resolve().is_relative_to(Path(self._download_path).resolve())
+        ):
             raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, onde cpopg baixa e apaga.")
         ids = _lista_de_cnjs(id_cnj)
         # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
         if not ids:
-            if raiz_temporaria_criada and self._download_path is not None:
-                with suppress(OSError):
-                    Path(self._download_path).rmdir()
             return tabelas_vazias()
-        pasta, raiz_criada = self._pasta_da_chamada(raiz_temporaria_criada=raiz_temporaria_criada)
+        pasta, raiz_criada = self._pasta_da_chamada()
         # Sem o aviso do download: o parse lê as falhas que ele gravou na
         # pasta e avisa uma vez só, junto com as de leitura.
         self._baixar_cpopg(ids, pasta, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas)
