@@ -73,6 +73,13 @@ class TestFalcaoIntegration:
         )
         assert len(df) > 0
 
+    def test_filtro_data_juntada_fim_sozinho(self):
+        """O backend rejeita ``dataFim`` sem ``dataInicio``; o client envia um piso."""
+        df = self.scraper.listar_decisoes("trabalho", paginas=1, data_juntada_fim="2020-12-31")
+        assert len(df) > 0
+        datas = pd.to_datetime(df["data_juntada"], format="%d/%m/%Y")
+        assert (datas <= pd.Timestamp("2020-12-31")).all()
+
     def test_paginacao_tamanho_10(self):
         df = self.scraper.listar_decisoes("dano moral", paginas=1, tamanho_pagina=10)
         assert len(df) == 10

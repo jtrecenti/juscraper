@@ -55,6 +55,11 @@ DEFAULT_HEADERS: dict[str, str] = {
 # ``HTTPScraper`` espera segundos, e o bloqueio do Falcao dura horas.
 _ESPERA_MAXIMA_RETRY = 60
 
+# ``dataFim`` sem ``dataInicio`` devolve HTTP 400 (``For input string: ""``,
+# visto em 16/11/2026); ``dataInicio`` sozinho funciona. Quando so o limite
+# superior e pedido, este piso vai como ``dataInicio``.
+_DATA_INICIO_PISO = "1900-01-01"
+
 # Mapeamento nome-canonico (juscraper) -> parametro do backend. Cada valor e
 # uma lista no schema; a querystring espera CSV.
 _FILTROS_CSV: dict[str, str] = {
@@ -172,6 +177,8 @@ def build_pesquisa_params(
             ``menos_recente``).
         data_juntada_inicio / data_juntada_fim: Intervalo de ``dataJuntada``
             em ISO ``AAAA-MM-DD`` (``dataInicio`` / ``dataFim`` no backend).
+            O backend rejeita ``dataFim`` sozinho: sem ``data_juntada_inicio``,
+            ``dataInicio`` vai com :data:`_DATA_INICIO_PISO`.
     """
     params: dict[str, Any] = {
         "texto": pesquisa,
@@ -199,9 +206,10 @@ def build_pesquisa_params(
         params["pesquisaSomenteNasEmentas"] = str(somente_ementa).lower()
     if ordenacao is not None:
         params["ordenacao"] = ordenacao
-    if data_juntada_inicio is not None:
-        params["dataInicio"] = data_juntada_inicio
     if data_juntada_fim is not None:
+        params["dataInicio"] = _DATA_INICIO_PISO if data_juntada_inicio is None else data_juntada_inicio
         params["dataFim"] = data_juntada_fim
+    elif data_juntada_inicio is not None:
+        params["dataInicio"] = data_juntada_inicio
 
     return params

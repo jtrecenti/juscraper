@@ -459,6 +459,14 @@ def test_data_isolada_valida_vai_para_o_backend(falcao):
 
 
 @responses.activate
+def test_data_fim_isolada_vai_com_piso_de_inicio(falcao):
+    _register("acordaos", dataInicio="1900-01-01", dataFim="2020-12-31")
+    df = falcao.listar_decisoes("dano moral", paginas=1, data_juntada_fim="31/12/2020")
+    assert len(responses.calls) == 1
+    assert len(df) > 0
+
+
+@responses.activate
 def test_waf_cloudfront_nao_e_retentado(falcao):
     responses.add(
         responses.GET, SEARCH_URL, status=403, content_type="text/html",

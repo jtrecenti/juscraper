@@ -76,7 +76,8 @@ class InputListarDecisoesFalcao(SearchBase):
         data_juntada_inicio: Limite inferior de ``dataJuntada`` (ISO
             ``AAAA-MM-DD``). Backend: ``dataInicio``. Opcional.
         data_juntada_fim: Limite superior de ``dataJuntada`` (ISO
-            ``AAAA-MM-DD``). Backend: ``dataFim``. Opcional.
+            ``AAAA-MM-DD``). Backend: ``dataFim``. Opcional; sem
+            ``data_juntada_inicio``, ``dataInicio`` vai como ``1900-01-01``.
         checkpoint_dir: Diretorio de paginas e manifesto da coleta retomavel.
             Nao vai ao backend. Default ``None`` (sem checkpoint).
         resume: Retoma o checkpoint da mesma busca, sem requisitar as paginas
