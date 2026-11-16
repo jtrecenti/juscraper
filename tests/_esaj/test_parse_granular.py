@@ -1,5 +1,6 @@
-"""
-Unit tests for TJSP CJSG functionality using mocked HTML responses.
+"""Testes granulares do parser de cjsg da família eSAJ (``_esaj/parse.py``).
+
+Os samples ficam nas pastas dos tribunais (``tests/<sigla>/samples/cjsg/``).
 """
 import tempfile
 from pathlib import Path
@@ -9,8 +10,16 @@ import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj import parse as esaj_parse
-from juscraper.courts._esaj.parse import _parse_single_page, _total_declarado, cjsg_n_results
-from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page, cjsg_n_pags, cjsg_parse_manager
+from juscraper.courts._esaj.parse import (
+    _clean_value,
+    _extract_pagination_count,
+    _parse_single_page,
+    _total_declarado,
+    cjsg_n_pags,
+    cjsg_n_results,
+    cjsg_parse_manager,
+)
+from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page
 from tests._helpers import load_sample
 
 ESAJ_COLUMNS = (
@@ -25,6 +34,16 @@ ESAJ_COLUMNS = (
     "data_publicacao",
     "ementa",
 )
+
+
+def _primeira_pagina_com_total(valor: object) -> str:
+    """Sample real do TJSP com o valor do input de total trocado."""
+    html = load_sample("tjsp", "cjsg/results_normal_page_01.html").replace(
+        'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="2571077"',
+        f'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="{valor}"',
+    )
+    assert f'value="{valor}"' in html
+    return html
 
 
 class TestCJSGNPages:
@@ -56,11 +75,14 @@ class TestCJSGNPages:
         with pytest.raises(ValueError, match="Não foi possível extrair o número"):
             cjsg_n_pags(html)
 
-    def test_captcha_error_raises_specific_message(self):
+    @pytest.mark.parametrize(
+        "texto", ["Falha na verificação do captcha.", "Captcha inválido.", "Falha na verificação."]
+    )
+    def test_captcha_error_raises_specific_message(self, texto):
         """Captcha/erro divs devem levantar ValueError com mensagem explicita."""
         html = (
             '<html><body>'
-            '<div class="mensagemErro">Falha na verificação do captcha.</div>'
+            f'<div class="mensagemErro">{texto}</div>'
             '</body></html>'
         )
         with pytest.raises(ValueError, match="Captcha"):
@@ -246,15 +268,9 @@ class TestCJSGNResultsInputDeclarado:
 
     @pytest.mark.parametrize("valor", ["", "n/d"])
     def test_input_vazio_ou_nao_numerico_cai_na_cascata(self, mocker, valor):
-        """HTML derivado do sample real: o valor do input é trocado."""
         espiao = mocker.spy(esaj_parse, "_find_pagination_element")
-        html = load_sample("tjsp", "cjsg/results_normal_page_01.html").replace(
-            'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="2571077"',
-            f'id="totalResultadoAbaRetornoFiltro-A" type="hidden" value="{valor}"',
-        )
-        assert f'value="{valor}"' in html
 
-        assert cjsg_n_results(html) == 2571077
+        assert cjsg_n_results(_primeira_pagina_com_total(valor)) == 2571077
         assert espiao.call_count == 1
 
 
@@ -362,7 +378,7 @@ class TestCJSGParseSinglePage:
         assert _cjsg_parse_single_page is _parse_single_page
 
     def test_dynamic_labels_malformed_rows_and_ementa_fallback(self):
-        sample_path = Path(__file__).parent / "samples/cjsg/parser_edge_cases.html"
+        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/parser_edge_cases.html"
 
         df = _parse_single_page(str(sample_path))
 
@@ -469,6 +485,59 @@ class TestCJSGParseManager:
             assert isinstance(df, pd.DataFrame)
             # Should have parsed the valid file
             assert len(df) >= 0
+
+    def test_parse_directory_reads_nested_folders(self, tmp_path):
+        """O auto-chunk grava uma pasta por janela; o parse desce nelas."""
+        html = load_sample("tjsp", "cjsg/results_normal.html")
+        (tmp_path / "janela_1").mkdir()
+        (tmp_path / "janela_1" / "cjsg_00001.html").write_text(html, encoding="utf-8")
+        (tmp_path / "cjsg_00001.html").write_text(html, encoding="utf-8")
+
+        uma_pagina = len(_parse_single_page(str(tmp_path / "cjsg_00001.html")))
+        assert uma_pagina > 0
+        assert len(cjsg_parse_manager(str(tmp_path))) == 2 * uma_pagina
+
+
+class TestCJSGNPagsLimites:
+    """``cjsg_n_pags`` nos limites das páginas de 20 resultados."""
+
+    @pytest.mark.parametrize(
+        ("total", "paginas"),
+        [(0, 0), (1, 1), (20, 1), (21, 2)],
+    )
+    def test_total_declarado_vira_paginas(self, total, paginas):
+        assert cjsg_n_pags(_primeira_pagina_com_total(total)) == paginas
+
+
+class TestExtractPaginationCount:
+    """A contagem ao lado de "resultados" vence o maior número do texto."""
+
+    @pytest.mark.parametrize(
+        ("texto", "esperado"),
+        [
+            ("Resultados 1 a 20 de 45", 45),
+            ("Foram encontrados 45 resultados em 2024.", 45),
+            ("sem numero", None),
+        ],
+    )
+    def test_tabela(self, texto, esperado):
+        assert _extract_pagination_count(texto) == esperado
+
+
+class TestCleanValue:
+    """Caracteres invisíveis que o eSAJ mistura nos valores saem todos."""
+
+    @pytest.mark.parametrize(
+        "invisivel",
+        [
+            pytest.param("\xad", id="soft-hyphen"),
+            pytest.param("\u200b", id="zero-width-space"),
+            pytest.param("\u200c", id="zero-width-non-joiner"),
+            pytest.param("\u200d", id="zero-width-joiner"),
+        ],
+    )
+    def test_remove_caractere_invisivel(self, invisivel):
+        assert _clean_value(f"Des. Jo{invisivel}ão{invisivel}") == "Des. João"
 
 
 if __name__ == "__main__":

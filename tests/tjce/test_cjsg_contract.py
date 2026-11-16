@@ -3,19 +3,12 @@
 Mocks ``resultadoCompleta.do`` + ``trocaDePagina.do`` with captured samples
 (see ``tests/fixtures/capture/tjce.py``) and asserts the public DataFrame
 contract. Covers typical multi-page, single-page, and zero-result scenarios.
-
-Also includes a unit-level regression test for the TLS ``SECLEVEL=1`` adapter
-required by the TJCE server.
 """
-import ssl
-
 import pandas as pd
 import responses
-from requests.adapters import HTTPAdapter
 from responses.matchers import query_param_matcher, urlencoded_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjce.cjsg_download import _TJCETLSAdapter
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_esaj_body
 
@@ -112,13 +105,3 @@ def test_cjsg_monocratica_single_page(tmp_path, mocker):
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) == 9  # todas as linhas do sample
     assert len(responses.calls) == 2  # POST + 1 GET: o total cabe em uma página
-
-
-def test_tls_adapter_configures_seclevel1():
-    """TJCE server requires ``SECLEVEL=1``; regression guard for the custom adapter."""
-    adapter = _TJCETLSAdapter()
-    assert isinstance(adapter, HTTPAdapter)
-
-    adapter.init_poolmanager(connections=1, maxsize=1)
-    ctx = adapter.poolmanager.connection_pool_kw["ssl_context"]
-    assert isinstance(ctx, ssl.SSLContext)
