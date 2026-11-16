@@ -200,7 +200,8 @@ class TJPEScraper(HTTPScraper):
             tipo_decisao (str): ``"acordaos"`` (default), ``"monocraticas"`` ou
                 ``"todos"``. Quando ``"todos"``, o backend marca os dois
                 checkboxes e o fluxo passa pela pagina de escolha
-                (``escolhaResultado.xhtml``).
+                (``escolhaResultado.xhtml``), que traz os acórdãos; se a
+                busca não tiver acórdão, traz as decisões monocráticas.
 
         Todos os filtros do schema :class:`InputCJSGTJPE` estao listados
         acima como parametros nomeados. O ``**kwargs`` so e exposto para

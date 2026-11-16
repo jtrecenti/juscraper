@@ -112,12 +112,15 @@ def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
     if not celula:
         return False
     linha = celula.find_parent("tr")
-    if not linha:
-        return False
+    return linha is not None and _rotulo_da_linha(linha) == tipo
+
+
+def _rotulo_da_linha(linha: Tag) -> str:
+    """Texto do ``<label>`` da primeira célula da linha da escolha; vazio sem ele."""
     celula_rotulo = linha.find("td")
     rotulo = celula_rotulo.find("label") if celula_rotulo else None
-    texto_rotulo: str = rotulo.get_text(strip=True) if rotulo else ""
-    return texto_rotulo == tipo
+    texto: str = rotulo.get_text(strip=True) if rotulo else ""
+    return texto
 
 
 def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
@@ -131,6 +134,19 @@ def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
         if match:
             return match.group(1)
     raise ValueError(f"Could not find escolha button for '{tipo}'")
+
+
+def tipo_zerado_na_escolha(html: str, tipo: str) -> bool:
+    """Diz se a linha do ``tipo`` na escolha traz ``Nenhum documento encontrado`` no lugar do link.
+
+    A linha fora do formato conhecido não conta como zerada.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for texto in soup.find_all(string=lambda t: any(m in t.lower() for m in _ZERO_MARKERS)):
+        linha = texto.find_parent("tr")
+        if linha is not None and _rotulo_da_linha(linha) == tipo:
+            return True
+    return False
 
 
 def extract_pagination_ids(html: str) -> tuple[str, str]:
@@ -366,7 +382,10 @@ def cjsg_download(
 
     # Step 2 may return results directly (single type) or escolha page (multiple types)
     if is_escolha_page(response_html):
-        # Step 3 - choose result type
+        # Step 3 - choose result type. Em "todos", vale a monocrática quando
+        # a escolha dá os acórdãos como zerados.
+        if tipo_decisao == "todos" and tipo_zerado_na_escolha(response_html, tipo_label):
+            tipo_label = "Decisões Monocráticas"
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
     elif is_results_page(response_html):

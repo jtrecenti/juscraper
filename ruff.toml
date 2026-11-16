@@ -18,7 +18,6 @@ extend = "pyproject.toml"
 "src/juscraper/aggregators/falcao/download.py" = ["D417", "PLR0913"]
 "src/juscraper/aggregators/falcao/parse.py" = ["ANN401"]
 "src/juscraper/core/base.py" = ["ANN201", "ANN204", "D107", "D200", "D212"]
-"src/juscraper/core/download.py" = ["D100"]
 "src/juscraper/core/exceptions.py" = ["ANN204", "D107"]
 "src/juscraper/core/http.py" = ["ANN204", "D107", "PLR0913", "TRY004"]
 "src/juscraper/core/parse_utils.py" = ["FBT001", "FBT002"]

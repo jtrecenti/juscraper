@@ -45,6 +45,7 @@ from urllib.parse import unquote_plus
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from ...core.download import gravar_arquivo
 from ...core.failures import MOTIVO_NAO_PDF, MOTIVO_RESPOSTA_INESPERADA
 
 ROTA_DOCUMENTO_MOVIMENTACAO = "abrirDocumentoVinculadoMovimentacao.do"
@@ -205,13 +206,5 @@ def conteudo_pdf(resposta: requests.Response, rota: str, erro: Callable[[str], E
 
 
 def gravar_pdf(conteudo: bytes, destino: Path) -> Path:
-    """Grava por arquivo temporário renomeado: falha no meio não deixa PDF truncado."""
-    destino.parent.mkdir(parents=True, exist_ok=True)
-    temporario = destino.with_suffix(".tmp")
-    try:
-        temporario.write_bytes(conteudo)
-        temporario.replace(destino)
-    except OSError:
-        temporario.unlink(missing_ok=True)
-        raise
-    return destino
+    """Grava o PDF por :func:`juscraper.core.download.gravar_arquivo`: falha no meio não deixa PDF truncado."""
+    return gravar_arquivo(conteudo, destino)

@@ -9,6 +9,9 @@ precisa entrar no repositório.
 """
 from __future__ import annotations
 
+import errno
+import itertools
+from pathlib import Path
 from urllib.parse import parse_qsl
 
 import pandas as pd
@@ -17,6 +20,7 @@ import responses
 
 import juscraper as jus
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
+from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests._helpers import load_sample, load_sample_bytes
 
@@ -26,6 +30,7 @@ DETAIL_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/listView.sea
 DOC_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
 CNJ = "00000011220248170001"
 CNJ_FORMATADO = "0000001-12.2024.8.17.0001"
+OUTRO_CNJ = "00000021220248170001"
 
 
 @pytest.fixture
@@ -250,6 +255,60 @@ def test_cjsg_continua_em_sessao_propria():
     assert tjpe._consulta() is consulta
     assert tjpe.session is not consulta.session
     assert tjpe.session.headers["User-Agent"] != USER_AGENT
+
+
+@responses.activate
+def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, mocker, tmp_path, caplog):
+    """Disco cheio na 2ª peça do 1º CNJ: ele sai com detalhe, a 1ª peça e o motivo; o 2º CNJ sai completo."""
+    detalhe = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    ids = [doc_id for _, doc_id in extract_documento_urls(detalhe.decode("latin-1"))]
+    assert len(ids) > 2
+    _form()
+    for _ in range(2):
+        _busca()
+        _detalhe()
+    doc = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    for _ in range(2 + len(ids)):
+        responses.add(responses.GET, DOC_URL, body=doc, content_type="text/html")
+    # Cópia de uma coleta anterior, que a gravação que falha não pode apagar.
+    anterior = tmp_path / CNJ / f"{ids[1]}.html"
+    anterior.parent.mkdir()
+    anterior.write_bytes(b"coleta anterior")
+
+    gravar = Path.write_bytes
+    gravacao = itertools.count(1)
+
+    def disco_cheio_na_segunda(caminho, conteudo):
+        if next(gravacao) == 2:
+            gravar(caminho, conteudo[:10])  # o disco enche no meio da escrita
+            raise OSError(errno.ENOSPC, "No space left on device")
+        return gravar(caminho, conteudo)
+
+    mocker.patch.object(Path, "write_bytes", autospec=True, side_effect=disco_cheio_na_segunda)
+
+    with (
+        caplog.at_level("WARNING", logger="juscraper._trf"),
+        pytest.warns(UserWarning, match="resposta_inesperada") as avisos,
+    ):
+        df = tjpe.cpopg([CNJ, OUTRO_CNJ], download_pecas=True, diretorio=str(tmp_path))
+
+    primeiro, segundo = df.iloc[0], df.iloc[1]
+    assert primeiro["processo"] is not None
+    assert primeiro["motivo_falha"] == "resposta_inesperada"
+    assert [Path(p).stem for p in primeiro["pecas"]] == ids[:1]
+    assert primeiro["pecas_falhas"] == [{"id": i, "motivo_falha": "resposta_inesperada"} for i in ids[1:]]
+    assert anterior.read_bytes() == b"coleta anterior"
+    assert not list(anterior.parent.glob("*.tmp"))
+    assert segundo["motivo_falha"] is None
+    assert [Path(p).stem for p in segundo["pecas"]] == ids
+    assert segundo["pecas_falhas"] == []
+    # As peças seguintes do 1º CNJ não são pedidas.
+    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == 2 + len(ids)
+    assert "No space left on device" in caplog.text
+    # Um aviso só, o dos processos: as peças que o erro encerrou não se repetem no das peças.
+    (aviso,) = avisos
+    assert "consulta(s) de processo" in str(aviso.message)
+    assert f"processo {CNJ}: resposta_inesperada" in str(aviso.message)
 
 
 def test_cpopg_rejeita_kwarg_desconhecido(tjpe):
