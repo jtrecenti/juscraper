@@ -91,9 +91,9 @@ def test_cjsg_classe_com_virgula_no_nome():
     """A classe com vírgula no nome é filtrada inteira, e soma numa lista."""
     scraper = TJMTScraper()
     nome = "Exceção de Incompetência, Suspeição e Impedimento"
-    df = scraper.cjsg("suspeição", paginas=1, classe=nome)
+    df = scraper.cjsg("suspeição", paginas=1, classe=[nome])
     assert set(df["classe"].str.upper()) == {nome.upper()}
-    so_ela = _total_acordaos(scraper, "suspeição", classe=nome)
+    so_ela = _total_acordaos(scraper, "suspeição", classe=[nome])
     apelacao = _total_acordaos(scraper, "suspeição", classe="Apelação Cível")
     assert _total_acordaos(scraper, "suspeição", classe=["Apelação Cível", nome]) == so_ela + apelacao
 

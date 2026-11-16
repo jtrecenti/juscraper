@@ -194,10 +194,14 @@ class TJMTScraper(HTTPScraper):
                 exato: ``"Apelação"`` e ``"Apelação Cível"`` são classes
                 distintas, e nome que não existe devolve busca vazia. Uma
                 lista soma as classes
-                (``["Apelação Cível", "Agravo de Instrumento"]``). Uma
-                string é sempre um nome só, mesmo com vírgula
-                (``"Exceção de Incompetência, Suspeição e Impedimento"``).
-                ``None`` e lista vazia não filtram.
+                (``["Apelação Cível", "Agravo de Instrumento"]``); nela, o
+                nome que não existe é ignorado, sem aviso. Texto com vírgula
+                levanta ``ValueError``: a classe com vírgula no nome vai
+                dentro de uma lista
+                (``["Exceção de Incompetência, Suspeição e Impedimento"]``),
+                e chega à API com a vírgula trocada por U+FF0C, a forma que
+                filtrou essas classes em 16/11/2026. Lista sem nomes levanta
+                ``ValueError``. ``None`` não filtra.
             **kwargs: Só os aliases deprecados abaixo. Qualquer outro nome,
                 inclusive ``data_julgamento_inicio``/``data_julgamento_fim``,
                 que a API não filtra, levanta ``TypeError``.
@@ -217,9 +221,9 @@ class TJMTScraper(HTTPScraper):
                 como número, ``tipo_consulta`` desconhecido e
                 ``tamanho_pagina`` menor que 1 ou booleano.
             ValueError: Data inválida ou início depois do fim; ``relator``,
-                ``orgao_julgador`` ou ``classe`` só com dígitos; ``relator``
-                ou ``orgao_julgador`` com vírgula; ``tipo_processo``
-                desconhecido;
+                ``orgao_julgador`` ou ``classe`` só com dígitos; ``relator``,
+                ``orgao_julgador`` ou ``classe`` em texto com vírgula;
+                ``classe`` em lista sem nomes; ``tipo_processo`` desconhecido;
                 ``tamanho_pagina`` acima de 10.000; página além do teto de
                 10.000 resultados.
             TJMTConfigError: A configuração pública do portal não foi

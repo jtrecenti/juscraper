@@ -114,19 +114,7 @@ def test_cjsg_lista_de_classes_vai_separada_por_virgula(mocker, classe, enviado)
 
 
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_lista_de_classes_vazia_nao_filtra(mocker):
-    mocker.patch("time.sleep")
-    _add_config()
-    _add_page("dano moral", 1, "cjsg/no_results.json")
-
-    jus.scraper("tjmt").cjsg("dano moral", paginas=1, classe=[])
-
-    assert "fqTipoProcesso" not in responses.calls[-1].request.params
-
-
-@pytest.mark.parametrize("como_lista", [False, True])
-@responses.activate(registry=OrderedRegistry)
-def test_cjsg_classe_com_virgula_no_nome_chega_inteira(mocker, como_lista):
+def test_cjsg_classe_com_virgula_no_nome_chega_inteira_dentro_de_lista(mocker):
     """A vírgula de dentro do nome vai como U+FF0C: a API parte o valor na
     vírgula ASCII e, com ela, não casaria a classe. O sample é a resposta
     real dessa busca, só com a classe pedida."""
@@ -141,18 +129,27 @@ def test_cjsg_classe_com_virgula_no_nome_chega_inteira(mocker, como_lista):
         classe="EXCECAO DE INCOMPETENCIA\uff0c SUSPEICAO E IMPEDIMENTO",
     )
 
-    df = jus.scraper("tjmt").cjsg("suspeição", paginas=1, tamanho_pagina=2, classe=[nome] if como_lista else nome)
+    df = jus.scraper("tjmt").cjsg("suspeição", paginas=1, tamanho_pagina=2, classe=[nome])
 
     assert df["classe"].tolist() == [nome.upper()] * 2
 
 
-@pytest.mark.parametrize("filtro", ["relator", "orgao_julgador"])
+@pytest.mark.parametrize(
+    ("filtro", "valor", "mensagem"),
+    [
+        ("relator", "Fulano, Beltrano", "relator não aceita vírgula"),
+        ("orgao_julgador", "Fulano, Beltrano", "orgao_julgador não aceita vírgula"),
+        ("classe", "Apelação Cível, Agravo de Instrumento", "classe em texto não aceita vírgula"),
+        ("classe", [], "lista sem nomes"),
+    ],
+)
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
 @responses.activate(registry=OrderedRegistry)
-def test_cjsg_relator_e_orgao_com_virgula_levantam_valueerror_sem_rede(metodo, filtro):
-    """A API soma os nomes separados por vírgula: o filtro traria outros nomes."""
-    with pytest.raises(ValueError, match=f"{filtro} não aceita vírgula"):
-        getattr(jus.scraper("tjmt"), metodo)("dano moral", paginas=1, **{filtro: "Fulano, Beltrano"})
+def test_cjsg_filtros_de_nome_ambiguos_levantam_valueerror_sem_rede(metodo, filtro, valor, mensagem):
+    """A API soma os nomes separados por vírgula: texto com vírgula filtraria
+    por outros nomes ou devolveria busca vazia."""
+    with pytest.raises(ValueError, match=mensagem):
+        getattr(jus.scraper("tjmt"), metodo)("dano moral", paginas=1, **{filtro: valor})
 
     assert len(responses.calls) == 0
 

@@ -12,7 +12,7 @@ from juscraper.courts.tjmt.download import (
     _build_params,
     _get_api_config,
     _normalize_classe,
-    _normalize_text_filter,
+    _normalize_nome_unico,
     _normalize_tipo_processo,
     _to_end_of_day,
     _to_tjmt_date,
@@ -57,8 +57,8 @@ def _capture(
         tipo_consulta=tipo_consulta,
         data_publicacao_inicio=_to_tjmt_date(data_publicacao_inicio),
         data_publicacao_fim=_to_end_of_day(data_publicacao_fim),
-        relator=_normalize_text_filter(relator, "relator"),
-        orgao_julgador=_normalize_text_filter(orgao_julgador, "orgao_julgador"),
+        relator=_normalize_nome_unico(relator, "relator"),
+        orgao_julgador=_normalize_nome_unico(orgao_julgador, "orgao_julgador"),
         tipo_processo=_normalize_tipo_processo(tipo_processo),
         classe=_normalize_classe(classe),
         thesaurus=thesaurus,
@@ -131,7 +131,7 @@ def main() -> None:
         1,
         "filtro_classe_com_virgula.json",
         quantidade=2,
-        classe="Exceção de Incompetência, Suspeição e Impedimento",
+        classe=["Exceção de Incompetência, Suspeição e Impedimento"],
     )
     _capture(
         session,
