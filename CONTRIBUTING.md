@@ -177,6 +177,8 @@ git fetch origin
 uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
 ```
 
+No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo.
+
 Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
 
 De IP residencial os testes `anti_bot` também passam, então `-m integration` os inclui; um bloqueio Akamai ainda vira `xfail` (ver **Marker `anti_bot`**). Uma falha que já existia na `main` aparece também na branch: para saber se a quebra veio da mudança, rodar o mesmo comando na `main` e comparar.
