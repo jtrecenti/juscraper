@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
+from ...utils.params import validate_intervalo_datas
 
 
 class InputCJSGTJRJ(SearchBase):
@@ -45,6 +46,15 @@ class InputCJSGTJRJ(SearchBase):
         if isinstance(value, int):
             return str(value)
         return value
+
+    @model_validator(mode="after")
+    def _anos_em_ordem(self) -> InputCJSGTJRJ:
+        # O JS do portal (``ValidarIntervaloData``) nao deixa submeter intervalo
+        # invertido; enviado mesmo assim, o portal devolve 0 documentos.
+        inicio, fim = str(self.ano_inicio or ""), str(self.ano_fim or "")
+        if inicio.isdigit() and fim.isdigit():
+            validate_intervalo_datas(inicio, fim, max_dias=None, formato="%Y", rotulo="ano")
+        return self
 
 
 class OutputCJSGTJRJ(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

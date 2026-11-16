@@ -11,6 +11,7 @@ import json
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
@@ -233,13 +234,13 @@ def test_cjsg_sem_ano_usa_ano_corrente(mocker):
 
 
 @responses.activate
-def test_cjsg_ano_parcial_completa_o_omitido_com_ano_corrente(mocker):
+def test_cjsg_so_ano_inicio_completa_o_fim_com_ano_corrente(mocker):
     """So ``ano_inicio`` => ``ano_fim`` vira o ano corrente (refs #278).
 
-    O preenchimento do default e por campo: o ano explicito e respeitado e o
-    omitido recebe o ano mais novo do dropdown, resultando num intervalo
-    ``2020..ano-corrente`` em vez do antigo ``cmbAnoFim`` vazio (que disparava
-    o 500). O contrato fixa essa semantica assimetrica.
+    O ano explicito e respeitado e o omitido recebe o ano mais novo do
+    dropdown, resultando num intervalo ``2020..ano-corrente`` em vez do antigo
+    ``cmbAnoFim`` vazio (que disparava o 500). O caso inverso (so ``ano_fim``)
+    esta em ``test_cjsg_so_ano_fim_comeca_no_ano_mais_antigo_da_origem``.
     """
     mocker.patch("time.sleep")
     _add_form_get()
@@ -256,6 +257,33 @@ def test_cjsg_ano_parcial_completa_o_omitido_com_ano_corrente(mocker):
         body = body.decode("utf-8")
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2020" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
+
+
+@responses.activate
+def test_cjsg_so_ano_fim_comeca_no_ano_mais_antigo_da_origem(mocker):
+    """So ``ano_fim`` => ``ano_inicio`` vira o ano mais antigo do combo (1975).
+
+    Antes, o inicio caia no padrao do combo (o ano mais recente) e a busca ia
+    com o intervalo invertido ``2026..2020``, que o JS do portal
+    (``ValidarIntervaloData``) nao deixa submeter.
+    """
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="1975", ano_fim="2020")
+    _add_xhr(0, "xhr_page_01.json")
+
+    df = jus.scraper("tjrj").cjsg("dano moral", ano_fim=2020, paginas=1)
+
+    assert len(df) > 0
+
+
+@responses.activate
+def test_cjsg_intervalo_de_anos_invertido_levanta_antes_da_busca():
+    """``ano_inicio > ano_fim`` levanta ``ValidationError``; o portal devolveria 0 documentos."""
+    with pytest.raises(ValidationError, match=r"'ano_inicio' \(2024\) é posterior a 'ano_fim' \(2020\)"):
+        jus.scraper("tjrj").cjsg("dano moral", ano_inicio=2024, ano_fim="2020", paginas=1)
+
+    assert len(responses.calls) == 0
 
 
 @responses.activate

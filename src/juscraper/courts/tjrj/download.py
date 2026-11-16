@@ -198,14 +198,15 @@ def _init_session(
 
     ``ano_inicio``, ``ano_fim`` e ``competencia`` vazios ficam com o padrao do
     form da origem, como no navegador: a opcao marcada do combo ou, sem ela, a
-    primeira. Valor que o combo da origem nao oferece levanta ``ValueError``.
+    primeira. A excecao e ``ano_inicio`` vazio com ``ano_fim`` preenchido, que
+    vira o ano mais antigo da origem. Valor que o combo da origem nao oferece
+    levanta ``ValueError``.
     """
     resp = request_fn("GET", FORM_URL, timeout=30)
     html = resp.text
     # Anos e competencia aqui sao os padroes do form inicial e so alimentam o
     # postback de origem; os da busca saem do form da origem, mais abaixo. O
-    # backend exige anos nao-vazios (refs #278). Passar so um dos dois anos
-    # (ex.: ano_inicio=2020) faz o outro virar o mais recente da origem.
+    # backend exige anos nao-vazios (refs #278).
     default_year = extract_default_year(html)
     data = build_cjsg_payload(
         hidden=extract_viewstate_fields(html),
@@ -233,6 +234,11 @@ def _init_session(
     # o de Alcada Criminal so tem a competencia "2" e o Conselho da
     # Magistratura so a "0" (15/11/2026). Fora deles, o servidor responde 500.
     default_year = extract_default_year(html)
+    if ano_fim and not ano_inicio:
+        # So o fim: o inicio vira o ano mais antigo da origem. O padrao do
+        # combo (o mais recente) invertia o intervalo, e o portal devolvia 0
+        # documentos.
+        ano_inicio = min(extract_select_options(html, "cmbAnoInicio"), default=None)
     for campo, nome, valor, fallback in (
         ("cmbAnoInicio", "ano_inicio", ano_inicio, default_year),
         ("cmbAnoFim", "ano_fim", ano_fim, default_year),
