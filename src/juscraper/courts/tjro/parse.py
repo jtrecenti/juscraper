@@ -8,7 +8,9 @@ from juscraper.utils.cnj import format_cnj
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """Extract relevant data from the raw TJRO Elasticsearch responses.
 
-    Returns a DataFrame with the decisions.
+    Returns a DataFrame with the decisions. ``id_documento`` e o ``_id`` do
+    documento no indice, a unica coluna que distingue as linhas de uma decisao
+    que o portal indexou duas vezes.
 
     Args:
         resultados_brutos: List of raw JSON responses from the TJRO API.
@@ -31,6 +33,9 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "grau_jurisdicao": source.get("grau_jurisdicao"),
                 "sistema_origem": source.get("sistema_origem"),
                 "ementa": clean_html(source.get("ds_modelo_documento")),
+                # Chave do documento no índice. O portal indexa algumas decisões duas
+                # vezes, com conteúdo igual: só esta coluna distingue as linhas.
+                "id_documento": hit.get("_id"),
             })
 
     df = pd.DataFrame(registros)

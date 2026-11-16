@@ -46,6 +46,19 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert len(df) > 0
 
 
+def test_cjsg_parse_traz_a_chave_do_documento_sem_deduplicar():
+    """``id_documento`` é o ``_id`` de cada hit, na ordem do portal, na última coluna."""
+    brutos = [json.loads(load_sample("tjro", f"cjsg/results_normal_page_0{n}.json")) for n in (1, 2)]
+    ids = [hit["_id"] for bruto in brutos for hit in bruto["hits"]["hits"]]
+
+    df = jus.scraper("tjro").cjsg_parse(brutos)
+
+    assert df.columns[-1] == "id_documento"
+    assert df["id_documento"].tolist() == ids
+    assert df["id_documento"].is_unique
+    assert len(df) == len(ids)
+
+
 @responses.activate
 def test_cjsg_single_page(mocker):
     """Single page: the request goes out with ``from=0`` and the default filter in ``tipo.raw``."""
