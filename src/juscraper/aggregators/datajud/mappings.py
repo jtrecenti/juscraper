@@ -101,8 +101,11 @@ ID_JUSTICA_TRIBUNAL_TO_ALIAS = {
     ("6", "25"): "api_publica_tre-se",  # TRE-SE
     ("6", "26"): "api_publica_tre-sp",  # TRE-SP
     ("6", "27"): "api_publica_tre-to",  # TRE-TO
-    # Justiça Militar da União (id_justica="7")
+    # Justiça Militar da União (id_justica="7"). As Auditorias das 12
+    # Circunscrições Judiciárias Militares (CJMs, 1º grau) ficam no mesmo índice
+    # do STM: conferido ao vivo, ``api_publica_stm`` traz CNJs ``.7.01.`` a ``.7.12.``.
     ("7", "00"): "api_publica_stm",  # STM
+    **{("7", f"{cjm:02d}"): "api_publica_stm" for cjm in range(1, 13)},  # 1ª a 12ª CJM
     # Justiça Militar Estadual (id_justica="9"): o código é o da UF na
     # Justiça Estadual, como o ``.9.26.`` dos CNJs do ``api_publica_tjmsp``.
     ("9", "13"): "api_publica_tjmmg",  # TJMMG (MG)

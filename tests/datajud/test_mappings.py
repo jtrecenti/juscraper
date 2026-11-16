@@ -35,6 +35,19 @@ class TestIdJusticaTribunalToAlias:
         assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("6", "07")] == "api_publica_tre-dft"
 
 
+class TestJusticaMilitarDaUniao:
+    def test_cjms_de_primeiro_grau_usam_o_indice_do_stm(self):
+        """Conferido ao vivo em 16/11/2026: ``api_publica_stm`` traz CNJs ``.7.01.`` a ``.7.12.``.
+
+        São os processos das Auditorias das 12 Circunscrições Judiciárias
+        Militares (grau ``G1``), com ``tribunal`` ``STM`` na fonte.
+        """
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("7", "00")] == "api_publica_stm"
+        for i in range(1, 13):
+            assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("7", f"{i:02d}")] == "api_publica_stm"
+        assert ("7", "13") not in ID_JUSTICA_TRIBUNAL_TO_ALIAS
+
+
 class TestTreDfAliasConveniencia:
     def test_tre_df_resolve_para_dft(self):
         # Sigla popular TRE-DF deve resolver para o alias oficial tre-dft
