@@ -31,6 +31,8 @@ Repita o processo acima em [test.pypi.org](https://test.pypi.org) com:
 
 ### Método 1: Usando o Script Automatizado
 
+Prefira o método 2 por enquanto: o script insere a seção da versão nova no topo do `CHANGELOG.md`, antes da introdução e com itens vazios, em vez de fazer o passo 2 do método 2.
+
 ```bash
 # Instalar dependências de desenvolvimento
 uv sync --all-extras
@@ -50,7 +52,7 @@ git push origin v0.1.0
    version = "0.1.0"
    ```
 
-2. **Atualizar CHANGELOG.md** com as mudanças da nova versão
+2. **Atualizar CHANGELOG.md**: renomear `[Unreleased]` para `[0.1.0] - AAAA-MM-DD`, abrir um `[Unreleased]` vazio acima dela e, nos links do fim do arquivo, apontar `[Unreleased]` para `compare/v0.1.0...HEAD` e acrescentar `[0.1.0]` (`compare/<tag anterior>...v0.1.0`).
 
 3. **Commit e tag**:
    ```bash
