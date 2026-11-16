@@ -30,7 +30,8 @@ from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param
 
 AVISO_DE_ORDEM = "A ordem de relevância do Falcao"
 
-# Para os contratos que pedem mais de uma página explícita sem ``ordenacao``, o que avisa; o aviso tem contratos próprios.
+# Para os contratos que pedem mais de uma página explícita sem ``ordenacao``, o que avisa.
+# O aviso tem contratos próprios.
 ordem_padrao_avisa = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
 
 

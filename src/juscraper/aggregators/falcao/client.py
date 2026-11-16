@@ -520,7 +520,7 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa, na ordem de relevância, que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
+        """Avisa, na ordem de relevância, que a coleta junta páginas de ordem instável (ver :meth:`listar_decisoes`)."""
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
                 "A ordem de relevância do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
