@@ -133,6 +133,7 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
         ('"corrupção ativa"', "ementa", '(ementa:"corrupção ativa")'),
         ('"deser*"', "ementa", '(ementa:"deser*")'),
         ("peculato", "inteiro_teor", '(inteiro_teor:"peculato")'),
+        ("290", "referencia_legislativa", '(referencia_legislativa:"290")'),
         ("7000588-60.2021.7.00.0000", "numero", "(numero_processo:*70005886020217000000*)"),
     ],
 )
@@ -154,26 +155,51 @@ def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa,
     assert not recwarn.list
 
 
-@pytest.mark.parametrize("pesquisa", ["corrupção ativa", "deser*", "furt?"])
+@pytest.mark.parametrize(
+    ("pesquisa", "expressao"),
+    [
+        # Entre palavras sem operador vale o E, como na busca simples.
+        ("corrupção ativa", '("corrupção" AND "ativa")'),
+        ("corrupção E ativa", '("corrupção" AND "ativa")'),
+        ("furto ou roubo", '("furto" OR "roubo")'),
+        ('"furto" OU "roubo qualificado"', '("furto" OR "roubo qualificado")'),
+        ("furto NÃO infração", '("furto" AND NOT "infração")'),
+        ("detenção OU (código NÃO penal)", '("detenção" OR ("código" AND NOT "penal"))'),
+        ("deser*", "deser*"),
+        ("em?argos deser*", "(em?argos AND deser*)"),
+        ('"detenção civil"~2', '"detenção civil"~2'),
+        # Palavra sem curinga vai entre aspas: o símbolo não vira sintaxe da consulta.
+        ("9.099/95 habeas-corpus", '("9.099/95" AND "habeas-corpus")'),
+        # Entre aspas, o operador é palavra.
+        ('acordo "não" previsto', '("acordo" AND "não" AND "previsto")'),
+    ],
+)
 @responses.activate
-def test_cjsg_termo_com_operador_ou_curinga_sem_aspas_avisa_uma_vez(mocker, pesquisa):
-    """Com data, o portal procura a expressão exata; a busca simples leria E ou curinga."""
+def test_cjsg_operadores_traduzidos_para_a_consulta_avancada(mocker, recwarn, pesquisa, expressao):
+    """Com data, os operadores da busca simples vão na sintaxe da pesquisa avançada."""
     mocker.patch("time.sleep")
     _add_avancada()
 
-    with pytest.warns(UserWarning, match="expressão exata") as avisos:
-        jus.scraper("stm").cjsg(pesquisa, data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021")
+    jus.scraper("stm").cjsg(pesquisa, data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021")
 
-    assert len(avisos) == 1
-    assert responses.calls[0].request.params["q"] == f'(ementa:"{pesquisa}") AND {PUBLICACAO}'
+    assert responses.calls[0].request.params["q"] == f"(ementa:{expressao}) AND {PUBLICACAO}"
+    assert not recwarn.list
 
 
 @pytest.mark.parametrize(
     ("pesquisa", "campo", "erro"),
     [
-        ('"furto" OU "roubo"', "ementa", "aspas no meio"),
         ("furto\\", "inteiro_teor", "barra invertida"),
+        ('furto "roubo', "ementa", "aspas sem par"),
+        ("(furto OU roubo", "ementa", "parênteses em pares"),
+        ("furto) OU (roubo", "ementa", "parênteses em pares"),
+        ("furto OU", "ementa", "um termo de cada lado"),
+        ("E furto", "ementa", "um termo de cada lado"),
+        ("furto NÃO", "ementa", "depois do NÃO"),
+        ("()", "ementa", "um termo de cada lado"),
+        ("9.099/9*", "ementa", "palavra com curinga"),
         ("7000588 OU 60", "numero", "só dígitos"),
+        ("deserção", "tudo", "campo='tudo' não combina com filtro de data"),
     ],
 )
 def test_cjsg_termo_que_nao_cabe_na_consulta_avancada_levanta(pesquisa, campo, erro):
@@ -231,4 +257,34 @@ def test_cjsg_alias_deprecado_de_data(mocker):
 
 def test_cjsg_campo_fora_do_dominio_levanta():
     with pytest.raises(ValidationError, match="campo"):
-        jus.scraper("stm").cjsg("deserção", campo="tudo")
+        jus.scraper("stm").cjsg("deserção", campo="notas")
+
+
+@pytest.mark.parametrize("campo", ["referencia_legislativa", "tudo"])
+@responses.activate
+def test_cjsg_campo_vai_no_search_filter(mocker, campo):
+    mocker.patch("time.sleep")
+    _add_single_page()
+
+    jus.scraper("stm").cjsg("290", paginas=1, campo=campo)
+
+    assert responses.calls[0].request.params == {
+        "search_filter_option": "jurisprudencia",
+        "search_filter": campo,
+        "search_input": "290",
+        "q": "290",
+        "q_or": "290",
+        "start": "0",
+        "rows": "100",
+    }
+
+
+@responses.activate
+def test_cjsg_campo_tudo_sem_termo_aceita_filtro_de_data(mocker):
+    """Sem termo, a consulta avançada só leva os intervalos, e o campo não entra nela."""
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    jus.scraper("stm").cjsg("", campo="tudo", data_julgamento_inicio="01/01/2010", data_julgamento_fim="08/06/2022")
+
+    assert responses.calls[0].request.params["q"] == JULGAMENTO

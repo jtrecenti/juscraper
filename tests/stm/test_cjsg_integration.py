@@ -9,7 +9,7 @@ import datetime
 import pytest
 
 import juscraper as jus
-from juscraper.courts.stm.download import RESULTS_PER_PAGE
+from juscraper.courts.stm.download import RESULTS_PER_PAGE, cjsg_n_resultados
 
 pytestmark = [pytest.mark.integration, pytest.mark.anti_bot]
 
@@ -17,6 +17,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.anti_bot]
 @pytest.fixture(scope="module")
 def stm():
     return jus.scraper("stm")
+
+
+def _total(stm, pesquisa, **filtros):
+    """Total de documentos que o portal anuncia para a busca."""
+    return cjsg_n_resultados(stm.cjsg_download(pesquisa, paginas=1, **filtros)[0])
 
 
 def test_cjsg_duas_paginas_ao_vivo(stm):
@@ -73,3 +78,62 @@ def test_cjsg_intervalo_sem_resultados_ao_vivo(stm):
     df = stm.cjsg("", data_julgamento_inicio="01/01/1800", data_julgamento_fim="31/12/1800")
 
     assert df.empty
+
+
+def test_cjsg_campo_tudo_ao_vivo(stm):
+    """Todos os campos incluem a ementa: a mesma expressão não pode achar menos."""
+    df = stm.cjsg('"corrupção ativa"', paginas=1, campo="tudo")
+
+    assert len(df) == RESULTS_PER_PAGE
+    assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
+    assert _total(stm, '"corrupção ativa"', campo="tudo") > _total(stm, '"corrupção ativa"')
+
+
+def test_cjsg_campo_referencia_legislativa_ao_vivo(stm):
+    df = stm.cjsg("290", paginas=1, campo="referencia_legislativa")
+
+    assert len(df) == RESULTS_PER_PAGE
+    assert df[["processo", "classe", "relator", "data_julgamento"]].notna().all().all()
+
+
+def test_cjsg_campo_referencia_legislativa_com_data_ao_vivo(stm):
+    inicio, fim = datetime.date(2024, 1, 1), datetime.date(2024, 12, 31)
+
+    df = stm.cjsg(
+        "290", paginas=1, campo="referencia_legislativa", data_julgamento_inicio=inicio, data_julgamento_fim=fim
+    )
+
+    assert len(df) > 0
+    assert df["data_julgamento"].between(inicio, fim).all()
+    assert _total(stm, "290", campo="referencia_legislativa") > _total(
+        stm, "290", campo="referencia_legislativa", data_julgamento_inicio=inicio, data_julgamento_fim=fim
+    )
+
+
+PERIODO = {"data_julgamento_inicio": "01/01/2020", "data_julgamento_fim": "31/12/2024"}
+
+
+def test_cjsg_operadores_com_data_ao_vivo(stm):
+    """Com data, E, OU e NÃO valem como na busca simples.
+
+    Em 16/11/2026, nesse período: expressão exata 48, E 53, OU 275.
+    """
+    frase = _total(stm, '"corrupção ativa"', **PERIODO)
+    sem_operador = _total(stm, "corrupção ativa", **PERIODO)
+    com_ou = _total(stm, "corrupção OU ativa", **PERIODO)
+    so_corrupcao = _total(stm, "corrupção", **PERIODO)
+
+    assert 0 < frase <= sem_operador < so_corrupcao < com_ou
+    assert _total(stm, "corrupção E ativa", **PERIODO) == sem_operador
+    assert _total(stm, "corrupção NÃO ativa", **PERIODO) == so_corrupcao - sem_operador
+
+
+def test_cjsg_curinga_e_parenteses_com_data_ao_vivo(stm):
+    inteira = _total(stm, "deserção", **PERIODO)
+    com_curinga = _total(stm, "deser*", **PERIODO)
+    df = stm.cjsg("deser* E (furto OU peculato)", paginas=1, **PERIODO)
+
+    assert 0 < inteira <= com_curinga
+    assert 0 < len(df) < com_curinga
+    assert df["ementa"].str.contains("deser", case=False).all()
+    assert df["ementa"].str.contains("furto|peculato", case=False).all()
