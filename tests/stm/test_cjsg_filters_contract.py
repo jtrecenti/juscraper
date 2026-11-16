@@ -1,4 +1,6 @@
 """Propagação de filtros do cjsg do STM para a query string."""
+import datetime
+
 import pytest
 import responses
 from pydantic import ValidationError
@@ -80,18 +82,126 @@ def test_cjsg_alias_deprecado_de_pesquisa(mocker, alias):
     assert len(df) == 1
 
 
+def test_cjsg_kwarg_desconhecido_levanta_type_error():
+    assert_unknown_kwarg_raises(jus.scraper("stm").cjsg, "parametro_bobo", "deserção")
+
+
+def _add_avancada() -> None:
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=load_sample("stm", "cjsg/avancada_datas.html"),
+        content_type="text/html; charset=UTF-8",
+    )
+
+
+JULGAMENTO = "(data_decisao:[2010-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])"
+PUBLICACAO = "(data_publicacao:[2021-10-01T00:00:00.000Z TO 2021-10-31T23:59:59.000Z])"
+
+
+@responses.activate
+def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
+    """A busca do sample: pesquisa avançada só com o intervalo e um filtro da coluna lateral."""
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    df = jus.scraper("stm").cjsg(
+        "",
+        data_julgamento_inicio="01/01/2010",
+        data_julgamento_fim=datetime.date(2022, 6, 8),
+        relator="CLAUDIO PORTUGAL DE VIVEIROS",
+    )
+
+    assert responses.calls[0].request.params == {
+        "search_filter_option": "jurisprudencia",
+        "search_filter": "busca_avancada",
+        "q": JULGAMENTO,
+        "q_or": "",  # vazio, como nos links de paginação do portal
+        "start": "0",
+        "rows": "100",
+        "fq_ministro_relator": "CLAUDIO PORTUGAL DE VIVEIROS",
+    }
+    assert len(df) == 1
+    assert set(df["relator"]) == {"CLAUDIO PORTUGAL DE VIVEIROS"}
+    assert df["data_julgamento"].between(datetime.date(2010, 1, 1), datetime.date(2022, 6, 8)).all()
+
+
 @pytest.mark.parametrize(
-    "kwarg",
+    ("pesquisa", "campo", "clausula"),
     [
-        "parametro_bobo",
-        "data_julgamento_inicio",
-        "data_julgamento_fim",
-        "data_publicacao_inicio",
-        "data_publicacao_fim",
+        ("deserção", "ementa", '(ementa:"deserção")'),
+        ('"corrupção ativa"', "ementa", '(ementa:"corrupção ativa")'),
+        ("peculato", "inteiro_teor", '(inteiro_teor:"peculato")'),
+        ("7000588-60.2021.7.00.0000", "numero", "(numero_processo:*70005886020217000000*)"),
     ],
 )
-def test_cjsg_kwarg_desconhecido_levanta_type_error(kwarg):
-    assert_unknown_kwarg_raises(jus.scraper("stm").cjsg, kwarg, "deserção", valor="01/01/2024")
+@responses.activate
+def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa, campo, clausula):
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    jus.scraper("stm").cjsg(
+        pesquisa,
+        campo=campo,
+        data_julgamento_inicio="2010-01-01",
+        data_julgamento_fim="2022-06-08",
+        data_publicacao_inicio="01/10/2021",
+        data_publicacao_fim="31/10/2021",
+    )
+
+    assert responses.calls[0].request.params["q"] == f"{clausula} AND {JULGAMENTO} AND {PUBLICACAO}"
+    assert not recwarn.list
+
+
+@responses.activate
+def test_cjsg_termo_de_varias_palavras_sem_aspas_avisa_uma_vez(mocker):
+    """Com data, o portal procura a expressão exata; a busca simples trataria como E."""
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    with pytest.warns(UserWarning, match="expressão exata") as avisos:
+        jus.scraper("stm").cjsg(
+            "corrupção ativa", data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021"
+        )
+
+    assert len(avisos) == 1
+    assert responses.calls[0].request.params["q"] == f'(ementa:"corrupção ativa") AND {PUBLICACAO}'
+
+
+def test_cjsg_aspas_no_meio_do_termo_com_data_levanta():
+    with pytest.raises(ValueError, match="aspas no meio"):
+        jus.scraper("stm").cjsg(
+            '"furto" OU "roubo"', data_julgamento_inicio="01/01/2024", data_julgamento_fim="31/01/2024"
+        )
+
+
+@responses.activate
+def test_cjsg_intervalo_aberto_e_preenchido_com_aviso(mocker):
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    with pytest.warns(UserWarning, match="data_julgamento_inicio"):
+        jus.scraper("stm").cjsg("", data_julgamento_fim="08/06/2022")
+
+    assert responses.calls[0].request.params["q"] == (
+        "(data_decisao:[1990-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])"
+    )
+
+
+def test_cjsg_inicio_depois_do_fim_levanta():
+    with pytest.raises(ValueError, match="data_julgamento"):
+        jus.scraper("stm").cjsg("", data_julgamento_inicio="02/01/2024", data_julgamento_fim="01/01/2024")
+
+
+@responses.activate
+def test_cjsg_alias_deprecado_de_data(mocker):
+    mocker.patch("time.sleep")
+    _add_avancada()
+
+    with pytest.warns(DeprecationWarning, match="data_inicio"), pytest.warns(DeprecationWarning, match="data_fim"):
+        jus.scraper("stm").cjsg("", data_inicio="01/01/2010", data_fim="08/06/2022")
+
+    assert responses.calls[0].request.params["q"] == JULGAMENTO
 
 
 def test_cjsg_campo_fora_do_dominio_levanta():

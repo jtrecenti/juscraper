@@ -84,16 +84,35 @@ class STMScraper(HTTPScraper):
                   acórdão.
                 * ``revisor`` (str | None): Ministro revisor.
                 * ``assunto`` (str | None): Assunto (``"PECULATO"``).
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): Intervalo de data de julgamento, em
+                  ``DD/MM/AAAA`` ou ``AAAA-MM-DD``.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): Intervalo de data de publicação.
+
+                Com filtro de data, a busca vai pela pesquisa avançada do
+                portal, a única que filtra por intervalo. Ela procura
+                ``pesquisa`` como expressão exata no ``campo`` escolhido
+                (``"corrupção ativa"`` só casa com as duas palavras juntas,
+                nessa ordem), não aplica ``E``, ``OU``, ``NÃO`` nem os
+                curingas, e aceita ``pesquisa=""`` para trazer tudo o que
+                está no intervalo. Termo de mais de uma palavra fora de aspas
+                emite ``UserWarning``. Informado só um lado do intervalo, o
+                outro é preenchido (01/01/1990 ou hoje), com ``UserWarning``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
 
         Raises:
-            TypeError: Quando um kwarg desconhecido é passado (inclusive
-                ``data_julgamento_*`` e ``data_publicacao_*``, que esta busca
-                não filtra).
+            TypeError: Quando um kwarg desconhecido é passado.
             ValidationError: Quando um filtro tem valor inválido, como um
                 ``campo`` fora das três opções.
+            ValueError: Quando uma data é inválida ou o início vem depois do
+                fim; quando há filtro de data e ``pesquisa`` tem aspas no
+                meio.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
             ValueError: Quando a página devolvida não traz o contador de
@@ -112,6 +131,7 @@ class STMScraper(HTTPScraper):
             >>> import juscraper as jus
             >>> stm = jus.scraper("stm")
             >>> df = stm.cjsg("deserção", paginas=1)
+            >>> df = stm.cjsg("deserção", data_julgamento_inicio="01/03/2025", data_julgamento_fim="31/03/2025")
 
         See Also:
             :class:`InputCJSGSTM` — schema pydantic é a fonte da verdade dos
@@ -150,6 +170,12 @@ class STMScraper(HTTPScraper):
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             campo=inp.campo,
+            datas={
+                "data_julgamento_inicio": inp.data_julgamento_inicio,
+                "data_julgamento_fim": inp.data_julgamento_fim,
+                "data_publicacao_inicio": inp.data_publicacao_inicio,
+                "data_publicacao_fim": inp.data_publicacao_fim,
+            },
             classe=inp.classe,
             relator=inp.relator,
             relator_acordao=inp.relator_acordao,

@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
 
+from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
@@ -29,6 +31,16 @@ _FILTROS = {
     "assunto": "fq_assunto_pesquisa",
 }
 
+# Pesquisa avançada do portal, a única que filtra por intervalo de datas. O
+# formulário monta a consulta no navegador (``processAdvsearch``, em
+# ``js/util.js``) e a manda pronta em ``q``.
+# Campo do método público -> campo da consulta avançada, que procura o termo
+# como expressão exata.
+_CAMPOS_DE_TEXTO = {"ementa": "ementa", "inteiro_teor": "inteiro_teor"}
+# Filtro de data do método público -> campo de data da consulta avançada.
+_CAMPOS_DE_DATA = {"data_julgamento": "data_decisao", "data_publicacao": "data_publicacao"}
+_PONTUACAO_DO_NUMERO = re.compile(r"[.\-/]")
+
 # Contador da página de resultados: "<b>1</b> - <b>100</b> de <b>351</b> documentos".
 _COUNT_SELECTORS = ("div.row.message",)
 # Abertura desse ``div`` no HTML bruto e quanto dele basta para ler o contador.
@@ -44,29 +56,79 @@ _WAF_MARKER = b"<title>Request Rejected</title>"
 _WAF_SUPPORT_ID = re.compile(r"support ID is:\s*(\d+)")
 
 
+def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
+    """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
+    termo = pesquisa.strip()
+    if not termo:
+        return None
+    if campo == "numero":
+        return f"(numero_processo:*{_PONTUACAO_DO_NUMERO.sub('', termo)}*)"
+    entre_aspas = len(termo) > 1 and termo[0] == termo[-1] == '"'
+    if entre_aspas:
+        termo = termo[1:-1]
+    if '"' in termo:
+        raise ValueError(
+            "STM: com filtro de data, 'pesquisa' é procurada como expressão exata e não pode ter aspas no meio "
+            f"(recebido: {pesquisa!r})."
+        )
+    if not entre_aspas and len(termo.split()) > 1:
+        avisar(
+            "STM: com filtro de data, a busca vai pela pesquisa avançada do portal, que procura 'pesquisa' como "
+            f"expressão exata ({termo!r}) e não aplica os operadores E, OU e NÃO nem os curingas. "
+            "Ponha o termo entre aspas para confirmar a expressão exata e dispensar este aviso."
+        )
+    return f'({_CAMPOS_DE_TEXTO[campo]}:"{termo}")'
+
+
+def montar_consulta_avancada(pesquisa: str, campo: str, datas: dict[str, str | None]) -> str | None:
+    """Monta a consulta da pesquisa avançada do STM; ``None`` quando não há filtro de data.
+
+    Repete o que o formulário do portal envia: o termo como expressão exata
+    no campo escolhido, ``(ementa:"deserção")``, e cada intervalo como
+    ``(data_decisao:[2024-01-01T00:00:00.000Z TO 2024-01-31T23:59:59.000Z])``,
+    ligados por ``AND``. ``datas`` traz ``data_julgamento_inicio/fim`` e
+    ``data_publicacao_inicio/fim`` em ``AAAA-MM-DD``. Sem termo, a consulta
+    fica só com os intervalos.
+
+    Raises:
+        ValueError: Quando o termo tem aspas no meio.
+    """
+    intervalos = [
+        f"({campo_de_data}:[{inicio}T00:00:00.000Z TO {fim}T23:59:59.000Z])"
+        for filtro, campo_de_data in _CAMPOS_DE_DATA.items()
+        if (inicio := datas.get(f"{filtro}_inicio")) and (fim := datas.get(f"{filtro}_fim"))
+    ]
+    if not intervalos:
+        return None
+    termo = _clausula_do_termo(pesquisa, campo)
+    return " AND ".join([termo, *intervalos] if termo else intervalos)
+
+
 def build_cjsg_params(
     pesquisa: str,
     pagina: int = 1,
     campo: str = "ementa",
+    *,
+    datas: dict[str, str | None] | None = None,
     **filtros: str | None,
 ) -> dict[str, str]:
     """Monta a query string da busca de jurisprudência do STM.
 
-    Repete o que o formulário do portal envia: o termo vai em ``q``, ``q_or``
-    e ``search_input``, e o portal traduz os operadores (``E``, ``OU``,
-    ``NÃO``) do lado dele. ``filtros`` aceita ``classe``, ``relator``,
-    ``relator_acordao``, ``revisor`` e ``assunto``; ``None`` ou vazio não
-    entra na query.
+    Repete o que o formulário do portal envia. Na busca simples, o termo vai
+    em ``q``, ``q_or`` e ``search_input``, e o portal traduz os operadores
+    (``E``, ``OU``, ``NÃO``) do lado dele. Com filtro de data em ``datas``, a
+    busca é a avançada: ``q`` leva a consulta de
+    :func:`montar_consulta_avancada`. ``filtros`` aceita ``classe``,
+    ``relator``, ``relator_acordao``, ``revisor`` e ``assunto``; ``None`` ou
+    vazio não entra na query.
     """
-    params = {
-        "search_filter_option": "jurisprudencia",
-        "search_filter": campo,
-        "search_input": pesquisa,
-        "q": pesquisa,
-        "q_or": pesquisa,
-        "start": str((pagina - 1) * RESULTS_PER_PAGE),
-        "rows": str(RESULTS_PER_PAGE),
-    }
+    params = {"search_filter_option": "jurisprudencia"}
+    consulta = montar_consulta_avancada(pesquisa, campo, datas or {})
+    if consulta is None:
+        params |= {"search_filter": campo, "search_input": pesquisa, "q": pesquisa, "q_or": pesquisa}
+    else:
+        params |= {"search_filter": "busca_avancada", "q": consulta, "q_or": ""}
+    params |= {"start": str((pagina - 1) * RESULTS_PER_PAGE), "rows": str(RESULTS_PER_PAGE)}
     for nome, valor in filtros.items():
         if valor:
             params[_FILTROS[nome]] = valor
@@ -133,16 +195,17 @@ def cjsg_download_manager(
     *,
     request_fn: RequestFn,
     sleep_time: float = 1.0,
-    campo: str = "ementa",
-    **filtros: str | None,
+    **busca: Any,
 ) -> list[str]:
     """Baixa as páginas de resultados da busca de jurisprudência do STM.
 
-    ``campo`` e ``filtros`` são os de :class:`~juscraper.courts.stm.schemas.InputCJSGSTM`.
+    ``busca`` leva os demais argumentos de :func:`build_cjsg_params`:
+    ``campo``, ``datas`` e os filtros da coluna "Filtrar por".
 
     Raises:
         BotChallengeBlockedError: Quando o WAF recusa a requisição.
-        ValueError: Quando a primeira página pedida não traz o contador de
+        ValueError: Quando o termo tem aspas no meio e há filtro de data;
+            quando a primeira página pedida não traz o contador de
             documentos nem o aviso de busca vazia, ou quando uma das seguintes
             vem sem documentos.
 
@@ -150,12 +213,14 @@ def cjsg_download_manager(
         O HTML de cada página, na ordem pedida.
     """
     primeira = menor_pagina(paginas)
+    # Montada uma vez aqui para o aviso do termo sair uma vez, não a cada página.
+    params_da_pagina_1 = build_cjsg_params(pesquisa, 1, **busca)
 
     def buscar(pagina: int) -> str:
         resp = request_fn(
             "GET",
             BASE_URL,
-            params=build_cjsg_params(pesquisa, pagina, campo, **filtros),
+            params=params_da_pagina_1 | {"start": str((pagina - 1) * RESULTS_PER_PAGE)},
             perfil="cjsg",
             on_response=conferir_bloqueio,
         )
