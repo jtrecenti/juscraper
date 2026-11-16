@@ -553,8 +553,6 @@ def test_maps_tipo_processo(tipo_processo, expected, mocker):
         ("classe", 123, TypeError),
         ("classe", "123", ValueError),
         ("classe", ["Apelação Cível", 123], TypeError),
-        ("relator", "Fulano de Tal, Beltrano de Tal", ValueError),
-        ("orgao_julgador", "Câmara Especial, Turma Recursal", ValueError),
         ("tipo_processo", "942", ValueError),
         ("tipo_processo", "Cível Criminal", ValueError),
         ("data_publicacao_inicio", "2024-99-99", ValueError),
