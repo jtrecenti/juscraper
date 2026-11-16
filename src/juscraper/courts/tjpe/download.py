@@ -133,6 +133,23 @@ def extract_escolha_button_id(html: str, tipo: str = "Acórdãos") -> str:
     raise ValueError(f"Could not find escolha button for '{tipo}'")
 
 
+def escolher_tipo_com_documentos(html: str, tipos: tuple[str, ...]) -> str:
+    """Primeiro dos ``tipos`` que tem documentos na página de escolha.
+
+    O tipo sem documento traz ``Nenhum documento encontrado`` no lugar do
+    link. Com ``tipo_decisao="todos"``, um tipo zerado e o outro com
+    documentos, vale o que tem. Se nenhum tiver, devolve o primeiro, e
+    :func:`extract_escolha_button_id` levanta o erro.
+    """
+    for tipo in tipos:
+        try:
+            extract_escolha_button_id(html, tipo)
+        except ValueError:
+            continue
+        return tipo
+    return tipos[0]
+
+
 def extract_pagination_ids(html: str) -> tuple[str, str]:
     """Extract the form ID and datascroller ID for AJAX pagination."""
     # The datascroller ID reveals the form ID (e.g. "j_id81:j_id87")
@@ -333,10 +350,13 @@ def cjsg_download(
 
     Returns a list of HTML strings, one per page.
     """
-    tipo_label = {
-        "acordaos": "Acórdãos",
-        "monocraticas": "Decisões Monocráticas",
-    }.get(tipo_decisao, "Acórdãos")
+    # Em "todos", o fluxo escolhe os acórdãos; se não houver nenhum, as
+    # decisões monocráticas.
+    tipos = {
+        "acordaos": ("Acórdãos",),
+        "monocraticas": ("Decisões Monocráticas",),
+    }.get(tipo_decisao, ("Acórdãos", "Decisões Monocráticas"))
+    tipo_label = tipos[0]
 
     # Step 1 - GET search page
     search_html, vs = step1_get_session(request_fn)
@@ -367,6 +387,7 @@ def cjsg_download(
     # Step 2 may return results directly (single type) or escolha page (multiple types)
     if is_escolha_page(response_html):
         # Step 3 - choose result type
+        tipo_label = escolher_tipo_com_documentos(response_html, tipos)
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
         time.sleep(1)
     elif is_results_page(response_html):

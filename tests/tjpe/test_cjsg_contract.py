@@ -203,3 +203,51 @@ def test_cjsg_pagina_desconhecida_levanta_erro(mocker):
 
     with pytest.raises(ValueError, match="fora dos formatos conhecidos"):
         jus.scraper("tjpe").cjsg("dano moral", paginas=1)
+
+
+def _escolha_com_tipo_zerado(botao_zerado: str) -> str:
+    """Escolha capturada com um dos tipos trocado por 'Nenhum documento encontrado'.
+
+    As duas capturas de escolha (``step_02_escolha.html``, com os dois tipos
+    com documentos, e ``no_results_todos.html``, com os dois zerados) só
+    diferem na célula do link de cada tipo: o portal monta a linha zerada com
+    o texto no lugar do ``<a>``. A página mista junta as duas, linha a linha.
+    """
+    com_documentos = load_sample("tjpe", "cjsg/step_02_escolha.html").splitlines(keepends=True)
+    zerada = load_sample("tjpe", "cjsg/no_results_todos.html").splitlines(keepends=True)
+    linhas = [z if botao_zerado in c else c for c, z in zip(com_documentos, zerada, strict=True)]
+    assert linhas != com_documentos, f"a captura deixou de ter a linha do botão {botao_zerado}"
+    return "".join(linhas)
+
+
+@pytest.mark.parametrize(
+    ("botao_zerado", "botao_escolhido"),
+    [
+        pytest.param("resultadoForm:j_id27", "resultadoForm:j_id37", id="acordaos_zerados"),
+        pytest.param("resultadoForm:j_id37", "resultadoForm:j_id27", id="monocraticas_zeradas"),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_todos_escolhe_o_tipo_com_documentos(mocker, botao_zerado, botao_escolhido):
+    """Em ``"todos"``, com um tipo zerado na escolha, vale o tipo que tem documentos.
+
+    A página de resultados devolvida é a de acórdãos capturada: o que se
+    confere é o botão pedido no POST da escolha.
+    """
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    responses.add(
+        responses.POST,
+        CONSULTA_URL,
+        body=_escolha_com_tipo_zerado(botao_zerado),
+        status=200,
+        content_type="text/html; charset=UTF-8",
+    )
+    _add_post_escolha(
+        "cjsg/step_03_resultado.html",
+        match=[urlencoded_body_subset_matcher({"resultadoForm": "resultadoForm", botao_escolhido: botao_escolhido})],
+    )
+
+    df = jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")
+
+    assert len(df) > 0
