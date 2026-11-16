@@ -25,6 +25,7 @@ abaixo no nível de módulo.
 from __future__ import annotations
 
 import logging
+import tempfile
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -153,7 +154,7 @@ def download_cjsg_pages(
             ``_request_with_retry`` usado nos GETs paginados (#203).
         base_url: ``https://esaj.<tribunal>.jus.br/`` (trailing slash).
         download_path: Base directory; actual files land under
-            ``<download_path>/cjsg/<YYYYMMDDHHMMSS>/cjsg_NNNNN.html``.
+            ``<download_path>/cjsg/<YYYYMMDDHHMMSS>_<sufixo>/cjsg_NNNNN.html``.
         body: Form body for ``POST cjsg/resultadoCompleta.do``. Must include
             ``tipoDecisaoSelecionados`` (``A`` or ``D``).
         tipo_decisao: ``"acordao"`` or ``"monocratica"``. Echoed in the
@@ -173,8 +174,9 @@ def download_cjsg_pages(
     """
     tipo_param = "A" if tipo_decisao == "acordao" else "D"
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    path = Path(download_path) / "cjsg" / timestamp
-    path.mkdir(parents=True, exist_ok=True)
+    raiz = Path(download_path) / "cjsg"
+    raiz.mkdir(parents=True, exist_ok=True)
+    path = Path(tempfile.mkdtemp(prefix=f"{timestamp}_", dir=raiz))
 
     link_cjsg = f"{base_url}cjsg/resultadoCompleta.do"
 
@@ -190,23 +192,26 @@ def download_cjsg_pages(
 
     n_pags = get_n_pags_callback(first_html)
 
-    with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
-        fp.write(first_html)
-
     if n_pags == 0:
+        with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
+            fp.write(first_html)
         logger.info("Nenhum resultado encontrado para a busca.")
         return str(path)
 
     conversation_id = _extract_conversation_id(first_html) if extract_conversation_id else ""
 
-    # A página 1 já veio no primeiro GET; as pedidas além do total vão para o log.
+    # A página 1 vem sempre no primeiro GET, porque dela sai o total, mas só
+    # é gravada se foi pedida: o parse lê todos os arquivos do diretório, e
+    # ``paginas=[2]`` traria as linhas dela junto. As pedidas além do total
+    # vão para o log.
     validas = paginas_no_intervalo(paginas, n_pags, tribunal=scraper.tribunal_name)
+    if 1 in validas:
+        with (path / "cjsg_00001.html").open("w", encoding="latin1") as fp:
+            fp.write(first_html)
     paginas_list = [p for p in validas if p != 1]
+    logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(validas))
     if not paginas_list:
-        logger.info("Total de páginas: %s. Baixando apenas a primeira.", n_pags)
         return str(path)
-
-    logger.info("Total de páginas: %s. Baixando: %s", n_pags, len(paginas_list) + 1)
 
     for pag in tqdm(paginas_list, desc=progress_desc, total=len(validas), initial=int(1 in validas)):
         time.sleep(sleep_time)

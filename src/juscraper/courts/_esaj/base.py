@@ -446,9 +446,12 @@ class EsajSearchScraper(HTTPScraper):
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
                   Default ``"acordao"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                  (str | date | datetime): Intervalo de julgamento.
+                  Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
-                  (str, ``DD/MM/AAAA``): Intervalo de publicacao.
+                  (str | date | datetime): Intervalo de publicacao, nos
+                  mesmos formatos.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
                   intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e

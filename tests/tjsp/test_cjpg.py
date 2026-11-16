@@ -559,5 +559,16 @@ def test_cjpg_download_sem_diretorio_usa_download_path(tmp_path, mocker):
     assert download.call_args.kwargs["download_path"] == str(caminho)
 
 
+@pytest.mark.parametrize("tribunal", ["tjsp", "tjms"])
+def test_cjpg_download_passa_a_sigla_do_tribunal_ao_download(tmp_path, mocker, tribunal):
+    download = mocker.patch(
+        "juscraper.courts._esaj.cjpg.cjpg_download_mod", return_value=str(tmp_path),
+    )
+
+    juscraper.scraper(tribunal, download_path=str(tmp_path)).cjpg_download(paginas=1)
+
+    assert download.call_args.kwargs["tribunal"] == tribunal.upper()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
