@@ -115,7 +115,11 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
             "STM: com filtro de data, 'pesquisa' precisa ter os parênteses em pares e um termo de cada lado dos "
             f"operadores E e OU e depois do NÃO (recebido: {pesquisa!r})."
         )
-    expressao = " ".join(partes).replace("( ", "(").replace(" )", ")")
+    # Espaço entre as partes, menos por dentro dos parênteses.
+    expressao = "".join(
+        parte if parte == ")" or anterior == "(" else f" {parte}"
+        for anterior, parte in zip(["(", *partes], partes, strict=False)
+    )
     return expressao if len(partes) == 1 else f"({expressao})"
 
 

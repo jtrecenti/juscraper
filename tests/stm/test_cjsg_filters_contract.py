@@ -170,6 +170,8 @@ def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa,
         ('"detenção civil"~2', '"detenção civil"~2'),
         # Palavra sem curinga vai entre aspas: o símbolo não vira sintaxe da consulta.
         ("9.099/95 habeas-corpus", '("9.099/95" AND "habeas-corpus")'),
+        # Entre aspas, nada é sintaxe: nem o parêntese.
+        ('"art. 9 ( inciso" OU furto', '("art. 9 ( inciso" OR "furto")'),
         # Entre aspas, o operador é palavra.
         ('acordo "não" previsto', '("acordo" AND "não" AND "previsto")'),
     ],
