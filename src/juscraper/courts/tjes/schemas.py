@@ -12,7 +12,14 @@ from typing import ClassVar, Literal
 
 from pydantic import model_validator
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase, TamanhoPagina
+from ...schemas import (
+    DataJulgamentoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+    TamanhoPagina,
+)
 
 # Opcoes do seletor "Ordenacao" do portal para cada core, capturadas em
 # 15/11/2026 de ``assets/ConsultasPublicas-*.js``. Fora delas, a API responde
@@ -127,8 +134,14 @@ class _OutputCJSGTJESBase(OutputCJSGBase, OutputRelatoriaMixin):
     cargo_julgador: str | None = None
 
 
-class OutputCJSGTJES(_OutputCJSGTJESBase):
-    """Output do cjsg (2o grau) do TJES."""
+class OutputCJSGTJES(_OutputCJSGTJESBase, OutputDataPublicacaoMixin):
+    """Output do cjsg (2o grau) do TJES.
+
+    Nos cores ``legado`` e ``turma_recursal_legado`` nao ha ``dt_juntada``:
+    a data vem em ``data_julgamento``, e o ``legado`` traz tambem
+    ``data_publicacao``. As demais colunas canonicas vem dos campos proprios
+    de cada core (ver ``tjes.parse._CAMPOS_POR_CORE_LEGADO``).
+    """
 
 
 class InputCJPGTJES(SearchBase, DataJulgamentoMixin):

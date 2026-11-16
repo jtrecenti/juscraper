@@ -1,4 +1,6 @@
 """Offline contract tests for TJES cjsg."""
+import datetime
+
 import pandas as pd
 import pytest
 import responses
@@ -108,3 +110,43 @@ def test_cjsg_rejects_pje1g_core():
     """Public cjsg rejects first-instance core; use cjpg instead."""
     with pytest.raises(ValueError, match="cjpg"):
         jus.scraper("tjes").cjsg("direito", core="pje1g", paginas=1)
+
+
+@responses.activate
+def test_cjsg_core_legado_preenche_colunas_canonicas(mocker):
+    """No core ``legado``, processo, relator, ementa e datas vêm dos campos próprios do core."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_legado_page_01.json", core="legado")
+
+    df = jus.scraper("tjes").cjsg("dano moral", paginas=1, core="legado")
+
+    assert len(df) == 20
+    for coluna in ("processo", "ementa", "relator", "orgao_julgador", "data_julgamento", "data_publicacao", "acordao"):
+        assert df[coluna].notna().all(), coluna
+    primeira = df.iloc[0]
+    assert primeira["processo"] == "0014394-89.2014.8.08.0012"
+    assert primeira["relator"] == "SAMUEL MEIRA BRASIL JUNIOR"
+    assert primeira["ementa"].strip().startswith("ACÓRDÃO")
+    assert "EMENTA: APELAÇÃO CÍVEL" in primeira["ementa"]
+    assert primeira["data_julgamento"] == datetime.date(2017, 4, 18)
+    assert primeira["data_publicacao"] == datetime.date(2017, 4, 28)
+
+
+@responses.activate
+def test_cjsg_core_turma_recursal_legado_preenche_colunas_canonicas(mocker):
+    """No core ``turma_recursal_legado``, processo, relator, classe, ementa e data vêm dos campos do core."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_turma_recursal_legado_page_01.json", core="turma_recursal_legado")
+
+    df = jus.scraper("tjes").cjsg("dano moral", paginas=1, core="turma_recursal_legado")
+
+    assert len(df) == 20
+    for coluna in ("processo", "ementa", "relator", "orgao_julgador", "classe", "data_julgamento"):
+        assert df[coluna].notna().all(), coluna
+    primeira = df.iloc[0]
+    # O número vem como a fonte o entrega: só dígitos, sem os zeros à esquerda.
+    assert primeira["processo"] == "145275020158080545"
+    assert primeira["relator"] == "PAULA CHEIM JORGE"
+    assert primeira["classe"] == "Recurso Inominado"
+    assert "ACÓRDÃO" in primeira["ementa"]
+    assert primeira["data_julgamento"] == datetime.date(2017, 2, 16)
