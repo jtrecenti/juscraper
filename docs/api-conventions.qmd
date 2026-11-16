@@ -699,8 +699,7 @@ share the same retry loop via `_request_with_retry`. Defaults:
 TRF6 `cpopg` does not inherit from `HTTPScraper` (its lookup is a captcha
 loop on its own session) and has no HTTP profiles: its request deadline is
 the constructor argument `timeout` (default 30 s), as in
-`jus.scraper("trf6", timeout=90)`, and `politica=`, like any other unknown
-constructor argument, raises `TypeError`.
+`jus.scraper("trf6", timeout=90)`, and `politica=` raises `TypeError`.
 
 Every scraper rejects an unknown constructor argument with `TypeError`, so
 a mistyped name such as `sleep_tim=` fails at construction instead of being
