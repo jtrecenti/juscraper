@@ -4,15 +4,27 @@ import pandas as pd
 from juscraper.core.parse_utils import coerce_date_columns
 
 
+def clean_value(val: object) -> object:
+    """Primeiro item de um campo multivalorado do Solr; o próprio valor nos demais."""
+    if isinstance(val, list):
+        return val[0] if val else None
+    return val
+
+
+def _relator(doc: dict) -> object:
+    """Nome do relator.
+
+    ``relator_redator`` traz o redator antes do relator quando são pessoas
+    diferentes; ``nome_relator`` é sempre o relator.
+    """
+    return clean_value(doc.get('nome_relator')) or clean_value(doc.get('relator_redator'))
+
+
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """
     Extrai os dados relevantes dos resultados brutos retornados pelo TJRS.
     Retorna um DataFrame com as decisões.
     """
-    def clean_value(val):
-        if isinstance(val, list):
-            return val[0] if val else None
-        return val
     resultados = []
     for data in resultados_brutos:
         docs = data.get('response', {}).get('docs', [])
@@ -29,7 +41,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 )
             resultado = {
                 'processo': clean_value(doc.get('numero_processo')),
-                'relator': clean_value(doc.get('relator_redator')),
+                'relator': _relator(doc),
                 'orgao_julgador': clean_value(doc.get('orgao_julgador')),
                 'data_julgamento': clean_value(doc.get('data_julgamento')),
                 'data_publicacao': clean_value(doc.get('data_publicacao')),
@@ -48,6 +60,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 'secao': clean_value(doc.get('secao')),
                 'ano_julgamento': clean_value(doc.get('ano_julgamento')),
                 'nome_relator': clean_value(doc.get('nome_relator')),
+                'nome_redator': clean_value(doc.get('nome_redator')),
                 'ind_segredo_justica': clean_value(doc.get('ind_segredo_justica')),
                 'ementa_referencia': clean_value(doc.get('ementa_referencia')),
                 'cod_ementa': clean_value(doc.get('cod_ementa')),

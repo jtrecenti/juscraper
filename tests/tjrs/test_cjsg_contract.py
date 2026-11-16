@@ -1,4 +1,5 @@
 """Offline contract tests for TJRS cjsg."""
+import json
 from urllib.parse import urlencode
 
 import pandas as pd
@@ -9,7 +10,8 @@ from responses.matchers import urlencoded_params_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from juscraper.core.exceptions import InvalidJSONResponseError
+from juscraper.core.exceptions import HTTPSemanticError, InvalidJSONResponseError
+from juscraper.courts.tjrs.download import TJRSBuscaError
 from tests._helpers import load_sample
 
 BASE = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -194,3 +196,38 @@ def test_cjsg_timeout_vem_do_perfil_http(mocker, politica, timeout_esperado):
     jus.scraper("tjrs", politica=politica).cjsg("mandado de seguranca", paginas=1)
 
     assert responses.calls[0].request.req_kwargs["timeout"] == timeout_esperado
+
+
+@pytest.mark.parametrize("paginas", [1, None], ids=["pagina_pedida", "todas_as_paginas"])
+@responses.activate
+def test_cjsg_erro_do_solr_levanta_em_vez_de_busca_vazia(mocker, paginas):
+    """Aspas sem fechar: HTTP 200 com ``{"error": ...}`` no lugar de ``response``."""
+    mocker.patch("time.sleep")
+    _add_page('"dano moral', 1, "cjsg/erro_solr.json")
+
+    with pytest.raises(TJRSBuscaError, match="Cannot parse") as excinfo:
+        jus.scraper("tjrs").cjsg('"dano moral', paginas=paginas)  # tjrs: guarda-paginas: 1 resposta registrada
+
+    assert excinfo.value.codigo == 400
+    assert isinstance(excinfo.value, HTTPSemanticError)
+    assert len(responses.calls) == 1
+
+
+def test_cjsg_parse_relator_quando_o_redator_e_outro():
+    """``relator_redator`` com dois nomes traz o redator primeiro; ``relator`` é o relator."""
+    brutos = [json.loads(load_sample("tjrs", "cjsg/relator_redator_multi.json"))]
+    assert brutos[0]["response"]["docs"][0]["relator_redator"] == [
+        "Regis de Oliveira Montenegro Barbosa",
+        "José Conrado Kurtz de Souza",
+    ]
+
+    df = jus.scraper("tjrs").cjsg_parse(brutos)
+
+    linha = df[df["processo"] == "80009491520268210001"].iloc[0]
+    assert linha["relator"] == "José Conrado Kurtz de Souza"
+    assert linha["nome_redator"] == "Regis de Oliveira Montenegro Barbosa"
+    assert (df["relator"] == df["nome_relator"]).all()
+    # Sem redator distinto, o portal não manda ``nome_redator``.
+    sem_redator = df[df["processo"] == "50043305220258210087"].iloc[0]
+    assert sem_redator["relator"] == "Altair de Lemos Junior"
+    assert sem_redator["nome_redator"] is None

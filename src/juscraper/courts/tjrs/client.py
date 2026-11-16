@@ -191,6 +191,9 @@ class TJRSScraper(HTTPScraper):
             ValueError: Quando uma data é inválida, o início é posterior ao
                 fim, ou um parâmetro e seu alias deprecado são passados juntos.
             ValidationError: Para os demais erros de validação do schema.
+            TJRSBuscaError: Quando o portal responde com erro do Solr no lugar
+                dos resultados, como em ``pesquisa`` com aspas sem fechar
+                (:class:`juscraper.courts.tjrs.download.TJRSBuscaError`).
 
         Avisos:
             ``UserWarning``: Quando um intervalo de datas vem só com o início
@@ -202,6 +205,8 @@ class TJRSScraper(HTTPScraper):
             Uma linha por decisão, com ``processo``, ``relator``,
                 ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
                 ``classe``, ``assunto`` e ``ementa``, entre outras colunas.
+                ``relator`` é o relator do processo; quando o redator do
+                acórdão é outra pessoa, o nome dela vem em ``nome_redator``.
 
         Examples: Exemplo
             >>> from datetime import date
