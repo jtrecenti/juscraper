@@ -14,11 +14,9 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.waf import USER_AGENT
 from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL
-from juscraper.courts.tjto.parse import cjsg_parse_manager
 from tests._helpers import load_sample
 
 
@@ -71,21 +69,16 @@ def test_desafio_no_get_da_ementa_levanta(tjto):
 @responses.activate(registry=OrderedRegistry)
 def test_bloqueio_no_meio_da_paginacao_guarda_as_paginas_baixadas(tjto, metodo, pasta):
     """O WAF desafia depois de algumas buscas: as páginas anteriores vêm lidas em ``.resultado``."""
-    for pagina in (1, 2):
-        responses.add(
-            responses.POST, BASE_URL, body=load_sample("tjto", f"{pasta}/results_normal_page_0{pagina}.html"),
-            content_type="text/html; charset=utf-8",
-        )
+    brutos = [load_sample("tjto", f"{pasta}/results_normal_page_0{pagina}.html") for pagina in (1, 2)]
+    for bruto in brutos:
+        responses.add(responses.POST, BASE_URL, body=bruto, content_type="text/html; charset=utf-8")
     responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
 
     falha = r"página 3 falhou.*faltam as páginas \[3, 4\].*depois de pelo menos 10 minutos"
     with pytest.raises(ColetaParcialError, match=falha) as erro:
         getattr(tjto, metodo)("dano moral", paginas=range(1, 5))
 
-    esperado = _texto_ausente_como_none(cjsg_parse_manager(
-        [load_sample("tjto", f"{pasta}/results_normal_page_0{pagina}.html") for pagina in (1, 2)]
-    ))
-    pd.testing.assert_frame_equal(erro.value.resultado, esperado)
+    pd.testing.assert_frame_equal(erro.value.resultado, tjto.cjsg_parse(brutos))
     assert isinstance(erro.value.__cause__, BotChallengeBlockedError)
     assert len(responses.calls) == 3
 

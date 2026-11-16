@@ -24,20 +24,14 @@ COLUNAS = {
 }
 
 
-@pytest.fixture(scope="module")
-def duas_paginas():
+@pytest.mark.integration
+def test_cjsg_duas_paginas_com_as_colunas_esperadas():
     """2 POSTs: as duas primeiras páginas de ``"direito"``, cruas e lidas."""
     scraper = jus.scraper("tjto")
     assert isinstance(scraper, TJTOScraper)
     brutos = scraper.cjsg_download("direito", paginas=range(1, 3))
-    return brutos, scraper.cjsg_parse(brutos)
-
-
-@pytest.mark.integration
-def test_cjsg_duas_paginas_com_as_colunas_esperadas(duas_paginas):
-    brutos, df = duas_paginas
+    df = scraper.cjsg_parse(brutos)
     assert len(brutos) == 2
-    assert isinstance(df, pd.DataFrame)
     assert COLUNAS.issubset(df.columns)
     # 20 resultados por página, sem repetir entre as duas.
     assert len(df) == 40
