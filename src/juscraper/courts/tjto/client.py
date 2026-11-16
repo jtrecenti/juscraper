@@ -163,7 +163,9 @@ class TJTOScraper(HTTPScraper):
         Args:
             pesquisa (str): Termo de busca livre.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
-                todas. Default ``None``.
+                todas. Default ``None``. A menor pagina pedida sai primeiro, e o
+                total dela descarta as paginas alem do fim da busca, sem pedi-las
+                ao portal, com aviso no logger ``juscraper.tjto``.
             tipo_documento (str): ``"acordaos"`` (default), ``"decisoes"`` ou
                 ``"sentencas"``.
             ordenacao (str): ``"DESC"`` (mais recentes, default), ``"ASC"``

@@ -24,6 +24,11 @@ def test_get_total_results_no_results_returns_zero():
     assert _get_total_results(html) == 0
 
 
+def test_get_total_results_pagina_alem_do_total_traz_o_total_da_busca():
+    """A página 3 de uma busca de 9 resultados diz "Nenhum documento encontrado", mas a aba traz 9."""
+    assert _get_total_results(_sample("pagina_alem_do_total.html")) == 9
+
+
 def test_get_total_results_falls_back_to_resultados_text():
     html = (
         '<html><body><p>pesquisando por <strong>x</strong> - '

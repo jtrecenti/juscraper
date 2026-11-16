@@ -85,7 +85,7 @@ def main() -> None:
     cjsg_queries = [
         ("dano moral", (1, 2),
          ("results_normal_page_01.html", "results_normal_page_02.html")),
-        ("\"alimentos avoengos\"", (1,), ("single_page.html",)),
+        ("\"alimentos avoengos\"", (1, 3), ("single_page.html", "pagina_alem_do_total.html")),
         ("juscraper_probe_zero_hits_xyzqwe", (1,), ("no_results.html",)),
     ]
     _capture_endpoint(session, cjsg_dest, "cjsg", instancia="2",
