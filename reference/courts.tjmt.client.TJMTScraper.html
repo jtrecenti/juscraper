@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -289,14 +289,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>data_publicacao_inicio</td>
-<td><code>str</code> | None</td>
-<td>Início do intervalo de publicação, em <code>DD/MM/AAAA</code> ou <code>AAAA-MM-DD</code>. Com só <code>data_publicacao_fim</code>, assume o piso <code>OPEN_ENDED_DATE_FLOOR</code> e emite <code>UserWarning</code>.</td>
+<td><code>str</code> | <code>date</code> | None</td>
+<td>Início do intervalo de publicação: <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. Com só <code>data_publicacao_fim</code>, assume o piso <code>OPEN_ENDED_DATE_FLOOR</code> e emite <code>UserWarning</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>data_publicacao_fim</td>
-<td><code>str</code> | None</td>
-<td>Fim do intervalo de publicação, inclusivo: o dia informado entra inteiro. Com só <code>data_publicacao_inicio</code>, assume a data de hoje e emite <code>UserWarning</code>.</td>
+<td><code>str</code> | <code>date</code> | None</td>
+<td>Fim do intervalo de publicação, nos mesmos formatos, inclusivo: o dia informado entra inteiro. Com só <code>data_publicacao_inicio</code>, assume a data de hoje e emite <code>UserWarning</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">

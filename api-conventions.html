@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -658,7 +658,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="per-row-failures" class="level2">
 <h2 class="anchored" data-anchor-id="per-row-failures">Per-row failures</h2>
-<p>Batch methods keep one row per requested item even when the item fails, and say why in the <code>motivo_falha</code> column (<code>None</code> when the item was read). This holds for TJSP <code>cpopg</code> (table <code>basicos</code>) and <code>cposg</code>; for <code>cpopg</code> of TRF1, TRF3, TRF5, TRF6 and TJPE, and <code>cposg</code> of TRF3; for <code>baixar_acordaos</code> and <code>baixar_sentencas</code> in the eSAJ courts; and for the batch methods of JusBR and PDPJ. DataJud <code>contar_processos</code> uses the same values in its <code>error</code> column. The failures of a call go into a single <code>UserWarning</code> at the end.</p>
+<p>Batch methods keep one row per requested item even when the item fails, and say why in the <code>motivo_falha</code> column (<code>None</code> when the item was read). This holds for TJSP <code>cpopg</code> (table <code>basicos</code>) and <code>cposg</code>; for <code>cpopg</code> of TRF1, TRF3, TRF5, TRF6 and TJPE, and <code>cposg</code> of TRF3; for <code>baixar_acordaos</code> and <code>baixar_sentencas</code> in the eSAJ courts; and for the batch methods of JusBR and PDPJ. The failures of a call go into a single <code>UserWarning</code> at the end. DataJud <code>contar_processos</code> uses the same values in its <code>error</code> column, without the warning, and <code>"&lt;Class&gt;: &lt;message&gt;"</code> for an error outside them, such as a partial Elasticsearch response.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
