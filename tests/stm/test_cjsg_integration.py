@@ -5,6 +5,7 @@ O WAF do portal recusa pedidos conforme o IP de origem; com o marker
 reprovando.
 """
 import datetime
+from pathlib import Path
 
 import pytest
 
@@ -136,3 +137,16 @@ def test_cjsg_curinga_e_parenteses_com_data_ao_vivo(stm):
     assert 0 < inteira <= com_curinga
     assert 0 < len(df) < com_curinga
     assert df["ementa"].str.contains("deser", case=False).all()
+
+
+def test_baixar_inteiro_teor_dos_dois_enderecos_ao_vivo(stm, tmp_path):
+    """Um acórdão recente (visualizador do eproc) e um antigo (PDF em ``www2``)."""
+    urls = stm.cjsg('"corrupção ativa"', paginas=[1, 3])["url_inteiro_teor"].dropna()
+    do_eproc = urls[urls.str.contains("eproc2g.stm.jus.br")].iloc[0]
+    do_www2 = urls[urls.str.contains("www2.stm.jus.br")].iloc[0]
+
+    for url in (do_eproc, do_www2):
+        caminho = Path(stm.baixar_inteiro_teor(url, diretorio=str(tmp_path)))
+
+        assert caminho.parent == tmp_path / "inteiro_teor"
+        assert caminho.read_bytes().startswith(b"%PDF")
