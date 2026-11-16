@@ -287,12 +287,14 @@ def _baixar_paginas(
         except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
             if not resultados:
                 raise
-            raise _coleta_parcial(ler_parcial(resultados), len(resultados), paginas[posicao:], exc) from exc
+            raise _coleta_parcial(resultados, paginas[posicao:], exc, ler_parcial) from exc
     return resultados
 
 
-def _coleta_parcial(resultado: pd.DataFrame, baixadas: int, faltando: list[int], exc: Exception) -> ColetaParcialError:
-    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar.
+def _coleta_parcial(
+    resultados: list[str], faltando: list[int], exc: Exception, ler_parcial: Callable[[list[str]], pd.DataFrame]
+) -> ColetaParcialError:
+    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar, lidas por ``ler_parcial``.
 
     ``paginas=None`` pode deixar milhares de páginas por baixar: a sequência
     sem saltos sai como intervalo.
@@ -301,8 +303,8 @@ def _coleta_parcial(resultado: pd.DataFrame, baixadas: int, faltando: list[int],
     faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
     mensagem = (
         f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
-        f"As {baixadas} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
+        f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
         "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
         f"custaria uma requisição por linha. Faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
     )
-    return ColetaParcialError(mensagem, resultado=resultado, falhas=[(None, None, exc)])
+    return ColetaParcialError(mensagem, resultado=ler_parcial(resultados), falhas=[(None, None, exc)])

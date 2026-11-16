@@ -197,6 +197,10 @@ def test_build_cjsg_form_body_envia_page_size_50():
 
 
 def _pagina_que_estoura_o_prazo(pesquisa: str, pagina: int) -> None:
+    """Registra a home, a página 1 (se a falha é depois dela) e o prazo estourado em ``pagina``."""
+    add_home()
+    if pagina > 1:
+        add_search_page(pesquisa, 1, "cjsg/results_normal_page_01.html")
     responses.add(
         responses.POST,
         SEARCH_URL,
@@ -208,8 +212,6 @@ def _pagina_que_estoura_o_prazo(pesquisa: str, pagina: int) -> None:
 @responses.activate
 def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
     """A página 2 estoura o prazo: a 1 não se perde, e a 3 não é pedida (como no TJMG e no TJTO)."""
-    add_home()
-    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
     with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*Faltam as páginas 2, 3") as info:
@@ -229,8 +231,6 @@ def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
 
 @responses.activate
 def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
-    add_home()
-    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
     with pytest.raises(ColetaParcialError) as info:
@@ -243,8 +243,6 @@ def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
 
 @responses.activate
 def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
-    add_home()
-    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
     with pytest.raises(ColetaParcialError, match=r"Faltam as páginas 2 a \d+,") as info:
@@ -255,8 +253,6 @@ def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
 
 @responses.activate
 def test_cjsg_download_pagina_que_falha_levanta_coleta_parcial():
-    add_home()
-    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
     with pytest.raises(ColetaParcialError) as info:
@@ -267,7 +263,6 @@ def test_cjsg_download_pagina_que_falha_levanta_coleta_parcial():
 
 @responses.activate
 def test_cjsg_falha_na_primeira_pagina_levanta_a_excecao_original():
-    add_home()
     _pagina_que_estoura_o_prazo("dano moral", 1)
 
     with pytest.raises(requests.ReadTimeout):
