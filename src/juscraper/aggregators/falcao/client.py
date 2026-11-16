@@ -501,8 +501,7 @@ class FalcaoScraper(HTTPScraper):
                 f"'data_juntada_fim' ({fim}) é anterior a {DATA_INICIO_PISO}, "
                 "o início que a busca envia quando só o limite superior é informado."
             )
-        # A ordem de relevância varia entre chamadas e embaralha páginas requisitadas em
-        # momentos diferentes: a coleta integral e a retomável usam a ordem por data.
+        # A coleta integral e a retomável não usam a relevância, que varia (ver ``listar_decisoes``).
         if inp.ordenacao is None and (inp.paginas is None or inp.checkpoint_dir is not None):
             inp = inp.model_copy(update={"ordenacao": _ORDEM_DE_COLETA})
         return inp

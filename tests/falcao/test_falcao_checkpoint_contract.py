@@ -4,7 +4,6 @@ O backend bloqueia o IP por cota diária: a retomada não pode gastar requisiç�
 nas páginas já gravadas, nem misturar buscas diferentes no mesmo diretório.
 """
 import json
-import warnings
 from pathlib import Path
 
 import pytest
@@ -307,10 +306,8 @@ def test_checkpoint_ocupado_falha_com_o_erro_do_diretorio_e_nao_com_o_aviso(falc
     _register("acordaos", pagina=1)
     falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        with pytest.raises(ValueError, match="ocupado"):
-            falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path)
+    with pytest.raises(ValueError, match="ocupado"):  # filterwarnings=error: aviso viraria falha
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path, ordenacao="mais_relevante")
 
 
 @responses.activate
