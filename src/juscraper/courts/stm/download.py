@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-
 from collections.abc import Callable, Iterable, Mapping
 from itertools import pairwise
 from typing import Any
