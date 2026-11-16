@@ -91,7 +91,7 @@ def test_vocabulario_publicado():
     assert set(MOTIVOS_FALHA) == {
         "http_<status>", "retry_esgotado_<status>", "timeout", "conexao", "json_invalido", "nao_encontrado",
         "sem_acordao", "nao_pdf", "resposta_inesperada", "entrada_invalida", "bloqueio_anti_bot",
-        "captcha_esgotado", "limite_de_requisicoes",
+        "captcha_esgotado", "limite_de_requisicoes", "erro_de_gravacao",
     }
 
 

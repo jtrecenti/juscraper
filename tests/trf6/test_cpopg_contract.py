@@ -104,6 +104,12 @@ def test_politica_e_recusada_em_vez_de_ignorada():
         jus.scraper("trf6", politica={"cpopg": {"timeout": 120}})
 
 
+def test_argumento_desconhecido_e_recusado_em_vez_de_ignorado():
+    # Antes caía em ``**kwargs`` sem efeito: um nome errado (``max_captcha_attempt=``) passava calado.
+    with pytest.raises(TypeError, match="'max_captcha_attempt', 'proxy'"):
+        jus.scraper("trf6", max_captcha_attempt=5, proxy="http://localhost")
+
+
 @responses.activate
 def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
     """Happy path: form fetch + captcha + search + parse → populated row."""

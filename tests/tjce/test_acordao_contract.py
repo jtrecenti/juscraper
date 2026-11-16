@@ -190,6 +190,22 @@ def test_baixar_acordaos_corpo_comprimido_corrompido_vira_linha(tjce):
     assert resultado["motivo_falha"].tolist() == [None, "resposta_inesperada", None]
 
 
+@responses.activate
+def test_baixar_acordaos_erro_ao_gravar_vira_linha_e_encerra_o_lote(tjce, tmp_path):
+    df = _cjsg().head(3)
+    for cd_acordao in df["cd_acordao"]:
+        _registrar(cd_acordao)
+    # Uma pasta no lugar do segundo PDF: a gravação falha com ``OSError`` de verdade.
+    (tmp_path / "acordaos" / f"{df['cd_acordao'].iloc[1]}.pdf").mkdir(parents=True)
+
+    with pytest.warns(UserWarning, match="2 download.*erro_de_gravacao"):
+        saida = tjce.baixar_acordaos(df)
+
+    assert saida["motivo_falha"].tolist() == [None, "erro_de_gravacao", "erro_de_gravacao"]
+    assert saida["caminho_acordao"].isna().tolist() == [False, True, True]
+    assert len(responses.calls) == 2
+
+
 def test_baixar_acordaos_exige_as_colunas_dos_codigos(tjce):
     with pytest.raises(ValueError, match="cd_foro"):
         tjce.baixar_acordaos(_cjsg().drop(columns=["cd_foro"]))

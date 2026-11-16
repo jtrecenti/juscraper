@@ -243,6 +243,25 @@ def test_lote_para_em_duas_recusas_seguidas(tmp_path):
 
 
 @responses.activate
+@pytest.mark.usefixtures("sem_espera")
+def test_lote_erro_ao_gravar_vira_linha_e_preserva_o_que_ja_baixou(tmp_path):
+    for codigo in ("2972172", "3522031"):
+        _registrar(codigo, PDF_PURO)
+    _registrar("8", ENVELOPE)
+    # Uma pasta no lugar do PDF: a gravação do segundo arquivo falha com ``OSError`` de verdade.
+    (tmp_path / "inteiro_teor" / "3522031.pdf").mkdir(parents=True)
+
+    with pytest.warns(UserWarning, match=r"2 download\(s\) de inteiro teor falharam.*3522031: erro_de_gravacao"):
+        df = jus.scraper("tse").baixar_inteiros_teores([2972172, 3522031, 8], diretorio=str(tmp_path))
+
+    # Antes, o ``OSError`` subia e a tabela com o primeiro PDF se perdia. O código 8 não é pedido.
+    assert df["motivo_falha"].tolist() == [None, "erro_de_gravacao", "erro_de_gravacao"]
+    assert df["caminho_inteiro_teor"].tolist() == [str(tmp_path / "inteiro_teor" / "2972172.pdf"), None, None]
+    assert [arquivo.name for arquivo in _pdfs(tmp_path)] == ["2972172.pdf"]
+    assert len(responses.calls) == 2
+
+
+@responses.activate
 @pytest.mark.parametrize("codigo", ["2972172", 2972172, np.int64(2972172), 2972172.0])
 def test_lote_recusa_um_codigo_solto(codigo):
     # Um texto seria percorrido caractere a caractere, um pedido por dígito.
