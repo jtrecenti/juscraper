@@ -236,9 +236,8 @@ def _init_session(
     default_year = extract_default_year(html)
     if ano_fim and not ano_inicio:
         # So o fim: o inicio vira o ano mais antigo da origem. O padrao do
-        # combo (o mais recente) invertia o intervalo, que o JS do portal
-        # (``ValidarIntervaloData``) nao deixa submeter. So o inicio: o fim
-        # fica no padrao, o mais recente, e o intervalo ja e valido.
+        # combo (o mais recente) invertia o intervalo, e o portal devolvia 0
+        # documentos.
         ano_inicio = min(extract_select_options(html, "cmbAnoInicio"), default=None)
     for campo, nome, valor, fallback in (
         ("cmbAnoInicio", "ano_inicio", ano_inicio, default_year),

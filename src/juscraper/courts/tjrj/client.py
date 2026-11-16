@@ -123,7 +123,8 @@ class TJRJScraper(HTTPScraper):
                   que o form da origem oferece: o corrente, ou 1998 nos
                   Tribunais de Alcada, que vao de 1975 a 1998. So
                   ``ano_fim`` informado: ``ano_inicio`` vira o ano mais
-                  antigo da origem (1975). Backend:
+                  antigo da origem (1975). ``ano_inicio`` posterior a
+                  ``ano_fim`` levanta ``ValidationError``. Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
                 * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
                   criminal / ``"3"`` fazendaria (so na Turma Recursal).
@@ -156,7 +157,9 @@ class TJRJScraper(HTTPScraper):
                 ``data_publicacao_inicio`` / ``data_publicacao_fim`` — o
                 backend ASPX do TJRJ nao expoe esses filtros; use
                 ``ano_inicio`` / ``ano_fim`` (granularidade anual apenas).
-            ValidationError: Quando um filtro tem formato invalido.
+            ValidationError: Quando um filtro tem formato invalido ou
+                ``ano_inicio`` e posterior a ``ano_fim``, que o portal
+                responderia sem resultados.
             ValueError: Quando ``ano_inicio``, ``ano_fim`` ou ``competencia``
                 nao e opcao do form da ``origem`` pedida (ex.: ``ano_inicio=2020``
                 com ``origem="2"``, ou ``competencia="1"`` com ``origem="5"``),
