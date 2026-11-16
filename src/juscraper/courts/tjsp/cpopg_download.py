@@ -17,6 +17,8 @@ from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import busca_sem_informacoes
 from .._esaj.pasta import DocumentoIndisponivelError, documentos_vinculados, gravar_pdf, pdf_pela_pasta
+from .._esaj.prazos import TENTATIVAS as _TENTATIVAS
+from .._esaj.prazos import TIMEOUT as _TIMEOUT
 from ._falhas import chave_do_registro, cnj_invalido, motivo_do_processo, registrar_falhas
 
 logger = logging.getLogger('juscraper.cpopg_download')
@@ -24,17 +26,6 @@ logger = logging.getLogger('juscraper.cpopg_download')
 
 class _InvalidProcessCodeError(ValueError):
     """Erro de validação de identificador recebido do CPOPG."""
-
-
-_TENTATIVAS = 5
-
-# (conexão, leitura), em segundos, de cada pedido do cpopg; o cposg e o cjpg
-# importam esta constante. Sem prazo, uma conexão que o eSAJ deixa aberta sem
-# responder prende o lote inteiro, e o retry de cpopg_download_html_single
-# nunca roda. O prazo estourado vira requests.Timeout, que o retry e
-# _FALHAS_DE_DOCUMENTO já tratam (#484). A conexão curta faz o portal fora do
-# ar falhar logo, sem 60 s por tentativa.
-_TIMEOUT = (10, 60)
 
 
 # Aviso que o e-SAJ devolve, no lugar do resultado, quando recebe buscas em

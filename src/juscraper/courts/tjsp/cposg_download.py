@@ -16,8 +16,8 @@ from ...core.failures import MOTIVO_ENTRADA_INVALIDA, MOTIVO_NAO_ENCONTRADO
 from ...utils import safe_path_component
 from ...utils.cnj import clean_cnj, format_cnj, split_cnj
 from .._esaj.acordao import RespostaInesperadaError, busca_sem_informacoes, paginas_movimentacoes, parse_cd_processo
+from .._esaj.prazos import TIMEOUT as _TIMEOUT
 from ._falhas import chave_do_registro, cnj_invalido, motivo_do_processo, registrar_falhas
-from .cpopg_download import _TIMEOUT
 
 logger = logging.getLogger('juscraper.cposg_download')
 
