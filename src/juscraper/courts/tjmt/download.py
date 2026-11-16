@@ -13,8 +13,8 @@ from urllib.parse import urljoin, urlparse
 import requests
 from tqdm import tqdm
 
-from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import contador_com_teto
 from juscraper.utils.params import coerce_brazilian_date
 
 PORTAL_URL = "https://jurisprudencia.tjmt.jus.br/"
@@ -357,34 +357,11 @@ def _validate_page_size(quantidade: int) -> None:
         )
 
 
-def _reject_pages_beyond_limit(paginas_list: list[int], quantidade: int) -> None:
-    """Rejeita páginas que a API responderia com HTTP 500 por passarem do teto."""
-    limite = _max_paginas(quantidade)
-    alem_do_limite = sorted(pagina for pagina in paginas_list if pagina > limite)
-    if alem_do_limite:
-        raise ValueError(
-            f"A API do TJMT devolve só os {MAX_RESULTS} primeiros resultados de uma "
-            f"consulta; com tamanho_pagina={quantidade}, a última página alcançável é "
-            f"a {limite}, e foram pedidas {alem_do_limite[:5]}. Restrinja a busca por "
-            "data de publicação ou relator para alcançar os demais."
-        )
-
-
-def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> list[int] | None:
-    """Valida paginação e tipo antes de iniciar requisições HTTP."""
+def _validate_download_inputs(quantidade: int, tipo_consulta: str) -> None:
+    """Valida tamanho de página e tipo antes de iniciar requisições HTTP."""
     _validate_page_size(quantidade)
     if tipo_consulta not in {"Acordao", "DecisaoMonocratica"}:
         raise ValueError(f"Tipo de consulta não suportado pelo TJMT: {tipo_consulta}.")
-    if paginas is None:
-        return None
-    paginas_list = list(paginas)
-    _reject_pages_beyond_limit(paginas_list, quantidade)
-    return paginas_list
-
-
-def _max_paginas(quantidade: int) -> int:
-    """Retorna a última página, 1-based, que cabe no teto de resultados da API."""
-    return MAX_RESULTS // quantidade
 
 
 def _initial_api_config(
@@ -499,7 +476,14 @@ def cjsg_download(
     Returns:
         Lista de dicionários JSON brutos, um por página.
     """
-    paginas_list = _validate_download_inputs(quantidade_por_pagina, paginas, tipo_consulta)
+    _validate_download_inputs(quantidade_por_pagina, tipo_consulta)
+
+    def _n_pags(total: int) -> int:
+        return math.ceil(total / quantidade_por_pagina) if total else 1
+
+    # A API responde HTTP 500 além do teto; a página pedida além dele é
+    # recusada aqui, antes de qualquer requisição.
+    contar_paginas = contador_com_teto(paginas, MAX_RESULTS // quantidade_por_pagina, _n_pags, tribunal="TJMT")
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)
     data_publicacao_fim = _to_end_of_day(data_publicacao_fim)
     relator = _normalize_nome_unico(relator, "relator")
@@ -531,20 +515,10 @@ def cjsg_download(
             raise TJMTResponseError("Resposta da API do TJMT não contém JSON válido.") from exc
         return _validate_response(data, tipo_consulta)
 
-    if paginas_list is None:
+    if paginas is None:
         first, total = _fetch_page(0)
         resultados = [first]
-        n_pags = math.ceil(total / quantidade_por_pagina) if total else 1
-        limite = _max_paginas(quantidade_por_pagina)
-        if n_pags > limite:
-            n_pags = limite
-            avisar(
-                f"A consulta ao TJMT tem {total} resultados, e a API devolve no máximo "
-                f"{MAX_RESULTS} por consulta; com tamanho_pagina={quantidade_por_pagina}, "
-                f"vêm os {limite * quantidade_por_pagina} primeiros. "
-                "Restrinja a busca por data de publicação (data_publicacao_inicio e "
-                "data_publicacao_fim) ou por relator para alcançar os demais."
-            )
+        n_pags = contar_paginas(total)
         if n_pags > 1:
             for pagina in tqdm(range(1, n_pags), desc="Baixando páginas TJMT"):
                 page, _ = _fetch_page(pagina)
@@ -552,6 +526,7 @@ def cjsg_download(
                 time.sleep(1)
         return resultados
 
+    paginas_list = list(paginas)
     resultados = []
     for pagina in tqdm(paginas_list, desc="Baixando páginas TJMT"):
         page, _ = _fetch_page(pagina - 1)

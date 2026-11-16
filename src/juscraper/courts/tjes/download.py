@@ -1,9 +1,6 @@
 """Downloads raw results from the TJES jurisprudence search."""
-import time
-
-from tqdm import tqdm
-
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas
 
 BASE_URL = "https://sistemas.tjes.jus.br/consulta-jurisprudencia/api"
 
@@ -113,20 +110,8 @@ def cjsg_download(
         resp = request_fn("GET", url, params=params, perfil="cjsg")
         return resp.json()
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        total_pages = first.get("total_pages", 1)
-        if total_pages > 1:
-            for pag in tqdm(range(2, total_pages + 1), desc="Baixando paginas TJES"):
-                time.sleep(1)
-                resultados.append(_get_page(pag))
-        return resultados
+    def _n_pags(first: dict) -> int:
+        total_pages: int = first.get("total_pages") or 1
+        return total_pages
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for i, pag in enumerate(tqdm(paginas_iter, desc="Baixando paginas TJES")):
-        if i > 0:
-            time.sleep(1)
-        resultados.append(_get_page(pag))
-    return resultados
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJES", sleep_time=1)

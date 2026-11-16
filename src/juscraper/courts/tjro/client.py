@@ -60,6 +60,7 @@ class TJROScraper(HTTPScraper):
         classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
+        auto_chunk: bool = True,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRO.
@@ -70,8 +71,8 @@ class TJROScraper(HTTPScraper):
                 todas. Default ``None``. O portal so entrega os 10.000
                 primeiros resultados de uma busca (1000 paginas): pagina
                 pedida alem da 1000 levanta ``ValueError`` antes de qualquer
-                requisicao, e ``None`` numa busca maior baixa as 1000
-                primeiras e emite ``UserWarning``.
+                requisicao, e ``None`` numa busca maior divide a busca por
+                data de julgamento (ver ``auto_chunk``).
             tipo (list | None): Tipos de documento. Default backend
                 ``["EMENTA"]``. O backend compara o valor exato, com acento
                 e em maiusculas: ``"EMENTA"``, ``"ACÓRDÃO"``, ``"DECISÃO"``,
@@ -87,6 +88,18 @@ class TJROScraper(HTTPScraper):
                 ``classe_judicial`` (refs #129).
             instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
             termo_exato (bool): Busca por termo exato.
+            auto_chunk (bool): Default ``True``. Com ``paginas=None``, a busca
+                com mais de 10.000 resultados e dividida em janelas de data de
+                julgamento que cabem no teto do portal, da mais recente para a
+                mais antiga, e todas sao baixadas: a ordem por relevancia vale
+                dentro de cada janela, nao entre elas, e a soma pode diferir
+                do total inicial, porque o portal segue indexando. A
+                primeira divisao emite ``UserWarning`` com o total e o numero
+                aproximado de requisicoes (~1 s cada, 10 resultados por
+                pagina). O dia que sozinho passa do teto vem ate o teto, com
+                ``UserWarning``. Com ``False``,
+                ``None`` baixa as 1000 primeiras paginas e emite
+                ``UserWarning``. Sem efeito com ``paginas`` explicito.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRO`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -107,6 +120,10 @@ class TJROScraper(HTTPScraper):
             ValueError: Quando um canonico e seu alias deprecado sao passados
                 simultaneamente.
             ValidationError: Quando um filtro tem formato invalido.
+            ColetaParcialError: Quando uma requisicao falha depois de a busca
+                ter sido dividida por data. ``.resultado`` traz o DataFrame
+                do que foi baixado, tambem em ``cjsg_download``, e a mensagem
+                diz o intervalo que falta.
 
         Returns:
             DataFrame com as decisoes.
@@ -126,6 +143,7 @@ class TJROScraper(HTTPScraper):
             classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
+            auto_chunk=auto_chunk,
             **kwargs,
         ))
 
@@ -141,6 +159,7 @@ class TJROScraper(HTTPScraper):
         classe: str | None = None,
         instancia: list | None = None,
         termo_exato: bool = False,
+        auto_chunk: bool = True,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRO.
@@ -176,12 +195,14 @@ class TJROScraper(HTTPScraper):
             classe=classe,
             instancia=instancia,
             termo_exato=termo_exato,
+            auto_chunk=auto_chunk,
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
+            auto_chunk=inp.auto_chunk,
             tipo=inp.tipo,
             nr_processo=inp.numero_processo or "",
             relator=inp.relator or "",

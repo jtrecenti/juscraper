@@ -2,7 +2,6 @@
 Downloads raw results from the TJPA jurisprudence search.
 """
 import json
-import time
 from datetime import date, timedelta
 
 import requests
@@ -129,11 +128,11 @@ def cjsg_download_manager(
         resp = post_cjsg(request_fn, payload)
         resp.encoding = "utf-8"
         data: dict = resp.json()
-        time.sleep(1)
         return data
 
     # O BFF responde a uma página além do total com a última, sem erro; por
     # isso o total corta as páginas pedidas antes da requisição.
     return baixar_paginas_pedidas(
         paginas, _get_page, lambda first: (first.get("data") or {}).get("totalPages") or 1, tribunal="TJPA",
+        sleep_time=1,
     )

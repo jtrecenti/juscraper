@@ -52,6 +52,7 @@ class TJBAScraper(HTTPScraper):
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         tamanho_pagina: int = 10,
+        auto_chunk: bool = True,
         **kwargs,
     ) -> list:
         """
@@ -67,7 +68,7 @@ class TJBAScraper(HTTPScraper):
             O portal só entrega os 10.000 primeiros resultados de uma busca
             (1000 páginas de 10): página pedida além desse teto levanta
             ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
-            maior baixa as páginas até o teto e emite ``UserWarning``.
+            maior divide a busca por data de publicação (ver ``auto_chunk``).
         numero_recurso : str, optional
             Case/appeal number filter.
         orgaos : list, optional
@@ -95,6 +96,20 @@ class TJBAScraper(HTTPScraper):
         tamanho_pagina : int
             Results per page (default 10). Aceita ``items_per_page`` como
             alias deprecado (emite ``DeprecationWarning``).
+        auto_chunk : bool
+            Default ``True``. Com ``paginas=None``, a busca com mais de 10.000
+            resultados é dividida em janelas de data de publicação que cabem
+            no teto do portal, da mais recente para a mais antiga, e todas são
+            baixadas; a soma pode diferir do total inicial, porque o portal
+            segue indexando. A primeira divisão emite ``UserWarning`` com o
+            total e o número aproximado de requisições (~1 s cada). O dia que
+            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
+            requisição falha depois da divisão, levanta
+            ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
+            baixado (também em ``cjsg_download``), e a mensagem diz o
+            intervalo que falta. Com ``False``, ``None`` baixa as páginas até
+            o teto e emite ``UserWarning``. Sem efeito com ``paginas``
+            explícito.
 
         Returns
         -------
@@ -134,6 +149,7 @@ class TJBAScraper(HTTPScraper):
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
             tamanho_pagina=tamanho_pagina,
+            auto_chunk=auto_chunk,
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
@@ -150,6 +166,7 @@ class TJBAScraper(HTTPScraper):
             tipo_decisoes_monocraticas=inp.tipo_decisoes_monocraticas,
             ordenado_por=inp.ordenado_por,
             items_per_page=inp.tamanho_pagina,
+            auto_chunk=inp.auto_chunk,
             request_fn=self._request_with_retry,
         )
 
@@ -185,6 +202,7 @@ class TJBAScraper(HTTPScraper):
         tipo_decisoes_monocraticas: bool = True,
         ordenado_por: str = "dataPublicacao",
         tamanho_pagina: int = 10,
+        auto_chunk: bool = True,
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -201,7 +219,7 @@ class TJBAScraper(HTTPScraper):
             O portal só entrega os 10.000 primeiros resultados de uma busca
             (1000 páginas de 10): página pedida além desse teto levanta
             ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
-            maior baixa as páginas até o teto e emite ``UserWarning``.
+            maior divide a busca por data de publicação (ver ``auto_chunk``).
         data_publicacao_inicio : str, date or None
             Start date: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
             ``AAAA/MM/DD``, ``date`` ou ``datetime``.
@@ -211,6 +229,20 @@ class TJBAScraper(HTTPScraper):
             ``"dataPublicacao"`` (default) or ``"relevancia"``.
         tamanho_pagina : int
             Results per page (default 10).
+        auto_chunk : bool
+            Default ``True``. Com ``paginas=None``, a busca com mais de 10.000
+            resultados é dividida em janelas de data de publicação que cabem
+            no teto do portal, da mais recente para a mais antiga, e todas são
+            baixadas; a soma pode diferir do total inicial, porque o portal
+            segue indexando. A primeira divisão emite ``UserWarning`` com o
+            total e o número aproximado de requisições (~1 s cada). O dia que
+            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
+            requisição falha depois da divisão, levanta
+            ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
+            baixado (também em ``cjsg_download``), e a mensagem diz o
+            intervalo que falta. Com ``False``, ``None`` baixa as páginas até
+            o teto e emite ``UserWarning``. Sem efeito com ``paginas``
+            explícito.
 
         Aliases deprecados
         ------------------
@@ -237,6 +269,7 @@ class TJBAScraper(HTTPScraper):
             tipo_decisoes_monocraticas=tipo_decisoes_monocraticas,
             ordenado_por=ordenado_por,
             tamanho_pagina=tamanho_pagina,
+            auto_chunk=auto_chunk,
             **kwargs,
         )
         return self.cjsg_parse(brutos)

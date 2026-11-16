@@ -1,13 +1,16 @@
 """Downloads raw results from the TJPI jurisprudence search (HTML scraping)."""
 import re
-import time
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
+from juscraper.utils.pagination import (
+    baixar_paginas_pedidas,
+    extract_count_with_cascade,
+    parse_page_number,
+    resolve_total_pages,
+)
 
 BASE_URL = "https://jurisprudencia.tjpi.jus.br/jurisprudences/search"
 RESULTS_PER_PAGE = 25
@@ -96,12 +99,12 @@ def _sem_resultados(soup: BeautifulSoup) -> bool:
 
 
 def _get_total_pages(html: str) -> int:
-    """Extrai o total de páginas da primeira página de resultados.
+    """Extrai o total de páginas de uma página de resultados.
 
     O total sai da contagem "de um total de N jurisprudência(s)" dividida por
     ``RESULTS_PER_PAGE``, e os links ``»`` da página são conferidos contra ele
-    por :func:`~juscraper.utils.pagination.resolve_total_pages`. Vale para a
-    primeira página, a única que ``cjsg_download_manager`` lê.
+    por :func:`~juscraper.utils.pagination.resolve_total_pages`. Toda página de
+    resultados traz a contagem; ``cjsg_download_manager`` a lê na menor página pedida.
 
     Raises:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
@@ -147,9 +150,10 @@ def cjsg_download_manager(
         **kwargs: Additional filter parameters (tipo, relator, classe, orgao).
 
     Raises:
-        ValueError: Com ``paginas=None``, quando a primeira página não permite
-            fixar o total de páginas; os casos estão em :func:`_get_total_pages`.
-            O download para depois da primeira requisição, em vez de estimar.
+        ValueError: Quando a menor página pedida (a 1, com ``paginas=None``)
+            não permite fixar o total de páginas; os casos estão em
+            :func:`_get_total_pages`. O download para depois da primeira
+            requisição, em vez de estimar.
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
@@ -157,20 +161,4 @@ def cjsg_download_manager(
         resp.encoding = "utf-8"
         return resp.text
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        n_pags = _get_total_pages(first)
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJPI"):
-                time.sleep(sleep_time)
-                resultados.append(_get_page(pagina))
-        return resultados
-
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJPI"):
-        if resultados:
-            time.sleep(sleep_time)
-        resultados.append(_get_page(pagina_1based))
-    return resultados
+    return baixar_paginas_pedidas(paginas, _get_page, _get_total_pages, tribunal="TJPI", sleep_time=sleep_time)

@@ -3,10 +3,17 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
+from ...schemas import (
+    AutoChunkMixin,
+    DataJulgamentoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
-class InputCJSGTJRO(SearchBase, DataJulgamentoMixin):
+class InputCJSGTJRO(SearchBase, DataJulgamentoMixin, AutoChunkMixin):
     """Accepted input for TJRO ``cjsg`` / ``cjsg_download``.
 
     Wired em :meth:`juscraper.courts.tjro.client.TJROScraper.cjsg_download`

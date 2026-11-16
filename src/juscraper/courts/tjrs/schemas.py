@@ -107,6 +107,7 @@ class OutputCJSGTJRS(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     secao: str | None = None
     ano_julgamento: str | int | None = None
     nome_relator: str | None = None
+    nome_redator: str | None = None
     ind_segredo_justica: str | bool | None = None
     ementa_referencia: str | None = None
     tipo_documento: str | None = None
