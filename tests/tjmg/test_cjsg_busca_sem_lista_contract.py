@@ -217,3 +217,19 @@ def test_parse_busca_categorizada_levanta_com_as_contagens():
 )
 def test_parse_nao_confunde_paginas_comuns_com_busca_sem_lista(sample):
     cjsg_parse([_pagina(sample)])
+
+
+def test_cjsg_parse_da_pagina_muitos_resultados_levanta_o_mesmo_value_error():
+    """O ``cjsg_parse`` de uma página "muitos resultados" salva levanta como o ``cjsg``.
+
+    Antes, devolvia um DataFrame vazio, como se a busca não tivesse resultados.
+    A busca sem resultados continua vazia, e a categorizada, ``TJMGBuscaSemListaError``.
+    """
+    mensagem = "TJMG returned 'muitos resultados' — refine the search (add date range or narrower terms)."
+    with pytest.raises(ValueError, match=f"^{re.escape(mensagem)}$") as exc:
+        cjsg_parse([_pagina("muitos_resultados.html")])
+
+    assert not isinstance(exc.value, TJMGBuscaSemListaError)
+    assert cjsg_parse([_pagina("no_results.html")]).empty
+    with pytest.raises(TJMGBuscaSemListaError):
+        cjsg_parse([_pagina("categorizada.html")])

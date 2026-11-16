@@ -160,7 +160,12 @@ class TJMGScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, raw_pages: list) -> pd.DataFrame:
-        """Transform raw TJMG HTML pages into a DataFrame."""
+        """Transform raw TJMG HTML pages into a DataFrame.
+
+        A página "muitos resultados" levanta ``ValueError``, como no
+        :meth:`cjsg`; a página com erro de busca ou com a busca categorizada
+        levanta :class:`~juscraper.courts.tjmg.parse.TJMGBuscaSemListaError`.
+        """
         return _cjsg_parse(raw_pages)
 
     def cjsg(
