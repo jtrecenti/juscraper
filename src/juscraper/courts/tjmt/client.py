@@ -62,7 +62,7 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_publicacao_inicio: str | date | None = None,
         data_publicacao_fim: str | date | None = None,
-        classe: str | None = None,
+        classe: str | list[str] | None = None,
         **kwargs,
     ) -> list:
         """Baixa as respostas JSON brutas da API de jurisprudência do TJMT.
@@ -139,7 +139,7 @@ class TJMTScraper(HTTPScraper):
         tamanho_pagina: int = 10,
         data_publicacao_inicio: str | date | None = None,
         data_publicacao_fim: str | date | None = None,
-        classe: str | None = None,
+        classe: str | list[str] | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).
@@ -165,11 +165,14 @@ class TJMTScraper(HTTPScraper):
                 exato; acentos, espaços repetidos e caixa são normalizados
                 (``"João da Silva"`` vai como ``"JOAO DA SILVA"``). A API
                 atual não aceita mais o identificador numérico, que é
-                rejeitado antes da rede. ``None`` não filtra.
+                rejeitado antes da rede. Nome com vírgula levanta
+                ``ValueError``, porque a API a lê como separador e somaria
+                os resultados de cada parte. ``None`` não filtra.
             orgao_julgador (str | None): Nome do órgão julgador, como
                 aparece na coluna ``orgao_julgador`` (ex.:
                 ``"PRIMEIRA CÂMARA DE DIREITO PRIVADO"``), com a mesma
-                normalização de ``relator``. ``None`` não filtra.
+                normalização de ``relator`` e a mesma recusa de vírgula.
+                ``None`` não filtra.
             tipo_processo (str | None): ``"Civel"``, ``"Cível"`` ou
                 ``"Criminal"``. ``None`` não filtra.
             thesaurus (bool): Se ``True``, a API amplia a busca com
@@ -185,13 +188,16 @@ class TJMTScraper(HTTPScraper):
                 publicação, nos mesmos formatos, inclusivo: o dia informado
                 entra inteiro. Com só ``data_publicacao_inicio``, assume a
                 data de hoje e emite ``UserWarning``.
-            classe (str | None): Nome da classe processual, como aparece na
-                coluna ``classe`` (ex.: ``"Apelação Cível"``), com a mesma
-                normalização de ``relator``. A API casa só o nome exato:
-                ``"Apelação"`` e ``"Apelação Cível"`` são classes
-                distintas, e nome que não existe devolve busca vazia.
-                Nome com vírgula levanta ``ValueError``, porque a API a lê
-                como separador de classes. ``None`` não filtra.
+            classe (str | list[str] | None): Nome da classe processual, como
+                aparece na coluna ``classe`` (ex.: ``"Apelação Cível"``), com
+                a mesma normalização de ``relator``. A API casa só o nome
+                exato: ``"Apelação"`` e ``"Apelação Cível"`` são classes
+                distintas, e nome que não existe devolve busca vazia. Uma
+                lista soma as classes
+                (``["Apelação Cível", "Agravo de Instrumento"]``). Uma
+                string é sempre um nome só, mesmo com vírgula
+                (``"Exceção de Incompetência, Suspeição e Impedimento"``).
+                ``None`` e lista vazia não filtram.
             **kwargs: Só os aliases deprecados abaixo. Qualquer outro nome,
                 inclusive ``data_julgamento_inicio``/``data_julgamento_fim``,
                 que a API não filtra, levanta ``TypeError``.
@@ -211,8 +217,9 @@ class TJMTScraper(HTTPScraper):
                 como número, ``tipo_consulta`` desconhecido e
                 ``tamanho_pagina`` menor que 1 ou booleano.
             ValueError: Data inválida ou início depois do fim; ``relator``,
-                ``orgao_julgador`` ou ``classe`` só com dígitos; ``classe``
-                com vírgula; ``tipo_processo`` desconhecido;
+                ``orgao_julgador`` ou ``classe`` só com dígitos; ``relator``
+                ou ``orgao_julgador`` com vírgula; ``tipo_processo``
+                desconhecido;
                 ``tamanho_pagina`` acima de 10.000; página além do teto de
                 10.000 resultados.
             TJMTConfigError: A configuração pública do portal não foi

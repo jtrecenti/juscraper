@@ -47,7 +47,7 @@ def _capture(
     relator: str | None = None,
     orgao_julgador: str | None = None,
     tipo_processo: str | None = None,
-    classe: str | None = None,
+    classe: str | list[str] | None = None,
     thesaurus: bool = False,
 ) -> None:
     params = _build_params(
@@ -122,6 +122,16 @@ def main() -> None:
         data_publicacao_inicio="2025-03-10",
         data_publicacao_fim="2025-03-10",
         classe="Apelação Cível",
+    )
+    _capture(
+        session,
+        dest,
+        cfg["api_url"],
+        "suspeição",
+        1,
+        "filtro_classe_com_virgula.json",
+        quantidade=2,
+        classe="Exceção de Incompetência, Suspeição e Impedimento",
     )
     _capture(
         session,

@@ -95,6 +95,68 @@ def test_cjsg_classe_vai_como_fq_tipo_processo(mocker):
     assert df["classe"].tolist() == ["APELAÇÃO CÍVEL", "APELAÇÃO CÍVEL"]
 
 
+@pytest.mark.parametrize(
+    ("classe", "enviado"),
+    [
+        (["Apelação Cível", " agravo  de instrumento "], "APELACAO CIVEL,AGRAVO DE INSTRUMENTO"),
+        (("Apelação Cível", "", "Agravo de Instrumento"), "APELACAO CIVEL,AGRAVO DE INSTRUMENTO"),
+        (["Apelação Cível"], "APELACAO CIVEL"),
+    ],
+)
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_lista_de_classes_vai_separada_por_virgula(mocker, classe, enviado):
+    """A API soma as classes de ``fqTipoProcesso`` separadas por vírgula."""
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page("dano moral", 1, "cjsg/no_results.json", classe=enviado)
+
+    jus.scraper("tjmt").cjsg("dano moral", paginas=1, classe=classe)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_lista_de_classes_vazia_nao_filtra(mocker):
+    mocker.patch("time.sleep")
+    _add_config()
+    _add_page("dano moral", 1, "cjsg/no_results.json")
+
+    jus.scraper("tjmt").cjsg("dano moral", paginas=1, classe=[])
+
+    assert "fqTipoProcesso" not in responses.calls[-1].request.params
+
+
+@pytest.mark.parametrize("como_lista", [False, True])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_classe_com_virgula_no_nome_chega_inteira(mocker, como_lista):
+    """A vírgula de dentro do nome vai como U+FF0C: a API parte o valor na
+    vírgula ASCII e, com ela, não casaria a classe. O sample é a resposta
+    real dessa busca, só com a classe pedida."""
+    mocker.patch("time.sleep")
+    nome = "Exceção de Incompetência, Suspeição e Impedimento"
+    _add_config()
+    _add_page(
+        "suspeição",
+        1,
+        "cjsg/filtro_classe_com_virgula.json",
+        tamanho_pagina=2,
+        classe="EXCECAO DE INCOMPETENCIA\uff0c SUSPEICAO E IMPEDIMENTO",
+    )
+
+    df = jus.scraper("tjmt").cjsg("suspeição", paginas=1, tamanho_pagina=2, classe=[nome] if como_lista else nome)
+
+    assert df["classe"].tolist() == [nome.upper()] * 2
+
+
+@pytest.mark.parametrize("filtro", ["relator", "orgao_julgador"])
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_relator_e_orgao_com_virgula_levantam_valueerror_sem_rede(metodo, filtro):
+    """A API soma os nomes separados por vírgula: o filtro traria outros nomes."""
+    with pytest.raises(ValueError, match=f"{filtro} não aceita vírgula"):
+        getattr(jus.scraper("tjmt"), metodo)("dano moral", paginas=1, **{filtro: "Fulano, Beltrano"})
+
+    assert len(responses.calls) == 0
+
+
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_query_alias_emits_deprecation_warning(mocker):
     """The deprecated ``query`` alias is normalized before the request is built."""
