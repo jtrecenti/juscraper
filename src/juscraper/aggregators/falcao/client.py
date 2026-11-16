@@ -117,15 +117,16 @@ class FalcaoScraper(HTTPScraper):
         removido, e ``resume=True`` continua uma coleta interrompida (pela
         cota diária do backend, por exemplo) requisitando só as páginas que
         faltam. O DataFrame traz todas as páginas presentes no checkpoint.
+
         A ordem padrão (``mais_relevante``) varia entre chamadas da mesma
         busca (medido em 16/11/2026: três versões da mesma página em três
-        minutos), e páginas gravadas em momentos diferentes podem repetir ou
-        omitir documentos: com ``checkpoint_dir`` e essa ordem, a coleta
-        emite ``UserWarning``. Para coleta de vários dias, use
-        ``ordenacao="menos_recente"`` com ``data_juntada_fim`` fechado no
-        passado, combinação que devolveu a mesma página em três chamadas.
-        ``mais_recente`` não foi medida; nela, cada documento novo desloca
-        as páginas seguintes.
+        minutos), e páginas requisitadas em momentos diferentes podem
+        repetir ou omitir documentos: nessa ordem, a coleta de mais de uma
+        página, ou com ``checkpoint_dir``, emite ``UserWarning``. Para
+        várias páginas ou vários dias, use ``ordenacao="menos_recente"``
+        com ``data_juntada_fim`` fechado no passado, combinação que devolveu
+        a mesma página em três chamadas. ``mais_recente`` não foi medida;
+        nela, cada documento novo desloca as páginas seguintes.
 
         Limites do checkpoint:
 
@@ -301,9 +302,9 @@ class FalcaoScraper(HTTPScraper):
             ValueError: Quando ``diretorio`` e ``checkpoint_dir`` vêm juntos.
 
         Avisos:
-            ``UserWarning``: com ``checkpoint_dir`` na ordem padrão
-            (``mais_relevante``), que varia entre chamadas; veja
-            :meth:`listar_decisoes`.
+            ``UserWarning``: na ordem padrão (``mais_relevante``), que
+            varia entre chamadas, ao coletar mais de uma página ou com
+            ``checkpoint_dir``; veja :meth:`listar_decisoes`.
 
         See also:
             :meth:`listar_decisoes` -- lista completa de filtros aceitos.
@@ -406,6 +407,8 @@ class FalcaoScraper(HTTPScraper):
         self._avisar_teto(inp, total)
 
         pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
+        if checkpoint is None and len(pendentes) > 1:
+            self._avisar_ordem_instavel(inp)
         if primeira not in pendentes:
             arquivo_inicial.unlink()
         for pagina in tqdm(pendentes, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):
@@ -493,12 +496,16 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_ordem_instavel(inp: InputListarDecisoesFalcao) -> None:
-        """Avisa que a coleta com checkpoint junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`)."""
+        """Avisa que a coleta junta páginas de uma ordem que varia (ver :meth:`listar_decisoes`).
+
+        Com checkpoint, vale para qualquer coleta, pois as páginas se somam entre
+        sessões; sem ele, só para a coleta de mais de uma página.
+        """
         if inp.ordenacao in (None, "mais_relevante"):
             avisar(
                 "A ordem padrão do Falcao (mais_relevante) varia entre chamadas da mesma busca: "
-                "páginas gravadas no checkpoint em momentos diferentes podem repetir ou omitir "
-                "documentos. Para coleta retomável, use ordenacao='menos_recente' com "
+                "páginas requisitadas em momentos diferentes podem repetir ou omitir "
+                "documentos. Para coleta de várias páginas, use ordenacao='menos_recente' com "
                 "data_juntada_fim fechado no passado, ou confira duplicatas no resultado.",
                 UserWarning,
             )

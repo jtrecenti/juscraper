@@ -13,14 +13,12 @@ import responses
 
 import juscraper as jus
 from juscraper.aggregators.falcao.download import SEARCH_URL
-from tests.falcao.test_falcao_contract import _paginas_pedidas, _register, _sample
+from tests.falcao.test_falcao_contract import AVISO_DE_ORDEM, _paginas_pedidas, _register, _sample
 
 _POR_PAGINA = len(_sample("acordaos")["documentos"])
 
-_AVISO_DE_ORDEM = "A ordem padrão do Falcao"
-
 # A maioria dos contratos usa a ordem padrão, que avisa; o aviso tem contratos próprios.
-pytestmark = pytest.mark.filterwarnings(f"ignore:{_AVISO_DE_ORDEM}:UserWarning")
+pytestmark = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
 
 
 @pytest.fixture
@@ -267,10 +265,21 @@ def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo
     """Medido ao vivo: a mesma página veio em três versões em três minutos."""
     _register("acordaos", pagina=1, **ordem)
 
-    with pytest.warns(UserWarning, match=f"{_AVISO_DE_ORDEM}.*menos_recente"):
+    with pytest.warns(UserWarning, match=f"{AVISO_DE_ORDEM}.*menos_recente"):
         getattr(falcao, metodo)("dano moral", checkpoint_dir=tmp_path / "coleta", **ordem)
 
     assert _paginas_pedidas() == [1]
+
+
+@responses.activate
+def test_checkpoint_de_varias_paginas_na_ordem_padrao_avisa_uma_vez(falcao, tmp_path):
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina)
+
+    with pytest.warns(UserWarning, match=AVISO_DE_ORDEM) as avisos:
+        falcao.listar_decisoes_download("dano moral", checkpoint_dir=tmp_path / "coleta")
+
+    assert len(avisos) == 1
 
 
 @responses.activate
@@ -279,7 +288,7 @@ def test_checkpoint_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo
     {"checkpoint_dir": "coleta", "ordenacao": "mais_recente"},
     {"diretorio": "downloads"},
 ])
-def test_ordem_por_data_ou_coleta_sem_checkpoint_nao_avisam(falcao, tmp_path, coleta):
+def test_ordem_por_data_ou_uma_pagina_sem_checkpoint_nao_avisam(falcao, tmp_path, coleta):
     coleta = {chave: str(tmp_path / valor) if "dir" in chave else valor for chave, valor in coleta.items()}
     _register("acordaos", pagina=1)
 

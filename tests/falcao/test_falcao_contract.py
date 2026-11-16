@@ -28,6 +28,11 @@ from juscraper.aggregators.falcao.download import SEARCH_URL
 from juscraper.core.exceptions import BotChallengeBlockedError
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
+AVISO_DE_ORDEM = "A ordem padrão do Falcao"
+
+# Vários contratos coletam mais de uma página na ordem padrão, que avisa; o aviso tem contratos próprios.
+pytestmark = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
+
 
 def _sample(colecao: str, cenario: str = "normal") -> dict:
     return cast(dict, json.loads(load_sample("falcao", f"pesquisa/{colecao}_{cenario}.json")))
@@ -283,6 +288,57 @@ def test_listar_decisoes_pagina_varias_paginas(falcao, tmp_path):
     assert sorted(p.name for p in pasta.iterdir()) == [
         "acordaos_0001.json", "acordaos_0002.json", "acordaos_0003.json",
     ]
+
+
+@responses.activate
+@pytest.mark.parametrize("ordem", [{}, {"ordenacao": "mais_relevante"}])
+@pytest.mark.parametrize("metodo", ["listar_decisoes", "listar_decisoes_download"])
+def test_mais_de_uma_pagina_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path, metodo, ordem):
+    """Medido ao vivo: a mesma página veio em três versões em três minutos.
+
+    As páginas de uma coleta saem de chamadas diferentes e podem repetir ou
+    omitir documentos; o aviso não muda o que é requisitado.
+    """
+    falcao.download_path = str(tmp_path)
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina, **ordem)
+
+    with pytest.warns(UserWarning, match=f"{AVISO_DE_ORDEM}.*menos_recente") as avisos:
+        getattr(falcao, metodo)("dano moral", **ordem)
+
+    assert len(avisos) == 1
+    assert _paginas_pedidas() == [1, 2]
+
+
+@responses.activate
+@pytest.mark.parametrize(("coleta", "paginas"), [
+    ({"paginas": 1}, [1]),
+    ({"paginas": [2]}, [2]),
+    ({}, [1]),  # o total cabe numa página
+    ({"paginas": [2, 9]}, [2]),  # a 9 fica além do total e não é requisitada
+])
+def test_uma_pagina_na_ordem_padrao_nao_avisa(falcao, coleta, paginas):
+    _register("acordaos", total=10 if not coleta else 20)
+
+    with warnings.catch_warnings():
+        # O ``pytestmark`` do módulo ignora o aviso de ordem; aqui ele tem de reprovar.
+        warnings.simplefilter("error")
+        falcao.listar_decisoes("dano moral", **coleta)
+
+    assert _paginas_pedidas() == paginas
+
+
+@responses.activate
+@pytest.mark.parametrize("ordenacao", ["menos_recente", "mais_recente"])
+def test_mais_de_uma_pagina_na_ordem_por_data_nao_avisa(falcao, ordenacao):
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina, ordenacao=ordenacao)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        falcao.listar_decisoes("dano moral", ordenacao=ordenacao)
+
+    assert _paginas_pedidas() == [1, 2]
 
 
 @responses.activate
