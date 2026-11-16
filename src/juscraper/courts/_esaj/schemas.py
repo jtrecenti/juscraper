@@ -1,12 +1,15 @@
-"""Pydantic schemas for eSAJ cjsg (TJAC/TJAL/TJAM/TJCE/TJMS).
+"""Schemas pydantic do eSAJ: ``cjsg`` (TJAC/TJAL/TJAM/TJCE/TJMS) e ``cjpg`` (TJSP/TJMS).
 
-TJSP has a divergent public API (``baixar_sg`` vs ``origem``, missing
-``numero_recurso``/``data_publicacao_*``) and gets its own schema in
-``juscraper.courts.tjsp.schemas``.
+O ``cjsg`` do TJSP diverge (``baixar_sg`` em vez de ``origem``, sem
+``numero_recurso``/``data_publicacao_*``) e tem schema próprio em
+``juscraper.courts.tjsp.schemas``. Os schemas do ``cjpg`` servem a todo
+tribunal construído sobre :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`.
 """
 from __future__ import annotations
 
 from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
 
 from ...schemas import (
     AutoChunkMixin,
@@ -79,3 +82,41 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     # hoje; canonico ``relator`` ja vem do OutputRelatoriaMixin e sera
     # unificado em PR dedicado.
     relatora: str | None = None
+
+
+class InputCJPGEsaj(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
+    """Entrada aceita pelo ``cjpg`` do eSAJ (TJSP e TJMS); kwarg desconhecido falha por ``extra='forbid'``.
+
+    Sobrescreve ``pesquisa`` com default vazio porque o eSAJ permite buscar
+    so por filtros (ex.: ``classe=[417]``) sem termo textual.
+
+    ``classe``/``assunto``/``vara`` aceitam ``int``, ``str`` ou
+    ``list[int | str]`` via :data:`IdFiltro` (refs #232). Nomes canonicos
+    seguem o singular do projeto; os plurais ``classes``/``assuntos``/``varas``
+    sao alias deprecados popados no client (:meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg_download`)
+    com :class:`DeprecationWarning`.
+    """
+
+    pesquisa: str = ""
+    classe: IdFiltro = None
+    assunto: IdFiltro = None
+    vara: IdFiltro = None
+    id_processo: str | None = None
+
+
+class OutputCJPGEsaj(BaseModel):
+    """Colunas observaveis numa linha do DataFrame do ``cjpg`` do eSAJ (TJSP e TJMS).
+
+    Reflete :mod:`juscraper.courts._esaj.cjpg_parse`. Diferente do ``cjsg``,
+    ``cjpg`` nao entrega ementa nem ``processo`` formatado em CNJ — so o par
+    de IDs internos (``id_processo`` / ``cd_processo``) que permitem seguir
+    para a consulta de 1o grau.
+    """
+
+    id_processo: str
+    cd_processo: str | None = None
+    cd_foro: str | None = None
+    nm_alias: str | None = None
+    cd_documento: str | None = None
+
+    model_config = ConfigDict(extra="allow")

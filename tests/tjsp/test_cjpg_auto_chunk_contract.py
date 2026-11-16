@@ -2,7 +2,7 @@
 
 Mesma estrutura de ``test_cjsg_auto_chunk_contract.py``, com dedup por
 ``id_processo`` (chave canônica do parser cjpg, vide
-``tjsp/cjpg_parse.py``).
+``_esaj/cjpg_parse.py``).
 """
 import warnings
 from datetime import date
@@ -155,7 +155,7 @@ def test_auto_chunk_not_propagated_to_download(tmp_path, mocker):
 def test_data_publicacao_long_window_raises_typeerror_immediately(tmp_path, mocker):
     """`data_publicacao_*` em TJSP cjpg + janela longa = TypeError imediato.
 
-    InputCJPGTJSP nao herda DataPublicacaoMixin (TJSP cjpg nao suporta
+    InputCJPGEsaj nao herda DataPublicacaoMixin (TJSP cjpg nao suporta
     filtro por publicacao). Sem o sniff de schema upfront, o erro viria
     como N janelas falhando em UserWarning. Com o sniff, vira TypeError
     limpo antes de qualquer chamada a cjpg_download.

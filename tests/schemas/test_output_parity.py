@@ -41,10 +41,10 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjce", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
     ("tjms", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
     ("tjsp", "cjsg"): ("juscraper.courts.tjsp.schemas", "OutputCJSGTJSP"),
-    ("tjsp", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
+    ("tjsp", "cjpg"): ("juscraper.courts._esaj.schemas", "OutputCJPGEsaj"),
     ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "OutputCPOPGTJSP"),
     ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "OutputCPOSGTJSP"),
-    ("tjms", "cjpg"): ("juscraper.courts.tjsp.schemas", "OutputCJPGTJSP"),
+    ("tjms", "cjpg"): ("juscraper.courts._esaj.schemas", "OutputCJPGEsaj"),
     ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "OutputCJSGTJAP"),
     ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "OutputCJSGTJBA"),
     ("tjdft", "cjsg"): ("juscraper.courts.tjdft.schemas", "OutputCJSGTJDFT"),
@@ -112,8 +112,6 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
     ("tjce", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjms", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjsp", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGTJSP validado manualmente",
-    # TJMS: o parser do cjpg e o do TJSP; a paridade dele roda em ("tjsp", "cjpg").
-    ("tjms", "cjpg"): "TJMS cjpg usa tjsp/cjpg_parse.py — paridade coberta por tjsp.cjpg",
     # TJDFT: parser passthrough do JSON da API.
     ("tjdft", "cjsg"): "TJDFT parser e passthrough do JSON — shape delegado ao backend",
     # STF: parser renomeia 6 chaves e repassa o resto do _source da API.
@@ -133,6 +131,10 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
 }
 
 
+# Raspador de cada tribunal, para achar o parser da familia (``courts/_<familia>/``).
+COURT_CLASSES = dict(_iter_court_scrapers())
+
+
 def _parser_sources(tribunal: str, endpoint: str) -> str:
     """Concatena source de todos os modulos de parser relevantes para ``tribunal``.
 
@@ -141,6 +143,8 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
     - ``juscraper.courts.<trib>.<endpoint>_parse`` (TJSP tem cjsg_parse, cjpg_parse)
     - ``juscraper.aggregators.<name>.parse``
     - ``juscraper.courts.<trib>.client`` (fallback, caso cjsg_parse seja metodo)
+    - ``juscraper.courts._<familia>.<endpoint>_parse``, de cada pacote de
+      familia no MRO do raspador (ex.: o ``cjpg`` do eSAJ para TJSP e TJMS)
     """
     sources: list[str] = []
     candidates = [
@@ -149,6 +153,11 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
         f"juscraper.aggregators.{tribunal}.parse",
         f"juscraper.courts.{tribunal}.client",
     ]
+    for cls in getattr(COURT_CLASSES.get(tribunal), "__mro__", ()):
+        pacote = cls.__module__.rpartition(".")[0]
+        if pacote.startswith("juscraper.courts._"):
+            candidates.append(f"{pacote}.{endpoint}_parse")
+    candidates = list(dict.fromkeys(candidates))
     for module_path in candidates:
         try:
             mod = importlib.import_module(module_path)
@@ -187,7 +196,7 @@ def _resolve_output(module_path: str, class_name: str) -> type[BaseModel]:
     return output_cls
 
 
-COURT_NAMES = {name for name, _cls in _iter_court_scrapers()}
+COURT_NAMES = set(COURT_CLASSES)
 AGG_NAMES = {name for name, _cls in _iter_aggregator_scrapers()}
 
 COURT_CASES = [

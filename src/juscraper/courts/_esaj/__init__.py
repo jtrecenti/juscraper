@@ -1,4 +1,4 @@
-"""Shared infrastructure for eSAJ-family cjsg scrapers (refs #84).
+"""Shared infrastructure for eSAJ-family cjsg and cjpg scrapers (refs #84, #487).
 
 Internal package — prefix ``_`` signals that nothing here is public API.
 Court clients consume :class:`EsajSearchScraper` to avoid ~2800 lines of

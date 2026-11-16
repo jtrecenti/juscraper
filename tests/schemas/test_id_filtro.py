@@ -4,7 +4,7 @@ Cobre a forma como os Annotated+BeforeValidator do schema convertem entradas
 ``int``/``str``/``list`` em ``str | None`` (CSV) — ou rejeitam, no caso de
 ``IdFiltroUnico`` recebendo lista.
 
-Os testes usam :class:`InputCJSGTJSP` e :class:`InputCJPGTJSP` como instancias
+Os testes usam :class:`InputCJSGTJSP` e :class:`InputCJPGEsaj` como instancias
 do tipo (em vez de validar o ``IdFiltro`` isolado), porque pydantic so resolve
 o ``BeforeValidator`` dentro de um ``BaseModel``.
 """
@@ -13,7 +13,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from juscraper.courts.tjsp.schemas import InputCJPGTJSP, InputCJSGTJSP
+from juscraper.courts._esaj.schemas import InputCJPGEsaj
+from juscraper.courts.tjsp.schemas import InputCJSGTJSP
 
 
 class TestIdFiltroCoercion:
@@ -80,17 +81,17 @@ class TestCJPGAceitaSingularComIdFiltro:
     """``cjpg`` (TJSP) agora aceita ``classe``/``assunto``/``vara`` singulares."""
 
     def test_classe_int(self):
-        m = InputCJPGTJSP(classe=12728)
+        m = InputCJPGEsaj(classe=12728)
         assert m.classe == "12728"
 
     def test_assunto_lista(self):
-        m = InputCJPGTJSP(assunto=[3607, 5885])
+        m = InputCJPGEsaj(assunto=[3607, 5885])
         assert m.assunto == "3607,5885"
 
     def test_vara_string_no_formato_arvore(self):
-        m = InputCJPGTJSP(vara="1-1-1")
+        m = InputCJPGEsaj(vara="1-1-1")
         assert m.vara == "1-1-1"
 
     def test_vara_lista_string(self):
-        m = InputCJPGTJSP(vara=["1-1-1", "2-2-2"])
+        m = InputCJPGEsaj(vara=["1-1-1", "2-2-2"])
         assert m.vara == "1-1-1,2-2-2"

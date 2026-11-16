@@ -41,7 +41,7 @@ CASES = [
     ),
     pytest.param(
         "juscraper.courts._esaj.cjpg", "EsajCjpgScraper", "cjpg",
-        "juscraper.courts.tjsp.schemas", "InputCJPGTJSP",
+        "juscraper.courts._esaj.schemas", "InputCJPGEsaj",
         id="esaj.cjpg",
     ),
     pytest.param(

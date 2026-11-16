@@ -166,7 +166,7 @@ def test_classes_plural_funciona_com_auto_chunk_long_window(tmp_path, mocker):
     """Regressao: plural alias + ``data_julgamento`` > 366d nao deve TypeError.
 
     Antes do fix de pop antes do ``run_auto_chunk``, a validacao upfront do
-    schema :class:`InputCJPGTJSP` dentro do chunking via ``extra_forbidden``
+    schema :class:`InputCJPGEsaj` dentro do chunking via ``extra_forbidden``
     em ``classes`` (declarado so como alias deprecado, nao como campo do
     schema) — virava ``TypeError`` antes da pop acontecer em
     ``cjpg_download``. Agora o helper :func:`_pop_cjpg_plural_aliases` roda

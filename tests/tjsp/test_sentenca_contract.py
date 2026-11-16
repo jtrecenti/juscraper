@@ -20,8 +20,8 @@ import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
+from juscraper.courts._esaj.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, parse_parametros_pasta
-from juscraper.courts.tjsp.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
 from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"

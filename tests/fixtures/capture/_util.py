@@ -197,7 +197,7 @@ def make_tjsp_cjpg_params(
 ) -> dict:
     """Build the query params sent to ``cjpg/pesquisar.do`` on TJSP.
 
-    Mirrors ``src/juscraper/courts/tjsp/cjpg_download.py::cjpg_download``.
+    Mirrors ``src/juscraper/courts/_esaj/cjpg_download.py::cjpg_download``.
     ``id_processo`` is assumed already normalized (via ``clean_cnj``) — this
     helper does not normalize, to keep contract tests close to real HTTP.
     """

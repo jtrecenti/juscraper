@@ -17,8 +17,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from juscraper.courts._esaj.schemas import InputCJSGEsajPuro
-from juscraper.courts.tjsp.schemas import InputCJPGTJSP, InputCJSGTJSP
+from juscraper.courts._esaj.schemas import InputCJPGEsaj, InputCJSGEsajPuro
+from juscraper.courts.tjsp.schemas import InputCJSGTJSP
 
 
 class TestInputCJSGEsajPuro:
@@ -105,9 +105,9 @@ class TestInputCJSGTJSP:
             InputCJSGTJSP(pesquisa="x", foo="bar")
 
 
-class TestInputCJPGTJSP:
+class TestInputCJPGEsaj:
     def test_all_documented_params_accepted(self):
-        model = InputCJPGTJSP(
+        model = InputCJPGEsaj(
             pesquisa="dano",
             paginas=range(1, 2),
             classe=["Ação Civil Pública"],
@@ -122,7 +122,7 @@ class TestInputCJPGTJSP:
         assert model.id_processo == "1000123-45.2023.8.26.0100"
 
     def test_defaults(self):
-        model = InputCJPGTJSP()
+        model = InputCJPGEsaj()
         assert model.pesquisa == ""
         assert model.classe is None
         assert model.assunto is None
@@ -139,17 +139,17 @@ class TestInputCJPGTJSP:
         """
         for bad in ("ementa", "comarca", "orgao_julgador", "baixar_sg", "tipo_decisao"):
             with pytest.raises(ValidationError, match="extra_forbidden"):
-                InputCJPGTJSP(**{bad: "x"})
+                InputCJPGEsaj(**{bad: "x"})
 
     def test_rejects_plural_aliases_at_schema(self):
         """Plurais sao tratados no client (deprecation); no schema sao extra_forbidden."""
         for plural in ("classes", "assuntos", "varas"):
             with pytest.raises(ValidationError, match="extra_forbidden"):
-                InputCJPGTJSP(**{plural: ["x"]})
+                InputCJPGEsaj(**{plural: ["x"]})
 
     def test_unknown_kwarg_rejected(self):
         with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJPGTJSP(parametro_bobo=True)
+            InputCJPGEsaj(parametro_bobo=True)
 
 
 class TestAutoChunkMixin:
@@ -173,7 +173,7 @@ class TestAutoChunkMixin:
         assert model.auto_chunk is False
 
     def test_tjsp_cjpg_accepts_auto_chunk(self):
-        model = InputCJPGTJSP(auto_chunk=False)
+        model = InputCJPGEsaj(auto_chunk=False)
         assert model.auto_chunk is False
 
     def test_non_esaj_schema_rejects_auto_chunk(self):

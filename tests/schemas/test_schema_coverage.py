@@ -50,11 +50,11 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjms", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
     # TJSP (wired, ja existe)
     ("tjsp", "cjsg"): ("juscraper.courts.tjsp.schemas", "InputCJSGTJSP"),
-    ("tjsp", "cjpg"): ("juscraper.courts.tjsp.schemas", "InputCJPGTJSP"),
+    ("tjsp", "cjpg"): ("juscraper.courts._esaj.schemas", "InputCJPGEsaj"),
     ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "InputCPOPGTJSP"),
     ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "InputCPOSGTJSP"),
     # TJMS herda o cjpg do TJSP (``_esaj/cjpg.py``), com o mesmo schema (#487).
-    ("tjms", "cjpg"): ("juscraper.courts.tjsp.schemas", "InputCJPGTJSP"),
+    ("tjms", "cjpg"): ("juscraper.courts._esaj.schemas", "InputCJPGEsaj"),
     # Tribunais nao wired (schema-arquivo, documentacao executavel)
     ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "InputCJSGTJAP"),
     ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "InputCJSGTJBA"),
