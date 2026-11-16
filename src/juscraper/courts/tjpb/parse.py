@@ -22,7 +22,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
             for hit in hits
         )
 
-    df = pd.DataFrame(registros)
+    df = pd.DataFrame(registros, columns=["processo", "ementa", "data_julgamento"])
     if df.empty:
         return df
 

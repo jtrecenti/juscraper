@@ -4,6 +4,13 @@ import pandas as pd
 from juscraper.core.parse_utils import clean_html, coerce_date_columns
 from juscraper.utils.cnj import format_cnj
 
+# Colunas na ordem do DataFrame, para a busca sem resultado também as trazer.
+_COLUNAS = [
+    "processo", "classe", "orgao_julgador", "colegiado",
+    "relator", "tipo_decisao", "data_julgamento", "data_publicacao",
+    "ementa", "sistema", "sigiloso",
+]
+
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """Extract relevant data from the raw TJRN Elasticsearch responses.
@@ -35,7 +42,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "ementa": clean_html(source.get("ementa")),
             })
 
-    df = pd.DataFrame(registros)
+    df = pd.DataFrame(registros, columns=_COLUNAS)
     if df.empty:
         return df
 
@@ -44,12 +51,4 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     if "processo" in df.columns:
         df["processo"] = df["processo"].apply(lambda v: format_cnj(v, strict=False))
 
-    principais = [
-        "processo", "classe", "orgao_julgador", "colegiado",
-        "relator", "tipo_decisao", "data_julgamento", "data_publicacao",
-        "ementa",
-    ]
-    cols_principais = [c for c in principais if c in df.columns]
-    cols_restantes = [c for c in df.columns if c not in principais]
-    df = df[cols_principais + cols_restantes]
     return df
