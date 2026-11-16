@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from typing import Any, ClassVar, Literal
 
 import pandas as pd
@@ -88,10 +89,10 @@ class TJMGScraper(HTTPScraper):
         pesquisar_por: Literal["ementa", "acordao"] = "ementa",
         order_by: Literal[0, 1, 2, "0", "1", "2"] = 2,
         tamanho_pagina: Literal[10, 20, 50] = 10,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """Run a TJMG acórdão search and return the raw HTML of each page.
@@ -117,10 +118,11 @@ class TJMGScraper(HTTPScraper):
         tamanho_pagina : int
             Results per page (10, 20 or 50). Aceita ``linhas_por_pagina``
             como alias deprecado.
-        data_julgamento_inicio, data_julgamento_fim : str
-            Julgamento date range (``dd/mm/yyyy`` or ``yyyy-mm-dd``).
-        data_publicacao_inicio, data_publicacao_fim : str
-            Publicação date range (``dd/mm/yyyy`` or ``yyyy-mm-dd``).
+        data_julgamento_inicio, data_julgamento_fim : str, date or None
+            Julgamento date range: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+        data_publicacao_inicio, data_publicacao_fim : str, date or None
+            Publicação date range (mesmos formatos).
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "linhas_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -188,11 +190,14 @@ class TJMGScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJMG`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``DD/MM/AAAA``. Backend: ``dataJulgamentoInicial`` /
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Backend: ``dataJulgamentoInicial`` /
                   ``dataJulgamentoFinal``.
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``DD/MM/AAAA``. Backend: ``dataPublicacaoInicial`` /
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): nos mesmos formatos. Backend:
+                  ``dataPublicacaoInicial`` /
                   ``dataPublicacaoFinal``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

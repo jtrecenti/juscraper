@@ -149,11 +149,13 @@ class TJPAScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPA`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``. Enviadas ao portal um dia antes, que
-                  compensa o desvio do filtro do TJPA (#508).
-                * ``data_publicacao_inicio`` / ``data_publicacao_fim`` (str):
-                  ``YYYY-MM-DD``.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Enviadas ao portal um dia antes, que compensa o desvio do
+                  filtro do TJPA (#508).
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): nos mesmos formatos.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``

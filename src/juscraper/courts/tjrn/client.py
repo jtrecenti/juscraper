@@ -93,8 +93,10 @@ class TJRNScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``YYYY-MM-DD``. Convertido para ``DD-MM-YYYY`` antes do
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Convertido para ``DD-MM-YYYY`` antes do
                   envio ao backend.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

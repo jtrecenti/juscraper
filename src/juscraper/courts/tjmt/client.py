@@ -2,6 +2,7 @@
 Scraper do Tribunal de Justiça do Estado de Mato Grosso (TJMT).
 """
 
+from datetime import date
 from functools import partial
 
 import pandas as pd
@@ -52,8 +53,8 @@ class TJMTScraper(HTTPScraper):
         tipo_processo: str | None = None,
         thesaurus: bool = False,
         tamanho_pagina: int = 10,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """Baixa as respostas JSON brutas da API de jurisprudência do TJMT.
@@ -126,8 +127,8 @@ class TJMTScraper(HTTPScraper):
         tipo_processo: str | None = None,
         thesaurus: bool = False,
         tamanho_pagina: int = 10,
-        data_publicacao_inicio: str | None = None,
-        data_publicacao_fim: str | None = None,
+        data_publicacao_inicio: str | date | None = None,
+        data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Pesquisa jurisprudência do TJMT (acórdãos ou decisões monocráticas).
@@ -164,14 +165,15 @@ class TJMTScraper(HTTPScraper):
                 sinônimos. Default ``False``.
             tamanho_pagina (int): Documentos por página, de 1 a 10.000.
                 Default 10.
-            data_publicacao_inicio (str | None): Início do intervalo de
-                publicação, em ``DD/MM/AAAA`` ou ``AAAA-MM-DD``. Com só
+            data_publicacao_inicio (str | date | None): Início do intervalo
+                de publicação: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                ``AAAA/MM/DD``, ``date`` ou ``datetime``. Com só
                 ``data_publicacao_fim``, assume o piso
                 ``OPEN_ENDED_DATE_FLOOR`` e emite ``UserWarning``.
-            data_publicacao_fim (str | None): Fim do intervalo de
-                publicação, inclusivo: o dia informado entra inteiro. Com só
-                ``data_publicacao_inicio``, assume a data de hoje e emite
-                ``UserWarning``.
+            data_publicacao_fim (str | date | None): Fim do intervalo de
+                publicação, nos mesmos formatos, inclusivo: o dia informado
+                entra inteiro. Com só ``data_publicacao_inicio``, assume a
+                data de hoje e emite ``UserWarning``.
             **kwargs: Só os aliases deprecados abaixo. Qualquer outro nome,
                 inclusive ``data_julgamento_inicio``/``data_julgamento_fim``
                 e ``classe``, que a API não filtra, levanta ``TypeError``.

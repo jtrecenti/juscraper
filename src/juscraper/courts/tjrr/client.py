@@ -1,5 +1,6 @@
 """Scraper for the Tribunal de Justica de Roraima (TJRR)."""
 
+from datetime import date
 from typing import Any
 
 import pandas as pd
@@ -81,8 +82,10 @@ class TJRRScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRR`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str):
-                  ``DD/MM/AAAA``. Backend: ``menuinicial:datainicial_input``
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
+                  ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+                  Backend: ``menuinicial:datainicial_input``
                   / ``menuinicial:datafinal_input``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
@@ -120,8 +123,8 @@ class TJRRScraper(HTTPScraper):
         relator: list | None = None,
         orgao_julgador: list | None = None,
         especie: list | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """Download raw HTML pages from TJRR.

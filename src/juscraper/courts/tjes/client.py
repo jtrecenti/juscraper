@@ -1,5 +1,7 @@
 """Scraper for the Tribunal de Justica do Espirito Santo (TJES)."""
 
+from datetime import date
+
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper
@@ -39,8 +41,8 @@ class TJESScraper(HTTPScraper):
         assunto: str | None = None,
         ordenacao: str | None = None,
         tamanho_pagina: int = DEFAULT_PER_PAGE,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> list:
         """
@@ -83,8 +85,10 @@ class TJESScraper(HTTPScraper):
             Results per page (default 20 — particularidade do backend
             Elasticsearch do TJES; demais tribunais usam 10). Aceita
             ``per_page`` como alias deprecado.
-        data_julgamento_inicio / data_julgamento_fim : str
-            Date range filter (YYYY-MM-DD). TJES uses ``dataIni``/``dataFim`` which
+        data_julgamento_inicio / data_julgamento_fim : str, date or None
+            Date range filter: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+            ``AAAA/MM/DD``, ``date`` ou ``datetime``, enviado ao backend como
+            ``AAAA-MM-DD``. TJES uses ``dataIni``/``dataFim`` which
             filters on ``dt_juntada``. The backend does not expose a separate
             data de publicacao filter; passing ``data_publicacao_*`` raises
             ``TypeError``.
@@ -169,8 +173,8 @@ class TJESScraper(HTTPScraper):
         assunto: str | None = None,
         ordenacao: str | None = None,
         tamanho_pagina: int = DEFAULT_PER_PAGE,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """

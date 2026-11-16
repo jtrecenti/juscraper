@@ -1,6 +1,7 @@
 """
 Scraper for the Tribunal de Justica do Tocantins (TJTO).
 """
+from datetime import date
 from typing import Any, Literal
 
 import pandas as pd
@@ -106,8 +107,8 @@ class TJTOScraper(HTTPScraper):
         tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
         ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
         numero_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         soementa: bool = False,
         **kwargs,
     ) -> list:
@@ -152,8 +153,8 @@ class TJTOScraper(HTTPScraper):
         tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
         ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
         numero_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         soementa: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
@@ -223,8 +224,8 @@ class TJTOScraper(HTTPScraper):
         tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
         ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
         numero_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         soementa: bool = False,
         **kwargs,
     ) -> list:
@@ -270,8 +271,8 @@ class TJTOScraper(HTTPScraper):
         tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos",
         ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC",
         numero_processo: str | None = None,
-        data_julgamento_inicio: str | None = None,
-        data_julgamento_fim: str | None = None,
+        data_julgamento_inicio: str | date | None = None,
+        data_julgamento_fim: str | date | None = None,
         soementa: bool = False,
         **kwargs,
     ) -> pd.DataFrame:

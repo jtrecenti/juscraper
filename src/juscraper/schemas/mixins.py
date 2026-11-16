@@ -87,6 +87,14 @@ class DataJulgamentoMixin(BaseModel):
     — ``extra="forbid"`` da classe concreta vai rejeitar
     ``data_julgamento_*`` corretamente, sinalizando ao usuario que a busca
     nao aceita o filtro.
+
+    O campo guarda a data ja convertida para ``BACKEND_DATE_FORMAT``, por isso
+    a anotacao e ``str | None``. O metodo publico aceita tambem
+    ``datetime.date``/``datetime.datetime`` (anotado ``str | date | None``), e
+    o pipeline de input do raspador converte antes do pydantic, com
+    :func:`~juscraper.utils.params.coerce_brazilian_date` (via
+    :func:`~juscraper.utils.params.apply_input_pipeline_search` na maioria
+    dos tribunais).
     """
 
     data_julgamento_inicio: str | None = None
@@ -99,6 +107,8 @@ class DataPublicacaoMixin(BaseModel):
     Tribunais que nao suportam este filtro **nao devem herdar** deste mixin
     — ``extra="forbid"`` da classe concreta vai rejeitar ``data_publicacao_*``
     corretamente, sinalizando ao usuario que a busca nao aceita o filtro.
+
+    Anotacao ``str | None`` pelo mesmo motivo de :class:`DataJulgamentoMixin`.
     """
 
     data_publicacao_inicio: str | None = None
