@@ -38,6 +38,35 @@ def test_notebook_manual_detecta_divergencia_da_cobertura(sigla, alteracao, monk
     assert f"docs/notebooks/{sigla}.ipynb" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize("sigla", ["tjac", "tjce"])
+def test_notebook_manual_detecta_linha_omitida(sigla, tmp_path, monkeypatch, capsys):
+    """Nestas duas tabelas completas, omitir um método disponível reprova."""
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS[sigla]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"] = [
+        linha for linha in notebook["cells"][0]["source"] if "baixar_acordao / baixar_acordaos" not in linha
+    ]
+    alterado = tmp_path / f"{sigla}.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {sigla: alterado})
+    monkeypatch.setattr(tabela_cobertura, "ARQUIVOS", {})
+    monkeypatch.setattr(tabela_cobertura, "RAIZ", tmp_path)
+
+    assert tabela_cobertura.main(["--check"]) == 1
+    assert sigla in capsys.readouterr().err
+
+
+def test_notebook_manual_ignora_exemplo_fora_da_tabela(tmp_path, monkeypatch):
+    original = tabela_cobertura.NOTEBOOKS_MANUAIS["tjac"]
+    notebook = json.loads(original.read_text(encoding="utf-8"))
+    notebook["cells"][0]["source"].append("\nExample prose: | cjsg | No |\n")
+    alterado = tmp_path / "tjac.ipynb"
+    alterado.write_text(json.dumps(notebook), encoding="utf-8")
+    monkeypatch.setattr(tabela_cobertura, "NOTEBOOKS_MANUAIS", {"tjac": alterado})
+
+    assert tabela_cobertura.notebooks_divergentes(tabela_cobertura.cobertura()) == []
+
+
 class _Exemplos:
     def stub_com_docstring(self):
         """Não implementado."""

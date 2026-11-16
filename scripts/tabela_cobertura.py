@@ -232,12 +232,22 @@ def notebooks_divergentes(grupos: dict[str, dict[str, list[str]]]) -> list[Path]
     for sigla, caminho in NOTEBOOKS_MANUAIS.items():
         notebook = json.loads(caminho.read_text(encoding="utf-8"))
         inicio = "".join(notebook["cells"][0]["source"])
-        linhas = _LINHA_METODO.findall(inicio)
+        linhas_texto = inicio.splitlines()
+        cabecalho = next((i for i, linha in enumerate(linhas_texto) if linha.startswith("| Feature |")), None)
+        if cabecalho is None:
+            divergentes.append(caminho)
+            continue
+        linhas = []
+        for linha in linhas_texto[cabecalho + 2:]:
+            if not linha.startswith("|"):
+                break
+            match = _LINHA_METODO.fullmatch(linha)
+            if match is not None:
+                linhas.append(match.groups())
         metodos = set(grupos["tribunais"][sigla])
-        if not linhas or any(
-            (metodo.strip() in metodos) != (disponivel == "Yes")
-            for nomes, disponivel in linhas for metodo in nomes.split("/")
-        ):
+        positivos = {metodo.strip() for nomes, estado in linhas if estado == "Yes" for metodo in nomes.split("/")}
+        negativos = {metodo.strip() for nomes, estado in linhas if estado == "No" for metodo in nomes.split("/")}
+        if not linhas or positivos != metodos or negativos & metodos:
             divergentes.append(caminho)
     return divergentes
 
