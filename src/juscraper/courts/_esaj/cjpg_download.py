@@ -1,8 +1,8 @@
 """Download do cjpg do eSAJ (consulta de julgados de primeiro grau).
 
 TJSP e TJMS o usam por :class:`juscraper.courts._esaj.cjpg.EsajCjpgScraper`
-(#487). ``_TENTATIVAS`` e ``_TIMEOUT`` ainda vêm do ``cpopg`` do TJSP, que
-os divide com o ``cposg``.
+(#487). Prazo e tentativas vêm de :mod:`.prazos`, comum ao cpopg e ao cposg
+do TJSP.
 """
 from __future__ import annotations
 
@@ -16,8 +16,9 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
-from ..tjsp.cpopg_download import _TENTATIVAS, _TIMEOUT
 from .cjpg_parse import MARCA_PAGINA_NAO_BAIXADA, cjpg_n_pags
+from .prazos import TENTATIVAS as _TENTATIVAS
+from .prazos import TIMEOUT as _TIMEOUT
 
 __all__ = ["cjpg_download", "fetch_cjpg_first_page"]
 
