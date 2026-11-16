@@ -65,6 +65,23 @@ def test_build_params_omite_filtros_none():
     assert "temEmenta" not in p
 
 
+def test_build_params_data_fim_sozinha_envia_piso_de_inicio():
+    """``dataFim`` sem ``dataInicio`` devolve HTTP 400 no backend (visto ao vivo em 16/11/2026)."""
+    p = build_pesquisa_params(
+        pesquisa="x", colecao="acordaos", session_id="_a", pagina=1, data_juntada_fim="2020-12-31"
+    )
+    assert p["dataInicio"] == "1900-01-01"
+    assert p["dataFim"] == "2020-12-31"
+
+
+def test_build_params_data_inicio_sozinha_nao_ganha_fim():
+    p = build_pesquisa_params(
+        pesquisa="x", colecao="acordaos", session_id="_a", pagina=1, data_juntada_inicio="2024-01-31"
+    )
+    assert p["dataInicio"] == "2024-01-31"
+    assert "dataFim" not in p
+
+
 def test_parse_total_le_quantidade():
     body = _sample("acordaos")
     assert parse_total(body) == body["quantidadeTotal"]

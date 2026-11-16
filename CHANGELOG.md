@@ -260,6 +260,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### Demais tribunais e agregadores
 
+- Falcao `listar_decisoes` e `listar_decisoes_download`: `data_juntada_fim` sem `data_juntada_inicio` falhava com `requests.HTTPError` (HTTP 400, "Erro ao tentar processar a sua solicitação"), porque o backend não aceita `dataFim` sozinho. Nesse caso a busca passa a enviar `dataInicio=1900-01-01`, e o limite superior vale sozinho, como a documentação já dizia.
 - JusBR e PDPJ `auth_govbr()`: o Ctrl-C que chega logo depois de a thread do login começar fecha o navegador e cancela o login, como no restante da espera; antes, o navegador ficava aberto até o prazo do login.
 - STF `listar_decisoes` e `contar_decisoes`: toda busca sem `waf_token` falhava com `RuntimeError` ("O portal do STF nao emitiu o cookie aws-waf-token em 60s"). O portal deixou o AWS WAF, e a busca passa a ir direto em `requests`; o Playwright só é usado se o portal voltar a responder com o desafio, e, sem desafio, o extra `juscraper[waf]` deixa de ser necessário. `waf_token` continua aceito.
 - TJAP `cjsg`/`cjsg_download`: `votacao="Unanime"`, a grafia que a docstring indicava até a 0.5.0, passa a trazer os acórdãos unânimes. O portal só reconhece `"Unânime"` e, em 15/11/2026, devolvia para `"Unanime"` os mesmos acórdãos de `"Maioria"`, sem erro.
