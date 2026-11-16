@@ -11,7 +11,7 @@ from juscraper.courts.tjmt.parse import CJSG_COLUMNS, cjsg_parse
 def _resultado(tipo: str, *, nulo: bool = False) -> dict:
     return {
         "idDocumento": 123 if tipo == "Acordao" else 456,
-        "id": "uuid-que-nao-deve-ser-usado",
+        "id": f"uuid-{tipo}",
         "tipo": tipo,
         "conteudo": "<p>Ementa <strong>com destaque</strong>.</p>",
         "observacao": None if nulo else "Observação",
@@ -40,7 +40,7 @@ def _pagina(*resultados: dict) -> dict:
     }
 
 
-def test_parser_mapeia_acordao_e_decisao_para_as_18_colunas():
+def test_parser_mapeia_acordao_e_decisao_para_as_colunas():
     registros = cjsg_parse(
         [_pagina(_resultado("Acordao"), _resultado("DecisaoMonocratica"))],
         tipo_consulta="Acordao",
@@ -48,6 +48,7 @@ def test_parser_mapeia_acordao_e_decisao_para_as_18_colunas():
 
     assert list(registros[0]) == list(CJSG_COLUMNS)
     assert registros[0]["id"] == 123
+    assert registros[0]["uuid"] == "uuid-Acordao"
     assert registros[0]["classe"] == "APELAÇÃO CÍVEL"
     assert registros[0]["orgao_julgador"] == "PRIMEIRA CÂMARA"
     assert registros[0]["tipo_acao"] == "DIREITO CIVIL"
@@ -55,6 +56,7 @@ def test_parser_mapeia_acordao_e_decisao_para_as_18_colunas():
     assert registros[0]["julgamento"] == "UNÂNIME"
     assert registros[0]["ementa"] == "Ementa com destaque."
     assert registros[1]["id"] == 456
+    assert registros[1]["uuid"] == "uuid-DecisaoMonocratica"
     assert registros[1]["tipo"] == "DecisaoMonocratica"
 
 
@@ -121,7 +123,7 @@ def test_cjsg_publico_processa_decisao_monocratica(mocker):
     assert dataframe.loc[0, "id"] == 456
 
 
-def test_cjsg_vazio_preserva_as_18_colunas(mocker):
+def test_cjsg_vazio_preserva_as_colunas(mocker):
     scraper = TJMTScraper()
     mocker.patch.object(scraper, "cjsg_download", return_value=[_pagina()])
 

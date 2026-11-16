@@ -59,6 +59,11 @@ class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
     Reflete ``tjmt.parse.cjsg_parse``. ``numero_unico`` (formato antigo)
     ja foi renomeado para ``processo`` no parser.
+
+    ``id`` é o ``idDocumento`` da API, que vem ``0`` em decisões
+    monocráticas antigas (``origem="Proteus"``): nelas, não serve de chave.
+    ``uuid`` é o campo ``id`` da API, distinto em cada documento; use-o
+    para deduplicar (#490).
     """
 
     id: int | str | None = None
@@ -73,3 +78,4 @@ class OutputCJSGTJMT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     instancia: str | None = None
     origem: str | None = None
     julgamento: str | None = None
+    uuid: str | None = None

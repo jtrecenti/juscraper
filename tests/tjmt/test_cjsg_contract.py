@@ -156,6 +156,26 @@ def test_cjsg_esfera_processual_nao_vira_sigla_de_classe(mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
+def test_cjsg_uuid_distingue_decisoes_com_id_documento_zero(mocker):
+    """Decisões antigas (Proteus) vêm com ``idDocumento`` 0; ``uuid`` as separa (#490)."""
+    mocker.patch("time.sleep")
+    sample_path = "cjsg/class_sigla_unavailable.json"
+    resultados = json.loads(load_sample("tjmt", sample_path))["value"]["resultados"]
+    assert [r["idDocumento"] for r in resultados].count(0) > 1
+
+    _add_config()
+    _add_page("habeas corpus", 1, sample_path, tamanho_pagina=3, tipo_consulta="DecisaoMonocratica")
+
+    df = jus.scraper("tjmt").cjsg(
+        "habeas corpus", paginas=1, tamanho_pagina=3, tipo_consulta="DecisaoMonocratica"
+    )
+
+    assert df["id"].tolist() == [r["idDocumento"] for r in resultados]
+    assert df["uuid"].tolist() == [r["id"] for r in resultados]
+    assert df["uuid"].is_unique
+
+
+@responses.activate(registry=OrderedRegistry)
 def test_cjsg_no_results(mocker):
     """Zero-result query returns an empty DataFrame instead of raising."""
     mocker.patch("time.sleep")
@@ -185,4 +205,5 @@ def test_cjsg_no_results(mocker):
         "instancia",
         "origem",
         "julgamento",
+        "uuid",
     ]

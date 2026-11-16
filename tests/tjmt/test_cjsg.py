@@ -21,9 +21,10 @@ def test_cjsg_colunas_esperadas():
     colunas_minimas = {
         "id", "tipo", "ementa", "processo", "classe",
         "assunto", "relator", "orgao_julgador",
-        "data_julgamento", "data_publicacao",
+        "data_julgamento", "data_publicacao", "uuid",
     }
     assert colunas_minimas.issubset(set(df.columns))
+    assert df["uuid"].notna().all()
 
 
 @pytest.mark.integration

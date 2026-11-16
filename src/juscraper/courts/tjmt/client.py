@@ -221,6 +221,9 @@ class TJMTScraper(HTTPScraper):
                 ``data_julgamento``, ``data_publicacao`` e outras, descritas em
                 :class:`OutputCJSGTJMT`). Datas vêm como ``datetime.date``. Busca
                 sem resultados devolve DataFrame vazio com as mesmas colunas.
+                ``id`` vem ``0`` em decisões monocráticas antigas
+                (``origem="Proteus"``); para deduplicar, use ``uuid``,
+                distinto em cada documento.
 
         Examples: Exemplo
             >>> import juscraper as jus
