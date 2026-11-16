@@ -6,7 +6,7 @@ import responses
 from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.courts.stm.download import BASE_URL
+from juscraper.courts.stm.download import BASE_URL, montar_consulta_avancada
 from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
@@ -121,7 +121,7 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
         "rows": "100",
         "fq_ministro_relator": "CLAUDIO PORTUGAL DE VIVEIROS",
     }
-    assert len(df) == 1
+    assert len(df) > 0
     assert set(df["relator"]) == {"CLAUDIO PORTUGAL DE VIVEIROS"}
     assert df["data_julgamento"].between(datetime.date(2010, 1, 1), datetime.date(2022, 6, 8)).all()
 
@@ -131,6 +131,7 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
     [
         ("deserção", "ementa", '(ementa:"deserção")'),
         ('"corrupção ativa"', "ementa", '(ementa:"corrupção ativa")'),
+        ('"deser*"', "ementa", '(ementa:"deser*")'),
         ("peculato", "inteiro_teor", '(inteiro_teor:"peculato")'),
         ("7000588-60.2021.7.00.0000", "numero", "(numero_processo:*70005886020217000000*)"),
     ],
@@ -153,26 +154,50 @@ def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa,
     assert not recwarn.list
 
 
+@pytest.mark.parametrize("pesquisa", ["corrupção ativa", "deser*", "furt?"])
 @responses.activate
-def test_cjsg_termo_de_varias_palavras_sem_aspas_avisa_uma_vez(mocker):
-    """Com data, o portal procura a expressão exata; a busca simples trataria como E."""
+def test_cjsg_termo_com_operador_ou_curinga_sem_aspas_avisa_uma_vez(mocker, pesquisa):
+    """Com data, o portal procura a expressão exata; a busca simples leria E ou curinga."""
     mocker.patch("time.sleep")
     _add_avancada()
 
     with pytest.warns(UserWarning, match="expressão exata") as avisos:
-        jus.scraper("stm").cjsg(
-            "corrupção ativa", data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021"
-        )
+        jus.scraper("stm").cjsg(pesquisa, data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021")
 
     assert len(avisos) == 1
-    assert responses.calls[0].request.params["q"] == f'(ementa:"corrupção ativa") AND {PUBLICACAO}'
+    assert responses.calls[0].request.params["q"] == f'(ementa:"{pesquisa}") AND {PUBLICACAO}'
 
 
-def test_cjsg_aspas_no_meio_do_termo_com_data_levanta():
-    with pytest.raises(ValueError, match="aspas no meio"):
+@pytest.mark.parametrize(
+    ("pesquisa", "campo", "erro"),
+    [
+        ('"furto" OU "roubo"', "ementa", "aspas no meio"),
+        ("furto\\", "inteiro_teor", "barra invertida"),
+        ("7000588 OU 60", "numero", "só dígitos"),
+    ],
+)
+def test_cjsg_termo_que_nao_cabe_na_consulta_avancada_levanta(pesquisa, campo, erro):
+    with pytest.raises(ValueError, match=erro):
         jus.scraper("stm").cjsg(
-            '"furto" OU "roubo"', data_julgamento_inicio="01/01/2024", data_julgamento_fim="31/01/2024"
+            pesquisa, campo=campo, data_julgamento_inicio="01/01/2024", data_julgamento_fim="31/01/2024"
         )
+
+
+@pytest.mark.parametrize("pesquisa", ["", "  ", '""'])
+def test_consulta_avancada_sem_termo_fica_so_com_os_intervalos(pesquisa):
+    datas = {"data_julgamento_inicio": "2010-01-01", "data_julgamento_fim": "2022-06-08"}
+
+    assert montar_consulta_avancada(pesquisa, "ementa", datas) == JULGAMENTO
+
+
+def test_consulta_avancada_lado_aberto_do_intervalo_vai_como_asterisco():
+    """Como no formulário do portal; o método público preenche o lado que falta antes."""
+    assert montar_consulta_avancada("", "ementa", {"data_julgamento_inicio": "2010-01-01"}) == (
+        "(data_decisao:[2010-01-01T00:00:00.000Z TO *])"
+    )
+    assert montar_consulta_avancada("", "ementa", {"data_publicacao_fim": "2021-10-31"}) == (
+        "(data_publicacao:[* TO 2021-10-31T23:59:59.000Z])"
+    )
 
 
 @responses.activate

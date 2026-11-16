@@ -96,8 +96,8 @@ class STMScraper(HTTPScraper):
                 (``"corrupção ativa"`` só casa com as duas palavras juntas,
                 nessa ordem), não aplica ``E``, ``OU``, ``NÃO`` nem os
                 curingas, e aceita ``pesquisa=""`` para trazer tudo o que
-                está no intervalo. Termo de mais de uma palavra fora de aspas
-                emite ``UserWarning``. Informado só um lado do intervalo, o
+                está no intervalo. Termo com mais de uma palavra ou com
+                curinga, fora de aspas, emite ``UserWarning``. Informado só um lado do intervalo, o
                 outro é preenchido (01/01/1990 ou hoje), com ``UserWarning``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
@@ -112,7 +112,8 @@ class STMScraper(HTTPScraper):
                 ``campo`` fora das três opções.
             ValueError: Quando uma data é inválida ou o início vem depois do
                 fim; quando há filtro de data e ``pesquisa`` tem aspas no
-                meio.
+                meio ou barra invertida, ou, em ``campo="numero"``, algo além
+                do número do processo.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
             ValueError: Quando a página devolvida não traz o contador de

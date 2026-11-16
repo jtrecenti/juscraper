@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 import requests
@@ -34,12 +34,11 @@ _FILTROS = {
 # Pesquisa avançada do portal, a única que filtra por intervalo de datas. O
 # formulário monta a consulta no navegador (``processAdvsearch``, em
 # ``js/util.js``) e a manda pronta em ``q``.
-# Campo do método público -> campo da consulta avançada, que procura o termo
-# como expressão exata.
-_CAMPOS_DE_TEXTO = {"ementa": "ementa", "inteiro_teor": "inteiro_teor"}
 # Filtro de data do método público -> campo de data da consulta avançada.
 _CAMPOS_DE_DATA = {"data_julgamento": "data_decisao", "data_publicacao": "data_publicacao"}
 _PONTUACAO_DO_NUMERO = re.compile(r"[.\-/]")
+# Operadores e curingas da busca simples, que a expressão exata não aplica.
+_OPERADORES = re.compile(r"\s|[*?]")
 
 # Contador da página de resultados: "<b>1</b> - <b>100</b> de <b>351</b> documentos".
 _COUNT_SELECTORS = ("div.row.message",)
@@ -56,48 +55,66 @@ _WAF_MARKER = b"<title>Request Rejected</title>"
 _WAF_SUPPORT_ID = re.compile(r"support ID is:\s*(\d+)")
 
 
+def _termo_exato(pesquisa: str) -> tuple[str, bool]:
+    """Devolve o termo sem o par de aspas que o envolve e se ele veio entre aspas."""
+    termo = pesquisa.strip()
+    entre_aspas = len(termo) > 1 and termo[0] == termo[-1] == '"'
+    return (termo[1:-1].strip() if entre_aspas else termo), entre_aspas
+
+
 def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
     """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
-    termo = pesquisa.strip()
+    termo, _ = _termo_exato(pesquisa)
     if not termo:
         return None
     if campo == "numero":
-        return f"(numero_processo:*{_PONTUACAO_DO_NUMERO.sub('', termo)}*)"
-    entre_aspas = len(termo) > 1 and termo[0] == termo[-1] == '"'
-    if entre_aspas:
-        termo = termo[1:-1]
-    if '"' in termo:
+        digitos = _PONTUACAO_DO_NUMERO.sub("", termo)
+        if not digitos.isdigit():
+            raise ValueError(
+                "STM: com filtro de data, 'pesquisa' em campo='numero' aceita só dígitos e a pontuação do número "
+                f"do processo (recebido: {pesquisa!r})."
+            )
+        return f"(numero_processo:*{digitos}*)"
+    if '"' in termo or "\\" in termo:
         raise ValueError(
             "STM: com filtro de data, 'pesquisa' é procurada como expressão exata e não pode ter aspas no meio "
-            f"(recebido: {pesquisa!r})."
+            f"nem barra invertida (recebido: {pesquisa!r})."
         )
-    if not entre_aspas and len(termo.split()) > 1:
+    return f'({campo}:"{termo}")'
+
+
+def avisar_expressao_exata(pesquisa: str, campo: str) -> None:
+    """Avisa quando a pesquisa avançada vai ler como expressão exata um termo com operador ou curinga."""
+    termo, entre_aspas = _termo_exato(pesquisa)
+    if campo != "numero" and not entre_aspas and _OPERADORES.search(termo):
         avisar(
             "STM: com filtro de data, a busca vai pela pesquisa avançada do portal, que procura 'pesquisa' como "
             f"expressão exata ({termo!r}) e não aplica os operadores E, OU e NÃO nem os curingas. "
             "Ponha o termo entre aspas para confirmar a expressão exata e dispensar este aviso."
         )
-    return f'({_CAMPOS_DE_TEXTO[campo]}:"{termo}")'
 
 
-def montar_consulta_avancada(pesquisa: str, campo: str, datas: dict[str, str | None]) -> str | None:
+def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str | None]) -> str | None:
     """Monta a consulta da pesquisa avançada do STM; ``None`` quando não há filtro de data.
 
     Repete o que o formulário do portal envia: o termo como expressão exata
     no campo escolhido, ``(ementa:"deserção")``, e cada intervalo como
     ``(data_decisao:[2024-01-01T00:00:00.000Z TO 2024-01-31T23:59:59.000Z])``,
     ligados por ``AND``. ``datas`` traz ``data_julgamento_inicio/fim`` e
-    ``data_publicacao_inicio/fim`` em ``AAAA-MM-DD``. Sem termo, a consulta
-    fica só com os intervalos.
+    ``data_publicacao_inicio/fim`` em ``AAAA-MM-DD``; o lado que falta num
+    intervalo vai como ``*``. Sem termo, a consulta fica só com os intervalos.
 
     Raises:
-        ValueError: Quando o termo tem aspas no meio.
+        ValueError: Quando o termo tem aspas no meio ou barra invertida, ou,
+            em ``campo="numero"``, algo além do número do processo.
     """
-    intervalos = [
-        f"({campo_de_data}:[{inicio}T00:00:00.000Z TO {fim}T23:59:59.000Z])"
-        for filtro, campo_de_data in _CAMPOS_DE_DATA.items()
-        if (inicio := datas.get(f"{filtro}_inicio")) and (fim := datas.get(f"{filtro}_fim"))
-    ]
+    intervalos = []
+    for filtro, campo_de_data in _CAMPOS_DE_DATA.items():
+        inicio, fim = datas.get(f"{filtro}_inicio"), datas.get(f"{filtro}_fim")
+        if inicio or fim:
+            de = f"{inicio}T00:00:00.000Z" if inicio else "*"
+            ate = f"{fim}T23:59:59.000Z" if fim else "*"
+            intervalos.append(f"({campo_de_data}:[{de} TO {ate}])")
     if not intervalos:
         return None
     termo = _clausula_do_termo(pesquisa, campo)
@@ -109,7 +126,7 @@ def build_cjsg_params(
     pagina: int = 1,
     campo: str = "ementa",
     *,
-    datas: dict[str, str | None] | None = None,
+    datas: Mapping[str, str | None] | None = None,
     **filtros: str | None,
 ) -> dict[str, str]:
     """Monta a query string da busca de jurisprudência do STM.
@@ -204,8 +221,8 @@ def cjsg_download_manager(
 
     Raises:
         BotChallengeBlockedError: Quando o WAF recusa a requisição.
-        ValueError: Quando o termo tem aspas no meio e há filtro de data;
-            quando a primeira página pedida não traz o contador de
+        ValueError: Quando há filtro de data e o termo não cabe na consulta
+            avançada (ver :func:`montar_consulta_avancada`); quando a primeira página pedida não traz o contador de
             documentos nem o aviso de busca vazia, ou quando uma das seguintes
             vem sem documentos.
 
@@ -213,14 +230,14 @@ def cjsg_download_manager(
         O HTML de cada página, na ordem pedida.
     """
     primeira = menor_pagina(paginas)
-    # Montada uma vez aqui para o aviso do termo sair uma vez, não a cada página.
-    params_da_pagina_1 = build_cjsg_params(pesquisa, 1, **busca)
+    if any((busca.get("datas") or {}).values()):
+        avisar_expressao_exata(pesquisa, busca.get("campo", "ementa"))
 
     def buscar(pagina: int) -> str:
         resp = request_fn(
             "GET",
             BASE_URL,
-            params=params_da_pagina_1 | {"start": str((pagina - 1) * RESULTS_PER_PAGE)},
+            params=build_cjsg_params(pesquisa, pagina, **busca),
             perfil="cjsg",
             on_response=conferir_bloqueio,
         )
