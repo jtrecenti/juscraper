@@ -14,7 +14,7 @@ import requests
 
 from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import paginas_no_intervalo
+from juscraper.utils.pagination import descrever_paginas, paginas_no_intervalo
 
 from .parse import cjsg_parse, levantar_se_muitos_resultados, levantar_se_sem_lista, listas_da_busca_categorizada
 
@@ -354,7 +354,7 @@ def _coleta_parcial(
     eSAJ, que tenta as janelas seguintes: depois das tentativas do perfil
     ``"cjsg"``, o portal costuma seguir fora do ar, e as paginas seguintes
     custariam as mesmas tentativas. Por isso ``falhas`` tem um item so, e a
-    mensagem lista todas as paginas que faltam. Na busca categorizada, a
+    mensagem diz todas as paginas que faltam. Na busca categorizada, a
     mensagem nomeia a lista da pagina (``faltando`` ``None`` quando falhou a
     pagina 1 dela) e as listas seguintes, nao baixadas; ``paginas=`` vale para
     todas as listas, entao a mensagem nao sugere pedir de novo so as que faltam.
@@ -365,9 +365,11 @@ def _coleta_parcial(
         "atributo .resultado do erro; "
     )
     if lista is None:
-        mensagem += f"faltam as páginas {faltando}, que podem ser pedidas de novo com paginas=."
+        # Sem lista, a página 1 que falha sobe a exceção original: ``faltando`` nunca é ``None`` aqui.
+        faltam = descrever_paginas(faltando or [])
+        mensagem += f"faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
     else:
-        faltam = "a lista inteira" if faltando is None else f"as páginas {faltando}"
+        faltam = "a lista inteira" if faltando is None else f"as páginas {descrever_paginas(faltando)}"
         mensagem += f"da lista {lista!r}, faltam {faltam}"
         mensagem += f", e as listas seguintes, {seguintes}, não foram baixadas." if seguintes else "."
     return ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)])

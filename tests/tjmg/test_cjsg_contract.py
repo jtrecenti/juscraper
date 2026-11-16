@@ -233,7 +233,7 @@ def test_cjsg_falha_persistente_numa_pagina_guarda_as_anteriores(mock_txtcaptcha
     _add_search("cjsg/results_normal_page_02.html", {"numeroRegistro": "11"})
     _falha_persistente_na_pagina("21")
 
-    with pytest.raises(ColetaParcialError, match=r"página 3 falhou.*faltam as páginas \[3, 4, 5\]") as erro:
+    with pytest.raises(ColetaParcialError, match=r"página 3 falhou.*faltam as páginas range\(3, 6\),") as erro:
         getattr(jus.scraper("tjmg"), metodo)("dano moral", paginas=range(1, 6))
 
     esperado = _texto_ausente_como_none(cjsg_parse(

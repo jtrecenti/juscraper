@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import descrever_paginas, extract_count_with_cascade, menor_pagina, paginas_no_intervalo
 from juscraper.utils.params import to_br_date
 
 from .parse import cjsg_parse_manager
@@ -197,7 +197,7 @@ def _coleta_parcial(resultados: list[str], faltando: list[int], exc: Exception) 
     mensagem = (
         f"TJTO: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
         f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
-        f"faltam as páginas {faltando}, que podem ser pedidas de novo com paginas="
+        f"faltam as páginas {descrever_paginas(faltando)}, que podem ser pedidas de novo com paginas="
     )
     if isinstance(exc, BotChallengeBlockedError):
         mensagem += " depois de pelo menos 10 minutos, quando o bloqueio do AWS WAF passa"

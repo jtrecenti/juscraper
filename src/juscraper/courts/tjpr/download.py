@@ -10,7 +10,12 @@ from tqdm.auto import tqdm
 
 from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, parse_page_number, resolve_total_pages
+from juscraper.utils.pagination import (
+    descrever_paginas,
+    extract_count_with_cascade,
+    parse_page_number,
+    resolve_total_pages,
+)
 
 BASE_URL = "https://portal.tjpr.jus.br/jurisprudencia/"
 SEARCH_URL = "https://portal.tjpr.jus.br/jurisprudencia/publico/pesquisa.do"
@@ -294,17 +299,12 @@ def _baixar_paginas(
 def _coleta_parcial(
     resultados: list[str], faltando: list[int], exc: Exception, ler_parcial: Callable[[list[str]], pd.DataFrame]
 ) -> ColetaParcialError:
-    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar, lidas por ``ler_parcial``.
-
-    ``paginas=None`` pode deixar milhares de páginas por baixar: a sequência
-    sem saltos sai como intervalo.
-    """
-    contiguas = len(faltando) > 2 and faltando == list(range(faltando[0], faltando[-1] + 1))
-    faltam = f"{faltando[0]} a {faltando[-1]}" if contiguas else ", ".join(map(str, faltando))
+    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar, lidas por ``ler_parcial``."""
     mensagem = (
         f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
         f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
         "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
-        f"custaria uma requisição por linha. Faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
+        f"custaria uma requisição por linha. Faltam as páginas {descrever_paginas(faltando)}, "
+        "que podem ser pedidas de novo com paginas=."
     )
     return ColetaParcialError(mensagem, resultado=ler_parcial(resultados), falhas=[(None, None, exc)])

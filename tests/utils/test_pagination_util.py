@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from juscraper.utils.pagination import (
     baixar_paginas_pedidas,
     contador_com_teto,
+    descrever_paginas,
     extract_count_with_cascade,
     paginas_no_intervalo,
     parse_page_number,
@@ -386,3 +387,26 @@ def test_contador_com_teto_avisa_quando_baixa_todas(recwarn):
     assert len(recwarn) == 0
     with pytest.warns(UserWarning, match=r"TJXX: a busca tem 5 páginas, e o portal só entrega as 3 primeiras"):
         assert contador_com_teto(None, 3, _cinco_paginas, tribunal="TJXX")(None) == 3
+
+
+@pytest.mark.parametrize(
+    ("paginas", "texto"),
+    [
+        ([3], "[3]"),
+        ([3, 4], "[3, 4]"),
+        ([3, 4, 5], "range(3, 6)"),
+        (list(range(2, 8241)), "range(2, 8241)"),
+        ([2, 3, 5, 6], "[2, 3, 5, 6]"),
+        ([5, 4, 3], "[5, 4, 3]"),
+        ([1, 2, 3, 10**10], "[1, 2, 3, 10000000000]"),
+        ([], "[]"),
+    ],
+)
+def test_descrever_paginas_resume_a_sequencia_sem_saltos(paginas, texto):
+    assert descrever_paginas(paginas) == texto
+
+
+@pytest.mark.parametrize("paginas", [[3], [3, 4], list(range(2, 40)), [2, 3, 5, 6]])
+def test_descrever_paginas_vale_como_paginas(paginas):
+    # O texto da mensagem é o que o usuário cola em ``paginas=``.
+    assert list(eval(descrever_paginas(paginas))) == paginas
