@@ -184,6 +184,7 @@ def _build_params(
     relator: str | None,
     orgao_julgador: str | None,
     tipo_processo: str | None,
+    classe: str | None,
 ) -> dict:
     """Monta os parâmetros da query para o endpoint de consulta."""
     params = {
@@ -207,6 +208,11 @@ def _build_params(
         params["fqOrgaoJulgador"] = orgao_julgador
     if tipo_processo is not None:
         params["tipoProcesso"] = tipo_processo
+    if classe is not None:
+        # O nome engana: no portal, ``fqTipoProcesso`` é a faceta de classe
+        # (``facetTipoProcesso``) e filtra por ``nomeClasse``. ``fqClasse``
+        # pertence a outro endpoint do bundle e é ignorado em ``/consulta``.
+        params["fqTipoProcesso"] = classe
     return params
 
 
@@ -229,7 +235,7 @@ def _validate_response(data: object, tipo_consulta: str) -> tuple[dict, int]:
 
 
 def _normalize_text_filter(value: str | int | None, name: str) -> str | None:
-    """Normaliza nome textual de relator ou órgão julgador."""
+    """Normaliza nome textual de relator, órgão julgador ou classe."""
     if value is None or value == "":
         return None
     if isinstance(value, int):
@@ -238,12 +244,28 @@ def _normalize_text_filter(value: str | int | None, name: str) -> str | None:
         raise TypeError(f"{name} deve ser informado como texto.")
     normalized = " ".join(value.strip().split())
     normalized = "".join(
-        char for char in unicodedata.normalize("NFKD", normalized)
+        # NFD, não NFKD: os nomes da API mantêm "ª" e "º" ("2ª CAMARA").
+        char for char in unicodedata.normalize("NFD", normalized)
         if not unicodedata.combining(char)
     ).upper()
     if normalized.isdigit():
         raise ValueError(f"{name} não aceita identificadores numéricos.")
     return normalized or None
+
+
+def _normalize_classe(value: str | None) -> str | None:
+    """Normaliza o nome da classe e recusa o que a API leria como lista.
+
+    Medido em 16/11/2026: a API parte ``fqTipoProcesso`` na vírgula e soma as
+    classes, sem forma de escapar; a única classe com vírgula no nome devolvia
+    as linhas de outra classe.
+    """
+    if isinstance(value, str) and "," in value:
+        raise ValueError(
+            "classe não aceita vírgula: a API do TJMT a lê como separador de classes "
+            "e filtraria por outra classe. Informe uma classe por consulta."
+        )
+    return _normalize_text_filter(value, "classe")
 
 
 def _normalize_tipo_processo(value: str | None) -> str | None:
@@ -398,6 +420,7 @@ def cjsg_download(
     thesaurus: bool = False,
     quantidade_por_pagina: int = DEFAULT_PAGE_SIZE,
     *,
+    classe: str | None = None,
     request_fn: RequestFn,
     session: requests.Session,
     api_config_provider: Callable[..., dict[str, str]] | None = None,
@@ -420,6 +443,8 @@ def cjsg_download(
         thesaurus: Define se a pesquisa deve usar sinônimos.
         quantidade_por_pagina: Itens por página (padrão 10), no máximo
             ``MAX_RESULTS``.
+        classe: Nome da classe processual, com a mesma normalização de
+            ``relator``.
         request_fn: Callable HTTP que trata retries e ``raise_for_status``,
             normalmente ``TJMTScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando o backoff exponencial
@@ -445,6 +470,7 @@ def cjsg_download(
     relator = _normalize_text_filter(relator, "relator")
     orgao_julgador = _normalize_text_filter(orgao_julgador, "orgao_julgador")
     tipo_processo = _normalize_tipo_processo(tipo_processo)
+    classe = _normalize_classe(classe)
     cfg = _initial_api_config(request_fn, api_config_provider)
     api_url = cfg["api_url"]
     _apply_api_config(session, cfg)
@@ -461,6 +487,7 @@ def cjsg_download(
             relator=relator,
             orgao_julgador=orgao_julgador,
             tipo_processo=tipo_processo,
+            classe=classe,
         )
         resp = _request_api_page(request_fn, api_url, params, session, api_config_provider)
         try:

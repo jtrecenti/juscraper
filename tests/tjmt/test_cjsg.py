@@ -56,5 +56,32 @@ def test_cjsg_download_e_parse():
     assert "ementa" in df.columns
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("tipo_consulta", "total"),
+    [("Acordao", "countAcordaoDocumento"), ("DecisaoMonocratica", "countDecisaoMonocratica")],
+)
+def test_cjsg_filtro_classe(tipo_consulta, total):
+    """``classe`` restringe a busca à classe pedida e reduz o total (#493)."""
+    scraper = TJMTScraper()
+    busca = {"pesquisa": "dano moral", "paginas": 1, "tipo_consulta": tipo_consulta}
+    com_filtro = scraper.cjsg_download(classe="Agravo de Instrumento", **busca)
+    classes = {linha["classe"].upper() for linha in scraper.cjsg_parse(com_filtro)}
+    assert classes == {"AGRAVO DE INSTRUMENTO"}
+    sem_filtro = scraper.cjsg_download(tamanho_pagina=1, **busca)
+    assert 0 < com_filtro[0]["value"][total] < sem_filtro[0]["value"][total]
+
+
+@pytest.mark.integration
+def test_cjsg_orgao_julgador_com_ordinal():
+    """O "ª" do nome do órgão chega à API como está."""
+    df = TJMTScraper().cjsg(
+        "recurso",
+        paginas=1,
+        orgao_julgador="Regime de Cooperação da 2ª Câmara de Direito Público",
+    )
+    assert not df.empty
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

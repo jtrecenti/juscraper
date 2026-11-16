@@ -27,17 +27,18 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     deste modelo.
 
     A API filtra datas só por publicação (``periodoDataDe``/``periodoDataAte``),
-    e o fim do intervalo é inclusivo. Ela não filtra por data de julgamento nem
-    por classe, então o modelo não declara ``data_julgamento_*`` nem
-    ``classe``: passá-los levanta ``TypeError`` por ``extra="forbid"``, antes de
-    qualquer requisição. Os aliases genéricos ``data_inicio``/``data_fim``
-    apontam para ``data_julgamento_*`` em
+    e o fim do intervalo é inclusivo. Ela não filtra por data de julgamento,
+    então o modelo não declara ``data_julgamento_*``: passá-los levanta
+    ``TypeError`` por ``extra="forbid"``, antes de qualquer requisição. Os
+    aliases genéricos ``data_inicio``/``data_fim`` apontam para
+    ``data_julgamento_*`` em
     :func:`juscraper.utils.params.normalize_datas` e por isso também terminam
     em ``TypeError``, depois do ``DeprecationWarning`` do alias.
 
-    ``relator`` e ``orgao_julgador`` recebem o nome, não o identificador
-    numérico; o downloader tira acentos, junta espaços e passa a maiúsculas,
-    e a API só casa o nome exato.
+    ``relator``, ``orgao_julgador`` e ``classe`` recebem o nome, não o
+    identificador numérico; o downloader tira acentos, junta espaços e passa a
+    maiúsculas, e a API só casa o nome exato. ``classe`` vai como
+    ``fqTipoProcesso``, a faceta de classe do portal (#493).
 
     ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
     ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as
@@ -50,6 +51,7 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     relator: str | None = None
     orgao_julgador: str | None = None
     tipo_processo: str | None = None
+    classe: str | None = None
     thesaurus: bool = False
     tamanho_pagina: TamanhoPagina = 10
 

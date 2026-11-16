@@ -27,6 +27,7 @@ def _params(
     relator: str = "",
     orgao_julgador: str = "",
     tipo_processo: str = "",
+    classe: str = "",
     thesaurus: bool = False,
 ) -> dict:
     params = {
@@ -46,6 +47,8 @@ def _params(
         params["fqOrgaoJulgador"] = orgao_julgador.upper()
     if tipo_processo:
         params["tipoProcesso"] = {"Criminal": "1", "Civel": "2", "Cível": "2"}[tipo_processo]
+    if classe:
+        params["fqTipoProcesso"] = classe.upper()
     if data_publicacao_inicio:
         params["periodoDataDe"] = data_publicacao_inicio
     if data_publicacao_fim:

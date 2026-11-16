@@ -11,6 +11,7 @@ import requests
 from juscraper.courts.tjmt.download import (
     _build_params,
     _get_api_config,
+    _normalize_classe,
     _normalize_text_filter,
     _normalize_tipo_processo,
     _to_end_of_day,
@@ -23,6 +24,7 @@ from ._util import dump, samples_dir_for
 def _capture_config(session: requests.Session) -> dict:
     def request_fn(method: str, url: str, **kwargs):
         kwargs.pop("expect_json", None)
+        kwargs.pop("perfil", None)
         response = session.request(method, url, **kwargs)
         response.raise_for_status()
         return response
@@ -45,6 +47,7 @@ def _capture(
     relator: str | None = None,
     orgao_julgador: str | None = None,
     tipo_processo: str | None = None,
+    classe: str | None = None,
     thesaurus: bool = False,
 ) -> None:
     params = _build_params(
@@ -57,6 +60,7 @@ def _capture(
         relator=_normalize_text_filter(relator, "relator"),
         orgao_julgador=_normalize_text_filter(orgao_julgador, "orgao_julgador"),
         tipo_processo=_normalize_tipo_processo(tipo_processo),
+        classe=_normalize_classe(classe),
         thesaurus=thesaurus,
     )
     response = session.get(f"{api_url}/consulta", params=params, timeout=60)
@@ -106,6 +110,18 @@ def main() -> None:
         "class_sigla_unavailable.json",
         tipo_consulta="DecisaoMonocratica",
         quantidade=3,
+    )
+    _capture(
+        session,
+        dest,
+        cfg["api_url"],
+        "dano moral",
+        1,
+        "filtro_classe.json",
+        quantidade=2,
+        data_publicacao_inicio="2025-03-10",
+        data_publicacao_fim="2025-03-10",
+        classe="Apelação Cível",
     )
     _capture(
         session,
