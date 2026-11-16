@@ -55,6 +55,24 @@ def update_version(new_version: str) -> None:
     print(f"Versão atualizada para {new_version}")
 
 
+def _localizar_unreleased(conteudo: str) -> tuple[re.Match[str], re.Match[str]]:
+    """Devolve o título ``## [Unreleased]`` e o link ``[Unreleased]: ...`` do fim do CHANGELOG.
+
+    Levanta ``ValueError`` quando falta a seção ou o link, ou quando o link vem antes dela.
+    """
+    secoes = list(re.finditer(r"^## \[Unreleased\][ \t]*$", conteudo, flags=re.MULTILINE))
+    if len(secoes) != 1:
+        raise ValueError("CHANGELOG.md precisa de exatamente uma seção '## [Unreleased]'.")
+    link = re.search(
+        r"^\[Unreleased\]: (?P<base>\S+/compare/)(?P<anterior>\S+)\.\.\.HEAD[ \t]*$",
+        conteudo,
+        flags=re.MULTILINE,
+    )
+    if link is None or link.start() < secoes[0].end():
+        raise ValueError("CHANGELOG.md precisa do link '[Unreleased]: .../compare/<tag>...HEAD' no fim.")
+    return secoes[0], link
+
+
 def promover_unreleased(conteudo: str, versao: str, data: str) -> str:
     """Transforma ``[Unreleased]`` na seção ``[versao] - data`` do CHANGELOG.
 
@@ -67,18 +85,7 @@ def promover_unreleased(conteudo: str, versao: str, data: str) -> str:
     """
     if re.search(rf"^## \[{re.escape(versao)}\]", conteudo, flags=re.MULTILINE):
         raise ValueError(f"CHANGELOG.md já tem a seção [{versao}].")
-    secoes = list(re.finditer(r"^## \[Unreleased\][ \t]*$", conteudo, flags=re.MULTILINE))
-    if len(secoes) != 1:
-        raise ValueError("CHANGELOG.md precisa de exatamente uma seção '## [Unreleased]'.")
-    secao = secoes[0]
-    link = re.search(
-        r"^\[Unreleased\]: (?P<base>\S+/compare/)(?P<anterior>\S+)\.\.\.HEAD[ \t]*$",
-        conteudo,
-        flags=re.MULTILINE,
-    )
-    if link is None or link.start() < secao.end():
-        raise ValueError("CHANGELOG.md precisa do link '[Unreleased]: .../compare/<tag>...HEAD' no fim.")
-
+    secao, link = _localizar_unreleased(conteudo)
     base, anterior = link["base"], link["anterior"]
     return (
         conteudo[:secao.end()]
@@ -89,17 +96,36 @@ def promover_unreleased(conteudo: str, versao: str, data: str) -> str:
     )
 
 
+def unreleased_vazio(conteudo: str) -> bool:
+    """Diz se ``[Unreleased]`` não tem entradas: só linhas em branco ou subtítulos ``###``.
+
+    A seção vai até o próximo ``## `` ou até o link ``[Unreleased]:`` do fim do arquivo.
+    """
+    secao, link = _localizar_unreleased(conteudo)
+    corpo = re.split(r"^## ", conteudo[secao.end():link.start()], maxsplit=1, flags=re.MULTILINE)[0]
+    return all(not linha.strip() or linha.startswith("### ") for linha in corpo.splitlines())
+
+
 def preparar_changelog(version: str) -> str:
     """Lê o CHANGELOG.md e devolve o texto com ``[Unreleased]`` promovido à versão nova.
 
-    Encerra o script se o arquivo faltar ou estiver fora do formato esperado.
+    Encerra o script se o arquivo faltar ou estiver fora do formato esperado e avisa,
+    sem impedir o release, quando ``[Unreleased]`` não tem entradas.
     """
     try:
         conteudo = Path("CHANGELOG.md").read_text(encoding="utf-8")
-        return promover_unreleased(conteudo, version, datetime.now().strftime("%Y-%m-%d"))
+        changelog = promover_unreleased(conteudo, version, datetime.now().strftime("%Y-%m-%d"))
     except (OSError, ValueError) as erro:
         print(f"CHANGELOG.md não pode ser atualizado: {erro}")
         sys.exit(1)
+    if unreleased_vazio(conteudo):
+        print(f"Aviso: [Unreleased] do CHANGELOG.md está vazio; a seção [{version}] sairá sem entradas.")
+    return changelog
+
+
+def tag_existe(tag: str) -> bool:
+    """Diz se a tag já existe no repositório local, por consulta somente leitura das refs."""
+    return run_command(f"git show-ref --verify --quiet refs/tags/{tag}", check=False).returncode == 0
 
 
 def main():
@@ -122,6 +148,11 @@ def main():
 
     # Confere o CHANGELOG.md antes de qualquer alteração, inclusive no dry run
     changelog = preparar_changelog(args.version)
+
+    # Confere a tag também no dry run, para não deixar commit de versão sem tag
+    if tag_existe(f"v{args.version}"):
+        print(f"A tag v{args.version} já existe! Nenhum arquivo foi alterado.")
+        sys.exit(1)
 
     if args.dry_run:
         print("=== MODO DRY RUN - Nenhuma alteração será feita ===")
