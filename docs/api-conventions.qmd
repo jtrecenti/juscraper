@@ -372,7 +372,9 @@ What to expect from a split search:
 - It is slow and held in memory: one request per second, 10 results per page
   in TJRO (10,000 results take about 17 minutes; "dano moral", with more than
   120,000, takes hours). In TJBA, `tamanho_pagina` reduces the number of
-  requests. Narrow the search by date when you do not need everything.
+  requests. Narrow the search by date when you do not need everything: a
+  TJBA decision takes about 35 KB of memory with its full text (measured on
+  1,299 decisions), so a search with a million results does not fit in RAM.
 - If a request fails after the split, the collection stops and raises
   `ColetaParcialError`. `.resultado` holds the DataFrame of what was
   downloaded (also in `cjsg_download`), and the message gives the interval

@@ -24,6 +24,13 @@ _Pagina = TypeVar("_Pagina")
 _Janela = tuple[date | None, date | None]
 
 
+class RespostaInesperadaDaDivisaoError(RuntimeError):
+    """As contagens das janelas não condizem com a da busca: o portal ignora ou mudou o filtro de data.
+
+    Sem esta trava, a divisão desceria até cada dia do intervalo, baixando o teto inteiro em todos.
+    """
+
+
 @dataclass(frozen=True)
 class BuscaComTeto(Generic[_Pagina]):
     """O que :func:`baixar_dividindo_por_data` precisa saber de uma busca e do portal que a corta.
@@ -103,6 +110,8 @@ def baixar_dividindo_por_data(
             sido dividida e já haver página baixada. A coleta para ali;
             ``resultado`` traz ``busca.parse`` das páginas baixadas e a
             mensagem diz o intervalo que falta.
+        RespostaInesperadaDaDivisaoError: Como causa do ``ColetaParcialError``,
+            quando as janelas somam mais que o dobro do total da busca.
         Exception: A falha de ``busca.buscar``, como veio, quando a busca não
             foi dividida ou ainda não há página baixada.
     """
@@ -172,6 +181,12 @@ class _Coleta(Generic[_Pagina]):
         # A janela vazia de uma busca dividida não tem o que devolver; a busca vazia devolve a sua página.
         if not filhas and (total or not self.dividiu):
             self.soma_das_janelas += total
+            if self.dividiu and self.soma_das_janelas > 2 * self.total_da_busca:
+                raise RespostaInesperadaDaDivisaoError(
+                    f"{busca.tribunal}: as janelas de {busca.rotulo} já somam {self.soma_das_janelas} resultados, "
+                    f"mais que o dobro dos {self.total_da_busca} da busca. O portal não está aplicando o filtro "
+                    "de data como esperado, e a coleta foi interrompida."
+                )
             self.janelas.append([primeira])
             for pagina in _barra(busca, janela, total):
                 self.janelas[-1].append(self._pedir(janela, pagina))

@@ -210,13 +210,17 @@ def test_pagina_alem_do_teto_levanta_sem_pedido(tribunal, paginas):
 @pytest.mark.parametrize("tribunal", list(MODULOS_COM_TETO))
 @responses.activate
 def test_todas_as_paginas_param_no_teto_com_aviso(tribunal, mocker):
-    """``paginas=None`` numa busca acima do teto baixa até ele e avisa; o teto é reduzido para o teste."""
+    """``paginas=None`` com ``auto_chunk=False`` numa busca acima do teto baixa até ele e avisa.
+
+    O teto é reduzido para o teste. Com ``auto_chunk=True`` a busca é dividida por data
+    (``tests/<tribunal>/test_cjsg_auto_chunk_contract.py``).
+    """
     mocker.patch("time.sleep")
     mocker.patch.object(MODULOS_COM_TETO[tribunal], "MAX_RESULTS", 30)
     _registrar_busca(tribunal)
 
     with pytest.warns(UserWarning, match=r"só entrega as 3 primeiras"):
-        brutos = jus.scraper(tribunal).cjsg_download("dano moral")
+        brutos = jus.scraper(tribunal).cjsg_download("dano moral", auto_chunk=False)
 
     assert _paginas_pedidas(tribunal) == [1, 2, 3]
     assert len(brutos) == 3

@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
+from juscraper.utils.divisao_por_data import BuscaComTeto, RespostaInesperadaDaDivisaoError, baixar_dividindo_por_data
 
 HOJE = date(2024, 12, 31)
 PISO = date(2024, 1, 1)
@@ -34,6 +34,7 @@ class _Portal:
         self.teto = teto
         self.pedidos: list[tuple[date | None, date | None, int]] = []
         self.falhar_em: tuple[date | None, date | None, int] | None = None
+        self.ignora_datas = False
 
     def buscar(self, inicio: str | None, fim: str | None, pagina: int) -> dict:
         janela = (_data(inicio), _data(fim))
@@ -41,6 +42,8 @@ class _Portal:
         if (*janela, pagina) == self.falhar_em:
             raise ConnectionError("portal caiu")
         assert pagina * POR_PAGINA <= self.teto or pagina == 1, "pedido além do teto do portal"
+        if self.ignora_datas:
+            janela = (None, None)
         na_janela = [
             item for item in self.itens
             if janela == (None, None)
@@ -242,3 +245,16 @@ def test_pagina_que_nao_divide_o_teto_para_na_ultima_pagina_inteira():
 
     assert _ids(paginas) == list(reversed(range(7)))
     assert len(portal.pedidos) > 4  # foi dividida, em vez de pedir a página 4 da busca inteira
+
+
+@pytest.mark.filterwarnings("ignore:.*o dia .* tem 25 resultados:UserWarning")
+def test_portal_que_ignora_o_filtro_de_data_interrompe_a_coleta():
+    """Sem a trava, a divisão desceria a cada dia do intervalo baixando o teto em todos."""
+    portal = _Portal(_um_por_dia(25), teto=6)
+    portal.ignora_datas = True
+
+    with pytest.raises(ColetaParcialError, match="parou na janela") as erro:
+        _baixar(portal)
+
+    assert isinstance(erro.value.__cause__, RespostaInesperadaDaDivisaoError)
+    assert len(portal.pedidos) < 40
