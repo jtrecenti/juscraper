@@ -1,5 +1,6 @@
 """Offline contract tests for TJDFT cjsg."""
 import json
+from datetime import date
 
 import pandas as pd
 import responses
@@ -72,6 +73,29 @@ def test_cjsg_single_page(mocker):
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
+
+
+@responses.activate
+def test_cjsg_datas_saem_como_date(mocker):
+    """``dataJulgamento``/``dataPublicacao`` saem como ``date``, e não como texto ISO.
+
+    A data é a do instante em UTC, a mesma do filtro da API: com
+    ``data_publicacao`` em 14/11/2026, a API devolve a publicação de
+    ``2026-11-14T00:56:36.000Z`` (conferido em 16/11/2026). O julgamento vem
+    em ``T03:00Z`` (``T02:00Z`` no horário de verão, como em 2016).
+    """
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.json")
+    _add_page("enfiteuse", 1, "cjsg/todas_paginas_page_01.json")
+
+    scraper = jus.scraper("tjdft")
+    df = pd.concat([scraper.cjsg("dano moral", paginas=1), scraper.cjsg("enfiteuse", paginas=1)])
+
+    for col in ("dataJulgamento", "dataPublicacao"):
+        assert df[col].map(type).eq(date).all(), col
+    datas = df.set_index("processo")[["dataJulgamento", "dataPublicacao"]]
+    assert tuple(datas.loc["0773607-82.2023.8.07.0016"]) == (date(2026, 11, 4), date(2026, 11, 14))
+    assert tuple(datas.loc["20120111466064APC"]) == (date(2016, 10, 19), date(2016, 10, 27))
 
 
 @responses.activate
