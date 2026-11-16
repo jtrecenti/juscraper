@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -451,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>As linhas de entrada com <code>caminho_acordao</code> (<code>None</code> quando falhou) e <code>motivo_falha</code>. O motivo é <code>entrada_invalida</code>, <code>nao_encontrado</code>, <code>sem_acordao</code>, <code>nao_pdf</code>, <code>resposta_inesperada</code> ou um motivo de rede de <code>MOTIVOS_FALHA</code>; as falhas saem também num único <code>UserWarning</code> ao fim. O primeiro <code>bloqueio_anti_bot</code> encerra o lote: as linhas seguintes saem com o mesmo motivo, sem pedido ao tribunal.</td>
+<td>As linhas de entrada com <code>caminho_acordao</code> (<code>None</code> quando falhou) e <code>motivo_falha</code>. O motivo é <code>entrada_invalida</code>, <code>nao_encontrado</code>, <code>sem_acordao</code>, <code>nao_pdf</code>, <code>resposta_inesperada</code> ou um motivo de rede de <code>MOTIVOS_FALHA</code>; as falhas saem também num único <code>UserWarning</code> ao fim. O primeiro <code>bloqueio_anti_bot</code> encerra o lote: as linhas seguintes saem com o mesmo motivo, sem pedido ao tribunal. O mesmo vale para o <code>erro_de_gravacao</code>, do PDF que chegou e não pôde ser gravado (disco cheio, pasta sem permissão).</td>
 </tr>
 </tbody>
 </table>
@@ -615,7 +615,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>As linhas de entrada com <code>caminho_sentenca</code> (<code>None</code> quando falhou) e <code>motivo_falha</code>. O motivo é <code>entrada_invalida</code>, <code>nao_pdf</code>, <code>resposta_inesperada</code> ou um motivo de rede de <code>MOTIVOS_FALHA</code>; as falhas saem também num único <code>UserWarning</code> ao fim. O primeiro <code>bloqueio_anti_bot</code> encerra o lote: as linhas seguintes saem com o mesmo motivo, sem pedido ao tribunal.</td>
+<td>As linhas de entrada com <code>caminho_sentenca</code> (<code>None</code> quando falhou) e <code>motivo_falha</code>. O motivo é <code>entrada_invalida</code>, <code>nao_pdf</code>, <code>resposta_inesperada</code> ou um motivo de rede de <code>MOTIVOS_FALHA</code>; as falhas saem também num único <code>UserWarning</code> ao fim. O primeiro <code>bloqueio_anti_bot</code> encerra o lote: as linhas seguintes saem com o mesmo motivo, sem pedido ao tribunal. O mesmo vale para o <code>erro_de_gravacao</code>, do PDF que chegou e não pôde ser gravado (disco cheio, pasta sem permissão).</td>
 </tr>
 </tbody>
 </table>

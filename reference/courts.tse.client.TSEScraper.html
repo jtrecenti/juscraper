@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -359,7 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa o PDF do inteiro teor de várias decisões, uma linha por código.</p>
-<p>Chama <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor"><code>baixar_inteiro_teor</code></a> para cada código, na ordem da entrada, com <code>sleep_time</code> entre os pedidos: são 10 s por decisão no default. A falha de uma decisão não interrompe o lote; duas recusas seguidas por excesso de requisições, sim, e as linhas seguintes saem <code>limite_de_requisicoes</code> sem pedido.</p>
+<p>Chama <a href="../reference/courts.tse.client.TSEScraper.html#juscraper.courts.tse.client.TSEScraper.baixar_inteiro_teor"><code>baixar_inteiro_teor</code></a> para cada código, na ordem da entrada, com <code>sleep_time</code> entre os pedidos: são 10 s por decisão no default. A falha de uma decisão não interrompe o lote; duas recusas seguidas por excesso de requisições, sim, e as linhas seguintes saem <code>limite_de_requisicoes</code> sem pedido. O erro ao gravar um PDF também encerra o lote: a linha e as seguintes saem <code>erro_de_gravacao</code>.</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
@@ -420,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Colunas <code>codigo_decisao</code> (como veio na entrada), <code>caminho_inteiro_teor</code> (<code>None</code> na falha) e <code>motivo_falha</code>: <code>None</code> no sucesso, <code>nao_pdf</code> (resposta sem PDF, como a de código que não existe), <code>limite_de_requisicoes</code> (o serviço recusou o pedido; basta pedir de novo as linhas que falharam), <code>entrada_invalida</code> (código que não é inteiro nem texto só de dígitos, como a célula vazia; nada é pedido) ou um motivo de rede de <code>MOTIVOS_FALHA</code>. As falhas saem também num único <code>UserWarning</code> ao fim.</td>
+<td>Colunas <code>codigo_decisao</code> (como veio na entrada), <code>caminho_inteiro_teor</code> (<code>None</code> na falha) e <code>motivo_falha</code>: <code>None</code> no sucesso, <code>nao_pdf</code> (resposta sem PDF, como a de código que não existe), <code>limite_de_requisicoes</code> (o serviço recusou o pedido; basta pedir de novo as linhas que falharam), <code>entrada_invalida</code> (código que não é inteiro nem texto só de dígitos, como a célula vazia; nada é pedido), <code>erro_de_gravacao</code> (o PDF chegou, mas não pôde ser gravado: disco cheio, pasta sem permissão) ou um motivo de rede de <code>MOTIVOS_FALHA</code>. As falhas saem também num único <code>UserWarning</code> ao fim.</td>
 </tr>
 </tbody>
 </table>
