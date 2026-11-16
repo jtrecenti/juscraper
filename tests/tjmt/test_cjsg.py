@@ -72,6 +72,32 @@ def test_cjsg_filtro_classe(tipo_consulta, total):
     assert 0 < com_filtro[0]["value"][total] < sem_filtro[0]["value"][total]
 
 
+def _total_acordaos(scraper, pesquisa, **filtros):
+    return scraper.cjsg_download(pesquisa, paginas=1, tamanho_pagina=1, **filtros)[0]["value"]["countAcordaoDocumento"]
+
+
+@pytest.mark.integration
+def test_cjsg_lista_de_classes_soma_as_classes():
+    """A API soma as classes da lista."""
+    scraper = TJMTScraper()
+    classes = ["Apelação Cível", "Agravo de Instrumento"]
+    partes = [_total_acordaos(scraper, "dano moral", classe=classe) for classe in classes]
+    assert all(partes)
+    assert _total_acordaos(scraper, "dano moral", classe=classes) == sum(partes)
+
+
+@pytest.mark.integration
+def test_cjsg_classe_com_virgula_no_nome():
+    """A classe com vírgula no nome é filtrada inteira, e soma numa lista."""
+    scraper = TJMTScraper()
+    nome = "Exceção de Incompetência, Suspeição e Impedimento"
+    df = scraper.cjsg("suspeição", paginas=1, classe=[nome])
+    assert set(df["classe"].str.upper()) == {nome.upper()}
+    so_ela = _total_acordaos(scraper, "suspeição", classe=[nome])
+    apelacao = _total_acordaos(scraper, "suspeição", classe="Apelação Cível")
+    assert _total_acordaos(scraper, "suspeição", classe=["Apelação Cível", nome]) == so_ela + apelacao
+
+
 @pytest.mark.integration
 def test_cjsg_orgao_julgador_com_ordinal():
     """O "ª" do nome do órgão chega à API como está."""

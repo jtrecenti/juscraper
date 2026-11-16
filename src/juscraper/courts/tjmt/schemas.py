@@ -38,7 +38,8 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     ``relator``, ``orgao_julgador`` e ``classe`` recebem o nome, não o
     identificador numérico; o downloader tira acentos, junta espaços e passa a
     maiúsculas, e a API só casa o nome exato. ``classe`` vai como
-    ``fqTipoProcesso``, a faceta de classe do portal (#493).
+    ``fqTipoProcesso``, a faceta de classe do portal (#493), e aceita também
+    uma lista de nomes, que a API soma.
 
     ``BACKEND_DATE_FORMAT="%Y-%m-%d"`` (ISO) — o Hellsgate aceita datas em
     ``YYYY-MM-DD``, entao :func:`apply_input_pipeline_search` coage as
@@ -51,7 +52,7 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     relator: str | None = None
     orgao_julgador: str | None = None
     tipo_processo: str | None = None
-    classe: str | None = None
+    classe: str | list[str] | None = None
     thesaurus: bool = False
     tamanho_pagina: TamanhoPagina = 10
 

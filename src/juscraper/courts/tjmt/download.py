@@ -253,19 +253,53 @@ def _normalize_text_filter(value: str | int | None, name: str) -> str | None:
     return normalized or None
 
 
-def _normalize_classe(value: str | None) -> str | None:
-    """Normaliza o nome da classe e recusa o que a API leria como lista.
+def _normalize_nome_unico(value: str | None, name: str) -> str | None:
+    """Normaliza ``relator`` ou ``orgao_julgador`` e recusa nome com vírgula.
 
-    Medido em 16/11/2026: a API parte ``fqTipoProcesso`` na vírgula e soma as
-    classes, sem forma de escapar; a única classe com vírgula no nome devolvia
-    as linhas de outra classe.
+    Medido em 16/11/2026: a API parte ``fqRelator`` e ``fqOrgaoJulgador`` na
+    vírgula e soma os resultados de cada parte (dois relatores com 1 e 152
+    resultados devolveram 153). Nenhum nome das facetas tem vírgula, então
+    ela só pode vir de um engano, que filtraria por outros nomes.
     """
     if isinstance(value, str) and "," in value:
         raise ValueError(
-            "classe não aceita vírgula: a API do TJMT a lê como separador de classes "
-            "e filtraria por outra classe. Informe uma classe por consulta."
+            f"{name} não aceita vírgula: a API do TJMT a lê como separador de nomes "
+            "e somaria os resultados de cada parte. Informe um nome por consulta."
         )
-    return _normalize_text_filter(value, "classe")
+    return _normalize_text_filter(value, name)
+
+
+# Vírgula de largura inteira (U+FF0C). Medido em 16/11/2026 em
+# ``fqTipoProcesso``: a API parte o valor na vírgula ASCII e só depois equipara
+# as duas, então é assim que um nome de classe com vírgula chega inteiro ao
+# índice. Barra, aspas, ``%2C`` e o código da classe não filtram.
+_VIRGULA_NO_NOME = "\uff0c"
+
+
+def _normalize_classe(value: str | list[str] | None) -> str | None:
+    """Normaliza um nome de classe, ou uma lista deles, para ``fqTipoProcesso``.
+
+    Medido em 16/11/2026: a API parte ``fqTipoProcesso`` na vírgula e soma as
+    classes (37.389 + 1.727 = 39.116 em "dano moral"). A lista vai separada
+    por vírgula, e a vírgula de dentro de um nome, como
+    :data:`_VIRGULA_NO_NOME`. Só a lista aceita nome com vírgula: numa string,
+    ela tanto pode ser do nome quanto de uma lista escrita como texto, que
+    devolveria busca vazia.
+    """
+    if isinstance(value, str):
+        if "," in value:
+            raise ValueError(
+                "classe em texto não aceita vírgula. Para várias classes, passe uma lista "
+                '(classe=["Apelação Cível", "Agravo de Instrumento"]); para uma classe com vírgula '
+                "no nome, passe-a dentro de uma lista."
+            )
+        return _normalize_text_filter(value, "classe")
+    if value is None:
+        return None
+    nomes = [_normalize_text_filter(nome, "classe") for nome in value]
+    if not any(nomes):
+        raise ValueError("classe recebeu uma lista sem nomes; use None para não filtrar.")
+    return ",".join(nome.replace(",", _VIRGULA_NO_NOME) for nome in nomes if nome)
 
 
 def _normalize_tipo_processo(value: str | None) -> str | None:
@@ -420,7 +454,7 @@ def cjsg_download(
     thesaurus: bool = False,
     quantidade_por_pagina: int = DEFAULT_PAGE_SIZE,
     *,
-    classe: str | None = None,
+    classe: str | list[str] | None = None,
     request_fn: RequestFn,
     session: requests.Session,
     api_config_provider: Callable[..., dict[str, str]] | None = None,
@@ -438,13 +472,14 @@ def cjsg_download(
         data_publicacao_inicio: Data inicial de publicação.
         data_publicacao_fim: Data final de publicação, inclusiva.
         relator: Nome do relator, normalizado sem acento e em maiúsculas.
+            Com vírgula, levanta ``ValueError``.
         orgao_julgador: Nome do órgão julgador, com a mesma normalização.
         tipo_processo: ``"Civel"``, ``"Cível"`` ou ``"Criminal"``.
         thesaurus: Define se a pesquisa deve usar sinônimos.
         quantidade_por_pagina: Itens por página (padrão 10), no máximo
             ``MAX_RESULTS``.
-        classe: Nome da classe processual, com a mesma normalização de
-            ``relator``.
+        classe: Nome da classe processual, ou lista de nomes, com a mesma
+            normalização de ``relator``.
         request_fn: Callable HTTP que trata retries e ``raise_for_status``,
             normalmente ``TJMTScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando o backoff exponencial
@@ -467,8 +502,8 @@ def cjsg_download(
     paginas_list = _validate_download_inputs(quantidade_por_pagina, paginas, tipo_consulta)
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)
     data_publicacao_fim = _to_end_of_day(data_publicacao_fim)
-    relator = _normalize_text_filter(relator, "relator")
-    orgao_julgador = _normalize_text_filter(orgao_julgador, "orgao_julgador")
+    relator = _normalize_nome_unico(relator, "relator")
+    orgao_julgador = _normalize_nome_unico(orgao_julgador, "orgao_julgador")
     tipo_processo = _normalize_tipo_processo(tipo_processo)
     classe = _normalize_classe(classe)
     cfg = _initial_api_config(request_fn, api_config_provider)
