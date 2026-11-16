@@ -694,8 +694,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>Retry-After</code> (numeric seconds)</td>
-<td>Honored when present</td>
-<td>n/a</td>
+<td>Honored when present, capped at <code>max_retry_after</code> (300 s); <code>inf</code> and <code>nan</code> fall back to backoff</td>
+<td><code>max_retry_after</code> in <code>politica=</code>, for scrapers with HTTP profiles</td>
 </tr>
 <tr class="even">
 <td><code>Retry-After</code> (HTTP-date)</td>
