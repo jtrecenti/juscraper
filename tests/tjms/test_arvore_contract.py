@@ -27,10 +27,13 @@ NO_ESPERADO = {
 }
 
 
-@pytest.mark.parametrize("label", list(CASOS_1O_GRAU))
+@pytest.mark.parametrize(
+    ("label", "chamada", "path", "campo_id"),
+    [(label, *resto) for label, resto in CASOS_1O_GRAU.items()],
+    ids=list(CASOS_1O_GRAU),
+)
 @responses.activate
-def test_pede_as_arvores_de_1o_grau_ao_tjms(label):
-    chamada, path, campo_id = CASOS_1O_GRAU[label]
+def test_pede_as_arvores_de_1o_grau_ao_tjms(label, chamada, path, campo_id):
     responses.add(
         responses.GET,
         f"https://esaj.tjms.jus.br/{path}",
