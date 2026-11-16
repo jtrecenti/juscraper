@@ -10,7 +10,7 @@ from responses.matchers import urlencoded_params_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from juscraper.core.exceptions import HTTPSemanticError, InvalidJSONResponseError
+from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError, InvalidJSONResponseError
 from juscraper.courts.tjrs.download import TJRSBuscaError
 from tests._helpers import load_sample
 
@@ -211,6 +211,61 @@ def test_cjsg_erro_do_solr_levanta_em_vez_de_busca_vazia(mocker, paginas):
     assert excinfo.value.codigo == 400
     assert isinstance(excinfo.value, HTTPSemanticError)
     assert len(responses.calls) == 1
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize("paginas", [range(1, 4), [1, 2, 3]], ids=["range", "lista"])
+@responses.activate
+def test_cjsg_erro_do_solr_no_meio_da_paginacao_guarda_as_paginas_anteriores(mocker, metodo, paginas):
+    """Erro do Solr na página 2: a página 1 vem lida em ``.resultado``, e a busca para."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.json")
+    _add_page("dano moral", 2, "cjsg/erro_solr.json")
+
+    with pytest.raises(ColetaParcialError, match=r"página 2 falhou.*faltam as páginas \[2, 3\],") as excinfo:
+        getattr(jus.scraper("tjrs"), metodo)("dano moral", paginas=paginas)
+
+    tjrs = jus.scraper("tjrs")
+    esperado = tjrs.cjsg_parse([json.loads(load_sample("tjrs", "cjsg/results_normal_page_01.json"))])
+    pd.testing.assert_frame_equal(excinfo.value.resultado, esperado)
+    assert isinstance(excinfo.value.__cause__, TJRSBuscaError)
+    assert [type(falha[2]) for falha in excinfo.value.falhas] == [TJRSBuscaError]
+    # A página 3 não é pedida.
+    assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_cjsg_erro_do_solr_no_meio_de_todas_as_paginas_resume_as_que_faltam(mocker):
+    """``paginas=None``: o total vem da página 1, e as páginas que faltam saem como ``range``."""
+    mocker.patch("time.sleep")
+    primeira = json.loads(load_sample("tjrs", "cjsg/results_normal_page_01.json"))
+    primeira["response"]["numFound"] = 45
+    responses.add(responses.POST, BASE, json=primeira)
+    _add_page("dano moral", 2, "cjsg/erro_solr.json")
+    todas = None  # a página 2 responde erro, e nenhuma outra é pedida
+
+    with pytest.raises(ColetaParcialError, match=r"faltam as páginas range\(2, 6\),") as excinfo:
+        jus.scraper("tjrs").cjsg("dano moral", paginas=todas)
+
+    assert len(excinfo.value.resultado) == 10
+    assert len(responses.calls) == 2
+
+
+@pytest.mark.parametrize("brutos", [["erro"], ["pagina", "erro"]], ids=["so_o_erro", "depois_de_uma_pagina"])
+def test_cjsg_parse_de_envelope_de_erro_levanta_em_vez_de_vazio(brutos):
+    """Arquivo salvo de uma busca recusada pelo Solr: o parse direto não o lê como busca vazia."""
+    amostras = {"erro": "cjsg/erro_solr.json", "pagina": "cjsg/results_normal_page_01.json"}
+
+    with pytest.raises(TJRSBuscaError, match="Cannot parse") as excinfo:
+        jus.scraper("tjrs").cjsg_parse([json.loads(load_sample("tjrs", amostras[nome])) for nome in brutos])
+
+    assert excinfo.value.codigo == 400
+
+
+def test_cjsg_parse_de_busca_sem_resultado_segue_vazio():
+    df = jus.scraper("tjrs").cjsg_parse([json.loads(load_sample("tjrs", "cjsg/no_results.json"))])
+
+    assert df.empty
 
 
 def test_cjsg_parse_relator_quando_o_redator_e_outro():

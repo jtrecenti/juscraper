@@ -1,12 +1,16 @@
 """Downloads raw files from the TJRS jurisprudence search."""
 import json
 import math
+from collections.abc import Callable
 from urllib.parse import urlencode
 
 from tqdm import tqdm
 
-from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
+from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError, _RecriaSemInit
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import descrever_paginas
+
+from .parse import cjsg_parse_manager
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -56,6 +60,32 @@ def _erro_da_busca(dados: object) -> TJRSBuscaError:
     if isinstance(detalhe, dict) and detalhe.get("msg"):
         return TJRSBuscaError(str(detalhe["msg"]), detalhe.get("code"))
     return TJRSBuscaError("resposta sem a chave 'response'")
+
+
+def _baixar_paginas(buscar: Callable[[int], dict], paginas: list[int], resultados: list[dict]) -> list[dict]:
+    """Acrescenta a ``resultados`` cada uma das ``paginas``, na ordem.
+
+    O erro do Solr numa página, com outra já baixada, encerra a paginação e
+    sobe como :class:`ColetaParcialError`, com as páginas anteriores lidas em
+    ``.resultado``. Sem página baixada, não há parcial a guardar, e o
+    :class:`TJRSBuscaError` sobe como veio.
+    """
+    for posicao, pagina in enumerate(tqdm(paginas, desc="Baixando páginas TJRS")):
+        try:
+            resultados.append(buscar(pagina))
+        except TJRSBuscaError as exc:
+            if not resultados:
+                raise
+            mensagem = (
+                f"TJRS cjsg: a página {pagina} falhou ({exc!r}), e a busca parou. "
+                f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
+                f"faltam as páginas {descrever_paginas(paginas[posicao:])}, "
+                "que podem ser pedidas de novo com paginas=."
+            )
+            raise ColetaParcialError(
+                mensagem, resultado=cjsg_parse_manager(resultados), falhas=[(None, None, exc)]
+            ) from exc
+    return resultados
 
 
 def build_cjsg_inner_payload(
@@ -180,17 +210,10 @@ def cjsg_download_manager(
 
     if paginas is None:
         first = _fetch_page(1)
-        resultados = [first]
         num_found = first.get('response', {}).get('numFound', 0)
         n_pags = math.ceil(num_found / RESULTS_PER_PAGE) if num_found else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJRS'):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_fetch_page(pagina))  # noqa: PERF401
-        return resultados
+        if n_pags == 1:
+            return [first]
+        return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first])
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
-        resultados.append(_fetch_page(pagina_1based))
-    return resultados
+    return _baixar_paginas(_fetch_page, list(paginas), [])

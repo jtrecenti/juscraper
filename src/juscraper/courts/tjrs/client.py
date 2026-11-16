@@ -8,7 +8,7 @@ import pandas as pd
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import PERFIL_CJSG, cjsg_download_manager
+from .download import PERFIL_CJSG, _exigir_resultados, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJRS
 
@@ -87,6 +87,11 @@ class TJRSScraper(HTTPScraper):
         Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`;
         veja lá a lista completa.
 
+        Raises:
+            TJRSBuscaError: Erro do Solr na primeira página pedida, como em :meth:`cjsg`.
+            ColetaParcialError: Erro do Solr numa página seguinte; ``.resultado``
+                traz as páginas anteriores, já lidas, em DataFrame.
+
         Returns:
             Lista com o JSON cru de cada página.
         """
@@ -125,11 +130,13 @@ class TJRSScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> 'pd.DataFrame':
+        """Lê as páginas brutas de :meth:`cjsg_download` num DataFrame, uma linha por decisão.
+
+        Raises:
+            TJRSBuscaError: Quando uma página é o envelope de erro do Solr, e
+                não resultados; a busca sem resultados devolve DataFrame vazio.
         """
-        Extracts relevant data from the raw results returned by TJRS.
-        Returns a DataFrame with the decisions.
-        """
-        return cjsg_parse_manager(resultados_brutos)
+        return cjsg_parse_manager([_exigir_resultados(bruto) for bruto in resultados_brutos])
 
     def cjsg(
         self,
@@ -194,6 +201,11 @@ class TJRSScraper(HTTPScraper):
             TJRSBuscaError: Quando o portal responde com erro do Solr no lugar
                 dos resultados, como em ``pesquisa`` com aspas sem fechar
                 (:class:`juscraper.courts.tjrs.download.TJRSBuscaError`).
+            ColetaParcialError: Quando o erro do Solr vem numa página depois
+                da primeira baixada: a busca para ali, ``.resultado`` traz as
+                páginas anteriores, ``.falhas`` e ``__cause__`` trazem o
+                ``TJRSBuscaError``, e a mensagem diz as páginas que faltam
+                (:class:`juscraper.core.exceptions.ColetaParcialError`).
 
         Avisos:
             ``UserWarning``: Quando um intervalo de datas vem só com o início
