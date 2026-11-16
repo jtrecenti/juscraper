@@ -16,6 +16,7 @@ import requests
 import responses
 
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
+from juscraper.core.failures import motivo_falha
 from juscraper.core.http import DEFAULT_POLICY, RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
 
 URL = "https://example.test/api"
@@ -733,6 +734,44 @@ def test_queda_no_meio_do_corpo_real_e_retentada(mocker):
 
     assert resp.json() == {}
     assert len(enviados) == 2
+
+
+def test_corpo_comprimido_corrompido_nao_e_retentado(mocker):
+    """Gzip que não descomprime levanta ``ContentDecodingError`` dentro de ``session.request``.
+
+    Não é queda de conexão: a queda no meio de um corpo gzip sai
+    ``ChunkedEncodingError`` (ver acima), e o corpo corrompido viria igual de
+    novo. Sem retry mesmo com ``retry_on_connection_error``; a falha por linha
+    o classifica como ``resposta_inesperada``.
+    """
+    class _P(HTTPScraper):
+        perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+            "p": RequestPolicy(timeout=5, retry_on_connection_error=True),
+        }
+
+    sleep_spy = mocker.patch("juscraper.core.http.time.sleep")
+    srv = socket.create_server(("127.0.0.1", 0))
+    corpo = b"\x1f\x8b\x08\x00" + b"\xff" * 30
+    pedidos: list[bytes] = []
+
+    def atender() -> None:
+        with srv:
+            conn, _ = srv.accept()
+            with conn:
+                pedidos.append(conn.recv(65536))
+                conn.sendall(
+                    b"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n"
+                    b"Content-Length: %d\r\nConnection: close\r\n\r\n" % len(corpo) + corpo
+                )
+
+    threading.Thread(target=atender, daemon=True).start()
+
+    with pytest.raises(requests.exceptions.ContentDecodingError) as erro:
+        _P()._request_with_retry("GET", f"http://127.0.0.1:{srv.getsockname()[1]}/", perfil="p")
+
+    assert motivo_falha(erro.value) == "resposta_inesperada"
+    assert len(pedidos) == 1
+    sleep_spy.assert_not_called()
 
 
 def test_network_retry_exhausted_reraises_original(probe_perfis, mocker):

@@ -590,7 +590,7 @@ partial Elasticsearch response.
 | `timeout` | The response did not arrive in time; the profile timeout may be too short. |
 | `conexao` | The connection failed or dropped, also in the middle of the body. |
 | `json_invalido` | The body is not the expected JSON. |
-| `resposta_inesperada` | A page outside the known format, or another error without its own reason. |
+| `resposta_inesperada` | A page outside the known format, a compressed body that does not decompress, or another error without its own reason. |
 | `nao_pdf` | The PDF endpoint answered with something else; nothing was written. |
 | `sem_acordao` | The process was found, but without an accessible acórdão on that date. |
 | `bloqueio_anti_bot` | A bot manager (Akamai, CloudFront, AWS WAF, F5) challenged or blocked the request. |

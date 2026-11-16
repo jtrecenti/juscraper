@@ -12,6 +12,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 import pandas as pd
 import pytest
+import requests
 import responses
 from responses.matchers import query_param_matcher
 
@@ -167,6 +168,26 @@ def test_baixar_acordaos_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(tj
     assert resultado["caminho_acordao"].isna().tolist() == [False, True, True]
     assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
     assert len(responses.calls) == 2
+
+
+@responses.activate
+def test_baixar_acordaos_corpo_comprimido_corrompido_vira_linha(tjce):
+    """Antes, o ``ContentDecodingError`` interrompia o lote e as linhas baixadas se perdiam."""
+    cjsg = _cjsg().head(3)
+    _registrar(cjsg.iloc[0].cd_acordao)
+    responses.add(
+        responses.GET,
+        URL,
+        body=requests.exceptions.ContentDecodingError("gzip inválido"),
+        match=[query_param_matcher({"cdAcordao": cjsg.iloc[1].cd_acordao}, strict_match=False)],
+    )
+    _registrar(cjsg.iloc[2].cd_acordao)
+
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        resultado = tjce.baixar_acordaos(cjsg)
+
+    assert resultado["caminho_acordao"].isna().tolist() == [False, True, False]
+    assert resultado["motivo_falha"].tolist() == [None, "resposta_inesperada", None]
 
 
 def test_baixar_acordaos_exige_as_colunas_dos_codigos(tjce):
