@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
-from pydantic import field_validator
+from pydantic import ValidationInfo, field_validator
 from unidecode import unidecode
 
 from ...schemas import (
@@ -21,6 +21,14 @@ from ...schemas import (
     OutputRelatoriaMixin,
     SearchBase,
 )
+
+#: Coluna do ``cjsg`` com o código que cada filtro espera.
+_COLUNA_DO_CODIGO = {
+    "classe": "cod_classe_cnj",
+    "assunto": "cod_assunto_cnj",
+    "orgao_julgador": "cod_org_julg",
+    "relator": "cod_relator",
+}
 
 
 class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
@@ -40,12 +48,33 @@ class InputCJSGTJRS(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     #: envia sem conversão; em ISO, a busca volta vazia (#496).
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
-    classe: str | None = None
-    assunto: str | None = None
-    orgao_julgador: str | None = None
-    relator: str | None = None
+    #: Códigos do portal, não nomes: o backend monta ``cod_classe_cnj:<valor>``,
+    #: ``cod_assunto_cnj``, ``cod_org_julg`` e ``cod_relator``/``cod_redator``.
+    #: Com um nome, o Solr recusa a consulta e a busca volta vazia, sem erro.
+    classe: int | str | None = None
+    assunto: int | str | None = None
+    orgao_julgador: int | str | None = None
+    relator: int | str | None = None
     tipo_processo: str | None = None
     secao: Literal["civel", "crime"] | None = None
+
+    @field_validator("classe", "assunto", "orgao_julgador", "relator", mode="before")
+    @classmethod
+    def _exigir_codigo(cls, valor: object, info: ValidationInfo) -> object:
+        # ``""`` é sem filtro; código em ``int`` ou string de dígitos vai como texto.
+        if isinstance(valor, int) and not isinstance(valor, bool):
+            return str(valor)
+        if isinstance(valor, str):
+            valor = valor.strip()
+            if not valor:
+                return None
+            if not (valor.isascii() and valor.isdigit()):
+                coluna = _COLUNA_DO_CODIGO[info.field_name or ""]
+                raise ValueError(
+                    f"o TJRS filtra {info.field_name} pelo código numérico, não pelo nome "
+                    f"(recebido {valor!r}); o código está na coluna {coluna!r} do cjsg"
+                )
+        return valor
 
     @field_validator("secao", mode="before")
     @classmethod

@@ -7,13 +7,14 @@ documentos da primeira página precisam trazer o valor filtrado no campo bruto
 do Solr (a lista inteira, nos campos multivalorados, e não só o primeiro valor
 que o parser guarda). Os valores de classe, assunto, órgão julgador, relator e
 tipo de processo vêm de documentos reais dos samples em
-``tests/tjrs/samples/cjsg/``; a seção e os intervalos de data foram escolhidos
+``tests/tjrs/samples/cjsg/`` (os quatro primeiros como código ``cod_*``, que é
+o que o portal aceita); a seção e os intervalos de data foram escolhidos
 para cair fora do que os samples trazem (seção cível, datas de 2026).
 
 O ``www.tjrs.jus.br`` não aceita conexão de IP de datacenter (timeout de
 conexão); rode de IP residencial. ``--log-cli-level=INFO`` mostra a tabela
-filtro -> total sem e com o filtro -> documentos conferidos, e o ``fq`` que o
-Solr recebeu::
+filtro -> total sem e com o filtro -> documentos conferidos, e o ``q`` que o
+Solr recebeu (o portal acrescenta o filtro ao ``q``, não usa ``fq``)::
 
     uv run pytest -m integration tests/tjrs/test_cjsg_filters_integration.py --log-cli-level=INFO
 """
@@ -34,11 +35,14 @@ PESQUISA = "dano moral"
 
 #: Filtro -> (kwargs do ``cjsg``, campos brutos que precisam conter o valor filtrado).
 FILTROS: dict[str, tuple[dict[str, str], tuple[str, ...]]] = {
-    "classe": ({"classe": "Recurso Inominado"}, ("nome_classe_cnj",)),
-    "assunto": ({"assunto": "Indenização por Dano Material"}, ("nome_assunto_cnj",)),
-    "orgao_julgador": ({"orgao_julgador": "Primeira Turma Recursal Cível"}, ("orgao_julgador",)),
+    # Classe, assunto, órgão e relator vão por código: Recurso Inominado,
+    # Indenização por Dano Material, Primeira Turma Recursal Cível e
+    # José Ricardo de Bem Sanhudo nos samples.
+    "classe": ({"classe": "460"}, ("cod_classe_cnj",)),
+    "assunto": ({"assunto": "7780"}, ("cod_assunto_cnj",)),
+    "orgao_julgador": ({"orgao_julgador": "65"}, ("cod_org_julg",)),
     # O filtro pode casar com o relator ou com o redator do acórdão.
-    "relator": ({"relator": "José Ricardo de Bem Sanhudo"}, ("relator_redator", "nome_relator")),
+    "relator": ({"relator": "650"}, ("cod_relator", "cod_redator")),
     "tipo_processo": ({"tipo_processo": "Mandado de Segurança Cível"}, ("tipo_processo",)),
     "secao": ({"secao": "crime"}, ("secao",)),
     "data_julgamento": (
@@ -89,10 +93,10 @@ def test_filtro_restringe_o_resultado(scraper: TJRSScraper, total_sem_filtro: in
     fora = [
         {campo: doc.get(campo) for campo in ("numero_processo", *campos)} for doc in docs if not _confere(doc, nome)
     ]
-    fq = bruto.get("responseHeader", {}).get("params", {}).get("fq")
+    q = bruto.get("responseHeader", {}).get("params", {}).get("q")
     logger.info(
-        "TJRS cjsg %s: sem=%s com=%s conferidos=%s/%s fq=%s",
-        nome, total_sem_filtro, total_com, len(docs) - len(fora), len(docs), fq,
+        "TJRS cjsg %s: sem=%s com=%s conferidos=%s/%s q=%s",
+        nome, total_sem_filtro, total_com, len(docs) - len(fora), len(docs), q,
     )
 
     assert 0 < total_com < total_sem_filtro, f"{nome}: o filtro não restringiu ({total_com} de {total_sem_filtro})"
