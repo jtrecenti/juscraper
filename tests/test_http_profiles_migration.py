@@ -8,6 +8,8 @@ import requests
 from juscraper.courts.tjes.client import TJESScraper
 from juscraper.courts.tjes.download import cjsg_download
 from juscraper.courts.tjpe.client import TJPEScraper
+from juscraper.courts.tjpr.client import TJPRScraper
+from juscraper.courts.tjpr.download import get_ementa_completa
 
 
 @pytest.mark.parametrize(
@@ -28,6 +30,7 @@ from juscraper.courts.tjpe.client import TJPEScraper
         ('courts.tjpe', 'TJPEScraper', 'cjsg', 30),
         ('courts.tjpe', 'TJPEScraper', 'cpopg', 30),
         ('courts.tjpi', 'TJPIScraper', 'cjsg', 30),
+        ('courts.tjpr', 'TJPRScraper', 'cjsg', 60),
         ('courts.tjrj', 'TJRJScraper', 'formulario', 30),
         ('courts.tjrj', 'TJRJScraper', 'cjsg', 60),
         ('courts.tjrn', 'TJRNScraper', 'cjsg', 30),
@@ -87,3 +90,29 @@ def test_tjpe_repassa_politica_ao_cliente_cpopg(mocker):
 
     consulta._request_with_retry("GET", "https://exemplo.test", perfil="cpopg")  # noqa: SLF001  # contrato HTTP
     assert request.call_args.kwargs["timeout"] == 7
+
+
+def test_tjpr_todas_as_requisicoes_usam_timeout_ajustado(mocker):
+    """Home, busca e ementa completa (linha truncada em "Leia mais...") saem pelo perfil ``cjsg``."""
+    scraper = TJPRScraper(politica={"cjsg": {"timeout": 7}})
+    pagina, ementa = requests.Response(), requests.Response()
+    pagina.status_code = ementa.status_code = 200
+    ementa._content = b"Texto da ementa."  # noqa: SLF001  # resposta sintetica de transporte
+    request = mocker.patch.object(scraper.session, "request", side_effect=[pagina, pagina, ementa])
+
+    scraper.cjsg_download("teste", paginas=1)
+    # O parser recebe o método HTTP efetivo do scraper para buscar a ementa.
+    get_ementa_completa(scraper._request_with_retry, "exibirTextoCompleto", "1", "teste")  # noqa: SLF001
+
+    assert [chamada.args[0] for chamada in request.call_args_list] == ["GET", "POST", "GET"]
+    assert [chamada.kwargs["timeout"] for chamada in request.call_args_list] == [7, 7, 7]
+
+
+def test_tjpr_sem_ajuste_tem_prazo(mocker):
+    scraper = TJPRScraper()
+    response = requests.Response()
+    response.status_code = 200
+    request = mocker.patch.object(scraper.session, "request", return_value=response)
+
+    scraper.cjsg_download("teste", paginas=1)
+    assert [chamada.kwargs["timeout"] for chamada in request.call_args_list] == [60, 60]
