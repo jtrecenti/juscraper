@@ -32,19 +32,20 @@ class TJPRScraper(HTTPScraper):
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
     )
 
-    # O portal não tinha prazo declarado: uma conexão que ele deixasse aberta
-    # sem responder prendia a coleta. O perfil vale para a home, a busca e a
-    # ementa completa.
+    # ``"cjsg"`` vale para a home e a busca; ``"ementa"``, para o pedido da
+    # ementa completa de cada linha truncada, cuja falha fica na própria linha.
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "cjsg": RequestPolicy(timeout=60),
+        "ementa": RequestPolicy(timeout=30),
     }
 
-    def __init__(self, politica: Mapping[str, Mapping[str, Any]] | None = None):
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None) -> None:
         """Cria o raspador do TJPR.
 
         Args:
-            politica: Ajuste do perfil HTTP ``"cjsg"`` (timeout de 60 s, 3
-                tentativas), por exemplo ``{"cjsg": {"timeout": 120}}``.
+            politica: Ajuste dos perfis HTTP ``"cjsg"`` (home e busca) e
+                ``"ementa"`` (ementa completa), por exemplo
+                ``{"cjsg": {"timeout": 120}}``.
         """
         super().__init__("TJPR", politica=politica)
 
