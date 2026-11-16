@@ -1,0 +1,89 @@
+<!-- Recorte da resposta real de cjpg/assuntoTreeSelect.do?campoId=assuntos do TJMS,
+     capturada em 2026-11-15 de IP residencial (UTF-8): mantidos os dois
+     primeiros <li> de cada <ul>; o recorte reserializou o HTML, sem mudar
+     textos nem atributos. Refs #487, #632. -->
+<!-- TreeSelect ini -->
+<div class="treeSelect" id="assuntos_treeSelectContainer">
+<div class="treeFilter">
+<form method="get" name="treeForm">
+<div>
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="20">
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="20"> </td>
+<td class="spwCelulaGrid" width="*"><input class="spwCampoTextoGrid" id="assuntos_treeSelectFilter" name="assuntos_treeSelectFilter" type="text"/></td>
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="15"> </td>
+</tr></table>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" id="filtroButton" type="submit" value="Procurar"/>
+<input class="spwBotaoGrid" type="button" value="Limpar"/>
+</td>
+</tr></table>
+</div>
+</form>
+</div>
+<div class="treeView">
+<ul class="tree root multiSelect" id="assuntos_tree">
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_1156" role="" searchid="1156" searchvalue="1156-direito do consumidor" tabindex="0" value="1156">DIREITO DO CONSUMIDOR</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_3903" role="checkbox" searchid="3903" searchvalue="1156-direito do consumidor|15048-superendividamento" tabindex="0" value="3903">Superendividamento</span>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_5019" role="" searchid="5019" searchvalue="1156-direito do consumidor|12755-direito coletivo" tabindex="0" value="5019">Direito Coletivo</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_5020" role="checkbox" searchid="5020" searchvalue="1156-direito do consumidor|12755-direito coletivo|12756-interesses ou direitos difusos" tabindex="0" value="5020">Interesses ou Direitos Difusos</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_5021" role="checkbox" searchid="5021" searchvalue="1156-direito do consumidor|12755-direito coletivo|12757-interesses ou direitos coletivos em sentido estrito" tabindex="0" value="5021">Interesses ou Direitos Coletivos em Sentido Estrito</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_1209" role="" searchid="1209" searchvalue="" tabindex="0" value="1209">DIREITO PROCESSUAL PENAL</span>
+<ul>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_3904" role="" searchid="3904" searchvalue="1209-direito processual penal|15033-objetos de cartas precatorias criminais" tabindex="0" value="3904">Objetos de Cartas Precatórias Criminais</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_3905" role="checkbox" searchid="3905" searchvalue="1209-direito processual penal|15033-objetos de cartas precatorias criminais|15034-citacao" tabindex="0" value="3905">Citação</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_3906" role="checkbox" searchid="3906" searchvalue="1209-direito processual penal|15033-objetos de cartas precatorias criminais|15035-intimacao" tabindex="0" value="3906">Intimação</span>
+</li>
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_8152" role="" searchid="8152" searchvalue="1209-direito processual penal|11703-habeas corpus" tabindex="0" value="8152">Habeas Corpus</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_8153" role="checkbox" searchid="8153" searchvalue="1209-direito processual penal|11703-habeas corpus|11704-habeas corpus - liberatorio" tabindex="0" value="8153">Habeas Corpus - Liberatório</span>
+</li>
+<li class="leafItem last-child"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_8154" role="checkbox" searchid="8154" searchvalue="1209-direito processual penal|11703-habeas corpus|11705-habeas corpus - preventivo" tabindex="0" value="8154">Habeas Corpus - Preventivo</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" type="button" value="Selecionar"/>
+<input class="spwBotaoGrid" type="button" value="Cancelar"/>
+</td>
+</tr></table>
+</div>
+</div>
+<script>
+	(function($) {
+		var checkBoxElement = $('#assuntos_checkbox');
+		var options = {campoId: 'assuntos'};
+		$.saj.tree('#assuntos_tree', {selecionarSomenteFolhas: true, autoSelecionarFilhosEPais: true, isMultiSelect: true});
+		// Binds do popup
+		var container = $('div#assuntos_treeSelectContainer');
+		$('div.treeFilter form', container).bind('submit', options, $.saj.tree.onFilterEvent);
+		$('input[value=Limpar]', container).bind('click', options, $.saj.tree.onClearFilterEvent);
+		$('input[value=Selecionar]', container).bind('click', options, $.saj.tree.onSaveSelection);
+			$('input[value=Todos]', container).bind('click', options, $.saj.tree.onSelectAll);
+			$('input[value=Nenhum]', container).bind('click', options, $.saj.tree.onSelectNone);
+		$('input[value=Cancelar]', container).bind('click', options, $.saj.tree.onCloseEvent);
+		$('#assuntos_treeSelectFilter').focus();
+	})(jQuery);
+</script>
+<!-- TreeSelect fim -->
