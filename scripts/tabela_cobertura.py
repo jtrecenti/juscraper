@@ -57,7 +57,7 @@ FIM = "<!-- tabela-cobertura:fim -->"
 ORDEM_CANONICA = ("cpopg", "cposg", "cjsg", "cjpg")
 
 # Métodos públicos que não são consulta: configuração, autenticação e as
-# listas de valores aceitos nos filtros da família eSAJ.
+# listas de valores aceitos nos filtros da família eSAJ e os catálogos do TSE.
 AUXILIARES = frozenset(
     {
         "auth",
@@ -68,7 +68,10 @@ AUXILIARES = frozenset(
         "set_verbose",
         "listar_assuntos",
         "listar_classes",
+        "listar_eleicoes",
+        "listar_normas",
         "listar_orgaos",
+        "listar_relatores",
         "listar_varas",
     }
 )
@@ -147,11 +150,12 @@ def cobertura() -> dict[str, dict[str, list[str]]]:
 
 
 def _chave_tribunal(sigla: str) -> tuple[int, str]:
-    # STF, depois os TJs e por fim os TRFs; sigla de outro ramo vai para o fim.
-    for posicao, prefixo in enumerate(("stf", "tj", "trf")):
+    # STF e TSE, depois os TJs e por fim os TRFs; sigla de outro ramo vai para o fim.
+    prefixos = ("stf", "tse", "tj", "trf")
+    for posicao, prefixo in enumerate(prefixos):
         if sigla.startswith(prefixo):
             return (posicao, sigla)
-    return (3, sigla)
+    return (len(prefixos), sigla)
 
 
 def _tabela(cabecalho: tuple[str, str], linhas: list[tuple[str, str]]) -> list[str]:

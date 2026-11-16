@@ -59,6 +59,7 @@ Most courts implement some of the methods below; the tables in the Implementatio
 | Court | Available methods |
 |-------|-------------------|
 | STF   | contar_decisoes, listar_decisoes |
+| TSE   | baixar_inteiro_teor |
 | TJAC  | cjsg, baixar_acordao, baixar_acordaos |
 | TJAL  | cjsg |
 | TJAM  | cjsg |
@@ -105,6 +106,8 @@ Most courts implement some of the methods below; the tables in the Implementatio
 
 > ⚠️ **TJGO — `cjsg` returns no results:** since 12 November 2026 (Projudi 3.194.1) the TJGO jurisprudence search validates a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) token server-side, which the scraper does not send. Without it the portal returns an empty search, with no error message, and `cjsg`/`cjsg_download` emit a `UserWarning` explaining the block. The portal answers a search that genuinely has no results the same way, so the warning is emitted on every empty search.
 
+> ⚠️ **TSE — no jurisprudence search:** the search of the [TSE jurisprudence portal](https://jurisprudencia.tse.jus.br/) requires a CAPTCHA token validated server-side, which the scraper, issuing plain HTTP requests (no browser), cannot produce; without it the API replies `"Falha na verificação antirrobô."` (probed on 16 November 2026). The scraper covers what the portal serves without a CAPTCHA: `baixar_inteiro_teor(codigo_decisao)`, which downloads the PDF of a decision given its code, and the catalogs of the search form (`listar_classes`, `listar_relatores`, `listar_eleicoes` and `listar_normas`). `cjsg` raises `NotImplementedError` with this explanation. See [issue #378](https://github.com/jtrecenti/juscraper/issues/378).
+
 Falcao covers national labor jurisprudence (TST and TRTs).
 
 #### JusBR and PDPJ authentication
@@ -147,6 +150,7 @@ These notebooks send live requests to external services and are not guaranteed t
 - [TRF3 example](notebooks/trf3.ipynb)
 - [TRF5 example](notebooks/trf5.ipynb)
 - [TRF6 example](notebooks/trf6.ipynb)
+- [TSE example](notebooks/tse.ipynb)
 - [Datajud example](notebooks/datajud.ipynb)
 - [Falcao example](notebooks/falcao.ipynb)
 - [JusBR example](notebooks/jusbr.ipynb)

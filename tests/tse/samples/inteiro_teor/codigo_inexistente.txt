@@ -1,0 +1,1 @@
+Erro ao tentar recuperar PDF: Falha ao recuperar arquivo do SitDoc.
