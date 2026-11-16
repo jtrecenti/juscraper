@@ -261,7 +261,7 @@ def test_resolve_total_pages_link_divergente_levanta(totais_links):
 
 
 def test_resolve_total_pages_sem_contagem_levanta_mesmo_com_link():
-    with pytest.raises(ValueError, match="TJXX: a primeira página não traz a contagem"):
+    with pytest.raises(ValueError, match="TJXX: a página lida não traz a contagem"):
         resolve_total_pages(None, resultados_por_pagina=50, totais_links={96}, tribunal="TJXX")
 
 

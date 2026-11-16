@@ -195,7 +195,7 @@ def resolve_total_pages(
     """
     if n_resultados is None:
         raise ValueError(
-            f"{tribunal}: a primeira página não traz a contagem de resultados; "
+            f"{tribunal}: a página lida não traz a contagem de resultados; "
             "o total de páginas não pode ser determinado sem estimar."
         )
     total = max(1, math.ceil(n_resultados / resultados_por_pagina))

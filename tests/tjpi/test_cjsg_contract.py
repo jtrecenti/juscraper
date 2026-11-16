@@ -102,6 +102,28 @@ def test_cjsg_paginas_none_sem_contagem_levanta(mocker):
 
 
 @responses.activate
+def test_cjsg_paginas_explicitas_sem_contagem_levanta(mocker):
+    """Com ``paginas`` explícito, a contagem sai da menor página pedida, e sem ela o download para."""
+    mocker.patch("time.sleep")
+    contagem = "de um total de <b>137865</b> jurisprudência(s)"
+    html = load_sample("tjpi", "cjsg/results_normal_page_02.html")
+    assert contagem in html
+    responses.add(
+        responses.GET,
+        BASE_URL,
+        body=html.replace(contagem, ""),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher(build_cjsg_params("dano moral", page=2))],
+    )
+
+    with pytest.raises(ValueError, match="não traz a contagem"):
+        jus.scraper("tjpi").cjsg("dano moral", paginas=[3, 2])
+
+    assert len(responses.calls) == 1
+
+
+@responses.activate
 def test_cjsg_no_results(mocker):
     """Zero-hit query returns an empty DataFrame."""
     mocker.patch("time.sleep")
