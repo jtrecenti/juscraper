@@ -7,7 +7,8 @@ Mocka os endpoints ``*TreeSelect.do`` com ``responses`` e valida:
 * o contrato do DataFrame retornado (colunas canonicas, nao-vazio);
 * a decodificacao UTF-8 (nome acentuado sobrevive);
 * os ``ValueError`` para arvores inexistentes no tribunal;
-* que os eSAJ-puros nao expoem as arvores de 1o grau (cjpg so existe no TJSP).
+* que o TJMS, que tambem tem cjpg, pede as arvores de 1o grau ao proprio host;
+* que os eSAJ-puros nao expoem as arvores de 1o grau (cjpg so no TJSP e no TJMS).
 
 Refs #228.
 """
@@ -55,6 +56,27 @@ def test_roteamento_e_contrato(label, chamada, path, campo_id):
     assert path in responses.calls[0].request.url
 
 
+CASOS_1O_GRAU = [c for c in CASOS if c[0].endswith("_1")]
+
+
+@pytest.mark.parametrize("label,chamada,path,campo_id", CASOS_1O_GRAU, ids=[c[0] for c in CASOS_1O_GRAU])
+@responses.activate
+def test_tjms_pede_as_arvores_de_1o_grau_ao_proprio_host(label, chamada, path, campo_id):
+    # O formulario do cjpg do TJMS tem as mesmas arvores, nas mesmas rotas, que
+    # o do TJSP (samples cjpg/results_normal_page_01.html dos dois; #487).
+    responses.add(
+        responses.GET,
+        f"https://esaj.tjms.jus.br/{path}",
+        body=load_sample_bytes("tjsp", "arvore/classes_min.html"),
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"campoId": campo_id})],
+    )
+    df = chamada(jus.scraper("tjms"))
+
+    assert set(df.columns) == ARVORE_COLUNAS
+    assert not df.empty
+
 @responses.activate
 def test_orgaos_nao_existe_no_1o_grau():
     with pytest.raises(ValueError, match="orgaos_1"):
@@ -65,7 +87,7 @@ def test_orgaos_nao_existe_no_1o_grau():
 
 def test_esaj_puro_nao_tem_arvore_de_1o_grau():
     tjam = jus.scraper("tjam")
-    # cjpg so existe no TJSP: o eSAJ-puro nem expoe ``listar_varas``...
+    # cjpg so no TJSP e no TJMS: o eSAJ-puro nem expoe ``listar_varas``...
     assert not hasattr(tjam, "listar_varas")
     # ...e pedir 1o grau das arvores compartilhadas levanta ValueError.
     with pytest.raises(ValueError, match="classes_1"):

@@ -8,14 +8,14 @@ de cada tribunal: o de 120 caracteres é do TJSP.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 import pandas as pd
 from pydantic import BaseModel
 
 from ...core.avisos import avisar
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
-from .base import ESAJ_JANELA_ANOS, somar_contagens_por_janela
+from .base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .cjpg_download import cjpg_download as cjpg_download_mod
 from .cjpg_download import fetch_cjpg_first_page
 from .cjpg_parse import cjpg_n_results, cjpg_parse_manager
@@ -62,6 +62,37 @@ class EsajCjpgScraper(EsajSentencaScraper):
     """Base eSAJ com ``cjpg`` e o PDF da sentença de cada linha dele (``baixar_sentenca``)."""
 
     INPUT_CJPG: type[BaseModel] = InputCJPGEsaj
+
+    # Alem das arvores de cjsg herdadas de EsajSearchScraper, as de 1o grau
+    # (cjpg). Os stems do cjpg sao no SINGULAR (``classeTreeSelect`` etc.),
+    # diferente do plural do cjsg. O formulario do cjpg tem as mesmas tres
+    # arvores, nas mesmas rotas, no TJSP e no TJMS (samples
+    # ``cjpg/results_normal_page_01.html`` dos dois). Refs #228, #487.
+    TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
+        **EsajSearchScraper.TREE_ENDPOINTS,
+        "classes_1": "cjpg/classeTreeSelect.do?campoId=classes",
+        "assuntos_1": "cjpg/assuntoTreeSelect.do?campoId=assuntos",
+        "varas_1": "cjpg/varasTreeSelect.do?campoId=varas",
+    }
+
+    def listar_varas(self, *, grau: str = "1") -> pd.DataFrame:
+        """Lista as varas de primeiro grau disponiveis para filtrar (cjpg).
+
+        Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo
+        filtro ``vara`` de :meth:`cjpg`. A arvore agrupa as varas por
+        comarca/foro, entao ``id_pai``/``caminho`` carregam essa hierarquia.
+
+        Args:
+            grau: ``"1"`` (primeiro grau / cjpg). Unico valor aceito.
+
+        Raises:
+            ValueError: Quando ``grau`` nao esta disponivel.
+
+        Returns:
+            Arvore de varas (colunas ``id``, ``nome``,
+                ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
+        """
+        return self._listar_arvore(f"varas_{grau}")
 
     # --- cjpg -----------------------------------------------------------
     # A orquestracao (probe count_only -> auto-chunk -> download -> parse)
