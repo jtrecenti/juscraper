@@ -29,7 +29,7 @@ CATALOGO_BODY: list[Any] = []
 # 10 s e recusou a 5 s com "Excesso de requisições".
 INTERVALO_INTEIRO_TEOR = 10.0
 
-_EXCESSO_DE_REQUISICOES = "Excesso de requisições"
+EXCESSO_DE_REQUISICOES = "Excesso de requisições"
 
 
 class InteiroTeorIndisponivelError(_RecriaSemInit):
@@ -51,8 +51,6 @@ class LimiteDeRequisicoesError(InteiroTeorIndisponivelError):
 
 def catalogo_url(catalogo: str) -> str:
     """URL do ``catalogo`` (um de :data:`CATALOGOS`)."""
-    if catalogo not in CATALOGOS:
-        raise ValueError(f"Catálogo desconhecido: {catalogo!r}. Use um de: {', '.join(CATALOGOS)}.")
     return f"{PESQUISA_URL}/{catalogo}"
 
 
@@ -92,13 +90,13 @@ def extrair_pdf(corpo: bytes) -> bytes | None:
         return corpo
     if not corpo.startswith(b"--"):
         return None
-    limite, _, resto = corpo.partition(b"\r\n")
-    _, separador, conteudo = resto.partition(b"\r\n\r\n")
-    fim = conteudo.rfind(b"\r\n" + limite + b"--")
-    if not separador or fim == -1:
+    # Por posições, para copiar o PDF uma vez só.
+    fim_do_limite = corpo.find(b"\r\n")
+    inicio = corpo.find(b"\r\n\r\n", fim_do_limite) + 4
+    fim = corpo.rfind(b"\r\n" + corpo[:fim_do_limite] + b"--", inicio)
+    if fim_do_limite == -1 or inicio < 4 or fim == -1 or not corpo.startswith(b"%PDF", inicio):
         return None
-    pdf = conteudo[:fim]
-    return pdf if pdf.startswith(b"%PDF") else None
+    return corpo[inicio:fim]
 
 
 def pdf_da_resposta(resposta: requests.Response, codigo_decisao: str) -> bytes:
@@ -116,7 +114,7 @@ def pdf_da_resposta(resposta: requests.Response, codigo_decisao: str) -> bytes:
     if pdf is not None:
         return pdf
     inicio = resposta.content[:300].decode("utf-8", "replace").strip()
-    if _EXCESSO_DE_REQUISICOES in inicio:
+    if EXCESSO_DE_REQUISICOES in inicio:
         raise LimiteDeRequisicoesError(
             codigo_decisao,
             f"o TSE recusou o pedido por excesso de requisições ({inicio!r}). "

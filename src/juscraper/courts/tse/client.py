@@ -43,8 +43,10 @@ class TSEScraper(HTTPScraper):
 
     perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
         "catalogo": RequestPolicy(timeout=60, expect_json=True),
-        # Uma nova tentativa só, depois do intervalo que o serviço aceita: o
-        # backoff padrão (2 s) cairia na recusa por excesso de requisições.
+        # Status retentável (429, 5xx) ganha uma nova tentativa só, depois do
+        # intervalo que o serviço aceita: a 2 s, o backoff padrão, ela voltaria
+        # recusada. A recusa por excesso de requisições vem em HTTP 200 e não
+        # é retentada; ver ``pdf_da_resposta``.
         "inteiro_teor": RequestPolicy(timeout=120, max_retries=2, base_backoff=INTERVALO_INTEIRO_TEOR),
     }
 
@@ -73,8 +75,7 @@ class TSEScraper(HTTPScraper):
 
     def _catalogo(self, catalogo: str) -> object:
         resposta = self._request_with_retry("POST", catalogo_url(catalogo), json=CATALOGO_BODY, perfil="catalogo")
-        dados: object = resposta.json()
-        return dados
+        return resposta.json()
 
     def listar_classes(self) -> pd.DataFrame:
         """Lista as classes processuais do formulário de jurisprudência do TSE.

@@ -7,7 +7,7 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import InvalidJSONResponseError
-from juscraper.courts.tse.download import PESQUISA_URL
+from juscraper.courts.tse.download import CATALOGO_BODY, PESQUISA_URL
 from juscraper.courts.tse.parse import CatalogoInesperadoError
 from tests._helpers import load_sample_bytes
 
@@ -20,16 +20,12 @@ CATALOGOS = [
 ]
 
 
-def _corpo_lista_vazia(request):
-    # A rota responde HTTP 500 sem o corpo ``[]``.
-    return request.body in (b"[]", "[]"), f"corpo enviado: {request.body!r}"
-
-
 def _registrar(sub_rota: str, **resposta) -> None:
     responses.add(
         responses.POST,
         f"{PESQUISA_URL}/{sub_rota}",
-        match=[_corpo_lista_vazia, matchers.header_matcher({"Content-Type": "application/json"})],
+        # A rota responde HTTP 500 sem o corpo ``[]``.
+        match=[matchers.json_params_matcher(CATALOGO_BODY)],
         **resposta,
     )
 

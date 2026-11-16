@@ -12,11 +12,11 @@ purpose.
 import logging
 import time
 
-import requests
-
+import juscraper as jus
 from juscraper.courts.tse.download import (
     CATALOGO_BODY,
     CATALOGOS,
+    EXCESSO_DE_REQUISICOES,
     INTERVALO_INTEIRO_TEOR,
     catalogo_url,
     inteiro_teor_url,
@@ -37,8 +37,8 @@ INTEIRO_TEOR = (
 def main() -> None:
     """Capture the four catalogs and the full-text response formats."""
     logging.basicConfig(level=logging.INFO, format="[tse] %(message)s")
-    session = requests.Session()
-    session.headers.update({"User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)"})
+    # A sessão do raspador, para capturar com os cabeçalhos que ele manda.
+    session = jus.scraper("tse").session
 
     for catalogo in CATALOGOS:
         response = session.post(catalogo_url(catalogo), json=CATALOGO_BODY, timeout=60)
@@ -57,10 +57,11 @@ def main() -> None:
     # Dois pedidos seguidos: o segundo volta "Excesso de requisições".
     session.get(inteiro_teor_url(INTEIRO_TEOR[0][1]), timeout=120)
     response = session.get(inteiro_teor_url(INTEIRO_TEOR[1][1]), timeout=120)
-    if "Excesso de requisi" not in response.text[:300]:
+    inicio = response.content[:300].decode("utf-8", "replace")
+    if EXCESSO_DE_REQUISICOES not in inicio:
         raise SystemExit("[tse] o segundo pedido seguido não foi recusado; excesso_requisicoes.txt não foi regravado.")
     dump(dest / "excesso_requisicoes.txt", response.content)
-    logger.info("wrote inteiro_teor/excesso_requisicoes.txt: %r", response.text[:80])
+    logger.info("wrote inteiro_teor/excesso_requisicoes.txt: %r", inicio[:80])
 
 
 if __name__ == "__main__":
