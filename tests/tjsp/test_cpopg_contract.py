@@ -10,6 +10,7 @@ HTML flow: GET ``cpopg/search.do?…`` → scraper extracts one
 the process details directly when the CNJ is unique).
 """
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -670,3 +671,14 @@ def test_cpopg_com_falha_preserva_arquivos_que_ja_estavam_em_download_path(tmp_p
     assert result["basicos"]["motivo_falha"].tolist() == ["http_503"]
     assert {caminho: caminho.read_text(encoding="utf-8") for caminho in alheios} == alheios
     assert _pastas_da_chamada(tmp_path) == []
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cposg"])
+def test_composto_apaga_raiz_temporaria_criada_pelo_scraper(metodo):
+    """Sem caminho explícito, o composto limpa também a raiz que a propriedade criou."""
+    scraper = jus.scraper("tjsp")
+
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        getattr(scraper, metodo)([None])
+
+    assert not Path(scraper.download_path).exists()

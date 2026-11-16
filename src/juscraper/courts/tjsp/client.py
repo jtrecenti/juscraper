@@ -67,19 +67,6 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
     return movimentacoes.assign(caminho_documento=[novos.get(c) for c in movimentacoes["caminho_documento"]])
 
 
-def _pasta_da_chamada(download_path: str) -> tuple[str, bool]:
-    """Pasta nova dentro de ``download_path`` para um ``cpopg``/``cposg`` composto, que a apaga ao terminar.
-
-    O composto apagava ``download_path`` inteiro, inclusive downloads
-    anteriores e arquivos do usuário. Devolve também se ``download_path``
-    foi criado agora, para ser removido junto quando ficar vazio.
-    """
-    raiz = Path(download_path)
-    criada = not raiz.exists()
-    raiz.mkdir(parents=True, exist_ok=True)
-    return tempfile.mkdtemp(prefix="composto_", dir=raiz), criada
-
-
 def _apagar_pasta_da_chamada(pasta: str, *, raiz_criada: bool) -> None:
     """Apaga a pasta da chamada e, se ``download_path`` nasceu com ela e ficou vazio, ele também."""
     shutil.rmtree(pasta)
@@ -124,6 +111,16 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
     def set_download_path(self, path: str | None = None) -> None:
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
+
+    def _pasta_da_chamada(self) -> tuple[str, bool]:
+        """Cria pasta própria e registra se a raiz nasceu com esta chamada."""
+        # A propriedade cria a raiz temporária na primeira leitura: registrar
+        # sua origem antes dela para não deixar a raiz vazia após o composto.
+        caminho_atual = self._download_path
+        raiz_criada = caminho_atual is None or not Path(caminho_atual).exists()
+        raiz = Path(self.download_path)
+        raiz.mkdir(parents=True, exist_ok=True)
+        return tempfile.mkdtemp(prefix="composto_", dir=raiz), raiz_criada
 
     def set_method(self, method: str) -> None:
         """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
@@ -386,7 +383,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
         if not ids:
             return tabelas_vazias()
-        pasta, raiz_criada = _pasta_da_chamada(self.download_path)
+        pasta, raiz_criada = self._pasta_da_chamada()
         # Sem o aviso do download: o parse lê as falhas que ele gravou na
         # pasta e avisa uma vez só, junto com as de leitura.
         self._baixar_cpopg(ids, pasta, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas)
@@ -495,7 +492,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """
         self.set_method(method)
         ids = _lista_de_cnjs(id_cnj)
-        pasta, raiz_criada = _pasta_da_chamada(self.download_path)
+        pasta, raiz_criada = self._pasta_da_chamada()
         # Como no cpopg: o parse lê as falhas do download e avisa uma vez só.
         self._baixar_cposg(ids, pasta)
         result = cposg_parse_manager(pasta, metodo="TJSPScraper.cposg", pedidos=ids)
