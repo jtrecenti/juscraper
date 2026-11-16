@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>STM - Superior Tribunal Militar – juscraper</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../notebooks/datajud.html" rel="next">
+<link href="../notebooks/tse.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="reference/_styles-quartodoc.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">juscraper</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Procurar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Alternar de navegação" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../reference/index.html"> 
+<span class="menu-text">Referência da API</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/jtrecenti/juscraper"> <i class="bi bi-github" role="img" aria-label="GitHub repository">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/stm.html">STM</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Home</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referência da API</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exemplos</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Tribunais</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAC</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjal.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAL</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjam.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJAP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJCE</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjba.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJBA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjdft.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJDFT</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjgo.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJGO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjmt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMT</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpa.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPA</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpb.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPB</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPE</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpi.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjpr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJPR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrn.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRN</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrj.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRJ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjrs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJRS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjsc.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJSC</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJES</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjto.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJTO</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjmg.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMG</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJMS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tjsp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TJSP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/trf3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TRF3</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/trf5.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TRF5</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/trf6.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TRF6</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/tse.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TSE</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/stm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">STM</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Agregadores</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/datajud.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Datajud</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/jusbr.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Jus.br</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/pdpj.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">PDPJ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/falcao.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Falcao (JT)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
+  <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
+  <li><a href="#search-operators-and-fields" id="toc-search-operators-and-fields" class="nav-link" data-scroll-target="#search-operators-and-fields">Search operators and fields</a></li>
+  <li><a href="#filters" id="toc-filters" class="nav-link" data-scroll-target="#filters">Filters</a></li>
+  <li><a href="#date-range" id="toc-date-range" class="nav-link" data-scroll-target="#date-range">Date range</a></li>
+  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/stm.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exemplos</li><li class="breadcrumb-item"><a href="../notebooks/tjac.html">Tribunais</a></li><li class="breadcrumb-item"><a href="../notebooks/stm.html">STM</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">STM - Superior Tribunal Militar</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Example notebook for the STM scraper, which searches the court’s decisions in the <a href="https://jurisprudencia.stm.jus.br/">Consulta Judicial Unificada da Justiça Militar da União</a>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Available</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cjsg</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The portal sits behind a WAF that refuses requests depending on the source IP address: it rejected every request from a datacenter IP address outside Brazil and accepted a residential one in Brazil (16 November 2026). When refused, <code>cjsg</code> raises <code>BotChallengeBlockedError</code> instead of returning an empty search. Run this notebook from a connection the portal accepts.</p>
+<div id="f04bddbc" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:34.754460Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:34.754281Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:35.327498Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:35.327062Z&quot;}" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>stm <span class="op">=</span> jus.scraper(<span class="st">"stm"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="basic-search" class="level2">
+<h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
+<p>Each page has 100 decisions, from the most recent judgment to the oldest. <code>paginas</code> is 1-based; <code>None</code> (default) downloads every page.</p>
+<div id="3d464a89" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:35.328930Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:35.328808Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:36.692471Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:36.692090Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> stm.cjsg(<span class="st">"deserção"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 6052.39it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(100, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">relator_acordao</th>
+<th data-quarto-table-cell-role="th">revisor</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">data_autuacao</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">url_inteiro_teor</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>7000339-36.2026.7.00.0000</td>
+<td>RECURSO EM SENTIDO ESTRITO</td>
+<td>GUIDO AMIN NAVES</td>
+<td>None</td>
+<td>None</td>
+<td>1) DIREITO PENAL MILITAR, CRIMES CONTRA O SERV...</td>
+<td>2026-05-21</td>
+<td>2026-10-15</td>
+<td>2026-11-03</td>
+<td>EMENTA: DIREITO PROCESSUAL PENAL MILITAR. RECU...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>732eb247f354b6e9f416466a576d5f70</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>7000339-05.2024.7.03.0103</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>ARTUR VIDIGAL DE OLIVEIRA</td>
+<td>None</td>
+<td>CARLOS VUYK DE AQUINO</td>
+<td>1) DIREITO PENAL MILITAR, CRIMES CONTRA O SERV...</td>
+<td>2025-11-11</td>
+<td>2026-10-06</td>
+<td>2026-11-05</td>
+<td>EMENTA: \t\t\t\t\t\tDIREITO PENAL MILITAR. DIR...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>edf2e7ffff99b9cc043f0181977d5ea3</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>7000530-81.2026.7.00.0000</td>
+<td>EMBARGOS DE DECLARAÇÃO CRIMINAL</td>
+<td>CARLOS VUYK DE AQUINO</td>
+<td>None</td>
+<td>None</td>
+<td>1) DIREITO PENAL MILITAR, CRIMES CONTRA O SERV...</td>
+<td>2026-08-05</td>
+<td>2026-09-24</td>
+<td>2026-10-06</td>
+<td>EMENTA: DIREITO PENAL MILITAR. DIREITO PROCESS...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>74c026fd79a31535a2f3cb45677d595b</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="available-columns" class="level2">
+<h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
+<div id="88994afe" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:36.693792Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:36.693722Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:36.695864Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:36.695586Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.dtypes</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>processo            object
+classe              object
+relator             object
+relator_acordao     object
+revisor             object
+assunto             object
+data_autuacao       object
+data_julgamento     object
+data_publicacao     object
+ementa              object
+url_inteiro_teor    object
+id_documento        object
+dtype: object</code></pre>
+</div>
+</div>
+<div id="4e074bf1" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:36.696886Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:36.696822Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:36.698423Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:36.698093Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">"ementa"</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>EMENTA: DIREITO PROCESSUAL PENAL MILITAR. RECURSO EM SENTIDO ESTRITO. DESERÇÃO. PEDIDO DE PRISÃO PREVENTIVA. INSTRUÇÃO PROVISÓRIA DE DESERÇÃO. ART. 255 DO CPPM. AUSÊNCIA DE PERICULUM LIBERTATIS CONCRETO. MEDIDA CAUTELAR EXCEPCIONAL. SUFICIÊNCIA DO TERMO DE DESERÇÃO COMO INSTRUMENTO DE CAPTURA. ART. </code></pre>
+</div>
+</div>
+</section>
+<section id="search-operators-and-fields" class="level2">
+<h2 class="anchored" data-anchor-id="search-operators-and-fields">Search operators and fields</h2>
+<p><code>pesquisa</code> takes the operators of the portal: <code>E</code> (the default between words), <code>OU</code>, <code>NÃO</code>, quotes for an exact phrase, and <code>*</code> and <code>?</code> as wildcards. <code>campo</code> chooses where the term is searched: <code>"ementa"</code> (default), <code>"inteiro_teor"</code> or <code>"numero"</code> (case number, complete or partial).</p>
+<div id="edc2f116" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:36.699346Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:36.699293Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:38.772017Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:38.771285Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_ou <span class="op">=</span> stm.cjsg(<span class="st">"peculato OU furto"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_frase <span class="op">=</span> stm.cjsg(<span class="st">'"corrupção ativa"'</span>, campo<span class="op">=</span><span class="st">"inteiro_teor"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_ou.shape, df_frase.shape)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 16644.06it/s]
+Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 35848.75it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(100, 12) (100, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+<div id="441748a3" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:38.776063Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:38.775869Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:39.115228Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:39.114720Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>stm.cjsg(<span class="st">"7000612-54.2022.7.00.0000"</span>, campo<span class="op">=</span><span class="st">"numero"</span>).drop(columns<span class="op">=</span><span class="st">"ementa"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 3934.62it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">relator_acordao</th>
+<th data-quarto-table-cell-role="th">revisor</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">data_autuacao</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">url_inteiro_teor</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>7000612-54.2022.7.00.0000</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>JOSÉ COÊLHO FERREIRA</td>
+<td>ODILSON SAMPAIO BENZI</td>
+<td>ODILSON SAMPAIO BENZI</td>
+<td>1) DIREITO PENAL MILITAR,CRIMES CONTRA INCOLUM...</td>
+<td>2022-09-02</td>
+<td>2023-08-17</td>
+<td>2023-09-11</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>2d277ef92fdcbd8ffa22ebe083e824e7</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="filters" class="level2">
+<h2 class="anchored" data-anchor-id="filters">Filters</h2>
+<p><code>classe</code>, <code>relator</code>, <code>relator_acordao</code>, <code>revisor</code> and <code>assunto</code> are the filters of the “Filtrar por” column of the portal. They match the exact value the portal shows, in upper case.</p>
+<div id="0a0d16ae" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:39.116969Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:39.116854Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:40.153621Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:40.153256Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df_apelacao <span class="op">=</span> stm.cjsg(<span class="st">"deserção"</span>, classe<span class="op">=</span><span class="st">"APELAÇÃO"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_apelacao.shape)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>df_apelacao[<span class="st">"classe"</span>].value_counts()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 11915.64it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(100, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>classe
+APELAÇÃO    100
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</section>
+<section id="date-range" class="level2">
+<h2 class="anchored" data-anchor-id="date-range">Date range</h2>
+<p><code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code> and <code>data_publicacao_inicio</code>/<code>data_publicacao_fim</code> take <code>DD/MM/YYYY</code>, <code>YYYY-MM-DD</code> or a <code>date</code>.</p>
+<p>The portal filters by date range only in its advanced search, so with these filters the search goes through it. The advanced search looks for <code>pesquisa</code> as an exact phrase in the chosen <code>campo</code> and does not apply <code>E</code>, <code>OU</code>, <code>NÃO</code> or the wildcards. A term with more than one word outside quotes emits a <code>UserWarning</code>; put it in quotes to confirm the exact phrase.</p>
+<div id="5c279631" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:40.154947Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:40.154888Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:40.529504Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:40.528632Z&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>df_datas <span class="op">=</span> stm.cjsg(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"deserção"</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"2025-03-01"</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"2025-03-31"</span>,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas.shape)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas[<span class="st">"data_julgamento"</span>].<span class="bu">min</span>(), df_datas[<span class="st">"data_julgamento"</span>].<span class="bu">max</span>())</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>df_datas.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 15141.89it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(3, 12)
+2025-03-13 2025-03-20</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">relator_acordao</th>
+<th data-quarto-table-cell-role="th">revisor</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">data_autuacao</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">url_inteiro_teor</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>7000636-14.2024.7.00.0000</td>
+<td>EMBARGOS INFRINGENTES E DE NULIDADE</td>
+<td>GUIDO AMIN NAVES</td>
+<td>None</td>
+<td>PÉRICLES AURÉLIO LIMA DE QUEIROZ</td>
+<td>1) DIREITO PENAL MILITAR,CRIMES CONTRA O SERVI...</td>
+<td>2024-10-14</td>
+<td>2025-03-20</td>
+<td>2025-04-29</td>
+<td>EMENTA: DIREITO PENAL MILITAR. DIREITO PROCESS...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>a6078179a94b355081ab716d3fcffba7</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>7000128-29.2024.7.11.0011</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>ODILSON SAMPAIO BENZI</td>
+<td>None</td>
+<td>PÉRICLES AURÉLIO LIMA DE QUEIROZ</td>
+<td>1) DIREITO PENAL MILITAR,CRIMES CONTRA O SERVI...</td>
+<td>2024-09-20</td>
+<td>2025-03-20</td>
+<td>2025-04-10</td>
+<td>EMENTA: DIREITO PENAL MILITAR. DIREITO PROCESS...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>6ac9201570c3b94e6a405e5a276626af</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0000173-29.2016.7.08.0008</td>
+<td>APELAÇÃO CRIMINAL</td>
+<td>CLÁUDIO PORTUGAL DE VIVEIROS</td>
+<td>None</td>
+<td>PÉRICLES AURÉLIO LIMA DE QUEIROZ</td>
+<td>1) DIREITO PENAL MILITAR,CRIMES CONTRA O SERVI...</td>
+<td>2024-10-10</td>
+<td>2025-03-13</td>
+<td>2025-03-28</td>
+<td>EMENTA: \t\t\t\t\t\tDIREITO PROCESSUAL PENAL M...</td>
+<td>https://eproc2g.stm.jus.br/eproc_2g_prod/exter...</td>
+<td>78f6e480366950e80c4f7d5bfa4ecc93</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>An empty <code>pesquisa</code> returns everything in the range.</p>
+<div id="dffce6e7" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:40.531319Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:40.531162Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:41.003668Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:41.003195Z&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>df_semana <span class="op">=</span> stm.cjsg(<span class="st">""</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"10/03/2025"</span>, data_julgamento_fim<span class="op">=</span><span class="st">"13/03/2025"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_semana.shape)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>df_semana[<span class="st">"classe"</span>].value_counts().head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 28532.68it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(29, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>classe
+APELAÇÃO CRIMINAL                  11
+HABEAS CORPUS CRIMINAL              7
+AGRAVO INTERNO CRIMINAL             6
+RECURSO EM SENTIDO ESTRITO          3
+EMBARGOS DE DECLARAÇÃO CRIMINAL     1
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</section>
+<section id="download-and-parse-separately" class="level2">
+<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
+<p><code>cjsg_download</code> returns the raw HTML of each page and <code>cjsg_parse</code> turns it into the DataFrame.</p>
+<div id="fe8339dc" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T18:02:41.005025Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T18:02:41.004946Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T18:02:42.053627Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T18:02:42.053193Z&quot;}" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> stm.cjsg_download(<span class="st">"deserção"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> stm.cjsg_parse(brutos)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">len</span>(brutos), df_parsed.shape)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas STM:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas STM: 100%|██████████| 1/1 [00:00&lt;00:00, 19239.93it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>1 (100, 12)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiada");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiada");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jtrecenti\.github\.io\/juscraper\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../notebooks/tse.html" class="pagination-link" aria-label="TSE">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">TSE</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../notebooks/datajud.html" class="pagination-link" aria-label="Datajud">
+        <span class="nav-page-text">Datajud</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Copyright 2025, Julio Trecenti</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.dev/jtrecenti/juscraper/blob/main/docs/notebooks/stm.ipynb" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

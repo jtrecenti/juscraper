@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -277,12 +277,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td><code>Any</code></td>
-<td>Filtros aceitos pelo schema <code>InputCJSGSTM</code>. Os cinco últimos são os da coluna “Filtrar por” do portal: opcionais (<code>None</code> = sem filtro) e comparados com o valor exato que o portal exibe, em maiúsculas. * <code>campo</code> (str): Onde procurar o termo: <code>"ementa"</code> (default), <code>"inteiro_teor"</code> ou <code>"numero"</code> (número do processo, completo ou parcial). * <code>classe</code> (str | None): Classe processual (<code>"APELAÇÃO"</code>). * <code>relator</code> (str | None): Ministro relator (<code>"CARLOS VUYK DE AQUINO"</code>). * <code>relator_acordao</code> (str | None): Ministro relator para o acórdão. * <code>revisor</code> (str | None): Ministro revisor. * <code>assunto</code> (str | None): Assunto (<code>"PECULATO"</code>).</td>
+<td>Filtros aceitos pelo schema <code>InputCJSGSTM</code>. Os cinco últimos são os da coluna “Filtrar por” do portal: opcionais (<code>None</code> = sem filtro) e comparados com o valor exato que o portal exibe, em maiúsculas. * <code>campo</code> (str): Onde procurar o termo: <code>"ementa"</code> (default), <code>"inteiro_teor"</code> ou <code>"numero"</code> (número do processo, completo ou parcial). * <code>classe</code> (str | None): Classe processual (<code>"APELAÇÃO"</code>). * <code>relator</code> (str | None): Ministro relator (<code>"CARLOS VUYK DE AQUINO"</code>). * <code>relator_acordao</code> (str | None): Ministro relator para o acórdão. * <code>revisor</code> (str | None): Ministro revisor. * <code>assunto</code> (str | None): Assunto (<code>"PECULATO"</code>). * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de data de julgamento, em <code>DD/MM/AAAA</code> ou <code>AAAA-MM-DD</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de data de publicação. Com filtro de data, a busca vai pela pesquisa avançada do portal, a única que filtra por intervalo. Ela procura <code>pesquisa</code> como expressão exata no <code>campo</code> escolhido (<code>"corrupção ativa"</code> só casa com as duas palavras juntas, nessa ordem), não aplica <code>E</code>, <code>OU</code>, <code>NÃO</code> nem os curingas, e aceita <code>pesquisa=""</code> para trazer tudo o que está no intervalo. Termo com mais de uma palavra ou com curinga, fora de aspas, emite <code>UserWarning</code>. Informado só um lado do intervalo, o outro é preenchido (01/01/1990 ou hoje), com <code>UserWarning</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -298,7 +298,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>TypeError</code></td>
-<td>Quando um kwarg desconhecido é passado (inclusive <code>data_julgamento_*</code> e <code>data_publicacao_*</code>, que esta busca não filtra).</td>
+<td>Quando um kwarg desconhecido é passado.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -307,13 +307,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td></td>
-<td><code>BotChallengeBlockedError</code></td>
-<td>Quando o WAF do portal recusa a requisição.</td>
+<td><code>ValueError</code></td>
+<td>Quando uma data é inválida ou o início vem depois do fim; quando há filtro de data e <code>pesquisa</code> tem aspas no meio ou barra invertida, ou, em <code>campo="numero"</code>, algo além do número do processo; quando a página devolvida não traz o contador de documentos nem o aviso de busca vazia.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><code>ValueError</code></td>
-<td>Quando a página devolvida não traz o contador de documentos nem o aviso de busca vazia.</td>
+<td><code>BotChallengeBlockedError</code></td>
+<td>Quando o WAF do portal recusa a requisição.</td>
 </tr>
 </tbody>
 </table>
@@ -341,7 +341,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> stm <span class="op">=</span> jus.scraper(<span class="st">"stm"</span>)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> stm.cjsg(<span class="st">"deserção"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> stm.cjsg(<span class="st">"deserção"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> stm.cjsg(<span class="st">"deserção"</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2025"</span>, data_julgamento_fim<span class="op">=</span><span class="st">"31/03/2025"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
