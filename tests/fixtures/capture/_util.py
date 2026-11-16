@@ -319,7 +319,7 @@ def capture_cjsg_samples(
     )
     dump(dest / "post_initial.html", post_resp.content)
     for pag, resp in zip(typical_pages, get_resps, strict=False):
-        dump(dest / f"results_normal_page_{pag:02d}.html", resp.content)  # noqa: E231
+        dump(dest / f"results_normal_page_{pag:02d}.html", resp.content)
     print(f"[{tribunal}] typical ({typical_query!r}) → {len(get_resps)} page(s)")
 
     _, single_resps = fetch_cjsg_pages(

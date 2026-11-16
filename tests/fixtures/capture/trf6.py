@@ -127,7 +127,7 @@ def main() -> None:
     # Validate that the txtcaptcha optional dep is installed *before* hitting
     # the live tribunal — a fresher error message than a deep ImportError.
     try:
-        import txtcaptcha  # noqa: F401
+        import txtcaptcha
     except ImportError as exc:
         raise SystemExit(
             "tests/fixtures/capture/trf6.py needs `txtcaptcha` installed "

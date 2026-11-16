@@ -65,10 +65,10 @@ def _classify_search(url: str, scenario: str, counters: dict[str, int]) -> str:
         return "categorizada_repetitivos.html"
     if "excluirRepetitivos=true" in url:
         counters["acordaos"] = counters.get("acordaos", 0) + 1
-        return f"categorizada_acordaos_page_{counters['acordaos']:02d}.html"  # noqa: E231
+        return f"categorizada_acordaos_page_{counters['acordaos']:02d}.html"
     if scenario == "typical":
         counters["search"] = counters.get("search", 0) + 1
-        return f"results_normal_page_{counters['search']:02d}.html"  # noqa: E231
+        return f"results_normal_page_{counters['search']:02d}.html"
     return f"{scenario}.html"
 
 

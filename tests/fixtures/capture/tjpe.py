@@ -65,7 +65,7 @@ def _classify(
             counters["ajax"] = counters.get("ajax", 0) + 1
             page_num = counters["ajax"] + 1  # AJAX kicks in for pages 2+
             step_num = counters["ajax"] + 3  # GET=01, POST=02, escolha=03, AJAX=04+
-            return f"step_{step_num:02d}_pagina_{page_num:02d}.xml"  # noqa: E231
+            return f"step_{step_num:02d}_pagina_{page_num:02d}.xml"
         return None
 
     if scenario == "simples":
@@ -77,7 +77,7 @@ def _classify(
         if method == "POST" and path == "resultado.xhtml":
             counters["ajax"] = counters.get("ajax", 0) + 1
             page_num = counters["ajax"] + 1
-            return f"simples_pagina_{page_num:02d}.xml"  # noqa: E231
+            return f"simples_pagina_{page_num:02d}.xml"
         return None
 
     if scenario == "no_results":
