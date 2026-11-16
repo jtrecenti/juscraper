@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
 import requests
@@ -27,6 +27,16 @@ _FILTROS = {
     "relator": "fq_ministro_relator",
     "relator_acordao": "fq_ministro_relator_acordao",
     "revisor": "fq_ministro_revisor",
+    "assunto": "fq_assunto_pesquisa",
+}
+
+# O mesmo para a aba de processos (``search_filter_option=feitos``).
+_FILTROS_DE_PROCESSOS = {
+    "cjm": "fq_cjm",
+    "orgao": "fq_orgao",
+    "conselho": "fq_conselho",
+    "situacao": "fq_situacao",
+    "classe": "fq_classe",
     "assunto": "fq_assunto_pesquisa",
 }
 
@@ -281,6 +291,44 @@ def cjsg_n_pags(html: str) -> int:
     return resolve_total_pages(cjsg_n_resultados(html), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="STM")
 
 
+def baixar_paginas_da_busca(
+    paginas: Iterable[int] | None,
+    montar_params: Callable[[int], dict[str, str]],
+    *,
+    request_fn: RequestFn,
+    perfil: str,
+    sleep_time: float = 1.0,
+) -> list[str]:
+    """Baixa as páginas de uma busca do portal, de jurisprudência ou de processos.
+
+    ``montar_params`` dá a query string de cada página.
+
+    Raises:
+        BotChallengeBlockedError: Quando o WAF recusa a requisição.
+        ValueError: Quando a primeira página pedida não traz o contador de
+            documentos nem o aviso de busca vazia, ou quando uma das seguintes
+            vem sem documentos.
+
+    Returns:
+        O HTML de cada página, na ordem pedida.
+    """
+    primeira = menor_pagina(paginas)
+
+    def buscar(pagina: int) -> str:
+        resp = request_fn(
+            "GET", BASE_URL, params=montar_params(pagina), perfil=perfil, on_response=conferir_bloqueio
+        )
+        resp.encoding = "utf-8"
+        html = resp.text
+        # ``primeira`` é conferida por ``cjsg_n_pags``. As demais só são
+        # pedidas dentro do total: sem contador, não são de resultados.
+        if pagina != primeira and not cjsg_n_resultados(html):
+            raise ValueError(f"STM: a página {pagina} da busca veio sem o contador de documentos.")
+        return html
+
+    return baixar_paginas_pedidas(paginas, buscar, cjsg_n_pags, tribunal="STM", sleep_time=sleep_time)
+
+
 def cjsg_download_manager(
     pesquisa: str,
     paginas: Iterable[int] | None = None,
@@ -304,22 +352,59 @@ def cjsg_download_manager(
     Returns:
         O HTML de cada página, na ordem pedida.
     """
-    primeira = menor_pagina(paginas)
+    return baixar_paginas_da_busca(
+        paginas,
+        lambda pagina: build_cjsg_params(pesquisa, pagina, **busca),
+        request_fn=request_fn,
+        perfil="cjsg",
+        sleep_time=sleep_time,
+    )
 
-    def buscar(pagina: int) -> str:
-        resp = request_fn(
-            "GET",
-            BASE_URL,
-            params=build_cjsg_params(pesquisa, pagina, **busca),
-            perfil="cjsg",
-            on_response=conferir_bloqueio,
-        )
-        resp.encoding = "utf-8"
-        html = resp.text
-        # ``primeira`` é conferida por ``cjsg_n_pags``. As demais só são
-        # pedidas dentro do total: sem contador, não são de resultados.
-        if pagina != primeira and not cjsg_n_resultados(html):
-            raise ValueError(f"STM: a página {pagina} da busca veio sem o contador de documentos.")
-        return html
 
-    return baixar_paginas_pedidas(paginas, buscar, cjsg_n_pags, tribunal="STM", sleep_time=sleep_time)
+def build_processos_params(pesquisa: str, pagina: int = 1, **filtros: str | None) -> dict[str, str]:
+    """Monta a query string da busca de processos do STM.
+
+    Repete o que o portal envia. Com ``pesquisa``, é a busca simples por
+    número do processo; sem ela, a pesquisa avançada com a consulta vazia, que
+    lista o que os filtros selecionam. ``filtros`` aceita ``cjm``, ``orgao``,
+    ``conselho``, ``situacao``, ``classe`` e ``assunto``; ``None`` ou vazio
+    não entra na query.
+    """
+    params = {"search_filter_option": "feitos"}
+    if pesquisa:
+        params |= {"search_filter": "numero", "search_input": pesquisa, "q": pesquisa, "q_or": pesquisa}
+    else:
+        params |= {"search_filter": "busca_avancada", "q": "", "q_or": ""}
+    params |= {"start": str((pagina - 1) * RESULTS_PER_PAGE), "rows": str(RESULTS_PER_PAGE)}
+    for nome, valor in filtros.items():
+        if valor:
+            params[_FILTROS_DE_PROCESSOS[nome]] = valor
+    return params
+
+
+def processos_download_manager(
+    pesquisa: str,
+    paginas: Iterable[int] | None = None,
+    *,
+    request_fn: RequestFn,
+    sleep_time: float = 1.0,
+    **filtros: str | None,
+) -> list[str]:
+    """Baixa as páginas de resultados da busca de processos do STM.
+
+    Raises:
+        BotChallengeBlockedError: Quando o WAF recusa a requisição.
+        ValueError: Quando a primeira página pedida não traz o contador de
+            documentos nem o aviso de busca vazia, ou quando uma das seguintes
+            vem sem documentos.
+
+    Returns:
+        O HTML de cada página, na ordem pedida.
+    """
+    return baixar_paginas_da_busca(
+        paginas,
+        lambda pagina: build_processos_params(pesquisa, pagina, **filtros),
+        request_fn=request_fn,
+        perfil="processos",
+        sleep_time=sleep_time,
+    )

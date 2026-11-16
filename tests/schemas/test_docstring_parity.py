@@ -60,6 +60,11 @@ CASES = [
         id="stm.cjsg",
     ),
     pytest.param(
+        "juscraper.courts.stm.client", "STMScraper", "listar_processos",
+        "juscraper.courts.stm.schemas", "InputListarProcessosSTM",
+        id="stm.listar_processos",
+    ),
+    pytest.param(
         "juscraper.courts.tjrj.client", "TJRJScraper", "cjsg",
         "juscraper.courts.tjrj.schemas", "InputCJSGTJRJ",
         id="tjrj.cjsg",

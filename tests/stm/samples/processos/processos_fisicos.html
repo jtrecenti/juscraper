@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<!-- Head -->
+<head>
+    <title>Consulta Judicial Unificada | JMU</title>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Indexing -->
+    <meta name="title" content="Consulta Judicial Unificada | JMU">
+    <meta name="description" content="A Justiça Militar da União é uma justiça especializada que julga os crimes militares previstos no Código Penal Militar (CPM), tendo como principais jurisdicionados os militares das Forças Armadas e, em certos casos, até civis.">
+    <meta name="keywords" content="stm, jmu, justiça militar da união, superior tribunal militar, justiça militar, consulta processual, jurisprudência, jmu consulta processual, stm consulta processual, jmu jurisprudência, stm jurisprudência, ministros jmu">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Portuguese">
+    <meta name="author" content="Justiça Militar da União">
+
+    <!-- Icon -->
+    <link rel="shortcut icon" href="images/jmu.ico" type="image/x-icon" />
+
+    <!-- CSS -->
+    <link href="/css/bootstrap-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-theme-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-chosen.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-datepicker.standalone.css" rel="stylesheet" type="text/css" media="screen">
+
+    <link href="/css/open-iconic-bootstrap.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/fonte.css" rel='stylesheet' type='text/css' media="screen">
+    <link href="/css/introjs.css" rel='stylesheet' type='text/css' media="screen">
+    
+        <link href="/css/style.css?v=20210903" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/print.css?v=20210903" rel="stylesheet" type="text/css" media="print">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Scripts Javascript -->
+    <!-- jQuery -->
+<script src="/js/jquery-3.2.1.min.js"></script>
+
+<!-- jQuery Select -->
+<script src="/js/chosen.jquery.min.js"></script>
+
+<!-- jQuery Mask -->
+<script src="/js/jquery.mask.min.js"></script>
+
+<!-- Bootstrap Collapse -->
+<script src="/js/collapse-3.3.7.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap-3.3.7.js"></script>
+
+<!-- Bootstrap Datepicker -->
+<script src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/bootstrap-datepicker.pt-BR.js"></script>
+
+<!-- Intro.js -->
+<script src="/js/intro.js"></script>
+
+<!-- Scripts -->
+<script src="/js/init.js?v=20210903"></script>
+<script src="/js/cpfcnpj.js?v=20210903"></script>
+<script src="/js/util.js?v=20210903"></script>
+<script src="/js/funcoes.js?v=20210903"></script>
+<script src="/js/controller.js?v=20210903"></script>
+
+<!-- <script src="js/google_analytics.js"></script>  -->
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WP8V5XK0S4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-WP8V5XK0S4');
+    </script>
+</head><body>
+
+<!-- Header -->
+<header class="container-fluid">
+    <div class="row">
+        <p>
+            <a id="header-url" href="https://processos.stm.jus.br"><img src="images/jmu-sistemas.png" alt=""><span id="header-title"></span> </a>
+            <span class="pull-right header-menu hidden-xs">
+                            <a href="https://tesjmu.stm.jus.br/portalthes/" target="_blank"><span class="oi oi-sun" aria-hidden="true"></span> Tesauro</a>
+                <a href="javascript:void(0);" onclick="tracker.functions.faleConosco(this);"><span class="oi oi-thumb-up" aria-hidden="true"></span> Pesquisa de Satisfação</a>
+            </span>
+        </p> 
+    </div>
+</header>
+<script>
+    localStorage.setItem('URL_PROCESSOS', 'https://processos.stm.jus.br');
+    localStorage.setItem('URL_JURISPRUDENCIA', 'https://jurisprudencia.stm.jus.br');
+</script>
+<!-- Filtros Ativos e Paginação -->
+        <div class="container">
+    <div class="row message">
+        <!-- Quantidade de documentos -->
+        <div class="col-xs-4"><b>1</b> - <b>3</b> de <b>3</b></u> <span class="hidden-xs">documentos</span></div>
+                <div class="col-xs-4 text-center"></div>
+                <!-- Documentos por página e ordenação -->
+        <div class="col-xs-4 text-right">
+                            <select id="docs-page"><option value="25"  selected>25 por página</option><option value="50" >50 por página</option><option value="100" >100 por página</option></select>
+                <select id="order-page"><option value='1'  selected>autuação mais recente</option><option value='2' >autuação mais antigo</option></select>
+                    </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row pagination-block">
+        <!-- Paginas -->
+        <div class="col-xs-12 text-center">
+                <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=0000028-58.2008.7.01.0101&amp;search_input=&amp;search_filter_option=feitos&amp;q=0000028-58.2008.7.01.0101&amp;search_filter=numero&amp;&amp;start=0&amp;rows=25"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+        </div>
+    </div>
+</div>
+<!-- Resultado da pesquisa - Feitos -->
+<div class="container container-fluid">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                        
+                <button class="btn btn-default" title="Exibir Movimentações" data-link="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=00000285820087010101"
+                        onclick="tracker.functions.movimentacoes(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		<a class="link" href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=00000285820087010101"
+                   title="Abrir o processo eletrônico '0000028-58.2008.7.01.0101'" target="_blank">
+		  		0000028-58.2008.7.01.0101
+		  		</a>
+	  		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                                <div class="text-center hidden-lg">
+                    <a href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=00000285820087010101" title="Abrir o processo eletrônico '0000028-58.2008.7.01.0101'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <div class="row-descrition text-center title">AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO N.º 0000028-58.2008.7.01.0101</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                                <div class="eproc-link hidden-md hidden-sm hidden-xs">
+                    <a href="https://eproc1g.stm.jus.br/eproc_1g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=00000285820087010101" title="Abrir o processo eletrônico '0000028-58.2008.7.01.0101'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <dt>Número do Feito:</dt>
+                <dd>0000028-58.2008.7.01.0101</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>AÇÃO PENAL MILITAR - PROCEDIMENTO ORDINÁRIO</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>1ª AUDITORIA DA 1ª CJM  - RJ</dd>
+                
+                
+                                <dt>Juiz(a):</dt>
+                <dd>MARIANA QUEIROZ AQUINO</dd>
+                
+                
+                
+                <div class="row">
+                                        <div class="col-sm-5">
+                        <dt>Data de Autuação:</dt>
+                        <dd>09/07/2010 00:00:00</dd>
+                    </div>
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>BAIXADO</dd>
+                    </div>
+                                    </div>
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                                <div class="row-title">Assuntos</div>
+                                                <dd class="dd">1) DIREITO PENAL MILITAR,CRIMES CONTRA O PATRIMÔNIO,ESTELIONATO E OUTRAS FRAUDES,ESTELIONATO</dd>
+                                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Acusado:</dt>
+                                <dd>BENEDITA SILVA LIMA</dd>
+                                                                    <dt>Autor:</dt>
+                                <dd>SERVIÇO DE VETERANOS E PENSIONISTAS DA MARINHA</dd>
+                                                                    <dt>Mp:</dt>
+                                <dd>MINISTÉRIO PÚBLICO MILITAR</dd>
+                                                
+                                <div class="row-title">Representantes</div>
+                                                                                                    <dt>Comandante:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>MARCELO GAMELEIRA CORRÊA</summary>        
+                                                    <div class="parte col-sm-6">SERVIÇO DE VETERANOS E PENSIONISTAS DA MARINHA</div>                                                                                                                                                                                                                                                                                                                  </details>
+                    </dd>
+                                  
+                                                                                                          <dt>Procurador:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>ANTONIO CARLOS GOMES FACURI</summary>        
+                                                                                                        <div class="parte col-sm-6">MINISTÉRIO PÚBLICO MILITAR</div>                                                                                                                                                                                                                                                              </details>
+                    </dd>
+                                  
+                                                                                        
+                                                      <dd>
+                      <details>
+                        <summary>CRISTINA GONÇALVES NASCIMENTO</summary>        
+                                                                                                                                                            <div class="parte col-sm-6">BENEDITA SILVA LIMA</div>                                                                                                                                                                                                          </details>
+                    </dd>
+                                  
+                                                                                        
+                                                      <dd>
+                      <details>
+                        <summary>DEFENSOR CHEFE JUNTO À 2ª CATEGORIA DEFENSORIA PÚBLICA DA UNIÃO RIO DE JANEIRO - RJ</summary>        
+                                                                                                                                                                                                                <div class="parte col-sm-6">BENEDITA SILVA LIMA</div>                                                                                                                                                      </details>
+                    </dd>
+                                  
+                                                                                        
+                                                      <dd>
+                      <details>
+                        <summary>JORGE LUIZ FERNANDES PINHO</summary>        
+                                                                                                                                                                                                                                                                    <div class="parte col-sm-6">BENEDITA SILVA LIMA</div>                                                                                                  </details>
+                    </dd>
+                                  
+                                                                                        
+                                                      <dd>
+                      <details>
+                        <summary>RODRIGO FRANCO MAIAROTTI</summary>        
+                                                                                                                                                                                                                                                                                                                        <div class="parte col-sm-6">BENEDITA SILVA LIMA</div>                                              </details>
+                    </dd>
+                                  
+                                                                                      
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                            <button class="btn btn-default" title="Exibir Movimentações" data-toggle="modal"
+                        data-target="#modal_data" data-processo="0000028-58.2008.7.01.0101"
+                        data-uuid="5217bb1402e2e82207063fd7c0ddf741" data-type="movimentacoes" data-title="Movimentações"
+                        onclick="tracker.functions.carregarModal(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		0000028-58.2008.7.01.0101
+      		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                
+                                <div class="row-descrition text-center title">INQUÉRITO POLICIAL MILITAR Nº 0000028-58.2008.7.01.0101</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                
+                                <dt>Número do Feito:</dt>
+                <dd>0000028-58.2008.7.01.0101</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>INQUÉRITO POLICIAL MILITAR</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>1ª AUDITORIA DA 1ª CJM  - RJ</dd>
+                
+                
+                
+                
+                
+                <div class="row">
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>AUTUAÇÃO COMO PROCESSO</dd>
+                    </div>
+                                    </div>
+
+                                <dt>Origem:</dt>
+                <dd>SERVIÇO DE INATIVOS E PENSIONISTAS DA MARINHA</dd>
+                
+                                <dt>Encarregado:</dt>
+                <dd>EDNALDO GAÚNA ( CAPITÃO DE CORVETA - MARINHA ) </dd>
+                
+                
+                
+                                <dt>Cidade de Origem:</dt>
+                <dd>RIO DE JANEIRO - RJ</dd>
+                
+                                <dt>Data do Crime:</dt>
+                <dd>30/06/2007 a 30/10/2007</dd>
+                
+                
+                                <dt>Decisão:</dt>
+                <dd>POR DECISÃO DE 09.07.10, A JUÍZA-AUDITORA RECEBE A DENÚNCIA CONTRA A CIVIL BENEDITA SILVA LIMA, COMO INCURSO NO ART. 251, DO CPM.</dd>
+                
+                                <dt>Observação:</dt>
+                <dd>FATO:  INDÍCIOS DE IRREGULARIDADE NO RECEBIMENTO DE PENSÃO DA SRA. BENEDITA DA SILVA LIMA.</dd>
+                
+                
+                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Envolvido:</dt>
+                                <dd>BENEDITA SILVA LIMA</dd>
+                                                
+                
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                            <button class="btn btn-default" title="Exibir Movimentações" data-toggle="modal"
+                        data-target="#modal_data" data-processo="0000028-58.2008.7.01.0101"
+                        data-uuid="2da946c570714e2446a9b1493e7a4ffa" data-type="movimentacoes" data-title="Movimentações"
+                        onclick="tracker.functions.carregarModal(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		0000028-58.2008.7.01.0101
+      		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                
+                                <div class="row-descrition text-center title">PROCEDIMENTO ORDINÁRIO Nº 0000028-58.2008.7.01.0101</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                
+                                <dt>Número do Feito:</dt>
+                <dd>0000028-58.2008.7.01.0101</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>PROCEDIMENTO ORDINÁRIO</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>1ª AUDITORIA DA 1ª CJM  - RJ</dd>
+                
+                                <dt>Conselho:</dt>
+                <dd>CONSELHO PERMANENTE DE JUSTIÇA - MARINHA</dd>
+                
+                
+                
+                
+                <div class="row">
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>EM SUSPENSO</dd>
+                    </div>
+                                    </div>
+
+                
+                
+                
+                
+                
+                                <dt>Data do Crime:</dt>
+                <dd>30/06/2007 a 30/10/2007</dd>
+                
+                
+                                <dt>Decisão:</dt>
+                <dd>EM 05/12/2011, O CPJ/MAR, ACOLHEU A PRELIMINAR DA DEFESA E REQUERIDA PELO MPM, NA DATA RETROMENCIONADA, DETERMINANDO, EM CONSEQUÊNCIA, QUE O PROCESSO FIQUE SUSPENSO, E A PRESCRIÇÃO CONTINUE A CORRER PELO PRAZO PREVISTO NO ART. 125, IV, DO CPM, QUE É DE 12 ANOS, CONSIDERANDO QUE A PENA MÁXIMA COMINADA AO FATO É DE 7 ANOS (ART.251,CPM).</dd>
+                
+                
+                
+                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Envolvido:</dt>
+                                <dd>BENEDITA SILVA LIMA</dd>
+                                                
+                                <div class="row-title">Representantes</div>
+                                                                                                    <dt>Defensor público:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>DEFENSORIA PÚBLICA DA UNIÃO</summary>        
+                                                    <div class="parte col-sm-6">BENEDITA SILVA LIMA</div>                                              </details>
+                    </dd>
+                                  
+                                                                                      
+                                <div class="row-title">Feitos Relacionados</div>
+                <div class="row">
+                                       <dd><a class='link' href='consulta.php?search_filter=numero&q=0000028-58.2008.7.01.0101&q_or=0000028-58.2008.7.01.0101'>Procedimento Investigatório Nº 28-58.2008.7.01.0101 (Origem)</a></dd>
+                                </div>
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+    </div>
+
+    <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=0000028-58.2008.7.01.0101&amp;search_input=&amp;search_filter_option=feitos&amp;q=0000028-58.2008.7.01.0101&amp;search_filter=numero&amp;&amp;start=0&amp;rows=25"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal_data" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modal_label"><strong>Titulo</strong></h4>
+      </div>
+      <div class="modal-body" id="modal_content">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid">
+    <div class="row footer">
+        <legend></legend>
+        <p><img src="images/jmu-sistemas-rodape.png" alt="JMU"> Consulta Judicial Unificada<span class="pull-right"> <a href="https://www.stm.jus.br/" class="link">stm.jus.br</a></span></p>
+    </div>
+</div>
+
+</body>
+
+</html>

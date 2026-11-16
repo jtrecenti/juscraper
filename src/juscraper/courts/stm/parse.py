@@ -1,7 +1,8 @@
-"""Parser das páginas de resultados da busca de jurisprudência do STM."""
+"""Parsers das páginas de resultados das buscas de jurisprudência e de processos do STM."""
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import pandas as pd
 from bs4 import BeautifulSoup, Tag
@@ -73,3 +74,103 @@ def cjsg_parse_manager(paginas: list[str]) -> pd.DataFrame:
         )
     df = pd.DataFrame(linhas, columns=COLUNAS)
     return coerce_date_columns(df, _COLUNAS_DE_DATA, date_format="%d/%m/%Y")
+
+
+# Aba de processos: a capa de cada feito, com as partes e os representantes.
+COLUNAS_PROCESSOS = [
+    "processo",
+    "classe",
+    "orgao",
+    "conselho",
+    "relator",
+    "revisor",
+    "juiz",
+    "data_autuacao",
+    "situacao",
+    "assunto",
+    "partes",
+    "representantes",
+    "url_processo",
+]
+# Campos da capa, reconhecidos pelo rótulo do ``<dt>``: coluna -> rótulo.
+_CAMPOS_DA_CAPA = {
+    "processo": "Número do Feito:",
+    "classe": "Classe:",
+    "orgao": "Orgão:",
+    "conselho": "Conselho:",
+    "relator": "Relator(a):",
+    "revisor": "Revisor(a):",
+    "juiz": "Juiz(a):",
+    "data_autuacao": "Data de Autuação:",
+    "situacao": "Situação:",
+}
+_ROTULO_DA_COLUNA = {rotulo: coluna for coluna, rotulo in _CAMPOS_DA_CAPA.items()}
+_FORMATO_DA_AUTUACAO = "%d/%m/%Y %H:%M:%S"
+
+
+def _texto_corrido(tag: Tag) -> str | None:
+    """Texto da tag com os espaços e as quebras de linha reduzidos a um espaço."""
+    return " ".join(tag.get_text().split()) or None
+
+
+def _parse_parte(tipo: str, dd: Tag) -> dict[str, str | None]:
+    """Parte do processo; ``qualificacao`` é o posto e a força que o portal mostra no ícone."""
+    icone = dd.find("img", class_="icone-forca")
+    return {"tipo": tipo, "nome": _texto_corrido(dd), "qualificacao": str(icone.get("title")) if icone else None}
+
+
+def _parse_representante(tipo: str, dd: Tag) -> dict[str, Any]:
+    """Representante e as partes que ele representa."""
+    nome = dd.find("summary")
+    return {
+        "tipo": tipo,
+        "nome": _texto_corrido(nome) if nome else None,
+        "partes": [_texto_corrido(parte) for parte in dd.select("div.parte")],
+    }
+
+
+def _parse_processo(painel: Tag) -> dict[str, Any]:
+    """Lê um painel de processo: a capa e as seções "Assuntos", "Partes" e "Representantes".
+
+    O painel é uma lista só (``<dl>``), com as seções separadas por
+    ``div.row-title``; nas duas últimas, um ``<dt>`` com o tipo vale para os
+    ``<dd>`` que vêm até o próximo.
+    """
+    linha: dict[str, Any] = dict.fromkeys(COLUNAS_PROCESSOS)
+    linha |= {"partes": [], "representantes": []}
+    assuntos: list[str | None] = []
+    link = painel.select_one(".label-processo a[href]")
+    linha["url_processo"] = str(link["href"]) if link else None
+    secao, rotulo = "Capa do Processo", ""
+    for tag in painel.select("div.row-title, dt, dd"):
+        if tag.name == "div":
+            secao = tag.get_text().strip()
+        elif tag.name == "dt":
+            rotulo = tag.get_text().strip()
+        elif secao == "Assuntos":
+            assuntos.append(_texto_corrido(tag))
+        elif secao == "Partes":
+            linha["partes"].append(_parse_parte(rotulo.rstrip(":"), tag))
+        elif secao == "Representantes":
+            linha["representantes"].append(_parse_representante(rotulo.rstrip(":"), tag))
+        elif rotulo in _ROTULO_DA_COLUNA:
+            linha[_ROTULO_DA_COLUNA[rotulo]] = _texto_corrido(tag)
+    # Um texto só, como no ``assunto`` do cjsg; o portal numera os assuntos ("1) ... 2) ...").
+    linha["assunto"] = " ".join(filter(None, assuntos)) or None
+    return linha
+
+
+def processos_parse_manager(paginas: list[str]) -> pd.DataFrame:
+    """Extrai os processos das páginas baixadas por ``listar_processos_download``.
+
+    Cada processo é um ``div.panel`` com a capa numa lista
+    (``dl.dl-horizontal``); os demais painéis da página não têm essa lista.
+    ``data_autuacao`` vira ``datetime``; o restante sai como o portal publica.
+    """
+    linhas: list[dict[str, Any]] = []
+    for html in paginas:
+        soup = BeautifulSoup(html, "html.parser")
+        linhas.extend(_parse_processo(painel) for painel in soup.select("div.panel:has(dl.dl-horizontal)"))
+    df = pd.DataFrame(linhas, columns=COLUNAS_PROCESSOS)
+    df["data_autuacao"] = pd.to_datetime(df["data_autuacao"], format=_FORMATO_DA_AUTUACAO)
+    return df

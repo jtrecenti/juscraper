@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<!-- Head -->
+<head>
+    <title>Consulta Judicial Unificada | JMU</title>
+
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Indexing -->
+    <meta name="title" content="Consulta Judicial Unificada | JMU">
+    <meta name="description" content="A Justiça Militar da União é uma justiça especializada que julga os crimes militares previstos no Código Penal Militar (CPM), tendo como principais jurisdicionados os militares das Forças Armadas e, em certos casos, até civis.">
+    <meta name="keywords" content="stm, jmu, justiça militar da união, superior tribunal militar, justiça militar, consulta processual, jurisprudência, jmu consulta processual, stm consulta processual, jmu jurisprudência, stm jurisprudência, ministros jmu">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="language" content="Portuguese">
+    <meta name="author" content="Justiça Militar da União">
+
+    <!-- Icon -->
+    <link rel="shortcut icon" href="images/jmu.ico" type="image/x-icon" />
+
+    <!-- CSS -->
+    <link href="/css/bootstrap-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-theme-3.3.7.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-chosen.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/bootstrap-datepicker.standalone.css" rel="stylesheet" type="text/css" media="screen">
+
+    <link href="/css/open-iconic-bootstrap.css" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/fonte.css" rel='stylesheet' type='text/css' media="screen">
+    <link href="/css/introjs.css" rel='stylesheet' type='text/css' media="screen">
+    
+        <link href="/css/style.css?v=20210903" rel="stylesheet" type="text/css" media="screen">
+    <link href="/css/print.css?v=20210903" rel="stylesheet" type="text/css" media="print">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Scripts Javascript -->
+    <!-- jQuery -->
+<script src="/js/jquery-3.2.1.min.js"></script>
+
+<!-- jQuery Select -->
+<script src="/js/chosen.jquery.min.js"></script>
+
+<!-- jQuery Mask -->
+<script src="/js/jquery.mask.min.js"></script>
+
+<!-- Bootstrap Collapse -->
+<script src="/js/collapse-3.3.7.js"></script>
+
+<!-- Bootstrap Core JavaScript -->
+<script src="/js/bootstrap-3.3.7.js"></script>
+
+<!-- Bootstrap Datepicker -->
+<script src="/js/bootstrap-datepicker.js"></script>
+<script src="/js/bootstrap-datepicker.pt-BR.js"></script>
+
+<!-- Intro.js -->
+<script src="/js/intro.js"></script>
+
+<!-- Scripts -->
+<script src="/js/init.js?v=20210903"></script>
+<script src="/js/cpfcnpj.js?v=20210903"></script>
+<script src="/js/util.js?v=20210903"></script>
+<script src="/js/funcoes.js?v=20210903"></script>
+<script src="/js/controller.js?v=20210903"></script>
+
+<!-- <script src="js/google_analytics.js"></script>  -->
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WP8V5XK0S4"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-WP8V5XK0S4');
+    </script>
+</head>
+<body>
+
+<!-- Header -->
+<header class="container-fluid">
+    <div class="row">
+        <p>
+            <a id="header-url" href="https://processos.stm.jus.br"><img src="images/jmu-sistemas.png" alt=""><span id="header-title"></span> </a>
+            <span class="pull-right header-menu hidden-xs">
+                            <a href="https://tesjmu.stm.jus.br/portalthes/" target="_blank"><span class="oi oi-sun" aria-hidden="true"></span> Tesauro</a>
+                <a href="javascript:void(0);" onclick="tracker.functions.faleConosco(this);"><span class="oi oi-thumb-up" aria-hidden="true"></span> Pesquisa de Satisfação</a>
+            </span>
+        </p> 
+    </div>
+</header>
+<script>
+    localStorage.setItem('URL_PROCESSOS', 'https://processos.stm.jus.br');
+    localStorage.setItem('URL_JURISPRUDENCIA', 'https://jurisprudencia.stm.jus.br');
+</script>
+<div class="topo">
+    <div class="gridbox">
+        <!-- Busca Textual -->
+<div class="container search-space">
+    <form name="form-search" action="consulta.php" method="GET" onsubmit="return processSearch()">
+        <div class="row">
+            <div class="form-group col-lg-8 col-md-10 passo-1">
+                <!-- Opção de Busca -->
+                <div style="height: 38px;" class="passo-2">
+                    <ul class="tabs-nav">
+                        <li class="tab-active"><a href="#tab-1" rel="nofollow" data-value="feitos" data-label="Processos" aria-label="Consulta Processual">Processos</a>
+                        </li>
+                        <li class="tab-active"><a href="#tab-2" rel="nofollow" data-value="jurisprudencia" data-label="Jurisprudência" aria-label="Consulta de Jurisprudência">Jurisprudência</a>
+                        </li>
+                        <li class="tab-active"><a href="#tab-3" rel="nofollow" data-value="irdr" data-label="IRDR" aria-label="IRDR">IRDR</a>
+                        </li>
+                        <li class="tab-active"><a href="#tab-4" rel="nofollow" data-value="revista" data-label="revista" aria-label="revista">Revista</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- Escolha -->
+                <div class="tabs-stage passo-3 passo-4 passo-5">
+                    <div id="tab-1" style="display: block;" class="tabs-option">
+                        <div class="input-group">
+                            <!-- Filtro -->
+                            <div class="input-group-btn">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+        <span class="hidden-xs"></span><span id="search_filter_label__feitos">Número do Processo</span>
+        <span class="caret"></span>
+    </button>
+
+    <ul class="dropdown-menu filter-menu" role="menu" aria-label="Consultar por:">
+                                                                
+            
+            <li><a href="#" data-id="numero" data-name="Número do Processo" role="menuitem">Número do Processo</a></li>
+                    
+            
+            <li><a href="#" data-id="nome_parte" data-name="Nome da Parte" role="menuitem">Nome da Parte</a></li>
+                    
+            
+            <li><a href="#" data-id="cpf_parte" data-name="CPF/CNPJ da Parte" role="menuitem">CPF/CNPJ da Parte</a></li>
+                    
+            
+            <li><a href="#" data-id="nome_representante" data-name="Nome do Advogado" role="menuitem">Nome do Advogado</a></li>
+                    
+            
+            <li><a href="#" data-id="oab_representante" data-name="OAB do Advogado" role="menuitem">OAB do Advogado</a></li>
+                    
+                            <li class="divider"></li>
+            
+            <li><a href="#" data-id="tudo" data-name="Todos os Campos" role="menuitem">Todos os Campos</a></li>
+            </ul>
+
+    <input type="hidden" id="search_filter_active__feitos" data-id="numero" data-name="Número do Processo"/>
+</div>                            <!-- Entrada -->
+                            <div class="search-group">
+    <input name="search_input" type="search" class="form-control" id="search_input__feitos" placeholder=""
+           autocomplete="off" value="" aria-labelledby="search_filter_label__feitos"/>
+
+    <!-- Conectores -->
+    <div id="connector__feitos" class="collapse out con-group">
+	<span>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('E');">E</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('OU');">OU</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('NÃO');">NÃO</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('*');">*</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('?');">?</button>
+</span>	<span class="connector_right"><a id="link_tips_feitos" class="link" href="#">Como Usar os Operadores?</a></span>
+</div></div>                            <!-- Submit -->
+                            <div class="input-group-btn">
+                                <button class="btn btn-danger" type="submit" aria-label="Consultar Processos"><span class="glyphicon glyphicon-search "></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-2" style="display: none;" class="tabs-option">
+                        <div class="input-group">
+                            <!-- Filtro -->
+                            <div class="input-group-btn">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+        <span class="hidden-xs"></span><span id="search_filter_label__jurisprudencia">Número do Processo</span>
+        <span class="caret"></span>
+    </button>
+
+    <ul class="dropdown-menu filter-menu" role="menu" aria-label="Consultar por:">
+                    
+            
+            <li><a href="#" data-id="ementa" data-name="Ementa" role="menuitem">Ementa</a></li>
+                    
+            
+            <li><a href="#" data-id="inteiro_teor" data-name="Inteiro Teor" role="menuitem">Inteiro Teor</a></li>
+                                                                
+            
+            <li><a href="#" data-id="numero" data-name="Número do Processo" role="menuitem">Número do Processo</a></li>
+                    
+            
+            <li><a href="#" data-id="referencia_legislativa" data-name="Referência Legislativa" role="menuitem">Referência Legislativa</a></li>
+                    
+                            <li class="divider"></li>
+            
+            <li><a href="#" data-id="tudo" data-name="Todos os Campos" role="menuitem">Todos os Campos</a></li>
+            </ul>
+
+    <input type="hidden" id="search_filter_active__jurisprudencia" data-id="numero" data-name="Número do Processo"/>
+</div>                            <!-- Entrada -->
+                            <div class="search-group">
+    <input name="search_input" type="search" class="form-control" id="search_input__jurisprudencia" placeholder=""
+           autocomplete="off" value="" aria-labelledby="search_filter_label__jurisprudencia"/>
+
+    <!-- Conectores -->
+    <div id="connector__jurisprudencia" class="collapse out con-group">
+	<span>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('E');">E</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('OU');">OU</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('NÃO');">NÃO</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('*');">*</button>
+	<button type="button" class="btn btn-default btn-xs custom-tooltip" onclick="javascript:seleciona_operador('?');">?</button>
+</span>    <span class="connector_right"><a id="link_tips_jurisprudencia" class="link" href="#">Como Usar os Operadores?</a></span>
+</div></div>                            <!-- Submit -->
+                            <div class="input-group-btn">
+                                <button class="btn btn-danger" type="submit" aria-label="Consultar Jurisprudência"><span class="glyphicon glyphicon-search "></span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tab-3" style="display: none;" class="tabs-option">
+                        
+                    </div>
+                    <div id="tab-4" style="display: none;" class="tabs-option">
+                        A revista foi aberta em uma nova janela
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+        <input type="hidden" name="search_filter_option" id="search_filter_option" value="feitos" />
+        <input type="hidden" name="q" value="7000374-06.2020.7.00.0000" />
+        <input type="hidden" name="q_or" value="7000374-06.2020.7.00.0000" />
+        <input type="hidden" name="search_filter" value="numero" />
+    </form>
+</div>
+<br/>
+
+<script>
+    // Scripts de inicialização
+    start_scripts();
+</script>
+
+<!--Dicas -->
+<!-- Dicas de Busca -->
+<div class="container collapse" id="tips">
+	<br/>
+	<button type="button" class="close" id="button_close_tips"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+	<div class="row space-h3">
+		<h3>Dicas de Uso dos Operadores</h3>
+	</div>
+	<hr>
+	<div class="row">
+		<div class="col-md-12">
+			<p>Ao solicitar a pesquisa por 'Todos os Campos', é possível que o usuário utilize operadores: palavras e símbolos que permitem ampliar ou restringir o alcance da pesquisa. Os seguintes operadores podem ser utilizados:</p>
+		</div>
+	</div>
+
+	<!-- Carousel -->
+	<div id="quote-carousel" class="carousel slide" data-ride="carousel"  data-interval="false">
+		<!-- Indicators -->
+		<ol class="carousel-indicators">
+			<li data-target="#quote-carousel" data-slide-to="0" class="active"></li>
+			<li data-target="#quote-carousel" data-slide-to="1"></li>
+			<li data-target="#quote-carousel" data-slide-to="2"></li>
+			<li data-target="#quote-carousel" data-slide-to="3"></li>
+		</ol>
+
+		<!-- Wrapper for slides -->
+		<div class="carousel-inner">
+			<div class="item active">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>E</b></h4>
+							<p>Todas as palavras ligadas pelo operador "e" devem estar necessariamente contidas no documento. O "e" é o operador padrão da ferramenta de pesquisa. Portanto, quando a expressão de busca é composta por mais de uma palavra, pressupõe-se que todas elas devam aparecer no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>militar furto caserna</span> é o mesmo que <span>militar e furto e caserna</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham as palavras <span>militar</span>, <span>furto</span> e <span>caserna</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>OU</b></h4>
+							<p>O operador "ou" é empregado para pesquisar palavras alternativas. Ao utilizá-lo, o usuário indica que basta que uma das palavras esteja presente no documento.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto ou recurso</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> ou que possuam a palavra <span>recurso</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>NÃO</b></h4>
+							<p>O operador "não" tem a função de descartar documentos que contenham determinadas palavras. Para tanto, deve-se posicionar o operador imediatamente antes da palavra que se pretende excluir.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>furto não infração</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>furto</span> e não contenham a palavra <span>infração</span></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "</b></h4>
+							<p>Utilizado para agrupar dois ou mais termos a serem pesquisados ou para transformar um operador em palavra a ser pesquisada.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>"direito constitucional"</span></p>
+							<p><b>Retorno do Exemplo 1:<br/></b>Todos os documentos que contenham o termo <span>direito constitucional</span></p>
+							<p><b>Exemplo 2:<br/></b> <span>acordo "não" previsto</span></p>
+							<p><b>Retorno do Exemplo 2:<br/></b>Todos os documentos que contenham as palavras <span>acordo</span>, <span>não</span> e <span>previsto</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>" "~n</b></h4>
+							<p>Os operadores til e aspas duplas, quando combinados, permitem ao usuário especificar a distância máxima admitida entre as palavras buscadas. Para tanto, é preciso colocar as palavras (duas ou mais) entre aspas duplas, acrescentar o til logo após e, por fim, indicar imediatamente o número máximo de palavras interpostas.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>"detenção civil"~2</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span> e a palavra <span>civil</span> com a quantidade máxima de 2 termos entre <span>detenção</span> e <span>civil</span>. <a href="#" class="link" data-original-title="No texto DETENÇÃO PARA O CIVIL a distância é 2, no texto DETENÇÃO DO CIVIL, a distância é 1 e no texto DETENÇÃO CIVIL a distância é 1. Todos os documentos com esses textos serão retornados. Já no texto DETENÇÃO JUNTO COM O CIVIL, a distância é 3 e os documentos com esse texto não serão retornados." data-toggle="tooltip" data-placement="top">Mais detalhes...</a></p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>( )</b></h4>
+							<p>Os parênteses servem para especificar a ordem de execução das operações caso o usuário utilize vários operadores distintos, de forma simultânea, em uma mesma expressão de busca.</p>
+							<hr>
+							<p><b>Exemplo:<br/></b> <span>detenção ou (codigo NÃO penal)</span></p>
+							<p><b>Retorno do Exemplo:<br/></b>Todos os documentos que contenham a palavra <span>detenção</span>ou que contenham a palavra <span>código</span> e, ao mesmo tempo, não contenham a palavra <span>penal</span></p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="item">
+				<div class="row">
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>*</b></h4>
+							<p>Substitui caracteres desconhecidos ou que não se deseja determinar. Pode ser utilizado no início, meio ou no fim da palavra.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>de*cao</span> (deserção, descrição, designação...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>constitui*</span> (constitui, constituir, constituído, constituição...)</p>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="well">
+							<h4 class="text-center"><b>?</b></h4>
+							<p>Substitui um único caractere que deverá estar na palavra. Pode ser utilizado no início, meio e/ou no fim da palavra. Cada interrogação corresponde a um caractere.</p>
+							<hr>
+							<p><b>Exemplo 1:<br/></b> <span>constituíd?</span> (constituído, constituída...)</p>
+							<p><b>Exemplo 2:<br/></b> <span>em?argos</span> (embargos...)</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Left and right controls -->
+		<a class="left carousel-control" href="#quote-carousel" data-slide="prev">
+			<span class="glyphicon glyphicon-chevron-left"></span>
+			<span class="sr-only">Previous</span>
+		</a>
+		<a class="right carousel-control" href="#quote-carousel" data-slide="next">
+			<span class="glyphicon glyphicon-chevron-right"></span>
+			<span class="sr-only">Next</span>
+		</a>
+    </div>
+</div>
+<div class="container" style="background-color: #fff; margin-bottom: -2px; color: #444; background-color: #fff; border-radius: 6px 6px 0 0;">
+    <!-- Escolher Filtros -->
+        <nav class="container" style="padding-top: 1rem;">
+        <div class="container-fluid">
+        <!-- Menu para dispositivos móveis -->
+        <div class="navbar-header" role="menu" >
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+
+        <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav navbar-left">
+            <li>
+                <span class="dropdown-filter"><strong>Filtrar por:</strong></span>
+            </li>
+        </ul>
+                                    <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Meio <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_meio=ELETRÔNICO" role="menuitem">
+                                        ELETRÔNICO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                                    <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Orgão <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_orgao=SUPERIOR TRIBUNAL MILITAR" role="menuitem">
+                                        SUPERIOR TRIBUNAL MILITAR (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                                    <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Classe <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_classe=HABEAS CORPUS CRIMINAL" role="menuitem">
+                                        HABEAS CORPUS CRIMINAL (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Assunto <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_assunto_pesquisa=CONTRA A SAÚDE" role="menuitem">
+                                        CONTRA A SAÚDE (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_assunto_pesquisa=CRIMES CONTRA INCOLUMIDADE PÚBLICA" role="menuitem">
+                                        CRIMES CONTRA INCOLUMIDADE PÚBLICA (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_assunto_pesquisa=DIREITO PENAL MILITAR" role="menuitem">
+                                        DIREITO PENAL MILITAR (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_assunto_pesquisa=POSSE OU USO DE ENTORPECENTE OU SUBSTÂNCIA DE EFEITO SIMILAR" role="menuitem">
+                                        POSSE OU USO DE ENTORPECENTE OU SUBSTÂNCIA DE EFEITO SIMILAR (01) 
+                                    </a>
+                                </li>
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_assunto_pesquisa=TRÁFICO" role="menuitem">
+                                        TRÁFICO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Situação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_situacao=BAIXADO" role="menuitem">
+                                        BAIXADO (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                                                <ul class="nav navbar-nav navbar-left">
+                    <li class="dropdown ">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Autuação <span
+                                    class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                                                            <li  >
+                                    <a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;fq_data_autuacao=d(2020/06)" role="menuitem">
+                                        Junho/2020 (01) 
+                                    </a>
+                                </li>
+                                                    </ul>
+                    </li>
+                </ul>
+                            </div>
+        </div>
+    </nav>
+
+    <!-- Filtros Ativos e Paginação -->
+                    <div class="container-fluid">
+    <div class="row message">
+        <!-- Quantidade de documentos -->
+        <div class="col-xs-4"><b>1</b> - <b>1</b> de <b>1</b></u> <span class="hidden-xs">documentos</span></div>
+                <div class="col-xs-4 text-center"></div>
+                <!-- Documentos por página e ordenação -->
+        <div class="col-xs-4 text-right">
+                            <select id="docs-page"><option value="25"  selected>25 por página</option><option value="50" >50 por página</option><option value="100" >100 por página</option></select>
+                <select id="order-page"><option value='1'  selected>autuação mais recente</option><option value='2' >autuação mais antigo</option></select>
+                    </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row pagination-block">
+        <!-- Paginas -->
+        <div class="col-xs-12 text-center">
+                <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;start=0&amp;rows=25"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+        </div>
+    </div>
+</div>    
+</div>    </div>
+</div>
+
+<!-- Resultado da pesquisa - Feitos -->
+<div class="container container-fluid">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+                                <div class="btn-group">
+                        
+                <button class="btn btn-default" title="Exibir Movimentações" data-link="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70003740620207000000"
+                        onclick="tracker.functions.movimentacoes(this)">
+                    Movimentações
+                </button>
+                        </div>
+                    
+            
+                        <span class="label-processo hidden-xs">
+		  		<a class="link" href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70003740620207000000"
+                   title="Abrir o processo eletrônico '7000374-06.2020.7.00.0000'" target="_blank">
+		  		7000374-06.2020.7.00.0000
+		  		</a>
+	  		</span>
+                    </div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+
+                                <div class="text-center hidden-lg">
+                    <a href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70003740620207000000" title="Abrir o processo eletrônico '7000374-06.2020.7.00.0000'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <div class="row-descrition text-center title">HABEAS CORPUS CRIMINAL N.º 7000374-06.2020.7.00.0000</div>
+                
+                <div class="row-title">Capa do Processo</div>
+
+                                <div class="eproc-link hidden-md hidden-sm hidden-xs">
+                    <a href="https://eproc2g.stm.jus.br/eproc_2g_prod/externo_controlador.php?acao=processo_seleciona_publica&amp;acao_origem=busca_processos&amp;num_processo=70003740620207000000" title="Abrir o processo eletrônico '7000374-06.2020.7.00.0000'" target="_blank">
+                        <img src="images/logo-eproc.png" height="70" alt="Link para eProc"/>
+                    </a>
+                </div>
+                
+                                <dt>Número do Feito:</dt>
+                <dd>7000374-06.2020.7.00.0000</dd>
+                                
+                                <dt>Classe:</dt>
+                <dd>HABEAS CORPUS CRIMINAL</dd>
+                
+                                <dt>Orgão:</dt>
+                <dd>SUPERIOR TRIBUNAL MILITAR </dd>
+                
+                
+                                <dt>Relator(a):</dt>
+                <dd>JOSÉ COÊLHO FERREIRA</dd>
+                
+                
+                
+                <div class="row">
+                                        <div class="col-sm-5">
+                        <dt>Data de Autuação:</dt>
+                        <dd>08/06/2020 15:09:43</dd>
+                    </div>
+                    
+                                        <div class="col-sm-7">
+                        <dt>Situação:</dt>
+                        <dd>BAIXADO</dd>
+                    </div>
+                                    </div>
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                                <div class="row-title">Assuntos</div>
+                                                <dd class="dd">1) DIREITO PENAL MILITAR,CRIMES CONTRA INCOLUMIDADE PÚBLICA,CONTRA A SAÚDE,TRÁFICO, POSSE OU USO DE ENTORPECENTE OU SUBSTÂNCIA DE EFEITO SIMILAR</dd>
+                                
+                                <div class="row-title">Partes</div>
+                                                                    <dt>Mp:</dt>
+                                <dd>MINISTÉRIO PÚBLICO MILITAR</dd>
+                                                                    <dt>Paciente:</dt>
+                                <dd>JOÃO LUCAS MACIEL MAYO DUARTE<img src="/icones/Exercito.png" class="icone-forca" data-toggle="tooltip" data-placement="bottom" title="SOLDADO / EXÉRCITO" alt="SOLDADO / EXÉRCITO"></dd>
+                                                
+                                <div class="row-title">Representantes</div>
+                                                                                                    <dt>Procurador:</dt>
+                  
+                                                      <dd>
+                      <details>
+                        <summary>AFONSO CARLOS ROBERTO DO PRADO</summary>        
+                                                    <div class="parte col-sm-6">JOÃO LUCAS MACIEL MAYO DUARTE</div>                                                                                                  </details>
+                    </dd>
+                                  
+                                                                                        
+                                                      <dd>
+                      <details>
+                        <summary>CARLOS FREDERICO DE OLIVEIRA PEREIRA</summary>        
+                                                                                                        <div class="parte col-sm-6">MINISTÉRIO PÚBLICO MILITAR</div>                                              </details>
+                    </dd>
+                                  
+                                                                                      
+                            </dl>
+        </div>
+    </div>
+
+    <br/>
+    </div>
+
+    <div class="text-center">
+        <ul class="pagination">
+                            
+                            <li><a href="?q_or=7000374-06.2020.7.00.0000&amp;search_filter=numero&amp;search_input=&amp;search_filter_option=feitos&amp;q=7000374-06.2020.7.00.0000&amp;&amp;start=0&amp;rows=25"  class="active">1  <span class="sr-only">(current)</span></a></li>
+
+                            
+                    </ul>
+    </div>
+
+<!-- Modal -->
+<div class="modal fade" id="modal_data" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modal_label"><strong>Titulo</strong></h4>
+      </div>
+      <div class="modal-body" id="modal_content">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid">
+    <div class="row footer">
+        <legend></legend>
+        <p><img src="images/jmu-sistemas-rodape.png" alt="JMU"> Consulta Judicial Unificada<span class="pull-right"> <a href="https://www.stm.jus.br/" class="link">stm.jus.br</a></span></p>
+    </div>
+</div>
+
+</body>
+
+</html>
