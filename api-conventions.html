@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -640,7 +640,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"cd_processo"</span>, <span class="st">"cd_documento"</span>, <span class="st">"caminho_sentenca"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The PDF goes to <code>&lt;diretorio&gt;/sentencas/&lt;cd_processo&gt;_&lt;cd_documento&gt;.pdf</code>. Each sentence takes two requests (<code>cjpg/obterArquivo.do</code>, which redirects to the folder, and the PDF), in any session, spaced by <code>sleep_time</code>. A code outside the eSAJ format raises <code>EntradaInvalidaError</code> before any request; in <code>baixar_sentencas</code> it becomes <code>motivo_falha="entrada_invalida"</code>. The other values are <code>nao_pdf</code>, <code>resposta_inesperada</code> and the network reasons of <code>juscraper.core.failures.MOTIVOS_FALHA</code>. The <code>cjpg</code> text column <code>decisao</code> already has the sentence text; the PDF keeps the layout and the signatures.</p>
 <p>The routes are the ones of <code>tjsp_baixar_doc_movimentacao</code> and <code>tjsp_baixar_sentenca_cjpg</code> in the R package <a href="https://github.com/jjesusfilho/tjsp"><code>tjsp</code></a> by José de Jesus Filho. They live in <code>juscraper.courts._esaj.pasta</code>. The movement route answers without login in TJAC, TJAL, TJAM and TJCE as well, but those courts do not have <code>cpopg</code> in juscraper yet.</p>
-<p>TJMS has the same <code>cjpg</code>, with the same filters and columns, and the same <code>baixar_sentenca</code> and <code>baixar_sentencas</code>. The 120-character limit of <code>pesquisa</code> (<code>QueryTooLongError</code>) applies only to TJSP, where it was measured. <code>listar_varas</code> and <code>grau="1"</code> in <code>listar_classes</code> and <code>listar_assuntos</code> exist only in TJSP.</p>
+<p>TJMS has the same <code>cjpg</code>, with the same filters and columns, and the same <code>baixar_sentenca</code> and <code>baixar_sentencas</code>. The 120-character limit of <code>pesquisa</code> (<code>QueryTooLongError</code>) applies only to TJSP, where it was measured. <code>listar_varas</code> and <code>grau="1"</code> in <code>listar_classes</code> and <code>listar_assuntos</code> exist in both courts, which share the <code>cjpg</code> form.</p>
 </section>
 <section id="normalization-utilities" class="level2">
 <h2 class="anchored" data-anchor-id="normalization-utilities">Normalization Utilities</h2>

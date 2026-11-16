@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -170,6 +170,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_assuntos" id="toc-juscraper.courts.tjms.client.TJMSScraper.listar_assuntos" class="nav-link" data-scroll-target="#juscraper.courts.tjms.client.TJMSScraper.listar_assuntos">listar_assuntos</a></li>
   <li><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_classes" id="toc-juscraper.courts.tjms.client.TJMSScraper.listar_classes" class="nav-link" data-scroll-target="#juscraper.courts.tjms.client.TJMSScraper.listar_classes">listar_classes</a></li>
   <li><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_orgaos" id="toc-juscraper.courts.tjms.client.TJMSScraper.listar_orgaos" class="nav-link" data-scroll-target="#juscraper.courts.tjms.client.TJMSScraper.listar_orgaos">listar_orgaos</a></li>
+  <li><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_varas" id="toc-juscraper.courts.tjms.client.TJMSScraper.listar_varas" class="nav-link" data-scroll-target="#juscraper.courts.tjms.client.TJMSScraper.listar_varas">listar_varas</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -251,6 +252,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_orgaos">listar_orgaos</a></td>
 <td>Lista os orgaos julgadores (secoes) de segundo grau.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjms.client.TJMSScraper.listar_varas">listar_varas</a></td>
+<td>Lista as varas de primeiro grau disponiveis para filtrar (cjpg).</td>
 </tr>
 </tbody>
 </table>
@@ -997,7 +1002,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjms.client.TJMSScraper.listar_assuntos">listar_assuntos</h3>
 <div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>courts.tjms.client.TJMSScraper.listar_assuntos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista os assuntos disponiveis para filtrar.</p>
-<p>Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo filtro <code>assunto</code> de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjsg"><code>cjsg</code></a> (e <code>assunto</code> de <code>cjpg</code> no TJSP).</p>
+<p>Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo filtro <code>assunto</code> de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjsg"><code>cjsg</code></a> (e <code>assunto</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
 <section id="parameters-8" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-8">Parameters</h4>
 <table class="caption-top table">
@@ -1013,7 +1018,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>grau</td>
 <td><code>str</code></td>
-<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg). Apenas o TJSP expoe <code>grau="1"</code>.</td>
+<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg), só nos tribunais com <code>cjpg</code> (<code>EsajCjpgScraper</code>).</td>
 <td><code>'2'</code></td>
 </tr>
 </tbody>
@@ -1067,7 +1072,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjms.client.TJMSScraper.listar_classes">listar_classes</h3>
 <div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>courts.tjms.client.TJMSScraper.listar_classes(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista as classes processuais disponiveis para filtrar.</p>
-<p>Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo filtro <code>classe</code> de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjsg"><code>cjsg</code></a> (e <code>classe</code> de <code>cjpg</code> no TJSP).</p>
+<p>Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo filtro <code>classe</code> de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjsg"><code>cjsg</code></a> (e <code>classe</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
 <section id="parameters-9" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
 <table class="caption-top table">
@@ -1083,7 +1088,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>grau</td>
 <td><code>str</code></td>
-<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg). Apenas o TJSP expoe <code>grau="1"</code>.</td>
+<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg), só nos tribunais com <code>cjpg</code> (<code>EsajCjpgScraper</code>).</td>
 <td><code>'2'</code></td>
 </tr>
 </tbody>
@@ -1205,6 +1210,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td>'pd.DataFrame'</td>
 <td>Arvore de orgaos julgadores (mesmas colunas de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.listar_classes"><code>listar_classes</code></a>).</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="juscraper.courts.tjms.client.TJMSScraper.listar_varas" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjms.client.TJMSScraper.listar_varas">listar_varas</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>courts.tjms.client.TJMSScraper.listar_varas(grau<span class="op">=</span><span class="st">'1'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista as varas de primeiro grau disponiveis para filtrar (cjpg).</p>
+<p>Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo filtro <code>vara</code> de <a href="../reference/courts.tjms.client.TJMSScraper.html#juscraper.courts.tjms.client.TJMSScraper.cjpg"><code>cjpg</code></a>. A arvore agrupa as varas por comarca/foro, entao <code>id_pai</code>/<code>caminho</code> carregam essa hierarquia.</p>
+<section id="parameters-11" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-11">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>grau</td>
+<td><code>str</code></td>
+<td><code>"1"</code> (primeiro grau / cjpg). Unico valor aceito.</td>
+<td><code>'1'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-9" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-9">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando <code>grau</code> nao esta disponivel.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-11" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-11">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Arvore de varas (colunas <code>id</code>, <code>nome</code>, <code>id_pai</code>, <code>nivel</code>, <code>selecionavel</code>, <code>caminho</code>).</td>
 </tr>
 </tbody>
 </table>

@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-a92d8eec9eda37e5377e1dd6cf3ce6ef.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fa0132e5ba1ccbcb15f610bc8f9b53b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -481,24 +481,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-3" class="cell" data-execution_count="1">
+<div id="cell-3" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:36.173512Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:36.173361Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:38.451711Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:38.451270Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjms <span class="op">=</span> jus.scraper(<span class="st">'tjms'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-4" class="cell" data-execution_count="2">
+<div id="cell-4" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:38.453069Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:38.452960Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:43.345405Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:43.345056Z&quot;}" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjms.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJMS: 100%|██████████| 2/2 [00:01&lt;00:00,  1.62s/it]
-Processando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,  6.27it/s]</code></pre>
+<pre><code>Baixando CJSG TJMS:  50%|█████     | 1/2 [00:00&lt;?, ?it/s]Baixando CJSG TJMS: 100%|██████████| 2/2 [00:01&lt;00:00,  1.74s/it]Baixando CJSG TJMS: 100%|██████████| 2/2 [00:01&lt;00:00,  1.74s/it]
+Processando documentos:   0%|          | 0/2 [00:00&lt;?, ?it/s]Processando documentos:  50%|█████     | 1/2 [00:00&lt;00:00,  8.83it/s]Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00, 10.62it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(200, 10)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -523,42 +520,42 @@ Processando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0800633-13.2024.8.12.0006</td>
-<td>1873656</td>
+<td>0804883-12.2021.8.12.0001</td>
+<td>1988615</td>
 <td>0</td>
-<td>Apelação Cível / Obrigação de Fazer / Não Fazer</td>
-<td>Des. Marcelo Câmara Rasslan</td>
-<td>Camapuã</td>
-<td>1ª Câmara Cível</td>
-<td>07/04/2026</td>
-<td>09/04/2026</td>
-<td>APELAÇÃO CÍVEL – AÇÃO DE OBRIGAÇÃO DE FAZER CU...</td>
+<td>Agravo Interno Cível / PASEP</td>
+<td>Vice-Presidente</td>
+<td>Campo Grande</td>
+<td>Vice-Presidência</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. RECU...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>0816158-21.2022.8.12.0001</td>
-<td>1873658</td>
+<td>0804350-61.2023.8.12.0008</td>
+<td>1988640</td>
 <td>0</td>
-<td>Embargos de Declaração Cível / Rescisão / Reso...</td>
-<td>Juiz Fábio Possik Salamene</td>
-<td>Campo Grande</td>
-<td>3ª Câmara Cível</td>
-<td>07/04/2026</td>
-<td>09/04/2026</td>
-<td>EMBARGOS DE DECLARAÇÃO EM APELAÇÃO CÍVEL – AÇÃ...</td>
+<td>Agravo Interno Cível / Obrigação de Fazer / Nã...</td>
+<td>Vice-Presidente</td>
+<td>Corumbá</td>
+<td>Vice-Presidência</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>DIREITO PROCESSUAL CIVIL, CONSTITUCIONAL E ADM...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0800410-78.2025.8.12.0021</td>
-<td>1873674</td>
+<td>0020390-61.2012.8.12.0001</td>
+<td>1988655</td>
 <td>0</td>
-<td>Embargos de Declaração Cível / Obrigação de Fa...</td>
-<td>Juiz Fábio Possik Salamene</td>
-<td>Três Lagoas</td>
-<td>3ª Câmara Cível</td>
-<td>07/04/2026</td>
-<td>09/04/2026</td>
-<td>EMBARGOS DE DECLARAÇÃO APELAÇÃO CÍVEL. INEXIS...</td>
+<td>Apelação Cível / Acidente de Trânsito</td>
+<td>Des. Luiz Tadeu Barbosa Silva</td>
+<td>Campo Grande</td>
+<td>4ª Câmara Cível</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>APELAÇÕES CÍVEIS – AÇÃO DE CONHECIMENTO – PRES...</td>
 </tr>
 </tbody>
 </table>
@@ -569,8 +566,8 @@ Processando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-6" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:43.346574Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:43.346505Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:43.348425Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:43.348165Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>['processo',
  'cd_acordao',
@@ -587,27 +584,27 @@ Processando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:43.349338Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:43.349286Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:43.350963Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:43.350587Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>APELAÇÃO CÍVEL – AÇÃO DE OBRIGAÇÃO DE FAZER CUMULADA COM INDENIZAÇÃO – ACORDO DE DISSOLUÇÃO DE UNIÃO ESTÁVEL – TRANSFERÊNCIA DE VEÍCULO – CLÁUSULA COM TERMO INICIAL, SEM TERMO FINAL – ATRASO NA FORMALIZAÇÃO – POSSE ANTECIPADA DO BEM – LUCROS CESSANTES E DANOS MORAIS – SENTENÇA CONFIRMADA – RECURSO C</code></pre>
+<pre><code>DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. RECURSO ESPECIAL. CONTA VINCULADA AO PASEP. DISTRIBUIÇÃO DO ÔNUS DA PROVA. TEMA REPETITIVO 1.300 DO STJ. LANÇAMENTOS REGISTRADOS SOB A RUBRICA FOPAG. PRETENSÃO DE REEXAME DA NATUREZA DAS MOVIMENTAÇÕES. IMPOSSIBILIDADE DE REEXAME FÁTICO-PROBATÓRIO. CONFORMIDA</code></pre>
 </div>
 </div>
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>You can filter by judgment date, publication date, decision type, and other fields.</p>
-<div id="cell-10" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjms.cjsg(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-10" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:43.351743Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:43.351689Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:45.484830Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:45.484465Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjms.cjsg(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Processando CJSG TJMS: 100%|██████████| 1/1 [00:00&lt;00:00,  7.51it/s]</code></pre>
+<pre><code>Processando documentos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Processando documentos: 100%|██████████| 1/1 [00:00&lt;00:00, 15.07it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(100, 10)</code></pre>
@@ -685,24 +682,24 @@ Processando CJSG TJMS: 100%|██████████| 2/2 [00:00&lt;00:00,
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
 <p>You can also download the raw HTML files and parse them in a separate step.</p>
-<div id="cell-12" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile, os</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>tmp <span class="op">=</span> tempfile.mkdtemp()</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>pasta <span class="op">=</span> tjms.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, diretorio<span class="op">=</span>tmp)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Downloaded to:'</span>, pasta)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Files:'</span>, os.listdir(pasta))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-12" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:45.485975Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:45.485913Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:49.076776Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:49.076323Z&quot;}" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile, os</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>tmp <span class="op">=</span> tempfile.mkdtemp()</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>pasta <span class="op">=</span> tjms.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, diretorio<span class="op">=</span>tmp)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Downloaded to:'</span>, pasta)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Files:'</span>, os.listdir(pasta))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Downloaded to: C:\Users\jtrec\AppData\Local\Temp\tmpzp9zc7ph\cjsg\20260409100838
+<pre><code>Downloaded to: /var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn/T/tmpwusew_y1/cjsg/20261115215445
 Files: ['cjsg_00001.html']</code></pre>
 </div>
 </div>
-<div id="cell-13" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjms.cjsg_parse(pasta)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-13" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:49.077826Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:49.077758Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:49.155472Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:49.155185Z&quot;}" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjms.cjsg_parse(pasta)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Processando CJSG TJMS: 100%|██████████| 1/1 [00:00&lt;00:00,  6.91it/s]</code></pre>
+<pre><code>Processando documentos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Processando documentos: 100%|██████████| 1/1 [00:00&lt;00:00, 13.88it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(100, 10)</code></pre>
@@ -733,42 +730,42 @@ Files: ['cjsg_00001.html']</code></pre>
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">0</td>
-<td>0802534-30.2022.8.12.0024</td>
-<td>1873642</td>
+<td>1413282-28.2014.8.12.0000</td>
+<td>1988517</td>
 <td>0</td>
-<td>Agravo Interno Cível / Pagamento</td>
+<td>Agravo Interno Cível / Férias</td>
 <td>Vice-Presidente</td>
-<td>Aparecida do Taboado</td>
+<td>Não informada</td>
 <td>Vice-Presidência</td>
-<td>08/04/2026</td>
-<td>09/04/2026</td>
-<td>em&gt;DIREITO ADMINISTRATIVO E PROCESSUAL CIVIL. ...</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>AGRAVO INTERNO. IMPUGNAÇÃO AO CUMPRIMENTO DE S...</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
-<td>1414822-28.2025.8.12.0000</td>
-<td>1873646</td>
+<td>1413282-28.2014.8.12.0000</td>
+<td>1988518</td>
 <td>0</td>
-<td>Agravo de Instrumento / Nulidade - Ausência de...</td>
-<td>Des. Marcelo Câmara Rasslan</td>
-<td>Ponta Porã</td>
-<td>1ª Câmara Cível</td>
-<td>07/04/2026</td>
-<td>09/04/2026</td>
-<td>AGRAVO DE INSTRUMENTO - AÇÃO CIVIL PÚBLICA POR...</td>
+<td>Agravo Interno Cível / Férias</td>
+<td>Vice-Presidente</td>
+<td>Não informada</td>
+<td>Vice-Presidência</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>em&gt;DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. C...</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
-<td>0803111-31.2024.8.12.0026</td>
-<td>1873649</td>
+<td>1413282-28.2014.8.12.0000</td>
+<td>1988519</td>
 <td>0</td>
-<td>Apelação Criminal / Tráfico de Drogas e Condut...</td>
-<td>Des. José Ale Ahmad Netto</td>
-<td>Bataguassu</td>
-<td>2ª Câmara Criminal</td>
-<td>07/04/2026</td>
-<td>09/04/2026</td>
-<td>em&gt;DIREITO PENAL E PROCESSUAL PENAL. APELAÇÃO ...</td>
+<td>Agravo Interno Cível / Férias</td>
+<td>Vice-Presidente</td>
+<td>Não informada</td>
+<td>Vice-Presidência</td>
+<td>13/11/2026</td>
+<td>16/11/2026</td>
+<td>AGRAVO INTERNO. IMPUGNAÇÃO AO CUMPRIMENTO DE S...</td>
 </tr>
 </tbody>
 </table>
@@ -780,18 +777,142 @@ Files: ['cjsg_00001.html']</code></pre>
 <section id="first-instance-decisions-cjpg" class="level2">
 <h2 class="anchored" data-anchor-id="first-instance-decisions-cjpg">First-instance decisions (cjpg)</h2>
 <p><code>cjpg()</code> searches the first-instance decisions (sentenças) of TJMS. Unlike <code>cjsg</code>, <code>pesquisa</code> may be empty, to search by filters only (e.g.&nbsp;<code>classe</code>, <code>vara</code>, <code>data_julgamento_inicio</code>). Each row brings the text of the decision in <code>decisao</code> and the codes <code>baixar_sentencas</code> uses to download its PDF.</p>
-<div id="cell-15" class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>sentencas <span class="op">=</span> tjms.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sentencas.shape)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>sentencas.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-15" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:49.156543Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:49.156484Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:49.372162Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:49.371760Z&quot;}" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>sentencas <span class="op">=</span> tjms.cjpg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sentencas.shape)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>sentencas.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando documentos: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]Baixando documentos: 100%|██████████| 1/1 [00:00&lt;?, ?it/s]
+Processando documentos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Processando documentos: 100%|██████████| 1/1 [00:00&lt;00:00, 53.33it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(10, 13)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">cd_processo</th>
+<th data-quarto-table-cell-role="th">cd_foro</th>
+<th data-quarto-table-cell-role="th">nm_alias</th>
+<th data-quarto-table-cell-role="th">cd_documento</th>
+<th data-quarto-table-cell-role="th">id_processo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">magistrado</th>
+<th data-quarto-table-cell-role="th">comarca</th>
+<th data-quarto-table-cell-role="th">foro</th>
+<th data-quarto-table-cell-role="th">vara</th>
+<th data-quarto-table-cell-role="th">data_disponibilizacao</th>
+<th data-quarto-table-cell-role="th">decisao</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0I0008KCG0000</td>
+<td>18</td>
+<td>PG5MS</td>
+<td>158709214</td>
+<td>0802668-36.2026.8.12.0018</td>
+<td>Procedimento Comum Cível</td>
+<td>Repetição do Indébito</td>
+<td>Nária Cassiana Silva Barros</td>
+<td>Paranaíba</td>
+<td>Paranaíba</td>
+<td>1ª Vara Cível</td>
+<td>15/11/2026</td>
+<td>Processo nº 0802668-36.2026.8.12.0018\nClasse:...</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0I0008IMN0000</td>
+<td>18</td>
+<td>PG5MS</td>
+<td>158901409</td>
+<td>0801258-40.2026.8.12.0018</td>
+<td>Procedimento Comum Cível</td>
+<td>Descontos dos benefícios</td>
+<td>Nária Cassiana Silva Barros</td>
+<td>Paranaíba</td>
+<td>Paranaíba</td>
+<td>1ª Vara Cível</td>
+<td>15/11/2026</td>
+<td>Processo nº 0801258-40.2026.8.12.0018\nClasse:...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0I0008KKB0000</td>
+<td>18</td>
+<td>PG5MS</td>
+<td>158715425</td>
+<td>0802879-72.2026.8.12.0018</td>
+<td>Procedimento Comum Cível</td>
+<td>Práticas Abusivas</td>
+<td>Nária Cassiana Silva Barros</td>
+<td>Paranaíba</td>
+<td>Paranaíba</td>
+<td>1ª Vara Cível</td>
+<td>15/11/2026</td>
+<td>Processo nº 0802879-72.2026.8.12.0018\nClasse:...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 </section>
 <section id="sentence-pdfs-baixar_sentencas" class="level2">
 <h2 class="anchored" data-anchor-id="sentence-pdfs-baixar_sentencas">Sentence PDFs (baixar_sentencas)</h2>
 <p><code>baixar_sentencas()</code> downloads the PDF of the sentence in each <code>cjpg</code> row, without login or captcha, and adds <code>caminho_sentenca</code> (<code>None</code> when the download failed) and <code>motivo_falha</code>. <code>baixar_sentenca()</code> downloads a single one.</p>
-<div id="cell-17" class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>pdfs <span class="op">=</span> tjms.baixar_sentencas(sentencas.head(<span class="dv">3</span>), diretorio<span class="op">=</span>tmp)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pdfs[[<span class="st">'id_processo'</span>, <span class="st">'caminho_sentenca'</span>, <span class="st">'motivo_falha'</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-17" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T00:54:49.373317Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T00:54:49.373254Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T00:54:59.519383Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T00:54:59.518622Z&quot;}" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>pdfs <span class="op">=</span> tjms.baixar_sentencas(sentencas.head(<span class="dv">3</span>), diretorio<span class="op">=</span>tmp)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>pdfs[[<span class="st">'id_processo'</span>, <span class="st">'caminho_sentenca'</span>, <span class="st">'motivo_falha'</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">id_processo</th>
+<th data-quarto-table-cell-role="th">caminho_sentenca</th>
+<th data-quarto-table-cell-role="th">motivo_falha</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0802668-36.2026.8.12.0018</td>
+<td>/var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn...</td>
+<td>None</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0801258-40.2026.8.12.0018</td>
+<td>/var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn...</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0802879-72.2026.8.12.0018</td>
+<td>/var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn...</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 
 
