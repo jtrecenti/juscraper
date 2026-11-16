@@ -60,6 +60,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 - Os scrapers HTTP de STF, TJAP, TJBA, TJDFT, TJES, TJGO, TJMT, TJPA, TJPB, TJPE, TJPI, TJRJ, TJRN, TJRO, TJRR, TJSC, TJTO, TRF1, TRF5, eSAJ, ComunicaCNJ e Falcão passam a aceitar `politica=` para ajustar por perfil o timeout e as tentativas das requisições. Os timeouts padrão e a política de retry de cada portal permanecem iguais (#360).
 - TJPR `cjsg`, `cjsg_download` e `cjsg_parse`: as requisições passam a ter timeout, em dois perfis ajustáveis com `politica=`: `"cjsg"` (home e busca, 60 s) e `"ementa"` (ementa completa das linhas truncadas, que o `cjsg_parse` busca, 30 s). Exemplo: `jus.scraper("tjpr", politica={"cjsg": {"timeout": 120}})`. Antes, o raspador não declarava prazo, e uma conexão que o portal deixasse aberta sem responder prendia a coleta sem erro. Agora a busca levanta `requests.Timeout`, e a ementa que não chega no prazo fica com o texto truncado e o aviso de erro na própria linha, como as demais falhas de transporte desse pedido.
+- TRF6: `jus.scraper("trf6", timeout=...)` ajusta o prazo, em segundos, de cada requisição do `cpopg` (o formulário com o captcha e a busca), por um número ou pela tupla `(conexão, leitura)`. O default continua 30 s, que antes era fixo. O TRF6 não usa `politica=`, porque não tem perfis HTTP; valor que não é número positivo e finito (ou `None`) levanta `ValueError` no construtor.
 
 
 #### TJSP

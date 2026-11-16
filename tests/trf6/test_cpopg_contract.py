@@ -71,6 +71,33 @@ def fake_captcha_solver(monkeypatch):
     return FAKE_CAPTCHA
 
 
+def _com_prazo(timeout: object) -> None:
+    """Registra formulário e detalhe que só casam se a requisição levar ``timeout``."""
+    prazo = responses.matchers.request_kwargs_matcher({"timeout": timeout})
+    responses.add(responses.GET, GET_URL, body=load_sample_bytes("trf6", "cpopg/form_initial.html"), match=[prazo])
+    responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", "cpopg/detail_normal.html"), match=[prazo])
+
+
+@responses.activate
+@pytest.mark.parametrize(
+    ("kwargs", "no_transporte"),
+    [({}, 30.0), ({"timeout": 90}, 90), ({"timeout": (5, 120)}, (5, 120))],
+)
+def test_timeout_do_construtor_chega_as_duas_requisicoes(fake_captcha_solver, kwargs, no_transporte):
+    _com_prazo(no_transporte)
+
+    df = jus.scraper("trf6", sleep_time=0, **kwargs).cpopg("10052295520234063801")
+
+    assert df["motivo_falha"].tolist() == [None]
+    assert len(responses.calls) == 2
+
+
+@pytest.mark.parametrize("timeout", [None, 0, -1, float("inf"), float("nan"), "30", True, (5,), (5, None), [5, 120]])
+def test_timeout_invalido_e_recusado_no_construtor(timeout):
+    with pytest.raises(ValueError, match="timeout"):
+        jus.scraper("trf6", timeout=timeout)
+
+
 @responses.activate
 def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
     """Happy path: form fetch + captcha + search + parse → populated row."""

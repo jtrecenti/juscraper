@@ -29,6 +29,7 @@ from ...core.failures import (
     exemplos_do_aviso,
     linhas_de_processos,
 )
+from ...core.http import timeout_valido
 from ...utils.cnj import clean_cnj, format_cnj
 from .download import HEADERS, fetch_detail
 from .parse import COLUNAS_DETALHE, parse_detail
@@ -72,13 +73,14 @@ class TRF6Scraper(BaseScraper):
 
     BASE_URL = "https://eproc1g.trf6.jus.br/eproc/"
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - um parâmetro por ajuste público do raspador
         self,
         verbose: int = 0,
         download_path: str | None = None,
         sleep_time: float = 1.0,
         max_captcha_attempts: int = 3,
         max_captcha_esgotado_seguidos: int | None = 3,
+        timeout: float | tuple[float, float] = 30.0,
         **kwargs: Any,
     ):
         """Configura a sessão da consulta pública.
@@ -93,15 +95,27 @@ class TRF6Scraper(BaseScraper):
                 ``captcha_esgotado`` que encerram o lote: o resolvedor está
                 errando sempre, e os CNJs restantes saem com o mesmo motivo,
                 sem nova consulta. ``None`` não encerra.
+            timeout: Prazo, em segundos, de cada requisição ao portal (o
+                formulário com o captcha e a busca): um número ou a tupla
+                ``(conexão, leitura)``. Default ``30``. O raspador não usa
+                ``politica=``, porque não tem perfis HTTP.
             **kwargs: Guardados em ``self.args``.
 
         Raises:
             TypeError: ``max_captcha_attempts`` ou ``max_captcha_esgotado_seguidos``
                 não é ``int`` (nem ``None``, no segundo).
-            ValueError: Um dos dois é menor que 1.
+            ValueError: Um dos dois é menor que 1, ou ``timeout`` não é um
+                número positivo e finito nem um par deles; ``None`` não vale,
+                porque deixaria a consulta sem prazo.
         """
         _exigir_inteiro_positivo("max_captcha_attempts", max_captcha_attempts)
         _exigir_inteiro_positivo("max_captcha_esgotado_seguidos", max_captcha_esgotado_seguidos, aceita_none=True)
+        # ``requests`` só aceita o par em tupla.
+        if isinstance(timeout, list) or not timeout_valido(timeout, aceita_none=False):
+            raise ValueError(
+                "timeout deve ser um número positivo e finito de segundos ou a tupla (conexão, leitura), "
+                f"recebido {timeout!r}"
+            )
         super().__init__("TRF6")
         self.session = requests.Session()
         self.session.headers.update(HEADERS)
@@ -110,6 +124,7 @@ class TRF6Scraper(BaseScraper):
         self.sleep_time = sleep_time
         self.max_captcha_attempts = max_captcha_attempts
         self.max_captcha_esgotado_seguidos = max_captcha_esgotado_seguidos
+        self.timeout = timeout
         self.args = kwargs
 
     # --- internal helpers -----------------------------------------------
@@ -136,6 +151,7 @@ class TRF6Scraper(BaseScraper):
             self.session,
             formatted,
             max_captcha_attempts=self.max_captcha_attempts,
+            timeout=self.timeout,
         )
 
     def _baixar(self, cnjs: list[str]) -> list[_Consulta]:
