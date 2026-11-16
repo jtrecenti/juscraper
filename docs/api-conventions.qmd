@@ -576,8 +576,10 @@ say why in the `motivo_falha` column (`None` when the item was read). This
 holds for TJSP `cpopg` (table `basicos`) and `cposg`; for `cpopg` of TRF1,
 TRF3, TRF5, TRF6 and TJPE, and `cposg` of TRF3; for `baixar_acordaos` and
 `baixar_sentencas` in the eSAJ courts; and for the batch methods of JusBR and
-PDPJ. DataJud `contar_processos` uses the same values in its `error` column.
-The failures of a call go into a single `UserWarning` at the end.
+PDPJ. The failures of a call go into a single `UserWarning` at the end.
+DataJud `contar_processos` uses the same values in its `error` column, without
+the warning, and `"<Class>: <message>"` for an error outside them, such as a
+partial Elasticsearch response.
 
 | `motivo_falha` | Meaning |
 |---|---|
