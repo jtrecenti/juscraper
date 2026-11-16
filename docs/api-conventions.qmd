@@ -554,7 +554,7 @@ TJMS has the same `cjpg`, with the same filters and columns, and the same
 `baixar_sentenca` and `baixar_sentencas`. The 120-character limit of
 `pesquisa` (`QueryTooLongError`) applies only to TJSP, where it was
 measured. `listar_varas` and `grau="1"` in `listar_classes` and
-`listar_assuntos` exist only in TJSP.
+`listar_assuntos` exist in both courts, which share the `cjpg` form.
 
 ## Normalization Utilities
 

@@ -5,14 +5,13 @@ import logging
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, ClassVar, Literal
+from typing import Any, Literal
 
 import pandas as pd
 from pydantic import BaseModel
 
 from ...utils.params import SEARCH_ALIASES, normalize_pesquisa
 from .._esaj.acordao import EsajAcordaoScraper
-from .._esaj.base import EsajSearchScraper
 from .._esaj.cjpg import EsajCjpgScraper
 from ._falhas import avisar_falhas_de_processo
 from .cpopg_download import cpopg_download_html, validar_download_pecas
@@ -82,16 +81,6 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
     CJSG_CHROME_UA = True
     CJSG_EXTRACT_CONVERSATION_ID = True
 
-    # Alem das arvores de cjsg herdadas de EsajSearchScraper, o TJSP expoe as
-    # arvores de 1o grau (cjpg). Os stems do cjpg sao no SINGULAR
-    # (``classeTreeSelect`` etc.), diferente do plural do cjsg. Refs #228.
-    TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
-        **EsajSearchScraper.TREE_ENDPOINTS,
-        "classes_1": "cjpg/classeTreeSelect.do?campoId=classes",
-        "assuntos_1": "cjpg/assuntoTreeSelect.do?campoId=assuntos",
-        "varas_1": "cjpg/varasTreeSelect.do?campoId=varas",
-    }
-
     def __init__(
         self,
         verbose: int = 0,
@@ -107,25 +96,6 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         )
         self.u_base = self.BASE_URL
         self.method: Literal["html"] | None = None
-
-    def listar_varas(self, *, grau: str = "1") -> pd.DataFrame:
-        """Lista as varas de primeiro grau disponiveis para filtrar (cjpg).
-
-        Baixa a arvore de varas do eSAJ para descobrir os IDs aceitos pelo
-        filtro ``vara`` de :meth:`cjpg`. A arvore agrupa as varas por
-        comarca/foro, entao ``id_pai``/``caminho`` carregam essa hierarquia.
-
-        Args:
-            grau: ``"1"`` (primeiro grau / cjpg). Unico valor aceito.
-
-        Raises:
-            ValueError: Quando ``grau`` nao esta disponivel.
-
-        Returns:
-            Arvore de varas (colunas ``id``, ``nome``,
-                ``id_pai``, ``nivel``, ``selecionavel``, ``caminho``).
-        """
-        return self._listar_arvore(f"varas_{grau}")
 
     def set_download_path(self, path: str | None = None) -> None:
         """Set download base dir; with ``None``, a tempdir is created on first use."""

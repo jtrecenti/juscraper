@@ -272,11 +272,10 @@ class EsajSearchScraper(HTTPScraper):
     _ultimo_pedido: float | None = None
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
-    # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite o
-    # TJSP estender com as arvores de 1o grau (cjpg) sem if/else. Todos os
-    # tribunais eSAJ expoem as arvores de cjsg (2o grau). As entradas ``_1``
-    # ficam no TJSPScraper: o TJMS tambem tem cjpg (#487), mas as arvores
-    # de 1o grau dele nao foram conferidas. Refs #228.
+    # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite a
+    # base do cjpg (``EsajCjpgScraper``) estender com as arvores de 1o grau
+    # sem if/else. Todos os
+    # tribunais eSAJ expoem as arvores de cjsg (2o grau). Refs #228, #487.
     TREE_ENDPOINTS: ClassVar[dict[str, str]] = {
         "classes_2": "cjsg/classesTreeSelect.do?campoId=classes",
         "assuntos_2": "cjsg/assuntosTreeSelect.do?campoId=assuntos",
@@ -718,11 +717,11 @@ class EsajSearchScraper(HTTPScraper):
         """Lista as classes processuais disponiveis para filtrar.
 
         Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo
-        filtro ``classe`` de :meth:`cjsg` (e ``classe`` de ``cjpg`` no TJSP).
+        filtro ``classe`` de :meth:`cjsg` (e ``classe`` de ``cjpg`` no TJSP e no TJMS).
 
         Args:
             grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
-                grau / cjpg). Apenas o TJSP expoe ``grau="1"``.
+                grau / cjpg), só nos tribunais com ``cjpg`` (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`).
 
         Raises:
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.
@@ -744,11 +743,11 @@ class EsajSearchScraper(HTTPScraper):
         """Lista os assuntos disponiveis para filtrar.
 
         Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo
-        filtro ``assunto`` de :meth:`cjsg` (e ``assunto`` de ``cjpg`` no TJSP).
+        filtro ``assunto`` de :meth:`cjsg` (e ``assunto`` de ``cjpg`` no TJSP e no TJMS).
 
         Args:
             grau: ``"2"`` (segundo grau / cjsg, default) ou ``"1"`` (primeiro
-                grau / cjpg). Apenas o TJSP expoe ``grau="1"``.
+                grau / cjpg), só nos tribunais com ``cjpg`` (:class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`).
 
         Raises:
             ValueError: Quando ``grau`` nao esta disponivel neste tribunal.

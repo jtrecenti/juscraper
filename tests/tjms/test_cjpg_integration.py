@@ -1,4 +1,4 @@
-"""Integração do ``cjpg`` e de ``baixar_sentencas`` do TJMS contra o portal (#487).
+"""Integração do ``cjpg``, de ``baixar_sentencas`` e das árvores de 1º grau do TJMS contra o portal (#487).
 
 O ``esaj.tjms.jus.br`` não responde a IP de datacenter: rodar de IP
 residencial, com ``uv run pytest tests/tjms/test_cjpg_integration.py -m integration``.
@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 import juscraper as jus
+from tests.tjsp.test_arvore_integration import ARVORE_COLUNAS
 
 
 @pytest.mark.integration
@@ -33,3 +34,19 @@ def test_baixar_sentencas_da_primeira_linha_do_cjpg(tmp_path):
 
     assert resultado["motivo_falha"].tolist() == [None]
     assert Path(resultado["caminho_sentenca"].iloc[0]).read_bytes().startswith(b"%PDF")
+
+
+@pytest.mark.integration
+def test_arvores_de_primeiro_grau():
+    """As árvores do formulário do cjpg respondem no TJMS, no formato das do TJSP."""
+    scraper = jus.scraper("tjms")
+
+    classes = scraper.listar_classes(grau="1")
+    assuntos = scraper.listar_assuntos(grau="1")
+    varas = scraper.listar_varas()
+
+    for arvore in (classes, assuntos, varas):
+        assert set(arvore.columns) == ARVORE_COLUNAS
+        assert arvore["selecionavel"].sum() > 0
+    assert len(classes) > 50
+    assert varas["caminho"].str.contains("Campo Grande").any()

@@ -7,7 +7,7 @@ Mocka os endpoints ``*TreeSelect.do`` com ``responses`` e valida:
 * o contrato do DataFrame retornado (colunas canonicas, nao-vazio);
 * a decodificacao UTF-8 (nome acentuado sobrevive);
 * os ``ValueError`` para arvores inexistentes no tribunal;
-* que os eSAJ-puros nao expoem as arvores de 1o grau (cjpg so existe no TJSP).
+* que os eSAJ-puros nao expoem as arvores de 1o grau (cjpg so no TJSP e no TJMS).
 
 Refs #228.
 """
@@ -65,7 +65,7 @@ def test_orgaos_nao_existe_no_1o_grau():
 
 def test_esaj_puro_nao_tem_arvore_de_1o_grau():
     tjam = jus.scraper("tjam")
-    # cjpg so existe no TJSP: o eSAJ-puro nem expoe ``listar_varas``...
+    # cjpg so no TJSP e no TJMS: o eSAJ-puro nem expoe ``listar_varas``...
     assert not hasattr(tjam, "listar_varas")
     # ...e pedir 1o grau das arvores compartilhadas levanta ValueError.
     with pytest.raises(ValueError, match="classes_1"):

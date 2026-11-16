@@ -1,0 +1,83 @@
+<!-- Recorte da resposta real de cjpg/classeTreeSelect.do?campoId=classes do TJMS,
+     capturada em 2026-11-15 de IP residencial (UTF-8): mantidos os dois
+     primeiros <li> de cada <ul>; o recorte reserializou o HTML, sem mudar
+     textos nem atributos. Refs #487, #632. -->
+<!-- TreeSelect ini -->
+<div class="treeSelect" id="classes_treeSelectContainer">
+<div class="treeFilter">
+<form method="get" name="treeForm">
+<div>
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="20">
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="20"> </td>
+<td class="spwCelulaGrid" width="*"><input class="spwCampoTextoGrid" id="classes_treeSelectFilter" name="classes_treeSelectFilter" type="text"/></td>
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="15"> </td>
+</tr></table>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" id="filtroButton" type="submit" value="Procurar"/>
+<input class="spwBotaoGrid" type="button" value="Limpar"/>
+</td>
+</tr></table>
+</div>
+</form>
+</div>
+<div class="treeView">
+<ul class="tree root multiSelect" id="classes_tree">
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_8700" role="" searchid="8700" searchvalue="1198-procedimentos administrativos" tabindex="0" value="8700">PROCEDIMENTOS ADMINISTRATIVOS</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_4082" role="checkbox" searchid="4082" searchvalue="1198-procedimentos administrativos|15545-procedimento relativo a posse de maconha para consumo pessoal" tabindex="0" value="4082">Procedimento Relativo à Posse de Maconha para Consumo Pessoal</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_6108" role="checkbox" searchid="6108" searchvalue="1198-procedimentos administrativos|15708-procedimento de justica restaurativa administrativo" tabindex="0" value="6108">Procedimento de Justiça Restaurativa Administrativo</span>
+</li>
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_8618" role="" searchid="8618" searchvalue="268-processo criminal" tabindex="0" value="8618">PROCESSO CRIMINAL</span>
+<ul>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_8677" role="" searchid="8677" searchvalue="385-execucao penal e de medidas alternativas" tabindex="0" value="8677">EXECUÇÃO PENAL E DE MEDIDAS ALTERNATIVAS</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_5801" role="checkbox" searchid="5801" searchvalue="385-execucao penal e de medidas alternativas||12728-transferencia entre estabelecimentos penais" tabindex="0" value="5801">Transferência Entre Estabelecimentos Penais</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_5802" role="checkbox" searchid="5802" searchvalue="385-execucao penal e de medidas alternativas||12729-execucao de medidas alternativas no juizo comum" tabindex="0" value="5802">Execução de Medidas Alternativas no Juízo Comum</span>
+</li>
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_8650" role="" searchid="8650" searchvalue="268-processo criminal|308-medidas cautelares" tabindex="0" value="8650">Medidas Cautelares</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_4308" role="checkbox" searchid="4308" searchvalue="308-medidas cautelares||14734-medidas de protecao - crianca e adolescente (lei 13.431) criminais" tabindex="0" value="4308">Medidas de Proteção - Criança e Adolescente (Lei 13.431) Criminais</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_8001" role="checkbox" searchid="8001" searchvalue="308-medidas cautelares||15170-medidas protetivas de urgencia - criancas e adolescentes (lei henry borel - lei 14.344/2022) criminais" tabindex="0" value="8001">Medidas Protetivas de Urgência - Crianças e Adolescentes (Lei Henry Borel - Lei 14.344/2022) Criminais</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" type="button" value="Selecionar"/>
+<input class="spwBotaoGrid" type="button" value="Cancelar"/>
+</td>
+</tr></table>
+</div>
+</div>
+<script>
+	(function($) {
+		var checkBoxElement = $('#classes_checkbox');
+		var options = {campoId: 'classes'};
+		$.saj.tree('#classes_tree', {selecionarSomenteFolhas: true, autoSelecionarFilhosEPais: true, isMultiSelect: true});
+		// Binds do popup
+		var container = $('div#classes_treeSelectContainer');
+		$('div.treeFilter form', container).bind('submit', options, $.saj.tree.onFilterEvent);
+		$('input[value=Limpar]', container).bind('click', options, $.saj.tree.onClearFilterEvent);
+		$('input[value=Selecionar]', container).bind('click', options, $.saj.tree.onSaveSelection);
+			$('input[value=Todos]', container).bind('click', options, $.saj.tree.onSelectAll);
+			$('input[value=Nenhum]', container).bind('click', options, $.saj.tree.onSelectNone);
+		$('input[value=Cancelar]', container).bind('click', options, $.saj.tree.onCloseEvent);
+		$('#classes_treeSelectFilter').focus();
+	})(jQuery);
+</script>
+<!-- TreeSelect fim -->
