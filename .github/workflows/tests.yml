@@ -67,17 +67,42 @@ jobs:
             echo "</details>"
           } >> "$GITHUB_STEP_SUMMARY"
 
+  # O pyproject.toml aceita pandas>=2.0.0, mas o lock instala o pandas mais novo,
+  # e as pernas acima nunca rodam o piso. Esta perna troca o pandas do lock pela
+  # série do piso e roda a suíte offline. O pandas 2.0 só tem wheel até o Python
+  # 3.11 e foi compilado contra o NumPy 1, que fica abaixo de 2 no mesmo passo.
+  pytest-piso-pandas:
+    name: pytest (py3.11, piso do pandas)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.11"
+          cache-dependency-glob: uv.lock
+      - name: Instalar dependências de desenvolvimento
+        run: uv sync --frozen --extra dev
+      - name: Trocar o pandas do lock pelo piso
+        run: uv pip install "pandas==2.0.*" "numpy<2"
+      # --no-sync: sem ele, o uv run reinstalaria o pandas do lock.
+      - name: Rodar a suíte offline com o piso do pandas
+        run: uv run --no-sync pytest -n auto
+
   # Check obrigatório é casado pelo nome do job. Este job dá um nome só para o
   # resultado de todas as pernas bloqueantes, que não muda quando a matriz muda.
   obrigatorios:
     name: Testes obrigatórios
     if: always()
-    needs: pytest
+    needs: [pytest, pytest-piso-pandas]
     runs-on: ubuntu-latest
     steps:
       - name: Conferir o resultado de todas as pernas
         env:
           RESULTADO: ${{ needs.pytest.result }}
+          RESULTADO_PISO: ${{ needs.pytest-piso-pandas.result }}
         run: |
           echo "pytest: $RESULTADO"
+          echo "pytest com o piso do pandas: $RESULTADO_PISO"
           test "$RESULTADO" = "success"
+          test "$RESULTADO_PISO" = "success"

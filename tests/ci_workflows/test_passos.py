@@ -1,4 +1,4 @@
-"""Executa com bash os blocos ``run:`` dos workflows de integração e de changelog.
+"""Executa com bash os blocos ``run:`` dos workflows de integração, de changelog e de testes.
 
 Ler o texto do YAML não prende o comportamento: reverter um código de saída ou
 a montagem do alvo deixaria as linhas conferidas no lugar. Aqui cada bloco roda
@@ -255,3 +255,22 @@ def test_relatorio_traz_as_suites_e_quem_ficou_fora(tmp_path, tribunal, suite, f
     assert ("Fora desta execução" in corpo) == (fora is not None)
     if fora is not None:
         assert fora in corpo
+
+
+@pytest.mark.parametrize(
+    ("resultado", "resultado_piso", "esperado"),
+    [
+        ("success", "success", 0),
+        ("success", "failure", 1),
+        ("failure", "success", 1),
+        ("success", "cancelled", 1),
+    ],
+    ids=["tudo-verde", "piso-falhou", "matriz-falhou", "piso-cancelado"],
+)
+def test_testes_obrigatorios_exigem_a_matriz_e_o_piso_do_pandas(tmp_path, resultado, resultado_piso, esperado):
+    codigo, _, log = rodar(
+        bloco_run("tests.yml", "Conferir o resultado de todas as pernas"), tmp_path,
+        RESULTADO=resultado, RESULTADO_PISO=resultado_piso,
+    )
+
+    assert codigo == esperado, log
