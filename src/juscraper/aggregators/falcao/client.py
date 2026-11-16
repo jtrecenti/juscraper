@@ -535,7 +535,8 @@ class FalcaoScraper(HTTPScraper):
         if inp.paginas is None and total >= _MAX_RESULTADOS:
             avisar(
                 f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
-                "backend nao informa o total real e o resultado pode estar incompleto. "
+                "backend nao informa o total real e o resultado pode estar incompleto: "
+                f"vieram os primeiros na ordem {inp.ordenacao}. "
                 "Divida a busca em janelas de data_juntada_inicio/data_juntada_fim.",
                 UserWarning,
             )

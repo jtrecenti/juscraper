@@ -32,7 +32,7 @@ AVISO_DE_ORDEM = "A ordem de relevância do Falcao"
 
 # Para os contratos que pedem mais de uma página explícita sem ``ordenacao``, o que avisa.
 # O aviso tem contratos próprios.
-ordem_padrao_avisa = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
+relevancia_avisa = pytest.mark.filterwarnings(f"ignore:{AVISO_DE_ORDEM}:UserWarning")
 
 
 def _sample(colecao: str, cenario: str = "normal") -> dict:
@@ -122,7 +122,7 @@ def test_listar_decisoes_resultado_vazio(falcao):
     assert df.empty
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 @pytest.mark.parametrize("falha", ["cota", "conexao", "interrupcao"])
 def test_listar_decisoes_preserva_paginas_apos_falha(temporarios, falha):
@@ -224,7 +224,7 @@ def test_listar_decisoes_falha_sem_paginas_nao_deixa_pasta_vazia(tmp_path, tempo
     assert not list(temporarios.iterdir())
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 def test_coleta_falhada_nao_entra_no_parse_do_download_path(tmp_path, temporarios):
     downloads = tmp_path / "downloads"
@@ -358,10 +358,10 @@ def test_aviso_de_ordem_convertido_em_erro_preserva_so_as_paginas_pedidas(falcao
     ({"paginas": 1}, 20, [1]),
     ({"paginas": [2]}, 20, [2]),
     ({"paginas": [2, 2]}, 20, [2]),  # a mesma página duas vezes é uma página
-    ({}, 10, [1]),  # o total cabe numa página
+    ({"paginas": [1, 2]}, 10, [1]),  # o total cabe numa página
     ({"paginas": [2, 9]}, 20, [2]),  # a 9 fica além do total e não é requisitada
 ])
-def test_uma_pagina_na_ordem_padrao_nao_avisa(falcao, coleta, total, paginas):
+def test_uma_pagina_por_relevancia_nao_avisa(falcao, coleta, total, paginas):
     _register("acordaos", total=total)
 
     falcao.listar_decisoes("dano moral", **coleta)  # filterwarnings=error: aviso viraria falha
@@ -380,7 +380,7 @@ def test_mais_de_uma_pagina_na_ordem_por_data_nao_avisa(falcao, ordenacao):
     assert _paginas_pedidas() == [1, 2]
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 def test_listar_decisoes_range_com_passo_respeita_o_passo(falcao):
     for pagina in (1, 3, 5):
@@ -389,7 +389,7 @@ def test_listar_decisoes_range_com_passo_respeita_o_passo(falcao):
     assert _paginas_pedidas() == [1, 3, 5]
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
     for pagina in (2, 3):
@@ -399,7 +399,7 @@ def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 @pytest.mark.parametrize("tamanho_pagina,ultima", [(5, 2000), (10, 1000)])
 def test_primeira_pagina_fora_do_teto_nao_impede_paginas_validas(falcao, tamanho_pagina, ultima):
@@ -420,7 +420,7 @@ def test_selecao_inteira_fora_do_teto_nao_requisita(falcao, paginas):
     assert not responses.calls
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 @pytest.mark.parametrize("paginas", [[1.0, 2.0], ["1", "2"]])
 def test_listar_decisoes_paginas_coagidas_pelo_schema(falcao, paginas):
@@ -437,7 +437,7 @@ def test_listar_decisoes_avisa_quando_atinge_o_teto(falcao, monkeypatch):
     monkeypatch.setattr(falcao_client, "_MAX_RESULTADOS", 20)
     for pagina in (1, 2):
         _register("acordaos", total=20, pagina=pagina)
-    with pytest.warns(UserWarning, match="teto de 20 resultados"):
+    with pytest.warns(UserWarning, match="teto de 20 resultados.*ordem menos_recente"):
         falcao.listar_decisoes("dano moral")
     assert _paginas_pedidas() == [1, 2]
 
@@ -449,7 +449,7 @@ def test_listar_decisoes_nao_avisa_com_paginas_explicitas(falcao, monkeypatch):
     falcao.listar_decisoes("dano moral", paginas=1)  # filterwarnings=error: warning viraria falha
 
 
-@ordem_padrao_avisa
+@relevancia_avisa
 @responses.activate
 def test_downloads_no_mesmo_diretorio_nao_se_misturam(falcao, tmp_path):
     # Mesma colecao, segunda busca menor que a primeira: com pasta fixa, a
