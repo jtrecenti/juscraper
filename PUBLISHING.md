@@ -31,7 +31,7 @@ Repita o processo acima em [test.pypi.org](https://test.pypi.org) com:
 
 ### Método 1: Usando o Script Automatizado
 
-O script faz os passos 1 a 3 do método 2, sem o push: atualiza a versão, promove `[Unreleased]` do `CHANGELOG.md` à versão nova como no passo 2 (avisa se a seção estiver vazia) e cria o commit e a tag, parando antes de alterar arquivos se a tag já existir.
+O script faz os passos 1 a 3 do método 2, sem o push: atualiza a versão, promove `[Unreleased]` do `CHANGELOG.md` à versão nova como no passo 2 (avisa se a seção estiver vazia) e cria o commit e a tag, parando antes de alterar arquivos se a tag já existir localmente ou no `origin` ou se o `origin` não puder ser consultado (no `--dry-run`, essa falha de consulta só gera aviso).
 
 ```bash
 # Instalar dependências de desenvolvimento
