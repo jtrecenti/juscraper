@@ -81,3 +81,22 @@ def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
     assert copia.args == erro.args
     assert vars(copia) == vars(erro)
     assert str(copia) == str(erro)
+
+
+@pytest.mark.parametrize(
+    "erro",
+    [ProcessoNaoEncontradoError("1000000-00.2024.8.26.0001", "não existe"), TJAPApiError("falhou")],
+    ids=["esaj", "tjap"],
+)
+@pytest.mark.parametrize("copiar", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
+def test_erro_com_init_proprio_preserva_causa(erro, copiar):
+    try:
+        raise erro from ValueError("causa original")
+    except type(erro) as capturado:
+        copia = copiar(capturado)
+
+    assert type(copia) is type(erro)
+    assert copia.args == erro.args
+    assert vars(copia) == vars(erro)
+    assert type(copia.__cause__) is ValueError
+    assert copia.__cause__.args == ("causa original",)
