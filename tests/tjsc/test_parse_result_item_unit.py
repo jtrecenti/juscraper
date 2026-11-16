@@ -102,6 +102,19 @@ def test_cjsg_parse_manager_reads_process_number_without_link():
     assert df["data_julgamento"].tolist() == [datetime.date(2027, 7, 9)]
 
 
+def test_cjsg_parse_manager_drops_sc_suffix_from_linked_process_number():
+    """O link traz ``<número>/SC`` além de ``<número>/TJSC``; nenhum sufixo fica em ``processo``.
+
+    Sample real (16/11/2026): ``0000.20.06.300854-0/SC`` e
+    ``0000.20.06.047047-0/TJSC`` na mesma página, os dois com link.
+    """
+    df = cjsg_parse_manager([load_sample("tjsc", "cjsg/processo_sufixo_sc.html", encoding="latin-1")])
+
+    assert len(df) == 10
+    assert {"0000.20.06.300854-0", "0000.20.06.047047-0"} <= set(df["processo"])
+    assert not df["processo"].str.contains("/").any()
+
+
 def test_cjsg_parse_manager_warns_when_process_number_is_missing():
     """Sem link nem texto ``/TJSC``, a linha fica sem processo e há aviso."""
     html = """
