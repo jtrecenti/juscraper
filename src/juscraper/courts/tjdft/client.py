@@ -36,7 +36,7 @@ class TJDFTScraper(HTTPScraper):
         sinonimos: bool = True,
         espelho: bool = True,
         inteiro_teor: bool = False,
-        tamanho_pagina: int = 10,
+        tamanho_pagina: int | None = None,
         **kwargs,
     ) -> list:
         """Baixa as respostas cruas da pesquisa de jurisprudência do TJDFT.
@@ -51,15 +51,18 @@ class TJDFTScraper(HTTPScraper):
             sinonimos (bool): Inclui sinônimos do termo na busca.
             espelho (bool): Pesquisa no espelho do acórdão.
             inteiro_teor (bool): Pesquisa também no inteiro teor.
-            tamanho_pagina (int): Resultados por página, de 1 a 40 (acima
-                disso a API responde HTTP 400).
+            tamanho_pagina (int | None): Resultados por página, de 1 a 40
+                (acima disso a API responde HTTP 400). ``None`` usa 10.
 
         Returns:
             Os registros do JSON da API, um por acórdão.
         """
+        # Sentinela ``None``: ``tamanho_pagina=10`` com o alias tambem e conflito.
         tamanho_pagina = resolve_deprecated_alias(
-            kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
+            kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina
         )
+        if tamanho_pagina is not None:
+            kwargs["tamanho_pagina"] = tamanho_pagina
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
@@ -70,7 +73,6 @@ class TJDFTScraper(HTTPScraper):
             sinonimos=sinonimos,
             espelho=espelho,
             inteiro_teor=inteiro_teor,
-            tamanho_pagina=tamanho_pagina,
         )
         brutos: list = cjsg_download(
             query=inp.pesquisa,
@@ -143,7 +145,9 @@ class TJDFTScraper(HTTPScraper):
             TypeError: Quando ``pesquisa`` falta ou quando todos os erros são
                 kwargs desconhecidos.
             ValueError: Quando uma data é inválida, o início é posterior ao
-                fim, ou uma data e seu alias deprecado são passados juntos.
+                fim, ou um parâmetro e seu alias deprecado são passados
+                juntos (uma data, ou ``tamanho_pagina`` com
+                ``quantidade_por_pagina``).
             ValidationError: Para os demais erros de validação do schema,
                 como ``tamanho_pagina`` acima de 40.
 
@@ -157,7 +161,10 @@ class TJDFTScraper(HTTPScraper):
             Uma linha por acórdão, com as chaves do JSON da API como estão,
                 entre elas ``processo``, ``ementa``, ``nomeRelator``,
                 ``descricaoOrgaoJulgador``, ``dataJulgamento`` e
-                ``dataPublicacao`` (texto ISO, como ``2026-10-28T03:00:00.000Z``).
+                ``dataPublicacao``. As duas datas saem como ``datetime.date``,
+                a data em UTC do instante que a API devolve
+                (``2026-10-28T03:00:00.000Z`` vira 28/10/2026), a mesma que os
+                filtros ``data_*`` usam.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -175,5 +182,6 @@ class TJDFTScraper(HTTPScraper):
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
-        coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
+        # Data em UTC de proposito: e a que o filtro ``data_*`` da API usa.
+        coerce_date_columns(df, ["dataJulgamento", "dataPublicacao"], date_format="ISO8601")
         return df

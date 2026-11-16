@@ -134,12 +134,33 @@ def test_cjsg_quantidade_por_pagina_alias_emits_deprecation_warning(mocker):
     assert isinstance(df, pd.DataFrame)
 
 
-def test_cjsg_tamanho_pagina_collision_raises():
-    """Passar canonico + alias simultaneamente levanta ValueError (refs #211)."""
+@pytest.mark.parametrize("tamanho_pagina", [25, 10], ids=["outro_valor", "igual_ao_default"])
+def test_cjsg_tamanho_pagina_collision_raises(tamanho_pagina):
+    """Passar canonico + alias simultaneamente levanta ValueError (refs #211).
+
+    Inclusive com ``tamanho_pagina=10``, o default: antes, o 10 era a
+    sentinela de "nao informado", e o alias passava por cima sem erro.
+    """
     with pytest.raises(ValueError, match=r"tamanho_pagina.*quantidade_por_pagina"):
         jus.scraper("tjdft").cjsg(
-            "dano moral", paginas=1, tamanho_pagina=25, quantidade_por_pagina=50
+            "dano moral", paginas=1, tamanho_pagina=tamanho_pagina, quantidade_por_pagina=50
         )
+
+
+@responses.activate
+@pytest.mark.parametrize(
+    ("kwargs", "tamanho"),
+    [({}, 10), ({"tamanho_pagina": 10}, 10), ({"tamanho_pagina": 25}, 25)],
+    ids=["nenhum", "so_canonico_default", "so_canonico"],
+)
+def test_cjsg_tamanho_pagina_sem_alias_nao_conflita(mocker, kwargs, tamanho):
+    """Sem o alias, ``tamanho_pagina`` (ou o default 10) vai direto ao payload."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, "cjsg/no_results.json", tamanho_pagina=tamanho)
+
+    df = jus.scraper("tjdft").cjsg("dano moral", paginas=1, **kwargs)
+
+    assert isinstance(df, pd.DataFrame)
 
 
 @responses.activate
