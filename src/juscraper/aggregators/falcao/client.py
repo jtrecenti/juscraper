@@ -411,7 +411,7 @@ class FalcaoScraper(HTTPScraper):
         pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
-        # Com checkpoint, ``_baixar`` já avisou antes da coleta. ``paginas`` em lista pode repetir a página.
+        # ``paginas`` em lista pode repetir a página; com checkpoint, ``_baixar`` já avisou.
         if checkpoint is None and len(set(pendentes)) > 1:
             self._avisar_ordem_instavel(inp)
         for pagina in tqdm(pendentes, desc=f"Falcao/{inp.colecao}", disable=not self.verbose):

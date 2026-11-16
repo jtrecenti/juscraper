@@ -327,20 +327,17 @@ def test_aviso_de_ordem_convertido_em_erro_preserva_so_as_paginas_pedidas(falcao
 
 
 @responses.activate
-@pytest.mark.parametrize(("coleta", "paginas"), [
-    ({"paginas": 1}, [1]),
-    ({"paginas": [2]}, [2]),
-    ({"paginas": [2, 2]}, [2]),  # a mesma página duas vezes é uma página
-    ({}, [1]),  # o total cabe numa página
-    ({"paginas": [2, 9]}, [2]),  # a 9 fica além do total e não é requisitada
+@pytest.mark.parametrize(("coleta", "total", "paginas"), [
+    ({"paginas": 1}, 20, [1]),
+    ({"paginas": [2]}, 20, [2]),
+    ({"paginas": [2, 2]}, 20, [2]),  # a mesma página duas vezes é uma página
+    ({}, 10, [1]),  # o total cabe numa página
+    ({"paginas": [2, 9]}, 20, [2]),  # a 9 fica além do total e não é requisitada
 ])
-def test_uma_pagina_na_ordem_padrao_nao_avisa(falcao, coleta, paginas):
-    _register("acordaos", total=10 if not coleta else 20)
+def test_uma_pagina_na_ordem_padrao_nao_avisa(falcao, coleta, total, paginas):
+    _register("acordaos", total=total)
 
-    with warnings.catch_warnings():
-        # O ``pytestmark`` do módulo ignora o aviso de ordem; aqui ele tem de reprovar.
-        warnings.simplefilter("error")
-        falcao.listar_decisoes("dano moral", **coleta)
+    falcao.listar_decisoes("dano moral", **coleta)  # filterwarnings=error: aviso viraria falha
 
     assert _paginas_pedidas() == paginas
 
@@ -351,9 +348,7 @@ def test_mais_de_uma_pagina_na_ordem_por_data_nao_avisa(falcao, ordenacao):
     for pagina in (1, 2):
         _register("acordaos", total=20, pagina=pagina, ordenacao=ordenacao)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        falcao.listar_decisoes("dano moral", ordenacao=ordenacao)
+    falcao.listar_decisoes("dano moral", ordenacao=ordenacao)  # filterwarnings=error: aviso viraria falha
 
     assert _paginas_pedidas() == [1, 2]
 
