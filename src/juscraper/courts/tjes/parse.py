@@ -11,6 +11,30 @@ _FIELD_RENAMES = {
     "assunto_principal": "assunto",
 }
 
+# Os cores legados guardam os mesmos dados sob outros nomes. Campo de origem ->
+# coluna canonica, por core (``core_used`` da resposta).
+_CAMPOS_POR_CORE_LEGADO = {
+    "legado": {
+        "numero_processo_legado": "processo",
+        "conteudo_decisao_html": "ementa",
+        "nome_desembargador": "relator",
+        "orgao_julgador": "orgao_julgador",
+        "data_julgamento": "data_julgamento",
+        "data_publicacao": "data_publicacao",
+        "id": "id",
+        "conteudo_decisao_completa_html": "acordao",
+    },
+    "turma_recursal_legado": {
+        "num_processo": "processo",
+        "cont_ementa": "ementa",
+        "nome_juiz": "relator",
+        "orgao_julgador": "orgao_julgador",
+        "classe_processo": "classe",
+        "data_julgamento": "data_julgamento",
+        "id": "id",
+    },
+}
+
 _MAIN_FIELDS = [
     "processo",
     "ementa",
@@ -23,6 +47,9 @@ _MAIN_FIELDS = [
     "competencia",
     "dt_juntada",
 ]
+
+# Ordem das colunas: as principais primeiro, com as datas dos cores legados.
+_ORDEM_COLUNAS = [*_MAIN_FIELDS, "data_julgamento", "data_publicacao"]
 
 _EXTRA_FIELDS = [
     "id",
@@ -41,14 +68,14 @@ _EXTRA_FIELDS = [
 ]
 
 
-def _normalizar_documento(documento: dict, campos: list[str]) -> dict:
+def _normalizar_documento(documento: dict, campos: dict[str, str]) -> dict:
     """Seleciona campos e junta listas na ordem recebida, mantendo escalares."""
     linha = {}
-    for campo in campos:
+    for campo, coluna in campos.items():
         valor = documento.get(campo)
         if isinstance(valor, list):
             valor = "; ".join(str(item) for item in valor) if valor else None
-        linha[_FIELD_RENAMES.get(campo, campo)] = valor
+        linha[coluna] = valor
     return linha
 
 
@@ -64,25 +91,30 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
+        Nos cores ``legado`` e ``turma_recursal_legado``, as colunas canonicas
+        vem dos campos proprios do core (ver ``_CAMPOS_POR_CORE_LEGADO``), e a
+        data e ``data_julgamento`` (mais ``data_publicacao`` no ``legado``),
+        em vez de ``dt_juntada``.
     """
-    campos_origem = list(_FIELD_RENAMES) + [
-        campo for campo in _MAIN_FIELDS + _EXTRA_FIELDS if campo not in _FIELD_RENAMES.values()
-    ]
+    campos_padrao = dict(_FIELD_RENAMES) | {
+        campo: campo for campo in _MAIN_FIELDS + _EXTRA_FIELDS if campo not in _FIELD_RENAMES.values()
+    }
     linhas: list[dict] = []
     for pagina in resultados_brutos:
+        campos = _CAMPOS_POR_CORE_LEGADO.get(pagina.get("core_used"), campos_padrao)
         documentos = pagina.get("docs", [])
-        linhas.extend(_normalizar_documento(documento, campos_origem) for documento in documentos)
+        linhas.extend(_normalizar_documento(documento, campos) for documento in documentos)
 
     if not linhas:
         return pd.DataFrame()
 
     df = pd.DataFrame(linhas)
 
-    coerce_date_columns(df, ["dt_juntada"])
+    coerce_date_columns(df, ["dt_juntada", "data_julgamento", "data_publicacao"])
 
     # Reorder: main fields first
-    principais = [coluna for coluna in _MAIN_FIELDS if coluna in df.columns]
-    extras = [coluna for coluna in df.columns if coluna not in _MAIN_FIELDS]
+    principais = [coluna for coluna in _ORDEM_COLUNAS if coluna in df.columns]
+    extras = [coluna for coluna in df.columns if coluna not in _ORDEM_COLUNAS]
     df = df[principais + extras]
 
     return df
