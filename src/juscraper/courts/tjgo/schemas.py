@@ -9,10 +9,26 @@ from __future__ import annotations
 
 from typing import Annotated, ClassVar, Literal
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, model_validator
 
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
 from ...schemas.types import _coerce_id_filtro_unico
+
+# Codigos do seletor "Orgao" por instancia (``servTipoId``) e area (``areaId``),
+# da lista ``tipos`` de ``js/ConsultaJurisprudencia.js`` do Projudi (nov/2026).
+# A instancia ``16`` (1o grau) saiu do seletor "Instancia": seus orgaos so
+# aparecem com "Todas as instancias". Os orgaos das Turmas Recursais tem area
+# ``3``, que o seletor "Area" nao oferece.
+ORGAOS_POR_INSTANCIA_E_AREA: dict[tuple[str, str], frozenset[str]] = {
+    ("151", "3"): frozenset({"6", "66"}),
+    ("15", "1"): frozenset({"10", "14", "21", "22", "41", "70"}),
+    ("15", "2"): frozenset({"10", "20", "22", "46", "71"}),
+    ("16", "1"): frozenset({
+        "1", "3", "7", "8", "9", "12", "26", "27", "34", "35", "36", "37", "42", "43",
+        "45", "49", "58", "64", "68", "69", "72", "81", "82", "83",
+    }),
+    ("16", "2"): frozenset({"2", "3", "11", "39", "42", "44", "47", "60", "61", "63", "67"}),
+}
 
 
 class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
@@ -51,6 +67,38 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
     ] = "0"
     numero_processo: str | None = None
     tamanho_pagina: TamanhoPagina = 10
+
+    @model_validator(mode="after")
+    def _combinacao_do_formulario(self) -> InputCJSGTJGO:
+        """Recusa combinacoes que o formulario do Projudi nao monta.
+
+        Replica ``inicializarAreas``/``atualizarAreas`` (com instancia ``151`` so
+        ha a area ``0``) e ``filtrarOpcoes`` (o seletor "Orgao" so lista os
+        orgaos da instancia e da area escolhidas; ``0`` nao filtra). ``1``,
+        deprecado e fora do formulario, fica sem conferencia.
+        """
+        instancia, area = str(self.id_instancia), str(self.id_area)
+        orgao = self.id_serventia_subtipo
+        if instancia == "151" and area != "0":
+            raise ValueError(
+                f"id_area={area} nao existe com id_instancia=151: o formulario do Projudi "
+                "so oferece a area 0 (todas) nas Turmas Recursais."
+            )
+        if orgao == "0" or instancia == "1":
+            return self
+        aceitos = {
+            codigo
+            for (tipo, area_orgao), codigos in ORGAOS_POR_INSTANCIA_E_AREA.items()
+            if instancia in ("0", tipo) and area in ("0", area_orgao)
+            for codigo in codigos
+        }
+        if orgao not in aceitos:
+            raise ValueError(
+                f"id_serventia_subtipo={orgao!r} nao e oferecido pelo formulario do Projudi "
+                f"com id_instancia={instancia} e id_area={area}. "
+                f"Use 0 (todos) ou um de: {', '.join(sorted(aceitos, key=int))}."
+            )
+        return self
 
 
 class OutputCJSGTJGO(OutputCJSGBase):

@@ -71,10 +71,13 @@ class TJGOScraper(HTTPScraper):
             ``3`` are deprecated aliases of ``151`` and ``15``; ``1`` is
             deprecated with no replacement.
         id_area : int or str
-            ``0`` all / ``1`` civil / ``2`` criminal.
+            ``0`` all / ``1`` civil / ``2`` criminal. With ``id_instancia=151``
+            only ``0`` is accepted, as in the website form.
         id_serventia_subtipo : int or str
             Code from the website's "Orgao" dropdown (e.g. ``14`` civil
-            chambers, ``20`` criminal chambers). ``0`` = all.
+            chambers, ``20`` criminal chambers). ``0`` = all. A code the form
+            does not list for the chosen instance and area raises
+            ``ValidationError``.
         numero_processo : str
             Filter by specific CNJ process number.
         tamanho_pagina : int
@@ -144,10 +147,12 @@ class TJGOScraper(HTTPScraper):
                 deprecados (ver abaixo); o 1o grau nao esta no seletor, e
                 ``1`` vai ao portal como esta.
             id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
+                Com ``id_instancia=151``, so ``0``, como no formulario do site.
             id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
                 site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
                 Criminais, ``6`` Turma Recursal Civel e Criminal). ``0`` =
-                todos. Codigo fora da lista levanta ``ValidationError``.
+                todos. Codigo fora da lista, ou que o formulario nao oferece
+                para a instancia e a area escolhidas, levanta ``ValidationError``.
             numero_processo (str): Filtrar por numero CNJ especifico.
             tamanho_pagina (int): Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
@@ -171,7 +176,9 @@ class TJGOScraper(HTTPScraper):
                 ``data_julgamento_inicio`` / ``data_julgamento_fim`` — o backend
                 Projudi nao expoe filtro de data de julgamento; use
                 ``data_publicacao_*`` (canonico para o TJGO).
-            ValidationError: Quando um filtro tem formato invalido.
+            ValidationError: Quando um filtro tem formato invalido ou a
+                combinacao de ``id_instancia``, ``id_area`` e
+                ``id_serventia_subtipo`` nao existe no formulario do Projudi.
 
         Returns:
             DataFrame com as decisoes (coluna ``texto`` carrega
