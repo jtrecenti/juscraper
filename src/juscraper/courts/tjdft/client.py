@@ -57,9 +57,7 @@ class TJDFTScraper(HTTPScraper):
         Returns:
             Os registros do JSON da API, um por acórdão.
         """
-        # Sentinela ``None``, e nao o default 10: ``tamanho_pagina=10`` junto
-        # com o alias tambem e conflito. Sem nenhum dos dois, vale o default
-        # do schema.
+        # Sentinela ``None``: ``tamanho_pagina=10`` com o alias tambem e conflito.
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "quantidade_por_pagina", "tamanho_pagina", tamanho_pagina
         )
@@ -184,8 +182,6 @@ class TJDFTScraper(HTTPScraper):
         brutos = self.cjsg_download(pesquisa=pesquisa, paginas=paginas, **kwargs)
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
-        # A data em UTC, como no filtro da propria API: com
-        # ``data_publicacao`` em 14/11/2026, ela devolve a publicacao de
-        # ``2026-11-14T00:56:36.000Z`` (conferido em 16/11/2026).
+        # Data em UTC de proposito: e a que o filtro ``data_*`` da API usa.
         coerce_date_columns(df, ["dataJulgamento", "dataPublicacao"], date_format="ISO8601")
         return df

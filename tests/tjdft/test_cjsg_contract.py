@@ -81,8 +81,7 @@ def test_cjsg_datas_saem_como_date(mocker):
 
     A data é a do instante em UTC, a mesma do filtro da API: com
     ``data_publicacao`` em 14/11/2026, a API devolve a publicação de
-    ``2026-11-14T00:56:36.000Z`` (conferido em 16/11/2026). O julgamento vem
-    em ``T03:00Z`` (``T02:00Z`` no horário de verão, como em 2016).
+    ``2026-11-14T00:56:36.000Z`` (conferido em 16/11/2026).
     """
     mocker.patch("time.sleep")
     _add_page("dano moral", 1, "cjsg/results_normal_page_01.json")
