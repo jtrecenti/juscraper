@@ -55,26 +55,51 @@ def update_version(new_version: str) -> None:
     print(f"Versão atualizada para {new_version}")
 
 
-def update_changelog(version: str) -> None:
-    """Atualiza o CHANGELOG.md."""
-    changelog_path = Path("CHANGELOG.md")
-    if not changelog_path.exists():
-        print("CHANGELOG.md não encontrado!")
-        return
+def promover_unreleased(conteudo: str, versao: str, data: str) -> str:
+    """Transforma ``[Unreleased]`` na seção ``[versao] - data`` do CHANGELOG.
 
-    content = changelog_path.read_text(encoding="utf-8")
-    today = datetime.now().strftime("%Y-%m-%d")
+    Segue o passo 2 do método 2 do PUBLISHING.md: as entradas de ``[Unreleased]``
+    passam à versão nova, um ``[Unreleased]`` vazio fica acima dela e, nos links do
+    fim do arquivo, ``[Unreleased]`` passa a comparar a partir da tag nova, que
+    ganha o link da comparação com a tag anterior. O resto do texto não muda.
+    Levanta ``ValueError`` quando falta a seção ou o link de ``[Unreleased]`` ou
+    quando a versão já está no arquivo.
+    """
+    if re.search(rf"^## \[{re.escape(versao)}\]", conteudo, flags=re.MULTILINE):
+        raise ValueError(f"CHANGELOG.md já tem a seção [{versao}].")
+    secoes = list(re.finditer(r"^## \[Unreleased\][ \t]*$", conteudo, flags=re.MULTILINE))
+    if len(secoes) != 1:
+        raise ValueError("CHANGELOG.md precisa de exatamente uma seção '## [Unreleased]'.")
+    secao = secoes[0]
+    link = re.search(
+        r"^\[Unreleased\]: (?P<base>\S+/compare/)(?P<anterior>\S+)\.\.\.HEAD[ \t]*$",
+        conteudo,
+        flags=re.MULTILINE,
+    )
+    if link is None or link.start() < secao.end():
+        raise ValueError("CHANGELOG.md precisa do link '[Unreleased]: .../compare/<tag>...HEAD' no fim.")
 
-    # Adiciona nova seção de versão
-    new_section = f"\n## [{version}] - {today}\n\n### Added\n- \n\n### Changed\n- \n\n### Fixed\n- \n\n"
+    base, anterior = link["base"], link["anterior"]
+    return (
+        conteudo[:secao.end()]
+        + f"\n\n## [{versao}] - {data}"
+        + conteudo[secao.end():link.start()]
+        + f"[Unreleased]: {base}v{versao}...HEAD\n[{versao}]: {base}{anterior}...v{versao}"
+        + conteudo[link.end():]
+    )
 
-    # Insere após o cabeçalho
-    lines = content.split('\n')
-    insert_index = 2  # Após o título e linha em branco
-    lines.insert(insert_index, new_section.strip())
 
-    changelog_path.write_text('\n'.join(lines), encoding="utf-8")
-    print(f"CHANGELOG.md atualizado com versão {version}")
+def preparar_changelog(version: str) -> str:
+    """Lê o CHANGELOG.md e devolve o texto com ``[Unreleased]`` promovido à versão nova.
+
+    Encerra o script se o arquivo faltar ou estiver fora do formato esperado.
+    """
+    try:
+        conteudo = Path("CHANGELOG.md").read_text(encoding="utf-8")
+        return promover_unreleased(conteudo, version, datetime.now().strftime("%Y-%m-%d"))
+    except (OSError, ValueError) as erro:
+        print(f"CHANGELOG.md não pode ser atualizado: {erro}")
+        sys.exit(1)
 
 
 def main():
@@ -94,6 +119,9 @@ def main():
     current_version = get_current_version()
     print(f"Versão atual: {current_version}")
     print(f"Nova versão: {args.version}")
+
+    # Confere o CHANGELOG.md antes de qualquer alteração, inclusive no dry run
+    changelog = preparar_changelog(args.version)
 
     if args.dry_run:
         print("=== MODO DRY RUN - Nenhuma alteração será feita ===")
@@ -120,7 +148,8 @@ def main():
     update_version(args.version)
 
     # Atualiza changelog
-    update_changelog(args.version)
+    Path("CHANGELOG.md").write_text(changelog, encoding="utf-8")
+    print(f"CHANGELOG.md atualizado com versão {args.version}")
 
     # Commit das alterações
     run_command('git add pyproject.toml CHANGELOG.md')
@@ -133,7 +162,7 @@ def main():
     print("Para finalizar:")
     print("1. git push origin main")
     print(f"2. git push origin v{args.version}")
-    print("3. Criar release no GitHub com a tag v{args.version}")
+    print(f"3. Criar release no GitHub com a tag v{args.version}")
 
 
 if __name__ == "__main__":
