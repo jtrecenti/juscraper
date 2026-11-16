@@ -2,9 +2,8 @@
 Downloads raw results from the TJBA jurisprudence search (GraphQL API).
 """
 
-
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, paginas_ate_o_teto, recusar_paginas_alem_do_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 from juscraper.utils.params import to_iso_date
 
 GRAPHQL_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
@@ -163,13 +162,11 @@ def cjsg_download(
             raise ValueError(f"GraphQL errors: {data['errors']}")
         return data
 
-    teto = MAX_RESULTS // items_per_page
-    recusar_paginas_alem_do_teto(paginas, teto, tribunal="TJBA")
-
     def _n_pags(first: dict) -> int:
-        page_count = ((first.get("data") or {}).get("filter") or {}).get("pageCount") or 1
-        return paginas_ate_o_teto(paginas, page_count, teto, tribunal="TJBA")
+        page_count: int = ((first.get("data") or {}).get("filter") or {}).get("pageCount") or 1
+        return page_count
 
+    contar = contador_com_teto(paginas, MAX_RESULTS // items_per_page, _n_pags, tribunal="TJBA")
     return baixar_paginas_pedidas(
-        paginas, lambda pagina: _fetch_page(pagina - 1), _n_pags, tribunal="TJBA", sleep_time=1,
+        paginas, lambda pagina: _fetch_page(pagina - 1), contar, tribunal="TJBA", sleep_time=1,
     )

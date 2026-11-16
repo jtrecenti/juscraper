@@ -269,7 +269,7 @@ def baixar_paginas_pedidas(
     first = buscar(primeira)
     validas = paginas_no_intervalo(paginas, contar_paginas(first), tribunal=tribunal)
     resultados = []
-    for pagina in tqdm(validas, desc=f"Baixando CJSG {tribunal}"):
+    for pagina in tqdm(validas, desc=f"Baixando páginas {tribunal}"):
         if pagina == primeira:
             resultados.append(first)
             continue
@@ -279,42 +279,44 @@ def baixar_paginas_pedidas(
     return resultados
 
 
-def recusar_paginas_alem_do_teto(paginas: Iterable[int] | None, teto: int, *, tribunal: str) -> None:
-    """Levanta se alguma página pedida passa de ``teto``, a última que o portal entrega.
+def contador_com_teto(
+    paginas: Iterable[int] | None, teto: int, contar_paginas: Callable[[_Pagina], int], *, tribunal: str
+) -> Callable[[_Pagina], int]:
+    """``contar_paginas`` limitado a ``teto``, a última página que o portal entrega.
 
     Para o portal que limita os resultados de uma busca (10.000 no TJBA e no
-    TJRO) e responde com erro além do limite: a recusa vem antes de qualquer
-    requisição. ``range`` crescente não é percorrido.
+    TJRO), responde com erro além do limite e informa o total sem descontá-lo.
+    A página pedida além de ``teto`` é recusada aqui, antes de qualquer
+    requisição; ``range`` crescente não é percorrido. O contador devolvido
+    serve a :func:`baixar_paginas_pedidas`.
 
     Raises:
         ValueError: Quando a maior página pedida passa de ``teto``.
+
+    Avisos:
+        ``UserWarning``, emitido pelo contador: com ``paginas=None``, quando o
+        total passa de ``teto``, porque o download para nele.
     """
-    if paginas is None:
-        return
-    maior = paginas[-1] if isinstance(paginas, range) and paginas.step > 0 else max(paginas)
-    if maior > teto:
-        raise ValueError(
-            f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
-            f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
-        )
+    if paginas is not None:
+        maior = paginas[-1] if isinstance(paginas, range) and paginas.step > 0 else max(paginas)
+        if maior > teto:
+            raise ValueError(
+                f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
+                f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
+            )
 
+    def contar(first: _Pagina) -> int:
+        n_pags = contar_paginas(first)
+        if n_pags <= teto:
+            return n_pags
+        if paginas is None:
+            avisar(
+                f"{tribunal}: a busca tem {n_pags} páginas, e o portal só entrega as {teto} primeiras; "
+                "as demais não foram baixadas. Restrinja a busca para alcançá-las."
+            )
+        return teto
 
-def paginas_ate_o_teto(paginas: Iterable[int] | None, n_pags: int, teto: int, *, tribunal: str) -> int:
-    """O total de páginas que o portal entrega: ``n_pags`` limitado a ``teto``.
-
-    O total que o portal informa não desconta o limite de resultados. Com
-    ``paginas=None`` e total acima de ``teto``, emite ``UserWarning``, porque
-    o download para em ``teto``; páginas explícitas já passaram por
-    :func:`recusar_paginas_alem_do_teto`.
-    """
-    if n_pags <= teto:
-        return n_pags
-    if paginas is None:
-        avisar(
-            f"{tribunal}: a busca tem {n_pags} páginas, e o portal só entrega as {teto} primeiras; "
-            "as demais não foram baixadas. Restrinja a busca para alcançá-las."
-        )
-    return teto
+    return contar
 
 
 def _avisar_paginas_fora(primeiras: list[int], n_fora: int, n_pags: int, tribunal: str) -> None:

@@ -11,11 +11,10 @@ from bs4 import BeautifulSoup
 
 from juscraper.utils.pagination import (
     baixar_paginas_pedidas,
+    contador_com_teto,
     extract_count_with_cascade,
-    paginas_ate_o_teto,
     paginas_no_intervalo,
     parse_page_number,
-    recusar_paginas_alem_do_teto,
     resolve_total_pages,
 )
 
@@ -362,20 +361,28 @@ class TestBaixarPaginasPedidas:
         sleep.assert_not_called()
 
 
+def _cinco_paginas(_first: object) -> int:
+    return 5
+
+
+def _duas_paginas(_first: object) -> int:
+    return 2
+
+
 @pytest.mark.parametrize("paginas", [[1, 4], range(1, 10**9), [4]])
-def test_recusar_paginas_alem_do_teto_levanta(paginas):
+def test_contador_com_teto_recusa_pagina_alem_do_teto(paginas):
     with pytest.raises(ValueError, match=r"TJXX: o portal só entrega as 3 primeiras páginas.*página (4|999999999)\."):
-        recusar_paginas_alem_do_teto(paginas, 3, tribunal="TJXX")
+        contador_com_teto(paginas, 3, _cinco_paginas, tribunal="TJXX")
 
 
-@pytest.mark.parametrize("paginas", [None, [3, 1], range(1, 4), range(3, 0, -1)])
-def test_recusar_paginas_alem_do_teto_aceita_ate_o_teto(paginas):
-    recusar_paginas_alem_do_teto(paginas, 3, tribunal="TJXX")
+@pytest.mark.parametrize("paginas", [[3, 1], range(1, 4), range(3, 0, -1)])
+def test_contador_com_teto_limita_paginas_explicitas_sem_aviso(paginas, recwarn):
+    assert contador_com_teto(paginas, 3, _cinco_paginas, tribunal="TJXX")(None) == 3
+    assert len(recwarn) == 0
 
 
-def test_paginas_ate_o_teto_avisa_so_quando_baixa_todas(recwarn):
-    assert paginas_ate_o_teto([1, 2], 5, 3, tribunal="TJXX") == 3
-    assert paginas_ate_o_teto(None, 2, 3, tribunal="TJXX") == 2
+def test_contador_com_teto_avisa_quando_baixa_todas(recwarn):
+    assert contador_com_teto(None, 3, _duas_paginas, tribunal="TJXX")(None) == 2
     assert len(recwarn) == 0
     with pytest.warns(UserWarning, match=r"TJXX: a busca tem 5 páginas, e o portal só entrega as 3 primeiras"):
-        assert paginas_ate_o_teto(None, 5, 3, tribunal="TJXX") == 3
+        assert contador_com_teto(None, 3, _cinco_paginas, tribunal="TJXX")(None) == 3

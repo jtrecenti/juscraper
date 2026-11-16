@@ -2,7 +2,7 @@
 import math
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, paginas_ate_o_teto, recusar_paginas_alem_do_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 
 BASE_URL = "https://juris-back.tjro.jus.br/search/varios_parametros/"
 RESULTS_PER_PAGE = 10
@@ -104,13 +104,10 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    teto = MAX_RESULTS // RESULTS_PER_PAGE
-    recusar_paginas_alem_do_teto(paginas, teto, tribunal="TJRO")
-
     def _n_pags(first: dict) -> int:
         total_info = first.get("hits", {}).get("total", {})
-        total = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
-        n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        return paginas_ate_o_teto(paginas, n_pags, teto, tribunal="TJRO")
+        total: int = total_info.get("value", 0) if isinstance(total_info, dict) else total_info
+        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
 
-    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJRO", sleep_time=sleep_time)
+    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJRO")
+    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJRO", sleep_time=sleep_time)
