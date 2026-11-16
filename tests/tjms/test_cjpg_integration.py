@@ -42,9 +42,10 @@ def test_arvores_de_primeiro_grau():
     colunas = {"id", "nome", "id_pai", "nivel", "selecionavel", "caminho"}
 
     classes = scraper.listar_classes(grau="1")
+    assuntos = scraper.listar_assuntos(grau="1")
     varas = scraper.listar_varas()
 
-    for arvore in (classes, varas):
+    for arvore in (classes, assuntos, varas):
         assert set(arvore.columns) == colunas
         assert arvore["selecionavel"].sum() > 0
     assert len(classes) > 50
