@@ -70,23 +70,44 @@ def _operando(pedaco: str, pesquisa: str) -> str:
         return f'"{pedaco}"'
     if not _PALAVRA_COM_CURINGA.fullmatch(pedaco):
         raise ValueError(
-            "STM: com filtro de data, palavra com curinga ('*' ou '?') aceita só letras, dígitos, ponto e hífen "
-            f"(recebido: {pedaco!r}, em {pesquisa!r})."
+            "STM: com filtro de data, palavra com curinga ('*' ou '?') aceita só letras, dígitos e, depois do "
+            f"começo, ponto e hífen (recebido: {pedaco!r}, em {pesquisa!r})."
         )
     return pedaco
 
 
-def _expressao_bem_formada(partes: list[str]) -> bool:
-    """Diz se os parênteses estão em pares e se todo operador tem os seus termos."""
-    abertos = 0
-    for pedaco in partes:
-        abertos += (pedaco == "(") - (pedaco == ")")
-        if abertos < 0:
-            return False
-    pares = zip(["(", *partes], [*partes, ")"], strict=True)
-    return abertos == 0 and not any(
-        (atual in _BINARIOS or atual == ")") and anterior in _SEM_TERMO_ANTES for anterior, atual in pares
-    )
+_SEM_PAR = "precisa ter os parênteses em pares"
+
+
+def _defeito_dos_grupos(partes: list[str]) -> str | None:
+    """Confere os pares de parênteses e a mistura de ``AND`` com ``OR`` dentro de cada um."""
+    # Operadores binários de cada grupo de parênteses ainda aberto; o primeiro é a expressão toda.
+    grupos: list[set[str]] = [set()]
+    for parte in partes:
+        if parte == "(":
+            grupos.append(set())
+        elif parte == ")":
+            grupos.pop()
+            if not grupos:
+                return _SEM_PAR
+        elif parte in _BINARIOS:
+            grupos[-1].add(parte)
+            if len(grupos[-1]) > 1:
+                return (
+                    "precisa de parênteses que digam a ordem onde E (ou termos seguidos) e OU se misturam, como em "
+                    "'(furto roubo) OU peculato'"
+                )
+    return None if len(grupos) == 1 else _SEM_PAR
+
+
+def _defeito_da_expressao(partes: list[str]) -> str | None:
+    """Diz por que a expressão não vai para a consulta; ``None`` quando ela está em ordem."""
+    for anterior, atual in zip(["(", *partes], [*partes, ")"], strict=True):
+        if (atual in _BINARIOS or atual == ")") and anterior in _SEM_TERMO_ANTES:
+            return "precisa de um termo de cada lado dos operadores E e OU, depois do NÃO e dentro dos parênteses"
+        if atual == "NOT" and anterior != "AND":
+            return "só aceita o NÃO depois de um termo (como em 'furto NÃO roubo'), para excluir dele o seguinte"
+    return _defeito_dos_grupos(partes)
 
 
 def _expressao_avancada(termo: str, pesquisa: str) -> str:
@@ -94,7 +115,9 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
 
     ``E``, ``OU`` e ``NÃO`` (em qualquer caixa) viram ``AND``, ``OR`` e
     ``NOT``; entre dois termos sem operador entra ``AND``, o padrão da busca
-    simples. Palavra sem curinga vai entre aspas, como o formulário do portal
+    simples. O ``NÃO`` só vale depois de um termo, e ``E`` e ``OU`` no mesmo
+    grupo pedem parênteses: fora disso, a consulta avançada não lê a expressão
+    como a busca simples. Palavra sem curinga vai entre aspas, como o formulário do portal
     a manda; expressão entre aspas, parênteses e palavra com curinga seguem
     como vieram.
     """
@@ -110,11 +133,8 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
         if abre_termo and partes and partes[-1] not in _SEM_TERMO_ANTES:
             partes.append("AND")
         partes.append(operador or _operando(pedaco, pesquisa))
-    if not _expressao_bem_formada(partes):
-        raise ValueError(
-            "STM: com filtro de data, 'pesquisa' precisa ter os parênteses em pares e um termo de cada lado dos "
-            f"operadores E e OU e depois do NÃO (recebido: {pesquisa!r})."
-        )
+    if defeito := _defeito_da_expressao(partes):
+        raise ValueError(f"STM: com filtro de data, 'pesquisa' {defeito} (recebido: {pesquisa!r}).")
     # Espaço entre as partes, menos por dentro dos parênteses.
     expressao = "".join(
         parte if parte == ")" or anterior == "(" else f" {parte}"
@@ -126,7 +146,7 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
 def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
     """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
     termo = pesquisa.strip()
-    if not termo or termo == '""':
+    if not termo.strip('" '):
         return None
     if campo == "tudo":
         raise ValueError(
@@ -134,7 +154,7 @@ def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
             "por intervalo, não tem a opção 'Todos os Campos'; escolha outro campo ou tire as datas."
         )
     if campo == "numero":
-        digitos = _PONTUACAO_DO_NUMERO.sub("", termo.strip('"'))
+        digitos = _PONTUACAO_DO_NUMERO.sub("", termo.strip('" '))
         if not digitos.isdigit():
             raise ValueError(
                 "STM: com filtro de data, 'pesquisa' em campo='numero' aceita só dígitos e a pontuação do número "
@@ -158,7 +178,8 @@ def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str 
 
     Raises:
         ValueError: Quando o termo não cabe na consulta: barra invertida,
-            aspas ou parênteses sem par, operador sem termo, curinga em
+            aspas ou parênteses sem par, operador sem termo, ``NÃO`` sem termo
+            antes, ``E`` e ``OU`` misturados sem parênteses, curinga em
             palavra com outro símbolo, ``campo="tudo"`` ou, em
             ``campo="numero"``, algo além do número do processo.
     """

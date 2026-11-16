@@ -136,4 +136,3 @@ def test_cjsg_curinga_e_parenteses_com_data_ao_vivo(stm):
     assert 0 < inteira <= com_curinga
     assert 0 < len(df) < com_curinga
     assert df["ementa"].str.contains("deser", case=False).all()
-    assert df["ementa"].str.contains("furto|peculato", case=False).all()

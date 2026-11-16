@@ -165,6 +165,7 @@ def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa,
         ('"furto" OU "roubo qualificado"', '("furto" OR "roubo qualificado")'),
         ("furto NÃO infração", '("furto" AND NOT "infração")'),
         ("detenção OU (código NÃO penal)", '("detenção" OR ("código" AND NOT "penal"))'),
+        ("(furto roubo) OU peculato OU dano", '(("furto" AND "roubo") OR "peculato" OR "dano")'),
         ("deser*", "deser*"),
         ("em?argos deser*", "(em?argos AND deser*)"),
         ('"detenção civil"~2', '"detenção civil"~2'),
@@ -198,7 +199,13 @@ def test_cjsg_operadores_traduzidos_para_a_consulta_avancada(mocker, recwarn, pe
         ("furto OU", "ementa", "um termo de cada lado"),
         ("E furto", "ementa", "um termo de cada lado"),
         ("furto NÃO", "ementa", "depois do NÃO"),
-        ("()", "ementa", "um termo de cada lado"),
+        ("()", "ementa", "dentro dos parênteses"),
+        # Negação sem termo antes: a consulta avançada devolveria nada.
+        ("NÃO furto", "ementa", "só aceita o NÃO depois de um termo"),
+        ("furto OU NÃO roubo", "ementa", "só aceita o NÃO depois de um termo"),
+        # E e OU no mesmo grupo: a precedência da consulta avançada não é a da leitura.
+        ("furto roubo OU peculato", "ementa", "parênteses que digam a ordem"),
+        ("(furto OU roubo E peculato) deserção", "ementa", "parênteses que digam a ordem"),
         ("9.099/9*", "ementa", "palavra com curinga"),
         ("7000588 OU 60", "numero", "só dígitos"),
         ("deserção", "tudo", "campo='tudo' não combina com filtro de data"),
@@ -211,7 +218,7 @@ def test_cjsg_termo_que_nao_cabe_na_consulta_avancada_levanta(pesquisa, campo, e
         )
 
 
-@pytest.mark.parametrize("pesquisa", ["", "  ", '""'])
+@pytest.mark.parametrize("pesquisa", ["", "  ", '""', '" "'])
 def test_consulta_avancada_sem_termo_fica_so_com_os_intervalos(pesquisa):
     datas = {"data_julgamento_inicio": "2010-01-01", "data_julgamento_fim": "2022-06-08"}
 

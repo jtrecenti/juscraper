@@ -96,7 +96,10 @@ class STMScraper(HTTPScraper):
                 portal, a única que filtra por intervalo. Os operadores de
                 ``pesquisa`` valem nela também: o raspador os traduz para a
                 sintaxe da pesquisa avançada (``E``, ``OU`` e ``NÃO``, em
-                qualquer caixa, viram ``AND``, ``OR`` e ``NOT``). Ela aceita
+                qualquer caixa, viram ``AND``, ``OR`` e ``NOT``). Nela, o
+                ``NÃO`` vem depois de um termo (``"furto NÃO roubo"``) e a
+                mistura de ``E`` com ``OU`` pede parênteses
+                (``"(furto roubo) OU peculato"``). Ela aceita
                 ``pesquisa=""``, para trazer tudo o que está no intervalo, e
                 não tem ``campo="tudo"``. Informado só um lado do intervalo,
                 o outro é preenchido (01/01/1990 ou hoje), com
@@ -115,7 +118,8 @@ class STMScraper(HTTPScraper):
             ValueError: Quando uma data é inválida ou o início vem depois do
                 fim; quando há filtro de data e ``campo="tudo"`` com termo, ou
                 ``pesquisa`` tem barra invertida, aspas ou parênteses sem par,
-                operador sem termo, curinga em palavra com símbolo além de
+                operador sem termo, ``NÃO`` sem termo antes, ``E`` e ``OU``
+                misturados sem parênteses, curinga em palavra com símbolo além de
                 ponto e hífen ou, em ``campo="numero"``, algo além do número
                 do processo; quando a página devolvida não traz o contador de
                 documentos nem o aviso de busca vazia.
