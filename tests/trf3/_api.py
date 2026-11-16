@@ -17,7 +17,7 @@ from typing import Any
 import responses
 from responses import matchers
 
-from juscraper.courts.trf3.download import RECURSOS_PAGINADOS, busca_url, recurso_url
+from juscraper.courts._pje_api.download import RECURSOS_PAGINADOS, busca_url, recurso_url
 
 SAMPLES = Path(__file__).parent / "samples"
 

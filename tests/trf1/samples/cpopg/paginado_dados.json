@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "1003063-27.2023.4.01.3304",
+  "dataDistribuicao": "2023-02-23T12:00:11.627",
+  "classeJudicial": "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL (436)",
+  "assunto": "DIREITO DA SAÚDE (12480) - Pública (12481) - Fornecimento de medicamentos (12484) - Oncológico (12496)",
+  "jurisdicao": "Subseção Judiciária de Feira de Santana-BA",
+  "orgaoJulgador": "Juizado Especial Cível e Criminal Adjunto à 3ª Vara Federal da SSJ de Feira de Santana-BA",
+  "orgaoJulgadorColegiado": "",
+  "endereco": "Rua Turquia, s/n, - até 309/310, Ponto Central, FEIRA DE SANTANA - BA - CEP: 44075-295",
+  "enderecoOrgaoJulgadorColegiado": "",
+  "numeroProcessoReferencia": null
+ }
+}

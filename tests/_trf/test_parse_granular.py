@@ -2,8 +2,9 @@
 
 O ramo ``ID: <id> - <data> - <descrição>`` dos documentos só aparece nos
 samples de ``tests/_trf/samples/cpopg/`` (PJe JSF capturado antes da troca
-do TRF3 para a API). As páginas do TRF1 e do TRF5 listam os documentos sem o
-prefixo ``ID:`` e caem no ramo que guarda só a descrição.
+do TRF3 para a API). As páginas do TRF1 (``trf1_*``, também JSF capturado
+antes da troca) e do TRF5 listam os documentos sem o prefixo ``ID:`` e caem no
+ramo que guarda só a descrição.
 """
 from __future__ import annotations
 
@@ -44,7 +45,7 @@ def test_documentos_com_prefixo_id_e_milissegundos_curtos() -> None:
 
 def test_documentos_sem_prefixo_id_guardam_so_a_descricao() -> None:
     """No layout do TRF1, sem ``ID:``, ``id`` e ``data`` ficam ``None`` e a linha inteira vai para ``descricao``."""
-    documentos = parse_detail(_detail("trf1", "detail_normal.html"))["documentos"]
+    documentos = parse_detail(_detail("_trf", "trf1_detail_normal.html"))["documentos"]
 
     assert documentos
     assert documentos[0] == {

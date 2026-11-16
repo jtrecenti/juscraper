@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "f1hCK_DizrmHvrHHDN_fHXEVsIiJs0TaW06LugEz7lrWrNbn1b895bJqbheVOzhJvw",
+   "numeroProcesso": "1003063-27.2023.4.01.3304",
+   "classe": "PROCEDIMENTO DO JUIZADO ESPECIAL CÍVEL",
+   "classeSigla": "PJEC",
+   "assunto": "Oncológico",
+   "ultimaMovimentacao": null,
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "ADILON JOSE DOS SANTOS",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "UNIÃO FEDERAL",
+     "qntOutros": 1,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}

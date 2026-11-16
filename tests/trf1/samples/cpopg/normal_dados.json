@@ -1,0 +1,17 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": {
+  "numeroProcesso": "1008828-35.2021.4.01.3502",
+  "dataDistribuicao": "2021-12-22T10:25:23.531",
+  "classeJudicial": "PROCEDIMENTO COMUM CÍVEL (7)",
+  "assunto": "DIREITO DA SAÚDE (12480) - Pública (12481) - Fornecimento de medicamentos (12484) - Sem registro na ANVISA (12493)",
+  "jurisdicao": "Subseção Judiciária de Anápolis-GO",
+  "orgaoJulgador": "2ª Vara Federal Cível e Criminal da SSJ de Anápolis-GO",
+  "orgaoJulgadorColegiado": "",
+  "endereco": "Avenida Universitária, Quadra 02, lote, 05, Jardim Bandeirante, ANáPOLIS - GO - CEP: 75083-035",
+  "enderecoOrgaoJulgadorColegiado": "",
+  "numeroProcessoReferencia": null
+ }
+}

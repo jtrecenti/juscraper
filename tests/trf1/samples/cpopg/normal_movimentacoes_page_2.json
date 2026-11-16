@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "17/08/2023 14:20:52 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/08/2023 14:20:59",
+   "idDocumento": "Q4mUryddrC5OebZTn9ZhV95B08FjVaScHs0PrfXAjGM-IjKUKG2PODG97mDB2wi__n0xPQ"
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/08/2023 14:20:58",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "17/08/2023 14:20:52 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/08/2023 14:20:57",
+   "idDocumento": "9iIEWwInk4vSEKKNoPWJhzfu1h5ebfx3kYgYmT8x3N4Sj3xCpPhF4uJ4eYsVuii6fK9bCw"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "17/08/2023 14:20:52 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/08/2023 14:20:53",
+   "idDocumento": "xBpnobvUVq0ErAenxV3iWk0UxRp5L2OXeJhdbMIzO98ucBBLZyspVWZGe6blGWI4Qy8dpw"
+  },
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/08/2023 13:38:01",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de MUNICIPIO DE ANAPOLIS em 06/03/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/03/2023 01:30:17",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIÃO FEDERAL em 01/03/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "02/03/2023 00:26:17",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DE GOIAS em 23/02/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/02/2023 03:13:03",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de emenda à inicial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/01/2023 16:52:25",
+   "idDocumento": "BUjlYGgZGb-zq7mnojNUeCzvcNCxjsqwTmr1jgnxVBWw5gus0vR5-FKmXEXtftQeuV8w4Q"
+  },
+  {
+   "movimento": "Juntada de apelação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/01/2023 16:21:16",
+   "idDocumento": "VAUbHWC9YLo0tqXyOvViYoJOzRPPiX1gzb12suV6k0Tyj4DlLrKUP1hB9pxbCAsUqbAelw"
+  },
+  {
+   "movimento": "Publicado Sentença Tipo A em 08/12/2022.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "06/12/2022 09:19:57 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/12/2022 02:17:54",
+   "idDocumento": "niwhQdCmouNVVGZ9jvz3aCJartjaF4NflNJGSh5Ql7P3HmtOnNW1wNyOwhi45mh1GJvsJA"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 09/12/2022",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "06/12/2022 09:19:57 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/12/2022 02:17:53",
+   "idDocumento": "8j2ISIOTYHMg99SHtP-QHWXJg3n5uXbR_MHX0QpQQgOeq0--SVD7SjLNa88j2OW2GU1jwA"
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "06/12/2022 09:19:59",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/12/2022 09:19:59",
+   "idDocumento": "Vo0ke9f-nLxotc5Y2-rItFWOAzPVdpvm5BaacvJvowA3I3nR6GOfZ0wtX9VrLw6dcogMIw"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "06/12/2022 09:19:57 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/12/2022 09:19:58",
+   "idDocumento": "vx81uhccjAKeYp5_dbKQOg6c4n25eINocY3BcJJh4tqaiVGhqavcYqtckftncs9JdmOOuQ"
+  }
+ ],
+ "pageInfo": {
+  "current": 3,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

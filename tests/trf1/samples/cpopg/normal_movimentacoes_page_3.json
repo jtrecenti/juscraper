@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "06/12/2022 09:19:58",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "06/12/2022 09:19:57 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/12/2022 09:19:58",
+   "idDocumento": "Rqmc7dIJvsJYwMc5zr7Iql6Y1gAGLVgNu1baWB6hp4phj42Wa1ykFnBy1E5s35ADRjNjTA"
+  },
+  {
+   "movimento": "Julgado improcedente o pedido",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "06/12/2022 09:19:57 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/12/2022 09:19:57",
+   "idDocumento": "Oh4NSZRPkl5zagZ2X8lFoT3rCR81SV19-Wb0yZcvxG9x-O_LVnK6Q4xxOLcneNyePF7hzQ"
+  },
+  {
+   "movimento": "Conclusos para julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "03/11/2022 11:02:22",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de documentos diversos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/09/2022 11:42:29",
+   "idDocumento": "RU6vVn9jOGPdQBztPjlsnkpMw7wZY-1H91YGKkfapcnFnHmMSwIb5MgerrV2JDWuXdqBpw"
+  },
+  {
+   "movimento": "Decorrido prazo de UNIÃO FEDERAL em 11/07/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/07/2022 01:53:41",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/06/2022 16:19:49",
+   "idDocumento": "A04Hy6GCWeEMSI8SwjQ7xsT39o7AAKy-IJ0izMaukKGyy_rc2cb_7T-2R5uXYlqQzbtrvg"
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/06/2022 09:09:34",
+   "idDocumento": "mX-n4OyNYRl0h4_kwNxPaegdpwbzykoTUR396sHTeljQVuVsWbXbpS8eXcIMJfBy0hY3NA"
+  },
+  {
+   "movimento": "Juntada de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/06/2022 13:14:05",
+   "idDocumento": "9xpQERGiTaZEIR6tqlSq1nHxfIdxWFFvSGfrnh_-op-FaN9d5fDWf3kpy8vRPVYKfBNI0w"
+  },
+  {
+   "movimento": "Juntada de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/06/2022 11:46:24",
+   "idDocumento": "mmvLWxCEdy8UDX1y5iWLqqfbXlINRq_G0e-1l83_pOIioQbVWBjjoFLXQ-xV7QVbSLv2CA"
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/05/2022 10:25:32",
+   "idDocumento": "BGztP-QGVw3imddOOzsbuHkjip8HSL77VQs_bQDZxMFga1MzAdcWzJ8qaFgZ2P7NU1jKVA"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "31/05/2022 10:25:28 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/05/2022 10:25:30",
+   "idDocumento": "zM-bpINhIBLBfHTIil4enTkrlpzxd6nwoHRkccPelLxAIci3BD0DDckH14LuZRTIr97UKw"
+  },
+  {
+   "movimento": "Ato ordinatório praticado",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "31/05/2022 10:25:28 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "31/05/2022 10:25:30",
+   "idDocumento": "Io9UDibQ2Z1mYo4qS0bmvZu_gOeUJNZoXxMsu8PcqzXnBRKNuoC4xLuy_r5lB8nM74CAcA"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/04/2022 19:49:49",
+   "idDocumento": "avKCDV9Vg4zhvxn1odV3aFz52qNYZj8di9Zzw8Ux3U_ZB7N9T4NSaZmFjxYTGzzzNwcQXg"
+  },
+  {
+   "movimento": "Juntada de réplica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/04/2022 10:27:31",
+   "idDocumento": "VFUQlraNxj3TKVjTnJcuZHRDz-giH_M_5t56VM6hWIGOwLM8lb7vtgKmUYPr_36ogJTASQ"
+  }
+ ],
+ "pageInfo": {
+  "current": 4,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

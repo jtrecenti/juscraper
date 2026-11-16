@@ -205,6 +205,8 @@ quartodoc:
         - courts.tjro.client.TJROScraper
         - courts.tjrr.client.TJRRScraper
         - courts.tjsc.client.TJSCScraper
-        - courts.trf3.client.TRF3Scraper
+        # cpopg_download e cpopg_parse vêm de _pje_api/base.py.
+        - name: courts.trf3.client.TRF3Scraper
+          include_inherited: true
         - courts.trf5.client.TRF5Scraper
         - courts.trf6.client.TRF6Scraper

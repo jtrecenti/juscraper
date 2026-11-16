@@ -1,0 +1,79 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "bkYrtakL_Q2-Ej0rfGk5-R6-eE-OW_7BuZKd7ch2knCfWWnl23lNNA4oqSPNqjX7w8dstw",
+   "descricao": "09/10/2025 19:34:46 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "Wy8N6O3V1QF4qGq8BDUv89R7NazZfDJgLwUjaOF4H7HL07ULN1sJJ9vH0Y55A-5Vmp2Ttw",
+   "descricao": "11/06/2025 11:41:39 - CERTIDÃO DE TRÂNSITO EM JULGADO (CERTIDÃO DE TRÂNSITO EM JULGADO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "NlI6sUs-fgt2M7KyCK_23X1zf4Az0zsr3Qes1QL27uEtyJvC17luAIOxFjtCE7TQroCnhw",
+   "descricao": "11/04/2025 15:36:05 - ACÓRDÃO (ACÓRDÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "xVk0Dc8NnkbTPf_BA7-L31P1A231GjlhOsgsYKZwDuG08dDo_nDLrsSwi3lRKLQm0umwJQ",
+   "descricao": "01/04/2025 18:55:42 - CERTIDÃO DE JULGAMENTO (CERTIDÃO DE JULGAMENTO COLEGIADO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "j9sbrTfcRmcTj8_6E_QzGRChLKjkmo8fuEp_1DUjp7K8CH-7qwB0S-InEONSCxqP3sVI9w",
+   "descricao": "11/04/2025 15:36:05 - VOTO (VOTO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "C-ZvIAKevQpor_IYefYhuoTXyrRghpzNsvfwV7CP1AyJr48PMhhu5f6C9kxuA1SWChIfng",
+   "descricao": "08/06/2024 20:14:40 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "jtAhAg1iBHhklUJD4l4q-fmT6QLpzMPU5oHnB8UEirnbjp8C5jeVa-XOLOu3mroVWxgCDQ",
+   "descricao": "17/08/2023 14:20:52 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "I5Ir2enZWNMZHmNPDPROjx2IFZgV8MbO0bhUwq_pXJ0bnnZfXsCxoYQTQc_E-qoYDzNvkQ",
+   "descricao": "06/12/2022 09:19:57 - SENTENÇA TIPO A (SENTENÇA TIPO A)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "I7fu9AGI_8spshGmwBxUJs6jusa8ReLZg91Mn3p_9zcUoEcvtYl_eqeX5TGK3TqJuDw4Ow",
+   "descricao": "31/05/2022 10:25:28 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "zt-uP45Zp8458R_r2pZ_C5kiW_jHvVYW8bzGSKvGokGUtcv6NaxhHXQe11HmlTFF6yjs",
+   "descricao": "13/01/2022 14:07:46 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "rqN8xLyqQfgSZoqXCFi__0cyiVD87i8qgp8r5i7tfmgAKDiA9azcSlAjfELxU3r_YTzp",
+   "descricao": "07/01/2022 15:12:39 - DECISÃO (DECISÃO)",
+   "mostrarComprovante": false,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 11
+ }
+}

@@ -4,7 +4,7 @@ Rodar a partir da raiz do repositório::
 
     uv run python -m tests.fixtures.capture.trf3
 
-Passa pelos helpers de produção em :mod:`juscraper.courts.trf3.download`
+Passa pelos helpers de produção em :mod:`juscraper.courts._pje_api.download`
 (``baixar_processo``, ``baixar_documento``) com um ``request_fn`` que grava
 cada resposta crua. Se a API mudar de forma, a captura quebra antes de os
 samples ficarem velhos.
@@ -29,14 +29,8 @@ from typing import Any
 import requests
 
 import juscraper as jus
-from juscraper.courts.trf3.download import (
-    BASE_URL_1G,
-    BASE_URL_2G,
-    PROCESSOS_PATH,
-    baixar_documento,
-    baixar_processo,
-    buscar_processo,
-)
+from juscraper.courts._pje_api.download import PROCESSOS_PATH, baixar_documento, baixar_processo, buscar_processo
+from juscraper.courts.trf3.download import APLICACAO_1G, APLICACAO_2G
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SAMPLES = REPO_ROOT / "tests" / "trf3" / "samples"
@@ -64,7 +58,7 @@ CENARIOS: dict[str, list[tuple[str, str]]] = {
         ("sem_resultado", "5003536-21.2025.4.03.6342"),
     ],
 }
-BASE_URLS = {"cpopg": BASE_URL_1G, "cposg": BASE_URL_2G}
+APLICACOES = {"cpopg": APLICACAO_1G, "cposg": APLICACAO_2G}
 
 
 def _nome_arquivo(cenario: str, url: str, params: dict[str, Any] | None) -> str:
@@ -104,11 +98,11 @@ def capturar_endpoint(scraper, endpoint: str) -> dict[str, Any]:
         print(f"[trf3] {endpoint}/{cenario}: {cnj}")
         request_fn = _gravador(scraper, cenario, dest)
         if cenario == "sem_resultado":
-            busca = buscar_processo(request_fn, BASE_URLS[endpoint], cnj)
+            busca = buscar_processo(request_fn, APLICACOES[endpoint], cnj)
             if busca["result"]:
                 raise RuntimeError(f"[trf3] {cnj} deveria não ter resultado em {endpoint}")
             continue
-        bruto = baixar_processo(request_fn, BASE_URLS[endpoint], cnj)
+        bruto = baixar_processo(request_fn, APLICACOES[endpoint], cnj)
         if bruto is None:
             raise RuntimeError(f"[trf3] {cnj} sem resultado em {endpoint}; escolha outro CNJ")
         brutos[cenario] = bruto
@@ -127,7 +121,7 @@ def main() -> None:
     bruto = brutos_1g["paginado"]
     id_documento = bruto["documentos"][0]["result"][0]["id"]
     request_fn = scraper._request_with_retry  # pylint: disable=protected-access
-    pdf = baixar_documento(request_fn, BASE_URL_1G, id_documento, bruto["busca"]["idProcesso"])
+    pdf = baixar_documento(request_fn, APLICACAO_1G, id_documento, bruto["busca"]["idProcesso"])
     pecas = SAMPLES / "cpopg_pecas"
     pecas.mkdir(parents=True, exist_ok=True)
     (pecas / "documento.pdf").write_bytes(pdf)

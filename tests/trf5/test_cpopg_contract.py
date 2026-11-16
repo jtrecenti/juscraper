@@ -1,6 +1,6 @@
 """Offline contract tests for TRF5 ``cpopg`` (PJe consulta pública).
 
-Same shape as ``tests/trf1/test_cpopg_contract.py``. Distinct from the TRF1
+Same shape as the TJPE contracts (``_trf`` family). Distinct from the TJPE
 suite to keep sample fixtures and matchers independent — TRF5 ships
 different form field IDs (``j_id162`` vs ``j_id165``).
 """

@@ -1,11 +1,12 @@
 """Contratos offline do ``cpopg`` do TJPE (PJe ConsultaPública + AWS WAF).
 
 O fluxo de busca, detalhe e parse é o da família ``_trf``, já coberto pelos
-contratos do TRF1/TRF5; aqui ficam o que o TJPE tem de próprio: o host,
+contratos do TRF5; aqui ficam o que o TJPE tem de próprio: o host,
 o formulário capturado do TJPE e o cookie do AWS WAF obtido só quando o
 desafio aparece. As respostas de busca e de detalhe reaproveitam os samples
-do TRF1, porque o HTML do PJe é o mesmo e nenhum dado de processo do TJPE
-precisa entrar no repositório.
+do PJe JSF do TRF1 (``tests/_trf/samples/*/trf1_*``, capturados antes de o
+TRF1 trocar para a API JSON), porque o HTML do PJe é o mesmo e nenhum dado de
+processo do TJPE precisa entrar no repositório.
 """
 from __future__ import annotations
 
@@ -68,11 +69,11 @@ def _desafio(method: str = responses.GET, url: str = LIST_URL):
     )
 
 
-def _busca(sample: str = "cpopg/search_one_result.html"):
+def _busca(sample: str = "cpopg/trf1_search_one_result.html"):
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", sample),
+        body=load_sample("_trf", sample),
         content_type="text/xml; charset=utf-8",
     )
 
@@ -81,7 +82,7 @@ def _detalhe():
     responses.add(
         responses.GET,
         DETAIL_URL,
-        body=load_sample_bytes("trf1", "cpopg/detail_normal.html"),
+        body=load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html"),
         content_type="text/html",
     )
 
@@ -113,7 +114,7 @@ def test_cpopg_sem_desafio_nao_chama_o_playwright(tjpe, obter):
 @responses.activate
 def test_processo_ausente_ou_em_segredo_vira_linha_so_com_id_cnj(tjpe, obter):
     _form()
-    _busca("cpopg/search_no_results.html")
+    _busca("cpopg/trf1_search_no_results.html")
 
     df = tjpe.cpopg(CNJ)
 
@@ -234,7 +235,7 @@ def test_falha_do_navegador_interrompe_o_lote_sem_relancar(tjpe, mocker):
 def test_cookie_fica_restrito_ao_host_do_pje(tjpe, obter):
     _desafio()
     _form()
-    _busca("cpopg/search_no_results.html")
+    _busca("cpopg/trf1_search_no_results.html")
 
     tjpe.cpopg(CNJ)
 
@@ -260,14 +261,14 @@ def test_cjsg_continua_em_sessao_propria():
 @responses.activate
 def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, mocker, tmp_path, caplog):
     """Disco cheio na 2ª peça do 1º CNJ: ele sai com detalhe, a 1ª peça e o motivo; o 2º CNJ sai completo."""
-    detalhe = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    detalhe = load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html")
     ids = [doc_id for _, doc_id in extract_documento_urls(detalhe.decode("latin-1"))]
     assert len(ids) > 2
     _form()
     for _ in range(2):
         _busca()
         _detalhe()
-    doc = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    doc = load_sample_bytes("_trf", "cpopg_pecas/trf1_documento_html.html")
     for _ in range(2 + len(ids)):
         responses.add(responses.GET, DOC_URL, body=doc, content_type="text/html")
     # Cópia de uma coleta anterior, que a gravação que falha não pode apagar.

@@ -1,0 +1,93 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "ESTADO DE GOIAS - CNPJ: 01.409.580/0001-38 (APELADO)",
+   "nome": "ESTADO DE GOIAS",
+   "tipo": "APELADO",
+   "procuradoria": "Procuradoria Geral do Estado de Goiás",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "JOSE RODRIGUES DE MOURA JUNIOR - OAB GO39827 - CPF: ***.350.391-** (ADVOGADO)",
+   "nome": "JOSE RODRIGUES DE MOURA JUNIOR",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  },
+  {
+   "participante": "MARCELO BORGES PROTO DE OLIVEIRA - OAB GO34353 - CPF: ***.793.941-** (ADVOGADO)",
+   "nome": "MARCELO BORGES PROTO DE OLIVEIRA",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  },
+  {
+   "participante": "BARBARA MARCELLE LUCIA DUARTE GIGONZAC - OAB GO24246 - CPF: ***.744.641-** (ADVOGADO)",
+   "nome": "BARBARA MARCELLE LUCIA DUARTE GIGONZAC",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  },
+  {
+   "participante": "ARIANA VIEIRA NUNES CAIXETA - OAB GO41371 - CPF: ***.356.086-** (ADVOGADO)",
+   "nome": "ARIANA VIEIRA NUNES CAIXETA",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  },
+  {
+   "participante": "MUNICIPIO DE ANAPOLIS - CNPJ: 01.067.479/0001-46 (APELADO)",
+   "nome": "MUNICIPIO DE ANAPOLIS",
+   "tipo": "APELADO",
+   "procuradoria": "Procuradoria Geral do Município de Anápolis-GO",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "LUCIANA MUNIZ - OAB GO14715 - CPF: ***.203.251-** (ADVOGADO)",
+   "nome": "LUCIANA MUNIZ",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  },
+  {
+   "participante": "UNIÃO FEDERAL - CNPJ: 26.994.558/0001-23 (APELADO)",
+   "nome": "UNIÃO FEDERAL",
+   "tipo": "APELADO",
+   "procuradoria": "Procuradoria da União nos Estados e no Distrito Federal",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 8
+ }
+}

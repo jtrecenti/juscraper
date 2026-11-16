@@ -1,6 +1,6 @@
 """Testes granulares dos helpers compartilhados da família ``_trf``.
 
-A família serve TRF1, TRF5 e TJPE (PJe ConsultaPública em JSF). Os samples
+A família serve TRF5 e TJPE (PJe ConsultaPública em JSF). Os samples
 em ``tests/_trf/samples/cpopg/`` são páginas de detalhe reais do PJe JSF,
 capturadas do TRF3 antes de ele migrar para a API JSON. São as únicas com
 dois sliders Richfaces (movimentações e documentos) na mesma página, o que

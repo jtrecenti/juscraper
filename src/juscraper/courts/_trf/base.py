@@ -1,4 +1,4 @@
-"""Shared scraper base for the TRF PJe ConsultaPública family (TRF1/TRF5, TJPE).
+"""Shared scraper base for the TRF PJe ConsultaPública family (TRF5, TJPE).
 
 Absorbs the near-identical ``client.py`` modules of the PJe
 ConsultaPública JSF deployments (refs #84, #294). A concrete tribunal is a thin
