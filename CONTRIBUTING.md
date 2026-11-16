@@ -205,7 +205,9 @@ A versão do Ruff é fixa no extra `[dev]`, no pre-commit e em `tool.ruff.requir
 
 Uma dispensa vale para todas as ocorrências daquela regra naquele arquivo. Portanto, uma função nova em arquivo dispensado também pode violar a regra dispensada. O gate não limita a contagem de ocorrências nem confere apenas as linhas do diff. Arquivos novos entram sem dispensas, e regras não dispensadas continuam exigidas nos arquivos antigos.
 
-O controle confere apenas a lista de `ruff.toml`. Um comentário `# noqa` na linha silencia a regra sem passar por ele, e uma mudança em `ignore`, `per-file-ignores` ou `extend-exclude` no `pyproject.toml` altera a régua inteira. Os dois casos dependem de revisão do diff. A política para `# noqa` está em discussão na [#401](https://github.com/jtrecenti/juscraper/issues/401).
+O controle confere apenas a lista de `ruff.toml`. Uma mudança em `ignore`, `per-file-ignores` ou `extend-exclude` no `pyproject.toml` altera a régua inteira e depende de revisão do diff.
+
+Um comentário `# noqa` silencia a regra só naquela linha, sem passar pela lista. Ele é aceito para exceções deliberadas, não para dívida: cite o código completo e justifique na própria linha ou no comentário acima (`except Exception as exc:  # noqa: BLE001 - resiliência por item`). Dois controles do Ruff valem para ele: `PGH004` rejeita `# noqa` sem código, que silenciaria todas as regras da linha, e `RUF100` rejeita o `# noqa` obsoleto, que não silencia mais nada, como a dispensa obsoleta em `ruff.toml`. Os códigos do flake8 (pycodestyle e pyflakes, `E`, `W` e `F`), que o Ruff não seleciona, ficam em `lint.external` no `pyproject.toml`, e o `RUF100` preserva os `# noqa` deles. A justificativa e o uso de `# noqa` no lugar de correção dependem de revisão do diff. Decidido na [#401](https://github.com/jtrecenti/juscraper/issues/401).
 
 Os testes têm uma política permanente própria: aceitam `assert`, dispensam anotações de tipo e não exigem docstrings. Uma docstring existente continua sujeita às regras de formato selecionadas. A tabela correspondente em `pyproject.toml` é a fonte dessa política.
 
@@ -234,11 +236,11 @@ uv run ruff check --config pyproject.toml src/juscraper/courts/tjsp/client.py
 
 As correções automáticas desse comando exigem revisão antes de salvar; sem `--fix`, ele só informa os achados. A lista não deve ser regenerada para acomodar código novo. Uma mudança de política exige revisão explícita da configuração e do gate.
 
-### CI e primeira adoção
+### CI
 
 O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele confere o `uv.lock` e executa Ruff, o controle de dispensas e os testes do próprio gate, comparando o PR com a ponta da branch de destino e o push com o SHA anterior, com histórico Git completo. O job `pre-commit` do mesmo workflow roda todos os hooks em todos os arquivos (`pre-commit run --all-files`), o que leva mypy, pylint, flake8, isort e bandit ao PR; `lint-policy`, `complexity` e `pytest` ficam de fora dele: os dois primeiros têm passo próprio, com a base de cada evento, e a suíte offline do `pytest` já roda no workflow `Testes`, em todas as versões. Os hooks rodam nas versões fixadas no `.pre-commit-config.yaml`, em ambientes próprios, e não nas do `uv.lock`; as dependências adicionais deles também têm versão fixa. Como nenhum hook do job usa o ambiente do projeto, o job não instala o extra `dev`: roda o pre-commit com `uvx`, restrito pelo `uv export` às versões do `uv.lock`, as mesmas de quem roda os hooks localmente. O `check-added-large-files` só olha arquivo acrescentado no commit, então não confere nada nesse job. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
 
-Na primeira adoção, a base ainda não contém `ruff.toml`. O script extrai os arquivos Python de `src/` e `tests/` daquela revisão em diretório temporário e mede esse código com a régua nova. Só os pares encontrados nesse código antigo podem receber dispensa. Nos PRs seguintes, a comparação usa diretamente a lista já versionada na base. Essa verificação impede incluir problemas criados no próprio PR como se fossem pendências antigas.
+A comparação usa a lista de `ruff.toml` versionada na base. Uma base sem `ruff.toml` é anterior à adoção da régua ([#396](https://github.com/jtrecenti/juscraper/pull/396)) e só aparece com referência local desatualizada; nesse caso o gate falha e orienta a atualizá-la.
 
 ## Complexidade de código (lizard + complexipy)
 

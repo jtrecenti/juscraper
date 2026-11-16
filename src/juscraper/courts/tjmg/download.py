@@ -320,7 +320,7 @@ def _baixar_lista(
     def baixar(pagina: int, total: int, faltando: list | None) -> str:
         try:
             return buscar(pagina, total)
-        except Exception as exc:  # noqa: BLE001 - vai para ColetaParcialError, como no auto-chunk
+        except Exception as exc:  # vai para ColetaParcialError, como no auto-chunk
             if not results:
                 raise
             raise erro(pagina, faltando, exc) from exc

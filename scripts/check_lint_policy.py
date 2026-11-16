@@ -1,15 +1,12 @@
 """Confere a adoção gradual de lint sem permitir novas dispensas por arquivo."""
 
 import argparse
-import io
 import json
 import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import tomllib
-import zipfile
 from pathlib import Path, PurePosixPath
 
 
@@ -79,29 +76,8 @@ def pares_dos_achados(achados: list[dict]) -> set[tuple[str, str]]:
 
 
 def excecoes_da_base(raiz: Path, revisao: str) -> set[tuple[str, str]]:
-    """Lê a base ou mede o código antigo na primeira adoção da política."""
-    arquivos = executar_git(raiz, "ls-tree", "--name-only", revisao).decode().splitlines()
-    if "ruff.toml" in arquivos:
-        return ler_excecoes(executar_git(raiz, "show", f"{revisao}:ruff.toml").decode())
-
-    # A primeira adoção também precisa rejeitar dispensas de problemas introduzidos
-    # pelo próprio PR. Só o código da base, medido com a nova régua, pode autorizá-las.
-    arquivo = executar_git(raiz, "archive", "--format=zip", revisao, "src", "tests")
-    with tempfile.TemporaryDirectory(prefix="juscraper-lint-") as temporario:
-        # resolve(): no macOS o temporário fica em /var, link para /private/var, e o
-        # Ruff devolve o caminho resolvido; sem isto o relative_to falha.
-        destino = Path(temporario).resolve()
-        with zipfile.ZipFile(io.BytesIO(arquivo)) as pacote:
-            for nome in pacote.namelist():
-                partes = PurePosixPath(nome).parts
-                if ".." in partes or PurePosixPath(nome).is_absolute():
-                    raise ValueError(f"Caminho inválido no histórico: {nome}")
-                if nome.endswith(".py"):
-                    caminho = destino / nome
-                    caminho.parent.mkdir(parents=True, exist_ok=True)
-                    caminho.write_bytes(pacote.read(nome))
-        # --config explícito resolve os padrões relativos ao cwd do snapshot.
-        return pares_dos_achados(medir_regras(destino, raiz / "pyproject.toml"))
+    """Lê as dispensas do ruff.toml da base; a falta dele indica referência desatualizada."""
+    return ler_excecoes(executar_git(raiz, "show", f"{revisao}:ruff.toml").decode())
 
 
 def conferir(raiz: Path, referencia: str) -> list[str]:

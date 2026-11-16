@@ -222,33 +222,50 @@ def test_rejeita_topo_alterado_no_arquivo_de_dispensas(repositorio, original, al
     assert "Política de lint inválida" in resultado.stderr
 
 
-@pytest.fixture
-def primeira_adocao(repositorio):
+def test_base_sem_ruff_toml_falha_com_orientacao(repositorio):
+    # Base anterior à adoção da régua: só uma referência local desatualizada chega aqui.
     (repositorio / "ruff.toml").unlink()
     registrar_base(repositorio)
     gravar_excecoes(repositorio, {"src/antigo.py": ["ANN201"]})
-    return repositorio
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "Falha ao consultar a base Git" in resultado.stderr
+    assert "git fetch" in resultado.stderr
 
 
-def test_primeira_adocao_mede_a_base_sem_lista_anterior(primeira_adocao):
-    resultado = executar_gate(primeira_adocao)
+def test_noqa_obsoleto_falha(repositorio):
+    (repositorio / "src/novo.py").write_text(
+        '"""Módulo novo."""\n\nVALOR = 1  # noqa: BLE001\n', encoding="utf-8",
+    )
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "src/novo.py:3: RUF100" in resultado.stderr
+
+
+def test_noqa_sem_codigo_falha(repositorio):
+    (repositorio / "src/novo.py").write_text(
+        '"""Módulo novo."""\n\nprint("problema")  # noqa\n', encoding="utf-8",
+    )
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 1
+    assert "src/novo.py:3: PGH004" in resultado.stderr
+
+
+def test_noqa_com_codigo_usado_passa(repositorio):
+    (repositorio / "src/novo.py").write_text(
+        '"""Módulo novo."""\n\nprint("diagnóstico")  # noqa: T201 - saída de diagnóstico\n', encoding="utf-8",
+    )
+    resultado = executar_gate(repositorio)
     assert resultado.returncode == 0, resultado.stderr
 
 
-def test_primeira_adocao_nao_autoriza_arquivo_novo(primeira_adocao):
-    (primeira_adocao / "src/novo.py").write_text(CODIGO_ANTIGO, encoding="utf-8")
-    gravar_excecoes(primeira_adocao, {"src/antigo.py": ["ANN201"], "src/novo.py": ["ANN201"]})
-    resultado = executar_gate(primeira_adocao)
-    assert resultado.returncode == 1
-    assert "Nova dispensa proibida: src/novo.py: ANN201" in resultado.stderr
-
-
-def test_primeira_adocao_nao_autoriza_regra_nova(primeira_adocao):
-    (primeira_adocao / "src/antigo.py").write_text(CODIGO_ANTIGO + '\nprint("problema")\n', encoding="utf-8")
-    gravar_excecoes(primeira_adocao, {"src/antigo.py": ["ANN201", "T201"]})
-    resultado = executar_gate(primeira_adocao)
-    assert resultado.returncode == 1
-    assert "Nova dispensa proibida: src/antigo.py: T201" in resultado.stderr
+def test_noqa_de_codigo_do_flake8_e_preservado(repositorio):
+    # O flake8 roda no pre-commit; o Ruff não seleciona E/W/F e não deve tratá-los como obsoletos.
+    (repositorio / "src/novo.py").write_text(
+        '"""Módulo novo."""\n\nVALOR = f"{1:02d}"  # noqa: E231\n', encoding="utf-8",
+    )
+    resultado = executar_gate(repositorio)
+    assert resultado.returncode == 0, resultado.stderr
 
 
 def test_politica_de_testes_dispensa_anotacao_docstring_e_assert(repositorio):
