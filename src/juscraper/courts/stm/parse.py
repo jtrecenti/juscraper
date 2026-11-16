@@ -92,19 +92,18 @@ COLUNAS_PROCESSOS = [
     "representantes",
     "url_processo",
 ]
-# Campos da capa, reconhecidos pelo rótulo do ``<dt>``: coluna -> rótulo.
-_CAMPOS_DA_CAPA = {
-    "processo": "Número do Feito:",
-    "classe": "Classe:",
-    "orgao": "Orgão:",
-    "conselho": "Conselho:",
-    "relator": "Relator(a):",
-    "revisor": "Revisor(a):",
-    "juiz": "Juiz(a):",
-    "data_autuacao": "Data de Autuação:",
-    "situacao": "Situação:",
+# Campos da capa, reconhecidos pelo rótulo do ``<dt>`` (sem os dois-pontos): rótulo -> coluna.
+_COLUNA_DO_ROTULO = {
+    "Número do Feito": "processo",
+    "Classe": "classe",
+    "Orgão": "orgao",
+    "Conselho": "conselho",
+    "Relator(a)": "relator",
+    "Revisor(a)": "revisor",
+    "Juiz(a)": "juiz",
+    "Data de Autuação": "data_autuacao",
+    "Situação": "situacao",
 }
-_ROTULO_DA_COLUNA = {rotulo: coluna for coluna, rotulo in _CAMPOS_DA_CAPA.items()}
 _FORMATO_DA_AUTUACAO = "%d/%m/%Y %H:%M:%S"
 
 
@@ -113,13 +112,13 @@ def _texto_corrido(tag: Tag) -> str | None:
     return " ".join(tag.get_text().split()) or None
 
 
-def _parse_parte(tipo: str, dd: Tag) -> dict[str, str | None]:
+def _parse_parte(tipo: str | None, dd: Tag) -> dict[str, str | None]:
     """Parte do processo; ``qualificacao`` é o posto e a força que o portal mostra no ícone."""
     icone = dd.find("img", class_="icone-forca")
     return {"tipo": tipo, "nome": _texto_corrido(dd), "qualificacao": str(icone.get("title")) if icone else None}
 
 
-def _parse_representante(tipo: str, dd: Tag) -> dict[str, Any]:
+def _parse_representante(tipo: str | None, dd: Tag) -> dict[str, Any]:
     """Representante e as partes que ele representa."""
     nome = dd.find("summary")
     return {
@@ -145,17 +144,17 @@ def _parse_processo(painel: Tag) -> dict[str, Any]:
     secao, rotulo = "Capa do Processo", ""
     for tag in painel.select("div.row-title, dt, dd"):
         if tag.name == "div":
-            secao = tag.get_text().strip()
+            secao, rotulo = tag.get_text().strip(), ""
         elif tag.name == "dt":
-            rotulo = tag.get_text().strip()
+            rotulo = tag.get_text().strip().rstrip(":")
         elif secao == "Assuntos":
             assuntos.append(_texto_corrido(tag))
         elif secao == "Partes":
-            linha["partes"].append(_parse_parte(rotulo.rstrip(":"), tag))
+            linha["partes"].append(_parse_parte(rotulo or None, tag))
         elif secao == "Representantes":
-            linha["representantes"].append(_parse_representante(rotulo.rstrip(":"), tag))
-        elif secao == "Capa do Processo" and rotulo in _ROTULO_DA_COLUNA:
-            linha[_ROTULO_DA_COLUNA[rotulo]] = _texto_corrido(tag)
+            linha["representantes"].append(_parse_representante(rotulo or None, tag))
+        elif secao == "Capa do Processo" and rotulo in _COLUNA_DO_ROTULO:
+            linha[_COLUNA_DO_ROTULO[rotulo]] = _texto_corrido(tag)
     # Um texto só, como no ``assunto`` do cjsg; o portal numera os assuntos ("1) ... 2) ...").
     linha["assunto"] = " ".join(filter(None, assuntos)) or None
     return linha
