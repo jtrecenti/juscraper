@@ -66,13 +66,12 @@ def _mover_documentos(movimentacoes: pd.DataFrame, origem: str, destino: str) ->
     return movimentacoes.assign(caminho_documento=[novos.get(c) for c in movimentacoes["caminho_documento"]])
 
 
-class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 def _lista_de_cnjs(id_cnj: str | Iterable) -> list:
     """Um CNJ ou vários, como lista: o composto lê os CNJs no download e no parse, e um gerador se esgotaria."""
     return [id_cnj] if isinstance(id_cnj, str) else list(id_cnj)
 
 
-class TJSPScraper(EsajSentencaScraper, EsajAcordaoScraper):
+class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
     """Raspador principal do TJSP, pelas páginas do eSAJ."""
 
     BASE_URL = "https://esaj.tjsp.jus.br/"
