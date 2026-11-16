@@ -56,7 +56,9 @@ def cposg_parse(path: str) -> pd.DataFrame:
     return cposg_parse_manager(path)
 
 
-def cposg_parse_manager(path: str, metodo: str = "TJSPScraper.cposg_parse", pedidos: list | None = None) -> pd.DataFrame:
+def cposg_parse_manager(
+    path: str, metodo: str = "TJSPScraper.cposg_parse", pedidos: list | None = None,
+) -> pd.DataFrame:
     """Interpreta os arquivos HTML do CPOSG sob ``path`` em um DataFrame.
 
     A coluna ``motivo_falha`` é ``None`` em cada processo lido. O arquivo que
