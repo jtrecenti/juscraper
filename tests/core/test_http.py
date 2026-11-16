@@ -15,6 +15,7 @@ import pytest
 import requests
 import responses
 
+import juscraper as jus
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError
 from juscraper.core.failures import motivo_falha
 from juscraper.core.http import DEFAULT_POLICY, RETRYABLE_STATUSES, HTTPScraper, RequestPolicy
@@ -182,6 +183,13 @@ def test_request_with_retry_max_retries_param(probe, mocker):
         probe._request_with_retry("GET", URL, max_retries=2)
 
     assert exc.value.attempts == 2
+
+
+@pytest.mark.parametrize("sigla", sorted(jus._SCRAPERS))
+def test_construtor_recusa_argumento_desconhecido(sigla):
+    # Antes, o ``HTTPScraper`` guardava o nome errado em ``self.args``, sem efeito e sem aviso.
+    with pytest.raises(TypeError, match="sleep_tim"):
+        jus.scraper(sigla, sleep_tim=0)
 
 
 def test_init_sets_user_agent_and_session():

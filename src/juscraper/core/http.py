@@ -281,6 +281,10 @@ class HTTPScraper(BaseScraper):
         politica: Mapping[str, Mapping[str, Any]] | None = None,
         **kwargs: Any,
     ):
+        if kwargs:
+            # Recusa em vez de guardar: um nome digitado errado (``sleep_tim=``) passava calado.
+            nomes = ", ".join(repr(nome) for nome in kwargs)
+            raise TypeError(f"{type(self).__name__}() não aceita o(s) argumento(s) {nomes}.")
         super().__init__(tribunal_name or type(self).__name__)
         self._perfis_http = self._merge_politica(politica)
         self.session = requests.Session()
@@ -291,7 +295,6 @@ class HTTPScraper(BaseScraper):
         self.set_verbose(verbose)
         self.set_download_path(download_path)
         self.sleep_time = sleep_time
-        self.args = kwargs
 
     @classmethod
     def _merge_politica(
