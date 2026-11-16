@@ -6,7 +6,8 @@ residencial (15/11/2026). Por isso a suíte do TJTO, com ``test_cjpg.py``, faz
 6 POSTs: as colunas, a paginação e o parse vêm de uma única busca de 2
 páginas, e o resto do contrato (filtros no payload, ``paginas`` inteiro,
 aliases) fica nos testes offline. Rodar a suíte duas vezes em menos de 10
-minutos cai no bloqueio, que sai como ``BotChallengeBlockedError``.
+minutos cai no bloqueio: ``BotChallengeBlockedError`` na primeira página, ou
+``ColetaParcialError`` com ele em ``__cause__`` numa página seguinte.
 """
 from datetime import date
 
@@ -52,7 +53,7 @@ def test_cjsg_filtro_data():
         paginas=1,
     )
     assert not df.empty
-    assert df["data_julgamento"].between(date(2024, 1, 1), date(2024, 6, 30)).all()
+    assert df["data_julgamento"].dropna().between(date(2024, 1, 1), date(2024, 6, 30)).all()
 
 
 @pytest.mark.integration

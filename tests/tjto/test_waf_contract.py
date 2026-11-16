@@ -65,7 +65,9 @@ def test_desafio_no_get_da_ementa_levanta(tjto):
         tjto.cjsg_ementa("f4b3440350bb6c8e6bdd708d78c43e85")
 
 
-@pytest.mark.parametrize(("metodo", "pasta"), [("cjsg", "cjsg"), ("cjsg_download", "cjsg"), ("cjpg", "cjpg")])
+@pytest.mark.parametrize(
+    ("metodo", "pasta"), [("cjsg", "cjsg"), ("cjsg_download", "cjsg"), ("cjpg", "cjpg"), ("cjpg_download", "cjpg")]
+)
 @responses.activate(registry=OrderedRegistry)
 def test_bloqueio_no_meio_da_paginacao_guarda_as_paginas_baixadas(tjto, metodo, pasta):
     """O WAF desafia depois de algumas buscas: as páginas anteriores vêm lidas em ``.resultado``."""
@@ -76,7 +78,8 @@ def test_bloqueio_no_meio_da_paginacao_guarda_as_paginas_baixadas(tjto, metodo, 
         )
     responses.add(responses.POST, BASE_URL, body="", status=202, headers={"x-amzn-waf-action": "challenge"})
 
-    with pytest.raises(ColetaParcialError, match=r"página 3 falhou.*faltam as páginas \[3, 4\]") as erro:
+    falha = r"página 3 falhou.*faltam as páginas \[3, 4\].*depois de pelo menos 10 minutos"
+    with pytest.raises(ColetaParcialError, match=falha) as erro:
         getattr(tjto, metodo)("dano moral", paginas=range(1, 5))
 
     esperado = _texto_ausente_como_none(cjsg_parse_manager(
