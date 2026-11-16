@@ -1,4 +1,7 @@
 """Testes de cobertura dos mapeamentos do DataJud (refs #56)."""
+import pytest
+
+from juscraper.aggregators.datajud.client import _resolve_cnj_alias
 from juscraper.aggregators.datajud.mappings import ID_JUSTICA_TRIBUNAL_TO_ALIAS, TRIBUNAL_TO_ALIAS
 
 
@@ -77,3 +80,40 @@ class TestTribunalToAlias:
             assert alias in siglas_por_alias, (
                 f"Alias {alias!r} (chave {chave}) nao tem sigla correspondente em TRIBUNAL_TO_ALIAS"
             )
+
+
+class TestCodigoDaUf:
+    """O código do tribunal no CNJ segue a ordem do nome da UF (Resolução CNJ 65/2008).
+
+    Antes, o mapa trocava MG (13) e MT (11) na Justiça Estadual e na
+    Eleitoral, punha o TJMMG em 9.11 e o TJMSP em 9.25: um CNJ do TJMG era
+    consultado no índice do TJMT. Os códigos de MG, MT e SP foram conferidos
+    ao vivo nos números que cada índice devolve.
+    """
+
+    def test_mato_grosso_e_minas_gerais(self):
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("8", "11")] == "api_publica_tjmt"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("8", "12")] == "api_publica_tjms"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("8", "13")] == "api_publica_tjmg"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("6", "11")] == "api_publica_tre-mt"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("6", "13")] == "api_publica_tre-mg"
+
+    def test_justica_militar_estadual(self):
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("9", "13")] == "api_publica_tjmmg"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("9", "21")] == "api_publica_tjmrs"
+        assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("9", "26")] == "api_publica_tjmsp"
+        assert ("9", "11") not in ID_JUSTICA_TRIBUNAL_TO_ALIAS
+        assert ("9", "25") not in ID_JUSTICA_TRIBUNAL_TO_ALIAS
+
+    @pytest.mark.parametrize(("id_justica", "prefixo"), [("6", "api_publica_tre-"), ("9", "api_publica_tjm")])
+    def test_mesmo_codigo_da_justica_estadual(self, id_justica, prefixo):
+        # O código de cada UF é o mesmo em todos os ramos.
+        for (justica, codigo), alias in ID_JUSTICA_TRIBUNAL_TO_ALIAS.items():
+            if justica != id_justica or codigo == "00":
+                continue
+            uf = alias.removeprefix(prefixo)
+            assert ID_JUSTICA_TRIBUNAL_TO_ALIAS[("8", codigo)] == f"api_publica_tj{uf}", (justica, codigo)
+
+    def test_cnj_do_tjmg_consulta_o_indice_do_tjmg(self):
+        assert _resolve_cnj_alias("5000001-23.2024.8.13.0024") == ("api_publica_tjmg", "50000012320248130024")
+        assert _resolve_cnj_alias("1000001-23.2024.8.11.0041") == ("api_publica_tjmt", "10000012320248110041")
