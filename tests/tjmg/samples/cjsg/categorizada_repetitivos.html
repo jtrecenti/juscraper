@@ -1,0 +1,413 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=9" >
+        <meta http-equiv="Pragma" content="no-cache"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Expires" content="0" />    
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <link href="css/sistema_antigo.css" rel="stylesheet" type="text/css" />
+        <title>TJMG - Pesquisa por Jurisprud&ecirc;ncia</title>
+        <script language="JavaScript" src="/js/tjmg_ui.js"></script>
+        <script language="JavaScript" src="/js/tjmg.js"></script>
+        <script language="JavaScript" src="js/valida_dv_nu.js"></script>
+        <script type='text/javascript' src='/jurisprudencia/js/ea_util.js'></script>
+                
+        <link title="geral" rel="stylesheet" type="text/css" href="/portaltjmg/css/screen.css" media="screen" />        
+        <link title="alternativo" rel="stylesheet" type="text/css" href="/portaltjmg/css/alternativo.css" media="screen" />   
+        
+    </head>
+    
+        <style type="text/css" media="screen">
+            a:link.linkListaEspelhoAcordaos {color: #990000;}
+            a:visited.linkListaEspelhoAcordaos {color: #2F2F0F;}
+
+            .cabecalho
+            {
+                width: 99%;                   
+                border: solid #CCCCCC 1px;
+                background-color:#DFDFDF;                
+                color: #880000;
+                height: 18px;                    
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                font-weight: bold;
+                font-style: normal;                
+            }
+
+            .caixa_processo
+            {
+                    width: 99%;                   
+                    margin-top: 20px;
+                    -webkit-border-radius: 5px;
+                    -moz-border-radius: 5px;
+                    border-radius: 5px;
+                    border: solid #CCCCCC 1px;
+                    background-color:#DFDFDF;
+                    text-indent: 5px;
+                    padding: 5px;
+            }
+
+            .corpo 
+            {
+                color: #333333;
+            }           
+            
+        </style>        
+    
+    <style type="text/css" media="print">        
+        td.leftRight
+        {
+            margin: 0;                
+        }
+
+        span#tabelaEspelho
+        {
+            width: 100%;    
+            margin-right: 0;
+        }
+
+        body
+        {
+            margin: 0;
+        }
+
+        img#logoTJ
+        {
+            visibility: visible;
+        }
+
+        img#imgBotao1
+        {
+            visibility: visible;
+        }
+
+        table#tabelaInformacoesAcordaos
+        {
+            margin-left: 0;
+        }
+
+        td.rightTop
+        {
+            visibility: hidden;
+        }
+
+        img#AWMEL3_4
+        {
+            visibility: hidden;
+        }
+
+        div#menutop
+        {
+            visibility: hidden;
+        }
+
+        img
+        {
+            visibility: hidden;
+        }
+
+        div.tabbar
+        {
+            visibility: hidden;
+        }
+
+        div#caminho
+        {
+            visibility: hidden;
+        }            
+
+        div#botaoImprimirInteiroTeor
+        {
+            visibility: hidden;
+        } 
+
+        div#panel2
+        {
+            visibility: hidden;
+        }   
+
+        div#botoesEspelho
+        {
+            visibility: hidden;
+        }        
+
+        div#cabecalhoMenu
+        {
+            visibility: hidden;
+            display: none;
+        }
+
+        td#curvaBotton
+        {
+            visibility: hidden;
+        }
+
+        div.menuPortal
+        {
+            visibility: hidden;                    
+        }        
+    </style>
+        
+    <script>
+    if (navigator.userAgent.toLowerCase().indexOf("msie 7") != -1)
+    {
+        //Comentado, pois alguns navegadores IE 8 estão emulando o IE 7
+        //alert("ATENÇÃO: A versão do seu navegador é Internet Explorer 7.\nA Consulta à Jurisprudência está homologada para Internet Explorer 8 ou versão superior. Favor atualizar a versão do seu navegador.");
+    }
+    </script>
+        
+        <body onload="if (document.getElementById('panel2').style.display == 'none' && (document.getElementById('siglaLegislativa').value != '' || document.getElementById('observacoes').value != '')) mostrarOcultarPanel(2);" onkeydown="if (capturaCtrlP(event)) { return false;}" onkeyup="if (capturaCtrlP(event)) {imprimirEspelho(); return false;}">        
+        	
+            <div id="cabecalhoMenu"><style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>  </div>
+            
+            <br />
+            
+            <div id="sistema">
+                <div class="containerSis" style="width: 1200px">
+    
+                
+                <table align="center" width="90%" border="0" cellspacing="0" cellpadding="0">                       
+                      
+                <tr>
+                    <td colspan="4" align="left" valign="top" class="leftRight" bgcolor="#FFFFFF">
+
+                        
+                        <h1>
+                            Resultado da busca
+                        </h1>
+
+                        <div class="textoUmaColuna" >
+                            <div class="tabbar" align="left">
+  <a href="formEspelhoAcordao.do" class="tabact">Ac&oacute;rd&atilde;os</a>
+  <a href="decisao.do">Decis&otilde;es Monocr&aacute;ticas</a>
+  <a href="decisaoVice.do">Decis&otilde;es da 1&ordf; e 3&ordf; Vice-Presid&ecirc;ncia</a>   
+  <a href="sumulas.do">S&uacute;mulas</a>
+  <a href="decisaoTurmaRecursal.do">Decis&otilde;es de Turma Recursal</a>
+    <a href="decisaoTurmaRecursalPJe.do">Decis&otilde;es de Turma Recursal - PJe</a>
+  <a href="sentenca.do">Senten&ccedil;as</a>
+  <a href="ajuda.do">Ajuda</a>
+</div>
+
+<div class="tabbar" align="left">
+  <a href="" class="tabact">Lista de Resultados</a>
+</div>
+
+                        </div>
+                        <br />
+                        <div align="left"><div class="textoUmaColuna">
+
+
+
+
+
+
+
+
+  <p class="info">
+	
+		Foram encontrados 1 Espelhos de Acórdãos com os critérios utilizados
+		<br>
+	
+		Palavras: usucapiao
+		<br>
+	
+		Utiliza termos relacionados: NÃO
+		<br>
+	
+		Data de julgamento inicial: 01/01/2025
+		<br>
+	
+		Data de julgamento final: 31/12/2025
+		<br>
+	
+		Classe(s): IRDR - Cv
+		<br>
+	
+  </p>
+
+
+
+
+
+
+
+
+<!-- Mensagem de erro geral do Struts (Validate por Ex) -->
+
+
+<!-- Mensagem geral do Struts  -->
+
+
+</div></div>
+
+                        
+
+
+
+
+
+ 
+	
+
+
+
+
+
+
+
+
+
+
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+
+<table align="center">
+    <tr><td>
+            <div class="textoUmaColuna">
+
+                
+
+                
+
+                    <div align="center">
+                        <strong>Para acessar mais informa&ccedil;&otilde;es clique no n&uacute;mero do ac&oacute;rd&atilde;o.</strong>
+                    </div>
+
+                    
+
+                    <br>
+                    <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+
+
+                    
+                        
+                            
+                        
+                        
+                    
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=1&totalLinhas=1&paginaNumero=1&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&listaClasse=600&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                1 - Processo: IRDR - Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.453789-0/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    4537890-68.2024.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=453789&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Lúcio de Brito</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            24/02/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            07/03/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO PROCESSUAL CIVIL. INCIDENTE DE RESOLUÇÃO DE DEMANDAS REPETITIVAS. DIVERGÊNCIA SOBRE APLICABILIDADE DO PROVIMENTO Nº 149 DO CNJ EM PROCESSOS JUDICIAIS DE <font color="#FF0000"><b>USUCAPIÃO</b></font>. ADMISSÃO DO INCIDENTE. SUSPENSÃO DAS AÇÕES.<br /><br />I. CASO EM EXAME<br />Incidente de Resolução de Demandas Repetitivas suscitado em razão  de divergências sobre a aplicação do Provimento nº 149 do CNJ, que simplifica os procedimentos de <font color="#FF0000"><b>usucapião</b></font> extrajudicial, aos processos judiciais.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />A questão em discussão consiste em saber se estão presentes os pressupostos do art. 976 do CPC para instauração do Incidente de Resolução de Demandas Repetitivas.<br /><br />III. RAZÕES DE DECIDIR<br />O art. 976 do CPC estabelece os requisitos para instauração do IRDR, incluindo:<br />(I) a efetiva repetição de processos e risco de ofensa à isonomia e à segurança jurídica;<br />(II) a existência de questão unicamente de direito; e<br />(III) a pendência de causa no tribunal.<br /><br />Verificou-se a existência de 1.089 processos similares, com decisões divergentes sobre a aplicabilidade do Provimento nº 149 do CNJ, conforme informado pela SEPAD (ordem 25/26).<br /><br />A ausência de afetação da matéria como recurso repetitivo pelos Tribunais Superiores e a opinião da Procuradoria-Geral de Justiça corroboram o preenchimento dos requisitos legais.<br /><br />IV. DISPOSITIVO E TESE<br />7. Incidente de Resolução de Demandas Repetitivas admitido. Determinada a suspensão das ações sobre o tema, nos termos do art. 982, I e §1º, do CPC.<br /><br />Tese de julgamento:<br />"Estão presentes os requisitos legais para a instauração do Incidente de Resolução de Demandas Repetitivas nos termos do art. 976 do CPC."<br /><br />Dispositivos relevantes citados: CPC, arts. 976 e 982.<br />Jurisprudência relevante citada: TJMG, Apelação Cível nº 1.0000.24.353531-7/001, Rel. Des. Marcos Henrique Caldeira Brant, 16ª Câmara Cível Especializada, j. 16.10.2024; TJMG, Apelação Cível nº 1.0000.24.349781-5/001, Rel. Des. Tiago Gomes deCarvalho Pinto, 16ª Câmara Cível Especializada, j. 02.09.2024.
+                        </div>                        
+                                         
+
+                    
+
+                    
+                        
+                    
+
+                    <!-- PAGINADOR -->
+                    <br><br>
+                    
+                    
+
+                    
+                    <!-- FIM  PAGINADOR -->
+
+                
+                <br><br>
+                <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+            </div>
+        </td></tr>
+</table>
+
+
+
+                        
+
+                    </td>
+                </tr>
+
+            </table>
+            <br /><br />
+            </div>
+            </div>
+                        
+            
+
+             
+
+
+
+
+
+        
+        
+
+    </body>    
+        
+        
+</html>
+

@@ -26,6 +26,8 @@ import pytest
 import requests
 import responses
 
+from juscraper.core.exceptions import CaptchaEsgotadoError
+from juscraper.core.failures import MOTIVO_CAPTCHA_ESGOTADO, motivo_falha_ou_inesperada
 from juscraper.courts.tjmg.download import (
     SEARCH_URL,
     _build_params,
@@ -340,8 +342,8 @@ class TestSolveCaptchaTempFile:
 # ---------------------------------------------------------------------------
 
 
-def test_revalidacao_com_captcha_falho_levanta_runtime_error(mocker):
-    """Captcha que falha na revalidacao apos HTTP 401 levanta RuntimeError e preserva o 401."""
+def test_revalidacao_com_captcha_falho_levanta_captcha_esgotado(mocker):
+    """Captcha que falha na revalidacao apos HTTP 401 levanta CaptchaEsgotadoError e preserva o 401."""
     mocker.patch("juscraper.courts.tjmg.download._solve_captcha", return_value=False)
     resposta_401 = requests.Response()
     resposta_401.status_code = 401
@@ -351,7 +353,8 @@ def test_revalidacao_com_captcha_falho_levanta_runtime_error(mocker):
             raise requests.HTTPError(response=resposta_401)
         return MagicMock()
 
-    with pytest.raises(RuntimeError, match="after 3 attempts") as erro:
+    with pytest.raises(CaptchaEsgotadoError, match="after 3 attempts") as erro:
         _fetch_page_revalidating(request_fn, MagicMock(spec=requests.Session), {"numeroRegistro": "11"})
 
     assert isinstance(erro.value.__context__, requests.HTTPError)
+    assert motivo_falha_ou_inesperada(erro.value) == MOTIVO_CAPTCHA_ESGOTADO

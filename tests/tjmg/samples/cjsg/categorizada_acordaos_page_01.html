@@ -1,0 +1,920 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=9" >
+        <meta http-equiv="Pragma" content="no-cache"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Expires" content="0" />    
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <link href="css/sistema_antigo.css" rel="stylesheet" type="text/css" />
+        <title>TJMG - Pesquisa por Jurisprud&ecirc;ncia</title>
+        <script language="JavaScript" src="/js/tjmg_ui.js"></script>
+        <script language="JavaScript" src="/js/tjmg.js"></script>
+        <script language="JavaScript" src="js/valida_dv_nu.js"></script>
+        <script type='text/javascript' src='/jurisprudencia/js/ea_util.js'></script>
+                
+        <link title="geral" rel="stylesheet" type="text/css" href="/portaltjmg/css/screen.css" media="screen" />        
+        <link title="alternativo" rel="stylesheet" type="text/css" href="/portaltjmg/css/alternativo.css" media="screen" />   
+        
+    </head>
+    
+        <style type="text/css" media="screen">
+            a:link.linkListaEspelhoAcordaos {color: #990000;}
+            a:visited.linkListaEspelhoAcordaos {color: #2F2F0F;}
+
+            .cabecalho
+            {
+                width: 99%;                   
+                border: solid #CCCCCC 1px;
+                background-color:#DFDFDF;                
+                color: #880000;
+                height: 18px;                    
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                font-weight: bold;
+                font-style: normal;                
+            }
+
+            .caixa_processo
+            {
+                    width: 99%;                   
+                    margin-top: 20px;
+                    -webkit-border-radius: 5px;
+                    -moz-border-radius: 5px;
+                    border-radius: 5px;
+                    border: solid #CCCCCC 1px;
+                    background-color:#DFDFDF;
+                    text-indent: 5px;
+                    padding: 5px;
+            }
+
+            .corpo 
+            {
+                color: #333333;
+            }           
+            
+        </style>        
+    
+    <style type="text/css" media="print">        
+        td.leftRight
+        {
+            margin: 0;                
+        }
+
+        span#tabelaEspelho
+        {
+            width: 100%;    
+            margin-right: 0;
+        }
+
+        body
+        {
+            margin: 0;
+        }
+
+        img#logoTJ
+        {
+            visibility: visible;
+        }
+
+        img#imgBotao1
+        {
+            visibility: visible;
+        }
+
+        table#tabelaInformacoesAcordaos
+        {
+            margin-left: 0;
+        }
+
+        td.rightTop
+        {
+            visibility: hidden;
+        }
+
+        img#AWMEL3_4
+        {
+            visibility: hidden;
+        }
+
+        div#menutop
+        {
+            visibility: hidden;
+        }
+
+        img
+        {
+            visibility: hidden;
+        }
+
+        div.tabbar
+        {
+            visibility: hidden;
+        }
+
+        div#caminho
+        {
+            visibility: hidden;
+        }            
+
+        div#botaoImprimirInteiroTeor
+        {
+            visibility: hidden;
+        } 
+
+        div#panel2
+        {
+            visibility: hidden;
+        }   
+
+        div#botoesEspelho
+        {
+            visibility: hidden;
+        }        
+
+        div#cabecalhoMenu
+        {
+            visibility: hidden;
+            display: none;
+        }
+
+        td#curvaBotton
+        {
+            visibility: hidden;
+        }
+
+        div.menuPortal
+        {
+            visibility: hidden;                    
+        }        
+    </style>
+        
+    <script>
+    if (navigator.userAgent.toLowerCase().indexOf("msie 7") != -1)
+    {
+        //Comentado, pois alguns navegadores IE 8 estão emulando o IE 7
+        //alert("ATENÇÃO: A versão do seu navegador é Internet Explorer 7.\nA Consulta à Jurisprudência está homologada para Internet Explorer 8 ou versão superior. Favor atualizar a versão do seu navegador.");
+    }
+    </script>
+        
+        <body onload="if (document.getElementById('panel2').style.display == 'none' && (document.getElementById('siglaLegislativa').value != '' || document.getElementById('observacoes').value != '')) mostrarOcultarPanel(2);" onkeydown="if (capturaCtrlP(event)) { return false;}" onkeyup="if (capturaCtrlP(event)) {imprimirEspelho(); return false;}">        
+        	
+            <div id="cabecalhoMenu"><style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>  </div>
+            
+            <br />
+            
+            <div id="sistema">
+                <div class="containerSis" style="width: 1200px">
+    
+                
+                <table align="center" width="90%" border="0" cellspacing="0" cellpadding="0">                       
+                      
+                <tr>
+                    <td colspan="4" align="left" valign="top" class="leftRight" bgcolor="#FFFFFF">
+
+                        
+                        <h1>
+                            Resultado da busca
+                        </h1>
+
+                        <div class="textoUmaColuna" >
+                            <div class="tabbar" align="left">
+  <a href="formEspelhoAcordao.do" class="tabact">Ac&oacute;rd&atilde;os</a>
+  <a href="decisao.do">Decis&otilde;es Monocr&aacute;ticas</a>
+  <a href="decisaoVice.do">Decis&otilde;es da 1&ordf; e 3&ordf; Vice-Presid&ecirc;ncia</a>   
+  <a href="sumulas.do">S&uacute;mulas</a>
+  <a href="decisaoTurmaRecursal.do">Decis&otilde;es de Turma Recursal</a>
+    <a href="decisaoTurmaRecursalPJe.do">Decis&otilde;es de Turma Recursal - PJe</a>
+  <a href="sentenca.do">Senten&ccedil;as</a>
+  <a href="ajuda.do">Ajuda</a>
+</div>
+
+<div class="tabbar" align="left">
+  <a href="" class="tabact">Lista de Resultados</a>
+</div>
+
+                        </div>
+                        <br />
+                        <div align="left"><div class="textoUmaColuna">
+
+
+
+
+
+
+
+
+  <p class="info">
+	
+		Foram encontrados 2.522 Espelhos de Acórdãos com os critérios utilizados
+		<br>
+	
+		Palavras: usucapiao
+		<br>
+	
+		Utiliza termos relacionados: NÃO
+		<br>
+	
+		Data de julgamento inicial: 01/01/2025
+		<br>
+	
+		Data de julgamento final: 31/12/2025
+		<br>
+	
+  </p>
+
+
+
+
+
+
+
+
+<!-- Mensagem de erro geral do Struts (Validate por Ex) -->
+
+
+<!-- Mensagem geral do Struts  -->
+
+
+</div></div>
+
+                        
+
+
+
+
+
+ 
+	
+
+
+
+
+
+
+
+
+
+
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+
+<table align="center">
+    <tr><td>
+            <div class="textoUmaColuna">
+
+                
+
+                
+
+                    <div align="center">
+                        <strong>Para acessar mais informa&ccedil;&otilde;es clique no n&uacute;mero do ac&oacute;rd&atilde;o.</strong>
+                    </div>
+
+                    
+
+                    <br>
+                    <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+
+
+                    
+                        
+                            
+                        
+                        
+                    
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=1&totalLinhas=2522&paginaNumero=1&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                1 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.24.463947-2/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000827-59.2024.8.13.0417 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=24&procCodigo=1&procCodigoOrigem=0&procNumero=463947&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Roberto Ribeiro de Paiva Junior</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            19/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            22/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA - REQUISITOS LEGAIS AUSENTES - POSSE DE IMÓVEL POR ANTECESSORA - FALECIMENTO - PRETENSÃO DE SOMA DAS POSSES - IMPOSSIBILIDADE - NATUREZAS JURÍDICAS DISTINTAS - SENTENÇA MANTIDA.<br />Ausente comprovação do exercício da posse pelo prazo legal, inviável o reconhecimento da prescrição aquisitiva pelas Apelantes.<br />A soma de posses para fins de preenchimento do tempo exigido para a aquisição da propriedade por <font color="#FF0000"><b>usucapião</b></font> exige identidade na natureza jurídica das posses, conforme jurisprudência.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=2&totalLinhas=2522&paginaNumero=2&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                2 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.441053-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5000693-78.2020.8.13.0447 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=441053&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Ivone Guilarducci</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            19/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            22/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO CIVIL. AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA. POSSE AD USUCAPIONEM. CONTESTAÇÃO APRESENTADA ANTES DO IMPLEMENTO DO PRAZO PRESCRICIONAL. INTERRUPÇÃO DA POSSE PACÍFICA. IMPOSSIBILIDADE DE CÔMPUTO DE FATO SUPERVENIENTE. AUSÊNCIA DE CADEIA POSSESSÓRIA PROBATÓRIA. IMPROCEDÊNCIA MANTIDA. RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br />Apelação cível interposta contra sentença que julgou improcedente o pedido formulado nos autos da Ação de <font color="#FF0000"><b>Usucapião</b></font> Extraordinária, reconhecendo a ausência de lapso temporal necessário e a ocorrência de oposição à posse. Em sede recursal, os apelantes reiteram a tese de implementação do prazo aquisitivo, mesmo durante o curso do processo, e requerem a reforma da decisão.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />Consiste em: (i) definir se é possível o reconhecimento da <font color="#FF0000"><b>usucapião</b></font> extraordinária com base na soma de posse própria e de antecessor, para fins de complementação do prazo legal; (ii) estabelecer se a apresentação de contestação antes do implemento do prazo aquisitivo impede o reconhecimento de fato superveniente no curso do processo com base no art. 493 do CPC.<br /><br />III. RAZÕES DE DECIDIR<br />A <font color="#FF0000"><b>usucapião</b></font> extraordinária exige posse contínua, mansa, pacífica e com animus domini pelo prazo mínimo de 15 anos, ou 10 anos, nos termos do parágrafo único do art. 1.238 do Código Civil, quando comprovada a moradia habitual ou a realização de obras de caráter produtivo.<br />Embora as provas testemunhais e documentais evidenciem o exercício de posse produtiva pelos autores desde 2013, o ajuizamento da ação em 2020 não satisfaz o requisito temporal mínimo de 10 anos exigido para a <font color="#FF0000"><b>usucapião</b></font> extraordinária qualificada.<br />A apresentação de contestação pela parte adversa antes do implemento do prazo aquisitivo rompe a característica de posse pacífica, inviabilizando a fluência do lapso temporal, conforme entendimento consolidado pelo TJMG.<br />A jurisprudência do STJ admite, em situações excepcionais, o cômputo do prazoaquisitivo durante a tramitação do processo, desde que não haja oposição à posse; no caso concreto, a contestação evidencia resistência clara, obstando o reconhecimento do fato superveniente nos moldes do art. 493 do CPC.<br />A alegação de soma da posse de antecessor (accessio possessionis), embora admitida pelo art. 1.243 do Código Civil, não encontra respaldo probatório nos autos, uma vez que não há demonstração suficiente da posse qualificada anterior exercida por Glair Teodorico da Silva.<br />A ausência de prova robusta quanto à cadeia possessória anterior inviabiliza o cômputo da posse anterior à dos autores, impossibilitando o implemento do prazo legal.<br /><br />IV. DISPOSITIVO E TESE<br />Recurso desprovido.<br /><br />Tese de julgamento:<br />A contestação apresentada antes do implemento do prazo aquisitivo rompe a condição de posse pacífica e impede o reconhecimento da <font color="#FF0000"><b>usucapião</b></font> extraordinária, ainda que durante a tramitação do processo.<br />O cômputo do prazo para <font color="#FF0000"><b>usucapião</b></font> com base em fato superveniente somente é admissível quando inexistente oposição material ou processual à posse exercida.<br />A soma de posse de antecessor à do atual possuidor exige prova concreta da continuidade, pacificidade e qualificação da posse exercida pelo transmitente.<br /><br />Dispositivos relevantes citados: CC, arts. 1.238, parágrafo único, e 1.243; CPC, arts. 373, I, e 493.<br /><br />Jurisprudência relevante citada: TJMG, Ap Cív nº 1.0000.23.072954-3/001, Rel. Des. Ramom Tácio, j. 08.05.2024; TJMG, Ap Cív nº 1.0671.13.001743-5/001, Rel. Des. Rinaldo Kennedy Silva, j. 15.12.2022; TJMG, Emb. Infringentes nº 1.0342.08.105411-2/002, Rel. Des. Aparecida Grossi, j. 11.03.2015.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=3&totalLinhas=2522&paginaNumero=3&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                3 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.395413-5/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5001238-90.2023.8.13.0303 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=395413&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Ivone Guilarducci</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            19/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            14/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL. DIREITO CIVIL E DIREITO PROCESSUAL CIVIL. AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA. ACESSIO POSSESSIONIS. REQUISITOS DA <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA. PROVIMENTO DO RECURSO.<br /><br />I. CASO EM EXAME<br />Cuida-se de recurso de Apelação interposto pela parte autora, representada por seu genitor, contra sentença que julgou improcedente o pedido de reconhecimento da <font color="#FF0000"><b>usucapião</b></font> extraordinária de imóvel urbano, fundamentada na alegada insuficiência do prazo de posse em razão da idade da autora. A sentença também deixou de condenar a parte recorrente ao pagamento das custas processuais, ante a gratuidade judiciária deferida.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />2. (i) Possibilidade de reconhecimento da <font color="#FF0000"><b>usucapião</b></font> extraordinária mediante soma do tempo de posse da autora com a posse do genitor (acessio possessionis), nos termos do artigo 1.243 do Código Civil;<br />(ii) Preenchimento dos requisitos legais para aquisição da propriedade por <font color="#FF0000"><b>usucapião</b></font> extraordinária (art. 1.238 e parágrafo único do Código Civil).<br /><br />III. RAZÕES DE DECIDIR<br />3. Restou demonstrado nos autos que a parte autora, representada por seu genitor, exerce posse mansa, pacífica, contínua e com animus domini sobre o imóvel urbano, não havendo oposição de confrontantes ou entes públicos, os quais foram notificados sem manifestação de resistência.<br />4. A jurisprudência é firme no sentido de admitir a soma da posse da parte autora com a de seu antecessor (acessio possessionis), desde que verificada a continuidade, pacificidade e mesma natureza da posse, conforme autorizado pelo artigo 1.243 do Código Civil.<br />5. No caso concreto, a prova testemunhal corrobora que o genitor da recorrente possuía o imóvel há mais de quinze anos, sendo a posse da recorrente transmitida e exercida em caráter familiar, configurando-se hipótese cabível de soma de posses e preenchimento do lapso temporal previsto no artigo 1.238 do Código Civil.<br />6. Reconhecido o preenchimento dos requisitos previstos para <font color="#FF0000"><b>usucapião</b></font> extraordinária, impõe-se a reforma da sentença para declarar a aquisição originária da propriedade em favor da parte autora.<br /><br />IV. DISPOSITIVO E TESE<br />7. Deram provimento ao recurso de apelação para reformar a sentença e julgar procedente o pedido, declarando a aquisição da propriedade por <font color="#FF0000"><b>usucapião</b></font> extraordinária em favor da parte autora, nos termos requeridos.<br /><br />Tese de julgamento:<br />"1. Admite-se a soma da posse do possuidor com a de seu genitor, nos termos do art. 1.243 do Código Civil, para fins de preenchimento do lapso temporal exigido para a <font color="#FF0000"><b>usucapião</b></font> extraordinária."<br />"2. Preenchidos os requisitos da posse contínua, pacífica, com animus domini e sem oposição, é possível o reconhecimento da aquisição da propriedade imobiliária por <font color="#FF0000"><b>usucapião</b></font> extraordinária, ainda que a autora seja menor e represente posse familiar."<br /><br />Dispositivos relevantes citados: art. 1.238, caput e parágrafo único, art. 1.243, art. 1.196 do Código Civil; arts. 259, I e 178, II do Código de Processo Civil.<br /><br />Jurisprudência relevante citada:<br />TJMG - Apelação Cível 1.0000.21.123427-3/001, Relator(a): Des.(a) Rogério Medeiros, 13ª Câmara Cível, julgamento em 16/09/2021, publicação da súmula em 16/09/2021;<br />TJMG - Apelação Cível 1.0134.14.008584-3/001, Relator(a): Des.(a) Pedro Aleixo, 16ª Câmara Cível, julgamento em 24/03/2021, publicação da súmula em 06/04/2021.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=4&totalLinhas=2522&paginaNumero=4&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                4 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.23.169030-6/003
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5010062-42.2022.8.13.0701 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=23&procCodigo=1&procCodigoOrigem=0&procNumero=169030&procSequencial=3&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Fernando Caldeira Brant</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            18/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO CIVIL E PROCESSUAL CIVIL. APELAÇÃO CÍVEL. REINTEGRAÇÃO DE POSSE. FERROVIA. FAIXA DE DOMÍNIO. AUSÊNCIA DE ESBULHO. RECURSO DESPROVIDO.<br />I. Caso em exame<br />1. Ação de reintegração de posse movida por concessionária de serviço público ferroviário (Ferrovia Centro-Atlântica S.A.) contra particular, alegando invasão de faixa de domínio e área non aedificandi em Uberaba/MG, com pedido de demolição. <br /><br />II. Questão em discussão <br />2. A questão em discussão consiste em saber se a edificação do réu invade a faixa de domínio ou a área de segurança da ferrovia, configurando esbulho possessório de bem público federal (insuscetível de <font color="#FF0000"><b>usucapião</b></font>), ou se a construção respeita os limites legais de distanciamento da via férrea.<br /><br />III. Razões de decidir<br />3. Para a procedência da reintegração de posse, incumbe ao autor provar a sua posse e o esbulho praticado pelo réu (art. 561 do CPC). Embora a concessionária detenha a posse da faixa de domínio por força de contrato, a proteção possessória limita-se à área pública afetada e às restrições administrativas da área non aedificandi<br />. 4. A prova pericial de engenharia constatou que o imóvel do réu está situado a 93,46 metros do eixo da via férrea.<br /> 5. A legislação de regência (Decreto nº 7.929/2013 e Lei nº 6.766/79) estabelece, em regra, faixa de domínio de 15 metros e área não edificável de mais 15 metros. A distância apurada (quase 100 metros) afasta a alegação de invasão, não havendo sobreposição à área da concessão pública ou risco à segurança operacional.<br /> 6. Não comprovada a invasão de bem público, a ocupação não se caracteriza como mera detenção, mas posse legítima em terreno lindeiro privado. Ausentes os requisitos do art. 561 do CPC, a manutenção da sentença de improcedência é medida que se impõe.<br /><br />IV. Dispositivo e tese <br />7. Recurso desprovido.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=5&totalLinhas=2522&paginaNumero=5&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                5 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.22.005168-4/007
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    2694435-69.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=22&procCodigo=1&procCodigoOrigem=0&procNumero=5168&procSequencial=7&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Clayton Rosa de Resende (JD Convocado)</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            18/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            18/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />AGRAVO DE INSTRUMENTO. DIREITO PROCESSUAL CIVIL. CUMPRIMENTO DE SENTENÇA. ALEGAÇÃO DE ILEGITIMIDADE ATIVA. REDISCUSSÃO DE MATÉRIA ALCANÇADA PELA COISA JULGADA. REJEIÇÃO DA IMPUGNAÇÃO. MULTA LITIGÂNCIA MÁ-FÉ.  AUSÊNCIA.  As alegações da parte executada, ora agravante, foram anteriormente analisadas e rejeitadas no julgamento da apelação, configurando matéria alcançada pela coisa julgada material, nos termos do art. 502 do CPC.<br />A decisão agravada manteve a higidez do título executivo judicial, reconhecendo que a área objeto da reintegração não se confunde com a discutida na ação de <font color="#FF0000"><b>usucapião</b></font>, tampouco há comprovação de posse pretérita do suposto terceiro sobre o bem, afastando a tese de ilegitimidade ativa. A existência de ação de <font color="#FF0000"><b>usucapião</b></font> relativa a área distinta daquela reconhecida na sentença de reintegração de posse não obsta o prosseguimento do cumprimento da ação reivindicatória.  Inexistindo a prática de quaisquer das condutas descritas no art. 80 do CPC/15, incabível a aplicação de multa por litigância de má-fé.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=6&totalLinhas=2522&paginaNumero=6&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                6 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.316370-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5009024-08.2021.8.13.0223 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=316370&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Nicolau Lupianhes Neto</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            18/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - LOCAÇÃO NÃO RESIDENCIAL - AÇÃO DE DESPEJO POR FALTA DE PAGAMENTO CUMULADA COM COBRANÇA DE ALUGUÉIS - RECONVENÇÃO - <font color="#FF0000"><b>USUCAPIÃO</b></font> - NULIDADE DO NEGÓCIO JURÍDICO - VÍCIO DE CONSENTIMENTO - INCAPACIDADE - COAÇÃO - FIANÇA SEM OUTORGA UXÓRIA - INEFICÁCIA - JUNTADA DE DOCUMENTOS NOVOS - CONTRADITA DE TESTEMUNHA - PRECLUSÃO. I. A <font color="#FF0000"><b>usucapião</b></font>, ainda que arguida em matéria de defesa, exige a comprovação de posse mansa, pacífica, ininterrupta e com animus domini. A posse derivada de relação locatícia, mesmo que prolongada e acompanhada do pagamento de contas de consumo (que constituem obrigações acessórias do locatário), é precária e não induz à prescrição aquisitiva. A alienação do imóvel pelo possuidor anterior à configuração do lapso temporal da <font color="#FF0000"><b>usucapião</b></font> descaracteriza o animus domini. II. A alegação de nulidade do contrato de locação por incapacidade ou vício de consentimento deve ser comprovada de forma cabal, não sendo suficiente a mera alegação de quadro depressivo, especialmente quando a cronologia dos fatos e a prova produzida não demonstram que a parte estava absolutamente incapaz de manifestar sua vontade no ato da contratação. III. A fiança prestada por cônjuge sem a outorga uxória do outro é ineficaz, nos termos da Súmula 332 do STJ, afastando a responsabilidade do fiador, mas não a validade do contrato de locação principal. IV. A juntada de documentos após a petição inicial ou contestação é admitida quando se referem a fatos novos surgidos no curso do processo ou para contrapô-los a fatos alegados pela parte contrária, desde que devidamente justificada a impossibilidade de apresentação anterior. V. A oportunidade para arguir a contradita de testemunha é durante a audiência de instrução e julgamento, após sua qualificação e antes do início do depoimento. A ausência de manifestação no momento adequado implica a preclusão do direito.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=7&totalLinhas=2522&paginaNumero=7&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                7 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.314465-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5002288-50.2020.8.13.0694 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=314465&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Ivone Guilarducci</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            18/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            22/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />Ementa: DIREITO CIVIL. APELAÇÃO CÍVEL. <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA. POSSE DECORRENTE DE LIBERALIDADE FAMILIAR. COMODATO VERBAL ENTRE PARENTES. AUSÊNCIA DE ANIMUS DOMINI. MANUTENÇÃO DA SENTENÇA DE IMPROCEDÊNCIA. RECURSO DESPROVIDO.<br />I. CASO EM EXAME<br />1. Apelação cível interposta contra sentença que julgou improcedente o pedido inicial da ação de <font color="#FF0000"><b>usucapião</b></font> extraordinária. Os autores alegaram posse contínua, mansa e pacífica, com início em 2003, acompanhada de benfeitorias e pagamentos de tributos. Requereram o reconhecimento da aquisição da propriedade do imóvel urbano objeto da lide. A sentença reconheceu a natureza precária da posse, oriunda de vínculo familiar e comodato verbal, e julgou improcedente o pedido. Os apelantes, inconformados, pugnaram pela reforma da decisão.<br />II. QUESTÃO EM DISCUSSÃO<br />2. A questão em discussão consiste em verificar se os apelantes comprovaram o preenchimento dos requisitos legais para a aquisição da propriedade do imóvel por <font color="#FF0000"><b>usucapião</b></font> extraordinária, nos termos do art. 1.238 do Código Civil.<br />III. RAZÕES DE DECIDIR<br />3. O art. 1.238 do Código Civil exige posse contínua, mansa, pacífica e com animus domini por 15 anos, prazo reduzido a 10 anos se o possuidor tiver residência habitual no imóvel ou nele realizar obras de caráter produtivo.<br />4. A posse exercida em razão de mera liberalidade familiar configura comodato verbal, relação jurídica de natureza precária, insuscetível de transmudação automática em posse ad usucapionem sem prova inequívoca de alteração do animus.<br />5. A alegada doação verbal é juridicamente ineficaz para demonstrar animus domini, pois carece de instrumento público exigido pelo art. 108 do Código Civil.<br />6. Os depoimentos testemunhais, além dos áudios juntados aos autos, demonstram que os apelantes, durante o período de posse, buscaram alternativas de moradia própria, como financiamento habitacional e locação de imóveis, o que se mostra incompatível com a convicção de proprietário exclusivo.<br />7. Há comprovação de pagamento de IPTU pela coproprietária, o que enfraquece a tese de que os apelantes assumiram os encargos do imóvel como se proprietários fossem.<br />8. A posse exercida em contexto de copropriedade familiar exige, para fins de <font color="#FF0000"><b>usucapião</b></font>, atos inequívocos de exclusão dos demais coproprietários e exteriorização clara do animus domini, o que não se verifica nos autos.<br />9. A notificação extrajudicial e os registros de oposição verbal anteriores evidenciam a existência de litígio, rompendo a continuidade e pacificidade da posse.<br />10. Ausente prova robusta de posse qualificada e animus domini, deve ser mantida a sentença de improcedência.<br />IV. DISPOSITIVO E TESE<br />11. Recurso desprovido.<br />Tese de julgamento:<br />1. A posse decorrente de mera tolerância ou liberalidade entre familiares configura comodato verbal, desprovido de animus domini, não apta a ensejar <font color="#FF0000"><b>usucapião</b></font> extraordinária.<br />1. A alegação de doação verbal de imóvel é juridicamente ineficaz para caracterizar animus domini quando desprovida de prova documental ou testemunhal idônea.<br />3. A oposição manifestada por coproprietários, mesmo de forma verbal ou indireta, é suficiente para romper a continuidade e pacificidade da posse, inviabilizando o reconhecimento da <font color="#FF0000"><b>usucapião</b></font>.<br /><br />Dispositivos relevantes citados: CC, arts. 1.208, 1.238 e 108; CPC, arts. 85, §§ 2º e 11.<br />Jurisprudência relevante citada:<br />STJ, REsp nº 1.552.548/MS, Rel. Min. Marco Buzzi, 4ª Turma, j. 06.12.2016, DJe 14.12.2016.<br />TJMG, Apelação Cível nº 1.0000.25.165635-1/001, Rel. Des.ª Luziene Barbosa Lima, j. 06.08.2025, pub. 12.08.2025.<br />TJMG, Apelação Cível nº 1.0000.24.491145-9/001, Rel. Des. Marcos Henrique Caldeira Brant, j. 23.07.2025, pub. 31.07.2025.<br />TJMG, Apelação Cível nº 1.0000.24.532910-7/001, Rel. Des. Gilson Soares Lemes, j. 05.06.2025, pub. 12.06.2025.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=8&totalLinhas=2522&paginaNumero=8&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                8 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.006933-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0000966-78.2014.8.13.0407 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=6933&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Marcelo Rodrigues</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            18/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            18/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />DIREITO CIVIL E PROCESSUAL CIVIL. APELAÇÃO CÍVEL. AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> EXTRAORDINÁRIA. REQUISITOS LEGAIS NÃO COMPROVADOS. POSSE. AUSÊNCIA DE ANIMUS DOMINI. PROVAS TESTEMUNHAIS CONTRADITÓRIAS. RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br />Recurso de apelação interposto contra sentença que julgou improcedente a ação de <font color="#FF0000"><b>usucapião</b></font> extraordinária, extinguindo o feito com resolução do mérito e condenando a autora ao pagamento de custas e honorários, com exigibilidade suspensa pela gratuidade da justiça.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />Há duas questões em discussão:<br />(i) verificar se a apelante comprovou o exercício de posse mansa, pacífica e contínua, com animus domini, pelo prazo legal exigido para a <font color="#FF0000"><b>usucapião</b></font> extraordinária (art. 1.238 do CC);<br />(ii) definir se a ausência de contestação de parte dos réus enseja o reconhecimento parcial da <font color="#FF0000"><b>usucapião</b></font> com base nos efeitos da revelia (art. 344 do CPC).<br /><br />III. RAZÕES DE DECIDIR<br />A <font color="#FF0000"><b>usucapião</b></font> extraordinária exige posse contínua, inconteste, mansa e pacífica, exercida com intenção de dono, por 15 anos, independentemente de justo título e boa-fé (art. 1.238, caput, do CC).<br />A prova da posse qualificada incumbe ao autor, devendo ser robusta e convincente, uma vez que a sentença de <font color="#FF0000"><b>usucapião</b></font> produz efeitos erga omnes, convertendo uma situação fática em direito de propriedade.<br />No caso concreto, a prova testemunhal é frágil e contraditória, revelando incerteza quanto à continuidade e à delimitação da posse. Depoimentos divergentes sobre a existência e manutenção de cercas, além da ausência de registros fotográficos ou documentais, impedem o reconhecimento da posse mansa e ininterrupta.<br />A ausência de contestação de parte dos réus não autoriza o reconhecimento automático da <font color="#FF0000"><b>usucapião</b></font>, pois, em ações dessa natureza, não se aplicam os efeitos plenos da revelia. A presunção de veracidade é relativa e não dispensa a comprovação dos requisitos legais da prescrição aquisitiva.<br />A jurisprudência do Superior Tribunal de Justiça reforça que a revelia não supre a ausência de provas do fato constitutivo, sendo indispensável a demonstração efetiva do exercício da posse qualificada (AgInt no AREsp n. 2.859.266/SP, Rel. Min. Raul Araújo, Quarta Turma, j. 18/08/2025, DJEN 22/08/2025).<br />Ausentes elementos probatórios suficientes para comprovar a posse contínua e o animus domini pelo prazo legal, mantém-se a improcedência do pedido inicial.<br />IV. DISPOSITIVO E TESE<br />Recurso desprovido.<br /><br />Tese de julgamento:<br />A <font color="#FF0000"><b>usucapião</b></font> extraordinária exige comprovação inequívoca da posse contínua, mansa, pacífica e exercida com animus domini por quinze anos, não bastando meras alegações ou provas contraditórias.<br />A ausência de contestação dos réus em ação de <font color="#FF0000"><b>usucapião</b></font> não gera presunção absoluta de veracidade dos fatos, sendo indispensável a comprovação dos requisitos legais pelo autor.<br />A posse precária, ainda que prolongada, não se converte em domínio pela via da <font color="#FF0000"><b>usucapião</b></font>.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=9&totalLinhas=2522&paginaNumero=9&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                9 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.16.037810-5/003
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    3179964-88.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=16&procCodigo=1&procCodigoOrigem=0&procNumero=37810&procSequencial=3&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Tiago Gomes de Carvalho Pinto</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            09/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - CUMPRIMENTO DE SENTENÇA - CANCELAMENTO DE USUFRUTO - ART. 1.410 DO CÓDIGO CIVIL - NÃO USO OU NÃO FRUIÇÃO - PROCEDIMENTO DE JURISDIÇÃO VOLUNTÁRIA PRÓPRIO PARA O CANCELAMENTO - ART. 725 DO CPC - MORTE PRESUMIDA DOS USUFRUTUÁRIOS - PROCEDIMENTO PRÓPRIO - ART. 7º DO CÓDIGO CIVIL - PEDIDO SUBSIDIÁRIO - REGISTRO DA CARTA DE ADJUDICAÇÃO COM USUFRUTO EM VIGOR - RECURSO PROVIDO<br />- O usufruto trata-se de um direito real de gozo ou fruição, acarretando uma divisão igualitária dos atributos da propriedade. <br />- O usufrutuário tem direito à posse, uso, administração e percepção dos frutos (art. 1.394), ao passo que o proprietário permanece com o domínio do bem, sem os atributos do uso e do gozo, mantendo-se apenas a nua-propriedade.<br />- Nos termos da legislação civil, a constituição do usufruto de imóvel, salvo na hipótese de <font color="#FF0000"><b>usucapião</b></font>, dar-se-á mediante a sua averbação na matrícula do bem, ao passo que a sua extinção (cancelamento) também depende de formal registro.  <br />- O não uso ou a não fruição do bem dado em usufruto pelo beneficiário não gera a sua extinção ex lege, dependendo da chancela judicial para que reste configurada a situação de abandono, razão pela qual depende de procedimento autônomo próprio, sendo incabível sua extinção por essa hipótese com base apenas em um auto de avaliação que indica a situação de abandono do imóvel.<br />- Tratando-se de extinção de usufruto legal pela morte do usufrutuário, desnecessário, em regra, qualquer procedimento.<br />- Inexistindo certidões de óbito, o instituto da morte presumida, sem decretação de ausência, disciplinada no art. 7º do Código Civil, depende de ação autônoma para o reconhecimento.<br />- Sendo o usufruto direito real autônomo, nada impede a aquisição da nua-propriedade pelo agravante, mediante registro da Carta de Adjudicação, com a manutenção do usufruto.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=10&totalLinhas=2522&paginaNumero=10&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                10 - Processo: Agravo Interno Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.323726-7/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    3237275-37.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=323726&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Alexandre Victor de Carvalho</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            18/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />Ementa: DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO. DECISÃO MONOCRÁTICA QUE NÃO CONHECEU DE AGRAVO DE INSTRUMENTO. INDEFERIMENTO DE PROVA PERICIAL. ROL TAXATIVO DO ART. 1.015 DO CPC. AUSÊNCIA DE URGÊNCIA. IMPOSSIBILIDADE DE MITIGAÇÃO. RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br />Agravo Interno interposto contra decisão monocrática que não conheceu do agravo de instrumento anteriormente manejado, por entender que a decisão de primeiro grau que indeferiu a produção de prova pericial em imóvel urbano, no âmbito de ação de <font color="#FF0000"><b>usucapião</b></font>, não se enquadra nas hipóteses previstas no art. 1.015 do CPC/2015. O agravante sustenta que a prova pericial é imprescindível ao deslinde da controvérsia e que o indeferimento da medida configura cerceamento de defesa, violando os princípios da ampla defesa, da celeridade e da economia processual. Requer o provimento do recurso para permitir o prosseguimento do agravo de instrumento.<br /><br />II. QUESTÃO EM DISCUSSÃO<br />A questão em discussão consiste em definir se é cabível agravo de instrumento contra decisão interlocutória que indefere a realização de prova pericial, e se, no caso concreto, estão presentes os requisitos de urgência aptos a justificar a mitigação do rol taxativo do art. 1.015 do Código de Processo Civil.<br /><br />III. RAZÕES DE DECIDIR<br />O art. 1.015 do CPC/2015 estabelece rol taxativo de decisões interlocutórias passíveis de impugnação imediata por agravo de instrumento, admitindo-se mitigação apenas em hipóteses excepcionais em que o retardamento da análise possa comprometer a utilidade da decisão ou causar prejuízo irreparável à parte.<br />A decisão que indefere a produção de prova pericial não se enquadra nas hipóteses previstas nos incisos do art. 1.015 do CPC, tampouco restou demonstrada situação de urgência ou risco de perecimento da prova que justifique a mitigação da taxatividade.<br />A jurisprudência consolidada do Superior Tribunal de Justiça afasta o cabimento de agravo de instrumento emhipóteses que envolvam deferimento ou indeferimento de prova, devendo eventual irresignação ser suscitada em preliminar de apelação.<br />Precedentes recentes reafirmam a orientação de que a decisão sobre produção probatória não versa sobre o mérito do processo e, portanto, não enseja agravo de instrumento (AgInt no AREsp n. 2.441.686/SP, Rel. Min. Marco Buzzi, Quarta Turma, j. 19/3/2024, DJe 22/3/2024; AgInt no AREsp n. 2.356.578/RS, Rel. Min. Raul Araújo, Quarta Turma, j. 20/5/2024, DJe 4/6/2024; AgInt no AREsp n. 2.593.022/RJ, Rel. Min. João Otávio de Noronha, Quarta Turma, j. 23/9/2024, DJe 25/9/2024; AgInt no AREsp n. 2.807.807/RJ, Rel. Min. Marco Buzzi, Quarta Turma, j. 11/6/2025, DJe 17/6/2025).<br />Ausente demonstração de que a eventual realização posterior da perícia no imóvel seria inviável ou ineficaz, inexiste risco de perecimento da prova a justificar a excepcionalidade.<br /><br />IV. DISPOSITIVO E TESE<br />Recurso desprovido.<br /><br />Tese de julgamento:<br /><br />A decisão interlocutória que indefere a produção de prova pericial não se enquadra nas hipóteses do art. 1.015 do CPC e, portanto, não é impugnável por agravo de instrumento.<br />A mitigação do rol taxativo do art. 1.015 do CPC somente é admitida em casos excepcionais, quando demonstrada urgência efetiva e risco de inutilidade da prestação jurisdicional.<br />A ausência de prejuízo imediato e de perecimento da prova afasta a possibilidade de mitigação, devendo eventual inconformismo ser arguido em preliminar de apelação.
+                        </div>                        
+                                         
+
+                    
+
+                    
+                        
+                    
+
+                    <!-- PAGINADOR -->
+                    <br><br>
+                    
+                    <table width="98%" border="0" cellspacing="0" cellpadding="0">
+<tr align="right">
+<td>
+p?gina 1 de 253</td>
+</tr><tr align="right">
+<td>
+<table border="0" cellspacing="1" cellpadding="4">
+ <tr>
+<td width="35" align="center" bgcolor="#DEDEDE">&lt;&lt;</td>
+<td width="35" align="center" bgcolor="#DEDEDE">&lt;</td>
+<td width="35" align="center" class="tabact:active"><b>1</b></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=2" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">2</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">3</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=4" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">4</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=5" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">5</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=6" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">6</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=7" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">7</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=8" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">8</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=9" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">9</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=2" alt="pr?xima" title="pr?xima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=253" alt="?ltima" title="?ltima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;&gt;</a></td>
+</tr>
+</table>
+<script type="text/javascript" language="JavaScript">
+// Select the pageNumber field
+function select() {
+  var pager = document.forms['pager'];
+  pager.pageNumber.focus();
+  pager.pageNumber.select();
+}
+
+// Function to adjust the page number (starts with 0)
+// a fun??o recebe o par?metro verificaSubmit para, caso seja chamada do onSubmit do form
+// retornar false e n?o submeter a p?gina;
+// se for chamada do link do bot?o n?o retorna false e executa a fun??o;
+function adjustPage(total, verificaSubmit) {
+  var pager = document.forms['pager'];
+  var page = parseInt(pager.pageNumber.value);
+  if (!pager.pageNumber.value) {
+    alert ("? preciso informar o n?mero da p?gina");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (!page) {
+    alert ("O formato do n?mero da p?gina est? incorreto");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (page < 1 || page > total) {
+    alert ("O n?mero da p?gina est? fora dos limites");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else {
+    pager.paginaNumero.value = page;
+    if (typeof validaPesquisa == 'function')
+    {
+    		if (validaPesquisa())
+    		{
+    			pager.submit();
+    		}
+    }
+    else
+    {
+    		pager.submit();
+    }
+  }
+}
+</script>
+  <table border="0" cellspacing="0" cellpadding="3" width="100%" bgcolor="#e7e7e7" summary="">
+  <form name="pager" OnSubmit=" return adjustPage(253,'noLink'); " action="pesquisaPalavrasEspelhoAcordao.do" method="post" >
+    <tr align="right">
+       <td width="100%">ir para a p?gina:</td>
+       <td align="right"><input type="text" name="pageNumber" size="5"></td>
+       <td align="left"><a href="javascript: void(0);" onclick="adjustPage(253,'linkSubmit')">ir</a></td>
+    </tr>
+    <input type="hidden" name="paginaNumero">
+    <input type="hidden" name="palavras" value = "usucapiao">
+    <input type="hidden" name="pesquisarPor" value = "ementa">
+    <input type="hidden" name="orderByData" value = "2">
+    <input type="hidden" name="dataJulgamentoInicial" value = "01/01/2025">
+    <input type="hidden" name="dataJulgamentoFinal" value = "31/12/2025">
+    <input type="hidden" name="referenciaLegislativa" value = "Clique na lupa para pesquisar as referÃªncias cadastradas...">
+    <input type="hidden" name="pesquisaPalavras" value = "Pesquisar">
+    <input type="hidden" name="excluirRepetitivos" value = "true">
+    <input type="hidden" name="">
+    <input type="hidden" name="linhasPorPagina" value = "10">
+  </form>
+  </table></td>
+</tr>
+</table>
+
+                    
+                    <!-- FIM  PAGINADOR -->
+
+                
+                <br><br>
+                <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+            </div>
+        </td></tr>
+</table>
+
+
+
+                        
+
+                    </td>
+                </tr>
+
+            </table>
+            <br /><br />
+            </div>
+            </div>
+                        
+            
+
+             
+
+
+
+
+
+        
+        
+
+    </body>    
+        
+        
+</html>
+

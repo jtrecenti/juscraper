@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import re
+from html import unescape
+from urllib.parse import parse_qsl, urlsplit
 
 import pandas as pd
 
@@ -35,9 +37,10 @@ _ERRO_DE_BUSCA_RE = re.compile(
 # por categoria, com um link para cada lista, e nenhum resultado.
 _CATEGORIZADA_RE = re.compile(r"<h1>\s*Resultado da busca \(Categorizada\)", re.IGNORECASE)
 _CATEGORIA_RE = re.compile(
-    r"<td>([^<]+?):</td>\s*<td><a [^>]*>(\d+) documento\(s\) encontrado\(s\)</a>",
+    r"<td>([^<]+?):</td>\s*<td><a ([^>]*)>(\d+) documento\(s\) encontrado\(s\)</a>",
     re.IGNORECASE,
 )
+_HREF_RE = re.compile(r"""href=["']([^"']*)["']""", re.IGNORECASE)
 _PROC_ID_RE = re.compile(
     r"procAno=(\d+)&procCodigo=(\d+)&procCodigoOrigem=(\d+)"
     r"&procNumero=(\d+)&procSequencial=(\d+)&procSeqAcordao=(\d+)"
@@ -51,7 +54,28 @@ class TJMGBuscaSemListaError(HTTPSemanticError):
     houvesse resultados: o erro ``ORA-20000 ... DRG-10599: a coluna não está
     indexada``, nas buscas sem filtro de data e em algumas faixas longas, e a
     busca categorizada, quando há acórdãos de repetitivos no resultado.
+
+    O ``cjsg_download`` levanta o erro do banco logo depois da página 1 e
+    segue as listas da busca categorizada; o parse levanta os dois, para as
+    páginas baixadas antes disso.
     """
+
+
+def listas_da_busca_categorizada(html: str) -> list[tuple[str, dict[str, str]]]:
+    """``(categoria, parâmetros do link)`` de cada lista da busca categorizada.
+
+    Vazia quando ``html`` não é a busca categorizada. Os parâmetros são os da
+    query do link, como ``{"excluirRepetitivos": "true", ...}`` para os
+    acórdãos e ``{"listaClasse": "600", ...}`` para os de repetitivos.
+    """
+    if not _CATEGORIZADA_RE.search(html):
+        return []
+    listas = []
+    for nome, atributos, _ in _CATEGORIA_RE.findall(html):
+        href = _HREF_RE.search(atributos)
+        link = href.group(1) if href else ""
+        listas.append((clean_html(nome) or nome, dict(parse_qsl(urlsplit(unescape(link)).query))))
+    return listas
 
 
 def _busca_sem_lista(html: str) -> str | None:
@@ -65,14 +89,22 @@ def _busca_sem_lista(html: str) -> str | None:
         )
     if _CATEGORIZADA_RE.search(html):
         categorias = "; ".join(
-            f"{clean_html(nome)}: {n}" for nome, n in _CATEGORIA_RE.findall(html)
+            f"{clean_html(nome)}: {n}" for nome, _, n in _CATEGORIA_RE.findall(html)
         )
         return (
             f"TJMG devolveu a busca categorizada ({categorias}), que separa os "
-            "acórdãos de repetitivos e não lista resultados; o juscraper ainda não "
-            "segue essas listas. Restrinja a faixa de datas ou os termos."
+            "acórdãos de repetitivos e não lista resultados. O formato dos links "
+            "das categorias não foi reconhecido, ou a página foi baixada antes de "
+            "o cjsg_download passar a seguir essas listas."
         )
     return None
+
+
+def levantar_se_sem_lista(html: str) -> None:
+    """Levanta :class:`TJMGBuscaSemListaError` se ``html`` não traz a lista de resultados."""
+    motivo = _busca_sem_lista(html)
+    if motivo:
+        raise TJMGBuscaSemListaError(motivo)
 
 
 def _split_blocks(html: str) -> list:
@@ -117,9 +149,7 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     for html in raw_pages:
         if not html:
             continue
-        motivo = _busca_sem_lista(html)
-        if motivo:
-            raise TJMGBuscaSemListaError(motivo)
+        levantar_se_sem_lista(html)
         rows.extend(_parse_block(block) for block in _split_blocks(html))
     df = pd.DataFrame(rows)
     coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="%d/%m/%Y")

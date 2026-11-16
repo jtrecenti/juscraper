@@ -1,0 +1,920 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7; IE=9" >
+        <meta http-equiv="Pragma" content="no-cache"/>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Expires" content="0" />    
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <link href="css/sistema_antigo.css" rel="stylesheet" type="text/css" />
+        <title>TJMG - Pesquisa por Jurisprud&ecirc;ncia</title>
+        <script language="JavaScript" src="/js/tjmg_ui.js"></script>
+        <script language="JavaScript" src="/js/tjmg.js"></script>
+        <script language="JavaScript" src="js/valida_dv_nu.js"></script>
+        <script type='text/javascript' src='/jurisprudencia/js/ea_util.js'></script>
+                
+        <link title="geral" rel="stylesheet" type="text/css" href="/portaltjmg/css/screen.css" media="screen" />        
+        <link title="alternativo" rel="stylesheet" type="text/css" href="/portaltjmg/css/alternativo.css" media="screen" />   
+        
+    </head>
+    
+        <style type="text/css" media="screen">
+            a:link.linkListaEspelhoAcordaos {color: #990000;}
+            a:visited.linkListaEspelhoAcordaos {color: #2F2F0F;}
+
+            .cabecalho
+            {
+                width: 99%;                   
+                border: solid #CCCCCC 1px;
+                background-color:#DFDFDF;                
+                color: #880000;
+                height: 18px;                    
+                font-family: Verdana, Arial, Helvetica, sans-serif;
+                font-size: 9pt;
+                font-weight: bold;
+                font-style: normal;                
+            }
+
+            .caixa_processo
+            {
+                    width: 99%;                   
+                    margin-top: 20px;
+                    -webkit-border-radius: 5px;
+                    -moz-border-radius: 5px;
+                    border-radius: 5px;
+                    border: solid #CCCCCC 1px;
+                    background-color:#DFDFDF;
+                    text-indent: 5px;
+                    padding: 5px;
+            }
+
+            .corpo 
+            {
+                color: #333333;
+            }           
+            
+        </style>        
+    
+    <style type="text/css" media="print">        
+        td.leftRight
+        {
+            margin: 0;                
+        }
+
+        span#tabelaEspelho
+        {
+            width: 100%;    
+            margin-right: 0;
+        }
+
+        body
+        {
+            margin: 0;
+        }
+
+        img#logoTJ
+        {
+            visibility: visible;
+        }
+
+        img#imgBotao1
+        {
+            visibility: visible;
+        }
+
+        table#tabelaInformacoesAcordaos
+        {
+            margin-left: 0;
+        }
+
+        td.rightTop
+        {
+            visibility: hidden;
+        }
+
+        img#AWMEL3_4
+        {
+            visibility: hidden;
+        }
+
+        div#menutop
+        {
+            visibility: hidden;
+        }
+
+        img
+        {
+            visibility: hidden;
+        }
+
+        div.tabbar
+        {
+            visibility: hidden;
+        }
+
+        div#caminho
+        {
+            visibility: hidden;
+        }            
+
+        div#botaoImprimirInteiroTeor
+        {
+            visibility: hidden;
+        } 
+
+        div#panel2
+        {
+            visibility: hidden;
+        }   
+
+        div#botoesEspelho
+        {
+            visibility: hidden;
+        }        
+
+        div#cabecalhoMenu
+        {
+            visibility: hidden;
+            display: none;
+        }
+
+        td#curvaBotton
+        {
+            visibility: hidden;
+        }
+
+        div.menuPortal
+        {
+            visibility: hidden;                    
+        }        
+    </style>
+        
+    <script>
+    if (navigator.userAgent.toLowerCase().indexOf("msie 7") != -1)
+    {
+        //Comentado, pois alguns navegadores IE 8 estão emulando o IE 7
+        //alert("ATENÇÃO: A versão do seu navegador é Internet Explorer 7.\nA Consulta à Jurisprudência está homologada para Internet Explorer 8 ou versão superior. Favor atualizar a versão do seu navegador.");
+    }
+    </script>
+        
+        <body onload="if (document.getElementById('panel2').style.display == 'none' && (document.getElementById('siglaLegislativa').value != '' || document.getElementById('observacoes').value != '')) mostrarOcultarPanel(2);" onkeydown="if (capturaCtrlP(event)) { return false;}" onkeyup="if (capturaCtrlP(event)) {imprimirEspelho(); return false;}">        
+        	
+            <div id="cabecalhoMenu"><style type="text/css">
+    header .wrapper-header
+    {
+        background: #7e1819;
+        color: white;
+        padding: 0px 0 0px 0;
+    }
+</style>
+
+<header role="banner">             
+    <div class="wrapper-header">
+        <a target="_blank" title="Link para Portal TJMG" 
+        aria-label="Logo do Tribunal de Justiça do Estado de Minas Gerais" class="brand-logo logo-tjmg" 
+        href="http://www.tjmg.jus.br">
+        <img src="imagens/logo_tjmg.png"/>
+        </a>
+    </div>
+</header>  </div>
+            
+            <br />
+            
+            <div id="sistema">
+                <div class="containerSis" style="width: 1200px">
+    
+                
+                <table align="center" width="90%" border="0" cellspacing="0" cellpadding="0">                       
+                      
+                <tr>
+                    <td colspan="4" align="left" valign="top" class="leftRight" bgcolor="#FFFFFF">
+
+                        
+                        <h1>
+                            Resultado da busca
+                        </h1>
+
+                        <div class="textoUmaColuna" >
+                            <div class="tabbar" align="left">
+  <a href="formEspelhoAcordao.do" class="tabact">Ac&oacute;rd&atilde;os</a>
+  <a href="decisao.do">Decis&otilde;es Monocr&aacute;ticas</a>
+  <a href="decisaoVice.do">Decis&otilde;es da 1&ordf; e 3&ordf; Vice-Presid&ecirc;ncia</a>   
+  <a href="sumulas.do">S&uacute;mulas</a>
+  <a href="decisaoTurmaRecursal.do">Decis&otilde;es de Turma Recursal</a>
+    <a href="decisaoTurmaRecursalPJe.do">Decis&otilde;es de Turma Recursal - PJe</a>
+  <a href="sentenca.do">Senten&ccedil;as</a>
+  <a href="ajuda.do">Ajuda</a>
+</div>
+
+<div class="tabbar" align="left">
+  <a href="" class="tabact">Lista de Resultados</a>
+</div>
+
+                        </div>
+                        <br />
+                        <div align="left"><div class="textoUmaColuna">
+
+
+
+
+
+
+
+
+  <p class="info">
+	
+		Foram encontrados 2.522 Espelhos de Acórdãos com os critérios utilizados
+		<br>
+	
+		Palavras: usucapiao
+		<br>
+	
+		Utiliza termos relacionados: NÃO
+		<br>
+	
+		Data de julgamento inicial: 01/01/2025
+		<br>
+	
+		Data de julgamento final: 31/12/2025
+		<br>
+	
+  </p>
+
+
+
+
+
+
+
+
+<!-- Mensagem de erro geral do Struts (Validate por Ex) -->
+
+
+<!-- Mensagem geral do Struts  -->
+
+
+</div></div>
+
+                        
+
+
+
+
+
+ 
+	
+
+
+
+
+
+
+
+
+
+
+<script type='text/javascript' src='dwr/engine.js'></script>
+<script type='text/javascript' src='dwr/util.js'></script>
+<script type='text/javascript' src='dwr/interface/ValidacaoCaptchaAction.js'></script>
+
+
+<table align="center">
+    <tr><td>
+            <div class="textoUmaColuna">
+
+                
+
+                
+
+                    <div align="center">
+                        <strong>Para acessar mais informa&ccedil;&otilde;es clique no n&uacute;mero do ac&oacute;rd&atilde;o.</strong>
+                    </div>
+
+                    
+
+                    <br>
+                    <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+
+
+                    
+                        
+                            
+                        
+                        
+                    
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=11&totalLinhas=2522&paginaNumero=11&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                11 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.247716-1/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    3561252-82.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=247716&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Tiago Gomes de Carvalho Pinto</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            09/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - SUSPENSÃO DO PROCESSO - ADMISSÃO DO IRDR Nº 1.0000.24.453789-0/001 (TEMA 102/TJMG) - APLICABILIDADE DO PROVIMENTO Nº 149 DO CNJ - EXIGÊNCIA DE PLANTA E MEMORIAL DESCRITIVO - PARTICULARIDADES DO CASO CONCRETO - DOCUMENTAÇÃO JÁ APRESENTADA NOS AUTOS DE ORIGEM - AUSÊNCIA DE IDENTIDADE TEMÁTICA - IMPOSSIBILIDADE DE SOBRESTAMENTO - PRINCÍPIOS DA RAZOÁVEL DURAÇÃO DO PROCESSO E DA EFETIVIDADE DA JURISDIÇÃO - TAXATIVIDADE MITIGADA - PROVIMENTO.<br />- A suspensão dos processos determinada na admissão do IRDR, nos termos do art. 982, I, do CPC, pressupõe a existência de identidade fática e jurídica entre a demanda individual e a controvérsia delimitada no incidente.<br />- Constatado que, ainda em 2017, houve determinação de juntada da planta e do memorial descritivo do imóvel usucapiendo, devidamente atendida pelas partes, revela-se superada, no caso concreto, a discussão jurídica objeto do IRDR, que versa justamente sobre a obrigatoriedade desses documentos.<br />- Ausente a similitude temática necessária ao sobrestamento, mostra-se indevida a suspensão automática do feito, sobretudo quando tal medida, aplicada de forma indistinta, compromete a razoável duração do processo (art. 5º, LXXVIII, da CF/88) e a efetividade da tutela jurisdicional.<br />- Verificado que a paralisação injustificada do processo, em trâmite há mais de oito anos, acarreta prejuízos relevantes aos agravantes, sobretudo quanto à segurança jurídica e à utilidade do provimento final, impõe-se o afastamento da suspensão.<br />- Admite-se o agravo de instrumento, à luz da taxatividade mitigada do art. 1.015 do CPC, diante do risco de dano decorrente da interrupção indevida da marcha processual.<br />- Recurso provido, para ratificar a tutela recursal e determinar o prosseguimento imediato do processo de origem.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=12&totalLinhas=2522&paginaNumero=12&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                12 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.241153-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5001037-67.2021.8.13.0142 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=241153&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Alexandre Victor de Carvalho</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> ORDINÁRIA - TEMPO DE POSSE - COMPROVAÇÃO SOBRE A QUALIFICAÇÃO AD USUCAPIONEM - INSUFICIÊNCIA - IMPROCEDÊNCIA CONFIRMADA.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=13&totalLinhas=2522&paginaNumero=13&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                13 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.352323-7/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5001351-45.2025.8.13.0474 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=352323&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Tiago Gomes de Carvalho Pinto</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            09/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - PRELIMINAR SUSCITADA DE OFÍCIO - SENTENÇA TERMINATIVA - AUSÊNCIA DE INTERESSE DE AGIR - DECISÃO-SURPRESA - VIOLAÇÃO AO ART. 10 DO CÓDIGO DE PROCESSO CIVIL - NULIDADE DA SENTENÇA. <br />-Nos termos do art. 10 do Código de Processo Civil, o juiz não pode decidir, em grau algum de jurisdição, com base em fundamento a respeito do qual não se tenha dado às partes oportunidade de se manifestar, ainda que se trate de matéria sobre a qual deva decidir de ofício.<br />- A Parte Geral do diploma processual assegura, mediante prévia intimação das partes, a inocorrência de prolação de decisão-surpresa, compreendida como aquela que encerra repentinamente o processo e frustra a pretendida tutela do direito das partes, além de induzir a cooperação entre os sujeitos processuais, com a oportunização ao contraditório substancial, sob pena de nulidade (arts. 6º, 9º e 10, CPC).
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=14&totalLinhas=2522&paginaNumero=14&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                14 - Processo: Embargos de Declaração-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.212293-2/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0090389-11.2003.8.13.0512 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=212293&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) José Eustáquio Lucas Pereira</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />Ementa: DIREITO PROCESSUAL CIVIL. EMBARGOS DE DECLARAÇÃO. ALEGAÇÃO DE OMISSÃO, CONTRADIÇÃO, OBSCURIDADE E ERRO MATERIAL. INEXISTÊNCIA DE VÍCIOS NAS HIPÓTESES DO ART. 1.022 DO CPC. PRETENSÃO DE REAPRECIAÇÃO DE PROVAS E REDISCUSSÃO DO MÉRITO. IMPOSSIBILIDADE. CARÁTER PROTELATÓRIO RECONHECIDO. MULTA APLICADA. EMBARGOS REJEITADOS.<br />I. CASO EM EXAME<br />1. Embargos de Declaração opostos contra acórdão que rejeitou preliminar de cerceamento de defesa e, no mérito, negou provimento a apelação interposta em ação de <font color="#FF0000"><b>usucapião</b></font>, mantendo sentença de improcedência, sob alegação de omissão, contradição, obscuridade e erro material relacionados à análise da prova testemunhal, à juntada de documentos em grau recursal, ao exame do decurso temporal da posse e à qualificação jurídica da posse.<br />II. QUESTÃO EM DISCUSSÃO<br />2. Há duas questões em discussão: (i) definir se o acórdão recorrido contém omissão, contradição, obscuridade ou erro material que justifiquem a integração do julgado; (ii) estabelecer se os embargos de declaração estão sendo utilizados como meio de rediscussão de matéria já apreciada, configurando caráter protelatório.<br />III. RAZÕES DE DECIDIR<br />3. O art. 1.022 do CPC delimita o cabimento dos embargos de declaração às hipóteses de omissão, obscuridade, contradição ou erro material, não compreendendo a reapreciação do conjunto probatório ou a revisão do mérito.<br />4. O acórdão embargado analisa expressamente a impossibilidade de juntada de documentos em grau recursal, à luz do art. 342 do CPC, destacando que os documentos existiam desde o ajuizamento da ação e foram apresentados sem justificativa plausível.<br />5. O julgamento originário examina a prova dos autos, incluindo ações possessórias anteriores, acordos firmados, alegações de comodato e ausência de demonstração de posse mansa, pacífica e com animus domini, afastando a caracterização de <font color="#FF0000"><b>usucapião</b></font> e demonstrando que a conclusão não decorre de omissão ou contradição.<br />6. Aalegação de omissão quanto ao decurso temporal da posse durante o processo não procede, pois o acórdão indica inexistência de prova suficiente da posse qualificada, tornando irrelevante o cômputo de lapso temporal adicional.<br />7. Os embargos buscam rediscutir fatos e provas já enfrentados no julgamento da apelação, configurando utilização inadequada do recurso integrativo.<br />8. Caracterizado o intuito protelatório, impõe-se a aplicação da multa prevista no art. 1.026, § 2º, do CPC, diante da apresentação de embargos sem apontamento de vícios e com finalidade de rediscussão indevida da matéria.<br />IV. DISPOSITIVO <br />9. Embargos de Declaração rejeitados, com aplicação de multa de 2% sobre o valor atualizado da causa.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=15&totalLinhas=2522&paginaNumero=15&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                15 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.237334-5/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    0120639-23.2014.8.13.0324 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=237334&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Ramom Tácio</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - AQUISIÇÃO PRESCRITIVA DA PROPRIEDADE DE IMÓVEL - REQUISITOS LEGAIS - AUSÊNCIA - IMPROCEDÊNCIA.<br />- A <font color="#FF0000"><b>usucapião</b></font> constitui modo de aquisição da propriedade, decorrente do exercício, pelo lapso temporal previsto em lei, de posse com "animus domini", de forma contínua e incontestada, cumulada com eventuais demais requisitos legalmente exigidos para a modalidade invocada.<br />- Se incumbe ao autor a prova do fato constitutivo de seu direito (CPC, art. 373, I), a ausência de tal demonstração conduz à improcedência do pedido inicial.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=16&totalLinhas=2522&paginaNumero=16&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                16 - Processo: Agravo Interno Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.156243-5/002
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    1562443-02.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=156243&procSequencial=2&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Luziene Barbosa Lima</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: DIREITO PROCESSUAL CIVIL. AGRAVO INTERNO EM AGRAVO DE INSTRUMENTO. <font color="#FF0000"><b>USUCAPIÃO</b></font>. DESPACHO DE MERO EXPEDIENTE. INEXISTÊNCIA DE CONTEÚDO DECISÓRIO RELEVANTE. IMPOSSIBILIDADE DE IMPUGNAÇÃO. RECURSO DESPROVIDO.<br /><br />I. CASO EM EXAME<br /><br />Agravo Interno interposto contra decisão monocrática onde não conheceu de Agravo de Instrumento manejado em ação de <font color="#FF0000"><b>usucapião</b></font>, sob fundamento de se tratar de despacho de mero expediente, sem conteúdo decisório relevante. Os agravantes sustentam possuir caráter decisório a determinação de indeferimento de pesquisa em sistemas conveniados, por impor ônus e prazo para comprovação documental, invocando o Tema 988 do STJ sobre a taxatividade mitigada do rol do art. 1.015 do CPC.<br /><br />II. QUESTÃO EM DISCUSSÃO<br /><br />A questão em discussão consiste em definir se o indeferimento provisório de pesquisa em sistemas eletrônicos, com fixação de prazo para comprovação de diligências, possui natureza decisória apta a ser impugnada por Agravo de Instrumento, à luz da mitigação do rol do art. 1.015 do CPC.<br /><br />III. RAZÕES DE DECIDIR<br /><br />O ato impugnado possui natureza de despacho ordinatório, pois apenas orienta o andamento do processo e não resolve questão incidental nem causa gravame concreto às partes.<br /><br />O Magistrado de origem manteve a possibilidade de nova apreciação do pedido de pesquisa após comprovação documental da impossibilidade de localização do confrontante, o que afasta qualquer caráter decisório definitivo.<br /><br />O rol do art. 1.015 do CPC é taxativo, e a mitigação reconhecida no Tema 988 do STJ aplica-se somente a hipóteses excepcionais em que se evidencie urgência ou risco de inutilidade do recurso de apelação, circunstâncias ausentes no caso concreto.<br /><br />O indeferimento provisório de diligência destinada à obtenção de dados sigilosos visa à observância do caráter subsidiário dessas consultas e à proteção de dados pessoais, sendo medida de prudência e proporcionalidade.<br /><br />A decisão monocrática recorrida, ao não conhecer do Agravo de Instrumento, observou corretamente a ausência de conteúdo decisório relevante e a inadequação da via eleita.<br /><br />IV. DISPOSITIVO E TESE<br /><br />Recurso desprovido.<br /><br />Tese de julgamento:<br />O indeferimento provisório de diligência de pesquisa em sistemas conveniados, com concessão de prazo para complementação documental, configura despacho de mero expediente, insuscetível de impugnação por Agravo de Instrumento.<br /><br />A mitigação do rol do art. 1.015 do CPC, firmada no Tema 988 do STJ, não se aplica aos atos ordinatórios desprovidos de urgência ou gravame irreversível.<br />____________________________________________________________<br />Dispositivos relevantes citados: CPC, arts. 203, §3º, e 1.015; Tema 988/STJ.<br />Jurisprudência relevante citada: STJ, REsp 1.704.520/MT (Tema 988), Rel. Min. Nancy Andrighi, Corte Especial, j. 19.12.2018.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=17&totalLinhas=2522&paginaNumero=17&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                17 - Processo: Agravo de Instrumento-Cv <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.267093-0/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    2670948-70.2025.8.13.0000 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=267093&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Marcos Henrique Caldeira Brant</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            19/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: AGRAVO DE INSTRUMENTO - AÇÃO DECLARATÓRIA DE NULIDADE ("QUERELA NULLITATIS") - AUSÊNCIA DE CITAÇÃO EM AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - VÍCIO TRANSRESCISÓRIO - NECESSIDADE DE DILAÇÃO PROBATÓRIA - TUTELA DE URGÊNCIA - REQUISITOS NÃO CONFIGURADOS - DECISÃO MANTIDA.<br />A ausência de citação válida constitui vício transrescisório apto a ensejar, em tese, a ação de querela nullitatis, por importar afronta aos princípios do contraditório e da ampla defesa.<br />Não demonstrada, de plano, a probabilidade do direito invocado, por depender a verificação de dilação probatória quanto à legitimidade da posse e à necessidade de citação do agravante na ação de <font color="#FF0000"><b>usucapião</b></font> originária, impõe-se a manutenção da decisão que indeferiu a tutela provisória de urgência.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=18&totalLinhas=2522&paginaNumero=18&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                18 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.167619-3/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5001943-49.2021.8.13.0080 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=167619&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Adriano de Mesquita Carneiro</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            18/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - EXTINÇÃO SEM RESOLUÇÃO DE MÉRITO POR FALTA DE INTERESSE PROCESSUAL. - AFASTAMENTO - NECESSIDADE DE CITAÇÃO DE HERDEIRA TESTAMENTÁRIA - NULIDADE RECONHECIDA - SENTENÇA ANULADA. <br />- A ausência de registro imobiliário não impede a utilização da ação de <font color="#FF0000"><b>usucapião</b></font> como meio adequado para a regularização da propriedade, motivo pelo qual não se configura falta de interesse processual dos autores.<br />- A citação válida constitui pressuposto de existência e validade da relação processual, sendo imprescindível a inclusão de todos os herdeiros com potencial interesse no imóvel, incluindo-se a herdeira testamentária.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=19&totalLinhas=2522&paginaNumero=19&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                19 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.349776-2/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5005096-27.2022.8.13.0607 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=349776&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) Roberto Vasconcellos</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            18/12/2025
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> - IMÓVEL OBJETO DE HERANÇA - PRETENSÃO DOS HERDEIROS DE ADQUIRIR ÁREA A SER RECEBIDA NO INVENTÁRIO - AUSÊNCIA DE INTERESSE DE AGIR- BINÔMIO NECESSIDADE/ADEQUAÇÃO - INEXISTÊNCIA - MANUTENÇÃO DA SENTENÇA. <br />- Se o provimento jurisdicional vindicado pelos Autores não é necessário, se revelando inadequada a via processual, remanesce afastado o interesse processual quanto ao ajuizamento de Ação de <font color="#FF0000"><b>Usucapião</b></font> sobre área a ser recebida por herança, em Ação de Inventário já ajuizada.
+                        </div>                        
+                                         
+
+                    
+                        
+                        <br>
+
+                        <!-- o atributo height foi setado in-line em funcao de outros sistemas usarem o mesmo CSS -->
+                        <div class="caixa_processo" style="height:35px;">
+                            <a href="pesquisaPalavrasEspelhoAcordao.do?&numeroRegistro=20&totalLinhas=2522&paginaNumero=20&linhasPorPagina=1&palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&" title="Abrir Espelho do Ac&oacute;rd&atilde;o" class="linkListaEspelhoAcordaos" onclick="return validaPesquisa();">
+                                20 - Processo: Apelação Cível <br />
+                                <div style="position: relative; float: left; padding-left: 10px;">
+                                    1.0000.25.413919-9/001
+                                </div>
+                                <div style="position:relative; float: right; padding-right: 10px">
+                                    5009725-03.2025.8.13.0134 (1)
+                                </div>
+                                <!-- REMOVER O POSITION RELATIVE PARA NAO COMPROMETER O LAYOUT -->
+                                <div style="clear: both;"></div>
+                            </a>                                
+                                
+                        </div>
+
+                        <div style="position: relative; text-align: right;">
+                            <input type="button" class="botao_vinho" value="Ementa sem formatação" onclick="abrirJanelaCentralizada('ementaSemFormatacao.do?procAno=25&procCodigo=1&procCodigoOrigem=0&procNumero=413919&procSequencial=1&procSeqAcordao=0', 'ementaSemFormatacao', '800', '500', 'yes', 'no');" />
+                        </div>
+
+                        <table cellspacing="0" cellpadding="0"><tr><td nowrap class="corpo"><strong>Relator(a):</strong> Des.(a) José Américo Martins da Costa</td></tr></table>
+
+                        <div class="corpo"><strong>Data de Julgamento:</strong>
+                            17/12/2025
+                        </div>
+
+                        <div class="corpo"><strong>Data da publica&ccedil;&atilde;o da s&uacute;mula:</strong>
+                            12/01/2026
+                            
+                        </div>
+
+                        <div style="text-align: justify;" class="corpo"><strong>Ementa:</strong>
+                            
+
+
+
+
+
+
+<br />EMENTA: APELAÇÃO CÍVEL - AÇÃO DE <font color="#FF0000"><b>USUCAPIÃO</b></font> ORDINÁRIA - IMÓVEL RURAL - JUSTO TÍTULO - CONTRATO DE CESSÃO DE DIREITOS - REQUISITOS LEGAIS COMPROVADOS.  É de se reconhecer a <font color="#FF0000"><b>usucapião</b></font> quando provado o exercício da posse do imóvel, por meio de contrato de cessão de direitos, sem interrupção, nem oposição.
+                        </div>                        
+                                         
+
+                    
+
+                    
+                        
+                    
+
+                    <!-- PAGINADOR -->
+                    <br><br>
+                    
+                    <table width="98%" border="0" cellspacing="0" cellpadding="0">
+<tr align="right">
+<td>
+p?gina 2 de 253</td>
+</tr><tr align="right">
+<td>
+<table border="0" cellspacing="1" cellpadding="4">
+ <tr>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" alt="primeira" title="primeira p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&lt;&lt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" alt="anterior" title="p?gina anterior" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&lt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=1" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">1</a></td>
+<td width="35" align="center" class="tabact:active"><b>2</b></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">3</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=4" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">4</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=5" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">5</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=6" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">6</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=7" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">7</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=8" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">8</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE"><a href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=9" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">9</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=3" alt="pr?xima" title="pr?xima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;</a></td>
+<td width="35" align="center" bgcolor="#DEDEDE" class="footerlink"><a class="logtext" href="pesquisaPalavrasEspelhoAcordao.do?palavras=usucapiao&pesquisarPor=ementa&orderByData=2&dataJulgamentoInicial=01/01/2025&dataJulgamentoFinal=31/12/2025&referenciaLegislativa=Clique na lupa para pesquisar as referÃªncias cadastradas...&pesquisaPalavras=Pesquisar&excluirRepetitivos=true&&linhasPorPagina=10&linhasPorPagina=10&paginaNumero=253" alt="?ltima" title="?ltima p?gina" onclick="if (typeof validaPesquisa == 'function') {return validaPesquisa();}">&gt;&gt;</a></td>
+</tr>
+</table>
+<script type="text/javascript" language="JavaScript">
+// Select the pageNumber field
+function select() {
+  var pager = document.forms['pager'];
+  pager.pageNumber.focus();
+  pager.pageNumber.select();
+}
+
+// Function to adjust the page number (starts with 0)
+// a fun??o recebe o par?metro verificaSubmit para, caso seja chamada do onSubmit do form
+// retornar false e n?o submeter a p?gina;
+// se for chamada do link do bot?o n?o retorna false e executa a fun??o;
+function adjustPage(total, verificaSubmit) {
+  var pager = document.forms['pager'];
+  var page = parseInt(pager.pageNumber.value);
+  if (!pager.pageNumber.value) {
+    alert ("? preciso informar o n?mero da p?gina");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (!page) {
+    alert ("O formato do n?mero da p?gina est? incorreto");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else if (page < 1 || page > total) {
+    alert ("O n?mero da p?gina est? fora dos limites");
+    select();
+    if (verificaSubmit == 'noLink') return false;
+  } else {
+    pager.paginaNumero.value = page;
+    if (typeof validaPesquisa == 'function')
+    {
+    		if (validaPesquisa())
+    		{
+    			pager.submit();
+    		}
+    }
+    else
+    {
+    		pager.submit();
+    }
+  }
+}
+</script>
+  <table border="0" cellspacing="0" cellpadding="3" width="100%" bgcolor="#e7e7e7" summary="">
+  <form name="pager" OnSubmit=" return adjustPage(253,'noLink'); " action="pesquisaPalavrasEspelhoAcordao.do" method="post" >
+    <tr align="right">
+       <td width="100%">ir para a p?gina:</td>
+       <td align="right"><input type="text" name="pageNumber" size="5"></td>
+       <td align="left"><a href="javascript: void(0);" onclick="adjustPage(253,'linkSubmit')">ir</a></td>
+    </tr>
+    <input type="hidden" name="paginaNumero">
+    <input type="hidden" name="palavras" value = "usucapiao">
+    <input type="hidden" name="pesquisarPor" value = "ementa">
+    <input type="hidden" name="orderByData" value = "2">
+    <input type="hidden" name="dataJulgamentoInicial" value = "01/01/2025">
+    <input type="hidden" name="dataJulgamentoFinal" value = "31/12/2025">
+    <input type="hidden" name="referenciaLegislativa" value = "Clique na lupa para pesquisar as referÃªncias cadastradas...">
+    <input type="hidden" name="pesquisaPalavras" value = "Pesquisar">
+    <input type="hidden" name="excluirRepetitivos" value = "true">
+    <input type="hidden" name="">
+    <input type="hidden" name="linhasPorPagina" value = "10">
+  </form>
+  </table></td>
+</tr>
+</table>
+
+                    
+                    <!-- FIM  PAGINADOR -->
+
+                
+                <br><br>
+                <div align="right"><input type="button" value="Nova pesquisa" name="novaPesquisa" onclick="document.location.href='formEspelhoAcordao.do'" class="botao_vinho"/></div>
+            </div>
+        </td></tr>
+</table>
+
+
+
+                        
+
+                    </td>
+                </tr>
+
+            </table>
+            <br /><br />
+            </div>
+            </div>
+                        
+            
+
+             
+
+
+
+
+
+        
+        
+
+    </body>    
+        
+        
+</html>
+

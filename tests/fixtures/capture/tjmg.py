@@ -19,7 +19,11 @@ Saves raw responses for the four endpoints TJMG hits per ``cjsg`` call:
   ``ORA-20000 ... DRG-10599`` instead of results.
 - ``categorizada.html`` — "Resultado da busca (Categorizada)": with
   repetitive-appeal rulings among the hits, the portal lists only the count
-  per category.
+  per category, with a link to each category's list.
+- ``categorizada_repetitivos.html`` — the repetitive-appeal list
+  (``listaClasse=600``) that ``cjsg_download`` follows from that page.
+- ``categorizada_acordaos_page_NN.html`` — the other rulings
+  (``excluirRepetitivos=true``), pages 1 and 2.
 
 The PNG sample stored is the *real* captcha bytes captured live (per the
 project rule "samples sempre do backend real"). Decoding inside pytest
@@ -32,6 +36,7 @@ need it unless they use TJMG.
 from __future__ import annotations
 
 import juscraper as jus
+from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError
 
 from ._util import samples_dir_for
 
@@ -50,11 +55,21 @@ def _classify(
     if ".dwr" in url and method == "POST":
         return "dwr_validate.txt"
     if "pesquisaPalavrasEspelhoAcordao.do" in url:
-        if scenario == "typical":
-            counters["search"] = counters.get("search", 0) + 1
-            return f"results_normal_page_{counters['search']:02d}.html"  # noqa: E231
-        return f"{scenario}.html"
+        return _classify_search(url, scenario, counters)
     return None
+
+
+def _classify_search(url: str, scenario: str, counters: dict[str, int]) -> str:
+    """Filename of a search page; the categorized lists are told apart by their link parameter."""
+    if "listaClasse=600" in url:
+        return "categorizada_repetitivos.html"
+    if "excluirRepetitivos=true" in url:
+        counters["acordaos"] = counters.get("acordaos", 0) + 1
+        return f"categorizada_acordaos_page_{counters['acordaos']:02d}.html"  # noqa: E231
+    if scenario == "typical":
+        counters["search"] = counters.get("search", 0) + 1
+        return f"results_normal_page_{counters['search']:02d}.html"  # noqa: E231
+    return f"{scenario}.html"
 
 
 def main() -> None:
@@ -116,14 +131,18 @@ def main() -> None:
     )
     print(f"[tjmg/no_results] rows: {len(df)} (expected 0)")
 
-    # Pages without the result list: only the download, since the parser
-    # raises on them.
+    # The database error: only the download, which raises on it.
     state["scenario"] = "erro_ora"
-    scraper.cjsg_download("dano moral", paginas=1)
+    try:
+        scraper.cjsg_download("dano moral", paginas=1)
+    except TJMGBuscaSemListaError as exc:
+        print(f"[tjmg/erro_ora] {exc}")
+    # The categorized search, followed into each category's list.
     state["scenario"] = "categorizada"
+    counters.clear()
     scraper.cjsg_download(
         "usucapiao",
-        paginas=1,
+        paginas=range(1, 3),
         data_julgamento_inicio="01/01/2025",
         data_julgamento_fim="31/12/2025",
     )
