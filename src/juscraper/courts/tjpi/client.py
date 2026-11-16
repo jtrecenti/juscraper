@@ -88,8 +88,8 @@ class TJPIScraper(HTTPScraper):
             TypeError: Quando um kwarg desconhecido é passado (inclusive
                 ``data_publicacao_*``, que o backend não expõe).
             ValidationError: Quando um filtro tem formato inválido.
-            ValueError: Com ``paginas=None``, quando a primeira página não
-                permite fixar o total de páginas; os casos estão em
+            ValueError: Quando a menor página pedida (a 1, com
+                ``paginas=None``) não permite fixar o total de páginas; os casos estão em
                 :func:`juscraper.utils.pagination.resolve_total_pages`. O
                 scraper levanta em vez de estimar.
 
@@ -132,8 +132,8 @@ class TJPIScraper(HTTPScraper):
         Raises
         ------
         ValueError
-            Com ``paginas=None``, quando a primeira página não permite fixar
-            o total de páginas; ver :meth:`cjsg`.
+            Quando a menor página pedida (a 1, com ``paginas=None``) não
+            permite fixar o total de páginas; ver :meth:`cjsg`.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPI,

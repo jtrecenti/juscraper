@@ -1,16 +1,20 @@
 """Downloads raw results from the TJPB jurisprudence search (Laravel API)."""
 import math
-import time
 from urllib.parse import unquote
 
-from tqdm import tqdm
-
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 CLASSES_URL = f"{BASE_URL}/api/pje/classes/list"
 SEARCH_URL = f"{BASE_URL}/api/jurisprudencia/pesquisar"
 RESULTS_PER_PAGE = 10
+# O backend entrega só os 10.000 primeiros resultados de uma busca. Medido em
+# 16/11/2026, em "dano moral" (``total`` 49.220): a página 1000 responde e a
+# 1001 dá HTTP 500 ("Whoops, looks like something went wrong."), assim como a
+# 1.000.000. Dentro do teto, a página além do total responde 200 com ``hits``
+# vazio e o ``total`` da busca.
+MAX_RESULTS = 10_000
 
 
 def fetch_csrf_token(request_fn: RequestFn) -> str:
@@ -86,6 +90,12 @@ def cjsg_download_manager(
             para 429/5xx.
         **kwargs: Additional filter parameters.
     """
+    def _n_pags(first: dict) -> int:
+        total: int = first.get("total", 0)
+        return math.ceil(total / RESULTS_PER_PAGE) if total else 1
+
+    # Antes do token: a página além do teto é recusada sem nenhuma requisição.
+    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJPB")
     xsrf_token = fetch_csrf_token(request_fn)
     headers = {
         "X-Requested-With": "XMLHttpRequest",
@@ -102,22 +112,6 @@ def cjsg_download_manager(
             perfil="cjsg",
         )
         data: dict = resp.json()
-        time.sleep(1)
         return data
 
-    if paginas is None:
-        first = _get_page(1)
-        resultados = [first]
-        total = first.get("total", 0)
-        n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc="Baixando CJSG TJPB"):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_get_page(pagina))  # noqa: PERF401
-        return resultados
-
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJPB"):
-        resultados.append(_get_page(pagina_1based))
-    return resultados
+    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJPB", sleep_time=1)
