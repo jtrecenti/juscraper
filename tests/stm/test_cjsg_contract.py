@@ -79,7 +79,7 @@ def test_cjsg_primeiro_documento(mocker):
 # Os dois samples saem do script de captura, de um IP que o portal aceite.
 # O ``skipif`` é provisório: sai no commit que gravar os samples.
 @pytest.mark.skipif(
-    not (SAMPLES_CJSG / "campo_tudo.html").exists(),
+    not all((SAMPLES_CJSG / sample).exists() for sample in ("campo_tudo.html", "campo_referencia_legislativa.html")),
     reason="samples de campo='tudo' e 'referencia_legislativa' ainda não capturados (prova residencial)",
 )
 @pytest.mark.parametrize(

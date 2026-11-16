@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
+from itertools import pairwise
 from typing import Any
 
 import requests
@@ -102,7 +103,7 @@ def _defeito_dos_grupos(partes: list[str]) -> str | None:
 
 def _defeito_da_expressao(partes: list[str]) -> str | None:
     """Diz por que a expressão não vai para a consulta; ``None`` quando ela está em ordem."""
-    for anterior, atual in zip(["(", *partes], [*partes, ")"], strict=True):
+    for anterior, atual in pairwise(["(", *partes, ")"]):
         if (atual in _BINARIOS or atual == ")") and anterior in _SEM_TERMO_ANTES:
             return "precisa de um termo de cada lado dos operadores E e OU, depois do NÃO e dentro dos parênteses"
         if atual == "NOT" and anterior != "AND":
@@ -121,7 +122,7 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
     a manda; expressão entre aspas, parênteses e palavra com curinga seguem
     como vieram.
     """
-    if "\\" in termo or _PEDACOS.sub("", termo).strip():
+    if "\\" in termo or termo.count('"') % 2:
         raise ValueError(
             "STM: com filtro de data, 'pesquisa' não pode ter barra invertida nem aspas sem par "
             f"(recebido: {pesquisa!r})."
@@ -138,7 +139,7 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
     # Espaço entre as partes, menos por dentro dos parênteses.
     expressao = "".join(
         parte if parte == ")" or anterior == "(" else f" {parte}"
-        for anterior, parte in zip(["(", *partes], partes, strict=False)
+        for anterior, parte in pairwise(["(", *partes])
     )
     return expressao if len(partes) == 1 else f"({expressao})"
 
@@ -146,7 +147,8 @@ def _expressao_avancada(termo: str, pesquisa: str) -> str:
 def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
     """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
     termo = pesquisa.strip()
-    if not termo.strip('" '):
+    sem_aspas = termo.strip('" ')
+    if not sem_aspas:
         return None
     if campo == "tudo":
         raise ValueError(
@@ -154,7 +156,7 @@ def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
             "por intervalo, não tem a opção 'Todos os Campos'; escolha outro campo ou tire as datas."
         )
     if campo == "numero":
-        digitos = _PONTUACAO_DO_NUMERO.sub("", termo.strip('" '))
+        digitos = _PONTUACAO_DO_NUMERO.sub("", sem_aspas)
         if not digitos.isdigit():
             raise ValueError(
                 "STM: com filtro de data, 'pesquisa' em campo='numero' aceita só dígitos e a pontuação do número "
