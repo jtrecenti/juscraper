@@ -253,7 +253,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>paginas</td>
 <td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
-<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code> (cap de 400 resultados, limite do TJMG).</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>. A busca comum com mais de 400 resultados levanta <code>ValueError</code> (“muitos resultados”). Quando ha acordaos de repetitivos no resultado, o portal responde com a busca categorizada, uma lista por categoria (repetitivos e demais acordaos), sem esse limite; o <code>cjsg</code> segue cada lista, e <code>paginas</code> vale para cada uma delas.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
@@ -307,8 +307,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td></td>
+<td><code>ValueError</code></td>
+<td>A busca comum passou de 400 resultados (“muitos resultados”); restrinja as datas ou os termos.</td>
+</tr>
+<tr class="even">
+<td></td>
 <td><code>ColetaParcialError</code></td>
-<td>Uma pagina falhou depois das tentativas do perfil <code>"cjsg"</code>, com outra ja baixada antes dela. A busca para nessa pagina; <code>.resultado</code> traz as anteriores, e a mensagem lista as que faltam. Sem pagina baixada antes, sobe a excecao original (<code>requests.ConnectionError</code>, por exemplo).</td>
+<td>Uma pagina falhou depois das tentativas do perfil <code>"cjsg"</code>, com outra ja baixada antes dela. A busca para nessa pagina; <code>.resultado</code> traz as anteriores, e a mensagem lista as que faltam (e, na busca categorizada, a lista da pagina e as seguintes). Sem pagina baixada antes, sobe a excecao original (<code>requests.ConnectionError</code>, por exemplo).</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>TJMGBuscaSemListaError</code></td>
+<td>O portal respondeu a pagina 1 com o erro do banco (<code>ORA-20000 ... DRG-10599</code>), comum sem filtro de data e em faixas longas.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>CaptchaEsgotadoError</code></td>
+<td>O portal recusou o captcha em todas as tentativas.</td>
 </tr>
 </tbody>
 </table>
@@ -355,7 +370,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Aceita os mesmos filtros de <a href="../reference/courts.tjmg.client.TJMGScraper.html#juscraper.courts.tjmg.client.TJMGScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa. Falhas: ver Raises de <a href="../reference/courts.tjmg.client.TJMGScraper.html#juscraper.courts.tjmg.client.TJMGScraper.cjsg"><code>cjsg</code></a> (<code>.resultado</code> sai como DataFrame).</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page (capped at 400 results, the TJMG limit). pesquisar_por : str Field to search in: <code>"ementa"</code> or <code>"acordao"</code> (inteiro teor). order_by : int Sort order: <code>2</code> data julgamento, <code>1</code> data publicação, <code>0</code> precisão. tamanho_pagina : int Results per page (10, 20 or 50). Aceita <code>linhas_por_pagina</code> como alias deprecado. data_julgamento_inicio, data_julgamento_fim : str Julgamento date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>). data_publicacao_inicio, data_publicacao_fim : str Publicação date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>).</p>
+<p>pesquisa : str Free-text search term. paginas : int, list, range or None Pages to download (1-based). <code>None</code> downloads every page. A common search above 400 results raises <code>ValueError</code> (“muitos resultados”); the lists of the categorized search have no such cap. In the categorized search, <code>paginas</code> applies to each list. pesquisar_por : str Field to search in: <code>"ementa"</code> or <code>"acordao"</code> (inteiro teor). order_by : int Sort order: <code>2</code> data julgamento, <code>1</code> data publicação, <code>0</code> precisão. tamanho_pagina : int Results per page (10, 20 or 50). Aceita <code>linhas_por_pagina</code> como alias deprecado. data_julgamento_inicio, data_julgamento_fim : str Julgamento date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>). data_publicacao_inicio, data_publicacao_fim : str Publicação date range (<code>dd/mm/yyyy</code> or <code>yyyy-mm-dd</code>).</p>
 </section>
 </section>
 <section id="juscraper.courts.tjmg.client.TJMGScraper.cjsg_parse" class="level3">

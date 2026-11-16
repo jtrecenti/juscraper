@@ -290,7 +290,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>sort_by</td>
 <td><code>str</code></td>
-<td><code>"datajulgamento"</code> (default), <code>"datapublicacao"</code> ou <code>"relevancia"</code>.</td>
+<td><code>"datajulgamento"</code> (default), <code>"datapublicacao"</code> ou <code>"relevancia"</code>. O indice do portal tem decisoes com data de julgamento impossivel, como o ano 8201 ou 2106 (observado em 15/11/2026), e, com o default (<code>"datajulgamento"</code> em ordem <code>"desc"</code>), elas vem primeiro. O juscraper repassa a data como a fonte a entrega; para exclui-las, filtre <code>data_julgamento_fim</code>. Outra ordenacao so as tira do topo.</td>
 <td><code>'datajulgamento'</code></td>
 </tr>
 <tr class="even">
