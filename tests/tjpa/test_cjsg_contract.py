@@ -5,6 +5,7 @@ The contract asserts both the DataFrame schema and the JSON payload — in
 particular that the 0-based conversion actually happens on the wire.
 """
 import pandas as pd
+import pytest
 import responses
 from responses.matchers import json_params_matcher
 
@@ -68,3 +69,16 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+@pytest.mark.parametrize(("paginas", "pausas"), [(1, 0), (range(1, 3), 1), ([2, 1, 3], 2)])
+@responses.activate
+def test_cjsg_download_pausa_so_entre_requisicoes(mocker, paginas, pausas):
+    """Uma pausa de 1 s antes de cada requisição depois da primeira; nenhuma depois da última."""
+    sleep = mocker.patch("time.sleep")
+    for pagina in (1, 2, 3):
+        _add_page("dano moral", pagina, "cjsg/results_normal_page_01.json")
+
+    jus.scraper("tjpa").cjsg_download("dano moral", paginas=paginas)
+
+    assert sleep.call_args_list == [mocker.call(1)] * pausas
