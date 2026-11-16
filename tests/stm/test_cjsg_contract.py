@@ -1,8 +1,8 @@
 """Contratos offline do cjsg do STM.
 
-A busca é um GET em ``consulta.php``. Os samples vêm de capturas do Wayback
-Machine (ver ``samples/cjsg/README.md``), menos ``waf_rejected.html``, que é
-a resposta direta do portal a um IP de datacenter.
+A busca é um GET em ``consulta.php``. Os samples saem de
+``tests/fixtures/capture/stm.py`` (ver ``samples/cjsg/README.md``), menos
+``waf_rejected.html``, que é a resposta direta do portal a um IP de datacenter.
 """
 import datetime
 
@@ -31,21 +31,19 @@ def _add_page(pesquisa: str, pagina: int, sample: str, campo: str = "ementa", **
 
 @responses.activate
 def test_cjsg_paginas_none_baixa_todas(mocker):
-    """O contador "1 - 100 de 167" dá duas páginas; a segunda sai com ``start=100``."""
+    """O contador "1 - 100 de 205" dá três páginas, com ``start`` 0, 100 e 200."""
     sleep = mocker.patch("time.sleep")
     _add_page('"corrupção ativa"', 1, "results_normal_page_01.html")
     _add_page('"corrupção ativa"', 2, "results_normal_page_02.html")
+    _add_page('"corrupção ativa"', 3, "results_normal_page_03.html")
 
     df = jus.scraper("stm", sleep_time=3).cjsg('"corrupção ativa"')
 
-    assert [call.request.params["start"] for call in responses.calls] == ["0", "100"]
-    sleep.assert_called_once_with(3)
+    assert [call.request.params["start"] for call in responses.calls] == ["0", "100", "200"]
+    assert sleep.call_args_list == [mocker.call(3), mocker.call(3)]
     assert list(df.columns) == COLUNAS
-    assert len(df) == 167
-    # As duas páginas foram arquivadas com cinco dias de diferença, e dois
-    # documentos publicados no intervalo empurraram o fim da primeira para o
-    # começo da segunda.
-    assert df["id_documento"].nunique() == 165
+    assert len(df) == 205
+    assert df["id_documento"].is_unique
     # Só estes campos vêm em todo documento; os demais faltam nos mais antigos.
     assert df[["processo", "classe", "relator", "data_julgamento", "ementa", "id_documento"]].notna().all().all()
     assert df["url_inteiro_teor"].dropna().str.startswith("https://").all()
@@ -84,7 +82,7 @@ def test_cjsg_relator_do_acordao(mocker):
 
     df = jus.scraper("stm").cjsg('"corrupção ativa"', paginas=1)
 
-    assert df["relator_acordao"].notna().sum() == 6
+    assert df["relator_acordao"].notna().sum() == 10
     assert (df["relator_acordao"].dropna() != df.loc[df["relator_acordao"].notna(), "relator"]).all()
 
 
@@ -108,7 +106,7 @@ def test_cjsg_paginas_pedidas(mocker):
     df = jus.scraper("stm").cjsg('"corrupção ativa"', paginas=[2])
 
     assert len(responses.calls) == 1
-    assert len(df) == 67
+    assert len(df) == 100
 
 
 @responses.activate
