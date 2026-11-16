@@ -55,3 +55,4 @@ class OutputCJSGTJRO(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     assunto: str | None = None
     grau_jurisdicao: str | None = None
     sistema_origem: str | None = None
+    id_documento: str | None = None

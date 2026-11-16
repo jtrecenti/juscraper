@@ -126,7 +126,11 @@ class TJROScraper(HTTPScraper):
                 diz o intervalo que falta.
 
         Returns:
-            DataFrame com as decisoes.
+            DataFrame com as decisoes. ``id_documento`` traz a chave do
+                documento no portal (o ``_id`` da resposta). O portal indexa
+                algumas decisoes duas vezes, como dois documentos de conteudo
+                igual: as linhas saem iguais em todas as outras colunas, e
+                nenhuma e removida.
 
         See also:
             :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos
