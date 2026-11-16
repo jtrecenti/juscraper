@@ -233,6 +233,7 @@ class TestCJSGNResultsInputDeclarado:
             # Aba de decisões monocráticas: o input é o ``-D``.
             ("tjac", "monocratica_single_page.html", 5),
             ("tjal", "monocratica_single_page.html", 2),
+            ("tjam", "monocratica_single_page.html", 1),
             ("tjce", "monocratica_single_page.html", 9),
             ("tjms", "monocratica_single_page.html", 6),
             ("tjsp", "monocratica_single_page.html", 1),

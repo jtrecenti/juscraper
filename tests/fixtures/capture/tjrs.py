@@ -56,7 +56,7 @@ def _minify(raw: bytes) -> bytes:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
+def _fetch(session: requests.Session, pesquisa: str, pagina: int) -> bytes:
     payload = build_cjsg_inner_payload(pesquisa, pagina)
     data = {
         "action": "consultas_solr_ajax",
@@ -65,7 +65,11 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filena
     }
     response = session.post(BASE_URL, data=data, timeout=30)
     response.raise_for_status()
-    dump(dest / filename, _minify(response.content))
+    return response.content
+
+
+def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
+    dump(dest / filename, _minify(_fetch(session, pesquisa, pagina)))
     print(f"[tjrs] wrote {filename}")
 
 
@@ -78,6 +82,12 @@ def main() -> None:
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.json")
     _capture(session, dest, "mandado de seguranca", 1, "single_page.json")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
+    # Acórdãos em que o redator não é o relator: ``relator_redator`` vem com os dois nomes.
+    _capture(session, dest, "redator para o acórdão vencido o relator", 1, "relator_redator_multi.json")
+    # Aspas sem fechar: o Solr recusa a consulta e o portal devolve HTTP 200 com
+    # ``{"error": ...}`` no lugar de ``response``. Corpo pequeno, salvo como veio.
+    dump(dest / "erro_solr.json", _fetch(session, '"dano moral', 1))
+    print("[tjrs] wrote erro_solr.json")
 
 
 if __name__ == "__main__":

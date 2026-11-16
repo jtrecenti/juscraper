@@ -1,9 +1,11 @@
 """Downloads raw files from the TJRS jurisprudence search."""
+import json
 import math
 from urllib.parse import urlencode
 
 from tqdm import tqdm
 
+from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
 from juscraper.core.http import RequestFn
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
@@ -12,6 +14,48 @@ RESULTS_PER_PAGE = 10
 #: Nome do perfil HTTP da busca de jurisprudência. O client declara a política
 #: com a mesma chave em ``TJRSScraper.perfis_http``.
 PERFIL_CJSG = "cjsg"
+
+
+class TJRSBuscaError(_RecriaSemInit, HTTPSemanticError):
+    """O portal respondeu HTTP 200 sem ``response``: o Solr recusou a consulta.
+
+    Observado ao vivo com aspas sem fechar e operador solto em ``pesquisa``
+    (código 400 do Solr) e com página absurda (código 500): o corpo vem como
+    ``{"error": "<JSON do Solr em texto>", ...}``. Sem este erro, a busca
+    voltava vazia, como se não houvesse acórdãos.
+
+    ``codigo`` é o código do Solr (``None`` se o envelope não o trouxer) e
+    ``mensagem``, o texto do erro.
+    """
+
+    def __init__(self, mensagem: str, codigo: int | None = None) -> None:
+        """Guarda ``mensagem`` e ``codigo`` e monta o texto do erro."""
+        self.mensagem = mensagem
+        self.codigo = codigo
+        super().__init__(
+            f"TJRS: a busca de jurisprudência devolveu erro em vez de resultados (código {codigo}): {mensagem}"
+        )
+
+
+def _exigir_resultados(dados: object) -> dict:
+    """Devolve ``dados`` se trouxer ``response``; senão, levanta :class:`TJRSBuscaError`."""
+    if isinstance(dados, dict) and isinstance(dados.get("response"), dict):
+        return dados
+    raise _erro_da_busca(dados)
+
+
+def _erro_da_busca(dados: object) -> TJRSBuscaError:
+    """Monta o erro a partir do envelope sem ``response``."""
+    erro = dados.get("error") if isinstance(dados, dict) else None
+    if isinstance(erro, str):
+        try:
+            erro = json.loads(erro)
+        except ValueError:
+            return TJRSBuscaError(erro[:500])
+    detalhe = erro.get("error") if isinstance(erro, dict) else None
+    if isinstance(detalhe, dict) and detalhe.get("msg"):
+        return TJRSBuscaError(str(detalhe["msg"]), detalhe.get("code"))
+    return TJRSBuscaError("resposta sem a chave 'response'")
 
 
 def build_cjsg_inner_payload(
@@ -132,7 +176,7 @@ def cjsg_download_manager(
             'parametros': parametros_str,
         }
         resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG)
-        return resp.json()
+        return _exigir_resultados(resp.json())
 
     if paginas is None:
         first = _fetch_page(1)
