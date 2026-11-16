@@ -61,7 +61,7 @@ def populate_session(request_fn: RequestFn, home_url: str) -> None:
     ``RetryExhaustedError`` em 5xx esgotado, entao a falha do GET inicial
     se propaga sem precisar de checagem extra.
     """
-    request_fn("GET", home_url)
+    request_fn("GET", home_url, perfil="cjsg")
 
 
 # Cabeçalhos do XHR do portal (``x-prototype-version``, ``x-requested-with``).
@@ -100,7 +100,7 @@ def get_ementa_completa(request_fn: RequestFn, action_type: str, id_registro: st
     """
     # ``params`` codifica o termo: "&" ou "#" num f-string cortariam o ``criterio``.
     params = {"actionType": action_type, "idProcesso": id_registro, "criterio": criterio}
-    resp = request_fn("GET", VISUALIZAR_URL, params=params, headers=_XHR_HEADERS)
+    resp = request_fn("GET", VISUALIZAR_URL, params=params, headers=_XHR_HEADERS, perfil="ementa")
     soup = BeautifulSoup(resp.text, "html.parser")
     texto = str(soup.get_text()).strip()
     if not texto or soup.find(_TAGS_DE_PAGINA) is not None:
@@ -248,7 +248,7 @@ def cjsg_download(
             data_publicacao_inicio=data_publicacao_inicio or '',
             data_publicacao_fim=data_publicacao_fim or '',
         )
-        resp = request_fn("POST", url, data=data, headers=headers)
+        resp = request_fn("POST", url, data=data, headers=headers, perfil="cjsg")
         return resp.text
 
     if paginas is None:

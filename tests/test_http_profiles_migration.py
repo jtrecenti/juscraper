@@ -8,6 +8,8 @@ import requests
 from juscraper.courts.tjes.client import TJESScraper
 from juscraper.courts.tjes.download import cjsg_download
 from juscraper.courts.tjpe.client import TJPEScraper
+from juscraper.courts.tjpr.client import TJPRScraper
+from tests._helpers import load_sample_bytes
 
 
 @pytest.mark.parametrize(
@@ -28,6 +30,8 @@ from juscraper.courts.tjpe.client import TJPEScraper
         ('courts.tjpe', 'TJPEScraper', 'cjsg', 30),
         ('courts.tjpe', 'TJPEScraper', 'cpopg', 30),
         ('courts.tjpi', 'TJPIScraper', 'cjsg', 30),
+        ('courts.tjpr', 'TJPRScraper', 'cjsg', 60),
+        ('courts.tjpr', 'TJPRScraper', 'ementa', 30),
         ('courts.tjrj', 'TJRJScraper', 'formulario', 30),
         ('courts.tjrj', 'TJRJScraper', 'cjsg', 60),
         ('courts.tjrn', 'TJRNScraper', 'cjsg', 30),
@@ -87,3 +91,22 @@ def test_tjpe_repassa_politica_ao_cliente_cpopg(mocker):
 
     consulta._request_with_retry("GET", "https://exemplo.test", perfil="cpopg")  # noqa: SLF001  # contrato HTTP
     assert request.call_args.kwargs["timeout"] == 7
+
+
+def test_tjpr_requisicoes_usam_os_timeouts_ajustados(mocker):
+    """Home e busca saem pelo perfil ``cjsg``; a ementa completa das linhas truncadas, pelo ``ementa``."""
+    scraper = TJPRScraper(politica={"cjsg": {"timeout": 7}, "ementa": {"timeout": 5}})
+    pagina, ementa = requests.Response(), requests.Response()
+    pagina.status_code = ementa.status_code = 200
+    pagina._content = load_sample_bytes("tjpr", "cjsg/results_normal_page_01.html")  # noqa: SLF001  # transporte
+    ementa._content = b"Texto da ementa."  # noqa: SLF001  # resposta sintetica de transporte
+    request = mocker.patch.object(scraper.session, "request", side_effect=lambda _metodo, url, **_: (
+        ementa if "visualizarDecisao" in url else pagina
+    ))
+
+    brutos = scraper.cjsg_download("teste", paginas=1)
+    assert [chamada.kwargs["timeout"] for chamada in request.call_args_list] == [7, 7]
+
+    request.reset_mock()
+    scraper.cjsg_parse(brutos)
+    assert {chamada.kwargs["timeout"] for chamada in request.call_args_list} == {5}

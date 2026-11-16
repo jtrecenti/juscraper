@@ -1,11 +1,13 @@
 """Scraper for the Court of Justice of Paraná (TJPR)."""
 
+from collections.abc import Mapping
 from datetime import date
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
 
-from juscraper.core.http import HTTPScraper
+from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import SEARCH_ALIASES, apply_input_pipeline_search, normalize_pesquisa
 
 from .download import BASE_URL, cjsg_download
@@ -30,8 +32,20 @@ class TJPRScraper(HTTPScraper):
         "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
     )
 
-    def __init__(self):
-        super().__init__("TJPR")
+    perfis_http: ClassVar[Mapping[str, RequestPolicy]] = {
+        "cjsg": RequestPolicy(timeout=60),
+        "ementa": RequestPolicy(timeout=30),
+    }
+
+    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None) -> None:
+        """Cria o raspador do TJPR.
+
+        Args:
+            politica: Ajuste dos perfis HTTP ``"cjsg"`` (home e busca) e
+                ``"ementa"`` (ementa completa), por exemplo
+                ``{"cjsg": {"timeout": 120}}``.
+        """
+        super().__init__("TJPR", politica=politica)
 
     def _configure_session(self, session: requests.Session) -> None:
         """TJPR's portal applies User-Agent gating — keep the Chrome UA."""
