@@ -77,14 +77,14 @@ def normalize_paginas(paginas) -> list | range | None:
     ``n``, inclusive do numpy, vira ``range(1, n + 1)``.
 
     Raises:
-        TypeError: se *paginas* não é de um dos tipos aceitos, inclusive ``bool``.
+        TypeError: se *paginas* não é de um dos tipos aceitos, inclusive ``bool``, ``tuple``, array e ``Series``.
     """
-    if paginas is None:
-        return None
-    if isinstance(paginas, (list, range)):
+    if paginas is None or isinstance(paginas, (list, range)):
         return paginas
     if isinstance(paginas, bool) or not isinstance(paginas, Integral):  # ``True`` viraria a página 1
-        raise TypeError(f"paginas deve ser int (bool não vale), list, range ou None, não {type(paginas).__name__}")
+        dica = "; converta com list(paginas)" if isinstance(paginas, tuple) or getattr(paginas, "ndim", 0) == 1 else ""
+        nome = type(paginas).__name__
+        raise TypeError(f"paginas deve ser int (bool não vale), list, range ou None, não {nome}{dica}")
     return range(1, int(paginas) + 1)
 
 

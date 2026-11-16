@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 
 import juscraper
-from juscraper.courts._esaj.cjpg_download import _TIMEOUT, cjpg_download
+from juscraper.courts._esaj.cjpg_download import _TIMEOUT, _normalize_pages, cjpg_download
 from juscraper.courts._esaj.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
 from tests._helpers import load_sample, load_sample_bytes
 
@@ -381,6 +381,30 @@ class TestCJPGDownload1Based:
             call("https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=3&conversationId=", timeout=_TIMEOUT)
         ]
         sleep.assert_called_once_with(0.25)
+
+    def test_pagina_zero_repetida_e_alem_do_total(self, tmp_path, mocker, caplog):
+        """Página 0 e além do total saem num aviso no logger do tribunal; a repetida baixa uma vez."""
+        with caplog.at_level(logging.WARNING, logger="juscraper.tjsp"):
+            _, files, urls, _, _, _ = self._download_with_mocks(
+                tmp_path,
+                mocker,
+                n_pags=3,
+                paginas=[0, 2, 2, 99],
+            )
+
+        assert files == ["cjpg_00002.html"]
+        assert urls == ["https://esaj.tjsp.jus.br/cjpg/trocarDePagina.do?pagina=2&conversationId="]
+        assert [(r.name, r.getMessage()) for r in caplog.records if r.name == "juscraper.tjsp"] == [
+            ("juscraper.tjsp", "TJSP: páginas 0, 99 fora do intervalo 1-3"),
+        ]
+
+    def test_aviso_sai_no_logger_do_tribunal_de_u_base(self, caplog):
+        with caplog.at_level(logging.WARNING, logger="juscraper.tjms"):
+            assert _normalize_pages([1, 5], 2, "https://esaj.tjms.jus.br/") == [1]
+
+        assert [(r.name, r.getMessage()) for r in caplog.records] == [
+            ("juscraper.tjms", "TJMS: página 5 fora do intervalo 1-2"),
+        ]
 
     def test_range_step_preserves_page_order_and_request_urls(self, tmp_path, mocker):
         sleep = mocker.patch("juscraper.courts._esaj.cjpg_download.time.sleep")

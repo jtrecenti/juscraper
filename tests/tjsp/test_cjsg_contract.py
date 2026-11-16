@@ -69,6 +69,44 @@ def test_cjsg_typical_com_paginacao(tmp_path, mocker):
 
 
 @responses.activate
+def test_cjsg_pagina_repetida_baixa_uma_vez_e_alem_do_total_avisa(tmp_path, mocker, caplog):
+    """Página repetida sai uma vez só; a além do total não gera GET e sai em aviso."""
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+    _add_get(2, "cjsg/results_normal_page_02.html")
+
+    with caplog.at_level("WARNING", logger="juscraper.tjsp"):
+        jus.scraper("tjsp", download_path=str(tmp_path)).cjsg_download(
+            "dano moral", paginas=[2, 2, 999999]
+        )
+
+    paginas_pedidas = [
+        call.request.params["pagina"] for call in responses.calls if "trocaDePagina" in call.request.url
+    ]
+    assert paginas_pedidas == ["1", "2"]
+    assert [(r.name, r.getMessage()) for r in caplog.records if r.name == "juscraper.tjsp"] == [
+        ("juscraper.tjsp", "TJSP: página 999999 fora do intervalo 1-128554"),
+    ]
+
+
+@responses.activate
+def test_cjsg_range_com_passo_baixa_so_as_paginas_do_range(tmp_path, mocker):
+    # Antes, o passo era ignorado: ``range(1, 4, 2)`` baixava as páginas 1 a 3.
+    mocker.patch("time.sleep")
+    _add_post("dano moral")
+    _add_get(1, "cjsg/results_normal_page_01.html")
+    _add_get(3, "cjsg/results_normal_page_02.html")
+
+    jus.scraper("tjsp", download_path=str(tmp_path)).cjsg_download("dano moral", paginas=range(1, 4, 2))
+
+    paginas_pedidas = [
+        call.request.params["pagina"] for call in responses.calls if "trocaDePagina" in call.request.url
+    ]
+    assert paginas_pedidas == ["1", "3"]
+
+
+@responses.activate
 def test_cjsg_single_page(tmp_path, mocker):
     """Query whose hits fit in a single page skips the per-page loop."""
     mocker.patch("time.sleep")

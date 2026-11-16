@@ -301,25 +301,6 @@ def _validate_page_size(quantidade: int) -> None:
         )
 
 
-def _as_page_list(paginas) -> list[int]:
-    """Converte ``paginas`` (inteiro ou iterável) em lista de páginas 1-based."""
-    if isinstance(paginas, bool):
-        raise TypeError("paginas deve conter inteiros positivos.")
-    if isinstance(paginas, int):
-        if paginas < 1:
-            raise ValueError("paginas deve conter apenas valores maiores que zero.")
-        paginas = range(1, paginas + 1)
-    try:
-        paginas_list = list(paginas)
-    except TypeError as exc:
-        raise TypeError("paginas deve conter inteiros positivos.") from exc
-    if any(isinstance(pagina, bool) or not isinstance(pagina, int) for pagina in paginas_list):
-        raise TypeError("paginas deve conter inteiros positivos.")
-    if any(pagina < 1 for pagina in paginas_list):
-        raise ValueError("paginas deve conter apenas valores maiores que zero.")
-    return paginas_list
-
-
 def _reject_pages_beyond_limit(paginas_list: list[int], quantidade: int) -> None:
     """Rejeita páginas que a API responderia com HTTP 500 por passarem do teto."""
     limite = _max_paginas(quantidade)
@@ -340,7 +321,7 @@ def _validate_download_inputs(quantidade: int, paginas, tipo_consulta: str) -> l
         raise ValueError(f"Tipo de consulta não suportado pelo TJMT: {tipo_consulta}.")
     if paginas is None:
         return None
-    paginas_list = _as_page_list(paginas)
+    paginas_list = list(paginas)
     _reject_pages_beyond_limit(paginas_list, quantidade)
     return paginas_list
 
@@ -425,8 +406,11 @@ def cjsg_download(
 
     Args:
         pesquisa: Termo de pesquisa.
-        paginas: Páginas a baixar, 1-based. ``None`` baixa todas, até o teto
-            de ``MAX_RESULTS`` resultados.
+        paginas: Páginas a baixar, 1-based, como ``range`` ou ``list``. ``None``
+            baixa todas, até o teto de ``MAX_RESULTS`` resultados. Chega já
+            validado pelo método público (``normalize_paginas`` e
+            ``PaginasMixin``): ``int`` vira ``range`` e ficam recusados
+            ``bool``, página ``0`` ou negativa e seleção vazia.
         tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
         data_publicacao_inicio: Data inicial de publicação.
         data_publicacao_fim: Data final de publicação, inclusiva.

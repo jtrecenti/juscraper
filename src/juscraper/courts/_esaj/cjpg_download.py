@@ -10,11 +10,13 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
+from ...utils.pagination import paginas_no_intervalo
 from .cjpg_parse import MARCA_PAGINA_NAO_BAIXADA, cjpg_n_pags
 from .prazos import TENTATIVAS as _TENTATIVAS
 from .prazos import TIMEOUT as _TIMEOUT
@@ -51,12 +53,14 @@ def _extract_page_count(
         ) from error
 
 
-def _normalize_pages(paginas: list[int] | range | None, n_pags: int) -> list[int] | range:
-    if paginas is None:
-        return range(1, n_pags + 1)
-    if isinstance(paginas, range):
-        return range(paginas.start, min(paginas.stop, n_pags + 1), paginas.step)
-    return [page for page in paginas if page <= n_pags]
+def _normalize_pages(paginas: list[int] | range | None, n_pags: int, u_base: str) -> list[int]:
+    """Páginas pedidas dentro de ``1..n_pags``, sem repetição; ``None`` vale todas.
+
+    As de fora saem em aviso no logger do tribunal, cuja sigla vem do host de
+    ``u_base`` (``esaj.tjsp.jus.br`` -> ``TJSP``).
+    """
+    tribunal = (urlparse(u_base).hostname or "").removesuffix(".jus.br").rsplit(".", 1)[-1].upper()
+    return paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
 
 
 def _save_page(path: Path, page: int, html: str) -> None:
@@ -185,17 +189,14 @@ def cjpg_download(  # noqa: PLR0913 - um parâmetro por filtro do formulário
         _save_page(path, 1, r0.text)
         return str(path)
 
-    paginas = _normalize_pages(paginas, n_pags)
+    paginas_list = _normalize_pages(paginas, n_pags, u_base)
 
-    first_page_in_range = 1 in paginas
+    first_page_in_range = 1 in paginas_list
     if first_page_in_range:
         _save_page(path, 1, r0.text)
 
-    remaining = [p for p in paginas if p > 1]
-    total = len(remaining) + (1 if first_page_in_range else 0)
-    initial = 1 if first_page_in_range else 0
-
-    for page in tqdm(remaining, desc="Baixando documentos", total=total, initial=initial):
+    remaining = [p for p in paginas_list if p > 1]
+    for page in tqdm(remaining, desc="Baixando documentos", total=len(paginas_list), initial=int(first_page_in_range)):
         time.sleep(sleep_time)
         u = f"{u_base}cjpg/trocarDePagina.do?pagina={page}&conversationId="
         _save_page(path, page, _baixar_pagina(session, u, page, sleep_time))

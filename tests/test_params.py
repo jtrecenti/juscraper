@@ -48,6 +48,23 @@ class TestNormalizePaginas:
         with pytest.raises(TypeError, match="não bool"):
             normalize_paginas(valor)
 
+    @pytest.mark.parametrize(
+        "valor",
+        [np.array([1, 2]), pd.Series([1, 2]), (1, 2)],
+        ids=["ndarray", "Series", "tuple"],
+    )
+    def test_colecao_fora_do_contrato_pede_list(self, valor):
+        # O contrato é ``int | list | range | None`` (``PaginasMixin``); a
+        # mensagem indica a conversão, que já é aceita.
+        with pytest.raises(TypeError, match=r"não (ndarray|Series|tuple); converta com list\(paginas\)"):
+            normalize_paginas(valor)
+        assert normalize_paginas(list(valor)) == [1, 2]
+
+    def test_texto_recusado_sem_sugerir_list(self):
+        with pytest.raises(TypeError, match="paginas deve ser") as exc_info:
+            normalize_paginas("12")
+        assert "list(paginas)" not in str(exc_info.value)
+
     def test_inteiro_numpy_aceito(self):
         # Mesmo contrato de ``tamanho_pagina`` (``TamanhoPagina``), que aceita ``np.int64``.
         result = normalize_paginas(np.int64(3))

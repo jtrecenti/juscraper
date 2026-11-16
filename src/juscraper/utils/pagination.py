@@ -15,6 +15,7 @@ import logging
 import math
 import re
 from collections.abc import Iterable, Sequence
+from itertools import chain, islice
 
 from bs4 import BeautifulSoup, Tag
 
@@ -200,21 +201,52 @@ def resolve_total_pages(
     return total
 
 
+_PAGINAS_FORA_NO_AVISO = 5
+
+
 def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
-    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida, com aviso no log para as demais.
+    """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida e sem repetição; as demais vão para o log.
 
-    ``paginas=None`` vale todas, de 1 a ``n_pags``.
+    ``paginas=None`` vale todas, de 1 a ``n_pags``. Uma página repetida é
+    baixada uma vez só, na posição em que aparece primeiro.
 
-    O aviso sai no logger do tribunal (``juscraper.<sigla>``), onde já saía
-    antes de o filtro virar helper.
+    As páginas de fora saem num aviso só, no logger do tribunal
+    (``juscraper.<sigla>``), onde já saía antes de o filtro virar helper:
+    ``paginas=1000`` numa busca de 7 páginas gera uma linha, não 993.
     """
-    logger = logging.getLogger(f"juscraper.{tribunal.lower()}")
     if paginas is None:
         return list(range(1, n_pags + 1))
-    validas = []
-    for pagina in paginas:
-        if 1 <= pagina <= n_pags:
-            validas.append(pagina)
-        else:
-            logger.warning("%s: página %s fora do intervalo 1-%s", tribunal, pagina, n_pags)
+    if isinstance(paginas, range) and paginas.step > 0:
+        validas, primeiras_fora, n_fora = _range_no_intervalo(paginas, n_pags)
+    else:
+        unicas = list(dict.fromkeys(paginas))
+        validas = [pagina for pagina in unicas if 1 <= pagina <= n_pags]
+        fora = [pagina for pagina in unicas if not 1 <= pagina <= n_pags]
+        primeiras_fora, n_fora = fora[:_PAGINAS_FORA_NO_AVISO], len(fora)
+    if n_fora:
+        _avisar_paginas_fora(primeiras_fora, n_fora, n_pags, tribunal)
     return validas
+
+
+def _avisar_paginas_fora(primeiras: list[int], n_fora: int, n_pags: int, tribunal: str) -> None:
+    """Um aviso só com as primeiras páginas fora de ``1..n_pags`` e quantas mais."""
+    listadas = ", ".join(str(pagina) for pagina in primeiras)
+    if n_fora > len(primeiras):
+        listadas += f" e mais {n_fora - len(primeiras)}"
+    rotulo = "página" if n_fora == 1 else "páginas"
+    logging.getLogger(f"juscraper.{tribunal.lower()}").warning(
+        "%s: %s %s fora do intervalo 1-%s", tribunal, rotulo, listadas, n_pags
+    )
+
+
+def _range_no_intervalo(paginas: range, n_pags: int) -> tuple[list[int], list[int], int]:
+    """Corta um ``range`` crescente em ``1..n_pags`` sem percorrê-lo, como o ``PaginasMixin``.
+
+    Devolve as páginas dentro, as primeiras de fora (para o aviso) e quantas
+    ficaram de fora: ``paginas=10**7`` não custa mais que ``paginas=10``.
+    """
+    abaixo = len(range(paginas.start, min(paginas.stop, 1), paginas.step))
+    ate_o_total = len(range(paginas.start, min(paginas.stop, n_pags + 1), paginas.step))
+    validas = list(paginas[abaixo:ate_o_total])
+    primeiras_fora = list(islice(chain(paginas[:abaixo], paginas[ate_o_total:]), _PAGINAS_FORA_NO_AVISO))
+    return validas, primeiras_fora, len(paginas) - len(validas)
