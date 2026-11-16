@@ -1,8 +1,7 @@
 """Download do cjpg do eSAJ (consulta de julgados de primeiro grau).
 
 TJSP e TJMS o usam por :class:`juscraper.courts._esaj.cjpg.EsajCjpgScraper`
-(#487). Prazo e tentativas vêm de :mod:`.prazos`, comum ao cpopg e ao cposg
-do TJSP.
+(#487).
 """
 from __future__ import annotations
 
