@@ -732,3 +732,15 @@ def test_duas_chamadas_compostas_limpam_raiz_apos_a_ultima(mocker):
         liberar_segunda.set()
         segunda.result(timeout=5)
     assert not raiz.exists()
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cposg"])
+def test_composto_limpa_raiz_relativa_que_criou(tmp_path, monkeypatch, metodo):
+    """``mkdtemp`` devolve pasta absoluta mesmo quando ``download_path`` é relativo."""
+    monkeypatch.chdir(tmp_path)
+    scraper = jus.scraper("tjsp", download_path="downloads")
+
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        getattr(scraper, metodo)([None])
+
+    assert not (tmp_path / "downloads").exists()

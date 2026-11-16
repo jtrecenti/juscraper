@@ -114,7 +114,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             # sua origem antes dela para não deixar a raiz vazia após o composto.
             caminho_atual = self._download_path
             raiz_criada = caminho_atual is None or not Path(caminho_atual).exists()
-            raiz = Path(self.download_path)
+            raiz = Path(self.download_path).resolve()
             raiz.mkdir(parents=True, exist_ok=True)
             pasta = tempfile.mkdtemp(prefix="composto_", dir=raiz)
             if raiz_criada:
