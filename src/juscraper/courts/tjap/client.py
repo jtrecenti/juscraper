@@ -2,8 +2,8 @@
 
 import pandas as pd
 
-from juscraper.core.avisos import avisar
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.deprecacao import resolve_deprecated_value
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download_manager
@@ -147,14 +147,13 @@ class TJAPScraper(HTTPScraper):
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
         )
-        if votacao == "Unanime":
-            # Sem acento, o portal devolve os acordaos por maioria (15/11/2026).
-            avisar(
-                'votacao="Unanime" esta deprecado: o portal trata esse valor como '
-                '"Maioria". O juscraper passa a enviar "Unânime"; use votacao="Unânime".',
-                DeprecationWarning,
-            )
-            votacao = "Unânime"
+        # Sem acento, o portal devolve os acordaos por maioria (15/11/2026).
+        votacao = resolve_deprecated_value(
+            votacao,
+            {"Unanime": "Unânime"},
+            'votacao="{antigo}" esta deprecado: o portal trata esse valor como '
+            '"Maioria". O juscraper passa a enviar "{novo}"; use votacao="{novo}".',
+        )
         inp = apply_input_pipeline_search(
             InputCJSGTJAP,
             "TJAPScraper.cjsg_download()",

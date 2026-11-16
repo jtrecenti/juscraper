@@ -10,6 +10,7 @@ import requests
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import HTTPScraper
+from juscraper.utils.deprecacao import resolve_deprecated_value
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download as _cjsg_download
@@ -71,10 +72,13 @@ class TJGOScraper(HTTPScraper):
             ``3`` are deprecated aliases of ``151`` and ``15``; ``1`` is
             deprecated with no replacement.
         id_area : int or str
-            ``0`` all / ``1`` civil / ``2`` criminal.
+            ``0`` all / ``1`` civil / ``2`` criminal. With ``id_instancia=151``
+            only ``0`` is accepted, as in the website form.
         id_serventia_subtipo : int or str
             Code from the website's "Orgao" dropdown (e.g. ``14`` civil
-            chambers, ``20`` criminal chambers). ``0`` = all.
+            chambers, ``20`` criminal chambers). ``0`` = all. A code the form
+            does not list for the chosen instance and area raises
+            ``ValidationError``.
         numero_processo : str
             Filter by specific CNJ process number.
         tamanho_pagina : int
@@ -144,10 +148,12 @@ class TJGOScraper(HTTPScraper):
                 deprecados (ver abaixo); o 1o grau nao esta no seletor, e
                 ``1`` vai ao portal como esta.
             id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
+                Com ``id_instancia=151``, so ``0``, como no formulario do site.
             id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
                 site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
                 Criminais, ``6`` Turma Recursal Civel e Criminal). ``0`` =
-                todos. Codigo fora da lista levanta ``ValidationError``.
+                todos. Codigo fora da lista, ou que o formulario nao oferece
+                para a instancia e a area escolhidas, levanta ``ValidationError``.
             numero_processo (str): Filtrar por numero CNJ especifico.
             tamanho_pagina (int): Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
@@ -171,7 +177,9 @@ class TJGOScraper(HTTPScraper):
                 ``data_julgamento_inicio`` / ``data_julgamento_fim`` — o backend
                 Projudi nao expoe filtro de data de julgamento; use
                 ``data_publicacao_*`` (canonico para o TJGO).
-            ValidationError: Quando um filtro tem formato invalido.
+            ValidationError: Quando um filtro tem formato invalido ou a
+                combinacao de ``id_instancia``, ``id_area`` e
+                ``id_serventia_subtipo`` nao existe no formulario do Projudi.
 
         Returns:
             DataFrame com as decisoes (coluna ``texto`` carrega
@@ -204,25 +212,27 @@ class TJGOScraper(HTTPScraper):
 # Valores que a docstring indicava ate a 0.5.0 ("1 1o grau", "2 recursal",
 # "3 tribunal"), fora das opcoes do seletor "Instancia" do Projudi, e a opcao
 # equivalente. O formulario atual nao tem o 1o grau: ``1`` vai como esta.
-_ID_INSTANCIA_DEPRECADO = {"2": 151, "3": 15}
+_ID_INSTANCIA_DEPRECADO: dict[str, int | str] = {"2": 151, "3": 15}
+_SO_OPCOES_DO_FORM = (
+    "o formulario do Projudi so oferece 0 (todas), 15 (Tribunal) e 151 (Turmas Recursais)."
+)
 
 
 def _resolver_id_instancia(id_instancia: int | str) -> int | str:
     """Troca ``2``/``3`` pela opcao do formulario e avisa de ``1``, com ``DeprecationWarning``."""
-    chave = str(id_instancia)
-    if chave not in {"1", *_ID_INSTANCIA_DEPRECADO}:
+    if str(id_instancia) == "1":
+        avisar(
+            f"id_instancia={id_instancia!r} esta deprecado: {_SO_OPCOES_DO_FORM} "
+            "O valor (1o grau) vai ao portal como esta, sem garantia de filtro.",
+            DeprecationWarning,
+        )
         return id_instancia
-    novo = _ID_INSTANCIA_DEPRECADO.get(chave, id_instancia)
-    if chave == "1":
-        destino = "O valor (1o grau) vai ao portal como esta, sem garantia de filtro."
-    else:
-        destino = f"O juscraper passa a enviar {novo}; use id_instancia={novo}."
-    avisar(
-        f"id_instancia={id_instancia!r} esta deprecado: o formulario do Projudi so "
-        f"oferece 0 (todas), 15 (Tribunal) e 151 (Turmas Recursais). {destino}",
-        DeprecationWarning,
+    return resolve_deprecated_value(
+        id_instancia,
+        _ID_INSTANCIA_DEPRECADO,
+        "id_instancia={antigo!r} esta deprecado: " + _SO_OPCOES_DO_FORM
+        + " O juscraper passa a enviar {novo}; use id_instancia={novo}.",
     )
-    return novo
 
 
 def _br_date(value) -> str:

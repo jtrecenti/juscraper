@@ -17,6 +17,8 @@ from responses.matchers import urlencoded_params_matcher
 import juscraper as jus
 from juscraper.courts.tjgo.download import SEARCH_URL, _extract_total, build_cjsg_payload
 from juscraper.courts.tjgo.parse import _split_blocks, cjsg_parse
+from juscraper.courts.tjgo.schemas import OutputCJSGTJGO
+from juscraper.schemas import OutputCJSGBase
 from tests._helpers import load_sample_bytes
 
 CJSG_FIELDS = {
@@ -99,6 +101,18 @@ def test_cjsg_busca_vazia_avisa_do_turnstile(mocker, pesquisa, sample_path):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+    assert set(df.columns) == CJSG_FIELDS
+
+
+def test_cjsg_parse_sem_paginas_traz_as_colunas():
+    """Sem paginas, o DataFrame vazio tambem traz as colunas."""
+    assert set(cjsg_parse([]).columns) == CJSG_FIELDS
+
+
+def test_cjsg_colunas_sao_as_do_output():
+    """As colunas sao ``processo`` e os campos proprios de ``OutputCJSGTJGO``."""
+    proprios = set(OutputCJSGTJGO.model_fields) - set(OutputCJSGBase.model_fields)
+    assert {"processo"} | proprios == CJSG_FIELDS
 
 
 @responses.activate

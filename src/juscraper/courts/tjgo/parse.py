@@ -122,6 +122,11 @@ def _parse_block(block: str) -> dict:
     }
 
 
+# Colunas do DataFrame (os campos de ``OutputCJSGTJGO``), para a busca sem
+# resultado tambem as trazer.
+_COLUNAS = list(_parse_block(""))
+
+
 def cjsg_parse(raw_pages: list) -> pd.DataFrame:
     """Transform raw HTML pages into a tidy DataFrame."""
     rows: list = []
@@ -129,4 +134,4 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
         if not html:
             continue
         rows.extend(_parse_block(block) for block in _split_blocks(html))
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=_COLUNAS)

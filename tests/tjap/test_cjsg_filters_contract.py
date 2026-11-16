@@ -82,10 +82,14 @@ def test_cjsg_votacao_unanime_sem_acento_vira_unanime_com_aviso(mocker):
         match=[json_params_matcher(_payload("dano moral", votacao="Unânime"))],
     )
 
-    with pytest.warns(DeprecationWarning, match='votacao="Unanime".*deprecado'):
+    with pytest.warns(DeprecationWarning, match='votacao="Unanime".*deprecado') as avisos:
         df = jus.scraper("tjap").cjsg("dano moral", paginas=1, votacao="Unanime")
 
     assert isinstance(df, pd.DataFrame)
+    assert [str(a.message) for a in avisos] == [
+        'votacao="Unanime" esta deprecado: o portal trata esse valor como "Maioria". '
+        'O juscraper passa a enviar "Unânime"; use votacao="Unânime".'
+    ]
 
 
 def test_cjsg_unknown_kwarg_raises():

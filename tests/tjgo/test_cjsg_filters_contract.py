@@ -10,6 +10,7 @@ behaviour now receives a :class:`TypeError`.
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
@@ -40,9 +41,9 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     _add_post(build_cjsg_payload(
         pesquisa="dano moral",
         page=1,
-        id_instancia="151",
-        id_area="1",
-        id_serventia_subtipo="42",
+        id_instancia="15",
+        id_area="2",
+        id_serventia_subtipo="20",
         numero_processo="0000000-00.0000.0.00.0000",
         qtde_itens_pagina=20,
         data_publicacao_inicio="01/02/2024",
@@ -52,9 +53,9 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     df = jus.scraper("tjgo").cjsg(
         "dano moral",
         paginas=1,
-        id_instancia=151,
-        id_area=1,
-        id_serventia_subtipo=42,
+        id_instancia=15,
+        id_area=2,
+        id_serventia_subtipo=20,
         numero_processo="0000000-00.0000.0.00.0000",
         tamanho_pagina=20,
         data_publicacao_inicio="2024-02-01",
@@ -69,9 +70,9 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
         "PosicaoPaginaAtual": "0",
         "Viewstate": "",
         "Texto": "dano moral",
-        "Id_Instancia": "151",
-        "Id_Area": "1",
-        "Id_ServentiaSubTipo": "42",
+        "Id_Instancia": "15",
+        "Id_Area": "2",
+        "Id_ServentiaSubTipo": "20",
         "Serventia": "",
         "Id_Serventia": "",
         "Usuario": "",
@@ -235,10 +236,15 @@ def test_cjsg_id_instancia_antigo_vira_opcao_do_form_com_aviso(mocker, antigo, n
     _add_get_prime()
     _add_post(build_cjsg_payload(pesquisa="dano moral", page=1, id_instancia=novo))
 
-    with pytest.warns(DeprecationWarning, match=f"id_instancia={antigo!r}.*id_instancia={novo}"):
+    with pytest.warns(DeprecationWarning, match=f"id_instancia={antigo!r}.*id_instancia={novo}") as avisos:
         df = jus.scraper("tjgo").cjsg("dano moral", paginas=1, id_instancia=antigo)
 
     assert isinstance(df, pd.DataFrame)
+    assert [str(a.message) for a in avisos] == [
+        f"id_instancia={antigo!r} esta deprecado: o formulario do Projudi so oferece 0 (todas), "
+        f"15 (Tribunal) e 151 (Turmas Recursais). O juscraper passa a enviar {novo}; "
+        f"use id_instancia={novo}."
+    ]
 
 
 @responses.activate
@@ -248,7 +254,48 @@ def test_cjsg_id_instancia_primeiro_grau_avisa_e_vai_como_esta(mocker):
     _add_get_prime()
     _add_post(build_cjsg_payload(pesquisa="dano moral", page=1, id_instancia="1"))
 
-    with pytest.warns(DeprecationWarning, match=r"id_instancia=1 .*\(1o grau\)"):
+    with pytest.warns(DeprecationWarning, match=r"id_instancia=1 .*\(1o grau\)") as avisos:
         df = jus.scraper("tjgo").cjsg("dano moral", paginas=1, id_instancia=1)
 
     assert isinstance(df, pd.DataFrame)
+    assert [str(a.message) for a in avisos] == [
+        "id_instancia=1 esta deprecado: o formulario do Projudi so oferece 0 (todas), "
+        "15 (Tribunal) e 151 (Turmas Recursais). O valor (1o grau) vai ao portal como esta, "
+        "sem garantia de filtro."
+    ]
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    ("filtros", "mensagem"),
+    [
+        ({"id_instancia": 151, "id_area": 1}, r"id_area=1 nao existe com id_instancia=151"),
+        (
+            {"id_instancia": 15, "id_serventia_subtipo": 6},
+            r"id_serventia_subtipo='6' .* id_instancia=15 e id_area=0",
+        ),
+        (
+            {"id_instancia": 15, "id_area": 1, "id_serventia_subtipo": 20},
+            r"id_serventia_subtipo='20' .* id_instancia=15 e id_area=1",
+        ),
+    ],
+    ids=["area_nas_turmas_recursais", "orgao_de_outra_instancia", "orgao_de_outra_area"],
+)
+@responses.activate
+def test_cjsg_combinacao_fora_do_formulario_falha_antes_da_requisicao(metodo, filtros, mensagem):
+    """Combinacoes que o formulario do Projudi nao monta levantam ``ValidationError``
+    sem nenhuma requisicao (``responses`` sem rotas recusaria qualquer uma)."""
+    with pytest.raises(ValidationError, match=mensagem):
+        getattr(jus.scraper("tjgo"), metodo)("dano moral", paginas=1, **filtros)
+
+    assert len(responses.calls) == 0
+
+
+@responses.activate
+def test_cjsg_id_instancia_deprecado_e_conferido_como_o_substituto():
+    """``2`` vira ``151`` (com aviso) antes da conferencia da combinacao."""
+    with pytest.warns(DeprecationWarning, match="id_instancia=2"), \
+            pytest.raises(ValidationError, match=r"id_area=2 nao existe com id_instancia=151"):
+        jus.scraper("tjgo").cjsg("dano moral", paginas=1, id_instancia=2, id_area=2)
+
+    assert len(responses.calls) == 0

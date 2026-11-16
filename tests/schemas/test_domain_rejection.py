@@ -36,7 +36,7 @@ from juscraper.courts.tjes.schemas import (
     OrdenacaoCJPG,
     OrdenacaoCJSG,
 )
-from juscraper.courts.tjgo.schemas import InputCJSGTJGO
+from juscraper.courts.tjgo.schemas import ORGAOS_POR_INSTANCIA_E_AREA, InputCJSGTJGO
 from juscraper.courts.tjmg.schemas import InputCJSGTJMG
 from juscraper.courts.tjmt.schemas import InputCJSGTJMT
 from juscraper.courts.tjpa.schemas import InputCJSGTJPA
@@ -366,11 +366,16 @@ class TestTJROOrgaoJulgadorIntZero:
         assert inp.orgao_julgador_colegiado is not None
 
 
-def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
-    """A lista do ``Literal`` vem do array ``tipos`` do script do formulário (#207)."""
+def _tipos_do_script_tjgo() -> list[tuple[str, str, str]]:
+    """``(areaId, servTipoId, codigo)`` do array ``tipos`` do script do formulário do TJGO."""
     script = load_sample("tjgo", "cjsg/consulta_jurisprudencia.js", encoding="latin-1")
     tipos = script.split("const tipos", 1)[1].split("];", 1)[0]
-    codigos = {"0"} | set(re.findall(r'"codigo": "(\d+)"', tipos))
+    return re.findall(r'"areaId": "(\d+)", "servTipoId": "(\d+)", "codigo": "(\d+)"', tipos)
+
+
+def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
+    """A lista do ``Literal`` vem do array ``tipos`` do script do formulário (#207)."""
+    codigos = {"0"} | {codigo for _, _, codigo in _tipos_do_script_tjgo()}
     campo = InputCJSGTJGO.model_fields["id_serventia_subtipo"].annotation
     assert set(get_args(campo)) == codigos
 
@@ -405,3 +410,46 @@ def test_tjrj_competencia_e_origem_batem_com_os_seletores_do_ejuris():
     assert set(get_args(literal_competencia)) == (
         opcoes(inicial, "cmbCompetencia") | opcoes(turma_recursal, "cmbCompetencia")
     )
+
+
+def test_tjgo_orgaos_por_instancia_e_area_batem_com_o_script_do_projudi():
+    """A tabela que confere as combinacoes vem do array ``tipos`` do formulario."""
+    do_script: dict[tuple[str, str], set[str]] = {}
+    for area, instancia, codigo in _tipos_do_script_tjgo():
+        do_script.setdefault((instancia, area), set()).add(codigo)
+    assert do_script == ORGAOS_POR_INSTANCIA_E_AREA
+
+
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"id_instancia": 151, "id_area": 1},
+        {"id_instancia": "151", "id_area": "2", "id_serventia_subtipo": "6"},
+        {"id_instancia": 15, "id_serventia_subtipo": 66},
+        {"id_instancia": 151, "id_serventia_subtipo": 14},
+        # Orgaos do 1o grau so aparecem com "Todas as instancias".
+        {"id_instancia": 15, "id_serventia_subtipo": 27},
+        {"id_instancia": 0, "id_area": 1, "id_serventia_subtipo": 20},
+        {"id_instancia": 0, "id_area": 2, "id_serventia_subtipo": 6},
+    ],
+)
+def test_tjgo_recusa_combinacao_que_o_formulario_nao_monta(filtros):
+    with pytest.raises(ValidationError, match="formulario do Projudi"):
+        InputCJSGTJGO(pesquisa="x", **filtros)
+
+
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"id_instancia": 151, "id_serventia_subtipo": 6},
+        {"id_instancia": 15, "id_area": 1, "id_serventia_subtipo": 22},
+        {"id_instancia": 15, "id_area": 2, "id_serventia_subtipo": "22"},
+        {"id_instancia": 0, "id_serventia_subtipo": 27},
+        {"id_instancia": 0, "id_area": 2, "id_serventia_subtipo": 42},
+        {"id_instancia": 0, "id_area": 1},
+        # ``1`` (deprecado, fora do formulario) fica sem conferencia.
+        {"id_instancia": 1, "id_area": 2, "id_serventia_subtipo": 14},
+    ],
+)
+def test_tjgo_aceita_combinacao_que_o_formulario_monta(filtros):
+    InputCJSGTJGO(pesquisa="x", **filtros)
