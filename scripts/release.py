@@ -191,7 +191,7 @@ def main():
         run_command("SKIP=pytest uv run pre-commit run --all-files")
 
         print("Executando testes...")
-        run_command("uv run pytest tests/ -v")
+        run_command("uv run pytest -n 2 tests/ -v")
 
     # Atualiza versão
     update_version(args.version)
