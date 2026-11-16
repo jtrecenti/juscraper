@@ -2,8 +2,7 @@
 
 Absorbs the constructor + ``cjsg``/``cjsg_download``/``cjsg_parse`` template
 shared by TJAC/TJAL/TJAM/TJCE/TJMS. Subclasses set ``BASE_URL`` and the
-pydantic input schema; TJSP adds a Chrome UA and conversationId
-propagation via class attributes.
+pydantic input schema; TJSP adds a Chrome UA via class attribute.
 
 Hooks a subclass may override:
 
@@ -254,8 +253,6 @@ class EsajSearchScraper(HTTPScraper):
             :class:`InputCJSGEsajPuro`. TJSP overrides with its own model.
         CJSG_CHROME_UA: TJSP only — sends the Chrome-flavoured UA that the
             eSAJ form expects from browsers.
-        CJSG_EXTRACT_CONVERSATION_ID: TJSP only — capture ``conversationId``
-            from the first-page HTML and propagate to subsequent GETs.
 
     Session lifecycle (issue #203):
         ``self.session`` é criada por :class:`HTTPScraper.__init__`; o hook
@@ -268,7 +265,6 @@ class EsajSearchScraper(HTTPScraper):
     TRIBUNAL_NAME: str = ""
     INPUT_CJSG: type[BaseModel] = InputCJSGEsajPuro
     CJSG_CHROME_UA: bool = False
-    CJSG_EXTRACT_CONVERSATION_ID: bool = False
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
     # ``<arvore>_<grau>``, relativas a BASE_URL. O sufixo de grau permite a
@@ -671,7 +667,6 @@ class EsajSearchScraper(HTTPScraper):
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,
-            extract_conversation_id=self.CJSG_EXTRACT_CONVERSATION_ID,
             progress_desc=f"Baixando CJSG {self.tribunal_name}",
         )
 

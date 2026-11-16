@@ -546,7 +546,6 @@ class TJXXScraper(EsajSearchScraper):
     TRIBUNAL_NAME = "..."
     INPUT_CJSG = InputCJSGTJXX        # pydantic próprio quando a API diverge
     CJSG_CHROME_UA = True              # quando o eSAJ precisa de UA browser
-    CJSG_EXTRACT_CONVERSATION_ID = True  # quando precisa propagar conversationId entre páginas
 
     def _build_cjsg_body(self, inp: BaseModel) -> dict:
         # sobrescrever quando o form body tem shape diferente
@@ -556,7 +555,7 @@ class TJXXScraper(EsajSearchScraper):
 ### 4. Hooks disponíveis
 
 - `_configure_session(session)` — montar adapters HTTP customizados (TLS, cookies, etc.)
-- Atributos de classe `CJSG_CHROME_UA`, `CJSG_EXTRACT_CONVERSATION_ID` (defaults `False`)
+- Atributo de classe `CJSG_CHROME_UA` (default `False`)
 - `_build_cjsg_body(inp)` — trocar o builder do form body quando diverge do default `build_cjsg_form_body`
 - `_validate_pesquisa(pesquisa, *, endpoint)`: rejeitar o termo de busca já resolvido antes de o auto-chunk dividir a busca em janelas (TJSP aplica o limite de 120 chars). Os caminhos de janela única e `count_only` não passam por ele: o tribunal valida também no próprio `<endpoint>_download` e no probe de contagem
 

@@ -34,10 +34,8 @@ def _add_post(pesquisa: str) -> None:
     )
 
 
-def _add_get(pagina: int, sample_path: str, *, conversation_id: str | None = None) -> None:
+def _add_get(pagina: int, sample_path: str) -> None:
     params = {"tipoDeDecisao": "A", "pagina": str(pagina)}
-    if conversation_id is not None:
-        params["conversationId"] = conversation_id
     responses.add(
         responses.GET,
         f"{BASE}/trocaDePagina.do",
@@ -53,9 +51,7 @@ def test_cjsg_typical_com_paginacao(tmp_path, mocker):
     """Typical multi-page query returns a DataFrame with the minimum schema."""
     mocker.patch("time.sleep")
     _add_post("dano moral")
-    # Page 1 is fetched without conversationId; page 2 reuses it when the
-    # first-page HTML exposes ``<input name='conversationId' value='...'>``.
-    # Match the common case: page 1 has no conversationId, page 2 has it.
+    # O matcher é estrito: nenhum GET leva ``conversationId``.
     _add_get(1, "cjsg/results_normal_page_01.html")
     _add_get(2, "cjsg/results_normal_page_02.html")
 
