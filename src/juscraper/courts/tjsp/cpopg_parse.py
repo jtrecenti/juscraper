@@ -28,8 +28,6 @@ _CANONICAL_KEYS = {
     'recebido_em': 'data_distribuicao',
 }
 
-# Regex for CNJ process number format: NNNNNNN-DD.YYYY.J.TR.OOOO
-
 _BASIC_SELECTORS = (
     ('id_processo', 'span', 'numeroProcesso'),
     ('classe', 'span', 'classeProcesso'),
