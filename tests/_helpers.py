@@ -160,7 +160,7 @@ def assert_unknown_kwarg_raises(
             auto_chunk exige uma janela longa de ``data_julgamento_*``
             para acionar o sniff; eSAJ exige ``paginas=1``).
     """
-    nomes = list(dict.fromkeys([kwarg] if isinstance(kwarg, str) else kwarg))
+    nomes = [kwarg] if isinstance(kwarg, str) else list(kwarg)
     listados = ", ".join(re.escape(repr(nome)) for nome in nomes)
     pattern = rf"got unexpected keyword argument\(s\): {listados}"
     if rotulo is not None:

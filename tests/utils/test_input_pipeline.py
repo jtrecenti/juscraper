@@ -238,16 +238,13 @@ def test_raise_on_extra_kwargs_raises_typeerror_for_pure_extra_forbidden():
     class _S(SearchBase):
         model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
-    def validar(**kwargs):
-        try:
-            _S(pesquisa="x", **kwargs)
-        except ValidationError as exc:
-            raise_on_extra_kwargs(exc, "Test")
-        else:
-            pytest.fail("Schema should have raised ValidationError")
+    with pytest.raises(ValidationError) as erro:
+        _S(pesquisa="x", extra="y")
 
     # Sem ``schema_cls``, nenhuma sugestão: a mensagem termina no nome.
-    assert_unknown_kwarg_raises(validar, "extra", rotulo="Test", exata=True)
+    assert_unknown_kwarg_raises(
+        lambda **_: raise_on_extra_kwargs(erro.value, "Test"), "extra", rotulo="Test", exata=True
+    )
 
 
 # --- Cobertura adicional pos-review do PR #135 ---------------------------
