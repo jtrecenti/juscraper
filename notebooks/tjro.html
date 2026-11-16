@@ -469,50 +469,233 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div id="cell-2" class="cell" data-execution_count="1">
+<div id="cell-2" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:10.160280Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:10.160129Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:10.835437Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:10.832709Z&quot;}" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjro <span class="op">=</span> jus.scraper(<span class="st">'tjro'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-4" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjro.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)<span class="bu">print</span>(df.shape)df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-4" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:10.837496Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:10.837124Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:13.858791Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:13.858482Z&quot;}" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjro.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 23967.45it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(10, 13)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">tipo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">grau_jurisdicao</th>
+<th data-quarto-table-cell-role="th">sistema_origem</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>7002737-13.2024.8.22.0005</td>
+<td>EMENTA</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+<td>2ª Turma Recursal - Gabinete 01</td>
+<td>2ª Turma Recursal</td>
+<td>ENIO SALVADOR VAZ</td>
+<td>Inclusão Indevida em Cadastro de Inadimplentes</td>
+<td>2025-04-15</td>
+<td>NaT</td>
+<td>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>27718444-PJESG</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>7003840-67.2024.8.22.0001</td>
+<td>EMENTA</td>
+<td>APELAÇÃO CÍVEL</td>
+<td>Gabinete Des. Torres Ferreira</td>
+<td>3ª Câmara Cível</td>
+<td>JOSE TORRES FERREIRA</td>
+<td>Perdas e Danos</td>
+<td>2025-03-27</td>
+<td>NaT</td>
+<td>EMENTA DIREITO DO CONSUMIDOR. RECURSO DE APELA...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>27477641-PJESG</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>7075911-33.2025.8.22.0001</td>
+<td>EMENTA</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+<td>2ª Turma Recursal - Gabinete 03</td>
+<td>2ª Turma Recursal</td>
+<td>GUILHERME RIBEIRO BALDAN</td>
+<td>Indenização por Dano Material</td>
+<td>2026-05-15</td>
+<td>NaT</td>
+<td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. DIRE...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>31782710-PJESG</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjro.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)df_parsed <span class="op">=</span> tjro.cjsg_parse(brutos)<span class="bu">print</span>(df_parsed.shape)df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-6" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:13.861343Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:13.861061Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:14.906851Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:14.906105Z&quot;}" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjro.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjro.cjsg_parse(brutos)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 16844.59it/s]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(10, 13)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">processo</th>
+<th data-quarto-table-cell-role="th">tipo</th>
+<th data-quarto-table-cell-role="th">classe</th>
+<th data-quarto-table-cell-role="th">orgao_julgador</th>
+<th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
+<th data-quarto-table-cell-role="th">relator</th>
+<th data-quarto-table-cell-role="th">assunto</th>
+<th data-quarto-table-cell-role="th">data_julgamento</th>
+<th data-quarto-table-cell-role="th">data_publicacao</th>
+<th data-quarto-table-cell-role="th">ementa</th>
+<th data-quarto-table-cell-role="th">grau_jurisdicao</th>
+<th data-quarto-table-cell-role="th">sistema_origem</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>7002737-13.2024.8.22.0005</td>
+<td>EMENTA</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+<td>2ª Turma Recursal - Gabinete 01</td>
+<td>2ª Turma Recursal</td>
+<td>ENIO SALVADOR VAZ</td>
+<td>Inclusão Indevida em Cadastro de Inadimplentes</td>
+<td>2025-04-15</td>
+<td>NaT</td>
+<td>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>27718444-PJESG</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>7003840-67.2024.8.22.0001</td>
+<td>EMENTA</td>
+<td>APELAÇÃO CÍVEL</td>
+<td>Gabinete Des. Torres Ferreira</td>
+<td>3ª Câmara Cível</td>
+<td>JOSE TORRES FERREIRA</td>
+<td>Perdas e Danos</td>
+<td>2025-03-27</td>
+<td>NaT</td>
+<td>EMENTA DIREITO DO CONSUMIDOR. RECURSO DE APELA...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>27477641-PJESG</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>7075911-33.2025.8.22.0001</td>
+<td>EMENTA</td>
+<td>RECURSO INOMINADO CÍVEL</td>
+<td>2ª Turma Recursal - Gabinete 03</td>
+<td>2ª Turma Recursal</td>
+<td>GUILHERME RIBEIRO BALDAN</td>
+<td>Indenização por Dano Material</td>
+<td>2026-05-15</td>
+<td>NaT</td>
+<td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. DIRE...</td>
+<td>2</td>
+<td>PJESG</td>
+<td>31782710-PJESG</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </div>
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:14.910297Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:14.909886Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:14.913848Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:14.913126Z&quot;}" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Ementa : &amp;nbsp; DIREITO DO CONSUMIDOR. RECURSO INOMINADO. INDENIZA&amp;Ccedil;&amp;Atilde;O POR DANO MORAL. INSCRI&amp;Ccedil;&amp;Atilde;O INDEVIDA EM &amp;Oacute;RG&amp;Atilde;O DE PROTE&amp;Ccedil;&amp;Atilde;O AO CR&amp;Eacute;DITO. EXIST&amp;Ecirc;NCIA DE APONTAMENTO PR&amp;Eacute;VIO LEG&amp;Iacute;TIMO. INCID&amp;Ecirc;NCIA DA S&amp;Uacute;MULA 38</code></pre>
+<pre><code>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMINADO. INDENIZAÇÃO POR DANO MORAL. INSCRIÇÃO INDEVIDA EM ÓRGÃO DE PROTEÇÃO AO CRÉDITO. EXISTÊNCIA DE APONTAMENTO PRÉVIO LEGÍTIMO. INCIDÊNCIA DA SÚMULA 385 DO STJ. SENTENÇA MANTIDA. RECURSO NÃO PROVIDO. 1. Recurso Inominado interposto pelo autor em face da </code></pre>
 </div>
 </div>
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>Available filters: <code>tipo</code> (list), <code>nr_processo</code>, <code>magistrado</code>, <code>orgao_julgador</code>, <code>orgao_julgador_colegiado</code>, <code>classe_judicial</code>, <code>instancia</code>, <code>termo_exato</code> (bool).</p>
-<div id="cell-10" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjro.cjsg(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    data_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    data_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-10" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:14.916928Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:14.916526Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:15.435009Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:15.434424Z&quot;}" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjro.cjsg(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    data_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    data_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJRO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.19s/it]</code></pre>
+<pre><code>/tmp/ipykernel_2701/3328444788.py:1: DeprecationWarning: O parâmetro 'data_inicio' está deprecado. Use 'data_julgamento_inicio' em vez disso.
+  df_filtered = tjro.cjsg(
+/tmp/ipykernel_2701/3328444788.py:1: DeprecationWarning: O parâmetro 'data_fim' está deprecado. Use 'data_julgamento_fim' em vez disso.
+  df_filtered = tjro.cjsg(
+Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 15827.56it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>(10, 12)</code></pre>
+<pre><code>(10, 13)</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code></code></pre>
@@ -527,7 +710,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th">processo</th>
 <th data-quarto-table-cell-role="th">tipo</th>
-<th data-quarto-table-cell-role="th">classe_judicial</th>
+<th data-quarto-table-cell-role="th">classe</th>
 <th data-quarto-table-cell-role="th">orgao_julgador</th>
 <th data-quarto-table-cell-role="th">orgao_julgador_colegiado</th>
 <th data-quarto-table-cell-role="th">relator</th>
@@ -537,6 +720,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th data-quarto-table-cell-role="th">ementa</th>
 <th data-quarto-table-cell-role="th">grau_jurisdicao</th>
 <th data-quarto-table-cell-role="th">sistema_origem</th>
+<th data-quarto-table-cell-role="th">id_documento</th>
 </tr>
 </thead>
 <tbody>
@@ -551,9 +735,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Direito de Imagem</td>
 <td>2024-05-31</td>
 <td>NaT</td>
-<td>EMENTA PRELIMINAR DE IN&amp;Eacute;PCIA DA INICIAL...</td>
+<td>EMENTA PRELIMINAR DE INÉPCIA DA INICIAL. PRELI...</td>
 <td>2</td>
 <td>PJESG</td>
+<td>24144524-PJESG</td>
 </tr>
 <tr class="even">
 <td data-quarto-table-cell-role="th">1</td>
@@ -569,6 +754,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>EMENTA RECURSO INOMINADO. OFENSA. DANOS MORAIS...</td>
 <td>2</td>
 <td>PJESG</td>
+<td>24511296-PJESG</td>
 </tr>
 <tr class="odd">
 <td data-quarto-table-cell-role="th">2</td>
@@ -584,6 +770,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. CONS...</td>
 <td>2</td>
 <td>PJESG</td>
+<td>24356554-PJESG</td>
 </tr>
 </tbody>
 </table>
@@ -594,7 +781,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="repeated-rows" class="level2">
 <h2 class="anchored" data-anchor-id="repeated-rows">Repeated rows</h2>
-<p>The portal sometimes indexes the same decision twice, as two documents with different ids (<code>_id</code> and <code>id_processo_documento</code> in the raw response) and identical content. Both come back in the search, next to each other, so <code>cjsg</code> can return rows that are equal in every column; when the pair falls on a page boundary, the repeated row shows up on two consecutive pages. Measured on 2026-11-16: 4 such pairs in the first 400 results of <code>'dano moral'</code>, with no repeated <code>_id</code>. The scraper returns what the portal returns; drop the repeated rows with <code>df.drop_duplicates()</code> if you need one row per decision.</p>
+<p>The portal sometimes indexes the same decision twice, as two documents with different ids (<code>_id</code> and <code>id_processo_documento</code> in the raw response) and identical content. Both come back in the search, next to each other, so <code>cjsg</code> can return rows that are equal in every column; when the pair falls on a page boundary, the repeated row shows up on two consecutive pages. Measured on 2026-11-16: 4 such pairs in the first 400 results of <code>'dano moral'</code>, with no repeated <code>_id</code>. The scraper returns what the portal returns. The column <code>id_documento</code> carries the <code>_id</code> of each document, so the two rows of a pair differ only there: a repeated <code>id_documento</code> would be the same document downloaded twice, while equal rows with different ids are the portal’s own duplicates. If you need one row per decision, drop them with <code>df.drop_duplicates(subset=df.columns.drop('id_documento'))</code>.</p>
 
 
 </section>
