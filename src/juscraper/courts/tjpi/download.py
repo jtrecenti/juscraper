@@ -106,7 +106,8 @@ def _get_total_pages(html: str) -> int:
     O total sai da contagem "de um total de N jurisprudência(s)" dividida por
     ``RESULTS_PER_PAGE``, e os links ``»`` da página são conferidos contra ele
     por :func:`~juscraper.utils.pagination.resolve_total_pages`. Toda página de
-    resultados traz a contagem; ``cjsg_download_manager`` a lê na menor página pedida.
+    resultados traz a contagem; ``cjsg_download_manager`` a lê na menor página pedida
+    e, se ela passar do total, na página 1.
 
     Raises:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
@@ -155,11 +156,12 @@ def cjsg_download_manager(
         ValueError: Quando a menor página pedida (a 1, com ``paginas=None``)
             não permite fixar o total de páginas; os casos estão em
             :func:`_get_total_pages`. O download para depois da primeira
-            requisição, em vez de estimar.
+            requisição, em vez de estimar. Quando a menor página pedida
+            passa do total, o portal responde "Sem resultados para:", e a
+            página 1 é pedida só para ler o total da busca, que vai para o
+            aviso das páginas fora do intervalo; levanta também se essa
+            página 1 informar um total que alcança a página pedida.
 
-    Quando a menor página pedida passa do total, o portal responde "Sem
-    resultados para:"; a página 1 é então pedida só para ler o total da busca,
-    que vai para o aviso das páginas fora do intervalo.
     """
     def _get_page(pagina_1based: int) -> str:
         params = build_cjsg_params(pesquisa=pesquisa, page=pagina_1based, **kwargs)
@@ -170,11 +172,18 @@ def cjsg_download_manager(
     primeira = menor_pagina(paginas)
 
     def _n_pags(html: str) -> int:
+        n_pags = _get_total_pages(html)
+        if primeira == 1 or n_pags > 1:
+            return n_pags
         # A página além do total responde "Sem resultados para:", como a busca
-        # vazia, e não traz a contagem; o total da busca sai da página 1.
-        if primeira > 1 and _sem_resultados(BeautifulSoup(html, "html.parser")):
-            time.sleep(sleep_time)
-            html = _get_page(1)
-        return _get_total_pages(html)
+        # vazia, e por ela o total seria 1; o total da busca sai da página 1.
+        time.sleep(sleep_time)
+        n_pags = _get_total_pages(_get_page(1))
+        if n_pags >= primeira:
+            raise ValueError(
+                f"TJPI: a página {primeira} veio sem resultados, mas a página 1 informa {n_pags} página(s); "
+                "o total de páginas não pode ser determinado sem estimar."
+            )
+        return n_pags
 
     return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPI", sleep_time=sleep_time)

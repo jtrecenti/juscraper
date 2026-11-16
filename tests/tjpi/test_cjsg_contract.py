@@ -175,3 +175,16 @@ def test_cjsg_download_pagina_2_de_busca_vazia_avisa_uma_pagina(mocker, caplog):
     assert brutos == []
     assert caplog.messages == ["TJPI: página 2 fora do intervalo 1-1"]
     assert _paginas_pedidas() == ["2", "1"]
+
+
+@responses.activate
+def test_cjsg_download_pagina_vazia_dentro_do_total_levanta(mocker):
+    """Página 2 sem resultados numa busca cuja página 1 informa várias páginas: não dá para fixar o total."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 2, "cjsg/no_results.html")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+
+    with pytest.raises(ValueError, match="a página 2 veio sem resultados, mas a página 1 informa"):
+        jus.scraper("tjpi").cjsg_download("dano moral", paginas=[2, 3])
+
+    assert _paginas_pedidas() == ["2", "1"]
