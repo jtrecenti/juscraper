@@ -373,9 +373,8 @@ def _salvar_resultados_html(
             resposta_documento = sessao.get(urljoin(url_base, link), timeout=_TIMEOUT)
             if resposta_documento.status_code != 200:
                 raise requests.HTTPError(
-                    f"A consulta ao site falhou."
-                    f"Processo: {id_limpo}; Código: {codigos_processo[indice]},"
-                    f"Status code {resposta_documento.status_code}.",
+                    f"A consulta ao site falhou. Processo: {id_limpo}; "
+                    f"código: {codigos_processo[indice]}; status code {resposta_documento.status_code}.",
                     response=resposta_documento,
                 )
             # As movimentações de cada documento saem logo depois do show.do

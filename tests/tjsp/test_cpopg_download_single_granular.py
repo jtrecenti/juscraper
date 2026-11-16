@@ -233,3 +233,20 @@ def test_erro_ao_gravar_o_segundo_documento_nao_deixa_o_primeiro(tmp_path, conte
     with pytest.raises(RuntimeError, match="5 tentativas"):
         cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
     assert list(diretorio.iterdir()) == []
+
+
+def test_status_de_erro_do_documento_cita_processo_codigo_e_status(tmp_path, contexto):
+    """A mensagem do ``HTTPError`` do show.do separa as partes com espaço."""
+    sessao, resposta, extrair, _, _ = contexto
+    extrair.return_value = LINKS
+    erro_500 = Mock(status_code=500)
+    sessao.get.side_effect = [resposta, erro_500] * 5
+    with pytest.raises(RuntimeError) as excinfo:
+        cpopg_download_html_single(CNJ, sessao, BASE, str(tmp_path), 0, extrair)
+    causa = excinfo.value.__cause__
+    assert isinstance(causa, requests.HTTPError)
+    assert causa.response is erro_500
+    assert str(causa) == (
+        f"A consulta ao site falhou. Processo: {CNJ_LIMPO}; código: PRIMEIRO; status code 500."
+    )
+    assert str(causa) in str(excinfo.value)
