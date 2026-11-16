@@ -188,7 +188,11 @@ class TJTOScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
             BotChallengeBlockedError: Quando o AWS WAF do portal desafia ou pede
                 CAPTCHA, o que acontece depois de algumas buscas seguidas do
-                mesmo IP.
+                mesmo IP, antes de qualquer pagina pedida.
+            ColetaParcialError: Uma pagina falhou (o bloqueio do WAF, por
+                exemplo) com outra ja baixada antes dela. A busca para nessa
+                pagina; ``.resultado`` traz as anteriores, e a mensagem lista
+                as que faltam.
 
         Returns:
             DataFrame com as decisoes.
