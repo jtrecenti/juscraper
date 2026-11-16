@@ -230,8 +230,6 @@ def cjsg_download_manager(
         O HTML de cada página, na ordem pedida.
     """
     primeira = menor_pagina(paginas)
-    if any((busca.get("datas") or {}).values()):
-        avisar_expressao_exata(pesquisa, busca.get("campo", "ementa"))
 
     def buscar(pagina: int) -> str:
         resp = request_fn(

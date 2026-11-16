@@ -52,7 +52,7 @@ def test_cjsg_intervalo_de_julgamento_ao_vivo(stm):
     """Termo e intervalo juntos: a combinação que só a pesquisa avançada faz."""
     inicio, fim = datetime.date(2024, 1, 1), datetime.date(2024, 12, 31)
 
-    com_data = stm.cjsg("deserção", data_julgamento_inicio=inicio, data_julgamento_fim=fim)
+    com_data = stm.cjsg("deserção", paginas=range(1, 3), data_julgamento_inicio=inicio, data_julgamento_fim=fim)
 
     assert len(com_data) > 0
     assert com_data["id_documento"].is_unique

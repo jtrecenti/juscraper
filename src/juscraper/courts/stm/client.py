@@ -8,9 +8,9 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
-from juscraper.utils.params import apply_input_pipeline_search
+from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
-from .download import cjsg_download_manager
+from .download import avisar_expressao_exata, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGSTM
 
@@ -113,11 +113,10 @@ class STMScraper(HTTPScraper):
             ValueError: Quando uma data é inválida ou o início vem depois do
                 fim; quando há filtro de data e ``pesquisa`` tem aspas no
                 meio ou barra invertida, ou, em ``campo="numero"``, algo além
-                do número do processo.
+                do número do processo; quando a página devolvida não traz o
+                contador de documentos nem o aviso de busca vazia.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
-            ValueError: Quando a página devolvida não traz o contador de
-                documentos nem o aviso de busca vazia.
 
         Returns:
             Uma linha por documento, do julgamento mais recente para o mais
@@ -165,18 +164,16 @@ class STMScraper(HTTPScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
         )
+        datas = inp.model_dump(include=set(DATE_CANONICAL))
+        if any(datas.values()):
+            avisar_expressao_exata(inp.pesquisa, inp.campo)
         return cjsg_download_manager(
             inp.pesquisa,
             inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             campo=inp.campo,
-            datas={
-                "data_julgamento_inicio": inp.data_julgamento_inicio,
-                "data_julgamento_fim": inp.data_julgamento_fim,
-                "data_publicacao_inicio": inp.data_publicacao_inicio,
-                "data_publicacao_fim": inp.data_publicacao_fim,
-            },
+            datas=datas,
             classe=inp.classe,
             relator=inp.relator,
             relator_acordao=inp.relator_acordao,
