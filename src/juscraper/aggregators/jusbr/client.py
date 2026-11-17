@@ -7,7 +7,6 @@ from collections.abc import Callable, Hashable, Iterator, Mapping
 from functools import partial
 from typing import Any, ClassVar
 
-import browser_cookie3
 import numpy as np
 import pandas as pd
 import requests
@@ -307,18 +306,30 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         Lê os cookies de ``sso.cloud.pje.jus.br`` do perfil do Firefox, pede um
         código de autorização ao SSO e o troca por um token, que passa por
         :meth:`auth`. As duas requisições usam o ``timeout`` do perfil
-        ``"listagem"``.
+        ``"listagem"``. Exige o extra ``juscraper[firefox]``.
 
         Returns:
             ``True`` quando o token foi aceito.
 
         Raises:
+            ImportError: Quando o ``browser_cookie3`` (extra
+                ``juscraper[firefox]``) não está instalado.
             RuntimeError: Quando a resposta do SSO não traz o cabeçalho
                 ``Location``, o ``code`` no fragmento ou o ``access_token``;
                 em geral, sessão do Firefox ausente ou vencida.
             ValueError: Quando o token devolvido é inválido ou está expirado.
             requests.RequestException: Falha de rede ao falar com o SSO.
         """
+        # Import tardio: o browser_cookie3 é dependência opcional, do extra ``firefox``.
+        try:
+            import browser_cookie3  # pylint: disable=import-outside-toplevel  # noqa: PLC0415
+        except ImportError as exc:
+            raise ImportError(
+                "`auth_firefox()` precisa do browser_cookie3 para ler os cookies do Firefox. "
+                "Instale com `pip install 'juscraper[firefox]'`, ou passe um token já obtido "
+                "em `auth(token)`."
+            ) from exc
+
         u = (
             "https://sso.cloud.pje.jus.br/auth/realms/pje/protocol/"
             "openid-connect/auth?client_id=portalexterno-frontend"

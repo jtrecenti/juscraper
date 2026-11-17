@@ -12,6 +12,7 @@ documentado.
 """
 import io
 import json
+import sys
 
 import jwt
 import pytest
@@ -158,7 +159,10 @@ def preparar_sso(mocker):
     """
     def preparar(**kwargs):
         scraper = jus.scraper("jusbr", **kwargs)
-        mocker.patch("juscraper.aggregators.jusbr.client.browser_cookie3.firefox", return_value={})
+        # O browser_cookie3 é import tardio (extra ``firefox``): o fake entra por ``sys.modules``.
+        falso = mocker.MagicMock()
+        falso.firefox.return_value = {}
+        mocker.patch.dict(sys.modules, {"browser_cookie3": falso})
         sessao = mocker.MagicMock()
         mocker.patch("juscraper.aggregators.jusbr.client.requests.Session", return_value=sessao)
         return scraper, sessao
@@ -178,6 +182,15 @@ def test_auth_firefox_troca_o_code_pelo_token_e_passa_pelo_auth(preparar_sso):
     assert sessao_sso.post.call_args.kwargs["data"]["code"] == "codigo-sso"
     assert sessao_sso.get.call_args.kwargs["timeout"] == 15
     assert sessao_sso.post.call_args.kwargs["timeout"] == 15
+
+
+def test_auth_firefox_sem_o_extra_levanta_import_error_com_a_instalacao(mocker):
+    scraper = jus.scraper("jusbr")
+    # ``None`` em ``sys.modules`` faz o ``import`` levantar ``ImportError``.
+    mocker.patch.dict(sys.modules, {"browser_cookie3": None})
+
+    with pytest.raises(ImportError, match=r"pip install 'juscraper\[firefox\]'"):
+        scraper.auth_firefox()
 
 
 def test_auth_firefox_usa_timeout_da_politica(preparar_sso):
