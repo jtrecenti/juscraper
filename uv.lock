@@ -2146,10 +2146,8 @@ dev = [
 docs = [
     { name = "ipykernel" },
     { name = "ipywidgets" },
-    { name = "joblib" },
     { name = "jupyter" },
     { name = "pyarrow" },
-    { name = "python-dotenv" },
     { name = "quartodoc" },
 ]
 firefox = [
@@ -2188,7 +2186,6 @@ requires-dist = [
     { name = "ipykernel", marker = "extra == 'docs'", specifier = ">=6.29.5" },
     { name = "ipywidgets", marker = "extra == 'docs'", specifier = ">=8.1.7" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.12.0" },
-    { name = "joblib", marker = "extra == 'docs'", specifier = ">=1.5.0" },
     { name = "joblib", marker = "extra == 'web'", specifier = ">=1.5.0" },
     { name = "jupyter", marker = "extra == 'docs'", specifier = ">=1.0.0" },
     { name = "juscraper", extras = ["waf"], marker = "extra == 'stf'" },
@@ -2209,7 +2206,6 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.12.0" },
     { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.3.0" },
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=3.0.0" },
-    { name = "python-dotenv", marker = "extra == 'docs'", specifier = ">=1.1.0" },
     { name = "quartodoc", marker = "extra == 'docs'", specifier = ">=0.11.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25.0" },

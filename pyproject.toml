@@ -110,9 +110,6 @@ docs = [
     "jupyter>=1.0.0",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.7",
-    # Usados apenas pelo notebook docs/notebooks/jusbr.ipynb (`load_dotenv`, `Parallel`).
-    "python-dotenv>=1.1.0",
-    "joblib>=1.5.0",
     # Engine de Parquet usada apenas pelos notebooks de docs/ (`df.to_parquet`).
     # A biblioteca nunca importa pyarrow — manter aqui e nao em dependencies e o
     # que impede o juscraper de arrastar a versao do pyarrow para quem o instala
