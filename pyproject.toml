@@ -40,11 +40,8 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: HTML",
 ]
 dependencies = [
-    "asttokens>=3.0.0",
     "beautifulsoup4>=4.13.4",
     "browser-cookie3>=0.20.1",
-    "comm>=0.2.2",
-    "nest-asyncio>=1.6.0",
     # pandas 2 ou 3, sem marcador por versão do Python. O piso 2.0.0 deixa o pip
     # do Google Colab manter o pandas 2.2 pré-instalado, que o cudf exige (issue
     # #25): o pip só atualiza dependência que não satisfaz o requisito, e o
@@ -60,7 +57,6 @@ dependencies = [
     "pandas>=2.0.0,<4.0.0",
     "pyjwt>=2.10.1",
     "pydantic>=2.0.0",
-    "python-dotenv>=1.1.0",
     "requests>=2.32.3",
     "tqdm>=4.67.1",
     "unidecode>=1.3.8",
@@ -111,6 +107,9 @@ docs = [
     "jupyter>=1.0.0",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.7",
+    # Usados apenas pelo notebook docs/notebooks/jusbr.ipynb (`load_dotenv`, `Parallel`).
+    "python-dotenv>=1.1.0",
+    "joblib>=1.5.0",
     # Engine de Parquet usada apenas pelos notebooks de docs/ (`df.to_parquet`).
     # A biblioteca nunca importa pyarrow — manter aqui e nao em dependencies e o
     # que impede o juscraper de arrastar a versao do pyarrow para quem o instala
