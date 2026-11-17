@@ -41,7 +41,6 @@ classifiers = [
 ]
 dependencies = [
     "beautifulsoup4>=4.13.4",
-    "browser-cookie3>=0.20.1",
     # pandas 2 ou 3, sem marcador por versão do Python. O piso 2.0.0 deixa o pip
     # do Google Colab manter o pandas 2.2 pré-instalado, que o cudf exige (issue
     # #25): o pip só atualiza dependência que não satisfaz o requisito, e o
@@ -97,6 +96,10 @@ tls = [
 stf = [
     # Alias de `waf`, mantido para quem ja instala `juscraper[stf]` desde a 0.4.0.
     "juscraper[waf]",
+]
+firefox = [
+    # Lê os cookies do SSO da PDPJ no perfil do Firefox (`auth_firefox()` do JusBR).
+    "browser-cookie3>=0.20.1",
 ]
 govbr = [
     # Conexão por CDP ao Chrome da máquina no login gov.br do JusBR e do PDPJ (`auth_govbr()`).
