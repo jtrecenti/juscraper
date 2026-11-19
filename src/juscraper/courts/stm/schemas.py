@@ -16,14 +16,14 @@ class InputCJSGSTM(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     em maiúsculas (``"APELAÇÃO"``, ``"CARLOS VUYK DE AQUINO"``).
 
     O portal filtra datas por intervalo só na pesquisa avançada. Com
-    ``data_julgamento_*`` ou ``data_publicacao_*``, a busca vai por ela, que
-    procura ``pesquisa`` como expressão exata, sem os operadores da busca
-    simples, e aceita ``pesquisa`` vazia.
+    ``data_julgamento_*`` ou ``data_publicacao_*``, a busca vai por ela, com
+    os operadores de ``pesquisa`` traduzidos para a sintaxe dela; aceita
+    ``pesquisa`` vazia e não tem ``campo="tudo"``.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    campo: Literal["ementa", "inteiro_teor", "numero"] = "ementa"
+    campo: Literal["ementa", "inteiro_teor", "numero", "referencia_legislativa", "tudo"] = "ementa"
     classe: str | None = None
     relator: str | None = None
     relator_acordao: str | None = None

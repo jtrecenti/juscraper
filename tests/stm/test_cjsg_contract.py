@@ -5,6 +5,7 @@ A busca é um GET em ``consulta.php``. Os samples saem de
 ``waf_rejected.html``, que é a resposta direta do portal a um IP de datacenter.
 """
 import datetime
+from pathlib import Path
 
 import pytest
 import responses
@@ -17,6 +18,7 @@ from juscraper.courts.stm.parse import COLUNAS
 from tests._helpers import load_sample
 
 INDEX_URL = "https://jurisprudencia.stm.jus.br/index.php"
+SAMPLES_CJSG = Path(__file__).parent / "samples" / "cjsg"
 
 
 def _add_page(pesquisa: str, pagina: int, sample: str, campo: str = "ementa", **filtros) -> None:
@@ -72,6 +74,35 @@ def test_cjsg_primeiro_documento(mocker):
     assert linha["ementa"].startswith("RECURSO DEFENSIVO. APELAÇÃO. FURTO SIMPLES.")
     assert linha["url_inteiro_teor"] == "https://www2.stm.jus.br/pesquisa/acordao/2015/50/10022722/10022722.pdf"
     assert linha["id_documento"] == "fde435a51e657229ddd7f670b2a704e3"
+
+
+# Os dois samples saem do script de captura, de um IP que o portal aceite.
+# O ``skipif`` é provisório: sai no commit que gravar os samples.
+@pytest.mark.skipif(
+    not all((SAMPLES_CJSG / sample).exists() for sample in ("campo_tudo.html", "campo_referencia_legislativa.html")),
+    reason="samples de campo='tudo' e 'referencia_legislativa' ainda não capturados (prova residencial)",
+)
+@pytest.mark.parametrize(
+    ("pesquisa", "campo", "sample"),
+    [
+        ('"corrupção ativa"', "tudo", "campo_tudo.html"),
+        ("290", "referencia_legislativa", "campo_referencia_legislativa.html"),
+    ],
+)
+@responses.activate
+def test_cjsg_demais_campos_de_busca(mocker, pesquisa, campo, sample):
+    """``tudo`` e ``referencia_legislativa`` respondem no template das demais buscas."""
+    mocker.patch("time.sleep")
+    relator = "CARLOS VUYK DE AQUINO"
+    _add_page(pesquisa, 1, sample, campo=campo, relator=relator)
+
+    df = jus.scraper("stm").cjsg(pesquisa, paginas=1, campo=campo, relator=relator)
+
+    assert list(df.columns) == COLUNAS
+    assert len(df) > 0
+    assert df["id_documento"].is_unique
+    assert set(df["relator"]) == {relator}
+    assert df[["processo", "classe", "data_julgamento", "ementa"]].notna().all().all()
 
 
 @responses.activate

@@ -27,6 +27,14 @@ CENARIOS: list[tuple[str, str, int, dict[str, Any]]] = [
     ("results_normal_page_03.html", '"corrupção ativa"', 3, {}),
     ("single_page.html", "0000088-44.2014.7.07.0007", 1, {"campo": "numero"}),
     ("no_results.html", "juscraper_probe_zero_hits_xyzqwe", 1, {}),
+    # As outras duas opções de ``campo`` da busca simples, com um relator para a página sair pequena.
+    ("campo_tudo.html", '"corrupção ativa"', 1, {"campo": "tudo", "relator": "CARLOS VUYK DE AQUINO"}),
+    (
+        "campo_referencia_legislativa.html",
+        "290",
+        1,
+        {"campo": "referencia_legislativa", "relator": "CARLOS VUYK DE AQUINO"},
+    ),
     # Pesquisa avançada: intervalo de data de julgamento, sem termo.
     (
         "avancada_datas.html",

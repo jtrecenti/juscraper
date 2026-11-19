@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable, Mapping
+from itertools import pairwise
 from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
 
-from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
@@ -37,8 +37,16 @@ _FILTROS = {
 # Filtro de data do método público -> campo de data da consulta avançada.
 _CAMPOS_DE_DATA = {"data_julgamento": "data_decisao", "data_publicacao": "data_publicacao"}
 _PONTUACAO_DO_NUMERO = re.compile(r"[.\-/]")
-# Operadores e curingas da busca simples, que a expressão exata não aplica.
-_OPERADORES = re.compile(r"\s|[*?]")
+# Operadores da busca simples -> os da consulta avançada.
+_OPERADORES = {"E": "AND", "OU": "OR", "NÃO": "NOT"}
+_BINARIOS = frozenset({"AND", "OR"})
+# Depois destes, a expressão ainda espera um termo.
+_SEM_TERMO_ANTES = _BINARIOS | {"NOT", "("}
+# Pedaços de ``pesquisa``: expressão entre aspas (com a distância ``~n``, se
+# houver), parêntese ou palavra.
+_PEDACOS = re.compile(r'"[^"]*"(?:~\d+)?|[()]|[^\s()"]+')
+# Palavra com curinga: vai sem aspas, e por isso só com o que a consulta não lê como sintaxe.
+_PALAVRA_COM_CURINGA = re.compile(r"[\w*?][\w*?.\-]*")
 
 # Contador da página de resultados: "<b>1</b> - <b>100</b> de <b>351</b> documentos".
 _COUNT_SELECTORS = ("div.row.message",)
@@ -55,58 +63,127 @@ _WAF_MARKER = b"<title>Request Rejected</title>"
 _WAF_SUPPORT_ID = re.compile(r"support ID is:\s*(\d+)")
 
 
-def _termo_exato(pesquisa: str) -> tuple[str, bool]:
-    """Devolve o termo sem o par de aspas que o envolve e se ele veio entre aspas."""
-    termo = pesquisa.strip()
-    entre_aspas = len(termo) > 1 and termo[0] == termo[-1] == '"'
-    return (termo[1:-1].strip() if entre_aspas else termo), entre_aspas
+def _operando(pedaco: str, pesquisa: str) -> str:
+    """Um pedaço de ``pesquisa`` que não é operador, como vai na consulta avançada."""
+    if pedaco in ("(", ")") or pedaco.startswith('"'):
+        return pedaco
+    if "*" not in pedaco and "?" not in pedaco:
+        return f'"{pedaco}"'
+    if not _PALAVRA_COM_CURINGA.fullmatch(pedaco):
+        raise ValueError(
+            "STM: com filtro de data, palavra com curinga ('*' ou '?') aceita só letras, dígitos e, depois do "
+            f"começo, ponto e hífen (recebido: {pedaco!r}, em {pesquisa!r})."
+        )
+    return pedaco
+
+
+_SEM_PAR = "precisa ter os parênteses em pares"
+
+
+def _defeito_dos_grupos(partes: list[str]) -> str | None:
+    """Confere os pares de parênteses e a mistura de ``AND`` com ``OR`` dentro de cada um."""
+    # Operadores binários de cada grupo de parênteses ainda aberto; o primeiro é a expressão toda.
+    grupos: list[set[str]] = [set()]
+    for parte in partes:
+        if parte == "(":
+            grupos.append(set())
+        elif parte == ")":
+            grupos.pop()
+            if not grupos:
+                return _SEM_PAR
+        elif parte in _BINARIOS:
+            grupos[-1].add(parte)
+            if len(grupos[-1]) > 1:
+                return (
+                    "precisa de parênteses que digam a ordem onde E (ou termos seguidos) e OU se misturam, como em "
+                    "'(furto roubo) OU peculato'"
+                )
+    return None if len(grupos) == 1 else _SEM_PAR
+
+
+def _defeito_da_expressao(partes: list[str]) -> str | None:
+    """Diz por que a expressão não vai para a consulta; ``None`` quando ela está em ordem."""
+    for anterior, atual in pairwise(["(", *partes, ")"]):
+        if (atual in _BINARIOS or atual == ")") and anterior in _SEM_TERMO_ANTES:
+            return "precisa de um termo de cada lado dos operadores E e OU, depois do NÃO e dentro dos parênteses"
+        if atual == "NOT" and anterior != "AND":
+            return "só aceita o NÃO depois de um termo (como em 'furto NÃO roubo'), para excluir dele o seguinte"
+    return _defeito_dos_grupos(partes)
+
+
+def _expressao_avancada(termo: str, pesquisa: str) -> str:
+    """Traduz a sintaxe da busca simples para a da consulta avançada.
+
+    ``E``, ``OU`` e ``NÃO`` (em qualquer caixa) viram ``AND``, ``OR`` e
+    ``NOT``; entre dois termos sem operador entra ``AND``, o padrão da busca
+    simples. O ``NÃO`` só vale depois de um termo, e ``E`` e ``OU`` no mesmo
+    grupo pedem parênteses: fora disso, a consulta avançada não lê a expressão
+    como a busca simples. Palavra sem curinga vai entre aspas, como o formulário do portal
+    a manda; expressão entre aspas, parênteses e palavra com curinga seguem
+    como vieram.
+    """
+    if "\\" in termo or termo.count('"') % 2:
+        raise ValueError(
+            "STM: com filtro de data, 'pesquisa' não pode ter barra invertida nem aspas sem par "
+            f"(recebido: {pesquisa!r})."
+        )
+    partes: list[str] = []
+    for pedaco in _PEDACOS.findall(termo):
+        operador = _OPERADORES.get(pedaco.upper())
+        abre_termo = operador in (None, "NOT") and pedaco != ")"
+        if abre_termo and partes and partes[-1] not in _SEM_TERMO_ANTES:
+            partes.append("AND")
+        partes.append(operador or _operando(pedaco, pesquisa))
+    if defeito := _defeito_da_expressao(partes):
+        raise ValueError(f"STM: com filtro de data, 'pesquisa' {defeito} (recebido: {pesquisa!r}).")
+    # Espaço entre as partes, menos por dentro dos parênteses.
+    expressao = "".join(
+        parte if parte == ")" or anterior == "(" else f" {parte}"
+        for anterior, parte in pairwise(["(", *partes])
+    )
+    return expressao if len(partes) == 1 else f"({expressao})"
 
 
 def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
     """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
-    termo, _ = _termo_exato(pesquisa)
-    if not termo:
+    termo = pesquisa.strip()
+    sem_aspas = termo.strip('" ')
+    if not sem_aspas:
         return None
+    if campo == "tudo":
+        raise ValueError(
+            "STM: campo='tudo' não combina com filtro de data. A pesquisa avançada do portal, a única que filtra "
+            "por intervalo, não tem a opção 'Todos os Campos'; escolha outro campo ou tire as datas."
+        )
     if campo == "numero":
-        digitos = _PONTUACAO_DO_NUMERO.sub("", termo)
+        digitos = _PONTUACAO_DO_NUMERO.sub("", sem_aspas)
         if not digitos.isdigit():
             raise ValueError(
                 "STM: com filtro de data, 'pesquisa' em campo='numero' aceita só dígitos e a pontuação do número "
                 f"do processo (recebido: {pesquisa!r})."
             )
         return f"(numero_processo:*{digitos}*)"
-    if '"' in termo or "\\" in termo:
-        raise ValueError(
-            "STM: com filtro de data, 'pesquisa' é procurada como expressão exata e não pode ter aspas no meio "
-            f"nem barra invertida (recebido: {pesquisa!r})."
-        )
-    return f'({campo}:"{termo}")'
-
-
-def avisar_expressao_exata(pesquisa: str, campo: str) -> None:
-    """Avisa quando a pesquisa avançada vai ler como expressão exata um termo com operador ou curinga."""
-    termo, entre_aspas = _termo_exato(pesquisa)
-    if campo != "numero" and not entre_aspas and _OPERADORES.search(termo):
-        avisar(
-            "STM: com filtro de data, a busca vai pela pesquisa avançada do portal, que procura 'pesquisa' como "
-            f"expressão exata ({termo!r}) e não aplica os operadores E, OU e NÃO nem os curingas. "
-            "Ponha o termo entre aspas para confirmar a expressão exata e dispensar este aviso."
-        )
+    return f"({campo}:{_expressao_avancada(termo, pesquisa)})"
 
 
 def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str | None]) -> str | None:
     """Monta a consulta da pesquisa avançada do STM; ``None`` quando não há filtro de data.
 
-    Repete o que o formulário do portal envia: o termo como expressão exata
-    no campo escolhido, ``(ementa:"deserção")``, e cada intervalo como
+    Segue o que o formulário do portal envia: o termo no campo escolhido,
+    ``(ementa:"deserção")``, e cada intervalo como
     ``(data_decisao:[2024-01-01T00:00:00.000Z TO 2024-01-31T23:59:59.000Z])``,
-    ligados por ``AND``. ``datas`` traz ``data_julgamento_inicio/fim`` e
+    ligados por ``AND``. Termo com operador ou mais de uma palavra vai
+    traduzido por :func:`_expressao_avancada`:
+    ``(ementa:("furto" OR "roubo"))``. ``datas`` traz ``data_julgamento_inicio/fim`` e
     ``data_publicacao_inicio/fim`` em ``AAAA-MM-DD``; o lado que falta num
     intervalo vai como ``*``. Sem termo, a consulta fica só com os intervalos.
 
     Raises:
-        ValueError: Quando o termo tem aspas no meio ou barra invertida, ou,
-            em ``campo="numero"``, algo além do número do processo.
+        ValueError: Quando o termo não cabe na consulta: barra invertida,
+            aspas ou parênteses sem par, operador sem termo, ``NÃO`` sem termo
+            antes, ``E`` e ``OU`` misturados sem parênteses, curinga em
+            palavra com outro símbolo, ``campo="tudo"`` ou, em
+            ``campo="numero"``, algo além do número do processo.
     """
     intervalos = []
     for filtro, campo_de_data in _CAMPOS_DE_DATA.items():
