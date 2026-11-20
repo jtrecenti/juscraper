@@ -10,6 +10,9 @@ HTML flow: GET ``cpopg/search.do?…`` → scraper extracts one
 the process details directly when the CNJ is unique).
 """
 import warnings
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from threading import Event
 
 import numpy as np
 import pandas as pd
@@ -19,6 +22,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
+from juscraper.courts.tjsp.cpopg_parse import cpopg_parse_manager
 from tests._helpers import load_sample, load_sample_bytes
 
 ESAJ = "https://esaj.tjsp.jus.br"
@@ -456,6 +460,14 @@ def test_method_api_removido_levanta_erro_sem_rede(tmp_path, metodo):
     assert not responses.calls
 
 
+def _pasta_da_chamada_fixa(tmp_path, mocker):
+    """A pasta que o composto cria para a chamada, já existente, para o teste pôr arquivos nela."""
+    pasta = tmp_path / "composto_fixo"
+    pasta.mkdir()
+    mocker.patch("juscraper.courts.tjsp.client.tempfile.mkdtemp", return_value=str(pasta))
+    return pasta
+
+
 @responses.activate
 def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mocker):
     """Lote com falha de download e de leitura avisa uma vez, com as duas, como o composto do TRF.
@@ -464,11 +476,12 @@ def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
     """
     mocker.patch("time.sleep")
     _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
-    # Processos já na pasta de download: um legível e um que o parse recusa.
-    legivel = tmp_path / "cpopg" / "10093677620178260344"
+    # Processos já na pasta da chamada: um legível e um que o parse recusa.
+    pasta = _pasta_da_chamada_fixa(tmp_path, mocker)
+    legivel = pasta / "cpopg" / "10093677620178260344"
     legivel.mkdir(parents=True)
     (legivel / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
-    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel = pasta / "cpopg" / "10001497120248260346"
     ilegivel.mkdir()
     (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
 
@@ -530,7 +543,7 @@ def test_cpopg_arquivos_ilegiveis_com_falha_de_download_devolvem_as_linhas(tmp_p
     """Antes, o lote em que todo arquivo é ilegível levantava ``ValueError`` mesmo com falha de download."""
     mocker.patch("time.sleep")
     _registrar_busca_por_cnj(CNJ_SEM_CONEXAO, body=requests.ConnectionError("recusada"))
-    ilegivel = tmp_path / "cpopg" / "10001497120248260346"
+    ilegivel = _pasta_da_chamada_fixa(tmp_path, mocker) / "cpopg" / "10001497120248260346"
     ilegivel.mkdir(parents=True)
     (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
 
@@ -616,3 +629,118 @@ def test_download_devolve_chave_str_para_entrada_que_nao_e_texto(tmp_path, metod
         falhas = getattr(jus.scraper("tjsp", download_path=str(tmp_path)), metodo)([np.int64(123), None])
 
     assert falhas == {"123": "entrada_invalida", "None": "entrada_invalida"}
+
+
+def _arquivos_alheios(pasta):
+    """Um download anterior do mesmo CNJ e um arquivo do usuário, que ``cpopg`` não pode apagar."""
+    anterior = pasta / "cpopg" / "10001497120248260346" / "10001497120248260346_ANTIGO.html"
+    anterior.parent.mkdir(parents=True)
+    anterior.write_text("download anterior", encoding="utf-8")
+    proprio = pasta / "planilha.csv"
+    proprio.write_text("a,b\n", encoding="utf-8")
+    return {anterior: "download anterior", proprio: "a,b\n"}
+
+
+def _pastas_da_chamada(pasta):
+    return [p for p in pasta.iterdir() if p.is_dir() and p.name != "cpopg"]
+
+
+@responses.activate
+def test_cpopg_preserva_arquivos_que_ja_estavam_em_download_path(tmp_path, mocker):
+    """``cpopg`` baixa numa pasta própria e apaga só ela; antes, apagava ``download_path`` inteiro."""
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(
+        CNJ, body=load_sample_bytes("tjsp", "cpopg/search.html"), content_type="text/html; charset=utf-8",
+    )
+    alheios = _arquivos_alheios(tmp_path)
+
+    result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ)
+
+    assert result["basicos"]["motivo_falha"].tolist() == [None]
+    assert result["basicos"]["classe"].notna().all()
+    assert {caminho: caminho.read_text(encoding="utf-8") for caminho in alheios} == alheios
+    assert _pastas_da_chamada(tmp_path) == []
+
+
+@responses.activate
+def test_cpopg_com_falha_preserva_arquivos_que_ja_estavam_em_download_path(tmp_path, mocker):
+    mocker.patch("time.sleep")
+    _registrar_busca_por_cnj(CNJ, status=503, body="<html>Serviço indisponível</html>")
+    alheios = _arquivos_alheios(tmp_path)
+
+    with pytest.warns(UserWarning, match=f"{CNJ}: http_503"):
+        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ)
+
+    assert result["basicos"]["motivo_falha"].tolist() == ["http_503"]
+    assert {caminho: caminho.read_text(encoding="utf-8") for caminho in alheios} == alheios
+    assert _pastas_da_chamada(tmp_path) == []
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cposg"])
+def test_composto_apaga_raiz_temporaria_criada_pelo_scraper(metodo):
+    """Sem caminho explícito, o composto limpa também a raiz que a propriedade criou."""
+    scraper = jus.scraper("tjsp")
+
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        getattr(scraper, metodo)([None])
+
+    assert not Path(scraper.download_path).exists()
+
+
+@pytest.mark.parametrize("ids", [[None], []], ids=["falha_por_linha", "lote_vazio"])
+def test_cpopg_com_diretorio_apaga_raiz_temporaria_criada_na_validacao(tmp_path, ids):
+    """A checagem de ``diretorio`` não deixa uma raiz temporária vazia."""
+    scraper = jus.scraper("tjsp")
+    kwargs = {"baixar_movimentacoes": True, "download_pecas": True, "diretorio": str(tmp_path / "pecas")}
+
+    if ids:
+        with pytest.warns(UserWarning, match="entrada_invalida"):
+            scraper.cpopg(ids, **kwargs)
+    else:
+        scraper.cpopg(ids, **kwargs)
+
+    if ids:
+        assert not Path(scraper.download_path).exists()
+    else:
+        assert scraper.__dict__["_download_path"] is None
+
+
+def test_duas_chamadas_compostas_limpam_raiz_apos_a_ultima(mocker):
+    """Se a segunda termina por último, ela remove a raiz criada pela primeira."""
+    scraper = jus.scraper("tjsp")
+    primeira_pronta, segunda_pronta = Event(), Event()
+    liberar_primeira, liberar_segunda = Event(), Event()
+    chamadas = iter([(primeira_pronta, liberar_primeira), (segunda_pronta, liberar_segunda)])
+
+    def parse_com_pausa(*args, **kwargs):
+        pronta, liberar = next(chamadas)
+        pronta.set()
+        assert liberar.wait(5)
+        return cpopg_parse_manager(*args, **kwargs)
+
+    mocker.patch("juscraper.courts.tjsp.client.cpopg_parse_manager", side_effect=parse_com_pausa)
+    with warnings.catch_warnings(), ThreadPoolExecutor(max_workers=2) as executor:
+        warnings.simplefilter("ignore", UserWarning)
+        primeira = executor.submit(scraper.cpopg, [None])
+        assert primeira_pronta.wait(5)
+        segunda = executor.submit(scraper.cpopg, [None])
+        assert segunda_pronta.wait(5)
+        raiz = Path(scraper.download_path)
+        liberar_primeira.set()
+        primeira.result(timeout=5)
+        assert raiz.exists()
+        liberar_segunda.set()
+        segunda.result(timeout=5)
+    assert not raiz.exists()
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cposg"])
+def test_composto_limpa_raiz_relativa_que_criou(tmp_path, monkeypatch, metodo):
+    """``mkdtemp`` devolve pasta absoluta mesmo quando ``download_path`` é relativo."""
+    monkeypatch.chdir(tmp_path)
+    scraper = jus.scraper("tjsp", download_path="downloads")
+
+    with pytest.warns(UserWarning, match="entrada_invalida"):
+        getattr(scraper, metodo)([None])
+
+    assert not (tmp_path / "downloads").exists()

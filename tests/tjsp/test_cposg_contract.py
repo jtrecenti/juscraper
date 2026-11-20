@@ -540,3 +540,33 @@ def test_cposg_processo_baixado_antes_nao_sai_tambem_como_falha(tmp_path, mocker
     df = scraper.cposg_parse(str(tmp_path))
 
     assert df[["processo", "motivo_falha"]].to_dict("records") == [{"processo": CNJ, "motivo_falha": None}]
+
+
+@pytest.mark.parametrize("falha", [False, True], ids=["sucesso", "falha"])
+@responses.activate
+def test_cposg_preserva_arquivos_que_ja_estavam_em_download_path(tmp_path, mocker, falha):
+    """``cposg`` baixa numa pasta própria e apaga só ela; antes, apagava ``download_path`` inteiro."""
+    mocker.patch("time.sleep")
+    _registrar_busca()
+    _registrar_movimentacoes()
+    if falha:
+        responses.replace(
+            responses.GET,
+            f"{ESAJ}/cposg/search.do",
+            body=load_sample_bytes("tjsp", "cposg/open.html"),
+            content_type="text/html; charset=utf-8",
+        )
+    anterior = tmp_path / "cposg" / "anterior.html"
+    anterior.parent.mkdir(parents=True)
+    anterior.write_text("download anterior", encoding="utf-8")
+    (tmp_path / "planilha.csv").write_text("a,b\n", encoding="utf-8")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        df = jus.scraper("tjsp", download_path=str(tmp_path)).cposg(CNJ)
+
+    esperado: list[str | None] = ["resposta_inesperada"] if falha else [None]
+    assert df["motivo_falha"].tolist() == esperado
+    assert anterior.read_text(encoding="utf-8") == "download anterior"
+    assert (tmp_path / "planilha.csv").read_text(encoding="utf-8") == "a,b\n"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["cposg", "planilha.csv"]
