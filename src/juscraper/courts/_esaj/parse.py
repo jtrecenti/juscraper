@@ -260,11 +260,22 @@ def _extract_process_metadata(details_table: Tag, data: dict) -> None:
 
 
 def _extract_ementa(detail_row: Tag) -> str:
-    for div in detail_row.find_all("div", align="justify"):
-        style = str(div.get("style", "display: none;"))
-        if "display: none" not in style:
-            text = cast(str, div.get_text(" ", strip=True))
-            return text.replace("Ementa:", "").strip()
+    divs = detail_row.find_all("div", align="justify")
+    if divs:
+        for div in reversed(divs):
+            if "display: none" in str(div.get("style", "")):
+                text = cast(str, div.get_text(" ", strip=True))
+                return text.replace("Ementa:", "").strip()
+
+        for div in divs:
+            style = str(div.get("style", ""))
+            if div.has_attr("style") and "display: none" not in style:
+                text = cast(str, div.get_text(" ", strip=True))
+                return text.replace("Ementa:", "").strip()
+
+        text = cast(str, divs[-1].get_text(" ", strip=True))
+        return text.replace("Ementa:", "").strip()
+
     text = cast(str, detail_row.get_text(" ", strip=True))
     return text.replace("Ementa:", "").strip()
 

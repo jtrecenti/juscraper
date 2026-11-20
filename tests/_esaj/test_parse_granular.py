@@ -278,6 +278,41 @@ class TestCJSGNResultsInputDeclarado:
 class TestCJSGParseSinglePage:
     """Test the _cjsg_parse_single_page function."""
 
+    def test_ementa_com_previa_sem_style_retorna_texto_completo_uma_vez(self):
+        """A ementa completa oculta deve substituir a prévia visível (issue #713)."""
+        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/ementa_preview_sem_style.html"
+        html = sample_path.read_text(encoding="utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+        divs = soup.select('div[align="justify"]')
+        previa, completa = divs
+        texto_completo = completa.get_text(" ", strip=True).replace("Ementa:", "", 1).strip()
+
+        df = _parse_single_page(str(sample_path))
+
+        assert len(df) == 1
+        assert df.iloc[0]["ementa"].count("APELAÇÃO  –  Ação Civil Pública") == 1
+        assert df.iloc[0]["ementa"] == texto_completo
+        assert len(previa.get_text(" ", strip=True)) < len(completa.get_text(" ", strip=True))
+
+    def test_ementa_com_div_unica_preserva_texto_de_captura_real(self):
+        """Uma div única continua sendo lida integralmente em captura TJSP real."""
+        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/ementa_com_resultados.html"
+        soup = BeautifulSoup(sample_path.read_text(encoding="utf-8"), "html.parser")
+        ementa_row = next(
+            row for row in soup.select("tr.ementaClass2")
+            if row.find("strong") is not None
+            and "ementa" in row.find("strong").get_text().lower()
+            and len(row.find_all("div", align="justify")) == 1
+        )
+        result_row = ementa_row.find_parent("tr", class_="fundocinza1")
+        div = ementa_row.find("div", align="justify")
+        processo = result_row.find("a", class_="esajLinkLogin").get_text(strip=True)
+        texto_esperado = div.get_text(" ", strip=True).replace("Ementa:", "", 1).strip()
+
+        df = _parse_single_page(str(sample_path))
+
+        assert df.loc[df["processo"] == processo, "ementa"].iloc[0] == texto_esperado
+
     def test_parse_results_page(self):
         """Test parsing a results page with multiple processes."""
         html = load_sample('tjsp', 'cjsg/results_normal.html')
@@ -404,7 +439,7 @@ class TestCJSGParseSinglePage:
             "campo_especial": "valor dinamico",
             "data_publicacao": "01/02/2024",
             "orgao_julgador": "Camara Especial",
-            "ementa": "texto visivel.",
+            "ementa": "texto oculto.",
         }
         assert df.iloc[1]["ementa"] == "fallback oculto."
         assert df.iloc[2]["ementa"] == ""
