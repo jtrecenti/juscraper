@@ -327,6 +327,8 @@ except ColetaParcialError as erro:
 
 TJMG `cjsg` and `cjsg_download` raise it too when a result page fails with another page already downloaded. The search stops at that page: `.resultado` holds the pages read before it (as a DataFrame, also in `cjsg_download`), `.falhas` holds only that failure, and the message lists the missing pages, to request again with `paginas=`.
 
+TJRS `cjsg` and `cjsg_download` follow the same rule, also when the portal answers a page with a Solr error in place of the results (`TJRSBuscaError`): `.resultado` holds the pages read before it, and `.falhas` and `__cause__` hold the exception of the failed page. A failure on the first page requested raises the original exception.
+
 DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, a response with `_shards.failed > 0`, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
 
 Combining `auto_chunk=True` with `paginas` is rejected when

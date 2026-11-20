@@ -1,12 +1,23 @@
 """Downloads raw files from the TJRS jurisprudence search."""
-import json
 import math
+from collections.abc import Callable
 from urllib.parse import urlencode
 
-from tqdm import tqdm
-
-from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
+from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_guardando_parcial, descrever_paginas
+
+from .parse import TJRSBuscaError, cjsg_parse_manager, exigir_resultados
+
+# ``TJRSBuscaError`` mora em ``parse``; este módulo é o caminho documentado dele.
+__all__ = [
+    "BASE_URL",
+    "PERFIL_CJSG",
+    "RESULTS_PER_PAGE",
+    "TJRSBuscaError",
+    "build_cjsg_inner_payload",
+    "cjsg_download_manager",
+]
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -16,46 +27,14 @@ RESULTS_PER_PAGE = 10
 PERFIL_CJSG = "cjsg"
 
 
-class TJRSBuscaError(_RecriaSemInit, HTTPSemanticError):
-    """O portal respondeu HTTP 200 sem ``response``: o Solr recusou a consulta.
-
-    Observado ao vivo com aspas sem fechar e operador solto em ``pesquisa``
-    (código 400 do Solr) e com página absurda (código 500): o corpo vem como
-    ``{"error": "<JSON do Solr em texto>", ...}``. Sem este erro, a busca
-    voltava vazia, como se não houvesse acórdãos.
-
-    ``codigo`` é o código do Solr (``None`` se o envelope não o trouxer) e
-    ``mensagem``, o texto do erro.
-    """
-
-    def __init__(self, mensagem: str, codigo: int | None = None) -> None:
-        """Guarda ``mensagem`` e ``codigo`` e monta o texto do erro."""
-        self.mensagem = mensagem
-        self.codigo = codigo
-        super().__init__(
-            f"TJRS: a busca de jurisprudência devolveu erro em vez de resultados (código {codigo}): {mensagem}"
-        )
-
-
-def _exigir_resultados(dados: object) -> dict:
-    """Devolve ``dados`` se trouxer ``response``; senão, levanta :class:`TJRSBuscaError`."""
-    if isinstance(dados, dict) and isinstance(dados.get("response"), dict):
-        return dados
-    raise _erro_da_busca(dados)
-
-
-def _erro_da_busca(dados: object) -> TJRSBuscaError:
-    """Monta o erro a partir do envelope sem ``response``."""
-    erro = dados.get("error") if isinstance(dados, dict) else None
-    if isinstance(erro, str):
-        try:
-            erro = json.loads(erro)
-        except ValueError:
-            return TJRSBuscaError(erro[:500])
-    detalhe = erro.get("error") if isinstance(erro, dict) else None
-    if isinstance(detalhe, dict) and detalhe.get("msg"):
-        return TJRSBuscaError(str(detalhe["msg"]), detalhe.get("code"))
-    return TJRSBuscaError("resposta sem a chave 'response'")
+def _coleta_parcial(resultados: list[dict], faltando: list[int], exc: Exception) -> ColetaParcialError:
+    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar."""
+    mensagem = (
+        f"TJRS cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
+        f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
+        f"faltam as páginas {descrever_paginas(faltando)}, que podem ser pedidas de novo com paginas=."
+    )
+    return ColetaParcialError(mensagem, resultado=cjsg_parse_manager(resultados), falhas=[(None, None, exc)])
 
 
 def build_cjsg_inner_payload(
@@ -176,21 +155,25 @@ def cjsg_download_manager(
             'parametros': parametros_str,
         }
         resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG)
-        return _exigir_resultados(resp.json())
+        return exigir_resultados(resp.json())
 
     if paginas is None:
         first = _fetch_page(1)
-        resultados = [first]
         num_found = first.get('response', {}).get('numFound', 0)
         n_pags = math.ceil(num_found / RESULTS_PER_PAGE) if num_found else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJRS'):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_fetch_page(pagina))  # noqa: PERF401
-        return resultados
+        if n_pags == 1:
+            return [first]
+        return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first])
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
-        resultados.append(_fetch_page(pagina_1based))
-    return resultados
+    return _baixar_paginas(_fetch_page, list(paginas), [])
+
+
+def _baixar_paginas(buscar: Callable[[int], dict], paginas: list[int], resultados: list[dict]) -> list[dict]:
+    """Acrescenta ``paginas`` a ``resultados``; a que falha com outra já baixada sobe como ``ColetaParcialError``.
+
+    Vale para toda falha da página (rede depois das tentativas, corpo que não
+    é JSON, erro do Solr), como no TJPR, no TJMG e no TJTO.
+    """
+    return baixar_paginas_guardando_parcial(
+        buscar, paginas, resultados, coleta_parcial=_coleta_parcial, desc="Baixando páginas TJRS"
+    )
