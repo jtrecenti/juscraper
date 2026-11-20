@@ -1,0 +1,113 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/02/2023 17:57:21",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/02/2023 17:57:20",
+   "idDocumento": "KtVELPCwkMZd0VgQgnutAUOzUQBjnjzpwnjVarEzQomFcEIfqPSLLfcjb7NyLWPU_fZCYQ"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "24/02/2023 17:57:18 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/02/2023 17:57:20",
+   "idDocumento": "_PIPxzOBpFMdR8fE-FWsd7NJ4vKrbDALZzWw-QBU9EtM-DllOE-3aLwDy-NjgTSED0nkbw"
+  },
+  {
+   "movimento": "Concedida a Antecipação de tutela",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "24/02/2023 17:57:18 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/02/2023 17:57:19",
+   "idDocumento": "ZU75H52NBHC4cJSp06_QH-BKTQ2WWIcfNvcBPBZYPBSjHBCKsrGdrSCBb2TDFgLzxKuS3A"
+  },
+  {
+   "movimento": "Concedida a gratuidade da justiça a ADILON JOSE DOS SANTOS - CPF: 383.823.425-15 (AUTOR)",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "24/02/2023 17:57:18 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/02/2023 17:57:19",
+   "idDocumento": "xuDv2UgFEEDPZ3Gm8avuYJBZdUbKKALoE2OdEWMouoWkfALQ4vNlOmDUXTcD3lXACeQ4Fw"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "24/02/2023 08:11:42",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Remetidos os Autos (em diligência) da Distribuição ao Juizado Especial Cível e Criminal Adjunto à 3ª Vara Federal da SSJ de Feira de Santana-BA",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/02/2023 13:55:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Informação de Prevenção",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/02/2023 13:55:54",
+   "idDocumento": "nVXUhgQdln9HLJoD0rz2QBtcPu6oc7TCIx-ZsxNtviJxtRKSysC822BIzssD9HARjuVFvA"
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/02/2023 12:00:12",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "23/02/2023 12:00:11",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 4,
+  "last": 4,
+  "size": 15,
+  "count": 55
+ }
+}

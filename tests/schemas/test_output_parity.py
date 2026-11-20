@@ -68,7 +68,7 @@ EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("tjsc", "cjsg"): ("juscraper.courts.tjsc.schemas", "OutputCJSGTJSC"),
     ("tjto", "cjsg"): ("juscraper.courts.tjto.schemas", "OutputCJSGTJTO"),
     ("tjto", "cjpg"): ("juscraper.courts.tjto.schemas", "OutputCJPGTJTO"),
-    ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
+    ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "OutputCpopgTRF1"),
     ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "OutputCpopgTRF3"),
     ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "OutputCposgTRF3"),
     ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "OutputCJSGTRF3"),
@@ -144,8 +144,10 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
     - ``juscraper.courts.<trib>.<endpoint>_parse`` (TJSP tem cjsg_parse, cjpg_parse)
     - ``juscraper.aggregators.<name>.parse``
     - ``juscraper.courts.<trib>.client`` (fallback, caso cjsg_parse seja metodo)
-    - ``juscraper.courts._<familia>.<endpoint>_parse``, de cada pacote de
-      familia no MRO do raspador (ex.: o ``cjpg`` do eSAJ para TJSP e TJMS)
+    - ``juscraper.courts._<familia>.<endpoint>_parse``, ``.parse`` e o modulo
+      da classe, de cada pacote de familia no MRO do raspador (ex.: o
+      ``cjpg`` do eSAJ para TJSP e TJMS; o ``cpopg`` do ``_pje_api`` para TRF1
+      e TRF3)
     """
     sources: list[str] = []
     candidates = [
@@ -157,7 +159,7 @@ def _parser_sources(tribunal: str, endpoint: str) -> str:
     for cls in getattr(COURT_CLASSES.get(tribunal), "__mro__", ()):
         pacote = cls.__module__.rpartition(".")[0]
         if pacote.startswith("juscraper.courts._"):
-            candidates.append(f"{pacote}.{endpoint}_parse")
+            candidates.extend([f"{pacote}.{endpoint}_parse", f"{pacote}.parse", cls.__module__])
     candidates = list(dict.fromkeys(candidates))
     for module_path in candidates:
         try:

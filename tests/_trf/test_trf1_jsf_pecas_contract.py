@@ -1,17 +1,31 @@
-"""Offline contract tests for ``TRF1Scraper.cpopg(download_pecas=True, ...)``.
+"""Contratos do ``download_pecas`` da família ``_trf`` com o portal JSF do TRF1.
 
-Mirrors the other PJe JSF suite: TRF1 and TRF5 share the same
-``documentoSemLoginHTML.seam?ca=...&idProcessoDoc=...`` URL shape.
+Os testes eram do ``TRF1Scraper``; com a troca do TRF1 para a API JSON, passam
+a usar :class:`TRF1JSFScraper`, uma instalação da família com o endereço antigo.
 """
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 
 import pytest
 import responses
 
-import juscraper as jus
+from juscraper.courts._trf.base import TRFConsultaScraper
+from juscraper.courts._trf.download import extract_documento_urls
 from tests._helpers import load_sample, load_sample_bytes
+
+
+class TRF1JSFScraper(TRFConsultaScraper):
+    """Instalação JSF do TRF1 antes da troca para a API (nov/2026), com os samples ``trf1_*``.
+
+    O TRF1 saiu da família, mas os samples do portal JSF dele seguem exercitando
+    o código da família ``_trf`` que o TRF5 e o TJPE usam.
+    """
+
+    BASE_URL = "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
+    TRIBUNAL_NAME = "TRF1"
+
 
 LIST_URL = (
     "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
@@ -28,9 +42,8 @@ DOC_URL = (
 
 
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
-    from juscraper.courts._trf.download import extract_documento_urls
 
-    detail = load_sample_bytes("trf1", "cpopg/detail_normal.html").decode("latin-1")
+    detail = load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html").decode("latin-1")
     urls = extract_documento_urls(detail)
     assert len(urls) >= 1
     ids = [d for _, d in urls]
@@ -38,15 +51,12 @@ def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
 
 
 def test_extract_documento_urls_empty_when_no_pecas() -> None:
-    from juscraper.courts._trf.download import extract_documento_urls
 
     assert extract_documento_urls("<html><body>nada</body></html>") == []
 
 
 def test_cpopg_default_does_not_download_pecas(tmp_path) -> None:
-    scraper = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path))
-    import inspect
-
+    scraper = TRF1JSFScraper(sleep_time=0, download_path=str(tmp_path))
     sig = inspect.signature(scraper.cpopg)
     assert sig.parameters["download_pecas"].default is False
 
@@ -56,27 +66,26 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/form_initial.html"),
+        body=load_sample("_trf", "cpopg/trf1_form_initial.html"),
         content_type="text/html; charset=utf-8",
     )
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/search_one_result.html"),
+        body=load_sample("_trf", "cpopg/trf1_search_one_result.html"),
         content_type="text/xml; charset=utf-8",
     )
     responses.add(
         responses.GET,
         DETAIL_URL,
-        body=load_sample_bytes("trf1", "cpopg/detail_normal.html"),
+        body=load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html"),
         content_type="text/html",
     )
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
-    from juscraper.courts._trf.download import extract_documento_urls
+    doc_body = load_sample_bytes("_trf", "cpopg_pecas/trf1_documento_html.html")
 
     n_pecas = len(
         extract_documento_urls(
-            load_sample_bytes("trf1", "cpopg/detail_normal.html").decode("latin-1")
+            load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html").decode("latin-1")
         )
     )
     for _ in range(n_pecas):
@@ -84,7 +93,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
             responses.GET, DOC_URL, body=doc_body, content_type="text/html"
         )
 
-    scraper = jus.scraper("trf1", sleep_time=0)
+    scraper = TRF1JSFScraper(sleep_time=0)
     df = scraper.cpopg(
         "10004080820254013602", download_pecas=True, diretorio=str(tmp_path)
     )
@@ -101,17 +110,17 @@ def test_cpopg_with_download_pecas_handles_missing_process(tmp_path) -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/form_initial.html"),
+        body=load_sample("_trf", "cpopg/trf1_form_initial.html"),
         content_type="text/html; charset=utf-8",
     )
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/search_no_results.html"),
+        body=load_sample("_trf", "cpopg/trf1_search_no_results.html"),
         content_type="text/xml; charset=utf-8",
     )
 
-    df = jus.scraper("trf1", sleep_time=0).cpopg(
+    df = TRF1JSFScraper(sleep_time=0).cpopg(
         "00000000019994010000", download_pecas=True, diretorio=str(tmp_path)
     )
 
@@ -122,19 +131,17 @@ def test_cpopg_with_download_pecas_handles_missing_process(tmp_path) -> None:
 @responses.activate
 def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) -> None:
     """404 na primeira peça vai para ``pecas_falhas`` com aviso; as demais continuam sendo gravadas."""
-    from juscraper.courts._trf.download import extract_documento_urls
-
-    detail = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    detail = load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html")
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/form_initial.html"),
+        body=load_sample("_trf", "cpopg/trf1_form_initial.html"),
         content_type="text/html; charset=utf-8",
     )
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/search_one_result.html"),
+        body=load_sample("_trf", "cpopg/trf1_search_one_result.html"),
         content_type="text/xml; charset=utf-8",
     )
     responses.add(responses.GET, DETAIL_URL, body=detail, content_type="text/html")
@@ -142,12 +149,12 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) 
     assert len(ids) > 1
     # 404 não é retentado, então a primeira peça falha de imediato.
     responses.add(responses.GET, DOC_URL, status=404)
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    doc_body = load_sample_bytes("_trf", "cpopg_pecas/trf1_documento_html.html")
     for _ in ids[1:]:
         responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 
     with caplog.at_level("WARNING", logger="juscraper._trf"), pytest.warns(UserWarning, match="pecas_falhas"):
-        df = jus.scraper("trf1", sleep_time=0).cpopg(
+        df = TRF1JSFScraper(sleep_time=0).cpopg(
             "10004080820254013602", download_pecas=True, diretorio=str(tmp_path)
         )
 
@@ -160,28 +167,26 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) 
 @responses.activate
 def test_cpopg_with_download_pecas_uses_download_path_when_diretorio_omitted(tmp_path) -> None:
     """Sem ``diretorio``, as peças vão para o ``download_path`` do construtor."""
-    from juscraper.courts._trf.download import extract_documento_urls
-
-    detail = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+    detail = load_sample_bytes("_trf", "cpopg/trf1_detail_normal.html")
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/form_initial.html"),
+        body=load_sample("_trf", "cpopg/trf1_form_initial.html"),
         content_type="text/html; charset=utf-8",
     )
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", "cpopg/search_one_result.html"),
+        body=load_sample("_trf", "cpopg/trf1_search_one_result.html"),
         content_type="text/xml; charset=utf-8",
     )
     responses.add(responses.GET, DETAIL_URL, body=detail, content_type="text/html")
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
+    doc_body = load_sample_bytes("_trf", "cpopg_pecas/trf1_documento_html.html")
     n_pecas = len(extract_documento_urls(detail.decode("latin-1")))
     for _ in range(n_pecas):
         responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
 
-    df = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path)).cpopg(
+    df = TRF1JSFScraper(sleep_time=0, download_path=str(tmp_path)).cpopg(
         "10004080820254013602", download_pecas=True
     )
 

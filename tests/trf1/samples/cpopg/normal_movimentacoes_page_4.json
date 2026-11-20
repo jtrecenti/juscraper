@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/03/2022 11:03:02",
+   "idDocumento": "kMoYqdctcHTBJalz9tDGHsC9fbUKicGDG-f6pSdLoYv3BaGaEUEiVLcMsUGGR05XWSPX"
+  },
+  {
+   "movimento": "Juntada de impugnação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/03/2022 11:05:41",
+   "idDocumento": "D4G8EziDByR6Iskym3jc9CQkCxNQeiKA0rfguGRsowvVo3bPfmQ65cfy1Y14BZ-jle0Q"
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DE GOIAS em 08/03/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "09/03/2022 01:27:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "04/03/2022 11:26:00",
+   "idDocumento": "V1yJVUUPKvFh0_RHYMNJsd7Fwm85H9y9ceM1bBHe3EWE_I7ba_l8NWlKpiYIe3rSy8np"
+  },
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/02/2022 18:47:02",
+   "idDocumento": "YW4yg1hezvuaobxxEkOwecWOgUDC2lVDlDQcELj6y0eTPgVkWB5M-9E6MMq3bHtOCLQX"
+  },
+  {
+   "movimento": "Decorrido prazo de ALTAIR DA SILVA JUNQUEIRA em 11/02/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/02/2022 02:27:51",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de MUNICIPIO DE ANAPOLIS em 10/02/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "11/02/2022 02:08:25",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "01/02/2022 09:20:50",
+   "idDocumento": "GRvGu7izb7Af_86twd3M-dfIP6BZcIXCDZxS1xwGuOyN2hy21kF6ceR6sodk-FpuuV88"
+  },
+  {
+   "movimento": "Decorrido prazo de MUNICIPIO DE ANAPOLIS em 27/01/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "29/01/2022 11:49:23",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DE GOIAS em 25/01/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "26/01/2022 09:23:12",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ALTAIR DA SILVA JUNQUEIRA em 24/01/2022 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/01/2022 20:13:34",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Ato ordinatório em 21/01/2022.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/01/2022 14:07:46 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2022 14:57:30",
+   "idDocumento": "DH493FOM75pK9PTmnf6gzkXc0Aui8bjsgWCVAVk_ipLDPikuY_jQXaplGHhBbcooLo13"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 23/01/2022",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/01/2022 14:07:46 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2022 14:57:29",
+   "idDocumento": "uphfWtCtAdslu8BulAMrWF-0Qh82cTu9NHaKqPp19koImLnycwsrEkklDOtBs1Oz7sCM"
+  },
+  {
+   "movimento": "Publicado Decisão em 21/01/2022.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "07/01/2022 15:12:39 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2022 07:36:43",
+   "idDocumento": "OgZvDnPUIBzBqKZMYb-Z4Z2sd_M_S9d6zIBx34pBGrqsMG5y5PH8KNSXmAzYP_L2QGwW"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 23/01/2022",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "07/01/2022 15:12:39 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "23/01/2022 07:36:42",
+   "idDocumento": "x-_2Mjsc6vAxFUxcy0bJZRUShJLjmFymFt_-mOLxlNhA0jnDg2-sPkG6JfwLx2kSYGCg"
+  }
+ ],
+ "pageInfo": {
+  "current": 5,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

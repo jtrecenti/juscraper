@@ -1,4 +1,4 @@
-"""HTML parser for TRF PJe ``ConsultaPublica`` detail pages (TRF1/TRF5, TJPE).
+"""HTML parser for TRF PJe ``ConsultaPublica`` detail pages (TRF5, TJPE).
 
 PJe renders the detail page as XHTML with stable ID suffixes
 (``processoEvento``, ``processoPartesPoloAtivoResumidoList``, etc.) and

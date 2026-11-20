@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Arquivado Definitivamente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "14/03/2026 13:56:28",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de termo",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/03/2026 13:56:11",
+   "idDocumento": "bq4C5qCSklm_FatvY3cRQIaScLBBuxU2yU33WC8nRADQ3jgdf7HxvRlb6spnRNShWCYj2A"
+  },
+  {
+   "movimento": "Juntada de certidão de decurso de prazo",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/03/2026 13:55:18",
+   "idDocumento": "1CldwKqZSMq42ACmV8Py_5sFZM3ajOj5c8gSi3H2eqETGrqb3o-BPMM2Ok_EsHBcYLsl1A"
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DE GOIAS em 11/11/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/11/2025 00:37:39",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de UNIÃO FEDERAL em 04/11/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "05/11/2025 00:48:27",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ALTAIR DA SILVA JUNQUEIRA em 04/11/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "05/11/2025 00:11:17",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de MUNICIPIO DE ANAPOLIS em 03/11/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/11/2025 00:02:54",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Publicado Despacho em 13/10/2025.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "09/10/2025 19:34:46 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/10/2025 00:03:21",
+   "idDocumento": "v9G8DGtKWFZlDBm0hgaCkYe6HYjZiQM7YzD29Kj0_WVxieOrpeT5d__qRZotYQNrJ3054Q"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 10/10/2025",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "09/10/2025 19:34:46 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/10/2025 01:02:40",
+   "idDocumento": "epjtDEhLmvwC_CxIykEz-Vd6vVlN7DyiP4JBzSeSxEiXf9-nG_Du61vNzsm5rKAKExrIzw"
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "09/10/2025 19:34:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/10/2025 19:34:52",
+   "idDocumento": "NOMCjw71rBzWI7-Us90iO0Po72NgkVsMW_INUVjjllzGe7fnVEdpNLH4iEJzN8DAW7J2yw"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "09/10/2025 19:34:46 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/10/2025 19:34:51",
+   "idDocumento": "THxJS5Le-wT3XIhFf6XpbLtjTcDkMKbEGwPD5lz5-w9rK2zU0rTCa4T30RSVGEK54_kJVw"
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "09/10/2025 19:34:51",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "09/10/2025 19:34:46 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/10/2025 19:34:50",
+   "idDocumento": "DNY3z239_F8BW3j24CfuMftTUEkeu7q4aNkhS8pRbZ-EVoeL7nvC1dnM0_QTnWleLbNXvg"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "09/10/2025 19:34:46 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "09/10/2025 19:34:48",
+   "idDocumento": "mXqlAUVg9ivXVoTFaCbI6oDLeF2mgxMutjTjFhLCZ0DSl4yqBDJRkflwhK47z5z7ELn6hA"
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

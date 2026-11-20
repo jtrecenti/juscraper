@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Conclusos para despacho",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "06/10/2025 10:50:01",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Recebidos os autos",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "11/06/2025 11:41:51",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de informação de prevenção negativa",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/06/2025 11:41:51",
+   "idDocumento": "7Cf-jYJfimKAVqU9_kKd89ccrtWQPxhp-NvCCyM4Wzfrl7mrbVU3f9hPqMGSYqrFxFRXZQ"
+  },
+  {
+   "movimento": "Remetidos os Autos (em grau de recurso) para Tribunal",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "29/11/2023 11:30:06",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Informação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2023 15:05:30",
+   "idDocumento": "-0IflsCReusB_jP-W5zPSzKP3RjbN6Wuuc7lB8w4v4rLcF2yzWfmbwaoHYh0jgAMZtDBaw"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2023 15:05:10",
+   "idDocumento": "hXTMWK5nMWY3Pq_bSG15uvRBMDHg_6qa-M-UBfWMQRrCN3s8QzsoOQAwhLfXE0vU1iej1A"
+  },
+  {
+   "movimento": "Juntada de certidão de decurso de prazo",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/11/2023 15:04:25",
+   "idDocumento": "DZmAZZTf7hYlM8zroXqwtgddeyC05jQlcDADTxhmtb43VtktCD0cJCRzzhudkDKgxovhBg"
+  },
+  {
+   "movimento": "Decorrido prazo de ALTAIR DA SILVA JUNQUEIRA em 12/09/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/09/2023 08:21:58",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DE GOIAS em 11/09/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "12/09/2023 02:13:02",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de contrarrazões",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "06/09/2023 10:48:22",
+   "idDocumento": "Tp3ySye2llveYBtCmz_F--AY7zYancvtcbx8f3zpB0PcFbgjd1KVcF6jxu0PwMy_RfDNTw"
+  },
+  {
+   "movimento": "Juntada de contrarrazões",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/08/2023 13:27:21",
+   "idDocumento": "CWL18pSWuEge_UfFd-aD0L--zoH06CB4r5xTYsAme_WB2tDjgoMi_d9VrHR5L843hTutWw"
+  },
+  {
+   "movimento": "Publicado Despacho em 21/08/2023.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "17/08/2023 14:20:52 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "21/08/2023 00:08:30",
+   "idDocumento": "_L_PAHkCZcwuKoVT7cp1GodUzC73u-i2Hn1HOBO3U9xt90b3pOS7ageGQqRnZPNKF0bZOA"
+  },
+  {
+   "movimento": "Disponibilizado no DJ Eletrônico em 19/08/2023",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "17/08/2023 14:20:52 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/08/2023 00:55:42",
+   "idDocumento": "xdtLSrI22d-q9vS8fCIGC8mtX1PdN053u2-DU1op7RKyWg7OYR3_4bnrvp2UgulMObqX5A"
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "17/08/2023 14:21:03",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/08/2023 14:21:01",
+   "idDocumento": "2g5MIwTEQPVVYntipqn7aNHFF2dkJ8RSoRwNw0fstojOX9MG1OrpB7yfIIaX-dSUwBR2-Q"
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

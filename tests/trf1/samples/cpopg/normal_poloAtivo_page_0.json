@@ -1,0 +1,33 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "ALTAIR DA SILVA JUNQUEIRA registrado(a) civilmente como ALTAIR DA SILVA JUNQUEIRA - CPF: ***.190.031-** (APELANTE)",
+   "nome": "ALTAIR DA SILVA JUNQUEIRA registrado(a) civilmente como ALTAIR DA SILVA JUNQUEIRA",
+   "tipo": "APELANTE",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "HIDERALDO LUIZ SILVA - OAB GO11125 - CPF: ***.757.211-** (ADVOGADO)",
+   "nome": "HIDERALDO LUIZ SILVA",
+   "tipo": "ADVOGADO",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 2
+ }
+}

@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Arquivado Definitivamente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "09/07/2025 10:24:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ADILON JOSE DOS SANTOS em 14/04/2025 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "15/04/2025 18:11:07",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "01/04/2025 10:11:54",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "01/04/2025 10:11:54",
+   "idDocumento": "YgTnO_mEFmQpKi2ADlCS85_2uZrHs12KFX4ACaQ3a_TYkV03rDd5Fg0FF93TfUWLpkmnZA"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "01/04/2025 10:11:51 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "01/04/2025 10:11:53",
+   "idDocumento": "Rb6aTRdr24Z8tW4j94De4sqQOuFeILRTXo1Bwn-3rHuUeK1cwetdrofg9kml1ev6OvvDbQ"
+  },
+  {
+   "movimento": "Proferido despacho de mero expediente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "01/04/2025 10:11:51 - Despacho (Despacho)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "01/04/2025 10:11:53",
+   "idDocumento": "NGTUHfB8OW9IWRtNpBDQKkz3aPkzJi44wRWl6b3Wza-gQmv8kXoak0Q0WkipoRY1i3pVKw"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "04/10/2024 16:48:40",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2024 19:12:02",
+   "idDocumento": "yisZr1Bp-GEtfIUbWEXSY-Xbl9nTGDujW7irwP2Y5Pp1L0dlohMc1TJvjPdTwpd2Nyf8HQ"
+  },
+  {
+   "movimento": "Decorrido prazo de ADILON JOSE DOS SANTOS em 21/03/2024 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/03/2024 00:35:55",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DA BAHIA em 12/03/2024 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/03/2024 00:10:11",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/03/2024 23:02:58",
+   "idDocumento": "O_fp-LIY5AOi-9G0HoHFP_qCzfjN3lvOc_9ZNQjmFGkNwNvSiG-HAFEvOc2TWy0ZH4m-Kw"
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "26/02/2024 15:54:08",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/02/2024 15:54:08",
+   "idDocumento": "_d0wsIXj1PlJLmb_M5DDo-isH6BLVKho9lpiPBOFh4lHO7Me-3GLVVDKp-lETxc7OU8VXg"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "26/02/2024 15:54:06 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/02/2024 15:54:07",
+   "idDocumento": "STpmXGiQhamzDJZXgK8Dm-EUU363buDd-ARDHmICXE5rHKwQHDS4XMFtvhVLXW-_Wp_Xaw"
+  },
+  {
+   "movimento": "Julgado procedente o pedido",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "26/02/2024 15:54:06 - Sentença Tipo A (Sentença Tipo A)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "26/02/2024 15:54:06",
+   "idDocumento": "pTRE9MdufiT5Qjpf3vSoeV6k68a9xAB10LyIPUTTdfRC2n_BtQ03VH6wav71s15HZM40KQ"
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 4,
+  "size": 15,
+  "count": 55
+ }
+}
