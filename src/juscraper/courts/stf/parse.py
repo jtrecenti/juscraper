@@ -15,15 +15,18 @@ _RENOMEAR = {
     "publicacao_data": "data_publicacao",
 }
 
-# Campos de texto corrido, que vem com ``\r\n``. Os ``*_html`` ficam como vem.
-_SUFIXO_TEXTO = "_texto"
-_CAMPOS_TEXTO = frozenset({"acordao_ata"})
-
 
 def _normalizar_campo(chave: str, valor: object) -> object:
-    if chave.endswith(_SUFIXO_TEXTO) or chave in _CAMPOS_TEXTO:
-        return normalizar_texto(valor)
-    return valor
+    r"""Normaliza os campos de texto corrido (``*_texto`` e ``acordao_ata``), que vem com ``\r\n``.
+
+    Alguns, como ``documental_legislacao_citada_texto``, sao listas de textos.
+    Os ``*_html`` ficam como vem.
+    """
+    if not (chave.endswith("_texto") or chave == "acordao_ata"):
+        return valor
+    if isinstance(valor, list):
+        return [normalizar_texto(item) for item in valor]
+    return normalizar_texto(valor)
 
 
 def validate_search_response(response: dict) -> None:

@@ -44,11 +44,7 @@ def parse_items(response: requests.Response) -> list[dict[str, Any]]:
     items = data.get("items")
     if items is None:
         items = data.get("itens", [])
-    return [_normalizar_item(item) for item in items]
-
-
-def _normalizar_item(item: dict[str, Any]) -> dict[str, Any]:
-    """Passa o ``texto`` da comunicacao por :func:`normalizar_texto`."""
-    if "texto" not in item:
-        return item
-    return {**item, "texto": normalizar_texto(item["texto"])}
+    for item in items:
+        if "texto" in item:
+            item["texto"] = normalizar_texto(item["texto"])
+    return list(items)
