@@ -1,0 +1,118 @@
+<!-- Recorte da resposta real de cjsg/classesTreeSelect.do?campoId=classes do TJSP, capturada em
+     2026-11-26 (UTF-8) e recortada por capture_arvores, em tests/fixtures/capture/tjsp.py:
+     mantidos os 2 primeiros <li> de cada <ul> e os que levam
+     aos nós 14734, 12227. -->
+
+<!-- TreeSelect ini -->
+<div class="treeSelect" id="classes_treeSelectContainer">
+<div class="treeFilter">
+<form method="get" name="treeForm">
+<div>
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="20">
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="20"> </td>
+<td class="spwCelulaGrid" width="*"><input class="spwCampoTextoGrid" id="classes_treeSelectFilter" name="classes_treeSelectFilter" type="text"/></td>
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="15"> </td>
+</tr></table>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" id="filtroButton" type="submit" value="Procurar"/>
+<input class="spwBotaoGrid" type="button" value="Limpar"/>
+</td>
+</tr></table>
+</div>
+</form>
+</div>
+<div class="treeView">
+<ul class="tree root multiSelect" id="classes_tree">
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_268" role="" searchid="268" searchvalue="-processo criminal|268-processo criminal" tabindex="0" value="268">PROCESSO CRIMINAL</span>
+<ul>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_308" role="" searchid="308" searchvalue="268-processo criminal-medidas cautelares|308-medidas cautelares" tabindex="0" value="308">Medidas Cautelares</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_14734" role="checkbox" searchid="14734" searchvalue="268-processo criminal|308-medidas cautelares|14734-medidas protetivas - crianca e adolescente (lei 13.431)" tabindex="0" value="14734">Medidas Protetivas - Criança e Adolescente (Lei 13.431)</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_10967" role="checkbox" searchid="10967" searchvalue="268-processo criminal|308-medidas cautelares|10967-medidas protetivas - estatuto do idoso criminal" tabindex="0" value="10967">Medidas Protetivas - Estatuto do Idoso Criminal</span>
+</li>
+
+
+
+
+
+
+</ul>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_50003" role="checkbox" searchid="50003" searchvalue="268-processo criminal|50003-conflito de competencia" tabindex="0" value="50003">Conflito de Competência</span>
+</li>
+
+
+
+
+
+
+
+
+
+
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="classes_tree_node_2" role="" searchid="2" searchvalue="-processo civel e do trabalho|2-processo civel e do trabalho" tabindex="0" value="2">PROCESSO CÍVEL E DO TRABALHO</span>
+<ul>
+<li class="leafItem open"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_12133" role="checkbox" searchid="12133" searchvalue="-processo civel e do trabalho|2-processo civel e do trabalho-tutela provisoria|12133-tutela provisoria de urgencia e tutela provisoria de evidencia" tabindex="0" value="12133">Tutela Provisória de Urgência e Tutela Provisória de Evidência</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_12134" role="checkbox" searchid="12134" searchvalue="2-processo civel e do trabalho|12133-tutela provisoria|12134-tutela cautelar antecedente" tabindex="0" value="12134">Tutela Cautelar Antecedente</span>
+</li>
+<li class="leafItem last-child"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_12135" role="checkbox" searchid="12135" searchvalue="2-processo civel e do trabalho|12133-tutela provisoria|12135-tutela antecipada antecedente" tabindex="0" value="12135">Tutela Antecipada Antecedente</span>
+</li>
+</ul>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_50000" role="checkbox" searchid="50000" searchvalue="2-processo civel e do trabalho|50000-reclamacao" tabindex="0" value="50000">Reclamação</span>
+</li>
+
+
+
+
+
+</ul>
+</li>
+
+
+
+
+<li class="leafItem last-child"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="classes_tree_node_12227" role="checkbox" searchid="12227" searchvalue=" - procedimentos especiais de jurisdicao voluntaria-interpelacao|12227-interpelacao" tabindex="0" value="12227">Interpelação</span>
+</li>
+</ul>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" type="button" value="Selecionar"/>
+<input class="spwBotaoGrid" type="button" value="Cancelar"/>
+</td>
+</tr></table>
+</div>
+</div>
+<script>
+	(function($) {
+		var checkBoxElement = $('#classes_checkbox');
+		var options = {campoId: 'classes'};
+		
+		$.saj.tree('#classes_tree', {selecionarSomenteFolhas: true, autoSelecionarFilhosEPais: true, isMultiSelect: true});
+		// Binds do popup
+		var container = $('div#classes_treeSelectContainer');
+		
+		$('div.treeFilter form', container).bind('submit', options, $.saj.tree.onFilterEvent);
+		$('input[value=Limpar]', container).bind('click', options, $.saj.tree.onClearFilterEvent);
+		$('input[value=Selecionar]', container).bind('click', options, $.saj.tree.onSaveSelection);
+		
+			$('input[value=Todos]', container).bind('click', options, $.saj.tree.onSelectAll);
+			$('input[value=Nenhum]', container).bind('click', options, $.saj.tree.onSelectNone);
+		
+		$('input[value=Cancelar]', container).bind('click', options, $.saj.tree.onCloseEvent);
+		$('#classes_treeSelectFilter').focus();
+
+		
+		
+	})(jQuery);
+</script>
+<!-- TreeSelect fim -->

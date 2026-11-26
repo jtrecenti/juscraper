@@ -21,13 +21,19 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
+import juscraper as jus
 from juscraper.courts._esaj.acordao import paginas_movimentacoes
+from juscraper.courts.tjsp.cpopg_parse import _split_party_cell
+from tests.tjsp.test_arvore_contract import NO_ESPERADO
 
 from ._util import (
     TJSP_CHROME_HEADERS,
@@ -49,11 +55,6 @@ DEFAULT_CNJ = "1000149-71.2024.8.26.0346"
 
 # Número sem processo no TJSP, para a busca "Não existem informações disponíveis".
 CPOPG_CNJ_INEXISTENTE = "0000001-12.2024.8.26.0100"
-
-
-def _clean_cnj(cnj: str) -> str:
-    """Strip non-digit characters from a CNJ. Mirrors ``utils.cnj.clean_cnj``."""
-    return re.sub(r"[^0-9]", "", cnj)
 
 
 # ---------- cjsg ---------------------------------------------------------
@@ -191,16 +192,13 @@ def capture_cjpg() -> None:
 def capture_cpopg_html(cnj: str) -> None:
     """Capture cpopg samples for ``method='html'``.
 
-    Fetches ``search.do`` for ``cnj`` and one ``show.do`` per link returned.
-    Overwrites ``show_standard.html`` — legacy synthetic samples live in the
-    same directory under their kept names (``show_standard.html``,
-    ``show_alternative.html``) and remain for unit tests.
+    Fetches ``search.do`` for ``cnj`` and the ``show.do`` of the first link
+    returned (saved as ``show_real.html``, which no test reads).
     """
     dest = samples_dir_for("tjsp", "cpopg")
     session = build_session(headers=TJSP_CHROME_HEADERS)
 
     # search
-    id_clean = _clean_cnj(cnj)
     num, dv = cnj.split("-")[0], cnj.split("-")[1][:2]
     ano = cnj.split(".")[1]
     orgao = cnj.split(".")[-1]
@@ -247,7 +245,69 @@ def capture_cpopg_html(cnj: str) -> None:
     r_show.raise_for_status()
     dump(dest / "show_real.html", r_show.content)
     print(f"[tjsp] cpopg html show for codigo={cd} → saved")
-    _ = id_clean  # referenced for symmetry with scraper internals
+
+
+# Processo com "Outros assuntos" no bloco maisDetalhes, que vira a coluna
+# ``outros_assuntos``. Em 26/11/2026, o show.do dele trazia o campo.
+CPOPG_CNJ_OUTROS_ASSUNTOS = "1009367-76.2017.8.26.0344"
+
+# Nome de ente público, que fica no sample (como "Fazenda Pública do Estado de São Paulo").
+_ENTE_PUBLICO = re.compile(r"fazenda|minist[ée]rio p[úu]blico|procuradoria|prefeitura|munic[íi]pio|defensoria", re.I)
+# Lista de advogados das publicações: "Advogados(s): Nome (OAB 123/SP), Outro (OAB 456/SP)".
+_ADVOGADO_PUBLICACAO = re.compile(r"([^,:()\n]+?) \(OAB \d+/")
+
+
+def pseudonimizar_cpopg(html: str) -> str:
+    """Troca por fictícios os nomes das partes e dos representantes, e zera a OAB.
+
+    Os nomes saem da tabela de partes e das listas de advogados das
+    publicações; nada fica fixo no script. Cada parte vira "Parte Ficticia N"
+    e cada representante, "Advogado Ficticio N", em todo o HTML e sem
+    distinguir maiúsculas. Entes públicos e o juiz ficam.
+    """
+    partes: list[str] = []
+    advogados: list[str] = []
+    soup = BeautifulSoup(html, "html.parser")
+    for tabela in soup.find_all("table", id=("tableTodasPartes", "tablePartesPrincipais")):
+        for linha in tabela.find_all("tr"):
+            celulas = linha.find_all("td")
+            if len(celulas) >= 2:
+                nome, representantes = _split_party_cell(celulas[1])
+                partes.append(nome)
+                advogados.extend(representantes)
+    advogados.extend(nome.strip() for nome in _ADVOGADO_PUBLICACAO.findall(html))
+    trocas: dict[str, str] = {}
+    for nomes, rotulo in ((partes, "Parte Ficticia"), (advogados, "Advogado Ficticio")):
+        for nome in dict.fromkeys(nomes):
+            if nome and not _ENTE_PUBLICO.search(nome) and nome.lower() not in map(str.lower, trocas):
+                trocas[nome] = f"{rotulo} {sum(v.startswith(rotulo) for v in trocas.values()) + 1}"
+    # O nome mais longo primeiro: "Fulano de Tal" não pode quebrar "Fulano de Tal Junior".
+    for real in sorted(trocas, key=len, reverse=True):
+        html = re.sub(re.escape(real), trocas[real], html, flags=re.IGNORECASE)
+    return re.sub(r"\(OAB \d+/", "(OAB 000000/", html)
+
+
+def capture_cpopg_outros_assuntos() -> None:
+    """Grava ``cpopg/show_outros_assuntos.html`` como o ``cpopg_download`` o salva.
+
+    O download junta à página as movimentações que o eSAJ carrega à parte
+    (``carregarMovimentacoesAjax.do``); o arquivo é o que o parser lê na
+    pasta de download. Os nomes saem trocados por :func:`pseudonimizar_cpopg`.
+    """
+    with tempfile.TemporaryDirectory() as pasta:
+        scraper = jus.scraper("tjsp", download_path=pasta)
+        scraper.cpopg_download(CPOPG_CNJ_OUTROS_ASSUNTOS)
+        salvos = list(Path(pasta).rglob("*.html"))
+        if len(salvos) != 1:
+            print(f"[tjsp] cpopg outros_assuntos: {len(salvos)} arquivos salvos; sample mantido")
+            return
+        html = pseudonimizar_cpopg(salvos[0].read_bytes().decode("utf-8"))
+    if "Outros assuntos" not in html:
+        # Sem o campo, o sample deixaria de exercitar a coluna outros_assuntos.
+        print("[tjsp] cpopg outros_assuntos: a página não traz mais o campo; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cpopg") / "show_outros_assuntos.html", html.encode("utf-8"))
+    print(f"[tjsp] cpopg outros_assuntos ({CPOPG_CNJ_OUTROS_ASSUNTOS}) → saved")
 
 
 # ---------- cposg html ---------------------------------------------------
@@ -431,6 +491,77 @@ def capture_documentos() -> None:
     print(f"[tjsp] documentos: {len(redirecionamentos)} redirecionamentos em {dest}")
 
 
+# ---------- árvores de seleção (*TreeSelect.do) --------------------------
+
+# Nós que o recorte mantém além dos primeiros de cada lista: o nó que
+# tests/tjsp/test_arvore_contract.py confere em cada árvore e, em classes_2, a
+# folha selecionável na raiz de test_arvore_granular.py. O eSAJ muda a ordem
+# dos nós entre respostas, então os primeiros de cada lista não são estáveis.
+ARVORE_NOS_EXTRAS: dict[str, tuple[str, ...]] = {arvore: (no,) for arvore, (no, _) in NO_ESPERADO.items()}
+ARVORE_NOS_EXTRAS["classes_2"] += ("12227",)
+
+# Itens mantidos em cada <ul> da árvore, além dos de ARVORE_NOS_EXTRAS.
+ARVORE_ITENS_POR_LISTA = 2
+
+
+def recortar_arvore(html: str, nos_extras: tuple[str, ...]) -> str:
+    """Recorta a árvore: os primeiros ``<li>`` de cada ``<ul>``, mais os que levam a ``nos_extras``.
+
+    Os nós mantidos saem com textos e atributos intactos; o HTML é
+    reserializado pelo BeautifulSoup, e o espaço em branco entre as tags, que
+    o JSP do eSAJ deixa aos montes, vira uma quebra de linha.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    caminhos: set[int] = set()  # id() dos <li> que levam a um nó extra
+    for no in nos_extras:
+        alvo = soup.find("span", id=re.compile(rf"_tree_node_{re.escape(no)}$"))
+        if alvo is None:
+            raise ValueError(f"nó {no} ausente da árvore")
+        caminhos.update(id(item) for item in alvo.find_parents("li"))
+    for lista in soup.find_all("ul"):
+        if lista.decomposed:
+            continue
+        for posicao, item in enumerate(lista.find_all("li", recursive=False)):
+            if posicao >= ARVORE_ITENS_POR_LISTA and id(item) not in caminhos:
+                item.decompose()
+    # Depois do recorte, que deixa poucos nós de texto. Só espaço ASCII: o
+    # &nbsp; (\xa0) dos <span class="ie"> fica.
+    for texto in soup.find_all(string=True):
+        if not texto.strip(" \t\r\n") and not isinstance(texto, Comment):
+            texto.replace_with("\n")
+    return str(soup)
+
+
+def capture_arvores() -> None:
+    """Grava ``arvore/<arvore>_min.html``: o recorte de cada árvore de ``TREE_ENDPOINTS`` do TJSP.
+
+    Árvore que falha (erro HTTP, nó extra ausente) mantém o sample anterior;
+    as outras seguem.
+    """
+    dest = samples_dir_for("tjsp", "arvore")
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date().isoformat()
+    for arvore, rota in jus.scraper("tjsp").TREE_ENDPOINTS.items():
+        time.sleep(1.5)
+        nos_extras = ARVORE_NOS_EXTRAS[arvore]
+        try:
+            resposta = session.get(f"{ESAJ_BASE}{rota}", timeout=120)
+            resposta.raise_for_status()
+            resposta.encoding = "utf-8"
+            recorte = recortar_arvore(resposta.text, nos_extras)
+        except (requests.RequestException, ValueError) as exc:
+            print(f"[tjsp] árvore {arvore} FAILED: {exc}; sample mantido")
+            continue
+        cabecalho = (
+            f"<!-- Recorte da resposta real de {rota} do TJSP, capturada em\n"
+            f"     {hoje} (UTF-8) e recortada por capture_arvores, em tests/fixtures/capture/tjsp.py:\n"
+            f"     mantidos os {ARVORE_ITENS_POR_LISTA} primeiros <li> de cada <ul> e os que levam\n"
+            f"     aos nós {', '.join(nos_extras)}. -->\n"
+        )
+        dump(dest / f"{arvore}_min.html", (cabecalho + recorte).encode("utf-8"))
+        print(f"[tjsp] árvore {arvore}: {len(resposta.content)} → {len(recorte.encode())} bytes")
+
+
 # ---------- orchestrator -------------------------------------------------
 
 def main() -> None:
@@ -440,7 +571,9 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cposg_html", "acordao", "documentos"],
+        choices=[
+            "cjsg", "cjpg", "cpopg_html", "cpopg_outros_assuntos", "cposg_html", "acordao", "documentos", "arvores",
+        ],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -449,9 +582,11 @@ def main() -> None:
         ("cjsg", lambda: capture_cjsg()),
         ("cjpg", lambda: capture_cjpg()),
         ("cpopg_html", lambda: capture_cpopg_html(args.cnj)),
+        ("cpopg_outros_assuntos", capture_cpopg_outros_assuntos),
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
         ("acordao", capture_acordao),
         ("documentos", capture_documentos),
+        ("arvores", capture_arvores),
     ]
     for name, fn in flows:
         if name in args.skip:
