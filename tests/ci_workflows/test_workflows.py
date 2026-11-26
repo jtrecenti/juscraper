@@ -186,3 +186,19 @@ def test_integracao_so_roda_por_disparo_manual():
     texto = (RAIZ / ".github/workflows/integration.yml").read_text(encoding="utf-8")
     # O YAML 1.1 lê a chave `on` como o booleano True.
     assert list(yaml.safe_load(texto)[True]) == ["workflow_dispatch"]
+
+
+def test_filtros_de_caminho_apontam_para_arquivos_existentes():
+    # Um filtro `paths` com caminho inexistente nunca casa e deixa de disparar
+    # o workflow em silêncio (o docs.yml já apontou para um docs-publish.yml).
+    eventos = [yaml.safe_load(workflow.read_text(encoding="utf-8"))[True] for workflow in WORKFLOWS]
+    padroes = [
+        padrao.removeprefix("!")
+        for evento in eventos
+        if isinstance(evento, dict)
+        for config in evento.values()
+        if isinstance(config, dict)
+        for padrao in config.get("paths", []) + config.get("paths-ignore", [])
+    ]
+    assert padroes
+    assert [padrao for padrao in padroes if not any(RAIZ.glob(padrao))] == []

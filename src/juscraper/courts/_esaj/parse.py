@@ -3,7 +3,8 @@
 Absorbs the 6 near-identical ``cjsg_parse.py`` modules from the courts.
 ``cjsg_n_results`` le o total do ``input#totalResultadoAbaRetornoFiltro-*``
 quando ele existe. The TJSP version is the canonical reference for the
-fallback cascade of ``cjsg_n_pags`` (see CLAUDE.md) because its cascade of selectors/regex tolerates both the
+fallback cascade of ``cjsg_n_pags`` (see ``CONTRIBUTING.md`` > **Contagem de
+páginas e resultados em HTML**) because its cascade of selectors/regex tolerates both the
 legacy ``bgcolor=#EEEEEE`` layout and the newer ``td Resultados…``
 wording. The parser treats latin-1 as the expected server encoding
 (falls back to utf-8 for test samples that were re-saved).
@@ -156,9 +157,9 @@ def cjsg_n_results(html_source: str) -> int:
     uma ementa que cite "resultados" nao muda a contagem.
 
     Sem esse input, ou com valor vazio ou nao numerico, cai numa cascata de
-    seletores e regex, que tolera mudancas de layout. See the
-    "Extração de número de páginas/resultados em raspadores HTML" section of
-    CLAUDE.md for the rationale.
+    seletores e regex, que tolera mudancas de layout. See
+    ``CONTRIBUTING.md`` > **Contagem de páginas e resultados em HTML** for the
+    rationale.
 
     Fallback for the "results table present but pagination marker missing"
     edge case: counts ``tr.fundocinza1`` rows on the page (the row class used
