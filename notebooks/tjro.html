@@ -482,7 +482,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 17260.51it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 21290.88it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
@@ -522,7 +522,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Inclusão Indevida em Cadastro de Inadimplentes</td>
 <td>2025-04-15</td>
 <td>NaT</td>
-<td>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
+<td>Ementa:\nDIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>27718444-PJESG</td>
@@ -538,7 +538,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Perdas e Danos</td>
 <td>2025-03-27</td>
 <td>NaT</td>
-<td>EMENTA DIREITO DO CONSUMIDOR. RECURSO DE APELA...</td>
+<td>EMENTA\nDIREITO DO CONSUMIDOR. RECURSO DE APEL...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>27477641-PJESG</td>
@@ -554,7 +554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Indenização por Dano Material</td>
 <td>2026-05-15</td>
 <td>NaT</td>
-<td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. DIRE...</td>
+<td>EMENTA\nTURMA RECURSAL. RECURSO INOMINADO. DIR...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>31782710-PJESG</td>
@@ -576,7 +576,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 21620.12it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 16384.00it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
@@ -616,7 +616,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Inclusão Indevida em Cadastro de Inadimplentes</td>
 <td>2025-04-15</td>
 <td>NaT</td>
-<td>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
+<td>Ementa:\nDIREITO DO CONSUMIDOR. RECURSO INOMIN...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>27718444-PJESG</td>
@@ -632,7 +632,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Perdas e Danos</td>
 <td>2025-03-27</td>
 <td>NaT</td>
-<td>EMENTA DIREITO DO CONSUMIDOR. RECURSO DE APELA...</td>
+<td>EMENTA\nDIREITO DO CONSUMIDOR. RECURSO DE APEL...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>27477641-PJESG</td>
@@ -648,7 +648,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Indenização por Dano Material</td>
 <td>2026-05-15</td>
 <td>NaT</td>
-<td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. DIRE...</td>
+<td>EMENTA\nTURMA RECURSAL. RECURSO INOMINADO. DIR...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>31782710-PJESG</td>
@@ -665,7 +665,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="cell-8" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMINADO. INDENIZAÇÃO POR DANO MORAL. INSCRIÇÃO INDEVIDA EM ÓRGÃO DE PROTEÇÃO AO CRÉDITO. EXISTÊNCIA DE APONTAMENTO PRÉVIO LEGÍTIMO. INCIDÊNCIA DA SÚMULA 385 DO STJ. SENTENÇA MANTIDA. RECURSO NÃO PROVIDO. 1. Recurso Inominado interposto pelo autor em face da </code></pre>
+<pre><code>Ementa:
+DIREITO DO CONSUMIDOR. RECURSO INOMINADO. INDENIZAÇÃO POR DANO MORAL. INSCRIÇÃO INDEVIDA EM ÓRGÃO DE PROTEÇÃO AO CRÉDITO. EXISTÊNCIA DE APONTAMENTO PRÉVIO LEGÍTIMO. INCIDÊNCIA DA SÚMULA 385 DO STJ. SENTENÇA MANTIDA. RECURSO NÃO PROVIDO.
+1. Recurso Inominado interposto pelo autor em face da s</code></pre>
 </div>
 </div>
 </section>
@@ -684,7 +686,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 17848.10it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 23831.27it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
@@ -724,7 +726,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Direito de Imagem</td>
 <td>2024-05-31</td>
 <td>NaT</td>
-<td>EMENTA PRELIMINAR DE INÉPCIA DA INICIAL. PRELI...</td>
+<td>EMENTA\nPRELIMINAR DE INÉPCIA DA INICIAL. PREL...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>24144524-PJESG</td>
@@ -740,7 +742,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Direito de Imagem</td>
 <td>2024-06-30</td>
 <td>NaT</td>
-<td>EMENTA RECURSO INOMINADO. OFENSA. DANOS MORAIS...</td>
+<td>EMENTA\nRECURSO INOMINADO. OFENSA. DANOS MORAI...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>24511296-PJESG</td>
@@ -756,7 +758,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Direito de Imagem</td>
 <td>2024-06-17</td>
 <td>NaT</td>
-<td>EMENTA TURMA RECURSAL. RECURSO INOMINADO. CONS...</td>
+<td>EMENTA\nTURMA RECURSAL. RECURSO INOMINADO. CON...</td>
 <td>2</td>
 <td>PJESG</td>
 <td>24356554-PJESG</td>

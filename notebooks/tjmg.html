@@ -538,7 +538,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>5006195-84.2023.8.13.0352</td>
 <td>1.0000.25.035103-8/001</td>
 <td>Apelação Cível</td>
-<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>Des.(a) José Maurício Cantarino Villela</td>
 <td>2025-03-31</td>
 <td>2025-04-02</td>
 <td>APELAÇÃO CÍVEL. DIREITO CIVIL E PROCESSUAL CIV...</td>
@@ -586,7 +586,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="cell-7" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZATÓRIA - COBRANÇA DE CONTRIBUIÇÃO PARA ASSOCIAÇÃO CIVIL - AUSÊNCIA DE VÍNCULO JURÍDICO - DANOS MORAIS - VALORES DIMINUTOS - DEVER DE INDENIZAR - NÃO CONFIGURAÇÃO - Impugnada a legitimidade de descontos em folha de pagamento de parcelas de contribuição à as</code></pre>
+<pre><code>APELAÇÃO CÍVEL - AÇÃO DECLARATÓRIA E INDENIZATÓRIA - COBRANÇA DE CONTRIBUIÇÃO PARA ASSOCIAÇÃO CIVIL - AUSÊNCIA DE VÍNCULO JURÍDICO - DANOS MORAIS - VALORES DIMINUTOS - DEVER DE INDENIZAR - NÃO CONFIGURAÇÃO
+- Impugnada a legitimidade de descontos em folha de pagamento de parcelas de contribuição à as</code></pre>
 </div>
 </div>
 </section>
@@ -641,7 +642,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td data-quarto-table-cell-role="th">3</td>
 <td>5000580-37.2024.8.13.0172</td>
-<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>Des.(a) José Maurício Cantarino Villela</td>
 <td>2025-01-30</td>
 </tr>
 <tr class="odd">
@@ -670,8 +671,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">type</span>(raw), <span class="bu">len</span>(raw), <span class="st">'chars in page 1:'</span>, <span class="bu">len</span>(raw[<span class="dv">0</span>]))</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>df_raw <span class="op">=</span> tjmg.cjsg_parse(raw)</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>df_raw.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>TJMG captcha attempt 1 failed (code=14114)</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>&lt;class 'list'&gt; 1 chars in page 1: 59219</code></pre>
+<pre><code>&lt;class 'list'&gt; 1 chars in page 1: 59211</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div>
@@ -710,7 +714,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>5006195-84.2023.8.13.0352</td>
 <td>1.0000.25.035103-8/001</td>
 <td>Apelação Cível</td>
-<td>Des.(a) José Maurício Cantarino Villela (JD 2G)</td>
+<td>Des.(a) José Maurício Cantarino Villela</td>
 <td>2025-03-31</td>
 <td>2025-04-02</td>
 <td>APELAÇÃO CÍVEL. DIREITO CIVIL E PROCESSUAL CIV...</td>

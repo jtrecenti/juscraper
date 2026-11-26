@@ -482,7 +482,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRN: 100%|██████████| 2/2 [00:01&lt;00:00,  1.22it/s]</code></pre>
+<pre><code>Baixando páginas TJRN: 100%|██████████| 2/2 [00:01&lt;00:00,  1.36it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(20, 11)</code></pre>
@@ -519,7 +519,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -533,7 +533,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0804535-75.2024.8.20.5106 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0804535-75.2024.8.20.5106\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -547,7 +547,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0800222-07.2022.8.20.5150 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0800222-07.2022.8.20.5150\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -567,7 +567,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRN: 100%|██████████| 1/1 [00:00&lt;00:00, 18157.16it/s]</code></pre>
+<pre><code>Baixando páginas TJRN: 100%|██████████| 1/1 [00:00&lt;00:00, 25115.59it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 11)</code></pre>
@@ -604,7 +604,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -618,7 +618,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0804535-75.2024.8.20.5106 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0804535-75.2024.8.20.5106\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -632,7 +632,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2026-11-26</td>
 <td>2026-11-26</td>
-<td>APELAÇÃO CÍVEL Nº 0800222-07.2022.8.20.5150 AP...</td>
+<td>APELAÇÃO CÍVEL Nº 0800222-07.2022.8.20.5150\nA...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -648,7 +648,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="cell-8" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100 APELANTE: LUZIA MARIA DA COSTA SILVA ADVOGADOS: JONH LENNO DA SILVA ANDRADE E RAYSSA VITORIA GONÇALVES DA SILVA APELADAS: ASPECIR PREVIDÊNCIA E UNIÃO SEGURADORA S.A. - VIDA E PREVIDÊNCIA ADVOGADOS: MARCELO NORONHA PEIXOTO E JULIANO DELESPORTE DOS SANTOS TU</code></pre>
+<pre><code>APELAÇÃO CÍVEL Nº 0801608-23.2025.8.20.5100
+APELANTE: LUZIA MARIA DA COSTA SILVA
+ADVOGADOS: JONH LENNO DA SILVA ANDRADE E RAYSSA VITORIA GONÇALVES DA SILVA
+APELADAS: ASPECIR PREVIDÊNCIA E UNIÃO SEGURADORA S.A. - VIDA E PREVIDÊNCIA
+ADVOGADOS: MARCELO NORONHA PEIXOTO E JULIANO DELESPORTE DOS SANTOS TU</code></pre>
 </div>
 </div>
 </section>
@@ -674,7 +678,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRN: 100%|██████████| 1/1 [00:00&lt;00:00, 4424.37it/s]</code></pre>
+<pre><code>Baixando páginas TJRN: 100%|██████████| 1/1 [00:00&lt;00:00, 15887.52it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 11)</code></pre>
@@ -711,7 +715,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2024-06-28</td>
 <td>2024-07-01</td>
-<td>EMENTA : DIREITO CIVIL E CONSUMIDOR. APELAÇÃO ...</td>
+<td>EMENTA: DIREITO CIVIL E CONSUMIDOR. APELAÇÃO C...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -725,7 +729,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2024-06-28</td>
 <td>2024-07-02</td>
-<td>Normal 0 21 false false false PT-BR X-NONE X-N...</td>
+<td>EMENTA: PROCESSUAL CIVIL. CONFLITO DE COMPETÊN...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
@@ -739,7 +743,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Acórdão</td>
 <td>2024-06-28</td>
 <td>2024-07-01</td>
-<td>Normal 0 21 false false false PT-BR EMENTA : D...</td>
+<td>EMENTA: DIREITO CIVIL E CONSUMIDOR. APELAÇÃO C...</td>
 <td>PJE</td>
 <td>False</td>
 </tr>
