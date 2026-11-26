@@ -173,7 +173,8 @@ class TJPAScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            DataFrame com as decisoes.
+            DataFrame com as decisoes. ``ementa`` e ``None`` na decisao
+                monocratica, que o portal manda sem ementa.
 
         See also:
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos
