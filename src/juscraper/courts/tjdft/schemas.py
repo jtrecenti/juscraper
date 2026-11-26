@@ -43,10 +43,6 @@ class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
 class OutputCJSGTJDFT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJDFTScraper.cjsg`.
 
-    O parser do TJDFT (``tjdft.parse.cjsg_parse``) renomeia ``nomeRelator``,
-    ``descricaoOrgaoJulgador``, ``dataJulgamento`` e ``dataPublicacao`` para
-    ``relator``, ``orgao_julgador``, ``data_julgamento`` e ``data_publicacao``,
-    e repassa as demais chaves da API (``decisao``, ``codigoClasseCnj``,
-    ``turmaRecursal``...) via ``extra='allow'``. As duas datas saem como
-    ``datetime.date``: :meth:`TJDFTScraper.cjsg` as converte.
+    O parser (``tjdft.parse.cjsg_parse``) dá nome canônico a relator, órgão
+    julgador e datas, e repassa as demais chaves da API via ``extra='allow'``.
     """

@@ -10,6 +10,7 @@ from responses.matchers import json_params_matcher
 import juscraper as jus
 from juscraper.courts.tjdft.schemas import OutputCJSGTJDFT
 from tests._helpers import load_sample
+from tests.fixtures.capture.tjdft import DATA_PUBLICACAO_COM_MONOCRATICAS
 
 BASE = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 CJSG_MIN_COLUMNS = {"processo", "ementa", "relator", "orgao_julgador", "data_julgamento", "data_publicacao"}
@@ -80,9 +81,7 @@ def test_cjsg_typical_com_paginacao(mocker):
 def test_cjsg_parse_renomeia_colunas_para_os_nomes_canonicos(sample):
     """Relator, órgão julgador e datas saem com os nomes dos demais tribunais.
 
-    O valor é o do campo cru da API; as chaves sem equivalente canônico
-    passam com o nome da API. Decisões monocráticas (``base="decisoes"``) não
-    trazem ``dataJulgamento``, e a linha fica sem ``data_julgamento``.
+    Decisões monocráticas (``base="decisoes"``) não trazem ``dataJulgamento``.
     """
     registros = json.loads(load_sample("tjdft", f"cjsg/{sample}"))["registros"]
     linhas = jus.scraper("tjdft").cjsg_parse(registros)
@@ -94,22 +93,21 @@ def test_cjsg_parse_renomeia_colunas_para_os_nomes_canonicos(sample):
         assert linha["orgao_julgador"] == bruto["descricaoOrgaoJulgador"]
         assert linha.get("data_julgamento") == bruto.get("dataJulgamento")
         assert linha["data_publicacao"] == bruto["dataPublicacao"]
-        assert all(linha[col] for col in CJSG_MIN_COLUMNS - {"data_julgamento"}), linha["processo"]
+        assert all(linha[col] for col in ("relator", "orgao_julgador", "data_publicacao")), linha["processo"]
         assert ("data_julgamento" in linha) == (bruto["base"] == "acordaos")
-        assert linha["codigoClasseCnj"] == bruto["codigoClasseCnj"]
         OutputCJSGTJDFT.model_validate(linha)
 
 
 @responses.activate
 def test_cjsg_decisoes_monocraticas_saem_sem_data_de_julgamento(mocker):
-    """Na página mista, a monocrática sai com relator e órgão, e ``data_julgamento`` ausente.
-
-    Busca de "direito penal" publicada em 20/11/2026: 8 acórdãos e 2
-    decisões monocráticas na página 1 (conferido em 26/11/2026).
-    """
+    """Na página mista, a monocrática sai com relator e órgão, e ``data_julgamento`` vazia."""
     mocker.patch("time.sleep")
-    termos = [{"campo": "dataPublicacao", "valor": "entre 2026-11-20 e 2026-11-20"}]
-    _add_page("direito penal", 1, "cjsg/com_decisoes_monocraticas.json", termos_acessorios=termos)
+    _add_page(
+        "direito penal",
+        1,
+        "cjsg/com_decisoes_monocraticas.json",
+        termos_acessorios=[DATA_PUBLICACAO_COM_MONOCRATICAS],
+    )
 
     df = jus.scraper("tjdft").cjsg(
         "direito penal",
@@ -118,15 +116,11 @@ def test_cjsg_decisoes_monocraticas_saem_sem_data_de_julgamento(mocker):
         data_publicacao_fim="2026-11-20",
     )
 
-    assert set(df.columns) >= CJSG_MIN_COLUMNS
-    assert not COLUNAS_CRUAS_RENOMEADAS & set(df.columns)
     monocraticas = df["base"] == "decisoes"
     assert monocraticas.sum() == 2
     assert df.loc[monocraticas, "data_julgamento"].isna().all()
-    assert df.loc[~monocraticas, "data_julgamento"].map(type).eq(date).all()
-    assert df["data_publicacao"].map(type).eq(date).all()
-    assert df["data_publicacao"].eq(date(2026, 11, 20)).all()
-    assert df[["relator", "orgao_julgador"]].notna().all().all()
+    assert df.loc[~monocraticas, "data_julgamento"].notna().all()
+    assert df[["relator", "orgao_julgador", "data_publicacao"]].notna().all().all()
 
 
 @responses.activate

@@ -98,13 +98,10 @@ class TJDFTScraper(HTTPScraper):
         return brutos
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
-        """Converte os registros brutos da API em linhas, uma por acórdão.
+        """Converte os registros brutos da API em linhas, uma por registro.
 
-        Renomeia ``nomeRelator``, ``descricaoOrgaoJulgador``,
-        ``dataJulgamento`` e ``dataPublicacao`` para ``relator``,
-        ``orgao_julgador``, ``data_julgamento`` e ``data_publicacao``; as
-        demais chaves passam com o nome da API. Não converte as datas: quem
-        converte é :meth:`cjsg`.
+        As colunas saem como em :meth:`cjsg`, mas as datas ficam no texto ISO
+        da API: quem as converte é :meth:`cjsg`.
 
         Args:
             resultados_brutos (list): Registros devolvidos por
