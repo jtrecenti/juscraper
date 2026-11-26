@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -653,8 +653,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>Available filters: <code>numero_processo</code>, <code>id_classe</code>, <code>id_orgao_julgador</code>, <code>id_relator</code>, <code>id_colegiado</code>, <code>sistema</code> (PJE/SAJ), <code>decisoes</code>, <code>jurisdicoes</code>, <code>grau</code>, plus the judgment date range <code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code>.</p>
-<p><code>decisoes</code> takes the portal values <code>"Acórdão"</code> (collegiate), <code>"Decisão"</code> (single-judge) and <code>"Sentença"</code> (first instance). <code>pesquisa</code> only searches the ementa, and only acórdãos have one: for the other two types, pass <code>pesquisa=""</code> with a date range or another filter.</p>
+<p>Available filters: <code>numero_processo</code>, <code>id_classe</code>, <code>id_orgao_julgador</code>, <code>id_relator</code>, <code>id_colegiado</code>, <code>data_julgamento_inicio</code>/<code>data_julgamento_fim</code>, <code>sistema</code>, <code>decisoes</code>, <code>jurisdicoes</code>, <code>grau</code>.</p>
+<p><code>sistema</code>, <code>decisoes</code>, <code>jurisdicoes</code> and <code>grau</code> only take the values of the portal form, or <code>""</code>/<code>None</code> for all; any other value raises <code>ValidationError</code> before the request:</p>
+<ul>
+<li><code>sistema</code>: <code>"PJE"</code> or <code>"SAJ"</code> (case-sensitive).</li>
+<li><code>decisoes</code>: <code>"Decisão"</code> (single-judge), <code>"Acórdão"</code> (collegiate) or <code>"Sentença"</code> (first instance).</li>
+<li><code>jurisdicoes</code>: <code>"TJ"</code> (Tribunal de Justiça) or <code>"TR"</code> (Turmas Recursais); both only cover second-instance decisions.</li>
+<li><code>grau</code>: <code>"1"</code> or <code>"2"</code>, as strings.</li>
+</ul>
+<p><code>pesquisa</code> only searches the ementa, and only acórdãos have one: with <code>decisoes="Decisão"</code>, <code>decisoes="Sentença"</code> or <code>grau="1"</code>, pass <code>pesquisa=""</code> with a date range or another filter.</p>
 <div id="cell-10" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjrn.cjsg(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
