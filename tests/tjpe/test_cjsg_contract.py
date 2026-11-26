@@ -170,7 +170,7 @@ def test_cjsg_simples_typical(mocker):
 
 @responses.activate(registry=OrderedRegistry)
 def test_cjsg_monocraticas_typical(mocker):
-    """3-call flow com ``tipo_decisao="monocraticas"``: a coluna ``ementa`` sai, ausente.
+    """3-call flow com ``tipo_decisao="monocraticas"``: ``ementa`` ausente, data e decisão preenchidas.
 
     O bloco das monocráticas não traz o rótulo ``Ementa``; sem a coluna, a
     junção com a saída dos acórdãos (e de outros tribunais) perdia o campo.
@@ -186,6 +186,8 @@ def test_cjsg_monocraticas_typical(mocker):
     assert df["processo"].nunique() == 10
     assert "ementa" in df.columns
     assert df["ementa"].map(pd.isna).all()
+    assert df["data_publicacao"].notna().all()
+    assert df["decisao"].map(lambda texto: isinstance(texto, str) and bool(texto)).all()
 
 
 @responses.activate(registry=OrderedRegistry)

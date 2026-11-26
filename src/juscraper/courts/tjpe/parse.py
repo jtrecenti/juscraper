@@ -16,8 +16,10 @@ FIELD_MAP = {
     "Órgão Julgador": "orgao_julgador",
     "Data de Julgamento": "data_julgamento",
     "Data da Publicação/Fonte": "data_publicacao",
+    "Data da Publicação": "data_publicacao",
     "Ementa": "ementa",
     "Acórdão": "acordao",
+    "Decisão": "decisao",
     "Meio de Tramitação": "meio_tramitacao",
 }
 
@@ -67,16 +69,27 @@ def _parse_result_table(table) -> dict:
     return result
 
 
-def _com_coluna_ementa(df: pd.DataFrame) -> pd.DataFrame:
-    """Garante a coluna ``ementa``, com ``None`` onde o bloco não traz ementa.
+def _ausente_como_none(df: pd.DataFrame, coluna: str) -> None:
+    """Troca por ``None`` o texto ausente (``NaN``) ou vazio de ``coluna``."""
+    serie = df[coluna]
+    df[coluna] = serie.where(serie.notna() & (serie != ""), None).astype(object)
 
-    O bloco das monocráticas não tem o rótulo ``Ementa``; célula vazia também
-    conta como ausente. A tabela vazia (busca sem resultados) fica como está.
+
+def _normaliza_textos(df: pd.DataFrame) -> pd.DataFrame:
+    """Garante a coluna ``ementa`` e deixa ``None`` onde falta ementa ou decisão.
+
+    O bloco das monocráticas não tem o rótulo ``Ementa``, e o dos acórdãos não
+    tem ``Decisão``; célula vazia também conta como ausente. ``decisao`` só
+    existe quando alguma linha a traz. A tabela vazia (busca sem resultados)
+    fica como está.
     """
     if df.empty:
         return df
-    ementa = df["ementa"] if "ementa" in df.columns else pd.Series(None, index=df.index, dtype=object)
-    df["ementa"] = ementa.where(ementa.notna() & (ementa != ""), None).astype(object)
+    if "ementa" not in df.columns:
+        df["ementa"] = None
+    _ausente_como_none(df, "ementa")
+    if "decisao" in df.columns:
+        _ausente_como_none(df, "decisao")
     return df
 
 
@@ -89,7 +102,9 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
 
     As decisões monocráticas não têm o rótulo ``Ementa`` no bloco: saem com
     ``ementa`` ausente (``None``), e a coluna existe mesmo quando nenhuma
-    linha da busca tem ementa.
+    linha da busca tem ementa. O texto delas (rótulo ``Decisão``) sai em
+    ``decisao``, que fica ``None`` nos acórdãos; o rótulo ``Data da
+    Publicação`` (sem "/Fonte") sai em ``data_publicacao``.
     """
     all_results = []
 
@@ -108,7 +123,7 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
                     result["url_inteiro_teor"] = inteiro_teor_urls[idx]
                 all_results.append(result)
 
-    df = _com_coluna_ementa(pd.DataFrame(all_results))
+    df = _normaliza_textos(pd.DataFrame(all_results))
 
     # Convert date columns
     for col in ["data_julgamento", "data_publicacao"]:
@@ -119,7 +134,7 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
     preferred = [
         "processo", "classe", "assunto", "relator",
         "orgao_julgador", "data_julgamento", "data_publicacao",
-        "ementa", "acordao", "meio_tramitacao", "url_inteiro_teor",
+        "ementa", "acordao", "decisao", "meio_tramitacao", "url_inteiro_teor",
     ]
     cols = [c for c in preferred if c in df.columns]
     cols += [c for c in df.columns if c not in preferred]
