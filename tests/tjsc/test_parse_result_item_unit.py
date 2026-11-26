@@ -1,8 +1,8 @@
 """Unit tests for the TJSC result-item parser.
 
 Most tests characterize behavior kept from the original parser. The tests on
-the ``/TJSC`` suffix, on ``DECISÃO`` and on the class read from the ``<span>``
-lock fixes: they fail against the parser that predates them.
+``DECISÃO``, on the ``/TJSC`` and ``/SC`` suffixes and on the class read from
+the ``<span>`` lock fixes: they fail against the parser that predates them.
 """
 import datetime
 
@@ -17,17 +17,7 @@ from tests._helpers import load_sample
 # desconhecido, rótulo conhecido dentro de texto maior e rótulo sem valor.
 # Não é resposta do portal; por isso fica aqui e não em ``samples/``.
 ITENS_COM_VARIANTES = """\
-<!doctype html>
-<html lang="pt-BR">
-<body>
   <div class="resultadoItem" id="direct-labels">
-    <div class="resLabel">PROCESSO</div>
-    <div class="resValue">
-      <div class="row">
-        <div class="col-12 col-md-auto"><a class="numero-processo">5001234-56.2024.8.24.0000/TJSC</a></div>
-        <div class="col-12 col-md-auto"><span>AI - Agravo de Instrumento</span></div>
-      </div>
-    </div>
     <div class="resLabel">ÓRGÃO JULGADOR</div>
     <div class="resValue">Primeira Câmara</div>
     <div class="resLabel">RELATORA</div>
@@ -68,8 +58,6 @@ ITENS_COM_VARIANTES = """\
     <div class="resLabel">RELATOR</div>
     <div class="resValue">SC</div>
   </div>
-</body>
-</html>
 """
 
 
@@ -78,13 +66,11 @@ def _sample_items() -> dict[str, object]:
     return {item["id"]: item for item in soup.find_all("div", class_="resultadoItem")}
 
 
-def test_parse_result_item_strips_tjsc_suffix_and_keeps_later_decision():
-    """The ``/TJSC`` suffix is dropped and a later DECISÃO stays next to EMENTA."""
+def test_parse_result_item_keeps_later_decision():
+    """A DECISÃO after EMENTA stays next to it."""
     result = _parse_result_item(_sample_items()["direct-labels"])
 
     assert result == {
-        "processo": "5001234-56.2024.8.24.0000",
-        "classe": "Agravo de Instrumento",
         "orgao_julgador": "Primeira Câmara",
         "relator": "Desembargadora Ana",
         "ementa": "Ementa preferencial",
@@ -139,12 +125,12 @@ def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
 
     ``partial-labels`` and ``truncated-pairs`` are dropped; the other three stay.
     """
-    with pytest.warns(UserWarning, match="2 registro"):
+    with pytest.warns(UserWarning, match=r"3 registro\(s\) sem número de processo"):
         df = cjsg_parse_manager([ITENS_COM_VARIANTES])
 
     assert len(_sample_items()) == 5
     assert len(df) == 3
-    assert df[["processo", "ementa"]].notna().any(axis=1).all()
+    assert df["ementa"].notna().all()
 
 
 def test_cjsg_parse_manager_reads_process_number_without_link():

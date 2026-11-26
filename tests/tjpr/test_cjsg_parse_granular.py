@@ -25,9 +25,6 @@ TRUNCATED_WITHOUT_VALUE = "Resumo com id sem valor. Leia mais..."
 # sem ``<input>`` e com ``<input>`` sem valor, e linha sem a célula da ementa.
 # Não é resposta do portal; por isso fica aqui e não em ``samples/``.
 PAGINA_COM_BORDAS = """\
-<!DOCTYPE html>
-<html lang="pt-BR">
-<body>
 <table class="resultTable jurisprudencia">
     <tr>
         <th>Tipo</th>
@@ -80,8 +77,6 @@ PAGINA_COM_BORDAS = """\
         <td>Linha sem a célula de ementa.</td>
     </tr>
 </table>
-</body>
-</html>
 """
 
 
