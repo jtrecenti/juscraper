@@ -278,40 +278,40 @@ class TestCJSGNResultsInputDeclarado:
 class TestCJSGParseSinglePage:
     """Test the _cjsg_parse_single_page function."""
 
-    def test_ementa_com_previa_sem_style_retorna_texto_completo_uma_vez(self):
-        """A ementa completa oculta deve substituir a prévia visível (issue #713)."""
-        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/ementa_preview_sem_style.html"
-        html = sample_path.read_text(encoding="utf-8")
-        soup = BeautifulSoup(html, "html.parser")
-        divs = soup.select('div[align="justify"]')
-        previa, completa = divs
-        texto_completo = completa.get_text(" ", strip=True).replace("Ementa:", "", 1).strip()
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo"),
+        [
+            ("tjac", "cjsg/post_initial.html"),
+            ("tjal", "cjsg/post_initial.html"),
+            ("tjam", "cjsg/post_initial.html"),
+            ("tjce", "cjsg/results_normal_page_01.html"),
+            ("tjms", "cjsg/post_initial.html"),
+            ("tjsp", "cjsg/ementa_com_resultados.html"),
+        ],
+    )
+    def test_ementa_longa_devolve_so_a_completa(self, sigla, arquivo):
+        """Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713)."""
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        soup = BeautifulSoup(path.read_bytes().decode("utf-8"), "html.parser")
+        linhas = soup.find_all("tr", class_="fundocinza1")
 
-        df = _parse_single_page(str(sample_path))
+        df = _parse_single_page(str(path))
 
-        assert len(df) == 1
-        assert df.iloc[0]["ementa"].count("APELAÇÃO  –  Ação Civil Pública") == 1
-        assert df.iloc[0]["ementa"] == texto_completo
-        assert len(previa.get_text(" ", strip=True)) < len(completa.get_text(" ", strip=True))
-
-    def test_ementa_com_div_unica_preserva_texto_de_captura_real(self):
-        """Uma div única continua sendo lida integralmente em captura TJSP real."""
-        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/ementa_com_resultados.html"
-        soup = BeautifulSoup(sample_path.read_text(encoding="utf-8"), "html.parser")
-        ementa_row = next(
-            row for row in soup.select("tr.ementaClass2")
-            if row.find("strong") is not None
-            and "ementa" in row.find("strong").get_text().lower()
-            and len(row.find_all("div", align="justify")) == 1
-        )
-        result_row = ementa_row.find_parent("tr", class_="fundocinza1")
-        div = ementa_row.find("div", align="justify")
-        processo = result_row.find("a", class_="esajLinkLogin").get_text(strip=True)
-        texto_esperado = div.get_text(" ", strip=True).replace("Ementa:", "", 1).strip()
-
-        df = _parse_single_page(str(sample_path))
-
-        assert df.loc[df["processo"] == processo, "ementa"].iloc[0] == texto_esperado
+        assert len(df) == len(linhas)
+        longas = 0
+        for ementa, linha in zip(df["ementa"], linhas, strict=True):
+            divs = [
+                div.get_text(" ", strip=True).replace("Ementa:", "").strip()
+                for div in linha.select('div[align="justify"]')
+            ]
+            if len(divs) == 2:
+                previa, completa = divs
+                assert len(previa) < len(completa)
+                assert ementa == completa
+                longas += 1
+            elif len(divs) == 1:
+                assert ementa == divs[0]
+        assert longas > 0
 
     def test_parse_results_page(self):
         """Test parsing a results page with multiple processes."""
