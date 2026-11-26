@@ -60,9 +60,7 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     so tribunal-specific extras (e.g., ``classe_assunto``) don't break
     validation.
 
-    O rótulo HTML ``"Relator(a):"`` vira a coluna canônica ``relator``,
-    a mesma dos demais tribunais. Até a 0.5.0, o parser emitia
-    ``relatora``.
+    O rótulo HTML ``"Relator(a):"`` vira a coluna canônica ``relator``.
     """
 
     cd_acordao: str | None = None

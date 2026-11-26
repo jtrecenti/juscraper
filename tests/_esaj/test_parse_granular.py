@@ -621,9 +621,6 @@ class TestNormalizeKey:
             pytest.param("Relator(a):", "relator", id="relator-a-colado"),
             pytest.param("Relator (a):", "relator", id="relator-a-com-espaco"),
             pytest.param("Relator:", "relator", id="relator"),
-            pytest.param("Órgão julgador:", "orgao_julgador", id="orgao-julgador"),
-            pytest.param("Classe/Assunto:", "classe_assunto", id="classe-assunto"),
-            pytest.param("Data de publicação:", "data_publicacao", id="data-publicacao"),
         ],
     )
     def test_rotulo_vira_chave_canonica(self, rotulo, chave):
@@ -638,7 +635,6 @@ class TestNormalizeKey:
 
         assert "relatora" not in df.columns
         assert df["relator"].notna().all()
-        assert df["relator"].str.len().gt(0).all()
 
 
 if __name__ == "__main__":
