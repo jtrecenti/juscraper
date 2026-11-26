@@ -257,8 +257,8 @@ class TestCPOPGUnit:
         """A broken file next to a readable one keeps a row with motivo_falha and goes into a warning."""
         pasta = tmp_path / '10093677620178260344'
         pasta.mkdir()
-        valido = pasta / 'show_standard.html'
-        valido.write_text(load_sample('tjsp', 'cpopg/show_standard.html'), encoding='utf-8')
+        valido = pasta / 'show_outros_assuntos.html'
+        valido.write_text(load_sample('tjsp', 'cpopg/show_outros_assuntos.html'), encoding='utf-8')
         quebrado = pasta / 'quebrado.html'
         quebrado.write_bytes(b'\xff\xfe\xfa invalido em utf-8')
 
@@ -492,81 +492,15 @@ class TestCPOPGUnit:
         finally:
             Path(temp_path).unlink()
 
-    def test_parse_alternative_template_from_sample(self):
-        """Test parsing the alternative template sample HTML file."""
-        html = load_sample('tjsp', 'cpopg/show_alternative.html')
-
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
-
-        try:
-            result = cpopg_parse_single_html(temp_path)
-            basicos = result['basicos'].iloc[0]
-
-            assert basicos['id_processo'] == '0015615-74.2025.8.26.0577'
-            assert basicos['classe'] == 'Cumprimento de Sentença contra a Fazenda Pública'
-            assert basicos['assunto'] == 'Reajuste de Prestações'
-            assert basicos['foro'] == 'Foro de São José dos Campos'
-            assert basicos['processo_principal'] == '1010658-13.2025.8.26.0577'
-            assert basicos['area'] == 'Cível'
-            assert basicos['data_distribuicao'] == '28/02/2025 às 12:15'
-
-            # Partes and movimentacoes should also be parsed
-            assert len(result['partes']) == 1
-            assert len(result['movimentacoes']) == 1
-        finally:
-            Path(temp_path).unlink()
-
-    def test_parse_standard_template_from_sample(self):
-        """Test parsing the standard template sample HTML file with extra fields."""
-        html = load_sample('tjsp', 'cpopg/show_standard.html')
-
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
-
-        try:
-            result = cpopg_parse_single_html(temp_path)
-            basicos = result['basicos'].iloc[0]
-
-            # Standard ID-based fields
-            assert basicos['id_processo'] == '1009367-76.2017.8.26.0344'
-            assert basicos['classe'] == 'Procedimento Comum Cível'
-            assert basicos['valor_acao'] == 'R$         10.000,00'
-            assert basicos['juiz'] == 'WALMIR IDALENCIO DOS SANTOS CRUZ'
-
-            # Extra fields from maisDetalhes
-            assert basicos['controle'] == '2017/006364'
-            assert basicos['area'] == 'Cível'
-            assert basicos['outros_assuntos'] == 'ICMS/ Imposto sobre Circulação de Mercadorias'
-        finally:
-            Path(temp_path).unlink()
-
     @pytest.mark.parametrize(
-        ('sample_name', 'basic_columns', 'basic_values', 'party_values', 'movement_values'),
+        ('sample_name', 'basic_values', 'party_values', 'n_movimentacoes', 'petition'),
         [
-            (
-                'show_standard.html',
-                [
-                    'file_path',
-                    'id_processo',
-                    'classe',
-                    'assunto',
-                    'foro',
-                    'vara',
-                    'juiz',
-                    'data_distribuicao',
-                    'valor_acao',
-                    'situacao',
-                    'controle',
-                    'area',
-                    'outros_assuntos',
-                ],
+            pytest.param(
+                'show_outros_assuntos.html',
                 {
                     'id_processo': '1009367-76.2017.8.26.0344',
-                    'classe': 'Procedimento Comum Cível',
-                    'assunto': 'Responsabilidade do Fornecedor',
+                    'classe': 'Procedimento do Juizado Especial da Fazenda Pública',
+                    'assunto': 'Repetição de indébito',
                     'foro': 'Foro de Marília',
                     'vara': 'Vara da Fazenda Pública',
                     'juiz': 'WALMIR IDALENCIO DOS SANTOS CRUZ',
@@ -577,77 +511,63 @@ class TestCPOPGUnit:
                     'area': 'Cível',
                     'outros_assuntos': 'ICMS/ Imposto sobre Circulação de Mercadorias',
                 },
-                {'tipo': 'Reqte', 'nome': 'João da Silva', 'advogados': ['Pedro Souza']},
                 {
-                    'data': '01/03/2025',
-                    'movimento': 'Juntada de Petição',
-                    'observacao': '',
-                    'cd_documento': None,
-                    'documento_publico': None,
-                    'caminho_documento': None,
+                    'tipo': 'Reqte',
+                    'nome': 'Parte Ficticia 1',
+                    'advogados': ['Advogado Ficticio 1', 'Advogado Ficticio 2'],
                 },
+                35,
+                {'data': '06/07/2017', 'tipo': 'Contestação'},
+                id='principal',
             ),
-            (
-                'show_alternative.html',
-                [
-                    'file_path',
-                    'id_processo',
-                    'classe',
-                    'assunto',
-                    'foro',
-                    'vara',
-                    'juiz',
-                    'data_distribuicao',
-                    'valor_acao',
-                    'situacao',
-                    'processo_principal',
-                    'controle',
-                    'area',
-                ],
+            pytest.param(
+                'show_incidente.html',
                 {
-                    'id_processo': '0015615-74.2025.8.26.0577',
-                    'classe': 'Cumprimento de Sentença contra a Fazenda Pública',
-                    'assunto': 'Reajuste de Prestações',
-                    'foro': 'Foro de São José dos Campos',
-                    'vara': 'Anexo do Juizado Especial da Fazenda Pública',
+                    'id_processo': '0000564-95.2025.8.26.0068',
+                    'classe': 'Cumprimento de sentença',
+                    'assunto': 'Atraso de vôo',
+                    'foro': 'Foro de Barueri',
+                    'vara': '1ª Vara do Juizado Especial Cível e Criminal',
                     'juiz': None,
-                    'data_distribuicao': '28/02/2025 às 12:15',
+                    'data_distribuicao': '27/11/2024 às 18:14',
                     'valor_acao': None,
                     'situacao': 'Extinto',
-                    'processo_principal': '1010658-13.2025.8.26.0577',
-                    'controle': '2024/005678',
+                    'processo_principal': '1013762-56.2023.8.26.0068',
+                    'controle': '2023/002711',
                     'area': 'Cível',
                 },
-                {'tipo': 'Exeqte', 'nome': 'Maria Santos', 'advogados': ['Ana Oliveira']},
-                {
-                    'data': '15/03/2025',
-                    'movimento': 'Recebidos os autos',
-                    'observacao': '',
-                    'cd_documento': None,
-                    'documento_publico': None,
-                    'caminho_documento': None,
-                },
+                {'tipo': 'Exeqte', 'nome': 'Exequente Ficticio', 'advogados': ['Advogado do Exequente']},
+                0,
+                {'data': '13/02/2025', 'tipo': 'Pedido de Expedição de Mandado de Levantamento'},
+                id='incidente',
+                marks=pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning'),
             ),
         ],
     )
     def test_cpopg_parse_sample_contract(
         self,
         sample_name,
-        basic_columns,
         basic_values,
         party_values,
-        movement_values,
+        n_movimentacoes,
+        petition,
     ):
-        """Characterize field order and nested table shapes for both CPOPG templates."""
+        """Ordem dos campos e forma das tabelas no processo principal e no incidente.
+
+        ``show_outros_assuntos.html`` é o arquivo que o ``cpopg_download`` grava, com as
+        movimentações; ``show_incidente.html`` é a página crua, sem elas. Das petições
+        diversas, confere uma petição real.
+        """
         sample_path = _SAMPLES / sample_name
         result = cpopg_parse_single_html(str(sample_path))
 
         assert list(result) == ['basicos', 'partes', 'movimentacoes', 'peticoes_diversas']
-        assert list(result['basicos'].columns) == basic_columns
+        assert list(result['basicos'].columns) == ['file_path', *basic_values]
         assert result['basicos'].iloc[0].to_dict() == {'file_path': str(sample_path), **basic_values}
         assert list(result['partes'].columns) == ['file_path', 'tipo', 'nome', 'advogados']
         assert result['partes'].iloc[0].to_dict() == {'file_path': str(sample_path), **party_values}
-        assert list(result['movimentacoes'].columns) == [
+        movimentacoes = result['movimentacoes']
+        assert list(movimentacoes.columns) == [
             'file_path',
             'data',
             'movimento',
@@ -656,9 +576,37 @@ class TestCPOPGUnit:
             'documento_publico',
             'caminho_documento',
         ]
-        assert result['movimentacoes'].iloc[0].to_dict() == {'file_path': str(sample_path), **movement_values}
-        assert result['peticoes_diversas'].empty
-        assert list(result['peticoes_diversas'].columns) == ['file_path', 'data', 'tipo']
+        assert len(movimentacoes) == n_movimentacoes
+        peticoes = result['peticoes_diversas']
+        assert list(peticoes.columns) == ['file_path', 'data', 'tipo']
+        assert petition in peticoes[['data', 'tipo']].to_dict('records')
+
+    def test_cpopg_parse_movimentacoes_gravadas_pelo_download(self):
+        """Movimentações que o ``cpopg_download`` junta à página: com e sem documento vinculado."""
+        sample_path = _SAMPLES / 'show_outros_assuntos.html'
+
+        movimentacoes = cpopg_parse_single_html(str(sample_path))['movimentacoes']
+
+        primeira = movimentacoes.iloc[0]
+        assert (primeira['data'], primeira['movimento'], primeira['observacao']) == (
+            '08/04/2025', 'Arquivado Definitivamente', '',
+        )
+        assert pd.isna(primeira['cd_documento'])
+        assert primeira['documento_publico'] is None
+        com_documento = movimentacoes[movimentacoes['cd_documento'].notna()]
+        assert com_documento.iloc[0].to_dict() == {
+            'file_path': str(sample_path),
+            'data': '08/04/2025',
+            'movimento': 'Trânsito em Julgado às partes',
+            'observacao': (
+                'Certifico e dou fé que a r. Sentença transitou em julgado em 17/02/2025. '
+                'Certifico ainda que, não havendo atos a cumprir, o processo foi definitivamente '
+                'baixado no sistema.'
+            ),
+            'cd_documento': '96501176',
+            'documento_publico': False,
+            'caminho_documento': None,
+        }
 
     def test_cpopg_parse_avisa_movimentacoes_nao_carregadas(self):
         """Página salva sem a lista carregada avisa em vez de parecer processo sem movimentações."""
@@ -668,6 +616,28 @@ class TestCPOPGUnit:
             result = cpopg_parse_single_html(str(sample_path))
 
         assert result['movimentacoes'].empty
+
+    @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
+    @pytest.mark.parametrize(
+        ('sample_name', 'n_peticoes', 'primeira'),
+        [
+            ('search.html', 27, ('14/02/2024', 'Emenda à Inicial')),
+            ('show_principal.html', 4, ('17/02/2025', 'Contestação')),
+            ('show_incidente.html', 1, ('13/02/2025', 'Pedido de Expedição de Mandado de Levantamento')),
+            (
+                'show_sociedade_advogados.html',
+                5,
+                ('24/02/2021', 'Impugnação aos Embargos à Execução Fiscal (ART. 17, DA LEI 6.830/80)'),
+            ),
+        ],
+    )
+    def test_cpopg_parse_peticoes_diversas_ignora_separador_do_cabecalho(self, sample_name, n_peticoes, primeira):
+        """A linha separadora do ``<thead>`` (duas ``<td>`` vazias) não vira petição."""
+        peticoes = cpopg_parse_single_html(str(_SAMPLES / sample_name))['peticoes_diversas']
+
+        assert len(peticoes) == n_peticoes
+        assert (peticoes[['data', 'tipo']] != '').all(axis=None)
+        assert tuple(peticoes.iloc[0][['data', 'tipo']]) == primeira
 
     @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
     def test_cpopg_parse_principal_situacao_e_advogada(self):

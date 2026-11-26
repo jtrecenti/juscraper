@@ -389,6 +389,43 @@ def test_cjsg_grau_fora_do_portal_levanta_validation_error(valor):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, grau=valor)
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):
+    """Com ``buscar_em="inteiro_teor"``, ``pesquisa`` vai no campo
+    ``inteiro_teor`` do payload, com a ementa vazia.
+
+    E o caminho para buscar termo em sentencas e monocraticas, que nao tem
+    ementa: o sample traz so sentencas com "dano moral" no inteiro teor.
+    """
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", "cjsg/inteiro_teor_sentenca.json")
+    hits = json.loads(raw)["hits"]["hits"]
+    assert hits
+    assert {h["_source"]["tipo_teor"] for h in hits} == {"Sentença"}
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "dano moral", page=1, buscar_em="inteiro_teor", decisoes="Sentença",
+        ))],
+    )
+
+    resultado = getattr(jus.scraper("tjrn"), metodo)(
+        "dano moral", paginas=1, buscar_em="inteiro_teor", decisoes="Sentença",
+    )
+
+    corpo = json.loads(responses.calls[0].request.body)["jurisprudencia"]
+    assert (corpo["ementa"], corpo["inteiro_teor"]) == ("", "dano moral")
+    if metodo == "cjsg":
+        assert len(resultado) == len(hits)
+    else:
+        assert resultado[0]["hits"]["hits"] == hits
+
+
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRN` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93)."""

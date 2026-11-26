@@ -244,9 +244,13 @@ class TJPEScraper(HTTPScraper):
             Uma linha por decisao. Colunas canonicas:
                 ``processo``, ``classe``, ``assunto``, ``relator``,
                 ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
-                ``ementa``, ``acordao``, ``meio_tramitacao``,
+                ``ementa``, ``acordao``, ``decisao``, ``meio_tramitacao``,
                 ``url_inteiro_teor``. As decisões monocráticas não têm
-                ementa no portal e saem com ``ementa`` ``None``.
+                ementa no portal e saem com ``ementa`` ``None``; o texto
+                delas sai em ``decisao``, coluna que só existe quando a
+                busca traz monocráticas (nos acórdãos, o texto sai em
+                ``acordao``). O portal não publica ``orgao_julgador`` nem
+                ``data_julgamento`` das monocráticas.
 
         Examples: Exemplo
             >>> import juscraper as jus

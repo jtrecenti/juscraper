@@ -76,6 +76,12 @@ def main() -> None:
     _capture(session, dest, "dano moral", 1, "sistema_saj.json", sistema="SAJ")
     # ``grau="1"`` traz so decisoes de 1o grau, que nao tem ementa: vai sem termo.
     _capture(session, dest, "", 1, "grau_1.json", grau="1", **periodo)
+    # ``buscar_em="inteiro_teor"``: o termo vai no campo ``inteiro_teor`` do
+    # payload, que monocraticas e sentencas tem (ao contrario da ementa).
+    _capture(
+        session, dest, "dano moral", 1, "inteiro_teor_sentenca.json",
+        buscar_em="inteiro_teor", decisoes="Sentença",
+    )
 
 
 if __name__ == "__main__":
