@@ -80,7 +80,7 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     # A mesma cascata do ``cjsg``: célula curta com "Resultados 1 a N de M"
     # primeiro. Sem o limite de tamanho, a primeira ``td`` com "resultado" é
     # a de layout, que envolve a página inteira e termina nos links de
-    # paginação; numa página só, o ``\d+$`` lia o link "1" (#740).
+    # paginação; numa página só, o ``\d+$`` lia o link "1".
     page_element = _find_pagination_element(soup)
     if page_element is None:
         return _count_cjpg_result_rows_or_raise(soup, len(linhas_de_resultado))
