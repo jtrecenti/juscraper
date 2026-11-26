@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.utils.deprecacao import resolve_deprecated_value
+from juscraper.utils.deprecacao import BUSCAR_EM_DE_INTEIRO_TEOR, resolve_buscar_em, resolve_deprecated_value
 from juscraper.utils.params import (
     iter_date_windows,
     normalize_datas,
@@ -456,6 +456,49 @@ class TestResolveDeprecatedValue:
         assert len(avisos) == 1
         assert str(avisos[0].message) == f"x={valor!r} esta deprecado; use x=151."
         assert avisos[0].filename == __file__
+
+
+# --- resolve_buscar_em ---
+
+class TestResolveBuscarEm:
+
+    @pytest.mark.parametrize(("kwargs", "buscar_em"), [({}, None), ({"x": 1}, None), ({"buscar_em": "ementa"}, None)])
+    def test_sem_alias_nao_avisa_e_mantem_buscar_em(self, recwarn, kwargs, buscar_em):
+        esperado = dict(kwargs)
+        resolve_buscar_em(kwargs, "campo", buscar_em)
+        assert kwargs == esperado
+        assert not recwarn.list
+
+    def test_buscar_em_do_argumento_vai_para_kwargs(self):
+        kwargs: dict = {}
+        resolve_buscar_em(kwargs, "campo", "inteiro_teor")
+        assert kwargs == {"buscar_em": "inteiro_teor"}
+
+    @pytest.mark.parametrize(("antigo", "novo"), [(True, "inteiro_teor"), (False, "ementa"), ("x", "x"), ([1], [1])])
+    def test_alias_converte_o_valor_com_aviso(self, antigo, novo):
+        """Valor fora do mapa (ou sem hash) segue igual, para o schema recusar."""
+        kwargs = {"inteiro_teor": antigo, "outro": 1}
+        with pytest.warns(DeprecationWarning, match="inteiro_teor") as avisos:
+            resolve_buscar_em(kwargs, "inteiro_teor", valores=BUSCAR_EM_DE_INTEIRO_TEOR)
+        assert kwargs == {"buscar_em": novo, "outro": 1}
+        assert len(avisos) == 1
+        assert str(avisos[0].message) == (
+            f"O parâmetro 'inteiro_teor' está deprecado. Use buscar_em={novo!r} em vez de inteiro_teor={antigo!r}."
+        )
+        assert avisos[0].filename == __file__
+
+    def test_alias_sem_mapa_mantem_o_valor(self):
+        kwargs = {"campo": "numero"}
+        with pytest.warns(DeprecationWarning, match="buscar_em='numero' em vez de campo='numero'"):
+            resolve_buscar_em(kwargs, "campo")
+        assert kwargs == {"buscar_em": "numero"}
+
+    @pytest.mark.parametrize("no_argumento", [True, False])
+    def test_alias_e_buscar_em_juntos_levanta_sem_aviso(self, recwarn, no_argumento):
+        kwargs = {"campo": "E"} if no_argumento else {"campo": "E", "buscar_em": "ementa"}
+        with pytest.raises(ValueError, match="'buscar_em' e 'campo' ao mesmo tempo"):
+            resolve_buscar_em(kwargs, "campo", "ementa" if no_argumento else None, {"E": "ementa"})
+        assert not recwarn.list
 
 
 # --- iter_date_windows ---

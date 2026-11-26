@@ -11,6 +11,8 @@ from juscraper.utils.pagination import baixar_paginas_pedidas
 BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 SITE_URL = "https://jurisprudencia.tjpa.jus.br"
 RESULTS_PER_PAGE = 25
+#: ``buscar_em`` -> valor de ``queryScope`` no front do portal.
+_QUERY_SCOPE = {"ementa": "ementa", "inteiro_teor": "inteiroTeor"}
 
 CJSG_HEADERS = {
     "Content-Type": "application/json",
@@ -37,7 +39,7 @@ def build_cjsg_payload(
     sort_by: str = "datajulgamento",
     sort_order: str = "desc",
     query_type: str = "free",
-    query_scope: str = "ementa",
+    buscar_em: str = "ementa",
 ) -> dict:
     """Monta o corpo JSON da busca de jurisprudencia do TJPA.
 
@@ -52,7 +54,7 @@ def build_cjsg_payload(
     payload = {
         "query": pesquisa,
         "queryType": query_type,
-        "queryScope": query_scope,
+        "queryScope": _QUERY_SCOPE[buscar_em],
         "origem": origem,
         "tipo": tipo,
         "page": pagina_0based,

@@ -9,6 +9,7 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.utils.deprecacao import BUSCAR_EM_DE_INTEIRO_TEOR, resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -42,7 +43,7 @@ class TJDFTScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         sinonimos: bool = True,
         espelho: bool = True,
-        inteiro_teor: bool = False,
+        buscar_em: str | None = None,
         tamanho_pagina: int | None = None,
         **kwargs,
     ) -> list:
@@ -57,7 +58,8 @@ class TJDFTScraper(HTTPScraper):
                 busca todas.
             sinonimos (bool): Inclui sinônimos do termo na busca.
             espelho (bool): Pesquisa no espelho do acórdão.
-            inteiro_teor (bool): Pesquisa também no inteiro teor.
+            buscar_em (str | None): ``"ementa"`` (default; ``None`` também)
+                ou ``"inteiro_teor"``; ver :meth:`cjsg`.
             tamanho_pagina (int | None): Resultados por página, de 1 a 40
                 (acima disso a API responde HTTP 400). ``None`` usa 10.
 
@@ -70,6 +72,7 @@ class TJDFTScraper(HTTPScraper):
         )
         if tamanho_pagina is not None:
             kwargs["tamanho_pagina"] = tamanho_pagina
+        resolve_buscar_em(kwargs, "inteiro_teor", buscar_em, BUSCAR_EM_DE_INTEIRO_TEOR)
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
@@ -79,7 +82,6 @@ class TJDFTScraper(HTTPScraper):
             consume_pesquisa_aliases=True,
             sinonimos=sinonimos,
             espelho=espelho,
-            inteiro_teor=inteiro_teor,
         )
         brutos: list = cjsg_download(
             query=inp.pesquisa,
@@ -87,7 +89,7 @@ class TJDFTScraper(HTTPScraper):
             request_fn=self._request_with_retry,
             sinonimos=inp.sinonimos,
             espelho=inp.espelho,
-            inteiro_teor=inp.inteiro_teor,
+            buscar_em=inp.buscar_em,
             quantidade_por_pagina=inp.tamanho_pagina,
             base_url=self.BASE_URL,
             data_julgamento_inicio=inp.data_julgamento_inicio,
@@ -134,9 +136,11 @@ class TJDFTScraper(HTTPScraper):
                   Default ``True``. Backend: ``sinonimos``.
                 * ``espelho`` (bool): Pesquisa no espelho do acórdão.
                   Default ``True``. Backend: ``espelho``.
-                * ``inteiro_teor`` (bool): Pesquisa também no inteiro teor,
-                  o que amplia o resultado. Default ``False``. Backend:
-                  ``inteiroTeor``.
+                * ``buscar_em`` (str): Onde procurar ``pesquisa``.
+                  ``"ementa"`` (default) busca no espelho do acórdão, que traz
+                  a ementa, quando ``espelho=True``. ``"inteiro_teor"`` busca
+                  também no inteiro teor, o que amplia o resultado. Outro
+                  valor levanta ``ValidationError``. Backend: ``inteiroTeor``.
                 * ``tamanho_pagina`` (int): Resultados por página, de 1 a 40;
                   acima de 40 a API responde HTTP 400, e o schema recusa
                   antes da requisição. Default ``10``.
@@ -155,14 +159,17 @@ class TJDFTScraper(HTTPScraper):
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
             * ``quantidade_por_pagina`` -> ``tamanho_pagina``
+            * ``inteiro_teor`` -> ``buscar_em``: ``inteiro_teor=True`` vira
+              ``buscar_em="inteiro_teor"`` e ``inteiro_teor=False``,
+              ``buscar_em="ementa"``
 
         Raises:
             TypeError: Quando ``pesquisa`` falta ou quando todos os erros são
                 kwargs desconhecidos.
             ValueError: Quando uma data é inválida, o início é posterior ao
                 fim, ou um parâmetro e seu alias deprecado são passados
-                juntos (uma data, ou ``tamanho_pagina`` com
-                ``quantidade_por_pagina``).
+                juntos (uma data, ``tamanho_pagina`` com
+                ``quantidade_por_pagina`` ou ``buscar_em`` com ``inteiro_teor``).
             ValidationError: Para os demais erros de validação do schema,
                 como ``tamanho_pagina`` acima de 40.
 

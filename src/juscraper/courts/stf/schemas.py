@@ -28,7 +28,7 @@ class InputListarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixi
 
     base: Literal["decisoes", "acordaos"] = "decisoes"
     classe: str | list[str] | None = None
-    inteiro_teor: bool = False
+    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
     tamanho_pagina: TamanhoPagina = Field(default=MAX_TAMANHO_PAGINA, le=MAX_TAMANHO_PAGINA)
     checkpoint_dir: str | Path | None = None
     resume: bool = False
@@ -44,7 +44,7 @@ class InputContarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixi
 
     base: Literal["decisoes", "acordaos"] = "decisoes"
     classe: str | list[str] | None = None
-    inteiro_teor: bool = False
+    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
 
 
 class OutputListarDecisoesSTF(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

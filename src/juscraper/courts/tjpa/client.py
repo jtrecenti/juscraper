@@ -7,11 +7,15 @@ from typing import Any, ClassVar, Literal
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPA
+
+#: Valores do alias deprecado ``query_scope`` -> ``buscar_em``.
+_QUERY_SCOPE_PARA_BUSCAR_EM = {"ementa": "ementa", "inteiroTeor": "inteiro_teor", "inteiroteor": "inteiro_teor"}
 
 
 class TJPAScraper(HTTPScraper):
@@ -47,7 +51,7 @@ class TJPAScraper(HTTPScraper):
         sort_by: str = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
-        query_scope: str = "ementa",
+        buscar_em: str | None = None,
         **kwargs,
     ) -> list:
         """Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).
@@ -56,7 +60,7 @@ class TJPAScraper(HTTPScraper):
         ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
         validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
         (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
-        da validacao.
+        da validacao, como ``query_scope``, alias deprecado de ``buscar_em``.
 
         Returns:
             Respostas JSON cruas (uma por pagina).
@@ -64,6 +68,7 @@ class TJPAScraper(HTTPScraper):
         See also:
             :class:`InputCJSGTJPA` — fonte da verdade dos filtros aceitos.
         """
+        resolve_buscar_em(kwargs, "query_scope", buscar_em, _QUERY_SCOPE_PARA_BUSCAR_EM)
         inp = apply_input_pipeline_search(
             InputCJSGTJPA,
             "TJPAScraper.cjsg_download()",
@@ -80,7 +85,6 @@ class TJPAScraper(HTTPScraper):
             sort_by=sort_by,
             sort_order=sort_order,
             query_type=query_type,
-            query_scope=query_scope,
         )
 
         return cjsg_download_manager(
@@ -100,7 +104,7 @@ class TJPAScraper(HTTPScraper):
             sort_by=inp.sort_by,
             sort_order=inp.sort_order,
             query_type=inp.query_type,
-            query_scope=inp.query_scope,
+            buscar_em=inp.buscar_em,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -123,13 +127,14 @@ class TJPAScraper(HTTPScraper):
         sort_by: str = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
         query_type: str = "free",
-        query_scope: str = "ementa",
+        buscar_em: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPA (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre.
+            pesquisa (str): Termo de busca livre, procurado no campo indicado
+                por ``buscar_em``.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
             relator (str | None): Nome do relator.
@@ -149,7 +154,13 @@ class TJPAScraper(HTTPScraper):
                 ``data_julgamento_fim``. Outra ordenacao so as tira do topo.
             sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
             query_type (str): ``"free"`` (default) ou ``"anywords"``.
-            query_scope (str): ``"ementa"`` (default) ou ``"inteiroTeor"``.
+            buscar_em (str | None): Onde procurar ``pesquisa``: ``"ementa"``
+                (default; ``None`` tambem) ou ``"inteiro_teor"`` (texto
+                integral da decisao, que inclui a ementa), as duas opcoes do
+                portal. Outro valor levanta ``ValidationError``. Em
+                26/11/2026, a API ignorava a escolha, tambem no site: as duas
+                procuravam o termo na ementa e no inteiro teor e traziam o
+                mesmo resultado.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPA`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -164,10 +175,14 @@ class TJPAScraper(HTTPScraper):
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``query_scope`` -> ``buscar_em``: ``"ementa"`` continua
+              ``"ementa"``; ``"inteiroTeor"`` e ``"inteiroteor"`` viram
+              ``"inteiro_teor"``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            ValueError: Quando ``query_scope`` e ``buscar_em`` sao passados juntos.
 
         Returns:
             DataFrame com as decisoes. ``ementa`` e ``None`` na decisao
@@ -189,6 +204,6 @@ class TJPAScraper(HTTPScraper):
             sort_by=sort_by,
             sort_order=sort_order,
             query_type=query_type,
-            query_scope=query_scope,
+            buscar_em=buscar_em,
             **kwargs,
         ))

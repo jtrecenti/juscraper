@@ -27,7 +27,7 @@ def test_cjsg_todos_os_filtros_chegam_na_query(mocker):
     jus.scraper("stm").cjsg(
         "peculato OU furto",
         paginas=[3],
-        campo="inteiro_teor",
+        buscar_em="inteiro_teor",
         classe="APELAÇÃO",
         relator="CARLOS VUYK DE AQUINO",
         relator_acordao="ODILSON SAMPAIO BENZI",
@@ -127,7 +127,7 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
 
 
 @pytest.mark.parametrize(
-    ("pesquisa", "campo", "clausula"),
+    ("pesquisa", "buscar_em", "clausula"),
     [
         ("deserção", "ementa", '(ementa:"deserção")'),
         ('"corrupção ativa"', "ementa", '(ementa:"corrupção ativa")'),
@@ -137,13 +137,13 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
     ],
 )
 @responses.activate
-def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa, campo, clausula):
+def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa, buscar_em, clausula):
     mocker.patch("time.sleep")
     _add_avancada()
 
     jus.scraper("stm").cjsg(
         pesquisa,
-        campo=campo,
+        buscar_em=buscar_em,
         data_julgamento_inicio="2010-01-01",
         data_julgamento_fim="2022-06-08",
         data_publicacao_inicio="01/10/2021",
@@ -169,17 +169,17 @@ def test_cjsg_termo_com_operador_ou_curinga_sem_aspas_avisa_uma_vez(mocker, pesq
 
 
 @pytest.mark.parametrize(
-    ("pesquisa", "campo", "erro"),
+    ("pesquisa", "buscar_em", "erro"),
     [
         ('"furto" OU "roubo"', "ementa", "aspas no meio"),
         ("furto\\", "inteiro_teor", "barra invertida"),
         ("7000588 OU 60", "numero", "só dígitos"),
     ],
 )
-def test_cjsg_termo_que_nao_cabe_na_consulta_avancada_levanta(pesquisa, campo, erro):
+def test_cjsg_termo_que_nao_cabe_na_consulta_avancada_levanta(pesquisa, buscar_em, erro):
     with pytest.raises(ValueError, match=erro):
         jus.scraper("stm").cjsg(
-            pesquisa, campo=campo, data_julgamento_inicio="01/01/2024", data_julgamento_fim="31/01/2024"
+            pesquisa, buscar_em=buscar_em, data_julgamento_inicio="01/01/2024", data_julgamento_fim="31/01/2024"
         )
 
 
@@ -229,6 +229,27 @@ def test_cjsg_alias_deprecado_de_data(mocker):
     assert responses.calls[0].request.params["q"] == JULGAMENTO
 
 
-def test_cjsg_campo_fora_do_dominio_levanta():
-    with pytest.raises(ValidationError, match="campo"):
-        jus.scraper("stm").cjsg("deserção", campo="tudo")
+def test_cjsg_buscar_em_fora_do_dominio_levanta():
+    with pytest.raises(ValidationError, match="buscar_em"):
+        jus.scraper("stm").cjsg("deserção", buscar_em="tudo")
+
+
+@pytest.mark.parametrize("valor", ["ementa", "inteiro_teor", "numero"])
+@responses.activate
+def test_cjsg_alias_campo_avisa_e_manda_o_mesmo_que_buscar_em(mocker, valor):
+    """``campo``, nome antigo de ``buscar_em``, tem os mesmos valores e a mesma query."""
+    mocker.patch("time.sleep")
+    _add_single_page()
+    _add_single_page()
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{valor}' em vez de campo='{valor}'"):
+        jus.scraper("stm").cjsg("7000612", paginas=1, campo=valor)
+    jus.scraper("stm").cjsg("7000612", paginas=1, buscar_em=valor)
+
+    assert responses.calls[0].request.params == responses.calls[1].request.params
+    assert responses.calls[0].request.params["search_filter"] == valor
+
+
+def test_cjsg_alias_campo_junto_com_buscar_em_levanta():
+    with pytest.raises(ValueError, match="'buscar_em' e 'campo' ao mesmo tempo"):
+        jus.scraper("stm").cjsg("deserção", campo="ementa", buscar_em="inteiro_teor")

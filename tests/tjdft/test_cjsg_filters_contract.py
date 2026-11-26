@@ -41,7 +41,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         paginas=1,
         sinonimos=False,
         espelho=False,
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         tamanho_pagina=25,
     )
 
@@ -238,3 +238,32 @@ def test_cjsg_data_publicacao_vai_em_termos_acessorios(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(("inteiro_teor", "buscar_em"), [(True, "inteiro_teor"), (False, "ementa")])
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_alias_inteiro_teor_avisa_e_manda_o_mesmo_que_buscar_em(mocker, metodo, inteiro_teor, buscar_em):
+    """``inteiro_teor=True``/``False`` vira ``buscar_em="inteiro_teor"``/``"ementa"``,
+    com o mesmo ``inteiroTeor`` no corpo."""
+    mocker.patch("time.sleep")
+    for _ in range(2):
+        _add_page("dano moral", 1, "cjsg/no_results.json", inteiro_teor=inteiro_teor)
+    scraper = jus.scraper("tjdft")
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{buscar_em}' em vez de inteiro_teor={inteiro_teor}"):
+        getattr(scraper, metodo)("dano moral", paginas=1, inteiro_teor=inteiro_teor)
+    getattr(scraper, metodo)("dano moral", paginas=1, buscar_em=buscar_em)
+
+    assert responses.calls[0].request.body == responses.calls[1].request.body
+
+
+def test_cjsg_alias_inteiro_teor_junto_com_buscar_em_levanta():
+    with pytest.raises(ValueError, match="'buscar_em' e 'inteiro_teor' ao mesmo tempo"):
+        jus.scraper("tjdft").cjsg("dano moral", paginas=1, inteiro_teor=False, buscar_em="ementa")
+
+
+@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", True])
+def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(valor):
+    with pytest.raises(ValidationError, match="buscar_em"):
+        jus.scraper("tjdft").cjsg("dano moral", paginas=1, buscar_em=valor)

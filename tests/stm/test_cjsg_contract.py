@@ -19,13 +19,13 @@ from tests._helpers import load_sample
 INDEX_URL = "https://jurisprudencia.stm.jus.br/index.php"
 
 
-def _add_page(pesquisa: str, pagina: int, sample: str, campo: str = "ementa", **filtros) -> None:
+def _add_page(pesquisa: str, pagina: int, sample: str, buscar_em: str = "ementa", **filtros) -> None:
     responses.add(
         responses.GET,
         BASE_URL,
         body=load_sample("stm", f"cjsg/{sample}"),
         content_type="text/html; charset=UTF-8",
-        match=[query_param_matcher(build_cjsg_params(pesquisa, pagina, campo, **filtros))],
+        match=[query_param_matcher(build_cjsg_params(pesquisa, pagina, buscar_em, **filtros))],
     )
 
 
@@ -53,9 +53,9 @@ def test_cjsg_paginas_none_baixa_todas(mocker):
 def test_cjsg_primeiro_documento(mocker):
     """Os valores saem como o portal os publica, com as datas em ``date``."""
     mocker.patch("time.sleep")
-    _add_page("0000088-44.2014.7.07.0007", 1, "single_page.html", campo="numero")
+    _add_page("0000088-44.2014.7.07.0007", 1, "single_page.html", buscar_em="numero")
 
-    df = jus.scraper("stm").cjsg("0000088-44.2014.7.07.0007", campo="numero")
+    df = jus.scraper("stm").cjsg("0000088-44.2014.7.07.0007", buscar_em="numero")
 
     assert len(responses.calls) == 1
     assert len(df) == 1
@@ -126,7 +126,7 @@ def test_cjsg_sem_resultados(mocker):
         content_type="text/html; charset=UTF-8",
     )
 
-    df = jus.scraper("stm").cjsg("0000000-00.0000.0.00.0000", campo="numero")
+    df = jus.scraper("stm").cjsg("0000000-00.0000.0.00.0000", buscar_em="numero")
 
     assert df.empty
     assert list(df.columns) == COLUNAS

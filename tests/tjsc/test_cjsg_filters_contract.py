@@ -2,6 +2,7 @@
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
@@ -23,7 +24,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
             build_cjsg_form_body(
                 "dano moral",
                 page=1,
-                campo="I",
+                buscar_em="inteiro_teor",
                 processo="00000000000000000000",
                 dt_decisao_inicio="01/01/2024",
                 dt_decisao_fim="31/03/2024",
@@ -37,7 +38,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
     df = jus.scraper("tjsc").cjsg(
         "dano moral",
         paginas=1,
-        campo="I",
+        buscar_em="inteiro_teor",
         processo="00000000000000000000",
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
@@ -252,3 +253,44 @@ def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(("campo", "buscar_em"), [("E", "ementa"), ("I", "inteiro_teor")])
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_alias_campo_avisa_e_manda_o_mesmo_que_buscar_em(mocker, metodo, campo, buscar_em):
+    """``campo="E"``/``"I"`` vira ``buscar_em="ementa"``/``"inteiro_teor"``,
+    com o mesmo ``rdoCampo`` no formulario."""
+    mocker.patch("time.sleep")
+    for _ in range(2):
+        responses.add(
+            responses.POST,
+            cjsg_url_for_page(1),
+            body=load_sample_bytes("tjsc", "cjsg/no_results.html"),
+            status=200,
+            content_type="text/html; charset=iso-8859-1",
+            match=[urlencoded_params_matcher(
+                build_cjsg_form_body("dano moral", page=1, buscar_em=buscar_em), allow_blank=True,
+            )],
+        )
+    scraper = jus.scraper("tjsc")
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{buscar_em}' em vez de campo='{campo}'"):
+        getattr(scraper, metodo)("dano moral", paginas=1, campo=campo)
+    getattr(scraper, metodo)("dano moral", paginas=1, buscar_em=buscar_em)
+
+    assert corpo_form_enviado(responses.calls[0].request) == corpo_form_enviado(responses.calls[1].request)
+    assert corpo_form_enviado(responses.calls[0].request)["rdoCampo"] == campo
+
+
+def test_cjsg_alias_campo_junto_com_buscar_em_levanta():
+    with pytest.raises(ValueError, match="'buscar_em' e 'campo' ao mesmo tempo"):
+        jus.scraper("tjsc").cjsg("dano moral", paginas=1, campo="E", buscar_em="ementa")
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.parametrize("kwargs", [{"buscar_em": "E"}, {"buscar_em": "numero"}, {"campo": "X"}])
+def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(kwargs):
+    """O TJSC so tem ementa e inteiro teor; o valor antigo ``"E"`` nao vale em ``buscar_em``."""
+    with pytest.raises(ValidationError, match="buscar_em"):
+        jus.scraper("tjsc").cjsg("dano moral", paginas=1, **kwargs)

@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
@@ -37,7 +38,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             sort_by="datapublicacao",
             sort_order="asc",
             query_type="anywords",
-            query_scope="inteiroTeor",
+            buscar_em="inteiro_teor",
         ))],
     )
 
@@ -57,7 +58,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         sort_by="datapublicacao",
         sort_order="asc",
         query_type="anywords",
-        query_scope="inteiroTeor",
+        buscar_em="inteiro_teor",
     )
 
     assert isinstance(df, pd.DataFrame)
@@ -218,3 +219,45 @@ def test_cjsg_datas_aceitam_formato_brasileiro(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
+
+
+@pytest.mark.parametrize(
+    ("query_scope", "buscar_em"),
+    [("ementa", "ementa"), ("inteiroTeor", "inteiro_teor"), ("inteiroteor", "inteiro_teor")],
+)
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@responses.activate
+def test_cjsg_alias_query_scope_avisa_e_manda_o_mesmo_que_buscar_em(mocker, metodo, query_scope, buscar_em):
+    """``query_scope`` vira ``buscar_em``, e o corpo leva o ``queryScope`` do
+    front do portal (``"inteiroTeor"``) nas duas grafias antigas."""
+    mocker.patch("time.sleep")
+    for _ in range(2):
+        responses.add(
+            responses.POST,
+            BASE_URL,
+            body=load_sample("tjpa", "cjsg/no_results.json"),
+            status=200,
+            content_type="application/json",
+            match=[json_params_matcher(build_cjsg_payload("dano moral", pagina_0based=0, buscar_em=buscar_em))],
+        )
+    scraper = jus.scraper("tjpa")
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{buscar_em}' em vez de query_scope='{query_scope}'"):
+        getattr(scraper, metodo)("dano moral", paginas=1, query_scope=query_scope)
+    getattr(scraper, metodo)("dano moral", paginas=1, buscar_em=buscar_em)
+
+    corpos = [json.loads(call.request.body) for call in responses.calls]
+    assert corpos[0] == corpos[1]
+    assert corpos[0]["queryScope"] == ("ementa" if buscar_em == "ementa" else "inteiroTeor")
+
+
+def test_cjsg_alias_query_scope_junto_com_buscar_em_levanta():
+    with pytest.raises(ValueError, match="'buscar_em' e 'query_scope' ao mesmo tempo"):
+        jus.scraper("tjpa").cjsg("dano moral", paginas=1, query_scope="ementa", buscar_em="ementa")
+
+
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.parametrize("kwargs", [{"buscar_em": "inteiroTeor"}, {"buscar_em": "numero"}, {"query_scope": "tudo"}])
+def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(kwargs):
+    with pytest.raises(ValidationError, match="buscar_em"):
+        jus.scraper("tjpa").cjsg("dano moral", paginas=1, **kwargs)

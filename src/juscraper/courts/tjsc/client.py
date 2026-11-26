@@ -1,10 +1,11 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
 from collections.abc import Mapping
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import PERFIL_CJSG, cjsg_download_manager
@@ -52,18 +53,21 @@ class TJSCScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        campo: Literal["E", "I"] = "E",
+        buscar_em: str | None = None,
         processo: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJSC.
 
         Args:
-            pesquisa (str): Termo de busca livre.
+            pesquisa (str): Termo de busca livre, procurado no campo indicado
+                por ``buscar_em``.
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            campo (str): Campo de busca: ``"E"`` para ementa (default),
-                ``"I"`` para inteiro teor.
+            buscar_em (str | None): Onde procurar ``pesquisa``: ``"ementa"``
+                (default; ``None`` tambem) ou ``"inteiro_teor"`` (texto
+                integral da decisao, que inclui a ementa). Outro valor levanta
+                ``ValidationError``.
             processo (str): Filtro por numero do processo.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJSC`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
@@ -81,10 +85,13 @@ class TJSCScraper(HTTPScraper):
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``campo`` -> ``buscar_em``: ``campo="E"`` vira
+              ``buscar_em="ementa"`` e ``campo="I"``, ``buscar_em="inteiro_teor"``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            ValueError: Quando ``campo`` e ``buscar_em`` sao passados juntos.
             RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
             requests.ConnectionError: Quando o portal derruba a conexao em
                 todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com
@@ -105,7 +112,7 @@ class TJSCScraper(HTTPScraper):
         return self.cjsg_parse(self.cjsg_download(
             pesquisa=pesquisa,
             paginas=paginas,
-            campo=campo,
+            buscar_em=buscar_em,
             processo=processo,
             **kwargs,
         ))
@@ -114,7 +121,7 @@ class TJSCScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        campo: Literal["E", "I"] = "E",
+        buscar_em: str | None = None,
         processo: str | None = None,
         **kwargs,
     ) -> list:
@@ -127,6 +134,7 @@ class TJSCScraper(HTTPScraper):
         list
             List of raw HTML strings (one per page).
         """
+        resolve_buscar_em(kwargs, "campo", buscar_em, {"E": "ementa", "I": "inteiro_teor"})
         inp = apply_input_pipeline_search(
             InputCJSGTJSC,
             "TJSCScraper.cjsg_download()",
@@ -134,7 +142,6 @@ class TJSCScraper(HTTPScraper):
             paginas=paginas,
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
-            campo=campo,
             processo=processo,
         )
         return cjsg_download_manager(
@@ -142,7 +149,7 @@ class TJSCScraper(HTTPScraper):
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
-            campo=inp.campo,
+            buscar_em=inp.buscar_em,
             processo=inp.processo or "",
             dt_decisao_inicio=inp.data_julgamento_inicio or "",
             dt_decisao_fim=inp.data_julgamento_fim or "",

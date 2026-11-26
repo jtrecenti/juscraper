@@ -11,7 +11,7 @@ from ...schemas.mixins import DataJulgamentoMixin, DataPublicacaoMixin, OutputDa
 class InputCJSGSTM(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Filtros aceitos por ``STMScraper.cjsg`` / ``cjsg_download``.
 
-    ``campo`` é o seletor da caixa de busca do portal. Os demais filtros são
+    ``buscar_em`` é o seletor da caixa de busca do portal. Os demais filtros são
     os da coluna "Filtrar por" e casam com o valor exato que o portal exibe,
     em maiúsculas (``"APELAÇÃO"``, ``"CARLOS VUYK DE AQUINO"``).
 
@@ -23,7 +23,7 @@ class InputCJSGSTM(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    campo: Literal["ementa", "inteiro_teor", "numero"] = "ementa"
+    buscar_em: Literal["ementa", "inteiro_teor", "numero"] = "ementa"
     classe: str | None = None
     relator: str | None = None
     relator_acordao: str | None = None

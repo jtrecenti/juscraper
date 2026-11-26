@@ -10,6 +10,7 @@ import requests
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.core.waf import eh_desafio_waf
+from juscraper.utils.deprecacao import BUSCAR_EM_DE_INTEIRO_TEOR, resolve_buscar_em
 from juscraper.utils.params import SEARCH_ALIASES
 
 from ._collection import FILTERS, Collection
@@ -137,8 +138,13 @@ class STFScraper(HTTPScraper):
                 * ``classe`` (str | list[str]): Sigla da classe processual (ex.:
                   ``"Rcl"``). Backend:
                   ``processo_classe_processual_unificada_classe_sigla.keyword``.
-                * ``inteiro_teor`` (bool): Pesquisa tambem no inteiro teor, como a
-                  opcao do portal. Default ``False``.
+                * ``buscar_em`` (str): Onde procurar ``pesquisa``. ``"ementa"``
+                  (default) busca nos campos que o portal usa por padrao: a
+                  ementa e tambem o texto da decisao, a indexacao, as partes e
+                  outros dados do documento, sem o inteiro teor.
+                  ``"inteiro_teor"`` soma a esses campos o inteiro teor, como a
+                  opcao "pesquisar no inteiro teor" do portal. Outro valor
+                  levanta ``ValidationError``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str | date): ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
@@ -156,12 +162,16 @@ class STFScraper(HTTPScraper):
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``inteiro_teor`` -> ``buscar_em``: ``inteiro_teor=True`` vira
+              ``buscar_em="inteiro_teor"`` e ``inteiro_teor=False``,
+              ``buscar_em="ementa"``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Página além do teto, dia saturado, contagem inexata ou
-                alterada, IDs inválidos ou checkpoint incompatível/corrompido.
+            ValueError: ``inteiro_teor`` e ``buscar_em`` juntos, página além do
+                teto, dia saturado, contagem inexata ou alterada, IDs inválidos
+                ou checkpoint incompatível/corrompido.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
@@ -181,6 +191,7 @@ class STFScraper(HTTPScraper):
             :class:`InputListarDecisoesSTF` — schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
+        resolve_buscar_em(kwargs, "inteiro_teor", valores=BUSCAR_EM_DE_INTEIRO_TEOR)
         inp = search_input(
             InputListarDecisoesSTF, "STFScraper.listar_decisoes()",
             _pesquisa_ou_tudo(pesquisa, kwargs), paginas, kwargs,
@@ -192,7 +203,7 @@ class STFScraper(HTTPScraper):
     def contar_decisoes(self, pesquisa: str | None = None, **kwargs) -> pd.DataFrame:
         """Conta os resultados de uma busca e devolve as facetas do portal, sem baixar documentos.
 
-        Uma requisicao com ``size=0``. Aceita os mesmos filtros de
+        Uma requisicao com ``size=0``. Aceita os mesmos filtros e aliases deprecados de
         :meth:`listar_decisoes`, exceto ``tamanho_pagina``, ``checkpoint_dir`` e ``resume``.
 
         Args:
@@ -203,6 +214,7 @@ class STFScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
+            ValueError: Quando ``inteiro_teor`` e ``buscar_em`` sao passados juntos.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
@@ -215,6 +227,7 @@ class STFScraper(HTTPScraper):
                 facetas o respeitam, como no portal. Uma decisao pode ter mais de um
                 ministro, entao a soma de ``ministro_facet`` pode passar do total.
         """
+        resolve_buscar_em(kwargs, "inteiro_teor", valores=BUSCAR_EM_DE_INTEIRO_TEOR)
         inp = search_input(
             InputContarDecisoesSTF, "STFScraper.contar_decisoes()",
             _pesquisa_ou_tudo(pesquisa, kwargs), None, kwargs,

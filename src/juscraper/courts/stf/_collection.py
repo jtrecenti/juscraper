@@ -16,7 +16,7 @@ from .parse import parse_decisoes
 FILTERS = {
     "base",
     "classe",
-    "inteiro_teor",
+    "buscar_em",
     "data_julgamento_inicio",
     "data_julgamento_fim",
     "data_publicacao_inicio",
