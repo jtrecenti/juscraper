@@ -84,6 +84,12 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP)
 
+- **BREAKING:** `cjsg` e `cjsg_parse`: o relator sai na coluna `relator`, o nome que os demais tribunais usam, e não mais em `relatora`. O portal rotula o campo como "Relator(a):", e o parser colava o "a" ao nome. No TJSP, as linhas com o rótulo "Relator:" já saíam em `relator`, e uma busca que trouxesse os dois rótulos dividia o relator entre duas colunas, cada uma vazia nas linhas da outra; agora fica tudo em `relator`. Sem ciclo de deprecação, como na padronização de colunas da 0.3.0 (#117): o DataFrame não tem como manter as duas colunas sem duplicar o dado. Para migrar, troque `df["relatora"]` por `df["relator"]`, ou renomeie DataFrames salvos com `df.rename(columns={"relatora": "relator"})` (#713, refs #12).
+
+  | Nome antigo | Nome canônico |
+  | --- | --- |
+  | `relatora` | `relator` |
+
 - **BREAKING:** TJSP e TJMS `cjpg` e `cjpg_parse`: o juiz que proferiu a decisão sai na coluna `relator`, o nome do `cjsg` e do `cjpg` de TJES e TJTO, e não mais em `magistrado`. O portal rotula o campo como "Magistrado:", e o parser usava o rótulo como nome da coluna. `OutputCJPGEsaj` passa a declarar `relator`. Sem ciclo de deprecação, como na padronização de colunas da 0.3.0 (#117), que fez a mesma troca no TJES: o DataFrame não tem como manter as duas colunas sem duplicar o dado. Para migrar, troque `df["magistrado"]` por `df["relator"]`, ou renomeie DataFrames salvos com `df.rename(columns={"magistrado": "relator"})` (refs #12).
 
   | Nome antigo | Nome canônico |

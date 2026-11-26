@@ -15,6 +15,7 @@ from juscraper.courts._esaj.parse import (
     _extract_detail,
     _extract_ementa,
     _extract_pagination_count,
+    _normalize_key,
     _parse_single_page,
     _total_declarado,
     cjsg_n_pags,
@@ -29,7 +30,7 @@ ESAJ_COLUMNS = (
     "cd_acordao",
     "cd_foro",
     "classe_assunto",
-    "relatora",
+    "relator",
     "comarca",
     "orgao_julgador",
     "data_julgamento",
@@ -521,7 +522,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao",
             "cd_foro",
             "classe_assunto",
-            "relatora",
+            "relator",
             "campo_especial",
             "data_publicacao",
             "orgao_julgador",
@@ -532,7 +533,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao": "123",
             "cd_foro": "4",
             "classe_assunto": "Apelacao / Contratos",
-            "relatora": "Des. Joao Acu",
+            "relator": "Des. Joao Acu",
             "campo_especial": "valor dinamico",
             "data_publicacao": "01/02/2024",
             "orgao_julgador": "Camara Especial",
@@ -550,7 +551,7 @@ class TestCJSGParseSinglePage:
         df = _parse_single_page(str(path))
 
         assert df.iloc[0]["processo"] == "0000002-03.2024.8.26.0002"
-        assert df.iloc[0]["relatora"] == "Des. João Açú"
+        assert df.iloc[0]["relator"] == "Des. João Açú"
         assert df.iloc[0]["ementa"] == "Decisão sobre obrigação."
 
 
@@ -671,6 +672,31 @@ class TestCleanValue:
     )
     def test_remove_caractere_invisivel(self, invisivel):
         assert _clean_value(f"Des. Jo{invisivel}ão{invisivel}") == "Des. João"
+
+
+class TestNormalizeKey:
+    """Rótulos com marcador de gênero viram o nome canônico (#713)."""
+
+    @pytest.mark.parametrize(
+        ("rotulo", "chave"),
+        [
+            pytest.param("Relator(a):", "relator", id="relator-a-colado"),
+            pytest.param("Relator (a):", "relator", id="relator-a-com-espaco"),
+            pytest.param("Relator:", "relator", id="relator"),
+        ],
+    )
+    def test_rotulo_vira_chave_canonica(self, rotulo, chave):
+        assert _normalize_key(rotulo) == chave
+
+    def test_paginas_com_relator_e_relator_a_geram_uma_so_coluna(self, tmp_path):
+        """O TJSP alterna "Relator:" e "Relator(a):"; o resultado junto tem só ``relator``."""
+        for nome in ("single_result.html", "single_page.html"):
+            (tmp_path / nome).write_text(load_sample("tjsp", f"cjsg/{nome}"), encoding="utf-8")
+
+        df = cjsg_parse_manager(str(tmp_path))
+
+        assert "relatora" not in df.columns
+        assert df["relator"].notna().all()
 
 
 if __name__ == "__main__":
