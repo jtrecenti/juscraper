@@ -5,6 +5,9 @@ from typing import ClassVar, Literal
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
+# Campos de texto do portal onde ``pesquisa`` pode ir.
+BuscarEm = Literal["ementa", "inteiro_teor"]
+
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRN ``cjsg`` / ``cjsg_download``.
@@ -46,9 +49,7 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     # busca todas. Os nomes por extenso fazem o portal responder 502/503.
     jurisdicoes: Literal["", "TJ", "TR"] | None = None
     grau: str | None = None
-    # Campo do portal onde vai ``pesquisa``: "ementa" (so os acordaos tem) ou
-    # "inteiro_teor" (acordaos, monocraticas e sentencas).
-    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
+    buscar_em: BuscarEm = "ementa"
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

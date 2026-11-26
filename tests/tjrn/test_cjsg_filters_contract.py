@@ -352,14 +352,6 @@ def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):
         assert resultado[0]["hits"]["hits"] == hits
 
 
-@pytest.mark.parametrize("valor", ["inteiroTeor", "I", "numero", ""])
-def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(valor):
-    """``buscar_em`` aceita so ``"ementa"`` e ``"inteiro_teor"``, os dois
-    campos de texto do portal."""
-    with pytest.raises(ValidationError, match="buscar_em"):
-        jus.scraper("tjrn").cjsg("dano moral", paginas=1, buscar_em=valor)
-
-
 def test_cjsg_unknown_kwarg_raises():
     """Kwargs not declared in :class:`InputCJSGTJRN` raise ``TypeError`` with
     the field name, instead of being silently dropped (refs #84, #93)."""

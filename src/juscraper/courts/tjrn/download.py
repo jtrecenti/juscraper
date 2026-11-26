@@ -4,6 +4,8 @@ import math
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import baixar_paginas_pedidas
 
+from .schemas import BuscarEm
+
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
 
@@ -11,7 +13,7 @@ RESULTS_PER_PAGE = 10
 def build_cjsg_payload(
     pesquisa: str,
     page: int = 1,
-    buscar_em: str = "ementa",
+    buscar_em: BuscarEm = "ementa",
     nr_processo: str = "",
     id_classe: str = "",
     id_orgao_julgador: str = "",

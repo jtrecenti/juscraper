@@ -96,10 +96,8 @@ class TJRNScraper(HTTPScraper):
                 ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
                 ``"Sentença"`` ou vazio para todas. Outro valor levanta
                 ``ValidationError``. Por padrao, ``pesquisa`` busca na ementa, e no
-                portal so os acordaos tem ementa: com ``"Decisão"`` ou
-                ``"Sentença"``, usar ``buscar_em="inteiro_teor"``
-                (``cjsg("dano moral", buscar_em="inteiro_teor",
-                decisoes="Sentença")``).
+                portal so os acordaos tem ementa: para buscar termo em
+                ``"Decisão"`` ou ``"Sentença"``, ver ``buscar_em``.
             jurisdicoes (str): Jurisdicao, com os valores do portal: ``"TJ"``
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
