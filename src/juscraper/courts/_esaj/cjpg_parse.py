@@ -10,6 +10,7 @@ from bs4.element import Tag
 from tqdm import tqdm
 
 from ...core.exceptions import ColetaParcialError
+from ...core.parse_utils import normalizar_texto
 from .parse import _extract_pagination_count, _find_page_summary_cell, _has_zero_results, _raise_page_error
 
 logger = logging.getLogger("juscraper.cjpg_parse")
@@ -152,7 +153,7 @@ def _extrair_dados_processo(tabela_dados: Tag) -> dict:
     div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})
     if div_decisao:
         spans = div_decisao.find_all('span')
-        dados_processo['decisao'] = spans[-1].get_text(separator=" ", strip=True) if spans else ''
+        dados_processo['decisao'] = normalizar_texto(spans[-1].get_text(separator=" ", strip=True)) if spans else ''
     return dados_processo
 
 

@@ -1,6 +1,8 @@
 """Conversao das respostas da API de jurisprudencia do STF em linhas."""
 from __future__ import annotations
 
+from juscraper.core.parse_utils import normalizar_texto
+
 # Chaves do ``_source`` renomeadas para os nomes canonicos do projeto. As demais
 # (``decisao_texto``, ``inteiro_teor_url``, ``base``, ``orgao_julgador``,
 # ``ministro_facet``, ``partes_lista_texto``...) passam como vem da API.
@@ -12,6 +14,16 @@ _RENOMEAR = {
     "julgamento_data": "data_julgamento",
     "publicacao_data": "data_publicacao",
 }
+
+# Campos de texto corrido, que vem com ``\r\n``. Os ``*_html`` ficam como vem.
+_SUFIXO_TEXTO = "_texto"
+_CAMPOS_TEXTO = frozenset({"acordao_ata"})
+
+
+def _normalizar_campo(chave: str, valor: object) -> object:
+    if chave.endswith(_SUFIXO_TEXTO) or chave in _CAMPOS_TEXTO:
+        return normalizar_texto(valor)
+    return valor
 
 
 def validate_search_response(response: dict) -> None:
@@ -27,9 +39,12 @@ def validate_search_response(response: dict) -> None:
 
 
 def parse_decisoes(respostas: list[dict]) -> list[dict]:
-    """Uma linha por documento das respostas de busca, com as chaves de :data:`_RENOMEAR` renomeadas."""
+    """Uma linha por documento das respostas de busca, com as chaves de :data:`_RENOMEAR` renomeadas.
+
+    Os campos ``*_texto`` e ``acordao_ata`` passam por :func:`normalizar_texto`.
+    """
     return [
-        {_RENOMEAR.get(chave, chave): valor for chave, valor in hit["_source"].items()}
+        {_RENOMEAR.get(chave, chave): _normalizar_campo(chave, valor) for chave, valor in hit["_source"].items()}
         for resposta in respostas
         for hit in resposta["result"]["hits"]["hits"]
     ]

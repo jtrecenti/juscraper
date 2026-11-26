@@ -14,6 +14,8 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
+from ...core.parse_utils import normalizar_texto
+
 logger = logging.getLogger(__name__)
 
 # Chaves brutas candidatas a virar a coluna canonica ``classe`` (nome por
@@ -30,6 +32,17 @@ _CLASSE_KEYS: tuple[str, ...] = (
 # do original. Ficam fora da saída; os campos brutos de inteiro teor seguem
 # preservados. O JSON de listar_decisoes_download mantém todas as variantes.
 _PREFIXO_HIGHLIGHT = "highlight"
+
+# Campos brutos de texto corrido, que chegam com ``\r\n``. Os de HTML
+# (``textoAcordao``, ``conteudoDecisao``, ``conteudoDocumento``...) ficam como
+# vem.
+_CAMPOS_TEXTO: tuple[str, ...] = (
+    "textoAcordaoMerito",
+    "textoDecisaoAdmissao",
+    "textoDocumentoAnonim",
+    "textoEmentaAdmissao",
+    "textoEmentaMerito",
+)
 
 # Abreviacao do ``tipo`` de precedente usada na chave ``processo``. Tipo fora
 # do mapa entra na chave com o valor bruto do backend.
@@ -149,6 +162,10 @@ def _normalizar_documento(raw: dict[str, Any], colecao: str) -> dict[str, Any]:
 
     if "ementa" in doc:
         doc["ementa"] = _texto_limpo(doc["ementa"])
+
+    for campo in _CAMPOS_TEXTO:
+        if campo in doc:
+            doc[campo] = normalizar_texto(doc[campo])
 
     return doc
 
