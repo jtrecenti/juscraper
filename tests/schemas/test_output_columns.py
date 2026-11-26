@@ -326,7 +326,7 @@ SEM_LEITURA: dict[tuple[str, str], str] = {
 
 # Só a conferência 1 (nomes deprecados). Motivo obrigatório.
 SO_NOMES_DEPRECADOS: dict[tuple[str, str], str] = {
-    ("tjdft", "cjsg"): "repassa cada registro do JSON da API; extra='allow' é o contrato",
+    ("tjdft", "cjsg"): "repassa cada registro do JSON da API com 4 chaves renomeadas; extra='allow' é o contrato",
     ("stf", "listar_decisoes"): "repassa o _source da API com 6 chaves renomeadas; extra='allow' é o contrato",
     ("datajud", "listar_processos"): "repassa o _source do Elasticsearch; extra='allow' é o contrato",
     ("comunica_cnj", "listar_comunicacoes"): "repassa os itens do JSON da API; extra='allow' é o contrato",
