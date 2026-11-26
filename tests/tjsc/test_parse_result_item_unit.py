@@ -113,11 +113,15 @@ def test_parse_result_item_preserves_partial_matching():
     }
 
 
-def test_parse_result_item_preserves_zip_truncation():
-    """A label without a corresponding value is ignored by pair truncation."""
+def test_parse_result_item_pareia_cada_rotulo_com_o_valor_seguinte():
+    """Cada rótulo fica com o ``resValue`` que o segue; rótulo sem valor próprio sai.
+
+    Antes, rótulos e valores eram pareados pela posição, e o valor ``SC``, que
+    vem depois de RELATOR, ia para ``uf``.
+    """
     result = _parse_result_item(_sample_items()["truncated-pairs"])
 
-    assert result == {"uf": "SC"}
+    assert result == {"relator": "SC"}
 
 
 def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():

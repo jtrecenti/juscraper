@@ -4,7 +4,7 @@ import math
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import baixar_paginas_pedidas
 
-from .schemas import BuscarEm
+from ...schemas import BuscarEm
 
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10

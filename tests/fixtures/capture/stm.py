@@ -25,7 +25,7 @@ CENARIOS: list[tuple[str, str, int, dict[str, Any]]] = [
     ("results_normal_page_01.html", '"corrupção ativa"', 1, {}),
     ("results_normal_page_02.html", '"corrupção ativa"', 2, {}),
     ("results_normal_page_03.html", '"corrupção ativa"', 3, {}),
-    ("single_page.html", "0000088-44.2014.7.07.0007", 1, {"campo": "numero"}),
+    ("single_page.html", "0000088-44.2014.7.07.0007", 1, {"buscar_em": "numero"}),
     ("no_results.html", "juscraper_probe_zero_hits_xyzqwe", 1, {}),
     # Pesquisa avançada: intervalo de data de julgamento, sem termo.
     (

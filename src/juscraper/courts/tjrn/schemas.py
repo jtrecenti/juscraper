@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
-
-# Campos de texto do portal onde ``pesquisa`` pode ir.
-BuscarEm = Literal["ementa", "inteiro_teor"]
+from ...schemas import (
+    BuscarEm,
+    DataJulgamentoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+)
 
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):

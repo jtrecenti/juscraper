@@ -11,12 +11,14 @@ AJAX_URL = f"{CONTROLADOR_URL}?acao=jurisprudencia@jurisprudencia/ajax_paginar_r
 RESULTS_PER_PAGE = 10
 #: Perfil HTTP da busca, declarado em ``TJSCScraper.perfis_http``.
 PERFIL_CJSG = "cjsg"
+#: ``buscar_em`` -> valor de ``rdoCampo`` no formulário do portal.
+RDO_CAMPO = {"ementa": "E", "inteiro_teor": "I"}
 
 
 def build_cjsg_form_body(
     pesquisa: str,
     page: int = 1,
-    campo: str = "E",
+    buscar_em: str = "ementa",
     processo: str = "",
     dt_decisao_inicio: str = "",
     dt_decisao_fim: str = "",
@@ -24,10 +26,14 @@ def build_cjsg_form_body(
     dt_publicacao_fim: str = "",
     num_resultados: int = RESULTS_PER_PAGE,
 ) -> dict:
-    """Build the form-encoded body for the TJSC CJSG eproc endpoint."""
+    """Build the form-encoded body for the TJSC CJSG eproc endpoint.
+
+    ``buscar_em`` (``"ementa"`` ou ``"inteiro_teor"``) vai em ``rdoCampo``
+    com os valores do portal, ``"E"`` ou ``"I"``.
+    """
     return {
         "txtPesquisa": pesquisa,
-        "rdoCampo": campo,
+        "rdoCampo": RDO_CAMPO[buscar_em],
         "txtProcesso": processo,
         "dtDecisaoInicio": dt_decisao_inicio,
         "dtDecisaoFim": dt_decisao_fim,

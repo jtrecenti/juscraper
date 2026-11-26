@@ -30,14 +30,14 @@ def test_cjsg_duas_paginas_ao_vivo(stm):
 
 
 def test_cjsg_filtros_ao_vivo(stm):
-    df = stm.cjsg("deserção", paginas=1, classe="APELAÇÃO", campo="inteiro_teor")
+    df = stm.cjsg("deserção", paginas=1, classe="APELAÇÃO", buscar_em="inteiro_teor")
 
     assert len(df) > 0
     assert set(df["classe"]) == {"APELAÇÃO"}
 
 
 def test_cjsg_por_numero_ao_vivo(stm):
-    df = stm.cjsg("7000612-54.2022.7.00.0000", campo="numero")
+    df = stm.cjsg("7000612-54.2022.7.00.0000", buscar_em="numero")
 
     assert "7000612-54.2022.7.00.0000" in set(df["processo"])
 

@@ -14,6 +14,11 @@ Cenarios capturados (busca ``"dano moral"``, 5 documentos por pagina):
                               Em ``precedentes``, a busca traz sumulas do TST
                               e precedentes regionais sem ``numero``.
     acordaos_vazio.json     — termo sem resultados (``documentos == []``).
+    acordaos_ementa_inteira.json — página 2 de ``"horas extras"`` em
+                              ``acordaos``, com a ``ementa`` sem truncar: traz
+                              ementa em vários ``<p>``, documento HTML com
+                              ``<style>`` e quebra de linha no meio da frase,
+                              para os testes de ``html_para_texto``.
 
 A querystring vem de
 ``juscraper.aggregators.falcao.download.build_pesquisa_params``, a mesma
@@ -28,7 +33,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import requests
 
@@ -55,31 +60,40 @@ TEXTO_TRUNC = 600
 MARCA_TRUNC = "…[truncado]"
 
 
-def _truncar(valor: Any) -> Any:
+class Cenario(NamedTuple):
+    colecao: str
+    pesquisa: str
+    arquivo: str
+    inteiros: frozenset[str] = frozenset()
+    pagina: int = 1
+
+
+def _truncar(valor: Any, inteiros: frozenset[str] = frozenset()) -> Any:
+    """Trunca as strings longas, menos as das chaves em ``inteiros``."""
     if isinstance(valor, str) and len(valor) > TEXTO_TRUNC:
         return valor[:TEXTO_TRUNC] + MARCA_TRUNC
     if isinstance(valor, dict):
-        return {k: _truncar(v) for k, v in valor.items()}
+        return {k: v if k in inteiros else _truncar(v, inteiros) for k, v in valor.items()}
     if isinstance(valor, list):
-        return [_truncar(v) for v in valor]
+        return [_truncar(v, inteiros) for v in valor]
     return valor
 
 
-def _capture(session: requests.Session, session_id: str, dest: Path, colecao: str,
-             pesquisa: str, arquivo: str) -> None:
+def _capture(session: requests.Session, session_id: str, dest: Path, cenario: Cenario) -> None:
     params = build_pesquisa_params(
-        pesquisa=pesquisa,
-        colecao=colecao,
+        pesquisa=cenario.pesquisa,
+        colecao=cenario.colecao,
         session_id=session_id,
-        pagina=1,
+        pagina=cenario.pagina,
         tamanho_pagina=TAMANHO_PAGINA,
     )
     resp = session.get(SEARCH_URL, params=params, timeout=60)
     verificar_resposta(resp)
     resp.raise_for_status()
-    body = _truncar(resp.json())
-    dump(dest / arquivo, json.dumps(body, ensure_ascii=False, indent=1).encode("utf-8"))
-    print(f"[falcao] wrote {arquivo} ({len(body['documentos'])} docs, quantidadeTotal={body['quantidadeTotal']})")
+    body = _truncar(resp.json(), cenario.inteiros)
+    dump(dest / cenario.arquivo, json.dumps(body, ensure_ascii=False, indent=1).encode("utf-8"))
+    total = body["quantidadeTotal"]
+    print(f"[falcao] wrote {cenario.arquivo} ({len(body['documentos'])} docs, quantidadeTotal={total})")
 
 
 def main() -> None:
@@ -89,12 +103,15 @@ def main() -> None:
     session.headers.update(DEFAULT_HEADERS)
     session_id = gerar_session_id()
 
-    cenarios = [(colecao, PESQUISA, f"{colecao}_normal.json") for colecao in COLECOES]
-    cenarios.append(("acordaos", PESQUISA_VAZIA, "acordaos_vazio.json"))
-    for i, (colecao, pesquisa, arquivo) in enumerate(cenarios):
+    cenarios = [Cenario(colecao, PESQUISA, f"{colecao}_normal.json") for colecao in COLECOES]
+    cenarios.append(Cenario("acordaos", PESQUISA_VAZIA, "acordaos_vazio.json"))
+    cenarios.append(Cenario(
+        "acordaos", "horas extras", "acordaos_ementa_inteira.json", frozenset({"ementa"}), pagina=2,
+    ))
+    for i, cenario in enumerate(cenarios):
         if i:
             time.sleep(PAUSA)
-        _capture(session, session_id, dest, colecao, pesquisa, arquivo)
+        _capture(session, session_id, dest, cenario)
 
     print(f"[falcao] all samples written to {dest}")
 

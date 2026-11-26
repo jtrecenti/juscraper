@@ -1,9 +1,10 @@
 """Pydantic schemas for TJSC scraper endpoints."""
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 from ...schemas import (
+    BuscarEm,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     OutputCJSGBase,
@@ -32,7 +33,8 @@ class InputCJSGTJSC(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
 
-    campo: Literal["E", "I"] = "E"
+    # O portal recebe "E" (ementa) ou "I" (inteiro teor) em ``rdoCampo``.
+    buscar_em: BuscarEm = "ementa"
     processo: str | None = None
 
 

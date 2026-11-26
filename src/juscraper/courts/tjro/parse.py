@@ -1,7 +1,7 @@
 """Parse raw results from the TJRO jurisprudence search (Elasticsearch)."""
 import pandas as pd
 
-from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.core.parse_utils import coerce_date_columns, html_para_texto
 from juscraper.utils.cnj import format_cnj
 
 
@@ -32,7 +32,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_publicacao": source.get("dtpublicacao"),
                 "grau_jurisdicao": source.get("grau_jurisdicao"),
                 "sistema_origem": source.get("sistema_origem"),
-                "ementa": clean_html(source.get("ds_modelo_documento")),
+                "ementa": html_para_texto(source.get("ds_modelo_documento")),
                 # Chave do documento no índice. O portal indexa algumas decisões duas
                 # vezes, com conteúdo igual: só esta coluna distingue as linhas.
                 "id_documento": hit.get("_id"),

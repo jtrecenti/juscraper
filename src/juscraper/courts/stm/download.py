@@ -62,16 +62,16 @@ def _termo_exato(pesquisa: str) -> tuple[str, bool]:
     return (termo[1:-1].strip() if entre_aspas else termo), entre_aspas
 
 
-def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
+def _clausula_do_termo(pesquisa: str, buscar_em: str) -> str | None:
     """Cláusula do termo na consulta avançada; ``None`` quando não há termo."""
     termo, _ = _termo_exato(pesquisa)
     if not termo:
         return None
-    if campo == "numero":
+    if buscar_em == "numero":
         digitos = _PONTUACAO_DO_NUMERO.sub("", termo)
         if not digitos.isdigit():
             raise ValueError(
-                "STM: com filtro de data, 'pesquisa' em campo='numero' aceita só dígitos e a pontuação do número "
+                "STM: com filtro de data, 'pesquisa' em buscar_em='numero' aceita só dígitos e a pontuação do número "
                 f"do processo (recebido: {pesquisa!r})."
             )
         return f"(numero_processo:*{digitos}*)"
@@ -80,13 +80,13 @@ def _clausula_do_termo(pesquisa: str, campo: str) -> str | None:
             "STM: com filtro de data, 'pesquisa' é procurada como expressão exata e não pode ter aspas no meio "
             f"nem barra invertida (recebido: {pesquisa!r})."
         )
-    return f'({campo}:"{termo}")'
+    return f'({buscar_em}:"{termo}")'
 
 
-def avisar_expressao_exata(pesquisa: str, campo: str) -> None:
+def avisar_expressao_exata(pesquisa: str, buscar_em: str) -> None:
     """Avisa quando a pesquisa avançada vai ler como expressão exata um termo com operador ou curinga."""
     termo, entre_aspas = _termo_exato(pesquisa)
-    if campo != "numero" and not entre_aspas and _OPERADORES.search(termo):
+    if buscar_em != "numero" and not entre_aspas and _OPERADORES.search(termo):
         avisar(
             "STM: com filtro de data, a busca vai pela pesquisa avançada do portal, que procura 'pesquisa' como "
             f"expressão exata ({termo!r}) e não aplica os operadores E, OU e NÃO nem os curingas. "
@@ -94,7 +94,7 @@ def avisar_expressao_exata(pesquisa: str, campo: str) -> None:
         )
 
 
-def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str | None]) -> str | None:
+def montar_consulta_avancada(pesquisa: str, buscar_em: str, datas: Mapping[str, str | None]) -> str | None:
     """Monta a consulta da pesquisa avançada do STM; ``None`` quando não há filtro de data.
 
     Repete o que o formulário do portal envia: o termo como expressão exata
@@ -106,7 +106,7 @@ def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str 
 
     Raises:
         ValueError: Quando o termo tem aspas no meio ou barra invertida, ou,
-            em ``campo="numero"``, algo além do número do processo.
+            em ``buscar_em="numero"``, algo além do número do processo.
     """
     intervalos = []
     for filtro, campo_de_data in _CAMPOS_DE_DATA.items():
@@ -117,14 +117,14 @@ def montar_consulta_avancada(pesquisa: str, campo: str, datas: Mapping[str, str 
             intervalos.append(f"({campo_de_data}:[{de} TO {ate}])")
     if not intervalos:
         return None
-    termo = _clausula_do_termo(pesquisa, campo)
+    termo = _clausula_do_termo(pesquisa, buscar_em)
     return " AND ".join([termo, *intervalos] if termo else intervalos)
 
 
 def build_cjsg_params(
     pesquisa: str,
     pagina: int = 1,
-    campo: str = "ementa",
+    buscar_em: str = "ementa",
     *,
     datas: Mapping[str, str | None] | None = None,
     **filtros: str | None,
@@ -140,9 +140,9 @@ def build_cjsg_params(
     vazio não entra na query.
     """
     params = {"search_filter_option": "jurisprudencia"}
-    consulta = montar_consulta_avancada(pesquisa, campo, datas or {})
+    consulta = montar_consulta_avancada(pesquisa, buscar_em, datas or {})
     if consulta is None:
-        params |= {"search_filter": campo, "search_input": pesquisa, "q": pesquisa, "q_or": pesquisa}
+        params |= {"search_filter": buscar_em, "search_input": pesquisa, "q": pesquisa, "q_or": pesquisa}
     else:
         params |= {"search_filter": "busca_avancada", "q": consulta, "q_or": ""}
     params |= {"start": str((pagina - 1) * RESULTS_PER_PAGE), "rows": str(RESULTS_PER_PAGE)}
@@ -217,7 +217,7 @@ def cjsg_download_manager(
     """Baixa as páginas de resultados da busca de jurisprudência do STM.
 
     ``busca`` leva os demais argumentos de :func:`build_cjsg_params`:
-    ``campo``, ``datas`` e os filtros da coluna "Filtrar por".
+    ``buscar_em``, ``datas`` e os filtros da coluna "Filtrar por".
 
     Raises:
         BotChallengeBlockedError: Quando o WAF recusa a requisição.
