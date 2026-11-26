@@ -184,7 +184,6 @@ def test_cjsg_monocraticas_typical(mocker):
 
     assert len(df) == 10
     assert df["processo"].nunique() == 10
-    assert "ementa" in df.columns
     assert df["ementa"].map(pd.isna).all()
     assert df["data_publicacao"].notna().all()
     assert df["decisao"].map(lambda texto: isinstance(texto, str) and bool(texto)).all()

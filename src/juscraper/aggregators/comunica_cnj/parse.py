@@ -11,6 +11,8 @@ from typing import Any
 
 import requests
 
+from ...core.parse_utils import normalizar_texto
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,4 +44,7 @@ def parse_items(response: requests.Response) -> list[dict[str, Any]]:
     items = data.get("items")
     if items is None:
         items = data.get("itens", [])
+    for item in items:
+        if "texto" in item:
+            item["texto"] = normalizar_texto(item["texto"])
     return list(items)

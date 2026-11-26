@@ -1,13 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><title></title></head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <style>
+        body {
+            font-family: "Arial";
+        }
+    </style>
+    <script type="text/javascript">
+    window.awsWafCookieDomainList = [];
+    window.gokuProps = {
+"key":"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5FKCMDnO+vTbNg96AHtO3n6Dwci7CDDjAiNzV9uAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMlK2hi/LUqw+2qUiVAgEQgDvK5CyA7U8GA1izX7hn9amj8bNlpJZpvsTJiBAvc2clr8QF+Zo7maAdpcS7xvICcz3KVfaxZfLMoO52jw==",
+          "iv":"CgAEwzBQhwAAA/Oa",
+          "context":"pbU1nJaYD12qUOK1eQsyyWinXbtkWN6cvQAmWzPZTA4N4CLkrc95JM/av+oh4iNQKgPVT5hbjkeyVEH3qlFgpawxzOuq8VIAh9e0xVIGfGwXHiscW1fVTggj4Kvhil21K7tsj8tgvOzSiIHLsCnprQPyOd6RFfySAMDLWJeNYDCqgql+afVKdVYsojLH1GPMjzlYtt/p4XgY6VjBnUscz4LhSW/OPBZ8mWOSusXEpem2B3VF8RqoulJSOEgFPoRc9PClsYKozKcwzZnyU52NlxT42EDEfab0XMu2wSbxyXH1HbioYeAKzWNnW+LX3RvMNrHz77YuE0IllVvjO8NjAQX7Ug45XzkhvU7FSDaXnaOtVYeSG3VCxnxxCRBqJDehYEJJeVOlPp8p0aOnvTNwjd2OI0zt0d8+ISdWCFhdXPc4zPWsgk9o/de5IctY4jgZ/oazS9Iy/QpsSJPVd1AhgnfUeMs8aKBRdqnz5Of2Gij5WyXt0yLKcxGnttsBZoVm3d7TLUbBxWIGbYlu79Z7abWRKm1mGzEXYDYaOJEXhBRo9hmmrCCgT+ZBVnghI/pvIfcd0b0Uegt5iZGhUutc+WBm9lYgzFp6OmPR2W7cAYGw2RvWxKmM+/2wms1HPRH4uYr4W+pvMJI/nDuzrZcwt+B6pLtlxvpKzfTlKVVWb4aY68wd594ypkrhbnlGV9fOXz155HIP7rhAWlBoKE1JCttLNY4d+zobS+TxIgsRqFZ0/JjFaOItwpX5zrpd21vGnUJvBR3IrxWlJaaeap2r/vv2UpO8mLsG8mo="
+};
+    </script>
+    <script src="https://b5746777659f.43492643.sa-east-1.token.awswaf.com/b5746777659f/4e0f6acb36e7/7545dcb40169/challenge.js"></script>
+</head>
 <body>
-<!-- Forma reduzida da página de desafio do AWS WAF: os marcadores são os da
-     resposta real; as chaves opacas foram trocadas por valores fictícios. -->
-<script>
-window.awsWafCookieDomainList = [];
-window.gokuProps = {"key": "chave-ficticia", "iv": "iv-ficticio", "context": "contexto-ficticio"};
-</script>
-<noscript>JavaScript is required</noscript>
+    <div id="challenge-container"></div>
+    <script type="text/javascript">
+        AwsWafIntegration.saveReferrer();
+        AwsWafIntegration.checkForceRefresh().then((forceRefresh) => {
+            if (forceRefresh) {
+                AwsWafIntegration.forceRefreshToken().then(() => {
+                    window.location.reload(true);
+                });
+            } else {
+                AwsWafIntegration.getToken().then(() => {
+                    window.location.reload(true);
+                });
+            }
+        });
+    </script>
+    <noscript>
+        <h1>JavaScript is disabled</h1>
+        In order to continue, we need to verify that you're not a robot.
+        This requires JavaScript. Enable JavaScript and then reload the page.
+    </noscript>
 </body>
 </html>

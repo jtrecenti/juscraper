@@ -9,11 +9,61 @@ import pytest
 
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts.tjes.parse import cjsg_parse
-from tests._helpers import load_sample
+
+# Páginas mínimas com as bordas do parser que as respostas reais gravadas não
+# reproduzem: campo canônico e campo desconhecido na entrada, listas e escalares
+# misturados, data inválida, página sem ``docs``, documento vazio e processo
+# repetido. Não é resposta do portal; por isso fica aqui e não em ``samples/``.
+PAGINAS_COM_BORDAS = """\
+[
+  {
+    "docs": [
+      {
+        "nr_processo": "0000001-00.2026.8.08.0000",
+        "processo": "campo canônico ignorado na entrada",
+        "ementa": "<p>Texto preservado</p>",
+        "magistrado": ["Relatora A", "Relator B"],
+        "relator": "ignorado",
+        "orgao_julgador": "Câmara Cível",
+        "classe_judicial": "Apelação",
+        "classe_judicial_sigla": "AC",
+        "assunto_principal": ["Dano moral"],
+        "jurisdicao": null,
+        "competencia": [],
+        "dt_juntada": "2026-04-17T20:29:22.764Z",
+        "id": "doc-1",
+        "acordao": false,
+        "lista_assunto": ["Consumidor", 42, null],
+        "localizacao": "Gabinete",
+        "cargo_julgador": ["Desembargador"],
+        "cd_assunto_principal": 0,
+        "cd_classe_judicial": 198,
+        "id_assunto_principal": [1, 2],
+        "id_classe_judicial": 198,
+        "id_jurisdicao": [],
+        "id_localizacao": null,
+        "id_cargo_julgador": 3,
+        "id_bin": 4,
+        "campo_desconhecido": "descartar"
+      },
+      {
+        "nr_processo": "0000002-00.2026.8.08.0000",
+        "dt_juntada": "data inválida",
+        "lista_assunto": [],
+        "localizacao": {"codigo": 7},
+        "competencia": ""
+      }
+    ]
+  },
+  {},
+  {"docs": []},
+  {"docs": [{}, {"nr_processo": "0000001-00.2026.8.08.0000", "dt_juntada": null}]}
+]
+"""
 
 
 def test_parse_preserva_valores_colunas_ordem_e_entrada():
-    paginas = json.loads(load_sample("tjes", "cjsg/parser_edge_cases.json"))
+    paginas = json.loads(PAGINAS_COM_BORDAS)
     original = copy.deepcopy(paginas)
 
     # O parser devolve o que o pandas da vez produzir; o metodo publico passa a

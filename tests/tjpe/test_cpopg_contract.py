@@ -28,6 +28,9 @@ BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
 DETAIL_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam"
 DOC_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
+# Corpo da peça: o download só grava os bytes, sem ler o conteúdo, então
+# qualquer HTML serve.
+DOCUMENTO = b"<html><body><p>Despacho</p></body></html>"
 CNJ = "00000011220248170001"
 CNJ_FORMATADO = "0000001-12.2024.8.17.0001"
 OUTRO_CNJ = "00000021220248170001"
@@ -267,9 +270,8 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, 
     for _ in range(2):
         _busca()
         _detalhe()
-    doc = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
     for _ in range(2 + len(ids)):
-        responses.add(responses.GET, DOC_URL, body=doc, content_type="text/html")
+        responses.add(responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html")
     # Cópia de uma coleta anterior, que a gravação que falha não pode apagar.
     anterior = tmp_path / CNJ / f"{ids[1]}.html"
     anterior.parent.mkdir()

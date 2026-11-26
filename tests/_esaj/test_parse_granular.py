@@ -9,12 +9,14 @@ import pandas as pd
 import pytest
 from bs4 import BeautifulSoup
 
+from juscraper.core.parse_utils import normalizar_texto
 from juscraper.courts._esaj import parse as esaj_parse
 from juscraper.courts._esaj.parse import (
-    _clean_value,
     _extract_detail,
     _extract_ementa,
+    _extract_labeled_value,
     _extract_pagination_count,
+    _normalize_key,
     _parse_single_page,
     _total_declarado,
     cjsg_n_pags,
@@ -24,12 +26,14 @@ from juscraper.courts._esaj.parse import (
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page
 from tests._helpers import load_sample
 
+_TESTS = Path(__file__).parents[1]
+
 ESAJ_COLUMNS = (
     "processo",
     "cd_acordao",
     "cd_foro",
     "classe_assunto",
-    "relatora",
+    "relator",
     "comarca",
     "orgao_julgador",
     "data_julgamento",
@@ -48,22 +52,86 @@ def _primeira_pagina_com_total(valor: object) -> str:
     return html
 
 
+def _pagina(corpo: str) -> str:
+    """Envelope mínimo para os casos de borda que nenhuma página real do eSAJ traz."""
+    return f"<html><body>{corpo}</body></html>"
+
+
+# Cascata de ``cjsg_n_results`` quando a página não traz o input de total.
+# Nenhuma captura reproduz esses layouts (o eSAJ atual sempre traz o input),
+# então o HTML mínimo fica aqui, e não em ``samples/``.
+_CASCATA_CONTAGEM = {
+    "legacy_bgcolor": (
+        '<table><tr><td bgcolor="#EEEEEE">Pagina 2 de 42 paginas encontradas</td></tr></table>',
+        42,
+    ),
+    "pagination_class": (
+        '<table><tr><td class="pagination-info">Total: 77 registros disponiveis</td></tr></table>',
+        77,
+    ),
+    "page_text": ("<table><tr><td>Página atual: 3, total 99 itens</td></tr></table>", 99),
+    "rows_fallback": (
+        '<table class="resultado-lista">'
+        '<tr class="fundocinza1"><td>primeiro</td></tr>'
+        '<tr class="fundocinza1"><td>segundo</td></tr>'
+        '<tr class="fundocinza1"><td>terceiro</td></tr>'
+        "</table>",
+        3,
+    ),
+}
+
+# Linhas de resultado que a página real não traz juntas: linha sem a segunda
+# célula, linha sem a tabela de detalhes, rótulo que o parser não conhece
+# ("Campo especial"), "Outros números" (descartado), os rótulos com a
+# acentuação estragada que ``_TYPO_FIXES`` conserta e ementa só na ``div``
+# oculta. O ``Relator(a)`` traz hífen suave e espaço de largura zero.
+_LINHAS_DE_BORDA = _pagina(
+    """<table>
+  <tr class="fundocinza1"><td>linha sem segunda celula</td></tr>
+  <tr class="fundocinza1"><td></td><td>linha sem tabela de detalhes</td></tr>
+  <tr class="fundocinza1"><td></td><td><table>
+    <tr><td>
+      <a class="esajLinkLogin downloadEmenta" cdacordao="123" cdforo="4">
+        0000001-02.2024.8.26.0001
+      </a>
+    </td></tr>
+    <tr class="ementaClass2"><td><strong>Classe / Assunto:</strong> Apelacao / Contratos</td></tr>
+    <tr class="ementaClass2"><td><strong>Relator(a):</strong> Des. Joao\xad Acu\u200b</td></tr>
+    <tr class="ementaClass2"><td><strong>Campo especial:</strong> valor dinamico</td></tr>
+    <tr class="ementaClass2"><td><strong>Outros numeros:</strong> deve ser descartado</td></tr>
+    <tr class="ementaClass2"><td><strong>Data de publicassapso:</strong> 01/02/2024</td></tr>
+    <tr class="ementaClass2"><td><strong>argapso julgador:</strong> Camara Especial</td></tr>
+    <tr class="ementaClass2"><td>
+      <strong>Ementa:</strong>
+      <div align="justify" style="display: none;">Ementa: texto oculto.</div>
+      <div align="justify" style="display: block;">Ementa: texto visivel.</div>
+    </td></tr>
+  </table></td></tr>
+  <tr class="fundocinza1"><td></td><td><table>
+    <tr class="ementaClass2"><td>
+      <strong>Ementa:</strong>
+      <div align="justify" style="display: none;">Ementa: fallback oculto.</div>
+    </td></tr>
+  </table></td></tr>
+  <tr class="fundocinza1"><td></td><td><table>
+    <tr class="ementaClass2"><td>detalhe sem rotulo</td></tr>
+  </table></td></tr>
+</table>"""
+)
+
+
 class TestCJSGNPages:
     """Test the cjsg_n_pags function."""
 
     def test_extract_pages_from_results(self):
-        """Test extracting page count from results HTML."""
-        html = load_sample('tjsp', 'cjsg/results_normal.html')
-        n_pags = cjsg_n_pags(html)
-        # 45 results / 20 per page = 3 pages (rounded up)
-        assert n_pags == 3
+        """78 resultados, 20 por página: 4 páginas."""
+        html = load_sample('tjsp', 'cjsg/single_page.html')
+        assert cjsg_n_pags(html) == 4
 
     def test_extract_pages_from_single_result(self):
-        """Test extracting page count from single result HTML."""
-        html = load_sample('tjsp', 'cjsg/single_result.html')
-        n_pags = cjsg_n_pags(html)
-        # 1 result / 20 per page = 1 page
-        assert n_pags == 1
+        """Um resultado só cabe numa página."""
+        html = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
+        assert cjsg_n_pags(html) == 1
 
     def test_extract_pages_missing_selector(self):
         """Test that missing pagination selector raises ValueError."""
@@ -113,11 +181,6 @@ class TestCJSGNResults:
         html = load_sample("tjsp", "cjsg/no_results.html")
         assert cjsg_n_results(html) == 0
 
-    def test_single_result_fallback_counts_rows(self):
-        """Sample com 1 hit e sem marker de paginacao — fallback conta linhas."""
-        html = load_sample("tjsp", "cjsg/single_result.html")
-        assert cjsg_n_results(html) == 1
-
     def test_ementa_com_resultados_nao_vira_paginacao(self):
         """Ementa curta com "resultados" na 1a página ("direito", baixar_sg=False, 14/11/2026)."""
         html = load_sample("tjsp", "cjsg/ementa_com_resultados.html")
@@ -142,36 +205,34 @@ class TestCJSGNResults:
         # 2571077 resultados / 20 por pagina = 128554 paginas (ceil).
         assert cjsg_n_pags(html) == (2571077 + 19) // 20
 
-    @pytest.mark.parametrize(
-        ("sample", "expected"),
-        [
-            ("count_legacy_bgcolor.html", 42),
-            ("count_pagination_class.html", 77),
-            ("count_page_text.html", 99),
-            ("count_rows_fallback.html", 3),
-        ],
-    )
-    def test_selector_and_regex_cascades(self, sample, expected):
-        html = load_sample("tjsp", f"cjsg/{sample}")
-        assert cjsg_n_results(html) == expected
+    @pytest.mark.parametrize(("corpo", "expected"), _CASCATA_CONTAGEM.values(), ids=_CASCATA_CONTAGEM.keys())
+    def test_selector_and_regex_cascades(self, corpo, expected):
+        assert cjsg_n_results(_pagina(corpo)) == expected
 
     def test_search_form_without_results_raises_specific_message(self):
-        html = load_sample("tjsp", "cjsg/count_form_initial.html")
+        html = _pagina('<form id="consultaForm"><input name="pesquisa" /></form>')
         with pytest.raises(ValueError, match="Ainda na página de consulta"):
             cjsg_n_results(html)
 
     def test_pagination_marker_without_number_raises_with_text(self):
-        html = load_sample("tjsp", "cjsg/count_invalid_text.html")
+        html = _pagina('<table><tr><td bgcolor="#EEEEEE">Formato inesperado sem numero</td></tr></table>')
         with pytest.raises(ValueError, match="Formato inesperado encontrado"):
             cjsg_n_results(html)
 
     def test_page_error_takes_precedence_over_zero_results_marker(self):
-        html = load_sample("tjsp", "cjsg/count_error_and_zero.html")
+        html = _pagina(
+            '<div class="mensagemErro">Falha na verificação do captcha.</div>'
+            "<p>Nenhum resultado encontrado.</p>"
+        )
         with pytest.raises(ValueError, match="Captcha"):
             cjsg_n_results(html)
 
     def test_results_table_without_standard_rows_returns_minimum_one(self):
-        html = load_sample("tjsp", "cjsg/count_table_without_standard_rows.html")
+        html = _pagina(
+            '<table class="resultado">'
+            '<tr class="novo-layout"><td>Resultado sem a classe legada de linha.</td></tr>'
+            "</table>"
+        )
         assert cjsg_n_results(html) == 1
 
     @pytest.mark.parametrize(
@@ -194,7 +255,7 @@ class TestCJSGNResults:
     ):
         relative_path = "cjsg/results_normal_page_01.html"
         html = load_sample(court, relative_path)
-        sample_path = Path(__file__).parent.parent / court / "samples" / relative_path
+        sample_path = _TESTS / court / "samples" / relative_path
 
         df = _parse_single_page(str(sample_path))
 
@@ -294,10 +355,11 @@ class TestCJSGParseSinglePage:
     def test_ementa_longa_devolve_so_a_completa(self, sigla, arquivo):
         r"""Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713).
 
-        O ``\r\n`` do HTML vira ``\n``, e o ``\x96`` do windows-1252, "–". O
-        sample vai lido em bytes, porque ``read_text`` já trocaria o ``\r\n``.
+        O ``\r\n`` do HTML vira ``\n``, o ``\x96`` do windows-1252, "–", e o
+        ``\xa0``, espaço comum. O sample vai lido em bytes, porque
+        ``read_text`` já trocaria o ``\r\n``.
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         html = path.read_bytes().decode("utf-8")
         assert "\r\n" in html
         soup = BeautifulSoup(html, "html.parser")
@@ -309,9 +371,7 @@ class TestCJSGParseSinglePage:
         longas = 0
         for ementa, linha in zip(df["ementa"], linhas, strict=True):
             divs = [
-                div.get_text(" ", strip=True)
-                .replace("\r\n", "\n")
-                .replace("\x96", "–")
+                normalizar_texto(div.get_text(" ", strip=True).replace("\x96", "–"))
                 .removeprefix("Ementa:")
                 .strip()
                 for div in linha.select('div[align="justify"]')
@@ -324,7 +384,32 @@ class TestCJSGParseSinglePage:
             elif len(divs) == 1:
                 assert ementa == divs[0]
         assert longas > 0
-        assert not df["ementa"].str.contains("\r").any()
+        assert not df["ementa"].str.contains("[\r\xa0]").any()
+        assert df["ementa"].str.contains("\n").any()
+
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo", "trecho"),
+        [
+            ("tjac", "cjsg/results_normal_page_02.html", "da unidade consumidora"),
+            ("tjal", "cjsg/results_normal_page_01.html", None),
+            ("tjam", "cjsg/results_normal_page_02.html", "art. 14, do CDC"),
+            ("tjce", "cjsg/results_normal_page_02.html", None),
+            ("tjms", "cjsg/results_normal_page_01.html", None),
+            ("tjsp", "cjsg/single_page.html", None),
+        ],
+    )
+    def test_ementa_sem_espaco_nao_separavel(self, sigla, arquivo, trecho):
+        r"""O ``\xa0`` do HTML sai como espaço comum, e a busca por "art. 14" acha a ementa."""
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        soup = BeautifulSoup(path.read_bytes().decode("utf-8"), "html.parser")
+        divs = soup.select('tr.ementaClass2 div[align="justify"]')
+        assert any("\xa0" in div.get_text() for div in divs)
+
+        ementas = _parse_single_page(str(path))["ementa"].dropna()
+
+        assert not ementas.str.contains("\xa0").any()
+        if trecho is not None:
+            assert ementas.str.contains(trecho, regex=False).any()
 
     def test_ementa_mantem_rotulo_citado_no_corpo(self):
         """Só o rótulo do início sai; "Ementa:" citado no texto fica."""
@@ -364,7 +449,7 @@ class TestCJSGParseSinglePage:
         O ``cjsg_download`` grava a resposta em latin-1, byte a byte como o eSAJ
         a mandou; o sample, regravado em UTF-8, guarda o mesmo U+0096.
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         html = path.read_bytes().decode("utf-8")
         assert "\x96" in html
         como_baixado = tmp_path / "cjsg_00001.html"
@@ -393,7 +478,7 @@ class TestCJSGParseSinglePage:
         O ``N/A`` do eSAJ aparece só no texto oculto de "ementa sem formatação"
         (no TJAM, ``Ementa: N/A``).
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         soup = BeautifulSoup(path.read_bytes().decode("latin-1"), "html.parser")
         linhas = soup.find_all("tr", class_="fundocinza1")
 
@@ -411,53 +496,24 @@ class TestCJSGParseSinglePage:
         assert df["ementa"].isna().sum() == sem_ementa
 
     def test_parse_results_page(self):
-        """Test parsing a results page with multiple processes."""
-        html = load_sample('tjsp', 'cjsg/results_normal.html')
+        """Primeira linha de uma página real, campo a campo, pelo nome do TJSP."""
+        path = _TESTS / "tjsp/samples/cjsg/single_page.html"
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
+        df = _cjsg_parse_single_page(str(path))
 
-        try:
-            df = _cjsg_parse_single_page(temp_path)
-
-            assert isinstance(df, pd.DataFrame)
-            assert len(df) == 2  # Two processes in the sample
-
-            # Check first process
-            assert df.iloc[0]['processo'] == '1000123-45.2023.8.26.0100'
-            assert df.iloc[0]['cd_acordao'] == '12345'
-            assert df.iloc[0]['cd_foro'] == '6789'
-            assert 'Apelação Cível' in df.iloc[0].get('classe', '')
-            assert 'Direito do Consumidor' in df.iloc[0].get('assunto', '')
-            assert 'ementa' in df.columns
-
-            # Check second process
-            assert df.iloc[1]['processo'] == '1000124-46.2023.8.26.0101'
-            assert df.iloc[1]['cd_acordao'] == '12346'
-        finally:
-            Path(temp_path).unlink()
-
-    def test_parse_single_result(self):
-        """Test parsing a page with a single result."""
-        html = load_sample('tjsp', 'cjsg/single_result.html')
-
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
-
-        try:
-            df = _cjsg_parse_single_page(temp_path)
-
-            assert isinstance(df, pd.DataFrame)
-            assert len(df) == 1
-
-            assert df.iloc[0]['processo'] == '1000999-99.2024.8.26.0100'
-            assert df.iloc[0]['cd_acordao'] == '99999'
-            assert 'Apelação Cível' in df.iloc[0].get('classe', '')
-            assert 'ementa' in df.columns
-        finally:
-            Path(temp_path).unlink()
+        assert len(df) == 20
+        assert df.iloc[0].drop("ementa").to_dict() == {
+            "processo": "1006180-87.2025.8.26.0309",
+            "cd_acordao": "20401626",
+            "cd_foro": "0",
+            "classe_assunto": "Apelação Cível / Condomínio",
+            "relator": "Salles Rossi",
+            "comarca": "Jundiaí",
+            "orgao_julgador": "8ª Câmara de Direito Privado",
+            "data_julgamento": "15/04/2026",
+            "data_publicacao": "15/04/2026",
+        }
+        assert df["ementa"].notna().all()
 
     def test_parse_empty_page(self):
         """Test parsing an empty results page."""
@@ -510,8 +566,9 @@ class TestCJSGParseSinglePage:
     def test_tjsp_reexport_preserves_internal_parser_identity(self):
         assert _cjsg_parse_single_page is _parse_single_page
 
-    def test_dynamic_labels_malformed_rows_and_ementa_fallback(self):
-        sample_path = Path(__file__).parent.parent / "tjsp/samples/cjsg/parser_edge_cases.html"
+    def test_dynamic_labels_malformed_rows_and_ementa_fallback(self, tmp_path):
+        sample_path = tmp_path / "linhas_de_borda.html"
+        sample_path.write_text(_LINHAS_DE_BORDA, encoding="utf-8")
 
         df = _parse_single_page(str(sample_path))
 
@@ -521,7 +578,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao",
             "cd_foro",
             "classe_assunto",
-            "relatora",
+            "relator",
             "campo_especial",
             "data_publicacao",
             "orgao_julgador",
@@ -532,7 +589,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao": "123",
             "cd_foro": "4",
             "classe_assunto": "Apelacao / Contratos",
-            "relatora": "Des. Joao Acu",
+            "relator": "Des. Joao Acu",
             "campo_especial": "valor dinamico",
             "data_publicacao": "01/02/2024",
             "orgao_julgador": "Camara Especial",
@@ -542,16 +599,23 @@ class TestCJSGParseSinglePage:
         assert pd.isna(df.iloc[2]["ementa"])
         assert "outros_numeros" not in df.columns
 
-    def test_latin1_file_is_decoded_without_mojibake(self, tmp_path):
-        html = load_sample("tjsp", "cjsg/latin1_result.html")
-        path = tmp_path / "latin1.html"
-        path.write_bytes(html.encode("latin-1"))
+    def test_cp1252_file_is_decoded_without_mojibake(self, tmp_path):
+        """Os bytes do eSAJ (windows-1252) gravados como vieram saem iguais à página em UTF-8.
+
+        ``results_normal_page_01.html`` tem acentos e o travessão "–", que no
+        windows-1252 é o byte 0x96.
+        """
+        original = _TESTS / "tjsp/samples/cjsg/results_normal_page_01.html"
+        texto = load_sample("tjsp", "cjsg/results_normal_page_01.html")
+        assert "–" in texto
+        path = tmp_path / "cp1252.html"
+        path.write_bytes(texto.encode("cp1252"))
 
         df = _parse_single_page(str(path))
 
-        assert df.iloc[0]["processo"] == "0000002-03.2024.8.26.0002"
-        assert df.iloc[0]["relatora"] == "Des. João Açú"
-        assert df.iloc[0]["ementa"] == "Decisão sobre obrigação."
+        pd.testing.assert_frame_equal(df, _parse_single_page(str(original)))
+        assert df["ementa"].str.contains("–").any()
+        assert df.iloc[0]["orgao_julgador"] == "Núcleo 4.0-T. V (DP1)"
 
 
 class TestCJSGParseManager:
@@ -559,8 +623,8 @@ class TestCJSGParseManager:
 
     def test_parse_directory(self):
         """Test parsing multiple files from a directory."""
-        html1 = load_sample('tjsp', 'cjsg/results_normal.html')
-        html2 = load_sample('tjsp', 'cjsg/single_result.html')
+        html1 = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
+        html2 = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file1 = Path(temp_dir) / 'page1.html'
@@ -574,12 +638,12 @@ class TestCJSGParseManager:
             df = cjsg_parse_manager(temp_dir)
 
             assert isinstance(df, pd.DataFrame)
-            # 2 processes from first file + 1 from second = 3 total
-            assert len(df) == 3
+            # Uma decisão monocrática em cada arquivo
+            assert len(df) == 2
 
     def test_parse_single_file(self):
         """Test parsing a single file."""
-        html = load_sample('tjsp', 'cjsg/results_normal.html')
+        html = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -588,7 +652,7 @@ class TestCJSGParseManager:
         try:
             df = cjsg_parse_manager(temp_path)
             assert isinstance(df, pd.DataFrame)
-            assert len(df) == 2
+            assert len(df) == 1
         finally:
             Path(temp_path).unlink()
 
@@ -601,7 +665,7 @@ class TestCJSGParseManager:
 
     def test_parse_with_invalid_file(self):
         """Test parsing directory with invalid file (should skip it)."""
-        html = load_sample('tjsp', 'cjsg/results_normal.html')
+        html = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             valid_file = Path(temp_dir) / 'valid.html'
@@ -621,7 +685,7 @@ class TestCJSGParseManager:
 
     def test_parse_directory_reads_nested_folders(self, tmp_path):
         """O auto-chunk grava uma pasta por janela; o parse desce nelas."""
-        html = load_sample("tjsp", "cjsg/results_normal.html")
+        html = load_sample("tjsp", "cjsg/monocratica_single_page.html")
         (tmp_path / "janela_1").mkdir()
         (tmp_path / "janela_1" / "cjsg_00001.html").write_text(html, encoding="utf-8")
         (tmp_path / "cjsg_00001.html").write_text(html, encoding="utf-8")
@@ -657,8 +721,8 @@ class TestExtractPaginationCount:
         assert _extract_pagination_count(texto) == esperado
 
 
-class TestCleanValue:
-    """Caracteres invisíveis que o eSAJ mistura nos valores saem todos."""
+class TestLabeledValue:
+    r"""Caracteres invisíveis e ``\xa0`` que o eSAJ mistura nos valores saem todos."""
 
     @pytest.mark.parametrize(
         "invisivel",
@@ -670,7 +734,42 @@ class TestCleanValue:
         ],
     )
     def test_remove_caractere_invisivel(self, invisivel):
-        assert _clean_value(f"Des. Jo{invisivel}ão{invisivel}") == "Des. João"
+        html = f'<tr class="ementaClass2"><td><strong>Comarca:</strong> Rio\xa0Bra{invisivel}nco{invisivel}</td></tr>'
+        linha = BeautifulSoup(html, "html.parser").tr
+
+        assert _extract_labeled_value(linha, "Comarca:") == ("comarca", "Rio Branco")
+
+
+class TestNormalizeKey:
+    """Rótulos com marcador de gênero viram o nome canônico (#713)."""
+
+    @pytest.mark.parametrize(
+        ("rotulo", "chave"),
+        [
+            pytest.param("Relator(a):", "relator", id="relator-a-colado"),
+            pytest.param("Relator (a):", "relator", id="relator-a-com-espaco"),
+            pytest.param("Relator:", "relator", id="relator"),
+        ],
+    )
+    def test_rotulo_vira_chave_canonica(self, rotulo, chave):
+        assert _normalize_key(rotulo) == chave
+
+    def test_paginas_com_relator_e_relator_a_geram_uma_so_coluna(self, tmp_path):
+        """Páginas com "Relator:" e com "Relator(a):" dão uma coluna só, ``relator``.
+
+        Todas as capturas do eSAJ trazem "Relator(a):"; a página com "Relator:"
+        é a mesma captura com o rótulo trocado.
+        """
+        html = load_sample("tjsp", "cjsg/monocratica_single_page.html")
+        sem_marcador = html.replace("Relator(a):", "Relator:")
+        assert "Relator(a):" not in sem_marcador
+        (tmp_path / "relator_a.html").write_text(html, encoding="utf-8")
+        (tmp_path / "relator.html").write_text(sem_marcador, encoding="utf-8")
+
+        df = cjsg_parse_manager(str(tmp_path))
+
+        assert "relatora" not in df.columns
+        assert df["relator"].notna().all()
 
 
 if __name__ == "__main__":

@@ -15,9 +15,8 @@ Dois enforcamentos em schemas concretos Input/Output (mapeados em
 :data:`TYPE_GRACE_PERIOD` e :data:`SYNONYM_GRACE_PERIOD` documentam
 excecoes conhecidas que ainda aparecem por razao explicita — p.ex.
 TJPI/TJGO nao convertem ``data_publicacao`` para ``date``, DataJud
-ainda so aceita ``range`` na assinatura, ``OutputCJSGEsaj`` declara
-``relatora`` por causa do parser ``_normalize_key``. Cada entrada
-tem a razao e o PR pendente.
+ainda so aceita ``range`` na assinatura. Cada entrada tem a razao e o
+PR pendente.
 """
 from __future__ import annotations
 
@@ -118,13 +117,6 @@ TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
 # Documentam tribunais que ainda nao passaram pelo rename canonico
 # mas estao na agenda.
 SYNONYM_GRACE_PERIOD: dict[tuple[str, str], str] = {
-    # OutputCJSGEsaj declara ``relatora`` explicito porque o parser eSAJ
-    # _normalize_key transforma "Relator(a):" em "relatora". Correcao
-    # estrutural no parser e breaking para 6 tribunais — PR dedicado.
-    (
-        "OutputCJSGEsaj",
-        "relatora",
-    ): "eSAJ parser emite relatora via _normalize_key — PR dedicado pendente (ver TODO no docstring)",
 }
 
 

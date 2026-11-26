@@ -87,14 +87,10 @@ def _caminho(arquivo: Path) -> tuple:
 
 
 def _paginas(arquivo: Path) -> tuple:
-    """``([pagina],)``: HTML como texto, JSON decodificado.
-
-    Um JSON que já é lista de páginas (o ``parser_edge_cases`` do TJES) vai como está.
-    """
+    """``([pagina],)``: HTML como texto, JSON decodificado."""
     if arquivo.suffix != ".json":
         return ([_texto(arquivo)],)
-    bruto = _json(arquivo)
-    return (bruto if isinstance(bruto, list) else [bruto],)
+    return ([_json(arquivo)],)
 
 
 def _json_solto(arquivo: Path) -> tuple:
@@ -179,20 +175,8 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjam", "cjsg"): _ESAJ_CJSG,
     ("tjce", "cjsg"): _ESAJ_CJSG,
     ("tjms", "cjsg"): _ESAJ_CJSG,
-    ("tjsp", "cjsg"): Leitura(
-        _caminho,
-        ignorar={
-            "parser_edge_cases.html": "escrito à mão para o parser, com rótulo inventado (Campo especial)",
-        },
-    ),
-    ("tjsp", "cjpg"): Leitura(
-        _caminho,
-        sufixos=(".html",),
-        ignorar={
-            "count_captcha_error.html": "página de captcha, que o parser recusa de propósito",
-            "results_optional_fields.html": "escrito à mão para o parser, com rótulo inventado (Tipo-de ato)",
-        },
-    ),
+    ("tjsp", "cjsg"): _ESAJ_CJSG,
+    ("tjsp", "cjpg"): Leitura(_caminho, sufixos=(".html",)),
     ("tjms", "cjpg"): Leitura(
         _caminho,
         sufixos=(".html",),
@@ -216,7 +200,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjap", "cjsg"): Leitura(
         ignorar={
             "security_check_failed.json": "recusa do portal, que o parser levanta de propósito",
-            "generic_error.json": "erro do portal, que o parser levanta de propósito",
         },
     ),
     ("tjba", "cjsg"): _PAGINAS,
@@ -302,7 +285,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         ignorar={
             "list_*.json": "listagem, lida no download para achar o processo",
             "typical_single.json": "listagem, lida no download para achar o processo",
-            "no_results.json": "listagem vazia, sem detalhe",
         },
     ),
     ("falcao", "listar_decisoes"): Leitura(
@@ -326,7 +308,7 @@ SEM_LEITURA: dict[tuple[str, str], str] = {
 
 # Só a conferência 1 (nomes deprecados). Motivo obrigatório.
 SO_NOMES_DEPRECADOS: dict[tuple[str, str], str] = {
-    ("tjdft", "cjsg"): "repassa cada registro do JSON da API; extra='allow' é o contrato",
+    ("tjdft", "cjsg"): "repassa cada registro do JSON da API com 4 chaves renomeadas; extra='allow' é o contrato",
     ("stf", "listar_decisoes"): "repassa o _source da API com 6 chaves renomeadas; extra='allow' é o contrato",
     ("datajud", "listar_processos"): "repassa o _source do Elasticsearch; extra='allow' é o contrato",
     ("comunica_cnj", "listar_comunicacoes"): "repassa os itens do JSON da API; extra='allow' é o contrato",
@@ -359,27 +341,17 @@ AUXILIARES_NAO_DECLARADAS: dict[tuple[str, str], dict[str, str]] = {
     },
 }
 
-# Sinônimo deprecado ainda entregue: o PR que o renomeia ou a decisão de API
-# pendente. Remover a entrada junto com a correção;
+# Sinônimo deprecado ainda entregue: o PR que o renomeia ou o motivo de a
+# exceção ser permanente. Remover a entrada junto com a correção;
 # ``test_excecoes_ainda_sao_necessarias`` cobra isso.
-_RELATORA_717 = "eSAJ cjsg: relatora vira relator no PR #717 (rótulo Relator(a): em _normalize_key)"
+_LISTA_DE_ASSUNTOS = "lista de assuntos do processo, não o assunto único em texto; plural deliberado"
 SINONIMOS_TOLERADOS: dict[tuple[str, str, str], str] = {
-    **{
-        (tribunal, "cjsg", "relatora"): _RELATORA_717
-        for tribunal in ("tjac", "tjal", "tjam", "tjce", "tjms", "tjsp")
-    },
-    # Decisão de API pendente: no cpopg, o magistrado do eproc é o juiz da
-    # causa, não o relator de acórdão para o qual o sinônimo foi pensado; e
-    # ``assuntos`` é a lista de assuntos do processo, não o filtro de busca
-    # que o #232 passou ao singular.
-    ("trf6", "cpopg", "magistrado"): "decisão de API pendente: juiz da causa no eproc, não relator",
-    ("trf6", "cpopg", "assuntos"): "decisão de API pendente: lista de assuntos do processo",
-    ("datajud", "listar_processos", "assuntos"): (
-        "decisão de API pendente: lista de assuntos do _source do DataJud, repassada como vem"
-    ),
-    ("falcao", "listar_decisoes", "assuntos"): (
-        "decisão de API pendente: lista de assuntos da coleção precedentes, repassada como vem"
-    ),
+    # Exceção permanente: ``assuntos`` aqui é a lista de assuntos do processo
+    # (código, descrição, principal), não o filtro de busca que o #232 passou
+    # ao singular nem o ``assunto`` em texto das outras saídas.
+    ("trf6", "cpopg", "assuntos"): _LISTA_DE_ASSUNTOS,
+    ("datajud", "listar_processos", "assuntos"): _LISTA_DE_ASSUNTOS,
+    ("falcao", "listar_decisoes", "assuntos"): _LISTA_DE_ASSUNTOS,
 }
 
 
