@@ -280,22 +280,14 @@ def test_cjsg_decisoes_fora_do_portal_levanta_validation_error(valor):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, decisoes=valor)
 
 
-# Colegiados das Turmas Recursais e da Turma de Uniformizacao, que ``"TR"`` traz e
-# ``"TJ"`` exclui.
-_TURMAS = ("Turma Recursal", "Turma de Uniformização")
-
-
-@pytest.mark.parametrize(
-    ("jurisdicoes", "sample", "eh_turma"),
-    [("TJ", "jurisdicoes_tj.json", False), ("TR", "jurisdicoes_tr.json", True)],
-)
+@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
 @responses.activate
-def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes, sample, eh_turma):
+def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes):
     """``jurisdicoes`` vai ao payload com o valor do seletor do portal (``"TJ"``
     ou ``"TR"``); os samples confirmam que cada valor traz so colegiados da
     jurisdicao pedida."""
     mocker.patch("time.sleep")
-    raw = load_sample("tjrn", f"cjsg/{sample}")
+    raw = load_sample("tjrn", f"cjsg/jurisdicoes_{jurisdicoes.lower()}.json")
     responses.add(
         responses.POST,
         BASE_URL,
@@ -309,7 +301,8 @@ def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes, sample, eh_
 
     assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
     assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
-    assert all(any(t in c for t in _TURMAS) == eh_turma for c in df["colegiado"])
+    # Turmas Recursais e Turma de Uniformizacao: so ``"TR"`` traz colegiados "Turma".
+    assert all(("Turma" in c) == (jurisdicoes == "TR") for c in df["colegiado"])
 
 
 @pytest.mark.parametrize("valor", ["Tribunal de Justica", "Turmas Recursais", "tj", "Todas"])
