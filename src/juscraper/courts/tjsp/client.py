@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import logging
 import shutil
+import tempfile
+import threading
 from collections.abc import Iterable
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Literal
 
@@ -21,6 +24,8 @@ from .cposg_parse import cposg_parse_manager
 from .exceptions import QueryTooLongError, validate_pesquisa_length
 from .forms import build_tjsp_cjsg_body
 from .schemas import InputCJSGTJSP
+
+_TRAVA_PASTAS_COMPOSTAS = threading.Lock()
 
 logger = logging.getLogger("juscraper.tjsp")
 
@@ -95,10 +100,36 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         )
         self.u_base = self.BASE_URL
         self.method: Literal["html"] | None = None
+        self._raiz_do_composto: Path | None = None
 
     def set_download_path(self, path: str | None = None) -> None:
         """Set download base dir; with ``None``, a tempdir is created on first use."""
         self._download_path = path
+
+    def _pasta_da_chamada(self) -> str:
+        """Cria pasta própria e registra se a raiz nasceu com esta chamada."""
+        with _TRAVA_PASTAS_COMPOSTAS:
+            # A propriedade cria a raiz temporária na primeira leitura: registrar
+            # sua origem antes dela para não deixar a raiz vazia após o composto.
+            caminho_atual = self._download_path
+            raiz_criada = caminho_atual is None or not Path(caminho_atual).exists()
+            raiz = Path(self.download_path).resolve()
+            raiz.mkdir(parents=True, exist_ok=True)
+            pasta = tempfile.mkdtemp(prefix="composto_", dir=raiz)
+            if raiz_criada:
+                self._raiz_do_composto = raiz
+            return pasta
+
+    def _apagar_pasta_da_chamada(self, pasta: str) -> None:
+        """Apaga só a pasta própria; remove a raiz criada pelo composto quando ela esvaziar."""
+        with _TRAVA_PASTAS_COMPOSTAS:
+            shutil.rmtree(pasta)
+            raiz = Path(pasta).parent
+            if self._raiz_do_composto == raiz:
+                # Outra chamada pode ainda ocupar a raiz; a última tenta de novo.
+                with suppress(OSError):
+                    raiz.rmdir()
+                    self._raiz_do_composto = None
 
     def set_method(self, method: str) -> None:
         """Valida e guarda o método de acesso do cpopg/cposg; só ``'html'`` é aceito."""
@@ -311,7 +342,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 Documento com senha do processo fica de fora. So com
                 ``baixar_movimentacoes=True``. Default ``False``.
             diretorio (str | None): Onde ficam os PDFs de ``download_pecas``,
-                que o exige: ``cpopg`` apaga a pasta de download ao terminar.
+                que o exige: ``cpopg`` apaga ao terminar a pasta em que baixou.
                 Os PDFs vao para
                 ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Nao
                 pode ficar dentro de :attr:`download_path`. Default ``None``.
@@ -319,8 +350,8 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         Raises:
             ValueError: Quando ``method`` nao e suportado, quando ha
                 arquivos baixados, nenhum pode ser lido e nenhum outro
-                processo do lote falhou no download (nesse caso o diretorio
-                de download nao e apagado), ou quando
+                processo do lote falhou no download (nesse caso a pasta da
+                chamada, dentro de :attr:`download_path`, nao e apagada), ou quando
                 ``download_pecas`` e ``diretorio`` nao combinam com os demais
                 argumentos.
 
@@ -335,9 +366,11 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                 ``download_pecas``, para documento com senha e para o que falhou
                 (as falhas saem num ``UserWarning``).
 
-                Todo CNJ pedido, e so ele, aparece em ``basicos``: o que um
-                ``cpopg_download`` anterior deixou em :attr:`download_path`
-                fica de fora. A coluna ``motivo_falha``
+                Todo CNJ pedido, e so ele, aparece em ``basicos``. O ``cpopg``
+                baixa numa pasta nova dentro de :attr:`download_path` e, ao
+                terminar, apaga so ela: o que um ``cpopg_download`` anterior ou
+                o usuario deixou em :attr:`download_path` nao e lido nem
+                apagado. A coluna ``motivo_falha``
                 e ``None`` no processo lido; o CNJ que nao foi baixado ganha uma
                 linha so com ``id_processo`` e o motivo (``nao_encontrado`` quando
                 a consulta diz nao ter o numero, ``entrada_invalida``,
@@ -351,26 +384,25 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         if download_pecas != (diretorio is not None):
             raise ValueError(
                 "download_pecas=True exige diretorio, e diretorio so vale com download_pecas=True: "
-                "cpopg apaga a pasta de download ao terminar."
+                "cpopg apaga ao terminar a pasta em que baixou."
             )
-        if diretorio is not None and Path(diretorio).resolve().is_relative_to(Path(self.download_path).resolve()):
-            raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, que cpopg apaga ao terminar.")
+        if (
+            diretorio is not None and self._download_path is not None
+            and Path(diretorio).resolve().is_relative_to(Path(self._download_path).resolve())
+        ):
+            raise ValueError(f"diretorio {diretorio!r} fica dentro de download_path, onde cpopg baixa e apaga.")
         ids = _lista_de_cnjs(id_cnj)
+        # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
+        if not ids:
+            return tabelas_vazias()
+        pasta = self._pasta_da_chamada()
         # Sem o aviso do download: o parse lê as falhas que ele gravou na
         # pasta e avisa uma vez só, junto com as de leitura.
-        self._baixar_cpopg(
-            ids, self.download_path, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas,
-        )
-        # Lote vazio: nada foi pedido, e o parse da pasta vazia levantaria.
-        result = (
-            cpopg_parse_manager(self.download_path, metodo="TJSPScraper.cpopg", pedidos=ids)
-            if ids else tabelas_vazias()
-        )
+        self._baixar_cpopg(ids, pasta, baixar_movimentacoes=baixar_movimentacoes, download_pecas=download_pecas)
+        result = cpopg_parse_manager(pasta, metodo="TJSPScraper.cpopg", pedidos=ids)
         if diretorio is not None:
-            result["movimentacoes"] = _mover_documentos(result["movimentacoes"], self.download_path, diretorio)
-        # O lote vazio não cria a pasta de download.
-        if Path(self.download_path).exists():
-            shutil.rmtree(self.download_path)
+            result["movimentacoes"] = _mover_documentos(result["movimentacoes"], pasta, diretorio)
+        self._apagar_pasta_da_chamada(pasta)
         return result
 
     def cpopg_download(
@@ -458,9 +490,10 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e
         levanta ``ValueError``.
 
-        Todo CNJ pedido, e só ele, aparece no DataFrame: o que um
-        ``cposg_download`` anterior deixou em :attr:`download_path` fica de
-        fora. A coluna ``motivo_falha`` é
+        Todo CNJ pedido, e só ele, aparece no DataFrame. O ``cposg`` baixa
+        numa pasta nova dentro de :attr:`download_path` e, ao terminar, apaga
+        só ela: o que um ``cposg_download`` anterior ou o usuário deixou em
+        :attr:`download_path` não é lido nem apagado. A coluna ``motivo_falha`` é
         ``None`` no processo lido; o CNJ que não foi baixado ganha uma linha
         só com ``processo`` e o motivo (``nao_encontrado`` quando a consulta
         de 2º grau não mostra o número, ``entrada_invalida``,
@@ -470,15 +503,12 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         saem juntas num único ``UserWarning``.
         """
         self.set_method(method)
-        path = self.download_path
         ids = _lista_de_cnjs(id_cnj)
+        pasta = self._pasta_da_chamada()
         # Como no cpopg: o parse lê as falhas do download e avisa uma vez só.
-        self._baixar_cposg(ids, path)
-        result = cposg_parse_manager(path, metodo="TJSPScraper.cposg", pedidos=ids)
-        if Path(path).exists():
-            shutil.rmtree(path)
-        else:
-            logger.warning("[TJSP] Aviso: diretório %s não existe e não pôde ser removido.", path)
+        self._baixar_cposg(ids, pasta)
+        result = cposg_parse_manager(pasta, metodo="TJSPScraper.cposg", pedidos=ids)
+        self._apagar_pasta_da_chamada(pasta)
         return result
 
     def cposg_download(
