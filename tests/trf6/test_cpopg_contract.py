@@ -146,7 +146,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
         "classe",
         "data_autuacao",
         "situacao",
-        "magistrado",
+        "relator",
         "orgao_julgador",
         "assuntos",
         "polo_ativo",
@@ -157,6 +157,8 @@ def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
     row = df.iloc[0]
     assert row["id_cnj"] == "10052295520234063801"
     assert row["processo"] == "1005229-55.2023.4.06.3801"
+    assert row["relator"] == "RENATO GRIZOTTI JUNIOR"
+    assert "magistrado" not in df.columns
     assert isinstance(row["polo_ativo"], list) and row["polo_ativo"]
     assert isinstance(row["movimentacoes"], list) and row["movimentacoes"]
 

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pandas as pd
 import pytest
 import requests
+from bs4 import BeautifulSoup
 
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts.tjpr.download import VISUALIZAR_URL
@@ -168,3 +169,29 @@ def test_cjsg_parse_propagates_programming_errors_from_full_ementa_fetch(mocker)
             criterio="dano moral",
             request_fn=request_fn,
         )
+
+
+def test_decisao_sem_ementa_sai_ausente():
+    """Monocrática com o ``div#ementa<id>`` vazio sai com ementa ausente, não ``""``.
+
+    Sample real da busca sem termo: 33 das 40 linhas do TJ vêm sem ementa.
+    """
+    html = load_sample("tjpr", "cjsg/results_sem_termo.html")
+    tabela = BeautifulSoup(html, "html.parser").select_one("table.resultTable.jurisprudencia")
+    # Linhas do TJ (as da Corte IDH ficam de fora no default): células de dados e de ementa.
+    celulas = [
+        linha.find_all("td")[:2] for linha in tabela.find_all("tr")[1:]
+        if not linha.find("input", {"name": "idsSelecionadosCidh"})
+    ]
+
+    df = cjsg_parse([html])
+
+    assert len(df) == len(celulas)
+    for ementa, (dados_td, ementa_td) in zip(df["ementa"], celulas, strict=True):
+        if ementa_td.get_text(strip=True):
+            assert isinstance(ementa, str)
+            assert ementa
+        else:
+            assert pd.isna(ementa)
+            assert "Decisão monocrática" in dados_td.get_text()
+    assert df["ementa"].isna().sum() == 33

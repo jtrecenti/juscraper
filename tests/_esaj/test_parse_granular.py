@@ -15,6 +15,7 @@ from juscraper.courts._esaj.parse import (
     _extract_detail,
     _extract_ementa,
     _extract_pagination_count,
+    _normalize_key,
     _parse_single_page,
     _total_declarado,
     cjsg_n_pags,
@@ -29,7 +30,7 @@ ESAJ_COLUMNS = (
     "cd_acordao",
     "cd_foro",
     "classe_assunto",
-    "relatora",
+    "relator",
     "comarca",
     "orgao_julgador",
     "data_julgamento",
@@ -479,7 +480,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao": "20401626",
             "cd_foro": "0",
             "classe_assunto": "Apelação Cível / Condomínio",
-            "relatora": "Salles Rossi",
+            "relator": "Salles Rossi",
             "comarca": "Jundiaí",
             "orgao_julgador": "8ª Câmara de Direito Privado",
             "data_julgamento": "15/04/2026",
@@ -550,7 +551,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao",
             "cd_foro",
             "classe_assunto",
-            "relatora",
+            "relator",
             "campo_especial",
             "data_publicacao",
             "orgao_julgador",
@@ -561,7 +562,7 @@ class TestCJSGParseSinglePage:
             "cd_acordao": "123",
             "cd_foro": "4",
             "classe_assunto": "Apelacao / Contratos",
-            "relatora": "Des. Joao Acu",
+            "relator": "Des. Joao Acu",
             "campo_especial": "valor dinamico",
             "data_publicacao": "01/02/2024",
             "orgao_julgador": "Camara Especial",
@@ -700,6 +701,38 @@ class TestCleanValue:
     )
     def test_remove_caractere_invisivel(self, invisivel):
         assert _clean_value(f"Des. Jo{invisivel}ão{invisivel}") == "Des. João"
+
+
+class TestNormalizeKey:
+    """Rótulos com marcador de gênero viram o nome canônico (#713)."""
+
+    @pytest.mark.parametrize(
+        ("rotulo", "chave"),
+        [
+            pytest.param("Relator(a):", "relator", id="relator-a-colado"),
+            pytest.param("Relator (a):", "relator", id="relator-a-com-espaco"),
+            pytest.param("Relator:", "relator", id="relator"),
+        ],
+    )
+    def test_rotulo_vira_chave_canonica(self, rotulo, chave):
+        assert _normalize_key(rotulo) == chave
+
+    def test_paginas_com_relator_e_relator_a_geram_uma_so_coluna(self, tmp_path):
+        """Páginas com "Relator:" e com "Relator(a):" dão uma coluna só, ``relator``.
+
+        Todas as capturas do eSAJ trazem "Relator(a):"; a página com "Relator:"
+        é a mesma captura com o rótulo trocado.
+        """
+        html = load_sample("tjsp", "cjsg/single_page.html")
+        sem_marcador = html.replace("Relator(a):", "Relator:")
+        assert "Relator(a):" not in sem_marcador
+        (tmp_path / "relator_a.html").write_text(html, encoding="utf-8")
+        (tmp_path / "relator.html").write_text(sem_marcador, encoding="utf-8")
+
+        df = cjsg_parse_manager(str(tmp_path))
+
+        assert "relatora" not in df.columns
+        assert df["relator"].notna().all()
 
 
 if __name__ == "__main__":
