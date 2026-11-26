@@ -5,6 +5,7 @@ from datetime import date
 from typing import ClassVar, Literal
 
 from ...schemas import (
+    BuscarEm,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     OutputCJSGBase,
@@ -41,7 +42,7 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     sort_by: Literal["datajulgamento", "datapublicacao", "relevancia"] = "datajulgamento"
     query_type: Literal["free", "anywords"] = "free"
     # O portal recebe "ementa" ou "inteiroTeor" em ``queryScope``.
-    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
+    buscar_em: BuscarEm = "ementa"
 
 
 class OutputCJSGTJPA(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

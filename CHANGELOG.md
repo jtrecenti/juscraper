@@ -208,7 +208,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 ### Deprecated
 
-- STM, TJSC, TJPA, STF e TJDFT: o parâmetro que escolhia onde buscar o termo passa a alias deprecado de `buscar_em` (ver `Added`), e o valor antigo é convertido no canônico. O alias emite `DeprecationWarning` com o valor novo, e passar o alias com `buscar_em` levanta `ValueError`. O valor antigo em `buscar_em` também é convertido, com `DeprecationWarning`: é onde cai o parâmetro antigo passado por posição, como em `tjsc.cjsg("dano moral", 1, "I")`. O STM `campo` só existiu na `main`, sem versão publicada. Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
+- STM, TJSC, TJPA, STF e TJDFT: o parâmetro que escolhia onde buscar o termo passa a alias deprecado de `buscar_em` (ver `Added`), e o valor antigo é convertido no canônico. O alias emite `DeprecationWarning` com o valor novo, e passar o alias com `buscar_em` levanta `ValueError`. Onde o nome antigo era parâmetro explícito da assinatura (TJSC e TJPA, e o `cjsg_download` do TJDFT), o valor antigo em `buscar_em` também é convertido, com `DeprecationWarning`: é onde cai o parâmetro antigo passado por posição, como em `tjsc.cjsg("dano moral", 1, "I")`. O STM `campo` só existiu na `main`, sem versão publicada. Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
 
   | Tribunal | Uso antigo | Uso canônico |
   | --- | --- | --- |

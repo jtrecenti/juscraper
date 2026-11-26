@@ -18,12 +18,15 @@ Tipos disponiveis:
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
   ``assuntosTreeSelection.values``, ``secoesTreeSelection.values``,
   ``varasTreeSelection.values``).
+- :data:`BuscarEm` — onde procurar ``pesquisa``: ``"ementa"`` ou
+  ``"inteiro_teor"`` (ver ``docs/api-conventions.qmd``). Tribunal com valor
+  proprio declara o seu ``Literal`` (STM: ``"numero"``).
 - :data:`IdFiltroUnico` — IDs single-value (``cdComarca`` no eSAJ). Rejeita
   ``list``/``tuple`` para nao mascarar uso indevido.
 """
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 import numpy as np
 from pydantic import BeforeValidator, Field
@@ -87,3 +90,5 @@ IdFiltro = Annotated[
 IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
 InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
 TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]
+
+BuscarEm = Literal["ementa", "inteiro_teor"]

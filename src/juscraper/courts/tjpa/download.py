@@ -12,7 +12,7 @@ BASE_URL = "https://jurisprudencia.tjpa.jus.br/bff/api/decisoes/buscar"
 SITE_URL = "https://jurisprudencia.tjpa.jus.br"
 RESULTS_PER_PAGE = 25
 #: ``buscar_em`` -> valor de ``queryScope`` no front do portal.
-_QUERY_SCOPE = {"ementa": "ementa", "inteiro_teor": "inteiroTeor"}
+QUERY_SCOPE = {"ementa": "ementa", "inteiro_teor": "inteiroTeor"}
 
 CJSG_HEADERS = {
     "Content-Type": "application/json",
@@ -54,7 +54,7 @@ def build_cjsg_payload(
     payload = {
         "query": pesquisa,
         "queryType": query_type,
-        "queryScope": _QUERY_SCOPE[buscar_em],
+        "queryScope": QUERY_SCOPE[buscar_em],
         "origem": origem,
         "tipo": tipo,
         "page": pagina_0based,

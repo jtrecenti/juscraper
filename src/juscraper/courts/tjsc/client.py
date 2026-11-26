@@ -8,9 +8,12 @@ from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import PERFIL_CJSG, cjsg_download_manager
+from .download import PERFIL_CJSG, RDO_CAMPO, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJSC
+
+#: Valores do alias deprecado ``campo`` -> ``buscar_em``.
+_CAMPO_PARA_BUSCAR_EM = {campo: buscar_em for buscar_em, campo in RDO_CAMPO.items()}
 
 
 class TJSCScraper(HTTPScraper):
@@ -136,7 +139,7 @@ class TJSCScraper(HTTPScraper):
         list
             List of raw HTML strings (one per page).
         """
-        resolve_buscar_em(kwargs, "campo", buscar_em, {"E": "ementa", "I": "inteiro_teor"})
+        resolve_buscar_em(kwargs, "campo", buscar_em, _CAMPO_PARA_BUSCAR_EM)
         inp = apply_input_pipeline_search(
             InputCJSGTJSC,
             "TJSCScraper.cjsg_download()",

@@ -516,6 +516,17 @@ class TestResolveBuscarEm:
             resolve_buscar_em(kwargs, "campo", buscar_em, valores)
         assert kwargs == {"buscar_em": novo}
 
+    @pytest.mark.parametrize(
+        ("kwargs", "buscar_em", "valores"),
+        [({"buscar_em": "I"}, None, _E_I), ({}, "1", buscar_em_de_inteiro_teor), ({}, "y", buscar_em_de_inteiro_teor)],
+    )
+    def test_valor_antigo_so_e_convertido_no_argumento_e_bool_so_como_bool(self, recwarn, kwargs, buscar_em, valores):
+        """Em ``kwargs`` o nome antigo nunca foi posicional; ``"1"`` nao e o ``bool`` antigo."""
+        valor = buscar_em or kwargs["buscar_em"]
+        resolve_buscar_em(kwargs, "campo", buscar_em, valores)
+        assert kwargs == {"buscar_em": valor}
+        assert not recwarn.list
+
     @pytest.mark.parametrize("no_argumento", [True, False])
     def test_alias_e_buscar_em_juntos_levanta_sem_aviso(self, recwarn, no_argumento):
         kwargs = {"campo": "E"} if no_argumento else {"campo": "E", "buscar_em": "ementa"}

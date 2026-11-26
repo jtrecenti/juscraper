@@ -10,12 +10,14 @@ from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
-from .download import cjsg_download_manager
+from .download import QUERY_SCOPE, cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGTJPA
 
-#: Valores do alias deprecado ``query_scope`` -> ``buscar_em``.
-_QUERY_SCOPE_PARA_BUSCAR_EM = {"ementa": "ementa", "inteiroTeor": "inteiro_teor", "inteiroteor": "inteiro_teor"}
+#: Valores do alias deprecado ``query_scope`` -> ``buscar_em``; ``"inteiroteor"`` e a grafia da docstring antiga.
+_QUERY_SCOPE_PARA_BUSCAR_EM = {scope: buscar_em for buscar_em, scope in QUERY_SCOPE.items()} | {
+    "inteiroteor": "inteiro_teor",
+}
 
 
 class TJPAScraper(HTTPScraper):

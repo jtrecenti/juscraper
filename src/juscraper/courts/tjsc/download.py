@@ -12,7 +12,7 @@ RESULTS_PER_PAGE = 10
 #: Perfil HTTP da busca, declarado em ``TJSCScraper.perfis_http``.
 PERFIL_CJSG = "cjsg"
 #: ``buscar_em`` -> valor de ``rdoCampo`` no formulário do portal.
-_RDO_CAMPO = {"ementa": "E", "inteiro_teor": "I"}
+RDO_CAMPO = {"ementa": "E", "inteiro_teor": "I"}
 
 
 def build_cjsg_form_body(
@@ -33,7 +33,7 @@ def build_cjsg_form_body(
     """
     return {
         "txtPesquisa": pesquisa,
-        "rdoCampo": _RDO_CAMPO[buscar_em],
+        "rdoCampo": RDO_CAMPO[buscar_em],
         "txtProcesso": processo,
         "dtDecisaoInicio": dt_decisao_inicio,
         "dtDecisaoFim": dt_decisao_fim,

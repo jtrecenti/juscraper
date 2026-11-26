@@ -141,7 +141,7 @@ def test_alias_inteiro_teor_junto_com_buscar_em_levanta(stf):
         stf.contar_decisoes(PESQUISA, inteiro_teor=False, buscar_em="ementa")
 
 
-@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", "sim"])
+@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", "sim", True])
 def test_buscar_em_fora_do_portal_levanta_validation_error(stf, valor):
     with pytest.raises(ValidationError, match="buscar_em"):
         stf.contar_decisoes(PESQUISA, buscar_em=valor)

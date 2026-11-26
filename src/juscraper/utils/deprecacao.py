@@ -93,14 +93,16 @@ def resolve_buscar_em(
       conhece segue igual, para o schema recusa-lo.
     - ``antigo`` e ``buscar_em`` juntos: ``ValueError``, sem aviso, como em
       :func:`~juscraper.utils.params.resolve_deprecated_alias`.
-    - Valor antigo em ``buscar_em`` (o parametro antigo passado por posicao,
-      como ``cjsg("dano", 1, "I")`` no TJSC): convertido, com
-      ``DeprecationWarning``.
+    - Valor antigo no argumento ``buscar_em`` (o parametro antigo passado
+      por posicao, como ``cjsg("dano", 1, "I")`` no TJSC): convertido, com
+      ``DeprecationWarning``. ``buscar_em`` vindo de ``kwargs`` nao e
+      convertido: nesses metodos o nome antigo nunca foi posicional.
 
     O schema do tribunal valida o resultado, e sem ``buscar_em`` nem
     ``antigo`` vale o default dele.
     """
-    if buscar_em is None:
+    do_argumento = buscar_em is not None
+    if not do_argumento:
         buscar_em = kwargs.pop("buscar_em", None)
     if antigo in kwargs:
         if buscar_em is not None:
@@ -109,7 +111,7 @@ def resolve_buscar_em(
                 f"Não é possível passar 'buscar_em' e '{antigo}' ao mesmo tempo. Use apenas 'buscar_em'."
             )
         buscar_em = _valor_do_alias(antigo, kwargs.pop(antigo), valores)
-    elif buscar_em is not None and valores is not None:
+    elif do_argumento and valores is not None:
         buscar_em = _valor_antigo_em_buscar_em(antigo, buscar_em, valores)
     if buscar_em is not None:
         kwargs["buscar_em"] = buscar_em
@@ -129,7 +131,13 @@ def _valor_do_alias(antigo: str, valor: object, valores: _Valores | None) -> obj
 
 
 def _valor_antigo_em_buscar_em(antigo: str, buscar_em: object, valores: _Valores) -> object:
-    """Converte, com aviso, o valor antigo passado em ``buscar_em`` (o parametro antigo por posicao)."""
+    """Converte, com aviso, o valor antigo passado em ``buscar_em`` (o parametro antigo por posicao).
+
+    Com funcao de conversao (``inteiro_teor``), so ``bool``: a leitura frouxa
+    do pydantic faria ``buscar_em="1"`` valer, em vez do ``ValidationError``.
+    """
+    if callable(valores) and not isinstance(buscar_em, bool):
+        return buscar_em
     novo = _converter(valores, buscar_em)
     if novo is None or novo == buscar_em:
         return buscar_em

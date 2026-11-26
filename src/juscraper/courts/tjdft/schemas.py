@@ -6,11 +6,12 @@ com ``extra="forbid"`` herdado de :class:`SearchBase`.
 """
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 from pydantic import Field
 
 from ...schemas import (
+    BuscarEm,
     DataJulgamentoMixin,
     DataPublicacaoMixin,
     OutputCJSGBase,
@@ -37,7 +38,7 @@ class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     sinonimos: bool = True
     espelho: bool = True
     # O portal recebe ``inteiroTeor``: ``True`` soma o inteiro teor ao espelho.
-    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
+    buscar_em: BuscarEm = "ementa"
     tamanho_pagina: TamanhoPagina = Field(default=10, le=MAX_TAMANHO_PAGINA)
 
 
