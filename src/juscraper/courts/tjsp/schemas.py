@@ -27,6 +27,7 @@ from ...schemas import (
     IdFiltro,
     IdFiltroUnico,
     OutputCnjConsultaBase,
+    OutputDataPublicacaoMixin,
     SearchBase,
 )
 from ...schemas.cjsg import OutputCJSGBase
@@ -53,17 +54,24 @@ class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
-class OutputCJSGTJSP(OutputCJSGBase):
+class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cjsg`.
 
     Herda ``processo``, ``ementa`` e ``data_julgamento`` de
-    :class:`OutputCJSGBase` e acrescenta colunas canonicas do parser
-    eSAJ compartilhado (``cd_acordao``, ``relator``, ``orgao_julgador``).
+    :class:`OutputCJSGBase` e ``data_publicacao`` de
+    :class:`OutputDataPublicacaoMixin`, e acrescenta as colunas do parser
+    eSAJ compartilhado. As paginas trazem ``"Classe/Assunto:"`` num rotulo
+    so ou ``"Classe:"`` e ``"Assunto:"`` separados.
     """
 
     cd_acordao: str | None = None
+    cd_foro: str | None = None
     relator: str | None = None
     orgao_julgador: str | None = None
+    classe_assunto: str | None = None
+    classe: str | None = None
+    assunto: str | None = None
+    comarca: str | None = None
 
 
 InputCJPGTJSP = InputCJPGEsaj
