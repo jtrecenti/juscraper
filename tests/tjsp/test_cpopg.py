@@ -670,6 +670,28 @@ class TestCPOPGUnit:
         assert result['movimentacoes'].empty
 
     @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
+    @pytest.mark.parametrize(
+        ('sample_name', 'n_peticoes', 'primeira'),
+        [
+            ('search.html', 27, ('14/02/2024', 'Emenda à Inicial')),
+            ('show_principal.html', 4, ('17/02/2025', 'Contestação')),
+            ('show_incidente.html', 1, ('13/02/2025', 'Pedido de Expedição de Mandado de Levantamento')),
+            (
+                'show_sociedade_advogados.html',
+                5,
+                ('24/02/2021', 'Impugnação aos Embargos à Execução Fiscal (ART. 17, DA LEI 6.830/80)'),
+            ),
+        ],
+    )
+    def test_cpopg_parse_peticoes_diversas_ignora_separador_do_cabecalho(self, sample_name, n_peticoes, primeira):
+        """A linha separadora do ``<thead>`` (duas ``<td>`` vazias) não vira petição."""
+        peticoes = cpopg_parse_single_html(str(_SAMPLES / sample_name))['peticoes_diversas']
+
+        assert len(peticoes) == n_peticoes
+        assert (peticoes[['data', 'tipo']] != '').all(axis=None)
+        assert tuple(peticoes.iloc[0][['data', 'tipo']]) == primeira
+
+    @pytest.mark.filterwarnings('ignore:.*não traz as movimentações:UserWarning')
     def test_cpopg_parse_principal_situacao_e_advogada(self):
         """Situação vem do labelSituacaoProcesso, não da etiqueta de prioridade; "Advogada:" separa como "Advogado:"."""
         sample_path = _SAMPLES / 'show_principal.html'
