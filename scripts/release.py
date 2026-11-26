@@ -188,7 +188,7 @@ def main():
     if not args.skip_tests:
         print("Executando linting...")
         # Gate de lint do CI: os hooks do pre-commit; a suíte offline roda no passo seguinte
-        run_command("SKIP=pytest uv run pre-commit run --all-files")
+        run_command("uv run pre-commit run --all-files")
 
         print("Executando testes...")
         run_command("uv run pytest -n 2 tests/ -v")

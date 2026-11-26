@@ -266,7 +266,7 @@ def test_lint_roda_o_pre_commit_e_falha_antes_de_alterar_a_versao(repo_com_origi
 
     _main_para_sem_alterar(repo_com_origin, monkeypatch, capsys, ["0.8.0"])
 
-    assert [cmd for cmd in comandos if not cmd.startswith("git ")] == ["SKIP=pytest uv run pre-commit run --all-files"]
+    assert [cmd for cmd in comandos if not cmd.startswith("git ")] == ["uv run pre-commit run --all-files"]
 
 
 def test_testes_do_release_usam_dois_workers_e_falham_antes_da_versao(repo_com_origin, monkeypatch, capsys):
@@ -287,5 +287,5 @@ def test_testes_do_release_usam_dois_workers_e_falham_antes_da_versao(repo_com_o
     _main_para_sem_alterar(repo_com_origin, monkeypatch, capsys, ["0.8.0"])
 
     assert [cmd for cmd in comandos if not cmd.startswith("git ")] == [
-        "SKIP=pytest uv run pre-commit run --all-files", "uv run pytest -n 2 tests/ -v",
+        "uv run pre-commit run --all-files", "uv run pytest -n 2 tests/ -v",
     ]

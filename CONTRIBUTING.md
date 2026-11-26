@@ -236,7 +236,7 @@ uv run pytest tests/lint_policy -q
 uv run pre-commit install
 ```
 
-O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. No CI, o PR é comparado com a ponta atual da branch de destino (`origin/<branch>`), e não com o `pull_request.base.sha` do evento, que só muda quando o PR é aberto ou troca de destino e atribuiria ao PR as dispensas que o destino ganhou depois. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso. O hook `pytest` roda a suíte offline inteira com `pytest -n auto` em todo commit (cerca de 30 s); para pular só ele num commit, usar `SKIP=pytest git commit ...`.
+O hook Ruff mantém o autofix seguro nos arquivos Python alterados. O hook `lint-policy` roda em todo commit, inclusive quando só a configuração muda, e confere todo o código de `src/` e `tests/`. O script usa `origin/main` como referência local e compara com o ancestral comum de `HEAD` e dessa referência. Para outra base, executar `uv run python scripts/check_lint_policy.py --base-ref <referência>`. No CI, o PR é comparado com a ponta atual da branch de destino (`origin/<branch>`), e não com o `pull_request.base.sha` do evento, que só muda quando o PR é aberto ou troca de destino e atribuiria ao PR as dispensas que o destino ganhou depois. O script nunca faz fetch; uma referência ausente faz o gate falhar com orientação para atualizá-la. O script usa `tomllib`, então o pre-commit precisa rodar em Python 3.11 ou mais recente; `uv run pre-commit` usa o ambiente do projeto e atende a isso. Os hooks não rodam a suíte de testes; ela roda no workflow `Testes` de cada PR.
 
 ### Retirada de dispensas
 
@@ -440,6 +440,23 @@ Para decidir quando conectar o schema ao método, seguir `CLAUDE.md` > **Testes*
 As bases e os mixins em `src/juscraper/schemas/` definem os tipos compartilhados. `tests/schemas/test_canonical_types.py::DEPRECATED_SYNONYMS` mapeia os nomes substituídos; `TYPE_GRACE_PERIOD` e `SYNONYM_GRACE_PERIOD` registram exceções com justificativa. Consultar essas fontes ao criar campos, sem copiar suas listas para documentação.
 
 O Output reflete o shape real do parser e usa `extra="allow"` para campos auxiliares do backend. Renomear chaves brutas para os nomes canônicos antes de construir o DataFrame; não preencher lacunas com valores provisórios. Campos específicos, como texto integral ou datas próprias do tribunal, continuam no schema concreto quando não representam o mesmo conceito de um campo compartilhado.
+
+### Colunas entregues
+
+`extra="allow"` deixa passar qualquer coluna, inclusive um sinônimo que o parser gera sem declarar: assim escaparam `relatora` no `cjsg` do eSAJ (#717) e `magistrado` no `cjpg`. `tests/schemas/test_output_columns.py` roda o parser público de cada endpoint de `EXPECTED_*_OUTPUT_SCHEMAS` sobre os samples de `tests/<sigla>/samples/` e confere as colunas efetivamente entregues:
+
+1. Nenhuma coluna tem nome de `DEPRECATED_SYNONYMS`, em todos os endpoints.
+2. Toda coluna está declarada no `Output*` do endpoint. Ficam só com a conferência 1 os endpoints de `SO_NOMES_DEPRECADOS`, que repassam o JSON do backend ou cujo Output cobre só o pivot.
+
+Quando o teste reprovar:
+
+- Coluna com nome canônico (conteúdo para quem usa o DataFrame): declarar o campo no `Output*`.
+- Sinônimo de um nome canônico: renomear no parser, como breaking change no `CHANGELOG.md`. Se a renomeação vier em outro PR ou depender de decisão de API, registrar `(tribunal, endpoint, coluna)` em `SINONIMOS_TOLERADOS` com o PR ou a decisão pendente.
+- Código interno do backend, ao lado de um nome já declarado: registrar em `AUXILIARES_NAO_DECLARADAS` com o motivo.
+- Sample novo que não é página de resultado (formulário, captcha, erro que o parser levanta de propósito) ou que foi escrito à mão com rótulos inventados: pôr em `Leitura.ignorar` com o motivo. Arquivo que o parser não lê e não está ali reprova o teste.
+- Endpoint novo em `EXPECTED_*_OUTPUT_SCHEMAS`: incluir em `LEITURAS` ou, sem sample que o parser leia sozinho, em `SEM_LEITURA` com o motivo.
+
+Exceção cuja coluna sumiu dos samples reprova `test_excecoes_ainda_sao_necessarias`: remover a entrada no PR que faz a correção.
 
 ### Modelos são irmãos de `SearchBase`
 
