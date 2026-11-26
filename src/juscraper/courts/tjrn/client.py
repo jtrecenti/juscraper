@@ -90,8 +90,13 @@ class TJRNScraper(HTTPScraper):
             id_relator (str): ID do relator.
             id_colegiado (str): ID do colegiado.
             sistema (str): ``"PJE"``, ``"SAJ"`` ou vazio para todos.
-            decisoes (str): ``"Monocraticas"``, ``"Colegiadas"``,
-                ``"Sentencas"`` ou vazio para todos.
+            decisoes (str): Tipo de decisao, com os valores do portal:
+                ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
+                ``"Sentença"`` ou vazio para todas. Outro valor levanta
+                ``ValidationError``. ``pesquisa`` busca so na ementa, e no
+                portal so os acordaos tem ementa: com ``"Decisão"`` ou
+                ``"Sentença"``, passar ``pesquisa=""`` e filtrar por data,
+                processo, classe ou orgao julgador.
             jurisdicoes (str): ``"Tribunal de Justica"``, ``"Turmas Recursais"``
                 ou vazio para todos.
             grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para todos.
