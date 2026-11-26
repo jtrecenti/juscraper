@@ -317,7 +317,9 @@ def _parse_result_row(result_row: Tag) -> dict | None:
     if details_table is None:
         return None
 
-    data: dict = {"ementa": ""}
+    # Decisão sem ementa vem sem a linha ``Ementa:``; o ``N/A`` do eSAJ fica
+    # só no texto oculto de "ementa sem formatação" (#713).
+    data: dict = {"ementa": None}
     _extract_process_metadata(details_table, data)
     for detail_row in details_table.find_all("tr", class_="ementaClass2"):
         _extract_detail(detail_row, data)

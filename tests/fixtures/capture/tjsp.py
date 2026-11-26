@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 
 import requests
+from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj.acordao import paginas_movimentacoes
 
@@ -79,6 +80,32 @@ def capture_cjsg() -> None:
     else:
         dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
         print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+    capture_cjsg_sem_ementa()
+
+
+def capture_cjsg_sem_ementa() -> None:
+    """Grava ``cjsg/sem_ementa.html``: 1a página com acórdãos com e sem ementa.
+
+    O acórdão sem ementa vem sem a linha ``Ementa:``; o ``N/A`` do eSAJ fica
+    só no texto oculto de "ementa sem formatação". Em 26/11/2026, esta busca
+    trouxe 9 de 20 linhas assim.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "roubo",
+        body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(
+            pesquisa, data_inicio="01/03/2021", data_fim="03/03/2021", **kw
+        ),
+    )
+    linhas = BeautifulSoup(resps[0].text, "html.parser").find_all("tr", class_="fundocinza1")
+    com_ementa = sum(
+        bool(linha.find("strong", string=lambda texto: "Ementa:" in (texto or ""))) for linha in linhas
+    )
+    if not 0 < com_ementa < len(linhas):
+        # Sem as duas formas na página, o sample deixaria de exercitar o caso.
+        print(f"[tjsp] cjsg sem_ementa: {com_ementa} de {len(linhas)} linhas com ementa; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cjsg") / "sem_ementa.html", resps[0].content)
+    print(f"[tjsp] cjsg sem_ementa: {len(linhas) - com_ementa} de {len(linhas)} linhas sem ementa → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------

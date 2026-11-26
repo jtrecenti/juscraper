@@ -313,6 +313,41 @@ class TestCJSGParseSinglePage:
                 assert ementa == divs[0]
         assert longas > 0
 
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo", "sem_ementa"),
+        [
+            ("tjsp", "cjsg/sem_ementa.html", 9),
+            ("tjsp", "cjsg/monocratica_single_page.html", 1),
+            ("tjac", "cjsg/monocratica_single_page.html", 5),
+            ("tjal", "cjsg/monocratica_single_page.html", 2),
+            ("tjam", "cjsg/monocratica_single_page.html", 1),
+            ("tjce", "cjsg/monocratica_single_page.html", 8),
+            ("tjms", "cjsg/monocratica_single_page.html", 6),
+        ],
+    )
+    def test_decisao_sem_ementa_sai_ausente(self, sigla, arquivo, sem_ementa):
+        """Decisão sem a linha ``Ementa:`` sai com ementa ausente, não ``""`` (#713).
+
+        O ``N/A`` do eSAJ aparece só no texto oculto de "ementa sem formatação"
+        (no TJAM, ``Ementa: N/A``).
+        """
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        soup = BeautifulSoup(path.read_bytes().decode("latin-1"), "html.parser")
+        linhas = soup.find_all("tr", class_="fundocinza1")
+
+        df = _parse_single_page(str(path))
+
+        assert len(df) == len(linhas)
+        for ementa, linha in zip(df["ementa"], linhas, strict=True):
+            if linha.find("strong", string=lambda texto: "Ementa:" in (texto or "")):
+                assert isinstance(ementa, str)
+                assert ementa
+            else:
+                assert pd.isna(ementa)
+                sem_formatacao = linha.select_one(".mensagemSemFormatacao").get_text(" ", strip=True)
+                assert sem_formatacao.removeprefix("Ementa:").strip().startswith("N/A")
+        assert df["ementa"].isna().sum() == sem_ementa
+
     def test_parse_results_page(self):
         """Test parsing a results page with multiple processes."""
         html = load_sample('tjsp', 'cjsg/results_normal.html')
@@ -442,7 +477,7 @@ class TestCJSGParseSinglePage:
             "ementa": "texto oculto.",
         }
         assert df.iloc[1]["ementa"] == "fallback oculto."
-        assert df.iloc[2]["ementa"] == ""
+        assert pd.isna(df.iloc[2]["ementa"])
         assert "outros_numeros" not in df.columns
 
     def test_latin1_file_is_decoded_without_mojibake(self, tmp_path):
