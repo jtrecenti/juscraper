@@ -178,19 +178,20 @@ def test_decisao_sem_ementa_sai_ausente():
     """
     html = load_sample("tjpr", "cjsg/results_sem_termo.html")
     tabela = BeautifulSoup(html, "html.parser").select_one("table.resultTable.jurisprudencia")
-    linhas = [
-        linha for linha in tabela.find_all("tr")[1:]
-        if not linha.find("input", {"name": "idsSelecionadosCidh"}) and len(linha.find_all("td")) >= 2
+    # Linhas do TJ (as da Corte IDH ficam de fora no default): células de dados e de ementa.
+    celulas = [
+        linha.find_all("td")[:2] for linha in tabela.find_all("tr")[1:]
+        if not linha.find("input", {"name": "idsSelecionadosCidh"})
     ]
 
     df = cjsg_parse([html])
 
-    assert len(df) == len(linhas)
-    for ementa, linha in zip(df["ementa"], linhas, strict=True):
-        if linha.find_all("td")[1].get_text(strip=True):
+    assert len(df) == len(celulas)
+    for ementa, (dados_td, ementa_td) in zip(df["ementa"], celulas, strict=True):
+        if ementa_td.get_text(strip=True):
             assert isinstance(ementa, str)
             assert ementa
         else:
             assert pd.isna(ementa)
-            assert "Decisão monocrática" in linha.find_all("td")[0].get_text()
+            assert "Decisão monocrática" in dados_td.get_text()
     assert df["ementa"].isna().sum() == 33
