@@ -244,6 +244,15 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 - Referência da API: PDPJ `contar`, `existe` e `pesquisa` voltam a listar todas as exceções que levantam (antes, só a última de cada grupo), e o retorno de vários métodos deixa de sair partido numa tabela com uma linha por pedaço da descrição. A seção `Warns:` do TJPE `cjsg`, que interrompia a publicação do site, passa a `Avisos:` (#414).
 - README e documentação: as tabelas de tribunais e agregadores com os métodos de cada um passam a ser geradas do código. A do README omitia TJAC, TJAL, TJAM, TJGO, TJMG, TJMS, TJRJ, os TRFs e o ComunicaCNJ, e a da documentação listava um método `acordao` do TJSP que não existe.
 - eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP), TJPA e TJPR `cjsg` e `cjsg_parse`: a decisão sem ementa trazia `""` na coluna `ementa`. Passa a trazer `None`, como o schema de saída já declara e como já vinham TJRR, STM e Falcão. No eSAJ, é a decisão que o portal mostra como `N/A`; no TJPA e no TJPR, a decisão monocrática, que esses portais mandam com a ementa vazia. Para achar essas linhas, troque `df["ementa"] == ""` por `df["ementa"].isna()`. Refs #713, #226, #12.
+- Texto corrido devolvido pelos raspadores: o espaço não separável (`\xa0`) passa a sair como espaço comum, os fins de linha `\r\n` e `\r` como `\n`, e o hífen discricionário (`\xad`) e os caracteres de largura zero (`\u200b`, `\u200c` e `\u200d`) saem do texto. Antes, uma busca por `"art. 14"` com espaço comum não achava `"art.\xa014"`, e o `\xa0` estava em todas as ementas das amostras do TJBA e em cerca de uma a cada dez das do eSAJ. As quebras de linha, que separam parágrafos, continuam no texto, e espaços repetidos e tabulações não mudam. Colunas afetadas:
+  - eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP): no `cjsg`, `ementa` e os demais campos rotulados (`classe_assunto`, `comarca`...); no `cjpg` do TJSP e do TJMS, `decisao`;
+  - `cjsg` de TJBA, TJDFT, TJPB, TJRJ e TJRR: `ementa`; TJES: `ementa` e `acordao`; TJRS: `ementa`, `ementa_text` e `ementa_referencia`; TJPI: `inteiro_teor`, `resumo` e `ementa`;
+  - STF `listar_decisoes`: `ementa`, as demais colunas `*_texto` (`decisao_texto`, `partes_lista_texto`, `documental_publicacao_lista_texto`...), inclusive os itens de `documental_legislacao_citada_texto`, que vem como lista, e `acordao_ata`;
+  - ComunicaCNJ `listar_comunicacoes`: `texto`, também quando a comunicação vem em HTML;
+  - Falcão `listar_decisoes`: `textoDecisaoAdmissao`, `textoEmentaAdmissao`, `textoEmentaMerito`, `textoAcordaoMerito` e `textoDocumentoAnonim`;
+  - JusBR e PDPJ, no texto dos documentos, que já trocavam `\xa0` e `\r`: passam a tirar também o hífen discricionário e os caracteres de largura zero.
+
+  As colunas de HTML (`*_html` do STF; `conteudoDecisao`, `conteudoDocumento`, `textoAcordao` e demais campos HTML do Falcão) ficam como o tribunal as entrega.
 
 #### eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP)
 

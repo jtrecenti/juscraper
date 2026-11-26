@@ -7,6 +7,8 @@ from typing import Any
 
 import pandas as pd
 
+from juscraper.core.parse_utils import normalizar_texto
+
 # Mantido local (em vez de core.parse_utils.clean_html) porque clean_html
 # substitui tags por espaco e altera o output observavel quando o backend
 # envolve trechos em tags inline (<b>foo</b> -> "foo " em vez de "foo").
@@ -19,7 +21,7 @@ _DATE_RE = re.compile(r"/Date\((-?\d+)\)/")
 def _strip_html(text: Any) -> str:
     if text is None:
         return ""
-    return _TAG_RE.sub("", str(text)).strip()
+    return normalizar_texto(_TAG_RE.sub("", str(text)).strip())
 
 
 def _parse_aspnet_date(raw: Any):

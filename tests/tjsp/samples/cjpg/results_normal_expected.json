@@ -30,7 +30,7 @@
         "vara": "2ª Vara Cível",
         "data_disponibilizacao": "21/04/2026",
         "decisao": {
-          "sha256": "8536240bf6cd207150b064b845bd988d045cbd52e3ba18bde3cfcba9d77aed2d",
+          "sha256": "6159ae9f2e6a4ad931d8e6775459aef26521912963e0ef109c0e635a1626bff2",
           "tamanho": 10742
         }
       },
@@ -120,7 +120,7 @@
         "vara": "Vara Única",
         "data_disponibilizacao": "21/04/2026",
         "decisao": {
-          "sha256": "75938e1bc07518b2531d82a283adc5f721af69857dd625eac4eec7b1af86f416",
+          "sha256": "1bf647bb0529a2090322fed41289e4bae7c94f0c7de55e3dd1c70c62c91f1e2b",
           "tamanho": 5171
         }
       },
@@ -138,7 +138,7 @@
         "vara": "Vara Única",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "89abb6590e0ecf392fed7027b2834fe6b85e9b26d3926d22c395baae42152cf2",
+          "sha256": "7f63df7e02165cb91fab999f507940b78757e40cac170db0ac741d2ee4987929",
           "tamanho": 8419
         }
       },
@@ -156,7 +156,7 @@
         "vara": "4ª Vara Cível",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "22302120e75132e6588b74f157a2ff04a07015e7a26658ffb8232a6c3a54d6f8",
+          "sha256": "8cf7594e2ecd3308e090d0d26c993d12b00c82c372157704d8c4110575bef40b",
           "tamanho": 10593
         }
       },
@@ -174,7 +174,7 @@
         "vara": "Vara Única",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "e2ca1e4e52b17c3b204f843da32c4128c0566e46111e7627aebb7df84a400c27",
+          "sha256": "e9cbc013778c9be20fd520e528091fcf1ab76555d4452f5778f1c2bf15151711",
           "tamanho": 10877
         }
       },
@@ -229,7 +229,7 @@
         "vara": "1ª Vara Cível",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "abf6d6d2a3be19eabc57379d73c296fa607a554a64c3ef2bfd60763965308d28",
+          "sha256": "cbf2ca843446123ea535b468898830eccd6eaa7a63352f6bc25d923d7515177b",
           "tamanho": 11359
         }
       },
@@ -283,7 +283,7 @@
         "vara": "1ª Vara",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "eea160c9fd9a534eea08fc65b9f59f7d652b8cda28ea9cbac3a68ec1fc9ff414",
+          "sha256": "4c54ee9527eb8bffd47beaa76943577e1dad413c6b61a3d8065cf252cdea66f6",
           "tamanho": 26328
         }
       },
@@ -319,7 +319,7 @@
         "vara": "2ª Vara Cível",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "f33d6bd363c583806516e364f0afff102936cb53037df087201308fd6bc6cab3",
+          "sha256": "bcd81bdad8a1685c1e264358b669bba3e38c37662cc1f2536830094b4de13d21",
           "tamanho": 9424
         }
       },
@@ -337,7 +337,7 @@
         "vara": "1ª Vara da Fazenda Pública",
         "data_disponibilizacao": "20/04/2026",
         "decisao": {
-          "sha256": "566fd97ad2db8ca27315c73f3388cf105cc3c3b64d0aa411f3cf42dab1eef082",
+          "sha256": "e76437de20b756ef0e325f36df7fb7fe04965e5f7741db25ad1597061c455aa5",
           "tamanho": 4458
         }
       },
