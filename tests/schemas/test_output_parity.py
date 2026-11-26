@@ -113,8 +113,6 @@ SKIP_REASONS: dict[tuple[str, str], str] = {
     ("tjce", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjms", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
     ("tjsp", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGTJSP validado manualmente",
-    # TJDFT: parser passthrough do JSON da API.
-    ("tjdft", "cjsg"): "TJDFT parser e passthrough do JSON — shape delegado ao backend",
     # STF: parser renomeia 6 chaves e repassa o resto do _source da API.
     ("stf", "listar_decisoes"): "STF parser e passthrough do _source — extra=allow e o contrato",
     # TJSP cpopg/cposg retornam 4 DataFrames; Output e pivot.

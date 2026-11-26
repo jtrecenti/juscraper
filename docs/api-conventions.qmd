@@ -183,6 +183,33 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
+### TJDFT `cjsg`: from the API column names to the canonical ones
+
+The TJDFT parser used to pass the API records through untouched, so the
+DataFrame carried the API's camelCase keys and lacked the columns every other
+court returns. Four of them now take the canonical names: `nomeRelator` becomes
+`relator`, `descricaoOrgaoJulgador` becomes `orgao_julgador`, `dataJulgamento`
+becomes `data_julgamento` and `dataPublicacao` becomes `data_publicacao`. The
+other API keys (`decisao`, `codigoClasseCnj`, `turmaRecursal`...) keep their
+names, since they have no canonical counterpart. There is no deprecation cycle:
+a DataFrame cannot keep both names without duplicating the data.
+
+```python
+# Before
+df[["nomeRelator", "descricaoOrgaoJulgador", "dataJulgamento", "dataPublicacao"]]
+
+# After
+df[["relator", "orgao_julgador", "data_julgamento", "data_publicacao"]]
+
+# DataFrames saved before the change
+df = df.rename(columns={
+    "nomeRelator": "relator",
+    "descricaoOrgaoJulgador": "orgao_julgador",
+    "dataJulgamento": "data_julgamento",
+    "dataPublicacao": "data_publicacao",
+})
+```
+
 ### TJSP `cpopg`/`cposg`: `method="api"` removed
 
 The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`

@@ -10,7 +10,15 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from ...schemas import DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
+from ...schemas import (
+    DataJulgamentoMixin,
+    DataPublicacaoMixin,
+    OutputCJSGBase,
+    OutputDataPublicacaoMixin,
+    OutputRelatoriaMixin,
+    SearchBase,
+    TamanhoPagina,
+)
 from .download import MAX_TAMANHO_PAGINA
 
 
@@ -32,11 +40,13 @@ class InputCJSGTJDFT(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     tamanho_pagina: TamanhoPagina = Field(default=10, le=MAX_TAMANHO_PAGINA)
 
 
-class OutputCJSGTJDFT(OutputCJSGBase):
+class OutputCJSGTJDFT(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJDFTScraper.cjsg`.
 
-    O parser do TJDFT (``tjdft.parse.cjsg_parse``) e passthrough do JSON
-    da API: as chaves do DataFrame vem direto do backend. A base
-    :class:`OutputCJSGBase` garante ``processo`` / ``ementa`` /
-    ``data_julgamento``; demais campos fluem via ``extra='allow'``.
+    O parser do TJDFT (``tjdft.parse.cjsg_parse``) renomeia ``nomeRelator``,
+    ``descricaoOrgaoJulgador``, ``dataJulgamento`` e ``dataPublicacao`` para
+    ``relator``, ``orgao_julgador``, ``data_julgamento`` e ``data_publicacao``,
+    e repassa as demais chaves da API (``decisao``, ``codigoClasseCnj``,
+    ``turmaRecursal``...) via ``extra='allow'``. As duas datas saem como
+    ``datetime.date``: :meth:`TJDFTScraper.cjsg` as converte.
     """
