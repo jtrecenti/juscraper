@@ -21,8 +21,12 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     ``data_inicio``/``data_fim`` via
     :func:`juscraper.utils.params.normalize_datas` (``data_publicacao_*``
     nao e suportado pelo backend e fica fora do schema). Filtro de data
-    de julgamento herdado de :class:`DataJulgamentoMixin`. Backend espera
-    ``YYYY-MM-DD``.
+    de julgamento herdado de :class:`DataJulgamentoMixin`.
+
+    ``BACKEND_DATE_FORMAT`` (``YYYY-MM-DD``) e so o formato interno do
+    pipeline. O portal espera ``DD-MM-YYYY`` com hifens: a conversao fica em
+    :func:`juscraper.courts.tjrn.client._to_tjrn_date`, porque o backend
+    ignora datas com barras ou em ISO e devolve resultados sem filtro.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
