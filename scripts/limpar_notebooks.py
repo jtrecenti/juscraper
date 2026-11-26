@@ -33,8 +33,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-RAIZ = Path(__file__).resolve().parents[1]
-NOTEBOOKS = RAIZ / "docs" / "notebooks"
+NOTEBOOKS = Path(__file__).resolve().parents[1] / "docs" / "notebooks"
 
 # Tudo o que, na mesma linha, vem antes de um ``\r`` seguido de mais texto: o
 # terminal sobrescreveria. Um ``\r`` no fim da linha (``\r\n``) fica.
@@ -58,25 +57,15 @@ def limpar_saidas(saidas: list[dict[str, Any]]) -> list[dict[str, Any]]:
     r"""Junta streams seguidos de mesmo nome e resolve os ``\r`` de cada linha."""
     juntas: list[dict[str, Any]] = []
     for saida in saidas:
-        if (
-            juntas
-            and _eh_stream(saida)
-            and _eh_stream(juntas[-1])
-            and juntas[-1].get("name") == saida.get("name")
-        ):
+        if _eh_stream(saida) and juntas and _eh_stream(juntas[-1]) and juntas[-1]["name"] == saida["name"]:
             juntas[-1]["text"] = _texto(juntas[-1]) + _texto(saida)
         else:
             juntas.append(copy.deepcopy(saida))
 
-    limpas = []
     for saida in juntas:
         if _eh_stream(saida):
-            texto = _SOBRESCRITO.sub("", _texto(saida))
-            if not texto.strip():
-                continue
-            saida["text"] = _LINHA.findall(texto)
-        limpas.append(saida)
-    return limpas
+            saida["text"] = _LINHA.findall(_SOBRESCRITO.sub("", _texto(saida)))
+    return [saida for saida in juntas if not _eh_stream(saida) or "".join(saida["text"]).strip()]
 
 
 def limpar_notebook(notebook: dict[str, Any]) -> dict[str, Any]:
@@ -118,8 +107,7 @@ def main(argv: list[str] | None = None) -> int:
     com_ruido = [caminho for caminho in caminhos if processar(caminho, args.check)]
     verbo = "tem ruído de execução" if args.check else "limpo"
     for caminho in com_ruido:
-        nome = caminho.resolve().relative_to(RAIZ) if caminho.resolve().is_relative_to(RAIZ) else caminho
-        print(f"{nome}: {verbo}", file=sys.stderr)
+        print(f"{caminho}: {verbo}", file=sys.stderr)
     return 1 if args.check and com_ruido else 0
 
 

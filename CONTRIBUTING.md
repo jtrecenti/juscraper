@@ -174,8 +174,8 @@ Notas:
   uv run python scripts/limpar_notebooks.py docs/notebooks/<tribunal>.ipynb
   ```
 
-  O script tira o `metadata.execution` de cada célula (os carimbos de horário que o `nbconvert --execute` grava), junta os streams seguidos e deixa só a linha final de cada barra do tqdm. O `metadata` do notebook (kernel e `language_info`), o `execution_count` e os demais outputs ficam como estão. `--check` só confere e sai com 1 se algum notebook mudaria; sem arquivos, ele percorre todos os de `docs/notebooks/`.
-- Se o portal bloquear a reexecução e a mudança for só de nome (ex.: coluna renomeada), é aceitável editar o nome nos outputs gravados sem reexecutar, desde que a descrição do PR diga que o notebook não foi reexecutado, como no #717 e no #719. Mudança de conteúdo (linhas, valores, formato da ementa) exige reexecução.
+  O script tira os carimbos de horário das células e as atualizações intermediárias das barras do tqdm; o resto do notebook fica como está. Detalhes e a opção `--check` estão na docstring do script.
+- Se o portal bloquear a reexecução e a mudança for só de nome (ex.: coluna renomeada), é aceitável editar o nome nos outputs gravados sem reexecutar, desde que a descrição do PR diga que o notebook não foi reexecutado, como no #719. Mudança de conteúdo (linhas, valores, formato da ementa) exige reexecução.
 
 ### Integração local
 

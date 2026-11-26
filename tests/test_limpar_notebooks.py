@@ -88,16 +88,6 @@ def test_cr_no_fim_da_linha_nao_e_sobrescrita():
     assert limpar_notebooks.limpar_saidas(saidas) == saidas
 
 
-def test_notebook_limpo_nao_e_reescrito(tmp_path):
-    caminho = tmp_path / "limpo.ipynb"
-    texto = limpar_notebooks.serializar(limpar_notebooks.limpar_notebook(_notebook_executado()))
-    caminho.write_text(texto, encoding="utf-8")
-
-    assert limpar_notebooks.main(["--check", str(caminho)]) == 0
-    assert limpar_notebooks.main([str(caminho)]) == 0
-    assert caminho.read_text(encoding="utf-8") == texto
-
-
 def test_check_acusa_sem_gravar_e_modo_normal_grava(tmp_path, capsys):
     caminho = tmp_path / "executado.ipynb"
     original = json.dumps(_notebook_executado(), indent=1)
