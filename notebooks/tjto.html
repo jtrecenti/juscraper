@@ -492,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The search portal sits behind an AWS WAF that blocks an IP after about 7 searches in a row and lets it through again after 10 minutes or more. Each page is one search, so this notebook asks for a single page per call and reuses each result in several cells. When the WAF blocks before any page, the call raises <code>BotChallengeBlockedError</code>; when it blocks in the middle of a pagination, it raises <code>ColetaParcialError</code>, with the pages already downloaded in <code>.resultado</code>.</p>
 <section id="basic-search-2nd-instance" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search-2nd-instance">Basic search (2nd instance)</h2>
-<div id="4bd5796a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:22.004196Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:22.004010Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.323830Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.323087Z&quot;}" data-execution_count="1">
+<div id="4bd5796a" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjto <span class="op">=</span> jus.scraper(<span class="st">'tjto'</span>)</span>
@@ -501,7 +501,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_cjsg.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>dados_cjsg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:03&lt;00:00,  3.31s/it]Baixando páginas TJTO: 100%|██████████| 1/1 [00:03&lt;00:00,  3.31s/it]</code></pre>
+<pre><code>Baixando páginas TJTO: 100%|██████████| 1/1 [00:03&lt;00:00,  3.31s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(20, 10)</code></pre>
@@ -575,7 +575,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="481173c7" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.325108Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.324973Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.328792Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.328155Z&quot;}" data-execution_count="2">
+<div id="481173c7" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dados_cjsg.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['processo',
@@ -593,7 +593,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-result-fields" class="level2">
 <h2 class="anchored" data-anchor-id="preview-result-fields">Preview result fields</h2>
-<div id="9e8f2c31" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.329906Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.329783Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:26.336000Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:26.335527Z&quot;}" data-execution_count="3">
+<div id="9e8f2c31" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>row <span class="op">=</span> dados_cjsg.iloc[<span class="dv">0</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Processo: </span><span class="sc">{</span>row[<span class="st">'processo'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Classe: </span><span class="sc">{</span>row[<span class="st">'classe'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -612,7 +612,7 @@ Data Julgamento: 2026-10-15</code></pre>
 <section id="filters-and-document-types" class="level2">
 <h2 class="anchored" data-anchor-id="filters-and-document-types">Filters and document types</h2>
 <p>You can filter by judgment date range and choose the document type: <code>acordaos</code> (default), <code>decisoes</code> (monocratic decisions) or <code>sentencas</code> (sentences). The sort order is set with <code>ordenacao</code>: <code>"DESC"</code> (most recent first, the default), <code>"ASC"</code> or <code>"RELEV"</code>.</p>
-<div id="7909313e" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:26.337473Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:26.337258Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:27.486197Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:27.485409Z&quot;}" data-execution_count="4">
+<div id="7909313e" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dados_decisoes <span class="op">=</span> tjto.cjsg(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
@@ -623,7 +623,7 @@ Data Julgamento: 2026-10-15</code></pre>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dados_decisoes.shape)</span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>dados_decisoes[[<span class="st">'processo'</span>, <span class="st">'classe'</span>, <span class="st">'data_julgamento'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:00&lt;00:00,  1.12it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:00&lt;00:00,  1.12it/s]</code></pre>
+<pre><code>Baixando páginas TJTO: 100%|██████████| 1/1 [00:00&lt;00:00,  1.12it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(20, 10)</code></pre>
@@ -670,7 +670,7 @@ Data Julgamento: 2026-10-15</code></pre>
 <section id="first-instance-search-cjpg-downloading-and-parsing-separately" class="level2">
 <h2 class="anchored" data-anchor-id="first-instance-search-cjpg-downloading-and-parsing-separately">First instance search (cjpg), downloading and parsing separately</h2>
 <p>Use <code>cjpg()</code> to search first-instance jurisprudence; it accepts the same parameters as <code>cjsg()</code>. Both are a download followed by a parse, and the two steps are also available on their own: <code>cjpg_download()</code> returns the raw HTML pages and <code>cjpg_parse()</code> turns them into the same DataFrame (<code>cjsg_download()</code> and <code>cjsg_parse()</code> do the same for the 2nd instance).</p>
-<div id="8ce744a0" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T02:45:27.487795Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T02:45:27.487317Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T02:45:29.074202Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T02:45:29.072610Z&quot;}" data-execution_count="5">
+<div id="8ce744a0" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjto.cjpg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>, tipo_documento<span class="op">=</span><span class="st">'sentencas'</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Pages downloaded: </span><span class="sc">{</span><span class="bu">len</span>(brutos)<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Raw HTML size (page 1): </span><span class="sc">{</span><span class="bu">len</span>(brutos[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
@@ -679,7 +679,7 @@ Data Julgamento: 2026-10-15</code></pre>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Parsed shape: </span><span class="sc">{</span>dados_cjpg<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>dados_cjpg.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJTO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJTO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]Baixando páginas TJTO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]</code></pre>
+<pre><code>Baixando páginas TJTO: 100%|██████████| 1/1 [00:01&lt;00:00,  1.18s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Pages downloaded: 1

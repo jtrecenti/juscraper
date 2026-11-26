@@ -471,20 +471,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div id="cell-2" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:52.979378Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:52.979027Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:53.683081Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:53.666315Z&quot;}" data-execution_count="1">
+<div id="cell-2" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjsc <span class="op">=</span> jus.scraper(<span class="st">'tjsc'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-4" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:53.689788Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:53.688618Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:55.824725Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:55.823763Z&quot;}" data-execution_count="2">
+<div id="cell-4" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsc.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>))</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJSC:   0%|          | 0/2 [00:00&lt;?, ?it/s]Baixando CJSG TJSC:  50%|█████     | 1/2 [00:00&lt;00:00,  2.38it/s]Baixando CJSG TJSC: 100%|██████████| 2/2 [00:01&lt;00:00,  1.08it/s]Baixando CJSG TJSC: 100%|██████████| 2/2 [00:01&lt;00:00,  1.18it/s]</code></pre>
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 2/2 [00:01&lt;00:00,  1.18it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(20, 9)</code></pre>
@@ -554,14 +554,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:55.828357Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:55.828047Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:56.381915Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:56.380257Z&quot;}" data-execution_count="3">
+<div id="cell-6" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjsc.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjsc.cjsg_parse(brutos)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJSC:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  2.98it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  2.97it/s]</code></pre>
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  2.97it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 9)</code></pre>
@@ -631,7 +631,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:56.385983Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:56.385779Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:56.391006Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:56.388681Z&quot;}" data-execution_count="4">
+<div id="cell-8" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">'ementa'</span> <span class="kw">in</span> df.columns <span class="kw">and</span> <span class="bu">len</span>(df) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -642,7 +642,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
 <p>Available filters: <code>campo</code> (E=ementa, I=inteiro teor), <code>processo</code>, <code>data_julgamento_inicio/fim</code>, <code>data_publicacao_inicio/fim</code>. Dates accept <code>YYYY-MM-DD</code> or <code>DD/MM/YYYY</code>.</p>
-<div id="cell-10" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:56.393498Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:56.393305Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:57.121890Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:57.121129Z&quot;}" data-execution_count="5">
+<div id="cell-10" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjsc.cjsg(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
@@ -652,13 +652,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJSC:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  1.79it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  1.79it/s]</code></pre>
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  1.79it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 9)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
@@ -725,26 +722,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="filter-by-judgment-date" class="level3">
 <h3 class="anchored" data-anchor-id="filter-by-judgment-date">Filter by judgment date</h3>
 <p><code>data_julgamento_inicio</code> and <code>data_julgamento_fim</code> restrict the search to decisions judged in the interval (both ends inclusive).</p>
-<div id="cell-12" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-15T12:25:57.123400Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-15T12:25:57.123304Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-15T12:25:57.389755Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-15T12:25:57.388872Z&quot;}" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_datas <span class="op">=</span> tjsc.cjsg(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2025-03-10'</span>,</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2025-03-13'</span>,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas.shape)</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas[<span class="st">'data_julgamento'</span>].<span class="bu">min</span>(), df_datas[<span class="st">'data_julgamento'</span>].<span class="bu">max</span>())</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>df_datas[[<span class="st">'processo'</span>, <span class="st">'orgao_julgador'</span>, <span class="st">'data_julgamento'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-12" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df_datas <span class="op">=</span> tjsc.cjsg(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2025-03-10'</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2025-03-13'</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas.shape)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_datas[<span class="st">'data_julgamento'</span>].<span class="bu">min</span>(), df_datas[<span class="st">'data_julgamento'</span>].<span class="bu">max</span>())</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>df_datas[[<span class="st">'processo'</span>, <span class="st">'orgao_julgador'</span>, <span class="st">'data_julgamento'</span>]].head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando CJSG TJSC:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  4.98it/s]Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  4.97it/s]</code></pre>
+<pre><code>Baixando CJSG TJSC: 100%|██████████| 1/1 [00:00&lt;00:00,  4.97it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 9)
 2025-03-13 2025-03-13</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div>

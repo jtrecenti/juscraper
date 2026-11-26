@@ -499,7 +499,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div id="48467dd5" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:06.872696Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:06.872475Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:07.137939Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:07.136192Z&quot;}" data-execution_count="1">
+<div id="48467dd5" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tse <span class="op">=</span> jus.scraper(<span class="st">"tse"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -507,7 +507,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="catalogs" class="level2">
 <h2 class="anchored" data-anchor-id="catalogs">Catalogs</h2>
 <p>Each catalog is one request and comes back as a DataFrame, with the values exactly as the portal returns them.</p>
-<div id="5649f8c5" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:07.144883Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:07.144687Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:07.912608Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:07.912232Z&quot;}" data-execution_count="2">
+<div id="5649f8c5" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>classes <span class="op">=</span> tse.listar_classes()</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(classes.shape)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>classes.head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -558,7 +558,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="175c2526" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:07.913704Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:07.913590Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:18.598429Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:18.597782Z&quot;}" data-execution_count="3">
+<div id="175c2526" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>relatores <span class="op">=</span> tse.listar_relatores()</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(relatores.shape)</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>relatores.head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -603,7 +603,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="dbedb77a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:18.600154Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:18.599622Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:18.941057Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:18.940632Z&quot;}" data-execution_count="4">
+<div id="dbedb77a" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tse.listar_eleicoes()[<span class="st">"eleicao"</span>].tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>['2026',
@@ -629,7 +629,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  '1950']</code></pre>
 </div>
 </div>
-<div id="772f2c37" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:18.942594Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:18.942448Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:19.464718Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:19.464241Z&quot;}" data-execution_count="5">
+<div id="772f2c37" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>normas <span class="op">=</span> tse.listar_normas()</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(normas.shape)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>normas[[<span class="st">"sigla"</span>, <span class="st">"tipo"</span>, <span class="st">"numero"</span>, <span class="st">"ano"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -695,7 +695,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="regional-electoral-courts-tres" class="level3">
 <h3 class="anchored" data-anchor-id="regional-electoral-courts-tres">Regional electoral courts (TREs)</h3>
 <p>The <code>listar_*</code> methods take <code>tribunal</code>: <code>"tse"</code> (default), one TRE (<code>"tre-sp"</code>) or <code>"tres"</code>, the 27 TREs together.</p>
-<div id="8b040995" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:19.466184Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:19.465934Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:19.704356Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:19.703744Z&quot;}" data-execution_count="6">
+<div id="8b040995" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>classes_tre_sp <span class="op">=</span> tse.listar_classes(tribunal<span class="op">=</span><span class="st">"tre-sp"</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(classes_tre_sp.shape)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>classes_tre_sp.head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -746,7 +746,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<div id="32852eda" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:19.706711Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:19.706486Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:19.941903Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:19.941245Z&quot;}" data-execution_count="7">
+<div id="32852eda" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>tse.listar_eleicoes(tribunal<span class="op">=</span><span class="st">"tres"</span>)[<span class="st">"eleicao"</span>].tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <pre><code>['2028',
@@ -787,7 +787,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="full-text-of-a-decision">Full text of a decision</h2>
 <p><code>baixar_inteiro_teor</code> takes the decision code (<code>codigoDecisao</code>), which is the last segment of the full-text link shown by the portal (<code>.../rest/download/pdf/&lt;code&gt;</code>), and returns the path of the saved PDF. The file goes to <code>&lt;diretorio&gt;/inteiro_teor/&lt;code&gt;.pdf</code>; without <code>diretorio</code>, to the scraper’s <code>download_path</code>.</p>
 <p>The PDF is saved as the court publishes it. Text extraction is left to the caller.</p>
-<div id="1aab6c0a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:19.943062Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:19.942941Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:21.048071Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:21.047563Z&quot;}" data-execution_count="8">
+<div id="1aab6c0a" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -805,7 +805,7 @@ b'%PDF-1.7'</code></pre>
 <h3 class="anchored" data-anchor-id="request-spacing">Request spacing</h3>
 <p>The full-text service refuses requests that come too close together (it accepted one every 10 s and refused at 5 s, measured on 16 November 2026). The scraper therefore waits <code>sleep_time</code> seconds (default 10) between consecutive <code>baixar_inteiro_teor</code> calls, so the cell below takes about 10 s. Change it with <code>jus.scraper("tse", sleep_time=...)</code>. The wait is shared by every scraper instance in the same Python process, because the service does not tell them apart; separate processes do not see each other.</p>
 <p>If the service still refuses, the call raises <code>LimiteDeRequisicoesError</code> and nothing is saved; wait and call again. A code that does not exist raises <code>InteiroTeorIndisponivelError</code>. Both live in <code>juscraper.courts.tse.download</code>.</p>
-<div id="6c23568a" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:21.049615Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:21.049222Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:15:31.682217Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:15:31.681514Z&quot;}" data-execution_count="9">
+<div id="6c23568a" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juscraper.courts.tse.download <span class="im">import</span> InteiroTeorIndisponivelError</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
@@ -820,7 +820,7 @@ b'%PDF-1.7'</code></pre>
 <section id="several-decisions-at-once" class="level3">
 <h3 class="anchored" data-anchor-id="several-decisions-at-once">Several decisions at once</h3>
 <p><code>baixar_inteiros_teores</code> takes a collection of codes and returns one row per code: <code>caminho_inteiro_teor</code> with the path of the PDF and <code>motivo_falha</code> with the reason when the download failed (<code>nao_pdf</code> for a response without a PDF, such as a code that does not exist; <code>limite_de_requisicoes</code> when the service refused the request). A failure does not stop the batch, and all of them come in a single <code>UserWarning</code> at the end. The calls keep <code>sleep_time</code> between them, so the cell below takes about 30 s. Code <code>3419640</code> is a decision of the TRE-RS: the full-text service is the same for the TSE and the TREs.</p>
-<div id="72643dcd" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T11:15:31.685903Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T11:15:31.685753Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T11:16:04.736701Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T11:16:04.735652Z&quot;}" data-execution_count="10">
+<div id="72643dcd" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> warnings.catch_warnings(record<span class="op">=</span><span class="va">True</span>) <span class="im">as</span> avisos:</span>

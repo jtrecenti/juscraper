@@ -479,7 +479,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="a3cc0795" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T10:05:11.702048Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T10:05:11.701832Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T10:05:27.389589Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T10:05:27.389167Z&quot;}" data-execution_count="1">
+<div id="a3cc0795" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjpe <span class="op">=</span> jus.scraper(<span class="st">'tjpe'</span>)</span>
@@ -488,13 +488,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 11983.73it/s]</code></pre>
+<pre><code>Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 11983.73it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(5, 11)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="1">
 <div>
@@ -569,8 +566,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="18bed310" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T10:05:27.392203Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T10:05:27.392052Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T10:05:27.396678Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T10:05:27.396151Z&quot;}" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="18bed310" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>['processo',
  'classe',
@@ -588,8 +585,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="dc0ebd20" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T10:05:27.398066Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T10:05:27.397851Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T10:05:27.400400Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T10:05:27.400025Z&quot;}" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="dc0ebd20" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>DIREITO CIVIL. AÇÃO DE COBRANÇA DE SEGURO C/C INDENIZAÇÃO POR DANO MORAL. INSTITUIÇÃO DE INDENIZAÇÃO SECURITÁRIA EM FAVOR DE CONCUBINA COMO BENEFICIÁRIA. FALHA NO DEVER DE CUIDADO DA SEGURADORA. INDENIZAÇÃO NOS TERMOS DO ART. 792 DO CÓDIGO CIVIL. DANO MORAL NÃO CONFIGURADO. AUSÊNCIA AFRONTA AO DIREI</code></pre>
 </div>
@@ -597,24 +594,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-date-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-date-filters">Using date filters</h2>
-<div id="2689f35b" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T10:05:27.401584Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T10:05:27.401448Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T10:05:48.494495Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T10:05:48.494213Z&quot;}" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Date filters use DD/MM/YYYY format</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjpe.cjsg(</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="2689f35b" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Date filters use DD/MM/YYYY format</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjpe.cjsg(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2024'</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'30/06/2024'</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 24966.10it/s]</code></pre>
+<pre><code>Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 24966.10it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(5, 11)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
@@ -689,27 +683,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="download-and-parse-separately" class="level2">
 <h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
-<div id="af13a05d" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T10:05:48.495826Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T10:05:48.495704Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T10:06:02.336356Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T10:06:02.335894Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw HTML pages</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjpe.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Downloaded </span><span class="sc">{</span><span class="bu">len</span>(raw)<span class="sc">}</span><span class="ss"> page(s)"</span>)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> raw:</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Raw HTML size: </span><span class="sc">{</span><span class="bu">len</span>(raw[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> bytes"</span>)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjpe.cjsg_parse(raw)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Parsed </span><span class="sc">{</span><span class="bu">len</span>(df_parsed)<span class="sc">}</span><span class="ss"> results"</span>)</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="af13a05d" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download raw HTML pages</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>raw <span class="op">=</span> tjpe.cjsg_download(<span class="st">'direito'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Downloaded </span><span class="sc">{</span><span class="bu">len</span>(raw)<span class="sc">}</span><span class="ss"> page(s)"</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> raw:</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Raw HTML size: </span><span class="sc">{</span><span class="bu">len</span>(raw[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> bytes"</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse into DataFrame</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjpe.cjsg_parse(raw)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Parsed </span><span class="sc">{</span><span class="bu">len</span>(df_parsed)<span class="sc">}</span><span class="ss"> results"</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Downloading TJPE Acórdãos:   0%|          | 0/1 [00:00&lt;?, ?it/s]Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 14413.42it/s]</code></pre>
+<pre><code>Downloading TJPE Acórdãos: 100%|██████████| 1/1 [00:00&lt;00:00, 14413.42it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Downloaded 1 page(s)
 Raw HTML size: 117705 bytes
 Parsed 5 results</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>

@@ -486,25 +486,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="looking-up-a-single-process" class="level2">
 <h2 class="anchored" data-anchor-id="looking-up-a-single-process">Looking up a single process</h2>
-<div id="26f72376" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:43.769848Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:43.769848Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:44.230968Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:44.230968Z&quot;}" data-execution_count="1">
+<div id="26f72376" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># `max_captcha_attempts` retries from a fresh form on each captcha rejection.</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>trf6 <span class="op">=</span> jus.scraper(<span class="st">"trf6"</span>, max_captcha_attempts<span class="op">=</span><span class="dv">5</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="de9be07f" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:44.232994Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:44.232994Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.478379Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.478379Z&quot;}" data-execution_count="2">
+<div id="de9be07f" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trf6.cpopg(<span class="st">"1005229-55.2023.4.06.3801"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>, <span class="st">"data_autuacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]</code></pre>
+TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(1, 13)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -537,8 +534,8 @@ TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]
 </section>
 <section id="available-columns" class="level2">
 <h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="2e8abd64" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.482482Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.481482Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.486404Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.486404Z&quot;}" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="2e8abd64" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df.columns.tolist()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>['processo',
  'data_autuacao',
@@ -559,11 +556,11 @@ TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]
 </section>
 <section id="inspecting-movements" class="level2">
 <h2 class="anchored" data-anchor-id="inspecting-movements">Inspecting movements</h2>
-<div id="597f0481" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.489418Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.488444Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.492928Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.492418Z&quot;}" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>movs <span class="op">=</span> df.iloc[<span class="dv">0</span>][<span class="st">"movimentacoes"</span>]</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(movs)<span class="sc">}</span><span class="ss"> events recorded"</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> movs[:<span class="dv">5</span>]:</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>m[<span class="st">'evento'</span>]<span class="sc">:&gt;3}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'data_hora'</span>]<span class="sc">}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'descricao'</span>][:<span class="dv">60</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="597f0481" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>movs <span class="op">=</span> df.iloc[<span class="dv">0</span>][<span class="st">"movimentacoes"</span>]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(movs)<span class="sc">}</span><span class="ss"> events recorded"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> movs[:<span class="dv">5</span>]:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>m[<span class="st">'evento'</span>]<span class="sc">:&gt;3}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'data_hora'</span>]<span class="sc">}</span><span class="ss"> | </span><span class="sc">{</span>m[<span class="st">'descricao'</span>][:<span class="dv">60</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>10 events recorded
    99 | 14/04/2026 01:29:31 | Decorrido prazo - Refer. ao Evento: 96
@@ -576,15 +573,15 @@ TRF6 cpopg: 100%|██████████| 1/1 [00:05&lt;00:00,  5.21s/it]
 </section>
 <section id="inspecting-parties" class="level2">
 <h2 class="anchored" data-anchor-id="inspecting-parties">Inspecting parties</h2>
-<div id="21574468" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.495938Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.494938Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:49.500969Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:49.499959Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo ativo:"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_ativo"</span>]:</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo passivo:"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_passivo"</span>]:</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="21574468" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo ativo:"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_ativo"</span>]:</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Polo passivo:"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> df.iloc[<span class="dv">0</span>][<span class="st">"polo_passivo"</span>]:</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>p[<span class="st">'descricao'</span>][:<span class="dv">120</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Polo ativo:
   - - SANDRA MARCIA TOSTES (017.**********) | ALESSANDRA APARECIDA ESTEVAO SOARES MG142599
@@ -597,15 +594,15 @@ Polo passivo:
 <section id="looking-up-multiple-processes-at-once" class="level2">
 <h2 class="anchored" data-anchor-id="looking-up-multiple-processes-at-once">Looking up multiple processes at once</h2>
 <p>Each lookup is one full request flow (form → captcha → search), so batches are sequential — expect ~3–5 seconds per CNJ depending on captcha-solve latency. Use <code>sleep_time</code> (default 1.0s) to throttle between calls.</p>
-<div id="7d4bbb28" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:49.503969Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:49.502970Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:52.141870Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:52.140820Z&quot;}" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cnjs <span class="op">=</span> [</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052295520234063801"</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052379620234063812"</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>df_batch <span class="op">=</span> trf6.cpopg(cnjs)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>df_batch[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="7d4bbb28" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cnjs <span class="op">=</span> [</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052295520234063801"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"10052379620234063812"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>df_batch <span class="op">=</span> trf6.cpopg(cnjs)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>df_batch[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"classe"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>TRF6 cpopg:   0%|          | 0/2 [00:00&lt;?, ?it/s]TRF6 cpopg:  50%|█████     | 1/2 [00:01&lt;00:01,  1.70s/it]TRF6 cpopg: 100%|██████████| 2/2 [00:02&lt;00:00,  1.23s/it]TRF6 cpopg: 100%|██████████| 2/2 [00:02&lt;00:00,  1.30s/it]</code></pre>
+<pre><code>TRF6 cpopg: 100%|██████████| 2/2 [00:02&lt;00:00,  1.30s/it]</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <div>
@@ -643,41 +640,35 @@ Polo passivo:
 <section id="handling-processes-the-public-portal-cannot-return" class="level2">
 <h2 class="anchored" data-anchor-id="handling-processes-the-public-portal-cannot-return">Handling processes the public portal cannot return</h2>
 <p>When a CNJ does not surface in the public consultation (sigilo, archived, or simply not found), eproc re-serves the form silently with no error message. The scraper detects that and yields a row with only <code>id_cnj</code> populated — callers can still distinguish “looked up but missing” from “never tried”.</p>
-<div id="23fa08f9" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:52.144870Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:52.143869Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:52.424898Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:52.424395Z&quot;}" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> trf6.cpopg(<span class="st">"00000000020994060000"</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"processo:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"processo"</span>))</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"classe:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"classe"</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="23fa08f9" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>df_missing <span class="op">=</span> trf6.cpopg(<span class="st">"00000000020994060000"</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"processo:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"processo"</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"classe:"</span>, df_missing.iloc[<span class="dv">0</span>].get(<span class="st">"classe"</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  3.67it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  3.66it/s]</code></pre>
+<pre><code>TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  3.66it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>processo: None
 classe: None</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 </div>
 </section>
 <section id="splitting-download-from-parse" class="level2">
 <h2 class="anchored" data-anchor-id="splitting-download-from-parse">Splitting download from parse</h2>
 <p><code>cpopg</code> is a thin wrapper over <code>cpopg_download</code> (raw HTML) + <code>cpopg_parse</code> (HTML → DataFrame). Splitting them is useful when you want to cache the raw HTMLs to disk before processing — relevant for TRF6 because each download spends a captcha solve.</p>
-<div id="cc209014" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-04-29T17:54:52.425902Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-04-29T17:54:52.425902Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-04-29T17:54:53.370361Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-04-29T17:54:53.369330Z&quot;}" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>htmls <span class="op">=</span> trf6.cpopg_download(<span class="st">"1005229-55.2023.4.06.3801"</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"got </span><span class="sc">{</span><span class="bu">len</span>(htmls)<span class="sc">}</span><span class="ss"> HTML(s), </span><span class="sc">{</span><span class="bu">len</span>(htmls[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf6.cpopg_parse(htmls, [<span class="st">"10052295520234063801"</span>])</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_autuacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cc209014" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>htmls <span class="op">=</span> trf6.cpopg_download(<span class="st">"1005229-55.2023.4.06.3801"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"got </span><span class="sc">{</span><span class="bu">len</span>(htmls)<span class="sc">}</span><span class="ss"> HTML(s), </span><span class="sc">{</span><span class="bu">len</span>(htmls[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> chars"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf6.cpopg_parse(htmls, [<span class="st">"10052295520234063801"</span>])</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_autuacao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>TRF6 cpopg:   0%|          | 0/1 [00:00&lt;?, ?it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.09it/s]TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.09it/s]</code></pre>
+<pre><code>TRF6 cpopg: 100%|██████████| 1/1 [00:00&lt;00:00,  1.09it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>got 1 HTML(s), 37871 chars</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="8">
 <div>
