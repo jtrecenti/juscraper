@@ -1,11 +1,12 @@
 """
 Funções de análise dos resultados de pesquisa de jurisprudência do TJMT.
 """
-import re
 from datetime import date
 from typing import cast
 
 import pandas as pd
+
+from juscraper.core.parse_utils import html_para_texto
 
 CJSG_COLUMNS = (
     "id",
@@ -28,13 +29,6 @@ CJSG_COLUMNS = (
     "julgamento",
     "uuid",
 )
-
-
-def _strip_html(text: str) -> str:
-    """Remove tags HTML de uma string."""
-    if not text:
-        return ""
-    return re.sub(r"<[^>]+>", "", text).strip()
 
 
 def _coerce_tjmt_date(value: object) -> date | None:
@@ -65,7 +59,7 @@ def _mapear_resultado(item: dict) -> dict:
     return {
         "id": item.get("idDocumento"),
         "tipo": item.get("tipo"),
-        "ementa": _strip_html(item.get("conteudo", "")),
+        "ementa": html_para_texto(item.get("conteudo") or "", preservar_quebras=True),
         "observacao": item.get("observacao"),
         "processo": item.get("numeroUnicoFormatado"),
         "classe": item.get("nomeClasse"),

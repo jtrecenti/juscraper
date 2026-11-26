@@ -8,7 +8,7 @@ from urllib.parse import parse_qsl, urlsplit
 import pandas as pd
 
 from juscraper.core.exceptions import HTTPSemanticError
-from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.core.parse_utils import clean_html, coerce_date_columns, html_para_texto
 from juscraper.utils.cnj import CNJ_FORMATADO_RE
 
 _INTERNAL_RE = re.compile(r"(\d\.\d{4}\.\d{2}\.\d{6}-\d/\d{3})")
@@ -138,7 +138,7 @@ def _parse_block(block: str) -> dict:
     ementa_match = _EMENTA_RE.search(block)
     proc_id_match = _PROC_ID_RE.search(block)
 
-    ementa = clean_html(ementa_match.group(1)) if ementa_match else None
+    ementa = html_para_texto(ementa_match.group(1)) if ementa_match else None
     if ementa:
         # Strip leading "EMENTA:" label that appears in the body text.
         ementa = re.sub(r"^EMENTA:\s*", "", ementa, flags=re.IGNORECASE)

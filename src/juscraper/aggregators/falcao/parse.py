@@ -12,9 +12,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bs4 import BeautifulSoup
-
-from ...core.parse_utils import normalizar_texto
+from ...core.parse_utils import html_para_texto, normalizar_texto
 
 logger = logging.getLogger(__name__)
 
@@ -106,11 +104,10 @@ def _chave_precedente(doc: dict[str, Any]) -> str | None:
 
 
 def _texto_limpo(html: Any) -> str | None:
-    """Converte a ementa HTML em texto corrido; vazia vira ``None``."""
-    if not isinstance(html, str) or not html.strip():
+    """Converte a ementa HTML em texto, um parágrafo por linha; vazia vira ``None``."""
+    if not isinstance(html, str):
         return None
-    texto = " ".join(BeautifulSoup(html, "html.parser").get_text(" ").split())
-    return texto or None
+    return html_para_texto(html) or None
 
 
 def _primeiro_nao_vazio(doc: dict[str, Any], *chaves: str) -> Any:
