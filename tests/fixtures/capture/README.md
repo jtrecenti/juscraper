@@ -97,9 +97,22 @@ samples `cposg/resultado_*.html` e `cposg/partes_*.html`; as particularidades
 
 ## TJPE cpopg
 
-`python -m tests.fixtures.capture.tjpe_cpopg` recaptura
-`cpopg/waf_challenge.html`, a página de desafio do AWS WAF (HTTP 202) na
-consulta pública do PJe de 1º grau; o docstring explica como provocar o desafio.
+`python -m tests.fixtures.capture.tjpe_cpopg` recaptura os samples da
+consulta pública do PJe de 1º grau. Precisa do extra `waf` (`uv sync --extra
+dev --extra waf` e `uv run playwright install chromium`): quando o AWS WAF
+desafia, o raspador obtém o cookie pelo Playwright e repete a requisição.
+
+| Arquivo | Conteúdo |
+|---|---|
+| `cpopg/form_initial.html` | formulário da consulta, de onde saem os IDs JSF (`j_idNNN`) |
+| `cpopg/search_one_result.html` | busca pelo `FOUND_CNJ` do script, com o token `ca` do detalhe |
+| `cpopg/detail_normal.html` | detalhe do `FOUND_CNJ`: movimentações e documentos numa página só, com 2 ou mais documentos |
+| `cpopg/search_no_results.html` | busca pelo `MISSING_CNJ`, sem token `ca` |
+| `cpopg/waf_challenge.html` | página de desafio do AWS WAF (HTTP 202); o docstring explica como provocá-la |
+
+O `jsessionid`, o nó do servidor e os tokens dos links das peças mudam a cada
+captura; os contratos leem esses valores do próprio sample. Se o processo passar de uma
+página de movimentações ou de documentos, o script para e pede outro CNJ.
 
 ## Agregadores
 

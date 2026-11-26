@@ -55,6 +55,7 @@ from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 from juscraper.aggregators.falcao.parse import parse_documentos
 from juscraper.aggregators.jusbr.parse import parse_process_details_response
 from juscraper.courts.stf.parse import parse_contagem, parse_decisoes
+from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests.schemas.test_canonical_types import DEPRECATED_SYNONYMS
 from tests.schemas.test_output_parity import (
     EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
@@ -103,7 +104,7 @@ def _xhr_tjrj(arquivo: Path) -> tuple:
 
 
 def _detalhe_com_cnj(arquivo: Path) -> tuple:
-    """``([html], [cnj])`` do ``cpopg_parse`` do PJe (TRF1, TRF5) e do eproc (TRF6)."""
+    """``([html], [cnj])`` do ``cpopg_parse`` do PJe (TRF1, TRF5, TJPE) e do eproc (TRF6)."""
     return ([_texto(arquivo)], [CNJ_FICTICIO])
 
 
@@ -275,6 +276,15 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjto", "cjpg"): _PAGINAS,
     ("trf1", "cpopg"): _PJE_CPOPG,
     ("trf5", "cpopg"): _PJE_CPOPG,
+    # O ``TJPEScraper`` não expõe ``cpopg_parse``; o parser é o da consulta pública.
+    ("tjpe", "cpopg"): Leitura(
+        _detalhe_com_cnj,
+        TJPEConsultaPublicaScraper(sleep_time=0).cpopg_parse,
+        ignorar={
+            **_PJE_CPOPG.ignorar,
+            "waf_challenge.html": "desafio do AWS WAF, que o download repete com cookie novo",
+        },
+    ),
     ("trf6", "cpopg"): Leitura(
         _detalhe_com_cnj,
         ignorar={
@@ -306,7 +316,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
 
 # Endpoints sem sample que o parser leia sozinho. Motivo obrigatório.
 SEM_LEITURA: dict[tuple[str, str], str] = {
-    ("tjpe", "cpopg"): "sem samples de detalhe do PJe do TJPE; o parser é o dos TRFs (trf1/trf5 cpopg)",
     ("trf3", "cpopg"): (
         "o bruto do parser junta várias respostas JSON por processo (dados, partes, "
         "movimentações, documentos); colunas fixas em trf3/parse.py, conferidas por test_output_parity"
@@ -330,6 +339,7 @@ SO_NOMES_DEPRECADOS: dict[tuple[str, str], str] = {
     ("tjsp", "cposg"): "devolve as tabelas do processo em colunas aninhadas; o Output cobre só o pivot",
     ("trf1", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
     ("trf5", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
+    ("tjpe", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
     ("trf6", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do eproc vem descrito no docstring",
 }
 
