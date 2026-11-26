@@ -61,7 +61,8 @@ class TestDeprecatedAliases:
     """Aliases deprecados (`query`/`termo`) devem emitir DeprecationWarning
     e ser popados antes do pydantic — caso contrario `extra='forbid'` acusa
     kwarg desconhecido e o `TypeError` amigavel esconde a intencao de
-    retrocompat documentada no CLAUDE.md."""
+    retrocompat descrita em `CONTRIBUTING.md` > **Política de deprecação**
+    e em `docs/api-conventions.qmd` > **Migration Guide**."""
 
     def test_cjsg_accepts_query_alias_with_warning(self, tmp_path):
         scraper = jus.scraper("tjsp", download_path=str(tmp_path))

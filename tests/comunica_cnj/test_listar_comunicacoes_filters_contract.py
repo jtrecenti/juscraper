@@ -6,7 +6,8 @@ querystring no GET ao endpoint, no nome canonico esperado pela API
 ``dataDisponibilizacaoFim``). Cobre tambem:
 
 - conversao automatica de datas em ``DD/MM/YYYY`` para ISO ``YYYY-MM-DD``
-  via ``to_iso_date`` (regra 4 do CLAUDE.md "Convencao de API");
+  via ``to_iso_date`` (``docs/api-conventions.qmd`` > **Date Filters** >
+  **Accepted input formats**);
 - validacao de intervalo de datas (``inicio > fim``) via
   ``validate_intervalo_datas`` antes de qualquer requisicao;
 - ausencia de aliases deprecados (a API ComunicaCNJ e nova; o schema

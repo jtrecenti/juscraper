@@ -183,5 +183,6 @@ O body Elasticsearch e construido por
 `build_listar_processos_payload` em `aggregators/datajud/download.py` —
 a mesma funcao usada pelo client em producao. O capture e os contratos
 em `tests/datajud/test_listar_processos_*_contract.py` importam dessa
-funcao, atendendo a regra 12 do CLAUDE.md (capture e producao falham
+funcao, atendendo ao item 13 ("Payload builders públicos") de
+`CONTRIBUTING.md` > **Adding a new tribunal** (capture e producao falham
 juntos quando o body real do scraper muda).
