@@ -260,12 +260,16 @@ def _extract_process_metadata(details_table: Tag, data: dict) -> None:
 
 
 def _extract_ementa(detail_row: Tag) -> str:
-    for div in detail_row.find_all("div", align="justify"):
-        style = str(div.get("style", "display: none;"))
-        if "display: none" not in style:
-            text = cast(str, div.get_text(" ", strip=True))
-            return text.replace("Ementa:", "").strip()
-    text = cast(str, detail_row.get_text(" ", strip=True))
+    """Devolve a ementa sem o rótulo ``Ementa:``.
+
+    Ementa longa vem em duas ``div align="justify"``: a prévia truncada,
+    visível e sem ``style``, e a completa, com ``display: none``. Ementa curta
+    vem numa ``div`` só. Preferir a oculta evita colar a prévia na ementa (#713).
+    """
+    divs = detail_row.find_all("div", align="justify")
+    ocultas = [div for div in divs if "display: none" in str(div.get("style", ""))]
+    fonte = ocultas[0] if ocultas else divs[0] if divs else detail_row
+    text = cast(str, fonte.get_text(" ", strip=True))
     return text.replace("Ementa:", "").strip()
 
 

@@ -278,6 +278,41 @@ class TestCJSGNResultsInputDeclarado:
 class TestCJSGParseSinglePage:
     """Test the _cjsg_parse_single_page function."""
 
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo"),
+        [
+            ("tjac", "cjsg/post_initial.html"),
+            ("tjal", "cjsg/post_initial.html"),
+            ("tjam", "cjsg/post_initial.html"),
+            ("tjce", "cjsg/results_normal_page_01.html"),
+            ("tjms", "cjsg/post_initial.html"),
+            ("tjsp", "cjsg/ementa_com_resultados.html"),
+        ],
+    )
+    def test_ementa_longa_devolve_so_a_completa(self, sigla, arquivo):
+        """Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713)."""
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        soup = BeautifulSoup(path.read_bytes().decode("utf-8"), "html.parser")
+        linhas = soup.find_all("tr", class_="fundocinza1")
+
+        df = _parse_single_page(str(path))
+
+        assert len(df) == len(linhas)
+        longas = 0
+        for ementa, linha in zip(df["ementa"], linhas, strict=True):
+            divs = [
+                div.get_text(" ", strip=True).replace("Ementa:", "").strip()
+                for div in linha.select('div[align="justify"]')
+            ]
+            if len(divs) == 2:
+                previa, completa = divs
+                assert len(previa) < len(completa)
+                assert ementa == completa
+                longas += 1
+            elif len(divs) == 1:
+                assert ementa == divs[0]
+        assert longas > 0
+
     def test_parse_results_page(self):
         """Test parsing a results page with multiple processes."""
         html = load_sample('tjsp', 'cjsg/results_normal.html')
@@ -404,7 +439,7 @@ class TestCJSGParseSinglePage:
             "campo_especial": "valor dinamico",
             "data_publicacao": "01/02/2024",
             "orgao_julgador": "Camara Especial",
-            "ementa": "texto visivel.",
+            "ementa": "texto oculto.",
         }
         assert df.iloc[1]["ementa"] == "fallback oculto."
         assert df.iloc[2]["ementa"] == ""
