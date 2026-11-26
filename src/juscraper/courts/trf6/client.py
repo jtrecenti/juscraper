@@ -253,7 +253,7 @@ class TRF6Scraper(BaseScraper):
 
         Accepts a single CNJ or a list. Returns a DataFrame with one row per
         process; columns include ``id_cnj``, ``processo``, ``classe``,
-        ``data_autuacao``, ``situacao``, ``magistrado``, ``orgao_julgador``,
+        ``data_autuacao``, ``situacao``, ``relator``, ``orgao_julgador``,
         ``assuntos``, ``polo_ativo``, ``polo_passivo``, ``mpf``, ``perito``,
         ``movimentacoes`` and ``motivo_falha``. As colunas do detalhe existem
         mesmo quando nenhum CNJ do lote foi lido, com ``None`` nas linhas não
