@@ -15,7 +15,11 @@ _COLUNAS = [
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """Extract relevant data from the raw TJRN Elasticsearch responses.
 
-    Returns a DataFrame with the decisions.
+    Returns a DataFrame with the decisions. O ``_source`` do Elasticsearch nao
+    tem ``relator`` nem ``tipo_decisao``: ``relator`` vem de ``magistrado`` e
+    ``tipo_decisao`` de ``tipo_teor`` (``"Acórdão"``, ``"Decisão"`` para as
+    monocraticas ou ``"Sentença"``). Na sentenca, ``magistrado`` e o juiz de
+    1o grau, que fica em ``relator`` como no ``cjpg`` do eSAJ.
 
     Args:
         resultados_brutos: List of raw JSON responses from the TJRN API.
@@ -30,8 +34,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "classe": source.get("classe_judicial"),
                 "orgao_julgador": source.get("orgao_julgador"),
                 "colegiado": source.get("colegiado"),
-                "relator": source.get("relator"),
-                "tipo_decisao": source.get("tipo_decisao"),
+                "relator": source.get("magistrado"),
+                "tipo_decisao": source.get("tipo_teor"),
                 "data_julgamento": (
                     source.get("dt_assinatura_teor")
                     or source.get("dt_assinatura_ementa")

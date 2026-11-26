@@ -23,8 +23,16 @@ class TestCJSGTJRN:
     def test_colunas_esperadas(self):
         """Result contains expected minimum columns."""
         df = self.scraper.cjsg("direito", paginas=1)
-        colunas_minimas = {"processo", "ementa", "relator"}
+        colunas_minimas = {"processo", "ementa", "relator", "tipo_decisao"}
         assert colunas_minimas.issubset(set(df.columns))
+
+    def test_relator_e_tipo_decisao_preenchidos(self):
+        """``relator`` (de ``magistrado``) e ``tipo_decisao`` (de ``tipo_teor``) vem preenchidos."""
+        df = self.scraper.cjsg("direito", paginas=1)
+        assert len(df) > 0
+        assert df["relator"].notna().all()
+        assert df["tipo_decisao"].notna().all()
+        assert set(df["tipo_decisao"]) <= {"Acórdão", "Decisão", "Sentença"}
 
     def test_paginacao(self):
         """Pagination brings results from multiple pages."""
