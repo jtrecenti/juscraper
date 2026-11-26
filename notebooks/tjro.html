@@ -425,7 +425,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#basic-search" id="toc-basic-search" class="nav-link active" data-scroll-target="#basic-search">Basic search</a></li>
-  <li><a href="#available-columns" id="toc-available-columns" class="nav-link" data-scroll-target="#available-columns">Available columns</a></li>
+  <li><a href="#download-and-parse-separately" id="toc-download-and-parse-separately" class="nav-link" data-scroll-target="#download-and-parse-separately">Download and parse separately</a></li>
   <li><a href="#preview-ementa" id="toc-preview-ementa" class="nav-link" data-scroll-target="#preview-ementa">Preview ementa</a></li>
   <li><a href="#using-filters" id="toc-using-filters" class="nav-link" data-scroll-target="#using-filters">Using filters</a></li>
   <li><a href="#repeated-rows" id="toc-repeated-rows" class="nav-link" data-scroll-target="#repeated-rows">Repeated rows</a></li>
@@ -469,26 +469,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div id="cell-2" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:10.160280Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:10.160129Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:10.835437Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:10.832709Z&quot;}" data-execution_count="1">
+<div id="cell-2" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>tjro <span class="op">=</span> jus.scraper(<span class="st">'tjro'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="basic-search" class="level2">
 <h2 class="anchored" data-anchor-id="basic-search">Basic search</h2>
-<div id="cell-4" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:10.837496Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:10.837124Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:13.858791Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:13.858482Z&quot;}" data-execution_count="2">
+<div id="cell-4" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjro.cjsg(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df.shape)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 23967.45it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 17260.51it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
@@ -569,22 +566,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="available-columns" class="level2">
-<h2 class="anchored" data-anchor-id="available-columns">Available columns</h2>
-<div id="cell-6" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:13.861343Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:13.861061Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:14.906851Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:14.906105Z&quot;}" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjro.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjro.cjsg_parse(brutos)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="download-and-parse-separately" class="level2">
+<h2 class="anchored" data-anchor-id="download-and-parse-separately">Download and parse separately</h2>
+<p><code>cjsg</code> is <code>cjsg_download</code> followed by <code>cjsg_parse</code>. Calling them separately lets you keep the raw responses before parsing.</p>
+<div id="cell-6" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> tjro.cjsg_download(<span class="st">'dano moral'</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df_parsed <span class="op">=</span> tjro.cjsg_parse(brutos)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_parsed.shape)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>df_parsed.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 16844.59it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 21620.12it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div>
@@ -667,8 +662,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="preview-ementa" class="level2">
 <h2 class="anchored" data-anchor-id="preview-ementa">Preview ementa</h2>
-<div id="cell-8" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:14.910297Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:14.909886Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:14.913848Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:14.913126Z&quot;}" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-8" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df[<span class="st">'ementa'</span>].iloc[<span class="dv">0</span>][:<span class="dv">300</span>])</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Ementa : DIREITO DO CONSUMIDOR. RECURSO INOMINADO. INDENIZAÇÃO POR DANO MORAL. INSCRIÇÃO INDEVIDA EM ÓRGÃO DE PROTEÇÃO AO CRÉDITO. EXISTÊNCIA DE APONTAMENTO PRÉVIO LEGÍTIMO. INCIDÊNCIA DA SÚMULA 385 DO STJ. SENTENÇA MANTIDA. RECURSO NÃO PROVIDO. 1. Recurso Inominado interposto pelo autor em face da </code></pre>
 </div>
@@ -676,29 +671,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-filters" class="level2">
 <h2 class="anchored" data-anchor-id="using-filters">Using filters</h2>
-<p>Available filters: <code>tipo</code> (list), <code>nr_processo</code>, <code>magistrado</code>, <code>orgao_julgador</code>, <code>orgao_julgador_colegiado</code>, <code>classe_judicial</code>, <code>instancia</code>, <code>termo_exato</code> (bool).</p>
-<div id="cell-10" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-11-16T20:17:14.916928Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-11-16T20:17:14.916526Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-11-16T20:17:15.435009Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-11-16T20:17:15.434424Z&quot;}" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjro.cjsg(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    data_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    data_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Available filters: <code>tipo</code> (list), <code>numero_processo</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>orgao_julgador_colegiado</code>, <code>classe</code>, <code>instancia</code>, <code>termo_exato</code> (bool), and the date range <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code>.</p>
+<p>The old names <code>nr_processo</code>, <code>magistrado</code>, <code>classe_judicial</code> and <code>data_inicio</code> / <code>data_fim</code> are still accepted as deprecated aliases and emit a <code>DeprecationWarning</code>.</p>
+<div id="cell-10" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjro.cjsg(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">'2024-01-01'</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">'2024-06-30'</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(df_filtered.shape)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>df_filtered.head(<span class="dv">3</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/tmp/ipykernel_2701/3328444788.py:1: DeprecationWarning: O parâmetro 'data_inicio' está deprecado. Use 'data_julgamento_inicio' em vez disso.
-  df_filtered = tjro.cjsg(
-/tmp/ipykernel_2701/3328444788.py:1: DeprecationWarning: O parâmetro 'data_fim' está deprecado. Use 'data_julgamento_fim' em vez disso.
-  df_filtered = tjro.cjsg(
-Baixando páginas TJRO:   0%|          | 0/1 [00:00&lt;?, ?it/s]Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 15827.56it/s]</code></pre>
+<pre><code>Baixando páginas TJRO: 100%|██████████| 1/1 [00:00&lt;00:00, 17848.10it/s]</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(10, 13)</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code></code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <div>
