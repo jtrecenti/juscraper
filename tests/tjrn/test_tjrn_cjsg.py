@@ -97,6 +97,31 @@ class TestCJSGTJRN:
         )
         assert brutos[0]["hits"]["hits"] == []
 
+    @pytest.mark.parametrize("sistema", ["PJE", "SAJ"])
+    def test_filtro_sistema_traz_so_o_sistema_pedido(self, sistema):
+        """Cada valor de ``sistema`` traz so processos do sistema pedido."""
+        df = self.scraper.cjsg("dano moral", paginas=1, sistema=sistema)
+        assert len(df) > 0
+        assert set(df["sistema"]) == {sistema}
+
+    @pytest.mark.parametrize("grau", ["1", "2"])
+    def test_filtro_grau_traz_so_o_grau_pedido(self, grau):
+        """Cada valor de ``grau`` traz so decisoes do grau pedido.
+
+        Vai sem termo, por periodo, porque decisoes de 1o grau nao tem ementa.
+        O backend grava ``grau`` como inteiro no PJe e como texto no SAJ.
+        """
+        brutos = self.scraper.cjsg_download(
+            "",
+            paginas=1,
+            grau=grau,
+            data_julgamento_inicio="2026-11-01",
+            data_julgamento_fim="2026-11-20",
+        )
+        hits = brutos[0]["hits"]["hits"]
+        assert hits
+        assert {str(h["_source"]["grau"]) for h in hits} == {grau}
+
     def test_inteiro_teor_busca_termo_em_sentencas(self):
         """Termo no inteiro teor traz sentencas, que nao tem ementa.
 

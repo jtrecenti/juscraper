@@ -2,11 +2,11 @@
 
 Duas fontes, com papéis diferentes. As capturas ``results_normal_page_*.html``
 fixam a saída do parser na página real, comparada com
-``results_normal_expected.json``. Já ``results_optional_fields.html`` é montado
-à mão, e não captura do tribunal: reúne num arquivo só os casos de borda que
-uma página real não traz juntos.
+``results_normal_expected.json``. Já :data:`_CAMPOS_OPCIONAIS` é montado à mão,
+e não captura do tribunal, por isso fica neste arquivo e não em ``samples/``:
+reúne os casos de borda que uma página real não traz juntos.
 
-No primeiro resultado do arquivo montado à mão, o bloco da decisão repete o
+No primeiro resultado do HTML montado à mão, o bloco da decisão repete o
 aninhamento da página real: uma ``tr.fonte`` sem rótulo, com o resumo visível
 antes do ``div`` oculto que guarda o inteiro teor. O ``name`` do link tem
 vários hifens e o texto da decisão tem tag colada em pontuação e quebra de
@@ -21,10 +21,35 @@ import pandas as pd
 import pytest
 
 from juscraper.courts._esaj.cjpg_parse import cjpg_parse_single
-from tests._helpers import load_sample
 
 _TESTS = Path(__file__).parents[1]
 _SAMPLES = _TESTS / "tjsp" / "samples" / "cjpg"
+
+# Linha sem tabela, linha completa com rótulo inventado ("Tipo-de ato") e
+# valor que repete o rótulo, linha sem identificadores e linha sem campos.
+_CAMPOS_OPCIONAIS = """<div id="divDadosResultado">
+  <tr class="fundocinza1"><td>Linha sem tabela</td></tr>
+  <tr class="fundocinza1"><td><table>
+    <a name="IGNORADO-0">Link sem estilo</a>
+    <a style="vertical-align: top" name="CODIGO-126--sufixo"
+      ><span class="fonteNegrito"> 1000000-00.2024.8.26.0001 </span></a>
+    <tr class="fonte"><td><strong>Classe:</strong> Classe: complemento</td></tr>
+    <tr class="fonte"><td><strong>Data de disponibilização:</strong> 01/02/2024</td></tr>
+    <tr class="fonte"><td><strong>Tipo-de ato:</strong> Sentença</td></tr>
+    <tr class="fonte"><td>Ignorar linha sem rótulo</td></tr>
+    <tr class="fonte"><td>
+      <div align="justify"><span>Resumo: trecho visível</span></div>
+      <div align="justify" style="display: none;"><span>Resumo ignorado</span><span>Decisão <b>completa</b>.
+Segunda linha.</span></div>
+    </td></tr>
+  </table></td></tr>
+  <tr class="fundocinza1"><td><table>
+    <a style="vertical-align: top">Sem identificadores</a>
+    <div align="justify" style="display: none;">Sem spans</div>
+  </table></td></tr>
+  <tr class="fundocinza1"><td><table><tr><td>Sem campos opcionais</td></tr></table></td></tr>
+</div>
+"""
 
 
 def _resumir(df):
@@ -71,7 +96,7 @@ def test_capturas_reais_tem_saida_fixada(captura):
     ("tribunal", "captura"),
     [
         ("tjsp", "results_normal_page_01.html"),
-        ("tjsp", "results_legacy.html"),
+        ("tjsp", "single_page.html"),
         ("tjms", "results_normal_page_01.html"),
     ],
 )
@@ -89,7 +114,7 @@ def test_rotulo_magistrado_sai_na_coluna_relator(tribunal, captura):
 def test_campos_opcionais_ordem_e_normalizacao(tmp_path):
     """Mantém linhas incompletas, ordem dos campos e o último span da decisão."""
     caminho = tmp_path / "resultados.html"
-    caminho.write_text(load_sample("tjsp", "cjpg/results_optional_fields.html"), encoding="utf-8")
+    caminho.write_text(_CAMPOS_OPCIONAIS, encoding="utf-8")
 
     resultado = cjpg_parse_single(caminho)
 

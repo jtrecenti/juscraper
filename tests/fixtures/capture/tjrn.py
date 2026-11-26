@@ -72,6 +72,10 @@ def main() -> None:
     # Tribunal de Justica; "TR", Turmas Recursais e Turma de Uniformizacao.
     _capture(session, dest, "dano moral", 1, "jurisdicoes_tj.json", jurisdicoes="TJ")
     _capture(session, dest, "dano moral", 1, "jurisdicoes_tr.json", jurisdicoes="TR")
+    # ``sistema="SAJ"`` traz so processos do SAJ (a maioria das buscas e do PJe).
+    _capture(session, dest, "dano moral", 1, "sistema_saj.json", sistema="SAJ")
+    # ``grau="1"`` traz so decisoes de 1o grau, que nao tem ementa: vai sem termo.
+    _capture(session, dest, "", 1, "grau_1.json", grau="1", **periodo)
     # ``buscar_em="inteiro_teor"``: o termo vai no campo ``inteiro_teor`` do
     # payload, que monocraticas e sentencas tem (ao contrario da ementa).
     _capture(

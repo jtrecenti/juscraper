@@ -315,6 +315,80 @@ def test_cjsg_jurisdicoes_fora_do_portal_levanta_validation_error(valor):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=valor)
 
 
+@responses.activate
+def test_cjsg_sistema_envia_valor_do_portal(mocker):
+    """``sistema`` vai ao payload com o valor do seletor do portal; o sample
+    confirma que ``"SAJ"`` traz so processos do SAJ."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", "cjsg/sistema_saj.json")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload("dano moral", page=1, sistema="SAJ"))],
+    )
+
+    df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema="SAJ")
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["sistema"] == "SAJ"
+    assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
+    assert set(df["sistema"]) == {"SAJ"}
+
+
+@pytest.mark.parametrize("valor", ["pje", "Pje", "XYZ"])
+def test_cjsg_sistema_fora_do_portal_levanta_validation_error(valor):
+    """O backend diferencia maiusculas: ``"pje"`` ou outro valor fora do
+    seletor dava 0 resultados sem aviso; agora levanta ``ValidationError``
+    antes de qualquer requisicao."""
+    with pytest.raises(ValidationError, match="sistema"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema=valor)
+
+
+@responses.activate
+def test_cjsg_grau_envia_valor_do_portal(mocker):
+    """``grau`` vai ao payload com o valor dos radios do portal; o sample
+    confirma que ``"1"`` traz so decisoes de 1o grau. Vai sem termo, por
+    periodo, porque decisoes de 1o grau nao tem ementa."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", "cjsg/grau_1.json")
+    hits = json.loads(raw)["hits"]["hits"]
+    assert hits
+    # O backend grava ``grau`` como inteiro no PJe e como texto no SAJ.
+    assert {str(h["_source"]["grau"]) for h in hits} == {"1"}
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "", page=1, grau="1", dt_inicio="01-11-2026", dt_fim="20-11-2026",
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        "",
+        paginas=1,
+        grau="1",
+        data_julgamento_inicio="2026-11-01",
+        data_julgamento_fim="2026-11-20",
+    )
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["grau"] == "1"
+    assert len(df) == len(hits)
+
+
+@pytest.mark.parametrize("valor", [2, "3", "Primeiro"])
+def test_cjsg_grau_fora_do_portal_levanta_validation_error(valor):
+    """Valores fora dos radios do portal (``"3"``, ``"Primeiro"``) davam 0
+    resultados sem aviso; agora levantam ``ValidationError`` antes de qualquer
+    requisicao. O inteiro ``2`` ja levantava, e o caso fica pinado."""
+    with pytest.raises(ValidationError, match="grau"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, grau=valor)
+
+
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
 @responses.activate
 def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):

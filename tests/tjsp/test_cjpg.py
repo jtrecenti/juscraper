@@ -16,6 +16,33 @@ from juscraper.courts._esaj.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_
 from tests._helpers import load_sample, load_sample_bytes
 
 
+def _pagina(corpo: str) -> str:
+    """Envelope mínimo para os casos de borda que nenhuma página real do eSAJ traz."""
+    return f"<!DOCTYPE html><html><body>{corpo}</body></html>"
+
+
+def _linhas_de_resultado(quantidade: int) -> str:
+    linhas = "".join(f'<tr class="fundocinza1"><td>processo {n}</td></tr>' for n in range(1, quantidade + 1))
+    return f'<div id="divDadosResultado"><table>{linhas}</table></div>'
+
+
+# Cascata de ``cjpg_n_results`` em layouts que a página atual do eSAJ não
+# traz: célula ``bgcolor`` sem a palavra "resultado", resumo "Página N, total
+# X" e texto em que só o maior número serve. O HTML mínimo fica aqui, e não em
+# ``samples/``, porque não é resposta do tribunal.
+_CASCATA_CONTAGEM = {
+    "bgcolor_legacy": (
+        '<table><tr><td bgcolor="#EEEEEE">Mostrando 1 a 10 de 25 ocorrências</td></tr></table>',
+        25,
+    ),
+    "page_summary": ("<table><tr><td>Página 1, total 31 registros encontrados</td></tr></table>", 31),
+    "max_number_fallback": (
+        "<table><tr><td>Resultados exibidos: itens 1 a 10; total = 47 ocorrências</td></tr></table>",
+        47,
+    ),
+}
+
+
 @pytest.mark.integration
 class TestCJPGIntegration:
     """Integration tests for CJPG that hit the real website."""
@@ -74,25 +101,17 @@ class TestCJPGIntegration:
 class TestCJPGUnit:
     """Unit tests for CJPG parsing functions."""
 
-    def test_cjpg_n_pags_extraction(self):
-        """Test extracting page count from CJPG HTML (legacy format)."""
-        html = load_sample('tjsp', 'cjpg/results_legacy.html')
-        n_pags = cjpg_n_pags(html)
-        # "Mostrando 1 a 10 de 25 resultados" → 25/10 = 3 pages (ceil)
-        assert n_pags == 3
-
     def test_cjpg_n_pags_novo_formato(self):
-        """Test extracting page count from current TJSP CJPG HTML.
+        """Página real do TJSP, com "Resultados 1 a 10 de N".
 
         Regression for the bug where TJSP changed the pagination text from
         "Mostrando 1 a 10 de N resultados" to "Resultados 1 a 10 de N",
         breaking the original regex (which required "resultado" after the
         number).
         """
-        html = load_sample('tjsp', 'cjpg/results_novo_formato.html')
-        n_pags = cjpg_n_pags(html)
-        # "Resultados 1 a 10 de 39764" → ceil(39764/10) = 3977
-        assert n_pags == 3977
+        html = load_sample('tjsp', 'cjpg/results_normal_page_01.html')
+        # "Resultados 1 a 10 de 3565472" → ceil(3565472/10) = 356548
+        assert cjpg_n_pags(html) == 356548
 
     @pytest.mark.parametrize("n_results,expected_pags", [
         (1, 1),       # 1 result -> 1 page
@@ -119,29 +138,19 @@ class TestCJPGUnit:
 
     def test_cjpg_parse_single(self):
         """Test parsing a single CJPG results page."""
-        html = load_sample('tjsp', 'cjpg/results_legacy.html')
+        df = cjpg_parse_single(Path(__file__).parent / "samples/cjpg/single_page.html")
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
-
-        try:
-            df = cjpg_parse_single(temp_path)
-
-            assert isinstance(df, pd.DataFrame)
-            assert len(df) == 2  # Two processes in sample
-
-            # Check first process
-            assert df.iloc[0]['id_processo'] == '1001796-12.2024.8.26.0699'
-            assert df.iloc[0]['cd_processo'] == 'JF0004W7G0000'
-            assert 'Procedimento do Juizado Especial Cível' in df.iloc[0].get('classe', '')
-            assert 'decisao' in df.columns
-        finally:
-            Path(temp_path).unlink()
+        assert len(df) == 2  # "jurimétrica" trouxe duas sentenças
+        assert df.iloc[0]['id_processo'] == '0003880-96.2022.8.26.0529'
+        assert df.iloc[0]['cd_processo'] == 'EP0005URT0000'
+        assert df.iloc[0]['classe'] == 'Cumprimento de sentença'
+        # A segunda sentença vem sem a linha "Classe:".
+        assert pd.isna(df.iloc[1]['classe'])
+        assert df['decisao'].str.startswith('SENTENÇA').all()
 
     def test_cjpg_parse_manager_directory(self):
         """Test parsing multiple CJPG files from directory."""
-        html = load_sample('tjsp', 'cjpg/results_legacy.html')
+        html = load_sample('tjsp', 'cjpg/single_page.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             file1 = Path(temp_dir) / 'page1.html'
@@ -177,41 +186,38 @@ class TestCJPGUnit:
 class TestCJPGNResults:
     """Tests do helper :func:`cjpg_n_results` (issue #92)."""
 
-    def test_extracts_raw_count_legacy_format(self):
-        """Legacy 'Mostrando 1 a 10 de 25 resultados' -> 25."""
-        html = load_sample("tjsp", "cjpg/results_legacy.html")
-        assert cjpg_n_results(html) == 25
-
     def test_extracts_raw_count_novo_formato(self):
-        """Novo formato 'Resultados 1 a 10 de 39764' -> 39764."""
-        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
-        assert cjpg_n_results(html) == 39764
+        """Página real: 'Resultados 1 a 10 de 3565472' -> 3565472."""
+        html = load_sample("tjsp", "cjpg/results_normal_page_01.html")
+        assert cjpg_n_results(html) == 3565472
 
-    @pytest.mark.parametrize(
-        ("sample", "expected"),
-        [
-            ("count_bgcolor_legacy.html", 25),
-            ("count_page_summary.html", 31),
-            ("count_max_number_fallback.html", 47),
-            ("results_normal_page_01.html", 3565472),
-        ],
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "A cascata pega a célula de layout com 'Resultados', e não a do bgcolor; "
+            "o '\\d+$' casa com o link da página '1' no fim dela."
+        ),
     )
-    def test_selector_and_text_cascades(self, sample, expected):
+    def test_single_page_conta_os_dois_resultados(self):
+        """A página real com "Resultados 1 a 2 de 2" deveria contar 2."""
+        html = load_sample("tjsp", "cjpg/single_page.html")
+        assert cjpg_n_results(html) == 2
+
+    @pytest.mark.parametrize(("corpo", "expected"), _CASCATA_CONTAGEM.values(), ids=_CASCATA_CONTAGEM.keys())
+    def test_selector_and_text_cascades(self, corpo, expected):
         """Characterizes the CJPG-only selectors and shared text cascade."""
-        html = load_sample("tjsp", f"cjpg/{sample}")
-        assert cjpg_n_results(html) == expected
+        assert cjpg_n_results(_pagina(corpo)) == expected
 
     def test_counts_result_rows_when_pagination_marker_is_missing(self):
-        html = load_sample("tjsp", "cjpg/count_rows_fallback.html")
-        assert cjpg_n_results(html) == 3
+        assert cjpg_n_results(_pagina(_linhas_de_resultado(3))) == 3
 
     def test_raises_when_full_page_has_no_pagination_marker(self):
-        html = load_sample("tjsp", "cjpg/count_truncated_full_page.html")
+        html = _pagina(_linhas_de_resultado(10))
         with pytest.raises(ValueError, match=r"página completa.*sem marcador"):
             cjpg_n_results(html)
 
     def test_captcha_error_takes_precedence_over_zero_marker(self):
-        html = load_sample("tjsp", "cjpg/count_captcha_error.html")
+        html = _pagina('<div class="mensagemErro">Falha na verificação do captcha. Nenhum resultado encontrado.</div>')
         with pytest.raises(ValueError, match="Captcha não foi resolvido"):
             cjpg_n_results(html)
 
@@ -228,31 +234,30 @@ class TestCJPGNResults:
             cjpg_n_results(html)
 
     def test_empty_results_container_still_raises_missing_selector(self):
-        html = load_sample("tjsp", "cjpg/count_empty_results.html")
+        html = _pagina('<div id="divDadosResultado"></div>')
         with pytest.raises(ValueError, match="Não foi possível encontrar o seletor"):
             cjpg_n_results(html)
 
     def test_raises_when_pagination_marker_has_no_number(self):
-        html = load_sample("tjsp", "cjpg/count_invalid_marker.html")
+        html = _pagina("<table><tr><td>Resultados temporariamente indisponíveis</td></tr></table>")
         with pytest.raises(ValueError, match="Não foi possível extrair o número de resultados"):
             cjpg_n_results(html)
 
     @pytest.mark.parametrize(
         ("counter", "expected"),
-        [(cjpg_n_results, 39764), (cjpg_n_pags, 3977)],
+        [(cjpg_n_results, 3565472), (cjpg_n_pags, 356548)],
     )
     def test_accepts_response_content_bytes(self, counter, expected):
-        html = load_sample_bytes("tjsp", "cjpg/results_novo_formato.html")
+        html = load_sample_bytes("tjsp", "cjpg/results_normal_page_01.html")
         assert counter(html) == expected
 
     def test_zero_results_returns_zero(self):
         html = load_sample("tjsp", "cjpg/no_results.html")
         assert cjpg_n_results(html) == 0
 
-    def test_n_pags_e_wrapper_que_aplica_ceil_div(self):
-        """``cjpg_n_pags`` permanece um wrapper sobre ``cjpg_n_results``."""
-        html = load_sample("tjsp", "cjpg/results_novo_formato.html")
-        assert cjpg_n_pags(html) == (39764 + 9) // 10
+    def test_n_pags_zero_sem_resultados(self):
+        """Busca sem resultados dá 0 páginas; o caso com resultados está em ``test_cjpg_n_pags_novo_formato``."""
+        assert cjpg_n_pags(load_sample("tjsp", "cjpg/no_results.html")) == 0
 
 
 class TestCJPGDownload1Based:
