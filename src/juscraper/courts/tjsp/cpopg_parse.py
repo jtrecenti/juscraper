@@ -410,12 +410,12 @@ def _extract_misc_petitions(soup: BeautifulSoup, path: str) -> list[dict]:
     petitions = []
     for row in table.find_all('tr'):
         cells = row.find_all('td')
-        if len(cells) == 2:
-            petitions.append({
-                'file_path': path,
-                'data': cells[0].get_text(strip=True),
-                'tipo': cells[1].get_text(strip=True),
-            })
+        if len(cells) != 2:
+            continue
+        data, tipo = (cell.get_text(strip=True) for cell in cells)
+        # Linha sem conteúdo não é petição: o ``<thead>`` do eSAJ traz um separador com duas ``<td>`` vazias.
+        if data or tipo:
+            petitions.append({'file_path': path, 'data': data, 'tipo': tipo})
     return petitions
 
 
