@@ -491,18 +491,6 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 ### Deprecated
 
-- STM, TJSC, TJPA, STF e TJDFT: o parâmetro que escolhia onde buscar o termo passa a alias deprecado de `buscar_em` (ver `Added`), e o valor antigo é convertido no canônico. O alias emite `DeprecationWarning` com o valor novo, e passar o alias com `buscar_em` levanta `ValueError`. O STM `campo` só existiu na `main`, sem versão publicada. Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
-
-  | Tribunal | Uso antigo | Uso canônico |
-  | --- | --- | --- |
-  | STM | `campo="ementa"` / `"inteiro_teor"` / `"numero"` | `buscar_em=` com o mesmo valor |
-  | TJSC | `campo="E"` | `buscar_em="ementa"` |
-  | TJSC | `campo="I"` | `buscar_em="inteiro_teor"` |
-  | TJPA | `query_scope="ementa"` | `buscar_em="ementa"` |
-  | TJPA | `query_scope="inteiroTeor"` ou `"inteiroteor"` | `buscar_em="inteiro_teor"` |
-  | STF e TJDFT | `inteiro_teor=False` | `buscar_em="ementa"` |
-  | STF e TJDFT | `inteiro_teor=True` | `buscar_em="inteiro_teor"` |
-
 - `TJSPScraper.cjpg`: parametros `classes`/`assuntos`/`varas` emitem `DeprecationWarning`. Use os singulares canonicos `classe`/`assunto`/`vara`. Refs #232.
 - `TJBAScraper.cjsg`/`cjsg_download`: parametro `classes` emite `DeprecationWarning`. Use `classe`. Refs #232.
 - `DatajudScraper.listar_processos`/`contar_processos`: parametro `assuntos` emite `DeprecationWarning`. Use `assunto`. Refs #232.
@@ -560,18 +548,6 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 - Sdist (`juscraper-X.Y.Z.tar.gz` no PyPI) inclui somente `src/juscraper/`, README, LICENSE, CHANGELOG, CONTRIBUTING, CONDUCT e `pyproject.toml`. Sem essa configuracao, o tarball cresceria com `tests/<tribunal>/samples/` (~25 MB). Refs #139.
 
 ### Deprecated
-
-- STM, TJSC, TJPA, STF e TJDFT: o parâmetro que escolhia onde buscar o termo passa a alias deprecado de `buscar_em` (ver `Added`), e o valor antigo é convertido no canônico. O alias emite `DeprecationWarning` com o valor novo, e passar o alias com `buscar_em` levanta `ValueError`. O STM `campo` só existiu na `main`, sem versão publicada. Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
-
-  | Tribunal | Uso antigo | Uso canônico |
-  | --- | --- | --- |
-  | STM | `campo="ementa"` / `"inteiro_teor"` / `"numero"` | `buscar_em=` com o mesmo valor |
-  | TJSC | `campo="E"` | `buscar_em="ementa"` |
-  | TJSC | `campo="I"` | `buscar_em="inteiro_teor"` |
-  | TJPA | `query_scope="ementa"` | `buscar_em="ementa"` |
-  | TJPA | `query_scope="inteiroTeor"` ou `"inteiroteor"` | `buscar_em="inteiro_teor"` |
-  | STF e TJDFT | `inteiro_teor=False` | `buscar_em="ementa"` |
-  | STF e TJDFT | `inteiro_teor=True` | `buscar_em="inteiro_teor"` |
 
 - Parametros de Input renomeados para canonicos; os nomes antigos continuam aceitos com `DeprecationWarning` por um ciclo:
   - `nr_processo` -> `numero_processo` em TJPB, TJRN, TJRO.
@@ -695,18 +671,6 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 - Adicionado `uv.lock` ao `.gitignore` (lockfile não deve ser versionado em bibliotecas)
 
 ### Deprecated
-
-- STM, TJSC, TJPA, STF e TJDFT: o parâmetro que escolhia onde buscar o termo passa a alias deprecado de `buscar_em` (ver `Added`), e o valor antigo é convertido no canônico. O alias emite `DeprecationWarning` com o valor novo, e passar o alias com `buscar_em` levanta `ValueError`. O STM `campo` só existiu na `main`, sem versão publicada. Deprecado a partir da 0.6.0, com remoção prevista na 0.7.0.
-
-  | Tribunal | Uso antigo | Uso canônico |
-  | --- | --- | --- |
-  | STM | `campo="ementa"` / `"inteiro_teor"` / `"numero"` | `buscar_em=` com o mesmo valor |
-  | TJSC | `campo="E"` | `buscar_em="ementa"` |
-  | TJSC | `campo="I"` | `buscar_em="inteiro_teor"` |
-  | TJPA | `query_scope="ementa"` | `buscar_em="ementa"` |
-  | TJPA | `query_scope="inteiroTeor"` ou `"inteiroteor"` | `buscar_em="inteiro_teor"` |
-  | STF e TJDFT | `inteiro_teor=False` | `buscar_em="ementa"` |
-  | STF e TJDFT | `inteiro_teor=True` | `buscar_em="inteiro_teor"` |
 
 - Nomes antigos de parâmetros (`query`, `termo`, `data_*_de/_ate`, `data_inicio/fim`) ainda aceitos com `DeprecationWarning`; serão removidos em v1.0
 
