@@ -19,6 +19,13 @@ _CJPG_PAGE_SIZE = 10
 MARCA_PAGINA_NAO_BAIXADA = "juscraper-pagina-nao-baixada"
 """``id`` do elemento que ``cjpg_download`` grava no lugar da página que não conseguiu baixar."""
 
+# Chaves que saem do rótulo da página com outro nome: "Magistrado:" vira a
+# coluna canônica ``relator``, a mesma do ``cjsg`` e dos demais tribunais.
+_CHAVES_CANONICAS = {
+    'data_de_disponibilização': 'data_disponibilizacao',
+    'magistrado': 'relator',
+}
+
 
 def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
     # A cascata do CJPG difere da que o CJSG usa em
@@ -145,8 +152,7 @@ def _extrair_dados_processo(tabela_dados: Tag) -> dict:
         if linha.find('strong'):
             chave, valor = linha.text.strip().split(':', 1)
             chave = chave.strip().lower().replace(' ', '_').replace('-', '')
-            if chave == 'data_de_disponibilização':
-                chave = 'data_disponibilizacao'
+            chave = _CHAVES_CANONICAS.get(chave, chave)
             dados_processo[chave] = valor.strip()
 
     div_decisao = tabela_dados.find('div', {'align': 'justify', 'style': 'display: none;'})

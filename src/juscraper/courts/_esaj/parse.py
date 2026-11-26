@@ -35,6 +35,13 @@ _TYPO_FIXES = {
     "argapso_julgador": "orgao_julgador",
 }
 
+# O eSAJ declara iso-8859-1, mas manda windows-1252: o travessão "–" chega
+# como o byte 0x96, que o latin-1 lê como o caractere de controle U+0096.
+_C1_PARA_CP1252 = {
+    byte: bytes([byte]).decode("cp1252")
+    for byte in range(0x80, 0xA0)
+    if byte not in (0x81, 0x8D, 0x8F, 0x90, 0x9D)  # sem caractere no windows-1252
+}
 _ERROR_CLASS_RE = re.compile(r"error|erro|mensagem.*erro", re.I)
 _FORM_ID_RE = re.compile(r"form|consulta", re.I)
 _PAGINATION_CLASS_RE = re.compile(r".*pag.*", re.I)
@@ -44,18 +51,6 @@ _PAGINATION_COUNT_PATTERNS = (
     re.compile(r"(?<=de )\d+"),
     re.compile(r"\d+(?=\s*(?:resultado|registro|página))", re.I),
 )
-_FIELD_STAMPS = {
-    "data_publicacao": (
-        "Data de publicação:",
-        "Data de Publicação:",
-        "Data de publicassapso:",
-    ),
-    "orgao_julgador": (
-        "Órgão julgador:",
-        "Orgão julgador:",
-        "argapso julgador:",
-    ),
-}
 
 
 def _raise_page_error(soup: BeautifulSoup) -> None:
@@ -242,11 +237,17 @@ def _clean_value(value: str) -> str:
 
 
 def _read_html(path: str) -> str:
+    r"""Lê o HTML salvo com fins de linha ``\n`` e os caracteres do windows-1252.
+
+    O eSAJ responde com ``\r\n``, que passaria para o texto das ementas, como
+    a leitura em modo texto do ``cjpg`` já evita. Ver ``_C1_PARA_CP1252``.
+    """
     raw = Path(path).read_bytes()
     try:
-        return raw.decode("utf-8")
+        texto = raw.decode("utf-8")
     except UnicodeDecodeError:
-        return raw.decode("latin1")
+        texto = raw.decode("latin1")
+    return texto.replace("\r\n", "\n").replace("\r", "\n").translate(_C1_PARA_CP1252)
 
 
 def _extract_process_metadata(details_table: Tag, data: dict) -> None:
@@ -260,7 +261,7 @@ def _extract_process_metadata(details_table: Tag, data: dict) -> None:
 
 
 def _extract_ementa(detail_row: Tag) -> str:
-    """Devolve a ementa sem o rótulo ``Ementa:``.
+    """Devolve a ementa sem o rótulo ``Ementa:`` do início do texto.
 
     Ementa longa vem em duas ``div align="justify"``: a prévia truncada,
     visível e sem ``style``, e a completa, com ``display: none``. Ementa curta
@@ -270,17 +271,7 @@ def _extract_ementa(detail_row: Tag) -> str:
     ocultas = [div for div in divs if "display: none" in str(div.get("style", ""))]
     fonte = ocultas[0] if ocultas else divs[0] if divs else detail_row
     text = cast(str, fonte.get_text(" ", strip=True))
-    return text.replace("Ementa:", "").strip()
-
-
-def _canonicalize_field(key: str, value: str) -> tuple[str, str]:
-    for canonical_key, stamps in _FIELD_STAMPS.items():
-        if canonical_key not in key:
-            continue
-        for stamp in stamps:
-            value = value.replace(stamp, "")
-        return canonical_key, value.strip()
-    return key, value
+    return text.removeprefix("Ementa:").strip()
 
 
 def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
@@ -289,7 +280,7 @@ def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | Non
     key = _normalize_key(label)
     if key == "outros_numeros":
         return None
-    return _canonicalize_field(key, value)
+    return key, value
 
 
 def _extract_detail(detail_row: Tag, data: dict) -> None:
