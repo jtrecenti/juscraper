@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -197,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Extracts structured information from the raw TJDFT search results.</td>
+<td>Converte os registros brutos da API em linhas, uma por registro.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjdft.client.TJDFTScraper.cpopg">cpopg</a></td>
@@ -304,7 +304,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>pd</code>.<code>DataFrame</code></td>
-<td>Uma linha por acórdão, com as chaves do JSON da API como estão, entre elas <code>processo</code>, <code>ementa</code>, <code>nomeRelator</code>, <code>descricaoOrgaoJulgador</code>, <code>dataJulgamento</code> e <code>dataPublicacao</code>. As duas datas saem como <code>datetime.date</code>, a data em UTC do instante que a API devolve (<code>2026-10-28T03:00:00.000Z</code> vira 28/10/2026), a mesma que os filtros <code>data_*</code> usam.</td>
+<td>Uma linha por acórdão ou decisão monocrática, com <code>processo</code>, <code>ementa</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>data_julgamento</code> e <code>data_publicacao</code>; as demais chaves do JSON da API (<code>decisao</code>, <code>codigoClasseCnj</code>, <code>turmaRecursal</code>…) saem com o nome da API. As duas datas saem como <code>datetime.date</code>, a data em UTC do instante que a API devolve (<code>2026-10-28T03:00:00.000Z</code> vira 28/10/2026), a mesma que os filtros <code>data_*</code> usam. Decisões monocráticas (<code>base == "decisoes"</code>) não têm data de julgamento: <code>data_julgamento</code> fica vazia nelas.</td>
 </tr>
 </tbody>
 </table>
@@ -412,7 +412,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjdft.client.TJDFTScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Extracts structured information from the raw TJDFT search results. Returns all fields present in each item.</p>
+<p>Converte os registros brutos da API em linhas, uma por registro.</p>
+<p>As colunas saem como em <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg"><code>cjsg</code></a>, mas as datas ficam no texto ISO da API: quem as converte é <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg"><code>cjsg</code></a>.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>resultados_brutos</td>
+<td><code>list</code></td>
+<td>Registros devolvidos por <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg_download"><code>cjsg_download</code></a>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code></td>
+<td>Uma linha por registro, como dicionário.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjdft.client.TJDFTScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjdft.client.TJDFTScraper.cpopg">cpopg</h3>
