@@ -192,13 +192,14 @@ def test_integracao_so_roda_por_disparo_manual():
 def test_filtros_de_caminho_apontam_para_arquivos_existentes():
     # Um filtro `paths` com caminho inexistente nunca casa e deixa de disparar
     # o workflow em silêncio (o docs.yml já apontou para um docs-publish.yml).
-    padroes = []
-    for workflow in WORKFLOWS:
-        eventos = yaml.safe_load(workflow.read_text(encoding="utf-8"))[True]
-        if not isinstance(eventos, dict):
-            continue
-        for nome, config in eventos.items():
-            for chave in ("paths", "paths-ignore"):
-                padroes += [(workflow.name, nome, padrao) for padrao in (config or {}).get(chave, [])]
+    eventos = [yaml.safe_load(workflow.read_text(encoding="utf-8"))[True] for workflow in WORKFLOWS]
+    padroes = [
+        padrao.removeprefix("!")
+        for evento in eventos
+        if isinstance(evento, dict)
+        for config in evento.values()
+        if isinstance(config, dict)
+        for padrao in config.get("paths", []) + config.get("paths-ignore", [])
+    ]
     assert padroes
-    assert [p for p in padroes if not any(RAIZ.glob(p[2].removeprefix("!")))] == []
+    assert [padrao for padrao in padroes if not any(RAIZ.glob(padrao))] == []
