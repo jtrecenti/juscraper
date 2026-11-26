@@ -89,7 +89,9 @@ class TJRNScraper(HTTPScraper):
             id_orgao_julgador (str): ID do orgao julgador.
             id_relator (str): ID do relator.
             id_colegiado (str): ID do colegiado.
-            sistema (str): ``"PJE"``, ``"SAJ"`` ou vazio para todos.
+            sistema (str): Sistema processual, com os valores do portal:
+                ``"PJE"``, ``"SAJ"`` ou vazio para todos. Outro valor (inclusive
+                ``"pje"``) levanta ``ValidationError``.
             decisoes (str): Tipo de decisao, com os valores do portal:
                 ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
                 ``"Sentença"`` ou vazio para todas. Outro valor levanta
@@ -103,7 +105,11 @@ class TJRNScraper(HTTPScraper):
                 levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
                 decisoes de 2o grau: com ``grau="1"`` a busca volta sem
                 resultados (o portal esconde ``"TR"`` quando o grau e ``"1"``).
-            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para todos.
+            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
+                todos, sempre como texto. Outro valor (inclusive o inteiro
+                ``2``) levanta ``ValidationError``. Decisoes de 1o grau nao tem
+                ementa: com ``grau="1"``, passar ``pesquisa=""`` e filtrar por
+                data, processo, classe ou orgao julgador.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

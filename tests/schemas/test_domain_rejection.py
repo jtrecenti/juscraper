@@ -124,6 +124,9 @@ _LITERAL_207_CASES = [
     (InputCJSGTJRN, "decisoes", ["", "Decisão", "Acórdão", "Sentença"], ["Monocraticas", "Colegiadas", "Sentencas"]),
     # Valores do seletor "Jurisdicoes" do portal; os da docstring antiga davam HTTP 502/503.
     (InputCJSGTJRN, "jurisdicoes", ["", "TJ", "TR"], ["Tribunal de Justica", "Turmas Recursais", "tj"]),
+    # Valores do seletor "Sistema" e dos radios de grau; outros davam 0 resultados.
+    (InputCJSGTJRN, "sistema", ["", "PJE", "SAJ"], ["pje", "Pje", "XYZ"]),
+    (InputCJSGTJRN, "grau", ["", "1", "2"], [2, "3", "Primeiro"]),
     # 2 e 3 saem do schema: o client os converte em 151 e 15 com DeprecationWarning.
     (InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16]),
     (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
