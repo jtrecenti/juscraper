@@ -1,0 +1,37 @@
+{
+ "result": {
+  "took": 31,
+  "timed_out": false,
+  "_shards": {
+   "total": 5,
+   "successful": 5,
+   "skipped": 0,
+   "failed": 0
+  },
+  "hits": {
+   "total": {
+    "value": 3422,
+    "relation": "eq"
+   },
+   "max_score": null,
+   "hits": []
+  },
+  "aggregations": {
+   "collection_bounds": {
+    "doc_count": 3422,
+    "upper": {
+     "value": 1795478400000.0,
+     "value_as_string": "2026-11-24"
+    },
+    "lower": {
+     "value": 1555027200000.0,
+     "value_as_string": "2019-04-12"
+    },
+    "missing": {
+     "doc_count": 1
+    }
+   }
+  }
+ },
+ "search_id": 1
+}

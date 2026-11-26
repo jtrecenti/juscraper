@@ -51,7 +51,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             dt_fim="31-03-2024",
             sistema="PJE",
             decisoes="Acórdão",
-            jurisdicoes="Tribunal de Justica",
+            jurisdicoes="TJ",
             grau="2",
         ))],
     )
@@ -68,7 +68,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         data_julgamento_fim="2024-03-31",
         sistema="PJE",
         decisoes="Acórdão",
-        jurisdicoes="Tribunal de Justica",
+        jurisdicoes="TJ",
         grau="2",
     )
 
@@ -90,7 +90,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             "origem": "",
             "sistema": "PJE",
             "decisoes": "Acórdão",
-            "jurisdicoes": "Tribunal de Justica",
+            "jurisdicoes": "TJ",
             "grau": "2",
         },
         "page": 1,
@@ -278,6 +278,41 @@ def test_cjsg_decisoes_fora_do_portal_levanta_validation_error(valor):
     agora levantam ``ValidationError`` antes de qualquer requisicao."""
     with pytest.raises(ValidationError, match="decisoes"):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, decisoes=valor)
+
+
+@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+@responses.activate
+def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes):
+    """``jurisdicoes`` vai ao payload com o valor do seletor do portal (``"TJ"``
+    ou ``"TR"``); os samples confirmam que cada valor traz so colegiados da
+    jurisdicao pedida."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", f"cjsg/jurisdicoes_{jurisdicoes.lower()}.json")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload("dano moral", page=1, jurisdicoes=jurisdicoes))],
+    )
+
+    df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
+    assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
+    # Turmas Recursais e Turma de Uniformizacao: so ``"TR"`` traz colegiados "Turma".
+    assert all(("Turma" in c) == (jurisdicoes == "TR") for c in df["colegiado"])
+
+
+@pytest.mark.parametrize("valor", ["Tribunal de Justica", "Turmas Recursais", "tj", "Todas"])
+def test_cjsg_jurisdicoes_fora_do_portal_levanta_validation_error(valor):
+    """Os valores que a docstring indicava (``"Tribunal de Justica"``,
+    ``"Turmas Recursais"``) nunca existiram no portal, que respondia 502/503
+    ate esgotar as tentativas; agora levantam ``ValidationError`` antes de
+    qualquer requisicao."""
+    with pytest.raises(ValidationError, match="jurisdicoes"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=valor)
 
 
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])

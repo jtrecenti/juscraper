@@ -6,7 +6,8 @@ Fluxo real do ``cpopg`` (de ``aggregators/jusbr/client.py``):
    a. ``clean_cnj`` reduz a 20 digitos. Se vazio, fallback ``CNJ Invalido``
       (sem HTTP).
    b. ``GET /api/v2/processos/?numeroProcesso=<cnj_limpo>`` -> lista.
-      Se ``content`` vazio, fallback ``Nao encontrado na lista inicial``.
+      Se HTTP 404 (CNJ inexistente) ou ``content`` vazio, fallback
+      ``Nao encontrado na lista inicial``.
    c. Para cada item na lista, ``GET /api/v2/processos/<numeroProcesso>``
       -> detalhes; row e ``parse_process_details_response``.
 2. ``processo`` (canonico do projeto) aparece em **toda** linha — happy
@@ -151,16 +152,15 @@ def test_cpopg_lista_de_cnjs(mocker):
 
 @responses.activate(registry=OrderedRegistry)
 def test_cpopg_no_results(mocker):
-    """Lista vazia (``content: []``) -> fallback com ``processo_pesquisado``."""
+    """CNJ inexistente: a API responde 404 -> fallback com ``processo_pesquisado``."""
     mocker.patch("time.sleep")
     scraper = _authenticated_scraper()
 
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("jusbr", "cpopg/no_results.json"),
-        status=200,
-        content_type="application/json",
+        json={"erro": "Processo não encontrado"},
+        status=404,
         match=[query_param_matcher({"numeroProcesso": NEUTRAL_CNJ_1_DIGITS})],
     )
 

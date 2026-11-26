@@ -4,6 +4,8 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+from juscraper.core.parse_utils import normalizar_texto
+
 
 def _extract_field(text: str, field: str) -> str | None:
     """Extract a named field from the full-text decision block."""
@@ -37,12 +39,12 @@ def _parse_item(item_div) -> dict:
         # Get only the direct text, not hidden children
         visible_text = summary_div.find(string=True, recursive=False)
         if visible_text:
-            result["resumo"] = visible_text.strip()
+            result["resumo"] = normalizar_texto(visible_text.strip())
 
     # Get hidden full text (contains the complete decision)
     hidden_div = item_div.select_one("div.d-none")
     if hidden_div:
-        full_text = hidden_div.get_text(strip=True)
+        full_text = normalizar_texto(hidden_div.get_text(strip=True))
         result["inteiro_teor"] = full_text
 
         # Extract structured fields from full text
@@ -65,7 +67,7 @@ def _parse_item(item_div) -> dict:
         else:
             # Fallback: use visible summary as ementa
             if summary_div:
-                result["ementa"] = summary_div.get_text(strip=True)[:2000]
+                result["ementa"] = normalizar_texto(summary_div.get_text(strip=True)[:2000])
 
     return result
 

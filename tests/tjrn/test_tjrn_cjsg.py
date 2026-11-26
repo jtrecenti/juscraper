@@ -21,10 +21,12 @@ class TestCJSGTJRN:
         assert len(df) > 0
 
     def test_colunas_esperadas(self):
-        """Result contains expected minimum columns."""
+        """Result contains expected minimum columns, with relator and tipo_decisao filled."""
         df = self.scraper.cjsg("direito", paginas=1)
-        colunas_minimas = {"processo", "ementa", "relator"}
+        colunas_minimas = {"processo", "ementa", "relator", "tipo_decisao"}
         assert colunas_minimas.issubset(set(df.columns))
+        assert df["relator"].notna().all()
+        assert set(df["tipo_decisao"]) <= {"Acórdão", "Decisão", "Sentença"}
 
     def test_paginacao(self):
         """Pagination brings results from multiple pages."""
@@ -65,6 +67,35 @@ class TestCJSGTJRN:
         hits = brutos[0]["hits"]["hits"]
         assert hits
         assert {h["_source"]["tipo_teor"] for h in hits} == {decisoes}
+
+    @pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+    def test_filtro_jurisdicoes_traz_so_a_jurisdicao_pedida(self, jurisdicoes):
+        """Cada valor de ``jurisdicoes`` traz so colegiados da jurisdicao pedida.
+
+        ``"TJ"`` traz orgaos do Tribunal de Justica e ``"TR"``, Turmas Recursais
+        e Turma de Uniformizacao; a jurisdicao e conferida pelo ``colegiado``.
+        """
+        df = self.scraper.cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
+        colegiados = df["colegiado"].dropna()
+        assert len(colegiados) > 0
+        assert all(("Turma" in c) == (jurisdicoes == "TR") for c in colegiados)
+
+    @pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+    def test_filtro_jurisdicoes_com_primeiro_grau_volta_vazio(self, jurisdicoes):
+        """``jurisdicoes`` com ``grau="1"`` volta sem resultados e sem erro.
+
+        ``"TJ"`` e ``"TR"`` so cobrem o 2o grau. Vai sem termo, por periodo,
+        porque decisoes de 1o grau nao tem ementa, onde ``pesquisa`` busca.
+        """
+        brutos = self.scraper.cjsg_download(
+            "",
+            paginas=1,
+            jurisdicoes=jurisdicoes,
+            grau="1",
+            data_julgamento_inicio="2026-11-01",
+            data_julgamento_fim="2026-11-20",
+        )
+        assert brutos[0]["hits"]["hits"] == []
 
     def test_inteiro_teor_busca_termo_em_sentencas(self):
         """Termo no inteiro teor traz sentencas, que nao tem ementa.

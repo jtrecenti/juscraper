@@ -68,6 +68,10 @@ def main() -> None:
     _capture(session, dest, "dano moral", 1, "decisoes_acordao.json", decisoes="Acórdão")
     _capture(session, dest, "", 1, "decisoes_decisao.json", decisoes="Decisão", **periodo)
     _capture(session, dest, "", 1, "decisoes_sentenca.json", decisoes="Sentença", **periodo)
+    # Um sample por valor do filtro ``jurisdicoes``: "TJ" traz camaras e pleno do
+    # Tribunal de Justica; "TR", Turmas Recursais e Turma de Uniformizacao.
+    _capture(session, dest, "dano moral", 1, "jurisdicoes_tj.json", jurisdicoes="TJ")
+    _capture(session, dest, "dano moral", 1, "jurisdicoes_tr.json", jurisdicoes="TR")
     # ``buscar_em="inteiro_teor"``: o termo vai no campo ``inteiro_teor`` do
     # payload, que monocraticas e sentencas tem (ao contrario da ementa).
     _capture(
