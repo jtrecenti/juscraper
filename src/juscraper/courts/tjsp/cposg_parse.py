@@ -23,7 +23,7 @@ _FIELD_MAPPING = (
     ('relator', 'relator'),
     ('valor da ação', 'valor_da_acao'),
     ('origem', 'origem'),
-    ('volumes / apensos', 'volume_apenso'),
+    ('volume / apenso', 'volume_apenso'),
 )
 
 _OUTPUT_COLUMNS = (
@@ -265,7 +265,13 @@ def _extract_parties(soup: BeautifulSoup) -> list[dict]:
 
 
 def _extract_history(soup: BeautifulSoup) -> list[list[str]]:
-    """Extract class history rows."""
+    """Lê as linhas do histórico de classes (``#tdHistoricoDeClasses``).
+
+    A página atual do 2º grau não mostra o histórico, nem quando a classe foi
+    corrigida (em 26/11/2026, o 1089223-45.2024.8.26.0053 trazia a
+    movimentação "Realizado Correção de Classe" e nenhum bloco de histórico).
+    Nela, a coluna sai ``[]``; o seletor fica para o formato antigo da página.
+    """
     hist_table = soup.find(id='tdHistoricoDeClasses')
     if not hist_table:
         return []

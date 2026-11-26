@@ -137,7 +137,8 @@ class TestCPOSGUnit:
         """Caracteriza cada coleção de uma página real com movimentações, partes, julgamento e 1ª instância.
 
         Sample real do 0022175-24.2003.8.26.0344, com os nomes das partes e dos
-        advogados trocados por fictícios.
+        advogados trocados por fictícios. Processo criminal, a página não traz
+        "Valor da ação"; o rótulo "Volume / Apenso" vem no singular.
         """
         result = cposg_parse_single_html(_SAMPLES / 'show_com_incidentes.html')
 
@@ -164,7 +165,8 @@ class TestCPOSGUnit:
             'primeira_inst',
             'motivo_falha',
         ]
-        assert {campo: row[campo] for campo in list(row)[:11]} == {
+        campos_simples = list(row)[:list(row).index('movimentacoes')]
+        assert {campo: row[campo] for campo in campos_simples} == {
             'id_original': '0022175-24.2003.8.26.0344',
             'processo': '0022175-24.2003.8.26.0344',
             'status': 'Encerrado',
@@ -176,6 +178,7 @@ class TestCPOSGUnit:
             'relator': 'MACHADO DE ANDRADE',
             'valor_da_acao': None,
             'origem': 'Comarca de Marília / Foro de Marília / 1ª Vara Criminal',
+            'volume_apenso': '6 / 1',
         }
         movimentacoes = row['movimentacoes']
         assert len(movimentacoes) == 85
@@ -231,7 +234,8 @@ class TestCPOSGUnit:
     def test_historico_de_classes(self, tmp_path):
         """``#tdHistoricoDeClasses`` vira uma lista por linha, com o texto de cada célula.
 
-        Nenhuma página capturada traz a tabela; o HTML mínimo segue o seletor do parser.
+        Nenhuma página capturada traz a tabela (ver ``_extract_history``); o HTML
+        mínimo segue o seletor do parser.
         """
         sample = tmp_path / 'historico.html'
         sample.write_text(
@@ -301,7 +305,8 @@ class TestCPOSGUnit:
         assert row['classe'] == 'Apelação Cível'
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
         assert row['processo'] == '1000149-71.2024.8.26.0346'
-        assert row['volume_apenso'] is None
+        assert row['valor_da_acao'] == '72.896,87'
+        assert row['volume_apenso'] == '1 / 0'
         assert row['movimentacoes'] == []
         assert len(row['partes']) == 13
         assert row['partes'][:2] == [
