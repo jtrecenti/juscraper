@@ -10,7 +10,7 @@ import time
 
 from bs4 import BeautifulSoup
 
-from ._util import build_session, capture_cjsg_samples, dump, make_tjsp_cjpg_params, samples_dir_for
+from ._util import build_session, capture_cjsg_samples, dump, fetch_cjpg_page1, make_tjsp_cjpg_params, samples_dir_for
 
 ESAJ_BASE = "https://esaj.tjms.jus.br/"
 
@@ -27,9 +27,7 @@ def capture_cjpg() -> None:
     dest = samples_dir_for("tjms", "cjpg")
 
     session = build_session()
-    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
-    r1 = session.get(f"{ESAJ_BASE}cjpg/pesquisar.do", params=make_tjsp_cjpg_params("dano moral"), timeout=60)
-    r1.raise_for_status()
+    r1 = fetch_cjpg_page1(session, ESAJ_BASE, "dano moral")
     dump(dest / "results_normal_page_01.html", r1.content)
     time.sleep(1.5)
     r2 = session.get(f"{ESAJ_BASE}cjpg/trocarDePagina.do", params={"pagina": "2", "conversationId": ""}, timeout=60)
@@ -65,14 +63,6 @@ def capture_cjpg() -> None:
     dump(dest / "redirecionamentos.json", json.dumps({f"sentenca_{cd_documento}": local}, indent=1).encode())
 
 
-def _cjpg_primeira_pagina(pesquisa: str) -> bytes:
-    session = build_session()
-    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
-    resposta = session.get(f"{ESAJ_BASE}cjpg/pesquisar.do", params=make_tjsp_cjpg_params(pesquisa), timeout=60)
-    resposta.raise_for_status()
-    return resposta.content
-
-
 def capture_cjpg_sentenca_sem_bens() -> None:
     """Grava ``cjpg/sentenca_nao_foram_encontrados.html``: sentenças que citam "não foram encontrados".
 
@@ -80,7 +70,7 @@ def capture_cjpg_sentenca_sem_bens() -> None:
     trouxe "Resultados 1 a 10 de 2303", e a contagem dava 0 porque lia o
     texto das sentenças.
     """
-    conteudo = _cjpg_primeira_pagina('"não foram encontrados bens"')
+    conteudo = fetch_cjpg_page1(build_session(), ESAJ_BASE, '"não foram encontrados bens"').content
     if "não foram encontrados" not in BeautifulSoup(conteudo, "html.parser").get_text():
         # Sem a frase, o sample deixaria de exercitar o caso.
         raise RuntimeError("cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; troque a busca")
@@ -93,7 +83,7 @@ def capture_cjpg_single_page() -> None:
     Em 26/11/2026, "machine learning" trouxe 2 sentenças ("Resultados 1 a 2
     de 2"). Confere pelas linhas da página, e não por ``cjpg_n_results``.
     """
-    conteudo = _cjpg_primeira_pagina("machine learning")
+    conteudo = fetch_cjpg_page1(build_session(), ESAJ_BASE, "machine learning").content
     linhas = BeautifulSoup(conteudo, "html.parser").select("#divDadosResultado tr.fundocinza1")
     if not 0 < len(linhas) < 10:
         # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.

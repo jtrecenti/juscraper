@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from pathlib import Path
 
 import pandas as pd
@@ -12,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.exceptions import ColetaParcialError
 from ...core.parse_utils import normalizar_texto
-from .parse import _extract_pagination_count, _find_pagination_element, _has_zero_results, _raise_page_error
+from .parse import _contar_pelo_texto, _raise_page_error
 
 logger = logging.getLogger("juscraper.cjpg_parse")
 
@@ -29,22 +28,7 @@ _CHAVES_CANONICAS = {
 }
 
 
-# Célula acima e abaixo das linhas: "Resultados 1 a 10 de 3565472".
-_RESUMO_RE = re.compile(r"Resultados?\s+\d+\s+a\s+\d+\s+de\s+(\d+)", re.IGNORECASE)
-
-
-def _total_do_resumo(soup: BeautifulSoup) -> int | None:
-    # A célula tem de ser só o resumo: a de layout, que envolve a página
-    # inteira, também contém "Resultados ..." e termina nos links de
-    # paginação, de onde um ``\d+$`` tiraria o "1" de uma página só.
-    for celula in soup.find_all("td"):
-        resumo = _RESUMO_RE.fullmatch(celula.get_text().strip())
-        if resumo is not None:
-            return int(resumo.group(1))
-    return None
-
-
-def _count_cjpg_result_rows_or_raise(n_rows: int) -> int:
+def _count_cjpg_result_rows_or_raise(_soup: BeautifulSoup, n_rows: int) -> int:
     if 0 < n_rows < _CJPG_PAGE_SIZE:
         return n_rows
     if n_rows >= _CJPG_PAGE_SIZE:
@@ -60,59 +44,34 @@ def _count_cjpg_result_rows_or_raise(n_rows: int) -> int:
 
 
 def cjpg_n_results(page_source: str | bytes) -> int:
-    """Extracts the total number of results from a CJPG first-page HTML.
+    """Total de resultados de uma busca do cjpg, lido da primeira página.
 
-    Sibling of :func:`cjpg_n_pags`, which is now a thin wrapper that divides
-    by the 10-hits-per-page constant. Used by the ``count_only=True``
-    short-circuit in :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (issue #92).
+    Usado pelo ``count_only=True`` de
+    :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (#92) e, por
+    :func:`cjpg_n_pags`, pelo download. Lê o texto da página como o
+    :func:`~juscraper.courts._esaj.parse.cjsg_n_results` (a página do cjpg
+    não traz o input oculto com o total): o resumo "Resultados X a Y de N",
+    os marcadores de busca vazia fora das sentenças e a cascata de seletores
+    e regex.
 
-    Lê o total da célula cujo texto é só "Resultados X a Y de N". Sem ela,
-    cai na cascata de seletores e regex do ``cjsg``
-    (:func:`juscraper.courts._esaj.parse.cjsg_n_results`), que tolera
-    mudanças de layout. A página do cjpg não traz o input oculto com o total
-    que o ``cjsg`` lê primeiro. Os marcadores de busca vazia são procurados
-    fora das linhas de resultado, porque as sentenças os citam.
-
-    Fallback for "results table present but pagination marker missing":
-    counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` when the page
-    has fewer than 10 rows. A full page without pagination is ambiguous and
-    raises instead of undercounting a potentially truncated response.
+    Sem marcador nenhum, conta as linhas ``tr.fundocinza1`` de
+    ``divDadosResultado`` quando são menos de 10. Página cheia sem
+    paginação é ambígua (pode estar truncada) e levanta erro.
 
     Returns:
-        Number of results (0 when the search returned no hits).
+        Número de resultados (0 quando a busca não trouxe nada).
 
     Raises:
-        ValueError: When the page reports an error, contains a full results
-            page without pagination, or has no known result marker.
+        ValueError: Página com erro, página cheia sem paginação ou sem
+            nenhum marcador de resultado conhecido.
     """
     soup = BeautifulSoup(page_source, "html.parser")
-
     _raise_page_error(soup)
-    total = _total_do_resumo(soup)
-    if total is not None:
-        return total
-
-    # As sentenças ficam nas linhas de resultado e citam "não foram
-    # encontrados" ("bens penhoráveis"); os marcadores de contagem ficam
-    # fora delas, como no ``cjsg``.
-    n_linhas = len(soup.select("#divDadosResultado tr.fundocinza1"))
-    for linha in soup.find_all("tr", class_="fundocinza1"):
-        linha.extract()
-    if _has_zero_results(soup):
-        return 0
-
-    page_element = _find_pagination_element(soup)
-    if page_element is None:
-        return _count_cjpg_result_rows_or_raise(n_linhas)
-
-    pagination_text = page_element.get_text().strip()
-    count = _extract_pagination_count(pagination_text)
-    if count is None:
-        raise ValueError(
-            "Não foi possível extrair o número de resultados "
-            f"da string: {pagination_text}"
-        )
-    return count
+    return _contar_pelo_texto(
+        soup,
+        seletor_linhas="#divDadosResultado tr.fundocinza1",
+        contar_linhas=_count_cjpg_result_rows_or_raise,
+    )
 
 
 def cjpg_n_pags(page_source: str | bytes) -> int:

@@ -41,8 +41,8 @@ from ._util import (
     capture_acordao_samples,
     capture_cjsg_samples,
     dump,
+    fetch_cjpg_page1,
     fetch_cjsg_pages,
-    make_tjsp_cjpg_params,
     make_tjsp_cjsg_body,
     samples_dir_for,
 )
@@ -111,18 +111,6 @@ def capture_cjsg_sem_ementa() -> None:
 
 # ---------- cjpg ---------------------------------------------------------
 
-def _fetch_cjpg_page1(session: requests.Session, pesquisa: str) -> requests.Response:
-    # Warm the session on the cjpg home page so the server sets the JSESSIONID
-    # and any CSRF cookies; then submit the query. The scraper itself doesn't
-    # do this, but live browsers do — the eSAJ cjpg backend increasingly
-    # refuses anonymous queries without a prior cookie-setting hit.
-    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
-    params = make_tjsp_cjpg_params(pesquisa)
-    r = session.get(f"{ESAJ_BASE}cjpg/pesquisar.do", params=params, timeout=60)
-    r.raise_for_status()
-    return r
-
-
 def _fetch_cjpg_page_n(session: requests.Session, page: int) -> requests.Response:
     url = f"{ESAJ_BASE}cjpg/trocarDePagina.do"
     params: dict[str, str] = {"pagina": str(page), "conversationId": ""}
@@ -139,7 +127,7 @@ def capture_cjpg_single_page() -> None:
     nenhuma. Confere pelas linhas da página, e não por ``cjpg_n_results``.
     """
     session = build_session(headers=TJSP_CHROME_HEADERS)
-    resposta = _fetch_cjpg_page1(session, "jurimétrica")
+    resposta = fetch_cjpg_page1(session, ESAJ_BASE, "jurimétrica")
     linhas = BeautifulSoup(resposta.content, "html.parser").select("#divDadosResultado tr.fundocinza1")
     if not 0 < len(linhas) < 10:
         # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.
@@ -157,7 +145,7 @@ def capture_cjpg_sentenca_sem_bens() -> None:
     texto das sentenças.
     """
     session = build_session(headers=TJSP_CHROME_HEADERS)
-    resposta = _fetch_cjpg_page1(session, '"não foram encontrados bens"')
+    resposta = fetch_cjpg_page1(session, ESAJ_BASE, '"não foram encontrados bens"')
     if "não foram encontrados" not in resposta.text:
         # Sem a frase, o sample deixaria de exercitar o caso.
         print("[tjsp] cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; sample mantido")
@@ -180,7 +168,7 @@ def capture_cjpg() -> None:
     # between page 1 and page 2, because the paginator is stateful.
     try:
         session = build_session(headers=TJSP_CHROME_HEADERS)
-        r1 = _fetch_cjpg_page1(session, "dano moral")
+        r1 = fetch_cjpg_page1(session, ESAJ_BASE, "dano moral")
         dump(dest / "results_normal_page_01.html", r1.content)
         time.sleep(1.5)
         r2 = _fetch_cjpg_page_n(session, 2)
@@ -201,7 +189,7 @@ def capture_cjpg() -> None:
 
     try:
         session = build_session(headers=TJSP_CHROME_HEADERS)
-        r_none = _fetch_cjpg_page1(session, "juscraper_probe_zero_hits_xyzqwe")
+        r_none = fetch_cjpg_page1(session, ESAJ_BASE, "juscraper_probe_zero_hits_xyzqwe")
         dump(dest / "no_results.html", r_none.content)
         print("[tjsp] cjpg no_results → saved")
     except Exception as exc:  # pylint: disable=broad-except

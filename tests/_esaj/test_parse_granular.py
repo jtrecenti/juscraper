@@ -332,7 +332,7 @@ class TestCJSGNResultsInputDeclarado:
 
     @pytest.mark.parametrize("valor", ["", "n/d"])
     def test_input_vazio_ou_nao_numerico_cai_na_cascata(self, mocker, valor):
-        espiao = mocker.spy(esaj_parse, "_find_pagination_element")
+        espiao = mocker.spy(esaj_parse, "_contar_pelo_texto")
 
         assert cjsg_n_results(_primeira_pagina_com_total(valor)) == 2571077
         assert espiao.call_count == 1
