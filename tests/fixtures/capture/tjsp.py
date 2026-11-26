@@ -84,12 +84,11 @@ def capture_cjsg() -> None:
 
 
 def capture_cjsg_sem_ementa() -> None:
-    """Grava ``cjsg/sem_ementa.html``: 1a página com acórdãos sem ementa.
+    """Grava ``cjsg/sem_ementa.html``: 1a página com acórdãos com e sem ementa.
 
-    O acórdão sem ementa não tem a linha ``Ementa:`` na tabela de resultados;
-    o ``N/A`` do eSAJ só aparece no texto oculto de "ementa sem formatação".
-    Em 26/11/2026, "roubo" julgado de 01/03/2021 a 03/03/2021 trouxe 9 de 20
-    linhas assim na 1a página.
+    O acórdão sem ementa vem sem a linha ``Ementa:``; o ``N/A`` do eSAJ fica
+    só no texto oculto de "ementa sem formatação". Em 26/11/2026, esta busca
+    trouxe 9 de 20 linhas assim.
     """
     _, resps = fetch_cjsg_pages(
         build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "roubo",
@@ -97,19 +96,16 @@ def capture_cjsg_sem_ementa() -> None:
             pesquisa, data_inicio="01/03/2021", data_fim="03/03/2021", **kw
         ),
     )
-    soup = BeautifulSoup(resps[0].text, "html.parser")
-    linhas = soup.find_all("tr", class_="fundocinza1")
+    linhas = BeautifulSoup(resps[0].text, "html.parser").find_all("tr", class_="fundocinza1")
     com_ementa = sum(
-        any("Ementa:" in strong.get_text() for strong in linha.select("tr.ementaClass2 strong"))
-        for linha in linhas
+        bool(linha.find("strong", string=lambda texto: "Ementa:" in (texto or ""))) for linha in linhas
     )
     if not 0 < com_ementa < len(linhas):
         # Sem as duas formas na página, o sample deixaria de exercitar o caso.
         print(f"[tjsp] cjsg sem_ementa: {com_ementa} de {len(linhas)} linhas com ementa; sample mantido")
         return
     dump(samples_dir_for("tjsp", "cjsg") / "sem_ementa.html", resps[0].content)
-    sem = len(linhas) - com_ementa
-    print(f"[tjsp] cjsg sem_ementa ('roubo', julgamento 01-03/03/2021, {sem} sem ementa) → saved")
+    print(f"[tjsp] cjsg sem_ementa: {len(linhas) - com_ementa} de {len(linhas)} linhas sem ementa → saved")
 
 
 # ---------- cjpg ---------------------------------------------------------

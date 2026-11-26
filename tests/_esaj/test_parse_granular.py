@@ -320,15 +320,16 @@ class TestCJSGParseSinglePage:
             ("tjsp", "cjsg/monocratica_single_page.html", 1),
             ("tjac", "cjsg/monocratica_single_page.html", 5),
             ("tjal", "cjsg/monocratica_single_page.html", 2),
+            ("tjam", "cjsg/monocratica_single_page.html", 1),
             ("tjce", "cjsg/monocratica_single_page.html", 8),
             ("tjms", "cjsg/monocratica_single_page.html", 6),
         ],
     )
     def test_decisao_sem_ementa_sai_ausente(self, sigla, arquivo, sem_ementa):
-        """Sem a linha ``Ementa:``, a ementa sai ausente, e não ``""`` nem ``"N/A"`` (#713).
+        """Decisão sem a linha ``Ementa:`` sai com ementa ausente, não ``""`` (#713).
 
-        O eSAJ só escreve ``N/A`` no texto oculto de "ementa sem formatação";
-        a tabela de resultados omite a linha da ementa.
+        O ``N/A`` do eSAJ aparece só no texto oculto de "ementa sem formatação"
+        (no TJAM, ``Ementa: N/A``).
         """
         path = Path(__file__).parent.parent / sigla / "samples" / arquivo
         soup = BeautifulSoup(path.read_bytes().decode("latin-1"), "html.parser")
@@ -338,17 +339,13 @@ class TestCJSGParseSinglePage:
 
         assert len(df) == len(linhas)
         for ementa, linha in zip(df["ementa"], linhas, strict=True):
-            tem_ementa = any(
-                "Ementa:" in strong.get_text() for strong in linha.select("tr.ementaClass2 strong")
-            )
-            sem_formatacao = linha.select_one(".mensagemSemFormatacao").get_text(" ", strip=True)
-            if tem_ementa:
+            if linha.find("strong", string=lambda texto: "Ementa:" in (texto or "")):
                 assert isinstance(ementa, str)
                 assert ementa
-                assert ementa != "N/A"
             else:
                 assert pd.isna(ementa)
-                assert sem_formatacao.startswith("N/A")
+                sem_formatacao = linha.select_one(".mensagemSemFormatacao").get_text(" ", strip=True)
+                assert sem_formatacao.removeprefix("Ementa:").strip().startswith("N/A")
         assert df["ementa"].isna().sum() == sem_ementa
 
     def test_parse_results_page(self):
