@@ -6,7 +6,8 @@ Fluxo real do ``cpopg`` (de ``aggregators/jusbr/client.py``):
    a. ``clean_cnj`` reduz a 20 digitos. Se vazio, fallback ``CNJ Invalido``
       (sem HTTP).
    b. ``GET /api/v2/processos/?numeroProcesso=<cnj_limpo>`` -> lista.
-      Se ``content`` vazio, fallback ``Nao encontrado na lista inicial``.
+      Se ``content`` vazio ou HTTP 404, fallback ``Nao encontrado na lista
+      inicial`` (o 404 e o que a API devolve; ver ``test_failure_contract.py``).
    c. Para cada item na lista, ``GET /api/v2/processos/<numeroProcesso>``
       -> detalhes; row e ``parse_process_details_response``.
 2. ``processo`` (canonico do projeto) aparece em **toda** linha — happy
@@ -147,34 +148,6 @@ def test_cpopg_lista_de_cnjs(mocker):
     assert len(df) == 2
     assert {"processo", "numeroProcesso", "detalhes"} <= set(df.columns)
     assert sorted(df["processo"].tolist()) == sorted([NEUTRAL_CNJ_1_DIGITS, NEUTRAL_CNJ_2_DIGITS])
-
-
-@responses.activate(registry=OrderedRegistry)
-def test_cpopg_no_results(mocker):
-    """Lista vazia (``content: []``) -> fallback com ``processo_pesquisado``."""
-    mocker.patch("time.sleep")
-    scraper = _authenticated_scraper()
-
-    responses.add(
-        responses.GET,
-        LIST_URL,
-        body=load_sample("jusbr", "cpopg/no_results.json"),
-        status=200,
-        content_type="application/json",
-        match=[query_param_matcher({"numeroProcesso": NEUTRAL_CNJ_1_DIGITS})],
-    )
-
-    df = scraper.cpopg(NEUTRAL_CNJ_1)
-
-    assert isinstance(df, pd.DataFrame)
-    assert len(df) == 1
-    # Followup 2 da #141: ``processo`` (canonico) presente em fallbacks.
-    assert {"processo", "processo_pesquisado", "status_consulta"} <= set(df.columns)
-    # Fallback dispara a reordenacao -> primeira coluna e processo_pesquisado.
-    assert df.columns[0] == "processo_pesquisado"
-    assert df.iloc[0]["status_consulta"] == "Nao encontrado na lista inicial"
-    assert df.iloc[0]["processo"] == NEUTRAL_CNJ_1_DIGITS
-    assert df.iloc[0]["processo_pesquisado"] == NEUTRAL_CNJ_1_DIGITS
 
 
 @responses.activate(registry=OrderedRegistry)
