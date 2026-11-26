@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/01/2022 16:30:03",
+   "idDocumento": "EcXsoDNQw0oGa_7nnJCjh5zE3c85wtegYPKpT4BglcJuUbyEPGjU3K07QmERGQu7gAqJ"
+  },
+  {
+   "movimento": "Juntada de manifestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/01/2022 15:29:05",
+   "idDocumento": "Xjnnd-d6nCuStxCEV8CAq892oWx3GnVeKuKueIDreYcE4FtdM0wJVMFXUadDIP-lDn37"
+  },
+  {
+   "movimento": "Juntada de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/01/2022 09:06:23",
+   "idDocumento": "tfomh8CtG9U0U5V-8oOKCXolTO9alUomCFQl34RF9BXZbTLdqxM6N1J2lOarh3cdLJON"
+  },
+  {
+   "movimento": "Juntada de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "17/01/2022 07:13:43",
+   "idDocumento": "PmaxF3ov5lMrcmyj2e3Cjnh38RMnzFJaZDb3vmKcYkjheOZzjV3fNcQVxJMEw7klaott"
+  },
+  {
+   "movimento": "Mandado devolvido entregue ao destinatário",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "14/01/2022 18:02:12",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de diligência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "14/01/2022 18:02:11",
+   "idDocumento": "wJB2kkDCg6ZbXzkj2uowcPbL6zHOMu0tU2hhVE-hqSsjwkURxm2EdBPH_g6gB5No1mAi"
+  },
+  {
+   "movimento": "Recebido o Mandado para Cumprimento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/01/2022 15:33:01",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Mandado.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2022 14:13:31",
+   "idDocumento": "5f4mqR1l2OlvV94Mc5X5-LHjndl8iPEvtTxYCehXplfMTOgpi0yFu681ik3SDq3F8SOX"
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2022 14:07:54",
+   "idDocumento": "oyRj4zBbF1_GDbs3LdiJAP03z5BW2uqVwVRnJ0t-Ca7uOMNKQyxBLcXRVXF5ntdaNelw"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/01/2022 14:07:46 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2022 14:07:53",
+   "idDocumento": "u4WPSzyJk5vx6cn_NYucHP7rEOFMZ0vAZlye2MdCTa0ayl8k6In5CrRwtEoRO3r3I2Q2"
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "13/01/2022 14:07:53",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/01/2022 14:07:46 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2022 14:07:53",
+   "idDocumento": "GWKDgMNGHOwKeurktxfBNYrVUXJyVOAJ-P0tDwj7_JizXGdwvKzysxzgjBq4xEbkUNl9"
+  },
+  {
+   "movimento": "Ato ordinatório praticado",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "13/01/2022 14:07:46 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "13/01/2022 14:07:47",
+   "idDocumento": "MfXQH5a53ULxhkAbhdZIPmC3eQzIlEcfGIYU7fIX0IJogtLHxJNFdpDNkfDuSgMPaOWt"
+  },
+  {
+   "movimento": "Mandado devolvido entregue ao destinatário",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "11/01/2022 17:56:08",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de diligência",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "11/01/2022 17:56:06",
+   "idDocumento": "XRwrOsHHaMpp15AVAH5nRL30g3HM7H30K7o_JTB63NIPjIiLnXjlVnIapLFWFkK270kT"
+  }
+ ],
+ "pageInfo": {
+  "current": 6,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

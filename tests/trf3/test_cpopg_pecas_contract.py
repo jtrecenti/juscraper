@@ -18,7 +18,8 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
-from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, baixar_documento, documento_download_url
+from juscraper.courts._pje_api.download import baixar_documento, documento_download_url
+from juscraper.courts.trf3.download import APLICACAO_1G, BASE_URL_1G, BASE_URL_2G
 from tests._helpers import load_sample_bytes
 from tests.trf3._api import (
     carregar,
@@ -188,7 +189,7 @@ def test_download_pecas_pula_id_de_documento_fora_do_alfabeto(tmp_path, caplog, 
     id acima do teto de comprimento seria baixado para falhar na gravação.
     A peça válida do mesmo processo continua sendo baixada.
     """
-    from juscraper.courts.trf3 import client
+    from juscraper.courts._pje_api import base as client
 
     valido = _doc_real()
     registrar_processo(
@@ -231,7 +232,7 @@ def test_download_pecas_pula_documento_sem_id(tmp_path, caplog) -> None:
 @responses.activate
 def test_download_pecas_confere_que_o_arquivo_fica_no_diretorio_do_processo(tmp_path, caplog, mocker) -> None:
     """Segunda barreira: mesmo que um id escape da validação, nada é gravado fora de ``<diretorio>/<cnj>``."""
-    from juscraper.courts.trf3 import client
+    from juscraper.courts._pje_api import base as client
 
     registrar_processo(
         BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": _documentos_com({**_doc_real(), "id": "../fora"})}
@@ -251,17 +252,31 @@ def test_download_pecas_confere_que_o_arquivo_fica_no_diretorio_do_processo(tmp_
 
 
 @responses.activate
-def test_download_pecas_erro_de_gravacao_sobe(tmp_path, mocker) -> None:
-    """Erro ao gravar o PDF não é falha de uma peça: sobe, porque disco cheio ou sem permissão vale para o lote."""
+def test_download_pecas_erro_de_gravacao_encerra_as_pecas_do_processo(tmp_path, mocker) -> None:
+    """Disco cheio: as peças do processo param, a linha mantém o detalhe e sai ``resposta_inesperada``.
+
+    Como na família ``_trf``: o erro tende a se repetir, então a peça e as
+    seguintes entram em ``pecas_falhas`` sem novo pedido, e nada fica truncado.
+    """
     valido = _doc_real()
-    registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": _documentos_com(valido)})
+    outro = {**valido, "id": valido["id"][:-1] + "Z"}
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado", substituir={"documentos": _documentos_com(valido, outro)})
     _registrar_pdf(BASE_URL_1G, "cpopg", "paginado", valido["id"], body=_pdf(), content_type="application/pdf")
     mocker.patch.object(Path, "write_bytes", side_effect=OSError(errno.ENOSPC, "No space left on device"))
 
-    with pytest.raises(OSError, match="No space left on device") as exc:
-        jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
+    with pytest.warns(UserWarning, match="resposta_inesperada"):
+        df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))
 
-    assert exc.value.errno == errno.ENOSPC
+    row = df.iloc[0]
+    assert row["processo"] == "5003536-21.2025.4.03.6342"
+    assert row["motivo_falha"] == "resposta_inesperada"
+    assert row["pecas"] == []
+    assert row["pecas_falhas"] == [
+        {"id": valido["id"], "motivo_falha": "resposta_inesperada"},
+        {"id": outro["id"], "motivo_falha": "resposta_inesperada"},
+    ]
+    assert _arquivos(tmp_path) == []
+    assert not any(outro["id"] in c.request.url for c in responses.calls)
 
 
 @responses.activate
@@ -314,9 +329,9 @@ def test_baixar_documento_recusa_token_invalido_sem_requisitar() -> None:
 
     valido = _doc_real()["id"]
     with pytest.raises(ValueError, match="id_documento inválido"):
-        baixar_documento(request_fn, BASE_URL_1G, "../x", valido)
+        baixar_documento(request_fn, APLICACAO_1G, "../x", valido)
     with pytest.raises(ValueError, match="id_processo inválido"):
-        baixar_documento(request_fn, BASE_URL_1G, valido, "/abs")
+        baixar_documento(request_fn, APLICACAO_1G, valido, "/abs")
     assert chamadas == []
 
 
@@ -374,7 +389,7 @@ def test_download_pecas_bloqueio_akamai_encerra_o_lote(tmp_path) -> None:
 def test_download_pecas_dependencia_ausente_interrompe(tmp_path, mocker) -> None:
     """``ImportError`` no download de uma peça sobe, como no download do processo, em vez de pular cada peça."""
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
-    mocker.patch("juscraper.courts.trf3.client.baixar_documento", side_effect=ImportError("sem módulo"))
+    mocker.patch("juscraper.courts._pje_api.base.baixar_documento", side_effect=ImportError("sem módulo"))
 
     with pytest.raises(ImportError, match="sem módulo"):
         jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO, download_pecas=True, diretorio=str(tmp_path))

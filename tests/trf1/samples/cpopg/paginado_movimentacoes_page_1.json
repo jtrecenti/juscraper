@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "18/12/2023 12:07:02",
+   "idDocumento": "81mebcCk_BVSoxOg6u3bZkJsrSASaIgDHod_DapI0ENp97Wj6R2k4rzK9-zrB9G82myFIw"
+  },
+  {
+   "movimento": "Conclusos para julgamento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "10/07/2023 16:55:35",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "05/07/2023 15:25:23",
+   "idDocumento": "g1omKhPiReSI3799op61wDWqgl0-uyxGh3zsET3uTSbgpeAsx9yutiGtBah86jO6ndHXZw"
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "24/06/2023 17:49:42",
+   "idDocumento": "6UUBFdJQhlb1v0VYFGDahnd2y3Pk3FIt6CGiV8VsLPKM04ziVjRFhaQBdsWI7ALKZL0P7Q"
+  },
+  {
+   "movimento": "Juntada de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "22/06/2023 09:29:45",
+   "idDocumento": "Vl7QwyiNpsrdRwarxwMnvIfaPEjiLS7O42MrDTgy017mb-9-suFMXRQottyMhyHyCPBAKA"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:29:03",
+   "idDocumento": "Pu7z8mC8CGJhgV4i4sDFbibLfPY8lRe-uETzisktlYHbzUlQ-C3CshoNQLyT82JdSW4j9g"
+  },
+  {
+   "movimento": "Expedição de Outros documentos.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:29:03",
+   "idDocumento": "3PbeDgVT443mr5VMivKYeJ8PoIvIkOGycWxG3Bg2e_6aM58k_LASpVj8jfMXzTiqqTnjuA"
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:28:41",
+   "idDocumento": "nqNAp2qX0jTmz3vK62VU30yRgCtMeLbdr0oAzu7HVHw9OLgYPitxGDo8YMX38rwTtgQH8w"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/06/2023 16:28:39 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:28:40",
+   "idDocumento": "s8X1ljSg9zWTzsX25rlrFbNae0PJzO_2RzlwQVfrngBeA2ygFpkok23JCSUHNijefiFbBg"
+  },
+  {
+   "movimento": "Ato ordinatório praticado",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "12/06/2023 16:28:39 - Ato ordinatório (Ato ordinatório)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:28:40",
+   "idDocumento": "SRX9qfXTcB7A0jL4_DRQ1XUofSiJot7P_k4J1T_YBFzgW473eyZUEW2Ejb5k8UKN-yFg3g"
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "12/06/2023 16:12:05",
+   "idDocumento": "7apjwg1Z95bo0rCEAd74uVN_mw7zh29tOSl7uKki5Xf7y6iTLf9BU0I-s0yAOXFvjuxdWg"
+  },
+  {
+   "movimento": "Juntada de laudo pericial",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "02/06/2023 15:34:23",
+   "idDocumento": "O5KHIZBt8mqjmihh71qsm-XP0px5TBupFDhOwyNZs1IB9SaBZjUJU0jP3GAZomTazfjROA"
+  },
+  {
+   "movimento": "Juntada de contestação",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "19/04/2023 16:54:41",
+   "idDocumento": "kJNK0WdaE5TzbuQsA6RmipZQWN9JRFKG7sjsKvaQAhMG0oDj1cz31f0m-A3lZk5_VoLkKw"
+  },
+  {
+   "movimento": "Juntada de petição intercorrente",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "29/03/2023 17:14:07",
+   "idDocumento": "Gx6aeT48SMNHBlVdeLWn4gWfl-0UECEE0P3-GsvnNpJOMMypQQZvMPFsvYFYGzy6Su5bQA"
+  },
+  {
+   "movimento": "Decorrido prazo de ESTADO DA BAHIA em 24/03/2023 23:59.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "25/03/2023 01:14:49",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 2,
+  "last": 4,
+  "size": 15,
+  "count": 55
+ }
+}

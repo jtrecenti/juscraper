@@ -1,0 +1,35 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "idProcesso": "F4Da2NTGdHxyCaowFP8VTXH3FJmNnS0fAIR73gA6pL1TYjGpdAfn8fEmzOTCkypK9Q",
+   "numeroProcesso": "1008828-35.2021.4.01.3502",
+   "classe": "PROCEDIMENTO COMUM CÍVEL",
+   "classeSigla": "ProceComCiv",
+   "assunto": "Sem registro na ANVISA",
+   "ultimaMovimentacao": "Arquivado Definitivamente (14/03/2026 13:56:28)",
+   "partes": {
+    "poloAtivo": {
+     "nomeParte": "ALTAIR DA SILVA JUNQUEIRA registrado(a) civilmente como ALTAIR DA SILVA JUNQUEIRA",
+     "qntOutros": 0,
+     "sigiloso": false,
+     "suspenso": false
+    },
+    "poloPassivo": {
+     "nomeParte": "ESTADO DE GOIAS",
+     "qntOutros": 2,
+     "sigiloso": false,
+     "suspenso": false
+    }
+   }
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 30,
+  "count": 1
+ }
+}

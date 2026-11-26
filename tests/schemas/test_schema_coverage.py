@@ -83,11 +83,10 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.courts.tjto.schemas",
         "InputCjsgEmentaTJTO",
     ),
-    # PJe consulta pública JSF (TRF1, TRF5): schema compartilhado da
-    # família ``_trf`` (assinatura pública idêntica nos dois).
-    ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
+    # PJe consulta pública JSF (TRF5): schema da família ``_trf``.
     ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
-    # TRF3: consulta pública do PJe pela API JSON, fora da família ``_trf``.
+    # TRF1 e TRF3: consulta pública do PJe pela API JSON (família ``_pje_api``).
+    ("trf1", "cpopg"): ("juscraper.courts.trf1.schemas", "InputCpopgTRF1"),
     ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
     ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "InputCposgTRF3"),
     # Busca de jurisprudência do TRF3 (portal próprio, fora do PJe).

@@ -180,6 +180,8 @@ def test_todo_notebook_e_todo_tribunal_do_repositorio_tem_alvo(tmp_path):
 def test_familias_reais_apontam_seus_tribunais(tmp_path):
     esaj = alvo(RAIZ, ["src/juscraper/courts/_esaj/x.py"], pasta=tmp_path)
     trf = alvo(RAIZ, ["src/juscraper/courts/_trf/x.py"], pasta=tmp_path)
+    pje_api = alvo(RAIZ, ["src/juscraper/courts/_pje_api/x.py"], pasta=tmp_path)
 
     assert {"tjsp", "tjal", "tjce"} <= set(esaj)
-    assert {"trf1", "trf3", "trf5"} <= set(trf)
+    assert {"trf5", "tjpe"} <= set(trf)
+    assert {"trf1", "trf3"} <= set(pje_api)

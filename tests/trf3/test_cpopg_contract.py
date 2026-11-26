@@ -14,7 +14,9 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
-from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
+from juscraper.courts._pje_api.download import busca_url, recurso_url
+from juscraper.courts._pje_api.parse import COLUNAS_DETALHE
+from juscraper.courts.trf3.download import BASE_URL_1G
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
 from tests._helpers import load_sample_bytes
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
@@ -50,8 +52,9 @@ def _row_sem_dados(row: pd.Series) -> bool:
 
 
 def _linha_so_com_id_cnj(df: pd.DataFrame, motivo: str | None) -> None:
-    """Uma linha, sem colunas de dados, com o ``motivo_falha`` esperado."""
-    assert list(df.columns) == ["id_cnj", "motivo_falha"]
+    """Uma linha com as colunas do detalhe vazias (#442) e o ``motivo_falha`` esperado."""
+    assert list(df.columns) == ["id_cnj", *COLUNAS_DETALHE, "motivo_falha"]
+    assert _row_sem_dados(df.iloc[0])
     assert df.iloc[0]["motivo_falha"] == motivo
 
 
@@ -191,7 +194,7 @@ def test_cpopg_lote_segue_apos_erro_de_rede() -> None:
 @responses.activate
 def test_cpopg_lote_segue_apos_erro_de_parse(monkeypatch) -> None:
     """Erro no parser de um item vira linha só com ``id_cnj`` e ``resposta_inesperada``, e o lote segue."""
-    from juscraper.courts.trf3 import client
+    from juscraper.courts._pje_api import base as client
 
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
     registrar_processo(BASE_URL_1G, "cpopg", "normal")
@@ -313,7 +316,7 @@ def test_cpopg_download_avisa_falha_e_parse_nao_afirma_motivo() -> None:
     assert brutos == [None]
 
     df = scraper.cpopg_parse(brutos, [CNJ_PAGINADO])
-    assert list(df.columns) == ["id_cnj"]
+    assert list(df.columns) == ["id_cnj", *COLUNAS_DETALHE]
 
 
 @responses.activate

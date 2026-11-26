@@ -10,7 +10,9 @@ import pytest
 import responses
 
 import juscraper as jus
-from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url
+from juscraper.courts._pje_api.download import busca_url
+from juscraper.courts._pje_api.parse import COLUNAS_DETALHE
+from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G
 from juscraper.courts.trf3.schemas import OutputCposgTRF3
 from tests.trf3._api import carregar, registrar_busca, registrar_processo
 
@@ -67,7 +69,7 @@ def test_cposg_sem_resultado_no_2o_grau() -> None:
     registrar_busca(BASE_URL_2G, "cposg", "sem_resultado", "5003536-21.2025.4.03.6342")
     df = jus.scraper("trf3", sleep_time=0).cposg(CNJ_SO_NO_1G)
 
-    assert list(df.columns) == ["id_cnj", "motivo_falha"]
+    assert list(df.columns) == ["id_cnj", *COLUNAS_DETALHE, "motivo_falha"]
     assert df.iloc[0]["id_cnj"] == CNJ_SO_NO_1G
     assert df.iloc[0]["motivo_falha"] is None
     assert not any(c.request.url.startswith(BASE_URL_1G) for c in responses.calls)

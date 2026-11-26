@@ -1,0 +1,163 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Recebido o Mandado para Cumprimento",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "10/01/2022 20:16:47",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Mandado.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "10/01/2022 10:54:24",
+   "idDocumento": "C30_7H3c-rd7Mv2a3vkYv63F_OFE3wGl7JwryRmksCndKoQmyUQ5_zBHjW-TNIOnsdQ2"
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "10/01/2022 10:28:33",
+   "idDocumento": "3ihJm5DnMAvm7_6BXkyObhLzp3AsJ_4AAawKlKJ2cRt1eqd2xAhK9zw6Suy3y4lfq-gk"
+  },
+  {
+   "movimento": "Processo devolvido à Secretaria",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/01/2022 15:12:42",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/01/2022 15:12:41",
+   "idDocumento": "toQjqToVqTiL-gMeplOebWqox6w0dsbHe3IHBcbEYq8x0Q-CnE6JH_zZxIKAQz303tU9"
+  },
+  {
+   "movimento": "Expedida/certificada a comunicação eletrônica",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "07/01/2022 15:12:39 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/01/2022 15:12:41",
+   "idDocumento": "XjVykzOCx_Lp1iv3VPircfd0k2s3X7nc9zgtQxt7z7onKaHp6H5uGpix6Q60ZKSw5vl0"
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/01/2022 15:12:41",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Expedição de Publicação ao Diário de Justiça Eletrônico Nacional.",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "07/01/2022 15:12:39 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/01/2022 15:12:41",
+   "idDocumento": "dZXmCdO0fLirYLSdZVwaCYVvnSMCEEQIK-EZRI6nKDjGybq9eaTPpgTrmJjvAAxbWbUh"
+  },
+  {
+   "movimento": "Não Concedida a Antecipação de tutela",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": "07/01/2022 15:12:39 - Decisão (Decisão)",
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/01/2022 15:12:39",
+   "idDocumento": "8rCL1VrR6DXJNnmG1Q2GAPkWHFZ_pIoulBzbfDqv0oQw_jmGY8WMyl_oRkP43Y7drQp_"
+  },
+  {
+   "movimento": "Conclusos para decisão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "07/01/2022 09:27:10",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de certidão",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "07/01/2022 09:25:51",
+   "idDocumento": "0rdb1NKVwxkgVHvKzb8fXL2-gGP1-ffUdk9qxQvcdWiocIEVMgWFfb0hAVYrffus3gVB"
+  },
+  {
+   "movimento": "Remetidos os Autos (em diligência) da Distribuição ao 2ª Vara Federal Cível e Criminal da SSJ de Anápolis-GO",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "27/12/2021 13:31:18",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Juntada de Informação de Prevenção",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": false,
+   "dataAtualizacao": "27/12/2021 13:31:17",
+   "idDocumento": "s-PecG9IcxRlJTKD8waJHMEzkMa6AAZtXLPxmIf0bXjZWo2xBFvb4H7Up5tIiewyvFq3"
+  },
+  {
+   "movimento": "Classe Processual alterada de PETIÇÃO CÍVEL (241) para PROCEDIMENTO COMUM CÍVEL (7)",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "27/12/2021 13:14:11",
+   "idDocumento": null
+  },
+  {
+   "movimento": "Recebido pelo Distribuidor",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/12/2021 10:25:24",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 7,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

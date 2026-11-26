@@ -1,0 +1,43 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "id": "onLDAp-vPvXoEskDMXb5STfCxVnZNTf8w4pfsaZKUoVjIQb2q2ZbwmOuYSYpOpnTMEwLHA",
+   "descricao": "01/04/2025 10:11:51 - DESPACHO (DESPACHO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "zv5ZWOWfsFyvkT1GupXy5nIV5KYYZhL70hv43BdYV3I-cgz0gK-kRlrv-SVdKg7dkIyQBQ",
+   "descricao": "26/02/2024 15:54:06 - SENTENÇA TIPO A (SENTENÇA TIPO A)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "WaHQl4XZCwyqdZ0r510-IRQukyI75Sl-CFrPH8xvB03uCDexkSAk8H-PQ1-vCbrBKPN2Eg",
+   "descricao": "12/06/2023 16:28:39 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": false,
+   "binario": false
+  },
+  {
+   "id": "TQhBtZ5_opl64hehov6IVGLuubo01HzXDSPvKQZn-NlAxcK2wkE2gI_dG9cpRVF_dEM_KA",
+   "descricao": "23/03/2023 15:46:19 - ATO ORDINATÓRIO (ATO ORDINATÓRIO)",
+   "mostrarComprovante": true,
+   "binario": false
+  },
+  {
+   "id": "3cRP-lVz-Tytg1xTapu2tls9rbU-uVZgoIRrTd-q7ZKklztnEI89oo-7O6dk7lJm_n4ENQ",
+   "descricao": "24/02/2023 17:57:18 - DECISÃO (DECISÃO)",
+   "mostrarComprovante": true,
+   "binario": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 15,
+  "count": 5
+ }
+}

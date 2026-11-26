@@ -1,0 +1,33 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "UNIÃO FEDERAL - CNPJ: 26.994.558/0001-23 (REU)",
+   "nome": "UNIÃO FEDERAL",
+   "tipo": "REU",
+   "procuradoria": "Procuradoria da União nos Estados e no Distrito Federal",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "ESTADO DA BAHIA - CNPJ: 13.937.032/0001-60 (REU)",
+   "nome": "ESTADO DA BAHIA",
+   "tipo": "REU",
+   "procuradoria": "Procuradoria Geral do Estado da Bahia",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 2
+ }
+}

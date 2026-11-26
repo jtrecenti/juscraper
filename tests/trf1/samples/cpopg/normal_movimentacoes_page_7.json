@@ -1,0 +1,23 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "movimento": "Distribuído por sorteio",
+   "movimentoExcluido": false,
+   "textoMovimentoExcluido": null,
+   "documento": null,
+   "documentoExcluido": false,
+   "documentoPendenteCiencia": true,
+   "dataAtualizacao": "22/12/2021 10:25:23",
+   "idDocumento": null
+  }
+ ],
+ "pageInfo": {
+  "current": 8,
+  "last": 8,
+  "size": 15,
+  "count": 106
+ }
+}

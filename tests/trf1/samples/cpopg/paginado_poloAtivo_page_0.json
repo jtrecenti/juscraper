@@ -1,0 +1,33 @@
+{
+ "status": "ok",
+ "code": "200",
+ "messages": [],
+ "result": [
+  {
+   "participante": "ADILON JOSE DOS SANTOS - CPF: ***.823.425-** (AUTOR)",
+   "nome": "ADILON JOSE DOS SANTOS",
+   "tipo": "AUTOR",
+   "procuradoria": "Defensoria Pública da União nos Estados e no Distrito Federal",
+   "procuradoriaDomicilio": true,
+   "situacao": "Ativo",
+   "principal": true,
+   "segredoJustica": false
+  },
+  {
+   "participante": "DEFENSORIA PUBLICA DA UNIAO - CNPJ: 00.375.114/0001-16 (REPRESENTANTE)",
+   "nome": "DEFENSORIA PUBLICA DA UNIAO",
+   "tipo": "REPRESENTANTE",
+   "procuradoria": null,
+   "procuradoriaDomicilio": false,
+   "situacao": "Ativo",
+   "principal": false,
+   "segredoJustica": false
+  }
+ ],
+ "pageInfo": {
+  "current": 1,
+  "last": 1,
+  "size": 10,
+  "count": 2
+ }
+}

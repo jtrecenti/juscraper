@@ -1,9 +1,9 @@
-"""Parser dos envelopes JSON da consulta pública do PJe do TRF3.
+"""Parser dos envelopes JSON da consulta pública do PJe (API ``/v1``).
 
 Recebe o dicionário bruto montado por
-:func:`juscraper.courts.trf3.download.baixar_processo` e devolve um registro
-plano com as colunas que o ``cpopg`` do TRF3 entregava quando o portal era
-JSF (``processo``, ``classe``, ``assunto``, ``data_distribuicao``,
+:func:`juscraper.courts._pje_api.download.baixar_processo` e devolve um registro
+plano com as colunas que o ``cpopg`` do TRF1 e do TRF3 entregava quando o
+portal era JSF (``processo``, ``classe``, ``assunto``, ``data_distribuicao``,
 ``orgao_julgador``, ``jurisdicao``, ``endereco_orgao``, ``polo_ativo``,
 ``polo_passivo``, ``movimentacoes``, ``documentos``), mais as que a API passou
 a expor (``orgao_julgador_colegiado``, ``outros_interessados``). O mesmo
@@ -91,7 +91,7 @@ def _parse_movimentacoes(paginas: list[dict[str, Any]] | None) -> list[dict[str,
 def _parse_documentos(paginas: list[dict[str, Any]] | None) -> list[dict[str, Any]] | None:
     """Lista ``[{id, data, descricao, binario}]``.
 
-    ``id`` é o token que :func:`juscraper.courts.trf3.download.baixar_documento`
+    ``id`` é o token que :func:`juscraper.courts._pje_api.download.baixar_documento`
     usa para baixar o PDF. A data vem embutida no início da descrição; quando
     o formato não casa, a descrição inteira fica em ``descricao`` e ``data``
     sai ``None``.
@@ -117,11 +117,33 @@ def _parse_documentos(paginas: list[dict[str, Any]] | None) -> list[dict[str, An
     return documentos
 
 
+COLUNAS_DETALHE: tuple[str, ...] = (
+    "processo",
+    "classe",
+    "assunto",
+    "data_distribuicao",
+    "orgao_julgador",
+    "orgao_julgador_colegiado",
+    "jurisdicao",
+    "endereco_orgao",
+    "polo_ativo",
+    "polo_passivo",
+    "outros_interessados",
+    "movimentacoes",
+    "documentos",
+)
+"""Colunas de :func:`parse_processo`, na ordem do registro.
+
+O DataFrame traz todas mesmo quando nenhum CNJ do lote foi lido, em vez de
+sair só com ``id_cnj`` e ``motivo_falha`` (#442).
+"""
+
+
 def parse_processo(bruto: dict[str, Any]) -> dict[str, Any]:
     """Transforma o dicionário bruto de um processo num registro plano.
 
     Recurso sem itens vira lista vazia; recurso que não pôde ser baixado
-    (``None`` no bruto, ver :func:`juscraper.courts.trf3.download.baixar_processo`)
+    (``None`` no bruto, ver :func:`juscraper.courts._pje_api.download.baixar_processo`)
     vira ``None``, para distinguir "não há partes" de "a API falhou".
     """
     dados = (bruto.get("dados") or {}).get("result") or {}

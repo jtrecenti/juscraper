@@ -1,11 +1,12 @@
 """Pydantic schemas shared by the TRF PJe ConsultaPública scrapers.
 
-TRF1/TRF5 (and TJPE's 1º grau) expose the same ``cpopg`` public signature, so
+TRF5 (and TJPE's 1º grau) expose the same ``cpopg`` public signature, so
 a single pair of schemas serves all of them, mirroring how the eSAJ family shares
 ``InputCJSGEsajPuro`` across TJAC/TJAL/TJAM/TJCE/TJMS. The schema-coverage
-tables in ``tests/schemas/`` map ``trf1``, ``trf5`` and ``tjpe`` (``cpopg``) to
-these classes; TRF3 left the family and has its own schemas in
-``juscraper.courts.trf3.schemas``.
+tables in ``tests/schemas/`` map ``trf5`` and ``tjpe`` (``cpopg``) to
+these classes; TRF3 and TRF1 left the family for the JSON API and have their
+own schemas in ``juscraper.courts.trf3.schemas`` and
+``juscraper.courts.trf1.schemas``.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from ...schemas import CnjInputBase, OutputCnjConsultaBase
 
 
 class InputCpopgTRF(CnjInputBase):
-    """Accepted input for ``TRF{1,5}Scraper.cpopg`` and ``TJPEScraper.cpopg``.
+    """Accepted input for ``TRF5Scraper.cpopg`` and ``TJPEScraper.cpopg``.
 
     Inherits ``id_cnj``; aceita também os filtros opcionais de download
     de peças (``download_pecas`` + ``diretorio``). A obrigatoriedade de
@@ -29,7 +30,7 @@ class InputCpopgTRF(CnjInputBase):
 
 
 class OutputCpopgTRF(OutputCnjConsultaBase):
-    """Columns produced by ``TRF{1,5}Scraper.cpopg`` and ``TJPEScraper.cpopg``.
+    """Columns produced by ``TRF5Scraper.cpopg`` and ``TJPEScraper.cpopg``.
 
     Pivot ``id_cnj`` is inherited from :class:`OutputCnjConsultaBase`. The
     rich detail fields populated by :func:`juscraper.courts._trf.parse.parse_detail`

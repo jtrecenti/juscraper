@@ -1,4 +1,4 @@
-"""Shared HTTP layer for the TRF PJe public-process consultation (TRF1/TRF5, TJPE).
+"""Shared HTTP layer for the TRF PJe public-process consultation (TRF5, TJPE).
 
 A single ``cpopg`` lookup is three requests:
 

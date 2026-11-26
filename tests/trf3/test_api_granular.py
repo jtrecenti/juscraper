@@ -6,9 +6,10 @@ from typing import Any
 
 import pytest
 
-from juscraper.courts.trf3 import download
-from juscraper.courts.trf3.download import RECURSOS_PAGINADOS, baixar_recurso_paginado, token_valido
-from juscraper.courts.trf3.parse import parse_processo
+from juscraper.courts._pje_api import download
+from juscraper.courts._pje_api.download import RECURSOS_PAGINADOS, baixar_recurso_paginado, token_valido
+from juscraper.courts._pje_api.parse import parse_processo
+from juscraper.courts.trf3.download import APLICACAO_1G
 from tests.trf3._api import SAMPLES, carregar, id_processo_do_cenario
 
 _COLUNA_DO_RECURSO = {
@@ -71,7 +72,7 @@ def test_paginacao_espera_sleep_time_entre_paginas(mocker) -> None:
     sleep = mocker.patch.object(download.time, "sleep")
     id_processo = id_processo_do_cenario("cpopg", "paginado")
     resultado = baixar_recurso_paginado(
-        request_fn, download.BASE_URL_1G, id_processo, "movimentacoes", sleep_time=0.7
+        request_fn, APLICACAO_1G, id_processo, "movimentacoes", sleep_time=0.7
     )
 
     assert pedidas == [0, 1, 2, 3, 4]
