@@ -39,8 +39,10 @@ def _minify(raw: bytes) -> bytes:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 
 
-def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
-    payload = build_cjsg_payload(pesquisa, page=pagina)
+def _capture(
+    session: requests.Session, dest, pesquisa: str, pagina: int, filename: str, **filtros,
+) -> None:
+    payload = build_cjsg_payload(pesquisa, page=pagina, **filtros)
     response = session.post(BASE_URL, json=payload, timeout=30)
     response.raise_for_status()
     dump(dest / filename, _minify(response.content))
@@ -59,6 +61,17 @@ def main() -> None:
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.json")
     _capture(session, dest, "mandado de seguranca", 1, "single_page.json")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.json")
+    # Um sample por valor do filtro ``decisoes``. So os acordaos tem ementa, e
+    # ``pesquisa`` busca na ementa: monocraticas e sentencas vem sem termo,
+    # recortadas por periodo de julgamento.
+    periodo = {"dt_inicio": "01-11-2026", "dt_fim": "20-11-2026"}
+    _capture(session, dest, "dano moral", 1, "decisoes_acordao.json", decisoes="Acórdão")
+    _capture(session, dest, "", 1, "decisoes_decisao.json", decisoes="Decisão", **periodo)
+    _capture(session, dest, "", 1, "decisoes_sentenca.json", decisoes="Sentença", **periodo)
+    # Um sample por valor do filtro ``jurisdicoes``: "TJ" traz camaras e pleno do
+    # Tribunal de Justica; "TR", Turmas Recursais e Turma de Uniformizacao.
+    _capture(session, dest, "dano moral", 1, "jurisdicoes_tj.json", jurisdicoes="TJ")
+    _capture(session, dest, "dano moral", 1, "jurisdicoes_tr.json", jurisdicoes="TR")
 
 
 if __name__ == "__main__":
