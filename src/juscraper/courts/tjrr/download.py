@@ -241,9 +241,9 @@ def _get_total_pages(html: str | Tag) -> int:
 # in 2026-06). Hardcoding it silently breaks pagination: the AJAX POST targets a
 # component that no longer exists and the backend replies with an opaque,
 # unparseable partial-response, so every page past the first yields zero rows.
-# Discover it from the rendered results page instead. Tried in cascade, the
-# approach ``CONTRIBUTING.md`` > **Contagem de páginas e resultados em HTML**
-# asks for when extracting counts from tribunal pages. The ``(?!\w)``
+# Discover it from the rendered results page instead, in cascade, as
+# ``CONTRIBUTING.md`` > **Contagem de páginas e resultados em HTML** asks for
+# counts. The ``(?!\w)``
 # lookahead stops the match before ``dataTablePesquisa2`` (the second, distinct
 # results table) and ``dataTablePesquisa_data`` (the tbody), pinning the base id.
 # ``{nome}`` é o nome da tabela: ``dataTablePesquisa`` (acórdãos) ou
