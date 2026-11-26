@@ -247,9 +247,10 @@ class TJPEScraper(HTTPScraper):
                 ``ementa``, ``acordao``, ``decisao``, ``meio_tramitacao``,
                 ``url_inteiro_teor``. As decisões monocráticas não têm
                 ementa no portal e saem com ``ementa`` ``None``; o texto
-                delas sai em ``decisao``. O portal não publica
-                ``orgao_julgador`` nem ``data_julgamento`` das
-                monocráticas.
+                delas sai em ``decisao``, coluna que só existe quando a
+                busca traz monocráticas (nos acórdãos, o texto sai em
+                ``acordao``). O portal não publica ``orgao_julgador`` nem
+                ``data_julgamento`` das monocráticas.
 
         Examples: Exemplo
             >>> import juscraper as jus

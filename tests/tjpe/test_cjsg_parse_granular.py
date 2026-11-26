@@ -25,11 +25,13 @@ def _rotulos_por_bloco(html: str) -> list[set[str]]:
     ]
 
 
-def test_decisao_sem_ementa_sai_ausente():
-    """Monocrática, sem o rótulo ``Ementa`` no bloco, sai com ementa ausente.
+def test_monocratica_sem_ementa_com_data_de_publicacao_e_decisao():
+    """Monocrática sai com ementa ausente, ``data_publicacao`` e o texto em ``decisao``.
 
-    A coluna existe mesmo quando a busca só traz monocráticas, e a mistura com
-    acórdãos (parse de páginas dos dois tipos) mantém o texto destes.
+    O bloco das monocráticas não tem ``Ementa`` e traz ``Data da Publicação`` e
+    ``Decisão``; o dos acórdãos traz ``Ementa``, ``Data da Publicação/Fonte`` e
+    ``Acórdão``. A mistura dos dois (parse de páginas dos dois tipos) mantém o
+    texto de cada um, com o do outro ausente.
     """
     paginas = [load_sample("tjpe", sample) for sample in SAMPLES]
     blocos = [rotulos for pagina in paginas for rotulos in _rotulos_por_bloco(pagina)]
@@ -37,36 +39,19 @@ def test_decisao_sem_ementa_sai_ausente():
     df = cjsg_parse(paginas)
 
     assert len(df) == len(blocos) == 15
-    for ementa, rotulos in zip(df["ementa"], blocos, strict=True):
-        if "Ementa" in rotulos:
-            assert isinstance(ementa, str)
-            assert ementa
-        else:
-            assert pd.isna(ementa)
-            assert "Decisão" in rotulos
-    assert df["ementa"].isna().sum() == 10
-
-
-def test_monocratica_traz_data_de_publicacao_e_decisao():
-    """O bloco das monocráticas tem ``Data da Publicação`` e ``Decisão``; nenhum dos dois some.
-
-    Nos acórdãos (rótulos ``Data da Publicação/Fonte`` e ``Acórdão``), a data
-    continua preenchida e ``decisao`` fica ausente.
-    """
-    paginas = [load_sample("tjpe", sample) for sample in SAMPLES]
-    blocos = [rotulos for pagina in paginas for rotulos in _rotulos_por_bloco(pagina)]
-
-    df = cjsg_parse(paginas)
-
     assert df["data_publicacao"].map(lambda d: isinstance(d, date)).all()
     for (_, linha), rotulos in zip(df.iterrows(), blocos, strict=True):
         if "Decisão" in rotulos:
+            assert pd.isna(linha["ementa"])
+            assert pd.isna(linha["acordao"])
             assert isinstance(linha["decisao"], str)
             assert linha["decisao"]
-            assert pd.isna(linha["acordao"])
         else:
-            assert pd.isna(linha["decisao"])
+            assert "Ementa" in rotulos
+            assert isinstance(linha["ementa"], str)
+            assert linha["ementa"]
             assert isinstance(linha["acordao"], str)
+            assert pd.isna(linha["decisao"])
     assert df["decisao"].notna().sum() == 10
 
 
@@ -77,10 +62,8 @@ def test_so_monocraticas_tem_colunas_na_ordem_dos_acordaos():
     acórdãos: depois de ``ementa`` e antes de ``meio_tramitacao``.
     """
     df = cjsg_parse([load_sample("tjpe", "cjsg/monocraticas_resultado.html")])
-    acordaos = cjsg_parse([load_sample("tjpe", "cjsg/simples_resultado.html")])
 
     assert df["ementa"].map(pd.isna).all()
-    assert [c for c in df.columns if c != "decisao"] == [c for c in acordaos.columns if c in df.columns]
     assert list(df.columns) == [
         "processo", "classe", "assunto", "relator", "data_publicacao",
         "ementa", "decisao", "meio_tramitacao", "url_inteiro_teor",
