@@ -20,7 +20,7 @@ def test_base_fora_do_dominio_e_rejeitada():
 
 def test_defaults():
     inp = InputListarDecisoesSTF(pesquisa="*")
-    assert (inp.base, inp.classe, inp.inteiro_teor, inp.tamanho_pagina) == ("decisoes", None, False, 250)
+    assert (inp.base, inp.classe, inp.buscar_em, inp.tamanho_pagina) == ("decisoes", None, "ementa", 250)
 
 
 def test_contar_nao_aceita_tamanho_pagina():

@@ -10,10 +10,11 @@ from .mixins import (
     OutputRelatoriaMixin,
     PaginasMixin,
 )
-from .types import IdFiltro, IdFiltroUnico, InteiroSemBool, TamanhoPagina
+from .types import BuscarEm, IdFiltro, IdFiltroUnico, InteiroSemBool, TamanhoPagina
 
 __all__ = [
     "AutoChunkMixin",
+    "BuscarEm",
     "CnjInputBase",
     "CountOnlyMixin",
     "DataJulgamentoMixin",

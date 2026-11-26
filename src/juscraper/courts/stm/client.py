@@ -8,6 +8,7 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
 from .download import avisar_expressao_exata, cjsg_download_manager
@@ -73,9 +74,10 @@ class STMScraper(HTTPScraper):
                 opcionais (``None`` = sem filtro) e comparados com o valor
                 exato que o portal exibe, em maiúsculas.
 
-                * ``campo`` (str): Onde procurar o termo: ``"ementa"``
-                  (default), ``"inteiro_teor"`` ou ``"numero"`` (número do
-                  processo, completo ou parcial).
+                * ``buscar_em`` (str): Onde procurar ``pesquisa``:
+                  ``"ementa"`` (default), ``"inteiro_teor"`` (texto integral
+                  do acórdão, que inclui a ementa) ou ``"numero"`` (número do
+                  processo, completo ou parcial; só o STM tem essa opção).
                 * ``classe`` (str | None): Classe processual
                   (``"APELAÇÃO"``).
                 * ``relator`` (str | None): Ministro relator
@@ -92,7 +94,7 @@ class STMScraper(HTTPScraper):
 
                 Com filtro de data, a busca vai pela pesquisa avançada do
                 portal, a única que filtra por intervalo. Ela procura
-                ``pesquisa`` como expressão exata no ``campo`` escolhido
+                ``pesquisa`` como expressão exata no campo de ``buscar_em``
                 (``"corrupção ativa"`` só casa com as duas palavras juntas,
                 nessa ordem), não aplica ``E``, ``OU``, ``NÃO`` nem os
                 curingas, e aceita ``pesquisa=""`` para trazer tudo o que
@@ -105,14 +107,16 @@ class STMScraper(HTTPScraper):
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``campo`` -> ``buscar_em``, com os mesmos valores
 
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
             ValidationError: Quando um filtro tem valor inválido, como um
-                ``campo`` fora das três opções.
+                ``buscar_em`` fora das três opções.
             ValueError: Quando uma data é inválida ou o início vem depois do
-                fim; quando há filtro de data e ``pesquisa`` tem aspas no
-                meio ou barra invertida, ou, em ``campo="numero"``, algo além
+                fim; quando ``campo`` e ``buscar_em`` são passados juntos;
+                quando há filtro de data e ``pesquisa`` tem aspas no
+                meio ou barra invertida, ou, em ``buscar_em="numero"``, algo além
                 do número do processo; quando a página devolvida não traz o
                 contador de documentos nem o aviso de busca vazia.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
@@ -156,6 +160,7 @@ class STMScraper(HTTPScraper):
         Returns:
             O HTML de cada página, na ordem pedida.
         """
+        resolve_buscar_em(kwargs, "campo")
         inp = apply_input_pipeline_search(
             InputCJSGSTM,
             "STMScraper.cjsg_download()",
@@ -166,13 +171,13 @@ class STMScraper(HTTPScraper):
         )
         datas = inp.model_dump(include=set(DATE_CANONICAL))
         if any(datas.values()):
-            avisar_expressao_exata(inp.pesquisa, inp.campo)
+            avisar_expressao_exata(inp.pesquisa, inp.buscar_em)
         return cjsg_download_manager(
             inp.pesquisa,
             inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
-            campo=inp.campo,
+            buscar_em=inp.buscar_em,
             datas=datas,
             classe=inp.classe,
             relator=inp.relator,
