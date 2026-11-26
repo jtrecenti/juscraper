@@ -98,9 +98,17 @@ class TJDFTScraper(HTTPScraper):
         return brutos
 
     def cjsg_parse(self, resultados_brutos: list) -> list:
-        """
-        Extracts structured information from the raw TJDFT search results.
-        Returns all fields present in each item.
+        """Converte os registros brutos da API em linhas, uma por registro.
+
+        As colunas saem como em :meth:`cjsg`, mas as datas ficam no texto ISO
+        da API: quem as converte é :meth:`cjsg`.
+
+        Args:
+            resultados_brutos (list): Registros devolvidos por
+                :meth:`cjsg_download`.
+
+        Returns:
+            Uma linha por registro, como dicionário.
         """
         parsed: list = cjsg_parse(resultados_brutos)
         return parsed
@@ -165,13 +173,16 @@ class TJDFTScraper(HTTPScraper):
             ``DeprecationWarning``: Quando um alias deprecado é usado.
 
         Returns:
-            Uma linha por acórdão, com as chaves do JSON da API como estão,
-                entre elas ``processo``, ``ementa``, ``nomeRelator``,
-                ``descricaoOrgaoJulgador``, ``dataJulgamento`` e
-                ``dataPublicacao``. As duas datas saem como ``datetime.date``,
-                a data em UTC do instante que a API devolve
-                (``2026-10-28T03:00:00.000Z`` vira 28/10/2026), a mesma que os
-                filtros ``data_*`` usam.
+            Uma linha por acórdão ou decisão monocrática, com ``processo``,
+                ``ementa``, ``relator``, ``orgao_julgador``,
+                ``data_julgamento`` e ``data_publicacao``; as demais chaves do
+                JSON da API (``decisao``, ``codigoClasseCnj``,
+                ``turmaRecursal``...) saem com o nome da API. As duas datas
+                saem como ``datetime.date``, a data em UTC do instante que a
+                API devolve (``2026-10-28T03:00:00.000Z`` vira 28/10/2026), a
+                mesma que os filtros ``data_*`` usam. Decisões monocráticas
+                (``base == "decisoes"``) não têm data de julgamento:
+                ``data_julgamento`` fica vazia nelas.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -190,5 +201,5 @@ class TJDFTScraper(HTTPScraper):
         dados = self.cjsg_parse(brutos)
         df = pd.DataFrame(dados)
         # Data em UTC de proposito: e a que o filtro ``data_*`` da API usa.
-        coerce_date_columns(df, ["dataJulgamento", "dataPublicacao"], date_format="ISO8601")
+        coerce_date_columns(df, ["data_julgamento", "data_publicacao"], date_format="ISO8601")
         return df

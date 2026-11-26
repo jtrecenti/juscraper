@@ -54,8 +54,7 @@ class TJPAScraper(HTTPScraper):
 
         Filtros de data (``data_julgamento_inicio``/``_fim``,
         ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
-        validados pelo schema :class:`InputCJSGTJPA`; as de julgamento vao ao
-        portal um dia antes (#508). Aliases deprecados
+        validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
         (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
         da validacao.
 
@@ -157,8 +156,6 @@ class TJPAScraper(HTTPScraper):
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
                   (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
                   ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-                  Enviadas ao portal um dia antes, que compensa o desvio do
-                  filtro do TJPA (#508).
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str | date | None): nos mesmos formatos.
 
@@ -173,7 +170,8 @@ class TJPAScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:
-            DataFrame com as decisoes.
+            DataFrame com as decisoes. ``ementa`` e ``None`` na decisao
+                monocratica, que o portal manda sem ementa.
 
         See also:
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos

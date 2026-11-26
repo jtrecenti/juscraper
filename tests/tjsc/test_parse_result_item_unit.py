@@ -1,8 +1,8 @@
 """Unit tests for the TJSC result-item parser.
 
 Most tests characterize behavior kept from the original parser. The tests on
-the ``/TJSC`` suffix, on ``DECISÃO`` and on the class read from the ``<span>``
-lock fixes: they fail against the parser that predates them.
+``DECISÃO``, on the ``/TJSC`` and ``/SC`` suffixes and on the class read from
+the ``<span>`` lock fixes: they fail against the parser that predates them.
 """
 import datetime
 
@@ -12,22 +12,65 @@ from bs4 import BeautifulSoup
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
 from tests._helpers import load_sample
 
+# HTML mínimo com variantes de rótulo que as páginas reais gravadas não
+# reproduzem: DECISÃO antes e depois de EMENTA, rótulo sem acento, rótulo
+# desconhecido, rótulo conhecido dentro de texto maior e rótulo sem valor.
+# Não é resposta do portal; por isso fica aqui e não em ``samples/``.
+ITENS_COM_VARIANTES = """\
+  <div class="resultadoItem" id="direct-labels">
+    <div class="resLabel">ÓRGÃO JULGADOR</div>
+    <div class="resValue">Primeira Câmara</div>
+    <div class="resLabel">RELATORA</div>
+    <div class="resValue">Desembargadora Ana</div>
+    <div class="resLabel">EMENTA</div>
+    <div class="resValue">Ementa preferencial</div>
+    <div class="resLabel">DECISÃO</div>
+    <div class="resValue">Decisão posterior</div>
+  </div>
+
+  <div class="resultadoItem" id="normalized-labels">
+    <div class="resLabel">ORGAO JULGADOR</div>
+    <div class="resValue">Segunda Câmara</div>
+    <div class="resLabel">DATA DA PUBLICACAO</div>
+    <div class="resValue">02/07/2025</div>
+    <div class="resLabel">DECISAO</div>
+    <div class="resValue">Decisão usada como ementa</div>
+    <div class="resLabel">CAMPO DESCONHECIDO</div>
+    <div class="resValue">Valor ignorado</div>
+  </div>
+
+  <div class="resultadoItem" id="decision-before-summary">
+    <div class="resLabel">DECISÃO</div>
+    <div class="resValue">Decisão preservada</div>
+    <div class="resLabel">EMENTA</div>
+    <div class="resValue">Ementa preferencial</div>
+  </div>
+
+  <div class="resultadoItem" id="partial-labels">
+    <div class="resLabel">INFORMAÇÃO DO RELATOR</div>
+    <div class="resValue">Desembargador Bruno</div>
+    <div class="resLabel">DATA DO JULGAMENTO DO RECURSO</div>
+    <div class="resValue">01/07/2025</div>
+  </div>
+
+  <div class="resultadoItem" id="truncated-pairs">
+    <div class="resLabel">UF</div>
+    <div class="resLabel">RELATOR</div>
+    <div class="resValue">SC</div>
+  </div>
+"""
+
 
 def _sample_items() -> dict[str, object]:
-    soup = BeautifulSoup(
-        load_sample("tjsc", "cjsg/result_item_variants.html"),
-        "html.parser",
-    )
+    soup = BeautifulSoup(ITENS_COM_VARIANTES, "html.parser")
     return {item["id"]: item for item in soup.find_all("div", class_="resultadoItem")}
 
 
-def test_parse_result_item_strips_tjsc_suffix_and_keeps_later_decision():
-    """The ``/TJSC`` suffix is dropped and a later DECISÃO stays next to EMENTA."""
+def test_parse_result_item_keeps_later_decision():
+    """A DECISÃO after EMENTA stays next to it."""
     result = _parse_result_item(_sample_items()["direct-labels"])
 
     assert result == {
-        "processo": "5001234-56.2024.8.24.0000",
-        "classe": "Agravo de Instrumento",
         "orgao_julgador": "Primeira Câmara",
         "relator": "Desembargadora Ana",
         "ementa": "Ementa preferencial",
@@ -82,12 +125,12 @@ def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
 
     ``partial-labels`` and ``truncated-pairs`` are dropped; the other three stay.
     """
-    with pytest.warns(UserWarning, match="2 registro"):
-        df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
+    with pytest.warns(UserWarning, match=r"3 registro\(s\) sem número de processo"):
+        df = cjsg_parse_manager([ITENS_COM_VARIANTES])
 
     assert len(_sample_items()) == 5
     assert len(df) == 3
-    assert df[["processo", "ementa"]].notna().any(axis=1).all()
+    assert df["ementa"].notna().all()
 
 
 def test_cjsg_parse_manager_reads_process_number_without_link():
