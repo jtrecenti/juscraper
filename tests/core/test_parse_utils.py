@@ -6,7 +6,13 @@ import datetime as dt
 import pandas as pd
 import pytest
 
-from juscraper.core.parse_utils import clean_document_text, clean_html, coerce_date_columns
+from juscraper.core.parse_utils import (
+    clean_document_text,
+    clean_html,
+    coerce_date_columns,
+    normalizar_colunas_texto,
+    normalizar_texto,
+)
 
 
 class TestCleanHtml:
@@ -111,6 +117,36 @@ class TestCoerceDateColumns:
         df = pd.DataFrame({"data_julgamento": ["15/01/2024"]})
         out = coerce_date_columns(df, ["data_julgamento"], date_format="%d/%m/%Y")
         assert out is df
+
+
+class TestNormalizarTexto:
+    def test_fins_de_linha_viram_quebra(self):
+        assert normalizar_texto("a\r\nb\rc\nd") == "a\nb\nc\nd"
+
+    def test_espaco_nao_separavel_vira_espaco_comum(self):
+        assert normalizar_texto("art.\xa014,\xa0do\xa0CDC") == "art. 14, do CDC"
+
+    @pytest.mark.parametrize("invisivel", ["\xad", "\u200b", "\u200c", "\u200d"])
+    def test_remove_invisiveis(self, invisivel):
+        assert normalizar_texto(f"MANDADO{invisivel} {invisivel}DE") == "MANDADO DE"
+
+    def test_preserva_espacos_tabs_e_paragrafos(self):
+        texto = "  1.\tCinge-se  a\n\n controvérsia \n"
+        assert normalizar_texto(texto) == texto
+
+    @pytest.mark.parametrize("valor", [None, 1, 2.5, float("nan")], ids=["none", "int", "float", "nan"])
+    def test_nao_str_volta_igual(self, valor):
+        assert normalizar_texto(valor) is valor
+
+
+class TestNormalizarColunasTexto:
+    def test_normaliza_so_as_colunas_pedidas(self):
+        df = pd.DataFrame({"ementa": ["a\xa0b\r\nc", None], "conteudo_html": ["<p>a\r\n</p>", "x\xa0y"]})
+        out = normalizar_colunas_texto(df, ["ementa", "inexistente"])
+        assert out is df
+        assert df["ementa"].iloc[0] == "a b\nc"
+        assert pd.isna(df["ementa"].iloc[1])
+        assert df["conteudo_html"].tolist() == ["<p>a\r\n</p>", "x\xa0y"]
 
 
 if __name__ == "__main__":

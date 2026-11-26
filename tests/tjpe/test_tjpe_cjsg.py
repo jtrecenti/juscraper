@@ -26,6 +26,12 @@ class TestCJSGTJPE:
         colunas_minimas = {"processo", "relator", "ementa", "data_julgamento"}
         assert colunas_minimas.issubset(set(df.columns))
 
+    def test_monocraticas_tem_coluna_ementa(self):
+        """Monocráticas saem com a coluna ``ementa``, ausente (o bloco não tem ementa)."""
+        df = self.scraper.cjsg("dano moral", paginas=1, tipo_decisao="monocraticas")
+        assert len(df) > 0
+        assert df["ementa"].map(pd.isna).all()
+
     def test_paginacao(self):
         """Pagination brings results from multiple pages."""
         df = self.scraper.cjsg("dano moral", paginas=range(1, 3))
