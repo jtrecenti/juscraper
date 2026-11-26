@@ -139,8 +139,9 @@ def _linha_jusbr(dados: Any, cnj: str) -> list[dict]:
     return [parse_process_details_response(dados, cnj)]
 
 
-def _decisoes_stf(resposta: dict) -> list[dict]:
-    return parse_decisoes([resposta])
+def _decisoes_stf(resposta: dict[str, Any]) -> list[dict[str, Any]]:
+    decisoes: list[dict[str, Any]] = parse_decisoes([resposta])
+    return decisoes
 
 
 @dataclass(frozen=True)
@@ -362,14 +363,11 @@ AUXILIARES_NAO_DECLARADAS: dict[tuple[str, str], dict[str, str]] = {
 # pendente. Remover a entrada junto com a correção;
 # ``test_excecoes_ainda_sao_necessarias`` cobra isso.
 _RELATORA_717 = "eSAJ cjsg: relatora vira relator no PR #717 (rótulo Relator(a): em _normalize_key)"
-_MAGISTRADO_CJPG = "eSAJ cjpg: magistrado vira relator no PR #719"
 SINONIMOS_TOLERADOS: dict[tuple[str, str, str], str] = {
     **{
         (tribunal, "cjsg", "relatora"): _RELATORA_717
         for tribunal in ("tjac", "tjal", "tjam", "tjce", "tjms", "tjsp")
     },
-    ("tjsp", "cjpg", "magistrado"): _MAGISTRADO_CJPG,
-    ("tjms", "cjpg", "magistrado"): _MAGISTRADO_CJPG,
     # Decisão de API pendente: no cpopg, o magistrado do eproc é o juiz da
     # causa, não o relator de acórdão para o qual o sinônimo foi pensado; e
     # ``assuntos`` é a lista de assuntos do processo, não o filtro de busca
