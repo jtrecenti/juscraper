@@ -127,6 +127,8 @@ _LITERAL_207_CASES = [
     # Valores do seletor "Sistema" e dos radios de grau; outros davam 0 resultados.
     (InputCJSGTJRN, "sistema", ["", "PJE", "SAJ"], ["pje", "Pje", "XYZ"]),
     (InputCJSGTJRN, "grau", ["", "1", "2"], [2, "3", "Primeiro"]),
+    # Campos de texto do portal onde vai ``pesquisa``.
+    (InputCJSGTJRN, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "I", "numero", ""]),
     # 2 e 3 saem do schema: o client os converte em 151 e 15 com DeprecationWarning.
     (InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16]),
     (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
