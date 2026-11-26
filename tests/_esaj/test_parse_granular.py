@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from juscraper.courts._esaj import parse as esaj_parse
 from juscraper.courts._esaj.parse import (
     _clean_value,
+    _extract_ementa,
     _extract_pagination_count,
     _parse_single_page,
     _total_declarado,
@@ -286,13 +287,19 @@ class TestCJSGParseSinglePage:
             ("tjam", "cjsg/post_initial.html"),
             ("tjce", "cjsg/results_normal_page_01.html"),
             ("tjms", "cjsg/post_initial.html"),
-            ("tjsp", "cjsg/ementa_com_resultados.html"),
+            ("tjsp", "cjsg/single_page.html"),
         ],
     )
     def test_ementa_longa_devolve_so_a_completa(self, sigla, arquivo):
-        """Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713)."""
+        r"""Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713).
+
+        O ``\r\n`` do HTML vira ``\n``, e o ``\x96`` do windows-1252, "–". O
+        sample vai lido em bytes, porque ``read_text`` já trocaria o ``\r\n``.
+        """
         path = Path(__file__).parent.parent / sigla / "samples" / arquivo
-        soup = BeautifulSoup(path.read_bytes().decode("utf-8"), "html.parser")
+        html = path.read_bytes().decode("utf-8")
+        assert "\r\n" in html
+        soup = BeautifulSoup(html, "html.parser")
         linhas = soup.find_all("tr", class_="fundocinza1")
 
         df = _parse_single_page(str(path))
@@ -301,7 +308,11 @@ class TestCJSGParseSinglePage:
         longas = 0
         for ementa, linha in zip(df["ementa"], linhas, strict=True):
             divs = [
-                div.get_text(" ", strip=True).replace("Ementa:", "").strip()
+                div.get_text(" ", strip=True)
+                .replace("\r\n", "\n")
+                .replace("\x96", "–")
+                .removeprefix("Ementa:")
+                .strip()
                 for div in linha.select('div[align="justify"]')
             ]
             if len(divs) == 2:
@@ -312,6 +323,39 @@ class TestCJSGParseSinglePage:
             elif len(divs) == 1:
                 assert ementa == divs[0]
         assert longas > 0
+        assert not df["ementa"].str.contains("\r").any()
+
+    def test_ementa_mantem_rotulo_citado_no_corpo(self):
+        """Só o rótulo do início sai; "Ementa:" citado no texto fica."""
+        html = (
+            '<tr class="ementaClass2"><td><strong>Ementa:</strong>'
+            '<div align="justify">Ementa: APELAÇÃO.\nConforme a Ementa: do REsp 1.234, '
+            "nega-se provimento.</div></td></tr>"
+        )
+        linha = BeautifulSoup(html, "html.parser").tr
+
+        assert _extract_ementa(linha) == "APELAÇÃO.\nConforme a Ementa: do REsp 1.234, nega-se provimento."
+
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo"),
+        [("tjac", "cjsg/post_initial.html"), ("tjce", "cjsg/results_normal_page_01.html")],
+    )
+    def test_ementa_com_travessao_do_windows_1252(self, tmp_path, sigla, arquivo):
+        """O byte 0x96, travessão no windows-1252, sai "–", não o controle U+0096.
+
+        O ``cjsg_download`` grava a resposta em latin-1, byte a byte como o eSAJ
+        a mandou; o sample, regravado em UTF-8, guarda o mesmo U+0096.
+        """
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        html = path.read_bytes().decode("utf-8")
+        assert "\x96" in html
+        como_baixado = tmp_path / "cjsg_00001.html"
+        como_baixado.write_bytes(html.encode("latin-1"))
+
+        for arquivo_html in (path, como_baixado):
+            ementas = _parse_single_page(str(arquivo_html))["ementa"]
+            assert ementas.str.contains("–").any()
+            assert not ementas.str.contains("[\x80-\x9f]").any()
 
     @pytest.mark.parametrize(
         ("sigla", "arquivo", "sem_ementa"),
