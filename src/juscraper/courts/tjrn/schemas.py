@@ -39,9 +39,9 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     decisoes: Literal["", "Decisão", "Acórdão", "Sentença"] | None = None
     jurisdicoes: str | None = None
     grau: str | None = None
-    # Termo buscado no campo ``inteiro_teor`` do portal; ``pesquisa`` vai no campo
-    # ``ementa``, que so os acordaos tem. O portal aceita os dois juntos (E).
-    inteiro_teor: str | None = None
+    # Campo do portal onde vai ``pesquisa``: "ementa" (so os acordaos tem) ou
+    # "inteiro_teor" (acordaos, monocraticas e sentencas).
+    buscar_em: Literal["ementa", "inteiro_teor"] = "ementa"
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

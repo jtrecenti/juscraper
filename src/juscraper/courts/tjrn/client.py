@@ -74,16 +74,14 @@ class TJRNScraper(HTTPScraper):
         decisoes: str | None = None,
         jurisdicoes: str | None = None,
         grau: str | None = None,
-        inteiro_teor: str | None = None,
+        buscar_em: str = "ementa",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
 
         Args:
-            pesquisa (str): Termo buscado na ementa (campo "Ementa" do portal).
-                No portal so os acordaos tem ementa: para monocraticas e
-                sentencas, buscar o termo em ``inteiro_teor``. Pode ficar de
-                fora (ou ``""``) quando ``inteiro_teor`` for informado.
+            pesquisa (str): Termo de busca, procurado no campo indicado por
+                ``buscar_em`` (por padrao, a ementa).
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
             numero_processo (str): Numero CNJ do processo. Aceita o alias
@@ -99,18 +97,17 @@ class TJRNScraper(HTTPScraper):
                 ``"Sentença"`` ou vazio para todas. Outro valor levanta
                 ``ValidationError``. ``pesquisa`` busca so na ementa, e no
                 portal so os acordaos tem ementa: com ``"Decisão"`` ou
-                ``"Sentença"``, buscar o termo em ``inteiro_teor``
-                (``cjsg(inteiro_teor="dano moral", decisoes="Sentença")``).
+                ``"Sentença"``, usar ``buscar_em="inteiro_teor"``
+                (``cjsg("dano moral", buscar_em="inteiro_teor",
+                decisoes="Sentença")``).
             jurisdicoes (str): ``"Tribunal de Justica"``, ``"Turmas Recursais"``
                 ou vazio para todos.
             grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para todos.
-            inteiro_teor (str | None): Termo buscado no texto integral da
-                decisao (campo "Inteiro teor" do portal), que existe em
-                acordaos, monocraticas e sentencas. ``None`` (default) nao
-                filtra pelo inteiro teor. Combinado com ``pesquisa``, o portal
-                exige os dois termos: ``cjsg("dano moral",
-                inteiro_teor="lucros cessantes")`` traz os acordaos com
-                "dano moral" na ementa e "lucros cessantes" no inteiro teor.
+            buscar_em (str): Onde procurar ``pesquisa``: ``"ementa"``
+                (default) ou ``"inteiro_teor"`` (texto integral da decisao,
+                campo "Inteiro teor" do portal). No portal so os acordaos tem
+                ementa; o inteiro teor existe em acordaos, monocraticas e
+                sentencas. Outro valor levanta ``ValidationError``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -152,7 +149,7 @@ class TJRNScraper(HTTPScraper):
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
             grau=grau,
-            inteiro_teor=inteiro_teor,
+            buscar_em=buscar_em,
             **kwargs,
         ))
 
@@ -169,7 +166,7 @@ class TJRNScraper(HTTPScraper):
         decisoes: str | None = None,
         jurisdicoes: str | None = None,
         grau: str | None = None,
-        inteiro_teor: str | None = None,
+        buscar_em: str = "ementa",
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.
@@ -194,9 +191,6 @@ class TJRNScraper(HTTPScraper):
             paginas=paginas,
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
-            # Com termo no inteiro teor, a ementa pode ir vazia; sem nenhum dos
-            # dois, ``pesquisa`` continua obrigatoria.
-            nullable_pesquisa=bool(inteiro_teor),
             numero_processo=numero_processo,
             id_classe=id_classe,
             id_orgao_julgador=id_orgao_julgador,
@@ -206,10 +200,11 @@ class TJRNScraper(HTTPScraper):
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
             grau=grau,
-            inteiro_teor=inteiro_teor,
+            buscar_em=buscar_em,
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
+            buscar_em=inp.buscar_em,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
@@ -224,7 +219,6 @@ class TJRNScraper(HTTPScraper):
             decisoes=inp.decisoes or "",
             jurisdicoes=inp.jurisdicoes or "",
             grau=inp.grau or "",
-            inteiro_teor=inp.inteiro_teor or "",
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:

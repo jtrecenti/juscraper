@@ -68,11 +68,11 @@ def main() -> None:
     _capture(session, dest, "dano moral", 1, "decisoes_acordao.json", decisoes="Acórdão")
     _capture(session, dest, "", 1, "decisoes_decisao.json", decisoes="Decisão", **periodo)
     _capture(session, dest, "", 1, "decisoes_sentenca.json", decisoes="Sentença", **periodo)
-    # Termo no inteiro teor, que monocraticas e sentencas tem (ao contrario da
-    # ementa): ``pesquisa`` vazia e o termo no campo ``inteiro_teor`` do payload.
+    # ``buscar_em="inteiro_teor"``: o termo vai no campo ``inteiro_teor`` do
+    # payload, que monocraticas e sentencas tem (ao contrario da ementa).
     _capture(
-        session, dest, "", 1, "inteiro_teor_sentenca.json",
-        inteiro_teor="dano moral", decisoes="Sentença",
+        session, dest, "dano moral", 1, "inteiro_teor_sentenca.json",
+        buscar_em="inteiro_teor", decisoes="Sentença",
     )
 
 

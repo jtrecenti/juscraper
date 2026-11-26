@@ -53,7 +53,6 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             decisoes="Acórdão",
             jurisdicoes="Tribunal de Justica",
             grau="2",
-            inteiro_teor="lucros cessantes",
         ))],
     )
 
@@ -71,7 +70,6 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         decisoes="Acórdão",
         jurisdicoes="Tribunal de Justica",
         grau="2",
-        inteiro_teor="lucros cessantes",
     )
 
     assert isinstance(df, pd.DataFrame)
@@ -79,7 +77,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     assert json.loads(responses.calls[0].request.body) == {
         "jurisprudencia": {
             "ementa": "dano moral",
-            "inteiro_teor": "lucros cessantes",
+            "inteiro_teor": "",
             "nr_processo": "00000000000000000000",
             "id_classe_judicial": "123",
             "id_orgao_julgador": "456",
@@ -282,14 +280,15 @@ def test_cjsg_decisoes_fora_do_portal_levanta_validation_error(valor):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, decisoes=valor)
 
 
-@pytest.mark.parametrize("pesquisa", [None, ""], ids=["sem_pesquisa", "pesquisa_vazia"])
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
 @responses.activate
-def test_cjsg_inteiro_teor_vai_no_campo_do_portal(mocker, metodo, pesquisa):
-    """``inteiro_teor`` vai no campo ``inteiro_teor`` do payload, com a ementa
-    vazia, e dispensa ``pesquisa``. E o caminho para buscar termo em
-    sentencas e monocraticas, que nao tem ementa: o sample traz so sentencas
-    com "dano moral" no inteiro teor."""
+def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):
+    """Com ``buscar_em="inteiro_teor"``, ``pesquisa`` vai no campo
+    ``inteiro_teor`` do payload, com a ementa vazia.
+
+    E o caminho para buscar termo em sentencas e monocraticas, que nao tem
+    ementa: o sample traz so sentencas com "dano moral" no inteiro teor.
+    """
     mocker.patch("time.sleep")
     raw = load_sample("tjrn", "cjsg/inteiro_teor_sentenca.json")
     hits = json.loads(raw)["hits"]["hits"]
@@ -302,13 +301,12 @@ def test_cjsg_inteiro_teor_vai_no_campo_do_portal(mocker, metodo, pesquisa):
         status=200,
         content_type="application/json",
         match=[json_params_matcher(build_cjsg_payload(
-            "", page=1, inteiro_teor="dano moral", decisoes="Sentença",
+            "dano moral", page=1, buscar_em="inteiro_teor", decisoes="Sentença",
         ))],
     )
-    kwargs = {} if pesquisa is None else {"pesquisa": pesquisa}
 
     resultado = getattr(jus.scraper("tjrn"), metodo)(
-        paginas=1, inteiro_teor="dano moral", decisoes="Sentença", **kwargs,
+        "dano moral", paginas=1, buscar_em="inteiro_teor", decisoes="Sentença",
     )
 
     corpo = json.loads(responses.calls[0].request.body)["jurisprudencia"]
@@ -319,12 +317,12 @@ def test_cjsg_inteiro_teor_vai_no_campo_do_portal(mocker, metodo, pesquisa):
         assert resultado[0]["hits"]["hits"] == hits
 
 
-@pytest.mark.parametrize("inteiro_teor", [None, ""])
-def test_cjsg_sem_pesquisa_nem_inteiro_teor_levanta_typeerror(inteiro_teor):
-    """Sem ``pesquisa`` e sem ``inteiro_teor``, a busca continua exigindo
-    ``pesquisa``: so um termo no inteiro teor dispensa a ementa."""
-    with pytest.raises(TypeError, match="pesquisa"):
-        jus.scraper("tjrn").cjsg(paginas=1, inteiro_teor=inteiro_teor)
+@pytest.mark.parametrize("valor", ["inteiroTeor", "I", "numero", ""])
+def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(valor):
+    """``buscar_em`` aceita so ``"ementa"`` e ``"inteiro_teor"``, os dois
+    campos de texto do portal."""
+    with pytest.raises(ValidationError, match="buscar_em"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, buscar_em=valor)
 
 
 def test_cjsg_unknown_kwarg_raises():

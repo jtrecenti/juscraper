@@ -13,8 +13,27 @@ All scrapers in juscraper follow a unified API convention for parameter names.
 | Parameter | Description |
 |-----------|-------------|
 | `pesquisa` | The search query string (canonical name) |
+| `buscar_em` | Where to look for `pesquisa`, when the portal lets you choose |
 
 **Deprecated aliases:** `query`, `termo` — accepted with `DeprecationWarning`, will be removed in v1.0.
+
+`buscar_em` takes `"ementa"` (only the headnote) or `"inteiro_teor"` (the
+full text of the decision, which includes the headnote). A value only one
+portal offers stays in that tribunal alone. Each scraper accepts only the
+values its portal has, and its default is the field the portal searches by
+default, so `pesquisa` alone keeps working as before. Use it to search terms
+in decisions without an ementa, such as single-judge decisions and
+sentenças:
+
+```python
+tjrn.cjsg("dano moral", buscar_em="inteiro_teor", decisoes="Sentença")
+```
+
+TJRN uses `buscar_em`. Some scrapers still pick the field under older names
+(STM and TJSC `campo`, TJPA `query_scope`, STF and TJDFT `inteiro_teor`);
+they will move to `buscar_em` with deprecated aliases. In the eSAJ family,
+TJSP and TRF3, `pesquisa` already searches the whole document and `ementa`
+is a separate text filter that combines with it.
 
 ### Date Filters
 
