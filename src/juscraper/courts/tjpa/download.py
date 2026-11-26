@@ -41,10 +41,8 @@ def build_cjsg_payload(
 ) -> dict:
     """Monta o corpo JSON da busca de jurisprudencia do TJPA.
 
-    As datas vao ao corpo como recebidas. Em 15/11/2026 o BFF deslocava o
-    filtro de data de julgamento em um dia (#508); em 26/11/2026, com
-    ``dataJulgamentoInicio`` = ``dataJulgamentoFim`` = D, ele ja devolve os
-    acordaos cujo ``datajulgamento`` e D, e a compensacao foi retirada.
+    As datas vao ao corpo como recebidas: o BFF, que em 15/11/2026 deslocava
+    o filtro de julgamento em um dia (#508), ja nao desloca em 26/11/2026.
     """
     if origem is None:
         origem = ["tribunal de justiça do estado do pará"]
