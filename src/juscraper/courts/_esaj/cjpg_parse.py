@@ -28,13 +28,11 @@ _CHAVES_CANONICAS = {
 }
 
 
-def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
-    results_container = soup.find("div", {"id": "divDadosResultado"})
-    if results_container is not None:
-        result_rows = results_container.find_all("tr", class_="fundocinza1")
-        if 0 < len(result_rows) < _CJPG_PAGE_SIZE:
-            return len(result_rows)
-        if len(result_rows) >= _CJPG_PAGE_SIZE:
+def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup, n_rows: int) -> int:
+    if soup.find("div", {"id": "divDadosResultado"}) is not None:
+        if 0 < n_rows < _CJPG_PAGE_SIZE:
+            return n_rows
+        if n_rows >= _CJPG_PAGE_SIZE:
             raise ValueError(
                 "A resposta contém uma página completa de resultados sem "
                 "marcador de paginação; o HTML pode estar truncado."
@@ -72,6 +70,10 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     soup = BeautifulSoup(page_source, "html.parser")
 
     _raise_page_error(soup)
+    # As sentenças ficam nas linhas de resultado e citam "não foram
+    # encontrados" ("bens penhoráveis"); os marcadores de contagem ficam
+    # fora delas, como no ``cjsg``.
+    linhas_de_resultado = [linha.extract() for linha in soup.find_all("tr", class_="fundocinza1")]
     if _has_zero_results(soup):
         return 0
 
@@ -81,7 +83,7 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     # paginação; numa página só, o ``\d+$`` lia o link "1" (#740).
     page_element = _find_pagination_element(soup)
     if page_element is None:
-        return _count_cjpg_result_rows_or_raise(soup)
+        return _count_cjpg_result_rows_or_raise(soup, len(linhas_de_resultado))
 
     pagination_text = page_element.get_text().strip()
     count = _extract_pagination_count(pagination_text)

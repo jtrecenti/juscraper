@@ -197,6 +197,11 @@ class TestCJPGNResults:
         assert cjpg_n_results(html) == 2
         assert cjpg_n_pags(html) == 1
 
+    def test_sentenca_com_marcador_de_zero_nao_zera_a_contagem(self):
+        """Sentenças que citam "não foram encontrados" não viram busca sem resultado."""
+        html = load_sample("tjsp", "cjpg/sentenca_nao_foram_encontrados.html")
+        assert cjpg_n_results(html) == 102853
+
     @pytest.mark.parametrize(("corpo", "expected"), _CASCATA_CONTAGEM.values(), ids=_CASCATA_CONTAGEM.keys())
     def test_selector_and_text_cascades(self, corpo, expected):
         """Caracteriza a cascata de seletores e de regex, a mesma do ``cjsg``."""

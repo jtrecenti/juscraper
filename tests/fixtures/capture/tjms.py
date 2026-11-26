@@ -65,23 +65,40 @@ def capture_cjpg() -> None:
     dump(dest / "redirecionamentos.json", json.dumps({f"sentenca_{cd_documento}": local}, indent=1).encode())
 
 
+def _cjpg_primeira_pagina(pesquisa: str) -> bytes:
+    session = build_session()
+    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
+    resposta = session.get(f"{ESAJ_BASE}cjpg/pesquisar.do", params=make_tjsp_cjpg_params(pesquisa), timeout=60)
+    resposta.raise_for_status()
+    return resposta.content
+
+
+def capture_cjpg_sentenca_sem_bens() -> None:
+    """Grava ``cjpg/sentenca_nao_foram_encontrados.html``: sentenças que citam "não foram encontrados".
+
+    A frase é um dos marcadores de busca sem resultado. Em 26/11/2026, a busca
+    trouxe "Resultados 1 a 10 de 2303", e a contagem dava 0 porque lia o
+    texto das sentenças.
+    """
+    conteudo = _cjpg_primeira_pagina('"não foram encontrados bens"')
+    if "não foram encontrados" not in BeautifulSoup(conteudo, "html.parser").get_text():
+        # Sem a frase, o sample deixaria de exercitar o caso.
+        raise RuntimeError("cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; troque a busca")
+    dump(samples_dir_for("tjms", "cjpg") / "sentenca_nao_foram_encontrados.html", conteudo)
+
+
 def capture_cjpg_single_page() -> None:
     """Grava ``cjpg/single_page.html``: busca cujos resultados cabem numa página de 10.
 
     Em 26/11/2026, "machine learning" trouxe 2 sentenças ("Resultados 1 a 2
     de 2"). Confere pelas linhas da página, e não por ``cjpg_n_results``.
     """
-    session = build_session()
-    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
-    resposta = session.get(
-        f"{ESAJ_BASE}cjpg/pesquisar.do", params=make_tjsp_cjpg_params("machine learning"), timeout=60
-    )
-    resposta.raise_for_status()
-    linhas = BeautifulSoup(resposta.content, "html.parser").select("#divDadosResultado tr.fundocinza1")
+    conteudo = _cjpg_primeira_pagina("machine learning")
+    linhas = BeautifulSoup(conteudo, "html.parser").select("#divDadosResultado tr.fundocinza1")
     if not 0 < len(linhas) < 10:
         # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.
         raise RuntimeError(f"cjpg single_page: {len(linhas)} linhas na 1a página; troque a busca")
-    dump(samples_dir_for("tjms", "cjpg") / "single_page.html", resposta.content)
+    dump(samples_dir_for("tjms", "cjpg") / "single_page.html", conteudo)
 
 
 def main() -> None:
@@ -95,6 +112,7 @@ def main() -> None:
     )
     capture_cjpg()
     capture_cjpg_single_page()
+    capture_cjpg_sentenca_sem_bens()
 
 
 if __name__ == "__main__":

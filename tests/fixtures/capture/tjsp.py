@@ -148,6 +148,23 @@ def capture_cjpg_single_page() -> None:
     print(f"[tjsp] cjpg single_page ('jurimétrica', {len(linhas)} resultado(s)) → saved")
 
 
+def capture_cjpg_sentenca_sem_bens() -> None:
+    """Grava ``cjpg/sentenca_nao_foram_encontrados.html``: sentenças que citam "não foram encontrados".
+
+    A frase é um dos marcadores de busca sem resultado. Em 26/11/2026, a busca
+    trouxe "Resultados 1 a 10 de 102853", e a contagem dava 0 porque lia o
+    texto das sentenças.
+    """
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    resposta = _fetch_cjpg_page1(session, '"não foram encontrados bens"')
+    if "não foram encontrados" not in resposta.text:
+        # Sem a frase, o sample deixaria de exercitar o caso.
+        print("[tjsp] cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cjpg") / "sentenca_nao_foram_encontrados.html", resposta.content)
+    print("[tjsp] cjpg sentenca_nao_foram_encontrados → saved")
+
+
 def capture_cjpg() -> None:
     """Capture cjpg samples (typical multi-page, single-page, no-results).
 
@@ -175,6 +192,11 @@ def capture_cjpg() -> None:
         capture_cjpg_single_page()
     except Exception as exc:  # pylint: disable=broad-except
         print(f"[tjsp] cjpg single_page FAILED: {exc}")
+
+    try:
+        capture_cjpg_sentenca_sem_bens()
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"[tjsp] cjpg sentenca_nao_foram_encontrados FAILED: {exc}")
 
     try:
         session = build_session(headers=TJSP_CHROME_HEADERS)

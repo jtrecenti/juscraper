@@ -116,6 +116,18 @@ def test_cjpg_count_only_numa_pagina_so_conta_as_linhas_declaradas(tmp_path, moc
 
 
 @responses.activate
+def test_cjpg_count_only_ignora_marcador_de_zero_no_texto_da_sentenca(tmp_path, mocker):
+    """Sentenças que citam "não foram encontrados" não viram busca sem resultado."""
+    mocker.patch("time.sleep")
+    pesquisa = '"não foram encontrados bens"'
+    _add_pesquisar(pesquisa, "cjpg/sentenca_nao_foram_encontrados.html")
+
+    scraper = jus.scraper("tjms", download_path=str(tmp_path))
+
+    assert scraper.cjpg(pesquisa, count_only=True) == 2303
+
+
+@responses.activate
 def test_cjpg_filtros_chegam_a_consulta_do_tjms(tmp_path, mocker):
     mocker.patch("time.sleep")
     esperado = make_tjsp_cjpg_params(
