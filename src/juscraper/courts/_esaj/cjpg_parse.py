@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -28,16 +29,29 @@ _CHAVES_CANONICAS = {
 }
 
 
-def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup, n_rows: int) -> int:
-    if soup.find("div", {"id": "divDadosResultado"}) is not None:
-        if 0 < n_rows < _CJPG_PAGE_SIZE:
-            return n_rows
-        if n_rows >= _CJPG_PAGE_SIZE:
-            raise ValueError(
-                "A resposta contém uma página completa de resultados sem "
-                "marcador de paginação; o HTML pode estar truncado."
-            )
+# Célula acima e abaixo das linhas: "Resultados 1 a 10 de 3565472".
+_RESUMO_RE = re.compile(r"Resultados?\s+\d+\s+a\s+\d+\s+de\s+(\d+)", re.IGNORECASE)
 
+
+def _total_do_resumo(soup: BeautifulSoup) -> int | None:
+    # A célula tem de ser só o resumo: a de layout, que envolve a página
+    # inteira, também contém "Resultados ..." e termina nos links de
+    # paginação, de onde um ``\d+$`` tiraria o "1" de uma página só.
+    for celula in soup.find_all("td"):
+        resumo = _RESUMO_RE.fullmatch(celula.get_text().strip())
+        if resumo is not None:
+            return int(resumo.group(1))
+    return None
+
+
+def _count_cjpg_result_rows_or_raise(n_rows: int) -> int:
+    if 0 < n_rows < _CJPG_PAGE_SIZE:
+        return n_rows
+    if n_rows >= _CJPG_PAGE_SIZE:
+        raise ValueError(
+            "A resposta contém uma página completa de resultados sem "
+            "marcador de paginação; o HTML pode estar truncado."
+        )
     raise ValueError(
         "Não foi possível encontrar o seletor de número de páginas "
         "na resposta HTML. Verifique se a busca retornou resultados "
@@ -52,8 +66,12 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     by the 10-hits-per-page constant. Used by the ``count_only=True``
     short-circuit in :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (issue #92).
 
-    Uses cascading selector + regex strategy to tolerate TJSP layout changes.
-    Mirrors :func:`juscraper.courts._esaj.parse.cjsg_n_results`.
+    Lê o total da célula cujo texto é só "Resultados X a Y de N". Sem ela,
+    cai na cascata de seletores e regex do ``cjsg``
+    (:func:`juscraper.courts._esaj.parse.cjsg_n_results`), que tolera
+    mudanças de layout. A página do cjpg não traz o input oculto com o total
+    que o ``cjsg`` lê primeiro. Os marcadores de busca vazia são procurados
+    fora das linhas de resultado, porque as sentenças os citam.
 
     Fallback for "results table present but pagination marker missing":
     counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` when the page
@@ -70,20 +88,22 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     soup = BeautifulSoup(page_source, "html.parser")
 
     _raise_page_error(soup)
+    total = _total_do_resumo(soup)
+    if total is not None:
+        return total
+
     # As sentenças ficam nas linhas de resultado e citam "não foram
     # encontrados" ("bens penhoráveis"); os marcadores de contagem ficam
     # fora delas, como no ``cjsg``.
-    linhas_de_resultado = [linha.extract() for linha in soup.find_all("tr", class_="fundocinza1")]
+    n_linhas = len(soup.select("#divDadosResultado tr.fundocinza1"))
+    for linha in soup.find_all("tr", class_="fundocinza1"):
+        linha.extract()
     if _has_zero_results(soup):
         return 0
 
-    # A mesma cascata do ``cjsg``: célula curta com "Resultados 1 a N de M"
-    # primeiro. Sem o limite de tamanho, a primeira ``td`` com "resultado" é
-    # a de layout, que envolve a página inteira e termina nos links de
-    # paginação; numa página só, o ``\d+$`` lia o link "1".
     page_element = _find_pagination_element(soup)
     if page_element is None:
-        return _count_cjpg_result_rows_or_raise(soup, len(linhas_de_resultado))
+        return _count_cjpg_result_rows_or_raise(n_linhas)
 
     pagination_text = page_element.get_text().strip()
     count = _extract_pagination_count(pagination_text)

@@ -426,7 +426,7 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 
 Ao alterar contagens, usar seleção e extração em cascata para os formatos observados nos samples. Consultar `src/juscraper/courts/_esaj/parse.py::cjsg_n_results` para eSAJ e `src/juscraper/utils/pagination.py::extract_count_with_cascade` para o helper compartilhado. O fallback pelo maior número exige evidência do layout; não o ativar por padrão, pois pode capturar anos ou identificadores. Cada formato suportado precisa de sample e teste.
 
-- Ler o número na menor célula que o declara ("Resultados 1 a 10 de 25"), nunca num contêiner achado por palavra-chave: a célula de layout que envolve a página também contém "resultados" e termina nos links de paginação, e no `cjpg` do eSAJ um `\d+$` lia ali o link "1".
+- Ler o número na célula cujo texto inteiro é o resumo ("Resultados 1 a 10 de 25", com `fullmatch`), e não na primeira que contém uma palavra-chave nem só pelo tamanho do texto: a célula de layout que envolve a página também contém "Resultados" e termina nos links de paginação, e no `cjpg` do eSAJ um `\d+$` lia ali o link "1".
 - Procurar os marcadores de busca vazia ("não foram encontrados", "nenhum resultado") fora das linhas de resultado. Ementas e sentenças citam essas frases, e uma contagem 0 faz o download parar na primeira página sem aviso.
 - Conferir a contagem em samples reais de uma página só e de página cheia: no layout do eSAJ, a página cheia acertava por acaso.
 

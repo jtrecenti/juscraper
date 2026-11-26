@@ -28,7 +28,8 @@ def _linhas_de_resultado(quantidade: int) -> str:
 
 # Cascata de ``cjpg_n_results`` em layouts que a página atual do eSAJ não
 # traz: célula ``bgcolor`` sem a palavra "resultado", resumo "Página N, total
-# X" e texto em que só o maior número serve. O HTML mínimo fica aqui, e não em
+# X", texto em que só o maior número serve e sentença que cita um marcador de
+# busca vazia sem a célula "Resultados X a Y de N". O HTML mínimo fica aqui, e não em
 # ``samples/``, porque não é resposta do tribunal.
 _CASCATA_CONTAGEM = {
     "bgcolor_legacy": (
@@ -39,6 +40,12 @@ _CASCATA_CONTAGEM = {
     "max_number_fallback": (
         "<table><tr><td>Resultados exibidos: itens 1 a 10; total = 47 ocorrências</td></tr></table>",
         47,
+    ),
+    "marcador_de_zero_na_sentenca": (
+        '<table><tr><td bgcolor="#EEEEEE">Mostrando 1 a 10 de 25 ocorrências</td></tr></table>'
+        '<div id="divDadosResultado"><table><tr class="fundocinza1">'
+        "<td>Não foram encontrados bens penhoráveis.</td></tr></table></div>",
+        25,
     ),
 }
 
