@@ -190,3 +190,21 @@ def test_build_params_omite_texto_sem_pesquisa():
     params = build_listar_comunicacoes_params(pagina=2, numero_processo=CNJ_FORMATADO)
 
     assert params == {"itensPorPagina": 100, "pagina": 2, "numeroProcesso": CNJ_DIGITOS}
+
+
+@pytest.mark.parametrize(
+    ("filtro", "parametro"),
+    [
+        ("data_disponibilizacao_inicio", "dataDisponibilizacaoInicio"),
+        ("data_disponibilizacao_fim", "dataDisponibilizacaoFim"),
+    ],
+)
+@responses.activate
+def test_limite_de_data_sozinho_vai_sem_o_outro(mocker, filtro, parametro):
+    """A API aceita cada limite sozinho (integração): o client não preenche o outro nem avisa."""
+    mocker.patch("time.sleep")
+    _mock_pagina_unica({"itensPorPagina": 100, "pagina": 1, "texto": "liminar", parametro: "2024-06-03"})
+
+    jus.scraper("comunica_cnj").listar_comunicacoes("liminar", **{filtro: "03/06/2024"})
+
+    assert len(responses.calls) == 1
