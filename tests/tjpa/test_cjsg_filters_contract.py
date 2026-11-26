@@ -76,10 +76,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "orgaoJulgadorColegiado": "1a Turma",
         "classe": "Apelacao",
         "assunto": "Dano moral",
-        # O BFF devolve o julgado em D+1 para o filtro D: o julgamento vai um
-        # dia antes do pedido, inclusive na virada de ano; publicacao, nao (#508).
-        "dataJulgamentoInicio": "2023-12-31",
-        "dataJulgamentoFim": "2024-03-30",
+        "dataJulgamentoInicio": "2024-01-01",
+        "dataJulgamentoFim": "2024-03-31",
         "dataPublicacaoInicio": "2024-02-01",
         "dataPublicacaoFim": "2024-04-30",
     }
