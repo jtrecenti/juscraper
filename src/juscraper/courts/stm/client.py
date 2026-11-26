@@ -10,7 +10,7 @@ import pandas as pd
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
-from .download import avisar_expressao_exata, cjsg_download_manager
+from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
 from .schemas import InputCJSGSTM
 
@@ -74,8 +74,10 @@ class STMScraper(HTTPScraper):
                 exato que o portal exibe, em maiúsculas.
 
                 * ``campo`` (str): Onde procurar o termo: ``"ementa"``
-                  (default), ``"inteiro_teor"`` ou ``"numero"`` (número do
-                  processo, completo ou parcial).
+                  (default), ``"inteiro_teor"``, ``"numero"`` (número do
+                  processo, completo ou parcial),
+                  ``"referencia_legislativa"`` ou ``"tudo"`` (todos os
+                  campos).
                 * ``classe`` (str | None): Classe processual
                   (``"APELAÇÃO"``).
                 * ``relator`` (str | None): Ministro relator
@@ -91,14 +93,17 @@ class STMScraper(HTTPScraper):
                   (str | date | None): Intervalo de data de publicação.
 
                 Com filtro de data, a busca vai pela pesquisa avançada do
-                portal, a única que filtra por intervalo. Ela procura
-                ``pesquisa`` como expressão exata no ``campo`` escolhido
-                (``"corrupção ativa"`` só casa com as duas palavras juntas,
-                nessa ordem), não aplica ``E``, ``OU``, ``NÃO`` nem os
-                curingas, e aceita ``pesquisa=""`` para trazer tudo o que
-                está no intervalo. Termo com mais de uma palavra ou com
-                curinga, fora de aspas, emite ``UserWarning``. Informado só um lado do intervalo, o
-                outro é preenchido (01/01/1990 ou hoje), com ``UserWarning``.
+                portal, a única que filtra por intervalo. Os operadores de
+                ``pesquisa`` valem nela também: o raspador os traduz para a
+                sintaxe da pesquisa avançada (``E``, ``OU`` e ``NÃO``, em
+                qualquer caixa, viram ``AND``, ``OR`` e ``NOT``). Nela, o
+                ``NÃO`` vem depois de um termo (``"furto NÃO roubo"``) e a
+                mistura de ``E`` com ``OU`` pede parênteses
+                (``"(furto roubo) OU peculato"``). Ela aceita
+                ``pesquisa=""``, para trazer tudo o que está no intervalo, e
+                não tem ``campo="tudo"``. Informado só um lado do intervalo,
+                o outro é preenchido (01/01/1990 ou hoje), com
+                ``UserWarning``.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
@@ -109,12 +114,15 @@ class STMScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
             ValidationError: Quando um filtro tem valor inválido, como um
-                ``campo`` fora das três opções.
+                ``campo`` fora das cinco opções.
             ValueError: Quando uma data é inválida ou o início vem depois do
-                fim; quando há filtro de data e ``pesquisa`` tem aspas no
-                meio ou barra invertida, ou, em ``campo="numero"``, algo além
-                do número do processo; quando a página devolvida não traz o
-                contador de documentos nem o aviso de busca vazia.
+                fim; quando há filtro de data e ``campo="tudo"`` com termo, ou
+                ``pesquisa`` tem barra invertida, aspas ou parênteses sem par,
+                operador sem termo, ``NÃO`` sem termo antes, ``E`` e ``OU``
+                misturados sem parênteses, curinga em palavra com símbolo além de
+                ponto e hífen ou, em ``campo="numero"``, algo além do número
+                do processo; quando a página devolvida não traz o contador de
+                documentos nem o aviso de busca vazia.
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
 
@@ -164,16 +172,13 @@ class STMScraper(HTTPScraper):
             kwargs=kwargs,
             consume_pesquisa_aliases=True,
         )
-        datas = inp.model_dump(include=set(DATE_CANONICAL))
-        if any(datas.values()):
-            avisar_expressao_exata(inp.pesquisa, inp.campo)
         return cjsg_download_manager(
             inp.pesquisa,
             inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             campo=inp.campo,
-            datas=datas,
+            datas=inp.model_dump(include=set(DATE_CANONICAL)),
             classe=inp.classe,
             relator=inp.relator,
             relator_acordao=inp.relator_acordao,
