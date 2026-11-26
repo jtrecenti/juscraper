@@ -95,6 +95,12 @@ Excecoes: TJMT tambem salva `cjsg/config.json` porque o scraper consulta
 samples `cposg/resultado_*.html` e `cposg/partes_*.html`; as particularidades
 (LF, campos voláteis, processos que evoluem) estão no docstring do script.
 
+## TJPE cpopg
+
+`python -m tests.fixtures.capture.tjpe_cpopg` recaptura
+`cpopg/waf_challenge.html`, a página de desafio do AWS WAF (HTTP 202) na
+consulta pública do PJe de 1º grau; o docstring explica como provocar o desafio.
+
 ## Agregadores
 
 ### JusBR (PDPJ-CNJ)
@@ -113,7 +119,6 @@ JUSBR_JWT=<token> JUSBR_CNJ_1=<cnj-real> JUSBR_CNJ_2=<outro-cnj-real> \
 | `JUSBR_JWT` | sim | JWT valido obtido do devtools do navegador logado em `portaldeservicos.pdpj.jus.br`. |
 | `JUSBR_CNJ_1` | sim | CNJ real (com ou sem mascara) que retorne 1+ processo. Sera substituido por `00000000000000000000` no sample. |
 | `JUSBR_CNJ_2` | sim | Segundo CNJ real para o cenario `list[str]`. Substituido por `11111111111111111111`. |
-| `JUSBR_CNJ_NO_RESULTS` | nao | Mantido por compatibilidade, mas hoje sem efeito util (ver nota abaixo). Default: `9999999-99.9999.9.99.9999`. |
 
 Saida em `tests/jusbr/samples/`:
 
@@ -122,16 +127,13 @@ Saida em `tests/jusbr/samples/`:
 | `cpopg/typical_single.json` | resposta do `GET /api/v2/processos/?numeroProcesso=...` (1 item). |
 | `cpopg/typical_single_details.json` | resposta do `GET /api/v2/processos/{numeroOficial}`. |
 | `cpopg/list_two_first*.json` + `list_two_second*.json` | par de capturas para o cenario `list[str]`. |
-| `cpopg/no_results.json` | `{"content": []}` — **escrito a mao** (ver nota). |
 | `documents/text_typical.txt` | texto de um documento (UTF-8, PII redatada e truncado). |
 | `documents/binary_typical.bin` | HTML do documento, redatado e truncado (~8 KB). |
 
-> **`no_results.json` e escrito a mao, nao capturado.** A API V2 do PDPJ
-> responde `HTTP 404` (com JSON de erro) para CNJ inexistente — nunca
-> `HTTP 200` com `content: []`. Logo o cenario "lista vazia" do contrato nao
-> e observavel no backend; o sample e a lista vazia trivial `{"content": []}`.
-> O capture aborta com 404 ao tentar o `JUSBR_CNJ_NO_RESULTS`, **depois** de ja
-> ter gravado os demais samples — esse erro final e esperado e inofensivo.
+> **Sem sample de "nenhum resultado".** A API V2 do PDPJ responde `HTTP 404`
+> (com JSON de erro) para CNJ inexistente, nunca `HTTP 200` com
+> `content: []`. Os testes cobrem esse caminho com `status=404`, sem sample.
+ado e inofensivo.
 
 **Sanitizacao agressiva pos-captura** acontece automaticamente:
 

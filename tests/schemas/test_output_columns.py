@@ -297,7 +297,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         ignorar={
             "list_*.json": "listagem, lida no download para achar o processo",
             "typical_single.json": "listagem, lida no download para achar o processo",
-            "no_results.json": "listagem vazia, sem detalhe",
         },
     ),
     ("falcao", "listar_decisoes"): Leitura(
