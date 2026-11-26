@@ -1,7 +1,8 @@
 """Testes granulares do parser de arvores eSAJ (``parse_arvore``).
 
 Exercita diretamente :func:`juscraper.courts._esaj.parse.parse_arvore` contra
-a fixture enxuta ``tjsp/samples/arvore/classes_min.html``, cobrindo as bordas:
+o recorte da arvore real de classes do cjsg (``tjsp/samples/arvore/classes_2_min.html``,
+gravado por ``capture_arvores`` em ``tests/fixtures/capture/tjsp.py``), cobrindo as bordas:
 raiz, no intermediario, folha, nome acentuado, nome com hifen e a hierarquia
 derivada do aninhamento ``<ul>/<li>``. Refs #228.
 """
@@ -18,13 +19,13 @@ def _df() -> pd.DataFrame:
     # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
     # saida por ``_texto_ausente_como_none``, que mantem texto ausente como
     # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
-    return _texto_ausente_como_none(parse_arvore(load_sample("tjsp", "arvore/classes_min.html")))
+    return _texto_ausente_como_none(parse_arvore(load_sample("tjsp", "arvore/classes_2_min.html")))
 
 
 def test_colunas_exatas():
     df = _df()
     assert set(df.columns) == ARVORE_COLUNAS
-    assert len(df) == 5
+    assert len(df) == 11
 
 
 def _row(df: pd.DataFrame, node_id: str) -> dict:
@@ -68,7 +69,7 @@ def test_caminho_lista_ancestrais_ate_o_no():
 
 def test_folha_na_raiz():
     # No selecionavel que tambem e raiz (sem pai, nivel 1).
-    folha_raiz = _row(_df(), "5000")
+    folha_raiz = _row(_df(), "12227")
     assert folha_raiz["id_pai"] is None
     assert folha_raiz["nivel"] == 1
     assert folha_raiz["selecionavel"] is True
