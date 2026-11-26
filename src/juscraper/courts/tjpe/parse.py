@@ -67,12 +67,29 @@ def _parse_result_table(table) -> dict:
     return result
 
 
+def _com_coluna_ementa(df: pd.DataFrame) -> pd.DataFrame:
+    """Garante a coluna ``ementa``, com ``None`` onde o bloco não traz ementa.
+
+    O bloco das monocráticas não tem o rótulo ``Ementa``; célula vazia também
+    conta como ausente. A tabela vazia (busca sem resultados) fica como está.
+    """
+    if df.empty:
+        return df
+    ementa = df["ementa"] if "ementa" in df.columns else pd.Series(None, index=df.index, dtype=object)
+    df["ementa"] = ementa.where(ementa.notna() & (ementa != ""), None).astype(object)
+    return df
+
+
 def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
     """
     Parse a list of raw HTML pages from cjsg_download into a DataFrame.
 
     Each page contains up to 5 result blocks structured as label/value
     table rows.
+
+    As decisões monocráticas não têm o rótulo ``Ementa`` no bloco: saem com
+    ``ementa`` ausente (``None``), e a coluna existe mesmo quando nenhuma
+    linha da busca tem ementa.
     """
     all_results = []
 
@@ -91,7 +108,7 @@ def cjsg_parse(raw_pages: list[str]) -> pd.DataFrame:
                     result["url_inteiro_teor"] = inteiro_teor_urls[idx]
                 all_results.append(result)
 
-    df = pd.DataFrame(all_results)
+    df = _com_coluna_ementa(pd.DataFrame(all_results))
 
     # Convert date columns
     for col in ["data_julgamento", "data_publicacao"]:

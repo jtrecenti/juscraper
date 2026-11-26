@@ -30,8 +30,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "classe": source.get("classe_judicial"),
                 "orgao_julgador": source.get("orgao_julgador"),
                 "colegiado": source.get("colegiado"),
-                "relator": source.get("relator"),
-                "tipo_decisao": source.get("tipo_decisao"),
+                "relator": source.get("magistrado"),
+                "tipo_decisao": source.get("tipo_teor"),
                 "data_julgamento": (
                     source.get("dt_assinatura_teor")
                     or source.get("dt_assinatura_ementa")
