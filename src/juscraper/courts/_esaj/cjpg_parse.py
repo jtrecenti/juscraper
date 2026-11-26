@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.exceptions import ColetaParcialError
 from ...core.parse_utils import normalizar_texto
-from .parse import _extract_pagination_count, _find_page_summary_cell, _has_zero_results, _raise_page_error
+from .parse import _contar_pelo_texto, _raise_page_error
 
 logger = logging.getLogger("juscraper.cjpg_parse")
 
@@ -28,37 +28,14 @@ _CHAVES_CANONICAS = {
 }
 
 
-def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
-    # A cascata do CJPG difere da que o CJSG usa em
-    # ``_esaj.parse._find_pagination_element``. Aqui qualquer ``td`` com
-    # "resultado" vence, sem o limite de 400 caracteres, antes de ``bgcolor``,
-    # e ``bgcolor`` vale em qualquer tag. O CJSG exige "resultados" em célula
-    # curta e ainda tenta ``td`` com classe "pag". A ordem faz parte do
-    # contrato legado do CJPG: unificar as duas mudaria qual célula é lida
-    # em páginas que casam com mais de um seletor.
-    for cell in soup.find_all("td"):
-        if "resultado" in cell.get_text().lower():
-            return cell
-
-    legacy_element = soup.find(attrs={"bgcolor": "#EEEEEE"})
-    if legacy_element is not None:
-        return legacy_element
-
-    return _find_page_summary_cell(soup)
-
-
-def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
-    results_container = soup.find("div", {"id": "divDadosResultado"})
-    if results_container is not None:
-        result_rows = results_container.find_all("tr", class_="fundocinza1")
-        if 0 < len(result_rows) < _CJPG_PAGE_SIZE:
-            return len(result_rows)
-        if len(result_rows) >= _CJPG_PAGE_SIZE:
-            raise ValueError(
-                "A resposta contém uma página completa de resultados sem "
-                "marcador de paginação; o HTML pode estar truncado."
-            )
-
+def _count_cjpg_result_rows_or_raise(_soup: BeautifulSoup, n_rows: int) -> int:
+    if 0 < n_rows < _CJPG_PAGE_SIZE:
+        return n_rows
+    if n_rows >= _CJPG_PAGE_SIZE:
+        raise ValueError(
+            "A resposta contém uma página completa de resultados sem "
+            "marcador de paginação; o HTML pode estar truncado."
+        )
     raise ValueError(
         "Não foi possível encontrar o seletor de número de páginas "
         "na resposta HTML. Verifique se a busca retornou resultados "
@@ -67,45 +44,34 @@ def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
 
 
 def cjpg_n_results(page_source: str | bytes) -> int:
-    """Extracts the total number of results from a CJPG first-page HTML.
+    """Total de resultados de uma busca do cjpg, lido da primeira página.
 
-    Sibling of :func:`cjpg_n_pags`, which is now a thin wrapper that divides
-    by the 10-hits-per-page constant. Used by the ``count_only=True``
-    short-circuit in :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (issue #92).
+    Usado pelo ``count_only=True`` de
+    :meth:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper.cjpg` (#92) e, por
+    :func:`cjpg_n_pags`, pelo download. Lê o texto da página como o
+    :func:`~juscraper.courts._esaj.parse.cjsg_n_results` (a página do cjpg
+    não traz o input oculto com o total): o resumo "Resultados X a Y de N",
+    os marcadores de busca vazia fora das sentenças e a cascata de seletores
+    e regex.
 
-    Uses cascading selector + regex strategy to tolerate TJSP layout changes.
-    Mirrors :func:`juscraper.courts._esaj.parse.cjsg_n_results`.
-
-    Fallback for "results table present but pagination marker missing":
-    counts ``tr.fundocinza1`` rows inside ``divDadosResultado`` when the page
-    has fewer than 10 rows. A full page without pagination is ambiguous and
-    raises instead of undercounting a potentially truncated response.
+    Sem marcador nenhum, conta as linhas ``tr.fundocinza1`` de
+    ``divDadosResultado`` quando são menos de 10. Página cheia sem
+    paginação é ambígua (pode estar truncada) e levanta erro.
 
     Returns:
-        Number of results (0 when the search returned no hits).
+        Número de resultados (0 quando a busca não trouxe nada).
 
     Raises:
-        ValueError: When the page reports an error, contains a full results
-            page without pagination, or has no known result marker.
+        ValueError: Página com erro, página cheia sem paginação ou sem
+            nenhum marcador de resultado conhecido.
     """
     soup = BeautifulSoup(page_source, "html.parser")
-
     _raise_page_error(soup)
-    if _has_zero_results(soup):
-        return 0
-
-    page_element = _find_cjpg_pagination_element(soup)
-    if page_element is None:
-        return _count_cjpg_result_rows_or_raise(soup)
-
-    pagination_text = page_element.get_text().strip()
-    count = _extract_pagination_count(pagination_text)
-    if count is None:
-        raise ValueError(
-            "Não foi possível extrair o número de resultados "
-            f"da string: {pagination_text}"
-        )
-    return count
+    return _contar_pelo_texto(
+        soup,
+        seletor_linhas="#divDadosResultado tr.fundocinza1",
+        contar_linhas=_count_cjpg_result_rows_or_raise,
+    )
 
 
 def cjpg_n_pags(page_source: str | bytes) -> int:

@@ -28,7 +28,8 @@ def _linhas_de_resultado(quantidade: int) -> str:
 
 # Cascata de ``cjpg_n_results`` em layouts que a página atual do eSAJ não
 # traz: célula ``bgcolor`` sem a palavra "resultado", resumo "Página N, total
-# X" e texto em que só o maior número serve. O HTML mínimo fica aqui, e não em
+# X", texto em que só o maior número serve e sentença que cita um marcador de
+# busca vazia sem a célula "Resultados X a Y de N". O HTML mínimo fica aqui, e não em
 # ``samples/``, porque não é resposta do tribunal.
 _CASCATA_CONTAGEM = {
     "bgcolor_legacy": (
@@ -39,6 +40,12 @@ _CASCATA_CONTAGEM = {
     "max_number_fallback": (
         "<table><tr><td>Resultados exibidos: itens 1 a 10; total = 47 ocorrências</td></tr></table>",
         47,
+    ),
+    "marcador_de_zero_na_sentenca": (
+        '<table><tr><td bgcolor="#EEEEEE">Mostrando 1 a 10 de 25 ocorrências</td></tr></table>'
+        '<div id="divDadosResultado"><table><tr class="fundocinza1">'
+        "<td>Não foram encontrados bens penhoráveis.</td></tr></table></div>",
+        25,
     ),
 }
 
@@ -191,21 +198,20 @@ class TestCJPGNResults:
         html = load_sample("tjsp", "cjpg/results_normal_page_01.html")
         assert cjpg_n_results(html) == 3565472
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "A cascata pega a célula de layout com 'Resultados', e não a do bgcolor; "
-            "o '\\d+$' casa com o link da página '1' no fim dela."
-        ),
-    )
     def test_single_page_conta_os_dois_resultados(self):
-        """A página real com "Resultados 1 a 2 de 2" deveria contar 2."""
+        """Página real com "Resultados 1 a 2 de 2": conta 2, e não o link da página "1" (#740)."""
         html = load_sample("tjsp", "cjpg/single_page.html")
         assert cjpg_n_results(html) == 2
+        assert cjpg_n_pags(html) == 1
+
+    def test_sentenca_com_marcador_de_zero_nao_zera_a_contagem(self):
+        """Sentenças que citam "não foram encontrados" não viram busca sem resultado."""
+        html = load_sample("tjsp", "cjpg/sentenca_nao_foram_encontrados.html")
+        assert cjpg_n_results(html) == 102853
 
     @pytest.mark.parametrize(("corpo", "expected"), _CASCATA_CONTAGEM.values(), ids=_CASCATA_CONTAGEM.keys())
     def test_selector_and_text_cascades(self, corpo, expected):
-        """Characterizes the CJPG-only selectors and shared text cascade."""
+        """Caracteriza a cascata de seletores e de regex, a mesma do ``cjsg``."""
         assert cjpg_n_results(_pagina(corpo)) == expected
 
     def test_counts_result_rows_when_pagination_marker_is_missing(self):
