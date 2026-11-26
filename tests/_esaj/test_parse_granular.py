@@ -573,15 +573,22 @@ class TestCJSGParseSinglePage:
         assert "outros_numeros" not in df.columns
 
     def test_latin1_file_is_decoded_without_mojibake(self, tmp_path):
-        """A página gravada em latin-1, como o download a grava, sai igual à lida em UTF-8."""
-        original = Path(__file__).parent.parent / "tjsp/samples/cjsg/results_normal_page_02.html"
-        path = tmp_path / "latin1.html"
-        path.write_bytes(original.read_bytes().decode("utf-8").encode("latin-1"))
+        """Os bytes do eSAJ (windows-1252) gravados como vieram saem iguais à página em UTF-8.
+
+        ``results_normal_page_01.html`` tem acentos e o travessão "–", que no
+        windows-1252 é o byte 0x96.
+        """
+        original = Path(__file__).parent.parent / "tjsp/samples/cjsg/results_normal_page_01.html"
+        texto = original.read_bytes().decode("utf-8")
+        assert "–" in texto
+        path = tmp_path / "cp1252.html"
+        path.write_bytes(texto.encode("cp1252"))
 
         df = _parse_single_page(str(path))
 
         pd.testing.assert_frame_equal(df, _parse_single_page(str(original)))
-        assert df.iloc[0]["orgao_julgador"] == "Núcleo 4.0-T. V (DP2)"
+        assert df["ementa"].str.contains("–").any()
+        assert df.iloc[0]["orgao_julgador"] == "Núcleo 4.0-T. V (DP1)"
 
 
 class TestCJSGParseManager:

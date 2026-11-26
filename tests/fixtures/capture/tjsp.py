@@ -28,7 +28,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj.acordao import paginas_movimentacoes
-from juscraper.courts._esaj.cjpg_parse import cjpg_n_results
 
 from ._util import (
     TJSP_CHROME_HEADERS,
@@ -134,19 +133,20 @@ def _fetch_cjpg_page_n(session: requests.Session, page: int) -> requests.Respons
 def capture_cjpg_single_page() -> None:
     """Grava ``cjpg/single_page.html``: busca cujos resultados cabem numa página de 10.
 
-    Em 26/11/2026, "jurimétrica" trouxe 1 sentença. A busca antiga
+    Em 26/11/2026, "jurimétrica" trouxe 2 sentenças. A busca antiga
     ("usucapiao extraordinario predio rural familia juizado") já não trazia
-    nenhuma.
+    nenhuma. Conta as linhas da página, e não usa ``cjpg_n_results``, que
+    numa página só devolve 1 (ver ``test_single_page_conta_os_dois_resultados``).
     """
     session = build_session(headers=TJSP_CHROME_HEADERS)
     resposta = _fetch_cjpg_page1(session, "jurimétrica")
-    total = cjpg_n_results(resposta.content)
-    if not 0 < total <= 10:
-        # Fora de uma página, o sample deixaria de exercitar o caso.
-        print(f"[tjsp] cjpg single_page: {total} resultados; sample mantido")
+    linhas = BeautifulSoup(resposta.content, "html.parser").select("#divDadosResultado tr.fundocinza1")
+    if not 0 < len(linhas) < 10:
+        # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.
+        print(f"[tjsp] cjpg single_page: {len(linhas)} linhas na 1a página; sample mantido")
         return
     dump(samples_dir_for("tjsp", "cjpg") / "single_page.html", resposta.content)
-    print(f"[tjsp] cjpg single_page ('jurimétrica', {total} resultado(s)) → saved")
+    print(f"[tjsp] cjpg single_page ('jurimétrica', {len(linhas)} resultado(s)) → saved")
 
 
 def capture_cjpg() -> None:

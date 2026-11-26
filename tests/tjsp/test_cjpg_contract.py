@@ -22,7 +22,6 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.courts._esaj.cjpg_parse import cjpg_n_results
 from juscraper.courts.tjsp.exceptions import QueryTooLongError
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
@@ -184,9 +183,8 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     Mocka 2 GETs distintos com `data_inicio` diferente (uma janela cada) e
     afere que o total e a soma das contagens reportadas. Vai falhar se o
     auto_chunk count-only path quebrar (ex.: iterar fora de
-    `iter_date_windows` ou nao somar). A soma esperada vem da contagem de
-    cada sample, porque a do ``single_page.html`` hoje sai errada (ver
-    ``test_single_page_conta_os_dois_resultados`` em ``test_cjpg.py``).
+    `iter_date_windows` ou nao somar). As duas janelas respondem com a
+    mesma captura real, de 3565472 resultados.
     """
     mocker.patch("time.sleep")
     # Janela total: 02/01/2020 a 01/01/2022 = 2 anos de calendario = 2 janelas.
@@ -211,7 +209,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
-        body=load_sample_bytes("tjsp", "cjpg/single_page.html"),
+        body=load_sample_bytes("tjsp", "cjpg/results_normal_page_01.html"),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(expected_w2)],
@@ -225,12 +223,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     assert isinstance(n, int)
-    contagens = [
-        cjpg_n_results(load_sample_bytes("tjsp", f"cjpg/{sample}"))
-        for sample in ("results_normal_page_01.html", "single_page.html")
-    ]
-    assert n == sum(contagens)  # soma bruta cross-janela
-    assert contagens[0] == 3565472
+    assert n == 2 * 3565472  # soma bruta cross-janela
     assert len(responses.calls) == 2
 
 
