@@ -2,7 +2,7 @@
 title: "API Conventions"
 ---
 
-For lifecycle stages and the warning-to-removal process, see the project's [deprecation policy](https://github.com/jtrecenti/juscraper/blob/main/CLAUDE.md#política-de-deprecação).
+For lifecycle stages and the warning-to-removal process, see the project's [deprecation policy](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#política-de-deprecação).
 
 ## Standard Parameter Names
 
@@ -27,6 +27,7 @@ All scrapers in juscraper follow a unified API convention for parameter names.
 
 **Generic aliases:** `data_inicio` / `data_fim` map to `data_julgamento_inicio` / `data_julgamento_fim`.
 Cannot be used together with the specific names — raises `ValueError`.
+They do not apply to DataJud `listar_processos`, which filters by filing date: use `data_ajuizamento_inicio` / `data_ajuizamento_fim`.
 
 **Deprecated aliases:** `data_julgamento_de` / `data_julgamento_ate`, `data_publicacao_de` / `data_publicacao_ate` — accepted with `DeprecationWarning`.
 
@@ -183,25 +184,30 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
-### eSAJ `cjsg`: from the `relatora` column to `relator`
+### eSAJ `cjsg`, eSAJ `cjpg` and TRF6 `cpopg`: from `relatora`/`magistrado` to `relator`
 
-The eSAJ portals (TJAC, TJAL, TJAM, TJCE, TJMS and TJSP) label the rapporteur
-as "Relator(a):", and the parser used to turn the label into a `relatora`
-column. The column is now `relator`, as in the other courts, with no
-deprecation cycle: a DataFrame cannot keep both names without duplicating the
-data. In TJSP, rows labelled "Relator:" already came out as `relator`, so a
-search with both labels split the rapporteur across two columns; it is now a
-single `relator` column.
+The parsers used to turn the portal label into the column name. The eSAJ
+portals (TJAC, TJAL, TJAM, TJCE, TJMS and TJSP) label the rapporteur as
+"Relator(a):", which became a `relatora` column in `cjsg`; the eSAJ
+first-instance search (`cjpg`, in TJSP and TJMS) labels the judge as
+"Magistrado:", which became `magistrado`; the TRF6 `cpopg` (eproc) did the
+same for the judge on the case cover. All of them now deliver `relator`, the
+name used by the other courts, also for first-instance decisions. In TJSP,
+`cjsg` rows labelled "Relator:" already came out as `relator`, so a search
+with both labels split the rapporteur across two columns; it is now a single
+column. There is no deprecation cycle: a DataFrame cannot keep both names
+without duplicating the data.
 
 ```python
 # Before
-df["relatora"]
+df["relatora"]    # eSAJ cjsg
+df["magistrado"]  # eSAJ cjpg, TRF6 cpopg
 
 # After
 df["relator"]
 
 # DataFrames saved before the change
-df = df.rename(columns={"relatora": "relator"})
+df = df.rename(columns={"relatora": "relator", "magistrado": "relator"})
 ```
 
 ### TJSP `cpopg`/`cposg`: `method="api"` removed

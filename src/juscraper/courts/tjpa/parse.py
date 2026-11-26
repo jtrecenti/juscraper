@@ -23,6 +23,12 @@ def _extract_assuntos(assuntos):
     return assuntos
 
 
+def _ementa(item: dict) -> str | None:
+    """Ementa em texto puro; a decisão monocrática sem ementa vem com ``""`` e sai ``None``."""
+    ementa = item.get("ementatextopuro")
+    return ementa if ementa and ementa.strip() else None
+
+
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """
     Extracts relevant data from the raw TJPA API responses.
@@ -52,7 +58,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_julgamento": item.get("datajulgamento"),
                 "data_documento": item.get("datadocumento"),
                 "data_publicacao": item.get("datapublicacao"),
-                "ementa": item.get("ementatextopuro"),
+                "ementa": _ementa(item),
                 "sentido_decisao": item.get("sentidodecisao"),
                 "especie": item.get("especie"),
                 "sistema_origem": _extract_nested(item.get("sistemaorigem")),

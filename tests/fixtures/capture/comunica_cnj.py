@@ -23,8 +23,9 @@ A querystring e construida por
 ``juscraper.aggregators.comunica_cnj.download.build_listar_comunicacoes_params`` —
 a mesma funcao que ``client.py:listar_comunicacoes`` chama em producao.
 Reexportada como ``build_params`` aqui apenas pelo nome curto e local;
-capture e contrato compartilham a mesma fonte de verdade (regra 12 do
-CLAUDE.md).
+capture e contrato compartilham a mesma fonte de verdade
+(``CONTRIBUTING.md`` > **Adding a new tribunal**, item 13, "Payload
+builders públicos").
 """
 from __future__ import annotations
 

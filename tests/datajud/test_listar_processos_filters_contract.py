@@ -1,7 +1,8 @@
 """Filters propagation for ``DatajudScraper.listar_processos`` (issue #140).
 
-DataJud has no deprecated aliases (rule 6a of the contract checklist
-in CLAUDE.md is N/A here): the API is recent and was designed with
+DataJud has no deprecated aliases (item 7, "Cobertura mínima de aliases
+deprecados", of the checklist in ``CONTRIBUTING.md`` > **Adding a new
+tribunal** is N/A here): the API is recent and was designed with
 the canonical names from day one.
 
 ``InputListarProcessosDataJud`` is wired into the client — unknown

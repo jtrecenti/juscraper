@@ -15,7 +15,7 @@ class OutputCpopgTRF6(OutputCnjConsultaBase):
 
     Pivot ``id_cnj`` is inherited from :class:`OutputCnjConsultaBase`. The
     rich detail fields populated by :func:`juscraper.courts.trf6.parse.parse_detail`
-    (``processo``, ``classe``, ``data_autuacao``, ``situacao``, ``magistrado``,
+    (``processo``, ``classe``, ``data_autuacao``, ``situacao``, ``relator``,
     ``orgao_julgador``, ``assuntos``, ``polo_ativo``, ``polo_passivo``,
     ``mpf``, ``perito``, ``movimentacoes``) flow through ``extra='allow'``.
     ``motivo_falha`` (``None`` ou o motivo da falha da linha) também.

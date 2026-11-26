@@ -1,125 +1,52 @@
 # CLAUDE.md
 
-juscraper é uma biblioteca Python para coletar dados de tribunais e agregadores brasileiros. A entrada pública é `juscraper.scraper()`; implementações ficam em `src/juscraper/courts/` e `src/juscraper/aggregators/`.
+juscraper é uma biblioteca Python para coletar dados de tribunais e agregadores brasileiros. A entrada pública é `juscraper.scraper()`; as implementações ficam em `src/juscraper/courts/` (famílias compartilhadas em pacotes com `_`, como `_esaj/` e `_trf/`) e `src/juscraper/aggregators/`. As regras abaixo valem para qualquer mudança; o detalhe está em `CONTRIBUTING.md` > **Internal Dev Guide**.
 
 ## Desenvolvimento
 
-- Usar `uv`. Para preparar o ambiente de desenvolvimento: `uv sync --extra dev` (inclui instalação editável). Testes devem importar o pacote instalado, sem alterar `sys.path`.
-- Versões suportadas e regras de lint ficam em `pyproject.toml`; as dispensas temporárias por arquivo ficam em `ruff.toml`; os hooks ficam em `.pre-commit-config.yaml`.
-- `# noqa` só para exceção deliberada, com código completo e justificativa na linha ou acima; `PGH004` e `RUF100` reprovam o sem código e o obsoleto. Dívida de lint não vai para `# noqa` nem para `ruff.toml`: corrigir o código.
-- Antes de concluir uma alteração, executar os testes afetados e `uv run pre-commit run --files <arquivos alterados>`. Para mudanças de API/schema, incluir `tests/schemas/`.
-
 ```bash
-uv sync --extra dev                          # ambiente + instalação editável
-uv run pre-commit install                    # hooks locais, inclusive a suíte offline
-uv run pytest -n auto                        # suíte offline em paralelo (~30 s)
-uv run ruff check --config ruff.toml src tests
-uv run pre-commit run mypy --all-files       # typecheck: o gate é o mypy do hook
-uv run pre-commit run --all-files            # todos os hooks, como no CI
+uv sync --extra dev                         # ambiente + instalação editável
+uv run pre-commit install                   # hooks de lint e typecheck
+uv run pytest tests/<área afetada>          # só os testes afetados; a suíte inteira roda no CI
+uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 ```
 
-- O typecheck que reprova é o hook `mypy` do pre-commit, com versão e dependências fixadas no `.pre-commit-config.yaml`. `uv run mypy src` usa outra versão e acusa centenas de erros que não são gate.
-- O hook `pytest` roda a suíte offline em todo commit. `SKIP=pytest git commit ...` o pula num commit pontual; o CI roda a suíte de qualquer forma.
-- CI (`.github/workflows/`): `Testes` (pytest em 3.11–3.15, cobertura mínima de 94% na perna 3.13), `Lint` (`uv.lock`, Ruff, política de dispensas e pre-commit), `Qualidade` (complexidade e Semgrep), `Changelog` e `Integração` (testes ao vivo e notebooks contra os tribunais; só por disparo manual). Os passos de CI são testados em `tests/ci_workflows/`.
-
-## Estrutura
-
-- `src/juscraper/courts/<sigla>/`: um pacote por tribunal: `client.py` com a classe pública e módulos de parse/download por endpoint. Famílias compartilhadas ficam em pacotes com `_`: `_esaj/` (TJSP, TJAC, TJAL, TJAM, TJCE, TJMS) e `_trf/`.
-- `src/juscraper/aggregators/`: Datajud, JusBR, PDPJ, ComunicaCNJ e Falcão.
-- `src/juscraper/core/` (base, HTTP, WAF, avisos, exceções), `schemas/` (modelos pydantic `Input*`/`Output*`), `utils/` (normalização de parâmetros, paginação).
-- `tests/<sigla>/` com `samples/` de respostas reais; `tests/schemas/` para paridade de schemas; `tests/lint_policy/`, `tests/complexity_gate/` e `tests/ci_workflows/` testam o próprio tooling.
-- `scripts/`: gates de lint e complexidade, release e relatório de integração. `docs/`: site Quarto e notebooks por tribunal.
-- Commits e PRs em português, com a área no início (`TJMT: ...`, `CI: ...`, `fix(tjro): ...`).
-- Ao investigar complexidade, consultar `CONTRIBUTING.md` > **Complexidade de código (lizard + complexipy)**. Métricas complementares, com gate no pre-commit e no CI.
+- Em mudança de API ou schema, incluir `tests/schemas/` nos testes afetados.
+- Testes importam o pacote instalado, sem alterar `sys.path`.
+- O typecheck que reprova é o hook `mypy` do pre-commit (`uv run pre-commit run mypy --all-files`); `uv run mypy src` usa outra versão e não é gate.
+- `# noqa` só para exceção deliberada, com código completo e justificativa. Dívida de lint se corrige no código, não em `# noqa` nem em `ruff.toml`.
 
 ## Arquitetura
 
 - **Regra de generalização:** mover para `_<familia>/` ou criar mixin/base só com **2+ ocorrências concretas**. Duplicar com 1 caso é mais barato que abstrair errado.
-- Nas famílias de raspadores, acomodar diferenças por hooks/atributos. Se a particularidade não couber, manter scraper próprio; não acrescentar `if tribunal == "X"` ao código compartilhado.
-- **Retry de rede** (`retry_on_timeout`/`retry_on_connection_error`): desligado no padrão do core; ligar por perfil em `perfis_http`, só no raspador cujo portal derruba conexões ou trava respostas, com contrato que simule a falha (ex.: `FALHAS_DE_REDE` em `tests/tjmg/_helpers.py`). O motivo está na docstring de `RequestPolicy`.
-- **Política de falhas HTTP:** declarar timeout, tentativas, backoff, `Retry-After`, status retentáveis e exigência de JSON em `RequestPolicy`/`perfis_http` quando mais de um endpoint da família compartilha o comportamento. O core limita as esperas e inclui 403 retentável por causa do WAF intermitente do eSAJ; PDPJ e JusBR o retiram dos perfis porque lá pode negar acesso a um recurso. `expect_json=True` só vale para resposta de sucesso que obrigatoriamente contém JSON: JusBR retenta 200 vazio/inválido no perfil `listagem`; PDPJ valida a forma no endpoint e falha na primeira resposta inválida, preservando `InvalidJSONResponseError`; seus documentos podem ser texto/binário. TJES, TJMT e Falcão exigem JSON nos perfis de busca; as chamadas usam `perfil=`.
-- **Classificação por linha:** usar `core.failures.EXCECOES_DE_FALHA_POR_LINHA` e `motivo_falha` nos lotes cujo contrato devolve uma linha por entrada; emitir aviso agregado e manter as linhas anteriores no retorno normal. `ChunkedEncodingError` é falha de conexão; `ContentDecodingError` é resposta inesperada. Falha fora dessa lista e autenticação inválida propagam o erro. No HTTP 401 ou na falha de renovação SSO, PDPJ/JusBR anotam falhas anteriores, mas não oferecem todas as linhas já coletadas no erro. O bloqueio anti-bot reconhecido pode virar linha de falha se o lote continuar; não transformar JSON válido com envelope de erro, captcha ou página ausente em busca vazia.
-- **Coleta de páginas:** TJMG `_baixar_lista`, TJPR `_baixar_paginas` e TJTO `_baixar_paginas` preservam páginas já baixadas em `ColetaParcialError.resultado` com a causa original; se nada foi baixado, relançam a falha original. eSAJ auto-chunk pode seguir após falhas múltiplas e registra cada uma em `.falhas`; ele e DataJud podem levantar `ColetaParcialError` com resultado vazio. TJMG mantém categorias e TJTO mantém a detecção de WAF. Só extrair laços de coleta quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais.
-- Antes de adicionar um raspador, ler `CONTRIBUTING.md` > **Adding a new tribunal**. Para eSAJ, ler também **Adding an eSAJ tribunal**; a base é `src/juscraper/courts/_esaj/base.py`.
+- Nas famílias, acomodar diferenças por hooks/atributos ou manter scraper próprio; nunca `if tribunal == "X"` no código compartilhado.
 
 ## Testes
 
-```bash
-uv run pytest                         # suíte offline; exclui integração
-uv run pytest tests/tjsp tests/schemas # exemplo de escopo por tribunal + schemas
-uv run pytest -m integration           # acessa serviços externos
-```
+- Mudança em parser exige sample de resposta real e teste do formato afetado. Formato que aparece em mais de um tribunal da família precisa de sample de cada um: procurar antes nos samples existentes e gravar o que faltar pelo script de `tests/fixtures/capture/<sigla>.py`.
+- Teste que acessa rede leva o marker `integration`. Ao mexer num tribunal, rodar a integração dele localmente antes do PR.
+- Antes de refatorar um tribunal, seus contratos devem passar. Wiring de schema vai em PR separado do PR de contratos; se a issue de contratos deixar o wiring em aberto, abrir follow-up.
 
-- Ao usar skills para criar ou alterar raspadores, seguir a política de testes deste repositório.
-- Mudança em parser HTML/JSON exige sample e teste para o formato afetado. Contratos verificam colunas do DataFrame e propagação de filtros no payload; samples vêm de respostas reais, não de campos inventados.
-- Formato que o parser trata e que aparece em mais de um tribunal de uma família precisa de sample de cada um deles. Antes de capturar, procurar nos samples existentes pelos marcadores do formato, que variam entre tribunais (no eSAJ, o texto sem formatação traz `N/A` no TJSP e `Ementa: N/A` no TJAM). O que faltar, gravar pelo script de `tests/fixtures/capture/<sigla>.py`, com o cenário no script, em vez de deixar a resposta só na sondagem.
-- Testes ao vivo rodam localmente, de IP residencial: os tribunais bloqueiam com frequência os IPs do runner do GitHub, e por isso a `Integração` não roda sozinha em PR nem por agendamento. Ao mexer num tribunal, rodar a integração dele antes do PR; os comandos estão em `CONTRIBUTING.md` > **Integração local**.
-- Marcar testes que acessam rede com `integration`. Ferramentas, estrutura de samples, helpers e tratamento de anti-bot estão em `CONTRIBUTING.md` > **Tests**; consultar antes de escrever contratos ou executar integração.
-- Antes de refatorar um tribunal, seus contratos devem passar. Wiring de schema entra na refatoração estrutural ou em PR dedicado posterior, separado do PR de contratos. Se a issue de contratos deixar wiring em aberto, abrir follow-up.
+## Antes de mexer em
 
-## API pública
-
-- Preservar nomes canônicos e compatibilidade com aliases deprecados. Antes de alterar parâmetros, datas ou paginação, consultar `docs/api-conventions.qmd`, o schema do endpoint e a normalização em `src/juscraper/utils/params.py`.
-- No Datajud, `listar_processos` filtra por ajuizamento: usar `data_ajuizamento_inicio/fim`; o alias genérico `data_inicio/fim` não se aplica.
-- `paginas` é 1-based; `None` busca todas. Herdar o contrato de `PaginasMixin` em `src/juscraper/schemas/mixins.py`, inclusive via `SearchBase`, sem redeclarar o campo em cada schema.
-- Resolver aliases e validações específicas antes do pydantic. Para implementar wiring, seguir `CONTRIBUTING.md` > **Schemas pydantic** > **Pipeline canônico (wiring)**.
-- `Input*` rejeita campos extras; `Output*` aceita auxiliares do backend. Na API pública, `raise_on_extra_kwargs` converte erros exclusivamente de kwargs desconhecidos em `TypeError`; os demais erros de validação permanecem `ValidationError`.
-
-## Política de deprecação
-
-Ao alterar uma API pública, aplicar esta política, definida a partir da [issue #150](https://github.com/jtrecenti/juscraper/issues/150) e dos [estágios do lifecycle do tidyverse](https://lifecycle.r-lib.org/articles/stages.html). O juscraper adota os estágios, mas usa transições curtas, proporcionais ao uso e ao custo de manter compatibilidade em uma biblioteca de raspagem. Não há prazo mínimo em meses ou anos.
-
-### Estágios
-
-O estágio pode se aplicar a um endpoint, parâmetro ou valor aceito. Registrar exceções na docstring e na documentação da API; `stable` é o padrão quando não houver indicação explícita.
-
-| Estágio | Contrato |
+| Área | Ler |
 | --- | --- |
-| `experimental` | Interface em avaliação, identificada como tal na documentação. Pode mudar ou desaparecer sem ciclo prévio de aviso; registrar a quebra e a migração no changelog. |
-| `stable` | Interface recomendada. Quebras deliberadas passam pelo fluxo de deprecação abaixo. A estabilidade da API não garante disponibilidade do portal do tribunal. |
-| `superseded` | Há alternativa recomendada, mas a API continua suportada, sem aviso e sem retirada prevista. Recebe correções críticas, sem novas funcionalidades. Para retirá-la, passar antes a `deprecated`. |
-| `deprecated` | Retirada prevista. O uso ainda funciona e emite `DeprecationWarning` com a alternativa, quando existir. |
+| Novo raspador | `CONTRIBUTING.md` > **Adding a new tribunal** (e **Adding an eSAJ tribunal**) |
+| Parâmetros, aliases, datas, paginação | `docs/api-conventions.qmd` e `CONTRIBUTING.md` > **Política de deprecação** |
+| Schemas pydantic | `CONTRIBUTING.md` > **Schemas pydantic** |
+| Docstrings com filtros em `**kwargs` | `CONTRIBUTING.md` > **Docstrings de métodos públicos com kwargs** |
+| HTTP, retry, falhas por linha, coleta parcial | `CONTRIBUTING.md` > **Falhas HTTP, falhas por linha e coleta parcial** |
+| Contagem de páginas/resultados em HTML | `CONTRIBUTING.md` > **Contagem de páginas e resultados em HTML** |
+| Samples, integração, CI | `CONTRIBUTING.md` > **Tests** |
+| Lint e complexidade | `CONTRIBUTING.md` > **Política de lint e adoção gradual** e **Complexidade de código (lizard + complexipy)** |
 
-### Fluxo de mudança
+## API pública e changelog
 
-1. No PR que inicia a deprecação, justificar a quebra, identificar os endpoints afetados e registrar a versão de início e a versão-alvo de remoção em `CHANGELOG.md`, na categoria `Deprecated` de `[Unreleased]`. Para aliases, incluir a tabela nome antigo → nome canônico. Descrever a migração em `docs/api-conventions.qmd` ou na documentação do endpoint; se não houver substituto, dizer isso explicitamente.
-2. Enquanto houver compatibilidade, emitir `DeprecationWarning` e testar tanto o aviso quanto o resultado ou payload equivalente ao uso canônico. Para aliases, reutilizar `normalize_pesquisa`, `normalize_datas`, `pop_deprecated_alias` ou `resolve_deprecated_alias`, conforme o caso. Para um valor deprecado de parâmetro (o nome continua, o valor muda), usar `resolve_deprecated_value` (`src/juscraper/utils/deprecacao.py`). Emitir o aviso por `juscraper.core.avisos.avisar`, que o atribui ao código de quem chamou a biblioteca sem `stacklevel` contado à mão; `warnings.warn` direto reprova em `tests/core/test_avisos.py`. O aviso deve orientar a migração; o changelog é a fonte das versões. O Python pode ocultar essa categoria por padrão: conferir a migração com `uv run python -W default::DeprecationWarning script.py`.
-3. Como regra, publicar o aviso em pelo menos uma versão antes da remoção. Antes da 1.0, a próxima versão menor pode encerrar a transição; a partir da 1.0, reservar remoções de API estável para versões maiores. Exceções ao aviso prévio ficam restritas a APIs experimentais ou mudanças externas que tornem impossível manter o comportamento anterior, com motivo e impacto registrados no PR e no changelog. Correções de bugs não exigem preservar o comportamento incorreto.
-4. No PR de remoção, conferir a versão anunciada, excluir a compatibilidade e atualizar testes, docstrings e guia de migração juntos. Testar que o uso antigo falha, sem ser ignorado pelos helpers que consomem `**kwargs`, e que a alternativa continua funcionando. Registrar em `Removed` de `[Unreleased]`, preservando entradas de versões já publicadas. Usar uma etapa `defunct`, com erro explicativo e indicação do substituto, somente quando a mensagem ajudar a migração; não manter wrappers sem prazo apenas para adiar a remoção.
-
-### Transição para a 1.0
-
-Os aliases legados já deprecados pela padronização da API têm a 1.0 como alvo de remoção. Na preparação dessa versão, inventariar os avisos no código e as tabelas de migração, conferir quais deprecações chegaram a uma versão publicada e retirar os aliases com os testes do fluxo acima. Deprecações introduzidas depois recebem versão-alvo própria; a 1.0 não autoriza apagar indiscriminadamente todos os warnings. Até o PR de remoção, os aliases continuam aceitos com aviso. Esta política não remove compatibilidade nem altera a versão do pacote por si só.
-
-## Schemas pydantic
-
-- Para criar ou alterar modelos, ler `CONTRIBUTING.md` > **Schemas pydantic**. O Output deve refletir o parser, com nomes canônicos, sem valores provisórios; métodos stub não recebem schema.
-- Os registros de endpoints estão em `tests/schemas/test_schema_coverage.py`. A existência de um schema não comprova seu uso em runtime: conferir o método e a detecção `_is_wired` em `tests/schemas/test_signature_parity.py`.
-- A paridade de assinatura tem exceções para infraestrutura, aliases e métodos com `**kwargs`; endpoints reconhecidos como wired são pulados por esse teste. Validar o comportamento público pelos contratos do scraper.
-
-## Docstrings
-
-Ao alterar método público com filtros em `**kwargs`, ler `CONTRIBUTING.md` > **Docstrings de métodos públicos com kwargs** e executar `uv run pytest tests/schemas/test_docstring_parity.py`. O padrão exige filtros sincronizados com o schema, referência ao método principal nos pares `*_download` e registro de novos casos nos testes de paridade.
-
-## Extração de número de páginas/resultados em raspadores HTML
-
-Ao alterar contagens, usar seleção e extração em cascata para os formatos observados nos samples. Consultar `src/juscraper/courts/_esaj/parse.py::cjsg_n_results` para eSAJ e `src/juscraper/utils/pagination.py::extract_count_with_cascade` para o helper compartilhado. O fallback pelo maior número exige evidência do layout; não o ativar por padrão, pois pode capturar anos ou identificadores. Cada formato suportado precisa de sample e teste.
+- Preservar nomes canônicos e aliases deprecados. Quebra deliberada segue `CONTRIBUTING.md` > **Política de deprecação**.
+- `CHANGELOG.md` registra só efeitos para quem usa a API pública, em `[Unreleased]` (regras em `CONTRIBUTING.md` > **Changelog**). PR que muda `src/juscraper/` sem efeito público leva a etiqueta `sem-changelog`.
 
 ## Worktree e GitHub
 
-- Trabalhar em branch de feature e worktree dedicada. Se a sessão já começou em worktree isolada para a tarefa, reutilizá-la. Caso contrário, criar uma a partir da branch do PR ou de `origin/main`, preservando o checkout existente.
-- Remover uma worktree apenas se criada pela própria sessão, sem trabalho pendente e sem vínculo ativo com a ferramenta que gerencia a sessão. Não remover worktrees preexistentes ou gerenciadas pela ferramenta.
-- Fazer push para a branch de feature e abrir PR; nunca enviar commits diretamente para `main`.
-- Quando o merge estiver autorizado, usar `gh pr merge <n> --merge --delete-branch`: o commit de merge preserva os commits individuais e o limite do PR.
-- Notas de revisão no próprio PR usam `gh pr review --comment`; o GitHub não permite aprovação pelo autor.
-
-## Changelog
-
-- Registrar apenas efeitos para quem usa a API pública: funcionalidades, filtros, correções observáveis, breaking changes e deprecações. Deprecações incluem a tabela de aliases. Correção de docstring que orientava o usuário incorretamente também entra.
-- Refatorações internas, testes, tooling e documentação sem efeito público não precisam de entrada. O workflow `Changelog` (`.github/workflows/changelog.yml`) reprova o PR que muda `src/juscraper/` sem tocar o `CHANGELOG.md`; quando a mudança não tem efeito público, a etiqueta `sem-changelog` dispensa a entrada.
-- Seguir as categorias de Keep a Changelog já usadas no arquivo. Novas entradas ficam em `[Unreleased]`, acima das versões publicadas, que são imutáveis.
-- Consolidar o mesmo efeito em uma entrada com a lista de tribunais afetados, inclusive em PRs com vários commits. Separar apenas quando o efeito divergir entre tribunais.
-
-## Idiomas
-
-Comentários de PR/issue, revisões, mensagens de commit e docstrings em `src/` ficam em português. Arquivos em `docs/` ficam em inglês por convenção do projeto.
+- Trabalhar em branch de feature e worktree dedicada: reutilizar a da sessão, se houver; senão, criar a partir da branch do PR ou de `origin/main`, preservando o checkout existente. Remover só a worktree criada pela própria sessão, sem trabalho pendente e sem vínculo com a ferramenta que gerencia a sessão.
+- Nunca enviar commits para `main`: push na branch e PR. Merge autorizado: `gh pr merge <n> --merge --delete-branch`. Nota de revisão no próprio PR: `gh pr review --comment`.
+- Commits, PRs, comentários de issue, revisões e docstrings de `src/` em português; arquivos de `docs/` em inglês. Commits e PRs levam a área no início (`TJMT: ...`, `fix(tjro): ...`).

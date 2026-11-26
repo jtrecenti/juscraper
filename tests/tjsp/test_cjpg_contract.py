@@ -31,7 +31,7 @@ from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 BASE = "https://esaj.tjsp.jus.br/cjpg"
-CJPG_MIN_COLUMNS = {"cd_processo", "id_processo", "classe", "decisao"}
+CJPG_MIN_COLUMNS = {"cd_processo", "id_processo", "classe", "relator", "decisao"}
 
 
 def _add_pesquisar(pesquisa: str, sample_path: str) -> None:

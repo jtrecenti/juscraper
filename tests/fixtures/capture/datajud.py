@@ -24,7 +24,8 @@ O body Elasticsearch e construido por
 a mesma funcao que ``client.py:_listar_processos_por_alias`` chama em
 producao. Reexportada como ``build_payload`` aqui apenas pelo nome curto
 e local; capture e contrato compartilham a mesma fonte de verdade
-(regra 12 do CLAUDE.md).
+(``CONTRIBUTING.md`` > **Adding a new tribunal**, item 13, "Payload
+builders públicos").
 """
 from __future__ import annotations
 

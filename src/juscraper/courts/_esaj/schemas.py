@@ -65,6 +65,11 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
+    # Rótulos do HTML de resultado: "Classe/Assunto:", "Comarca:" e, em
+    # algumas páginas do TJMS, "Classe:" sozinho.
+    classe_assunto: str | None = None
+    classe: str | None = None
+    comarca: str | None = None
 
 
 class InputCJPGEsaj(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
@@ -94,12 +99,26 @@ class OutputCJPGEsaj(BaseModel):
     ``cjpg`` nao entrega ementa nem ``processo`` formatado em CNJ — so o par
     de IDs internos (``id_processo`` / ``cd_processo``) que permitem seguir
     para a consulta de 1o grau.
+
+    O juiz que proferiu a decisao (rotulo ``"Magistrado:"`` na pagina) sai em
+    ``relator``, o nome canonico do ``cjsg``. O campo e declarado aqui, e nao
+    herdado de ``OutputRelatoriaMixin``, porque o mixin traz tambem
+    ``orgao_julgador``, que o ``cjpg`` nao tem.
     """
 
     id_processo: str
+    # Rótulos da tabela de cada processo, como saem de ``_extrair_dados_processo``.
+    classe: str | None = None
+    assunto: str | None = None
+    comarca: str | None = None
+    foro: str | None = None
+    vara: str | None = None
+    data_disponibilizacao: str | None = None
+    decisao: str | None = None
     cd_processo: str | None = None
     cd_foro: str | None = None
     nm_alias: str | None = None
     cd_documento: str | None = None
+    relator: str | None = None
 
     model_config = ConfigDict(extra="allow")

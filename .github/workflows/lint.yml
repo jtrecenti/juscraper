@@ -54,7 +54,7 @@ jobs:
           # A política de lint e a complexidade têm passo próprio, com a base de
           # cada evento; aqui elas comparariam com origin/main. A suíte offline
           # roda no workflow Testes, em todas as versões de Python.
-          SKIP: lint-policy,complexity,pytest
+          SKIP: lint-policy,complexity
         # Cada hook roda no ambiente próprio que o pre-commit monta, e nenhum
         # dos que sobram usa o do projeto; por isso o job não instala o extra
         # dev. As restrições exportadas do uv.lock fixam o pre-commit e as

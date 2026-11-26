@@ -5,8 +5,10 @@ quando todas as tentativas de retry esgotaram em status retryable (429/5xx).
 
 `HTTPSemanticError` é a base abstrata para casos de "HTTP-200 com página de erro"
 (captcha expirado, sessão inválida, formulário não submetido). Subclasses concretas
-ficam nos parsers que detectam o erro — ver Regra 2 ("Detecção de erro HTTP-200")
-em ``CLAUDE.md``.
+ficam nos parsers que detectam o erro, seguindo a **Regra de generalização** de
+``CLAUDE.md`` > **Arquitetura**. Página de erro não vira busca vazia: ver
+``CONTRIBUTING.md`` > **Falhas HTTP, falhas por linha e coleta parcial** >
+**Falha por linha**.
 """
 from __future__ import annotations
 
