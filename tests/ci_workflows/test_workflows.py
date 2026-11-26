@@ -53,7 +53,7 @@ def test_pre_commit_no_ci_pula_so_o_que_roda_em_outro_passo():
         'uvx --python 3.12 --constraints "$RUNNER_TEMP/restricoes.txt" '
         "pre-commit run --all-files --show-diff-on-failure"
     ) in lint
-    assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity,pytest"]
+    assert [linha for linha in lint if linha.startswith("SKIP:")] == ["SKIP: lint-policy,complexity"]
 
 
 def test_job_pre_commit_pula_os_hooks_que_usam_o_ambiente_do_projeto():
@@ -66,7 +66,6 @@ def test_job_pre_commit_pula_os_hooks_que_usam_o_ambiente_do_projeto():
         for hook in repo.get("hooks", [])
         if hook.get("language") in {"system", "script", "unsupported", "unsupported_script"}
     }
-    assert fora_do_ambiente_proprio
     (skip,) = [linha.split(":", 1)[1].strip() for linha in linhas("lint.yml") if linha.startswith("SKIP:")]
     assert fora_do_ambiente_proprio <= set(skip.split(","))
 

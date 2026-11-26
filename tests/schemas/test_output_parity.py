@@ -16,8 +16,9 @@ parser concreto (muitos parsers os entregam sem nome explicito via
 ``rows.append({"processo": ...})``; a conferencia acima ja cobre isso).
 
 Parsers dinamicos que extraem rotulos de HTML sem dict literal
-(eSAJ puro) sao ``skip`` — o Output ja foi validado manualmente contra
-o parser compartilhado em ``_esaj/parse.py``.
+(``cjsg`` e ``cjpg`` do eSAJ) sao ``skip`` aqui: as colunas que entregam
+sao conferidas contra o Output sobre os samples reais em
+:mod:`tests.schemas.test_output_columns`.
 """
 from __future__ import annotations
 
@@ -105,14 +106,17 @@ BASE_FIELDS_CONSULTA = frozenset({"id_cnj"})
 # Casos em que o parser e dinamico (label-based) ou passthrough — nao da
 # para detectar campos por substring no source. Marcar skip com motivo.
 SKIP_REASONS: dict[tuple[str, str], str] = {
-    # eSAJ puro: parser extrai rotulos do HTML, nao tem dict literal.
-    # Validado manualmente em _esaj/parse.py:_parse_single_page.
-    ("tjac", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
-    ("tjal", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
-    ("tjam", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
-    ("tjce", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
-    ("tjms", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGEsaj validado manualmente",
-    ("tjsp", "cjsg"): "eSAJ parser extrai labels HTML — OutputCJSGTJSP validado manualmente",
+    # eSAJ: o parser monta a chave a partir do rotulo do HTML, sem dict
+    # literal. As colunas entregues sao conferidas contra o Output sobre os
+    # samples em test_output_columns.
+    **{
+        (trib, "cjsg"): "eSAJ monta chaves dos rotulos do HTML — conferido em test_output_columns"
+        for trib in ("tjac", "tjal", "tjam", "tjce", "tjms", "tjsp")
+    },
+    **{
+        (trib, "cjpg"): "eSAJ monta chaves dos rotulos do HTML — conferido em test_output_columns"
+        for trib in ("tjsp", "tjms")
+    },
     # STF: parser renomeia 6 chaves e repassa o resto do _source da API.
     ("stf", "listar_decisoes"): "STF parser e passthrough do _source — extra=allow e o contrato",
     # TJSP cpopg/cposg retornam 4 DataFrames; Output e pivot.

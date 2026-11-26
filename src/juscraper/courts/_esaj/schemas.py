@@ -78,6 +78,11 @@ class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
+    # Rótulos do HTML de resultado: "Classe/Assunto:", "Comarca:" e, em
+    # algumas páginas do TJMS, "Classe:" sozinho.
+    classe_assunto: str | None = None
+    classe: str | None = None
+    comarca: str | None = None
     # Ver TODO no docstring — ``relatora`` e o nome real que o parser emite
     # hoje; canonico ``relator`` ja vem do OutputRelatoriaMixin e sera
     # unificado em PR dedicado.
@@ -119,6 +124,14 @@ class OutputCJPGEsaj(BaseModel):
     """
 
     id_processo: str
+    # Rótulos da tabela de cada processo, como saem de ``_extrair_dados_processo``.
+    classe: str | None = None
+    assunto: str | None = None
+    comarca: str | None = None
+    foro: str | None = None
+    vara: str | None = None
+    data_disponibilizacao: str | None = None
+    decisao: str | None = None
     cd_processo: str | None = None
     cd_foro: str | None = None
     nm_alias: str | None = None
