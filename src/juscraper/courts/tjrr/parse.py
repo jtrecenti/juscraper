@@ -5,7 +5,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 
 from juscraper.core.avisos import avisar
-from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.core.parse_utils import coerce_date_columns, normalizar_texto
 from juscraper.utils.cnj import format_cnj
 
 from .download import _ACORDAOS, _MONOCRATICAS
@@ -59,7 +59,7 @@ def _parse_result_div(div) -> dict:
         elif "PUBLICA" in title.upper():
             result["data_publicacao"] = text
         elif "EMENTA" in title.upper():
-            result["ementa"] = text
+            result["ementa"] = normalizar_texto(text)
 
     return result
 

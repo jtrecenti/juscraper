@@ -3,7 +3,7 @@ Parse raw results from the TJBA jurisprudence search.
 """
 import pandas as pd
 
-from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.core.parse_utils import coerce_date_columns, normalizar_texto
 
 
 def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
@@ -43,7 +43,7 @@ def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
                 "classe_id": classe.get("id"),
                 "tipo_decisao": d.get("tipoDecisao"),
                 "data_publicacao": d.get("dataPublicacao"),
-                "ementa": d.get("ementa"),
+                "ementa": normalizar_texto(d.get("ementa")),
                 "hash": d.get("hash"),
             })
 

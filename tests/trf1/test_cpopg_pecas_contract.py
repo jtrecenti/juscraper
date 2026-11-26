@@ -25,6 +25,9 @@ DOC_URL = (
     "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
     "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
 )
+# Corpo da peça: o download só grava os bytes, sem ler o conteúdo, então
+# qualquer HTML serve.
+DOCUMENTO = b"<html><body><p>Despacho</p></body></html>"
 
 
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
@@ -71,7 +74,6 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
         body=load_sample_bytes("trf1", "cpopg/detail_normal.html"),
         content_type="text/html",
     )
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
     from juscraper.courts._trf.download import extract_documento_urls
 
     n_pecas = len(
@@ -81,7 +83,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     )
     for _ in range(n_pecas):
         responses.add(
-            responses.GET, DOC_URL, body=doc_body, content_type="text/html"
+            responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html"
         )
 
     scraper = jus.scraper("trf1", sleep_time=0)
@@ -142,9 +144,8 @@ def test_cpopg_with_download_pecas_continues_after_peca_error(tmp_path, caplog) 
     assert len(ids) > 1
     # 404 não é retentado, então a primeira peça falha de imediato.
     responses.add(responses.GET, DOC_URL, status=404)
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
     for _ in ids[1:]:
-        responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+        responses.add(responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html")
 
     with caplog.at_level("WARNING", logger="juscraper._trf"), pytest.warns(UserWarning, match="pecas_falhas"):
         df = jus.scraper("trf1", sleep_time=0).cpopg(
@@ -176,10 +177,9 @@ def test_cpopg_with_download_pecas_uses_download_path_when_diretorio_omitted(tmp
         content_type="text/xml; charset=utf-8",
     )
     responses.add(responses.GET, DETAIL_URL, body=detail, content_type="text/html")
-    doc_body = load_sample_bytes("trf1", "cpopg_pecas/documento_html.html")
     n_pecas = len(extract_documento_urls(detail.decode("latin-1")))
     for _ in range(n_pecas):
-        responses.add(responses.GET, DOC_URL, body=doc_body, content_type="text/html")
+        responses.add(responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html")
 
     df = jus.scraper("trf1", sleep_time=0, download_path=str(tmp_path)).cpopg(
         "10004080820254013602", download_pecas=True

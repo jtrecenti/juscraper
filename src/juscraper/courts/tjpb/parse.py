@@ -1,6 +1,8 @@
 """Parse raw results from the TJPB jurisprudence search."""
 import pandas as pd
 
+from juscraper.core.parse_utils import normalizar_texto
+
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
     """Extract relevant data from the raw TJPB API responses.
@@ -16,7 +18,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
         registros.extend(
             {
                 "processo": hit.get("numero_processo"),
-                "ementa": hit.get("ementa"),
+                "ementa": normalizar_texto(hit.get("ementa")),
                 "data_julgamento": hit.get("dt_ementa"),
             }
             for hit in hits
