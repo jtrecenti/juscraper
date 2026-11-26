@@ -184,6 +184,26 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
+### eSAJ `cjpg`: from the `magistrado` column to `relator`
+
+The eSAJ first-instance search (`cjpg`, in TJSP and TJMS) labels the judge as
+"Magistrado:", and the parser used to turn the label into a `magistrado`
+column. The column is now `relator`, the name used by `cjsg` and by the
+`cjpg` of the other courts (TJES and TJTO), also for first-instance
+decisions. There is no deprecation cycle: a DataFrame cannot keep both names
+without duplicating the data.
+
+```python
+# Before
+df["magistrado"]
+
+# After
+df["relator"]
+
+# DataFrames saved before the change
+df = df.rename(columns={"magistrado": "relator"})
+```
+
 ### TJSP `cpopg`/`cposg`: `method="api"` removed
 
 The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`
