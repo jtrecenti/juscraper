@@ -169,6 +169,26 @@ def test_cjsg_simples_typical(mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
+def test_cjsg_monocraticas_typical(mocker):
+    """3-call flow com ``tipo_decisao="monocraticas"``: a coluna ``ementa`` sai, ausente.
+
+    O bloco das monocráticas não traz o rótulo ``Ementa``; sem a coluna, a
+    junção com a saída dos acórdãos (e de outros tribunais) perdia o campo.
+    """
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    _add_post_consulta("cjsg/monocraticas_resultado.html")
+    _add_post_ajax("cjsg/monocraticas_pagina_02.xml")
+
+    df = jus.scraper("tjpe").cjsg("dano moral", paginas=range(1, 3), tipo_decisao="monocraticas")
+
+    assert len(df) == 10
+    assert df["processo"].nunique() == 10
+    assert "ementa" in df.columns
+    assert df["ementa"].map(pd.isna).all()
+
+
+@responses.activate(registry=OrderedRegistry)
 def test_cjsg_no_results(mocker):
     """Zero-hit query: GET consulta + POST consulta=zero, no AJAX follow-up."""
     mocker.patch("time.sleep")
