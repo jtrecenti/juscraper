@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -170,7 +170,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#trf3-cpopg_parse-from-htmls-to-brutos" id="toc-trf3-cpopg_parse-from-htmls-to-brutos" class="nav-link" data-scroll-target="#trf3-cpopg_parse-from-htmls-to-brutos">TRF3 <code>cpopg_parse</code>: from <code>htmls</code> to <code>brutos</code></a></li>
   <li><a href="#tjap-cjsg-from-votacaounanime-to-votacaounânime" id="toc-tjap-cjsg-from-votacaounanime-to-votacaounânime" class="nav-link" data-scroll-target="#tjap-cjsg-from-votacaounanime-to-votacaounânime">TJAP <code>cjsg</code>: from <code>votacao="Unanime"</code> to <code>votacao="Unânime"</code></a></li>
   <li><a href="#tjgo-cjsg-id_instancia-takes-the-projudi-form-values" id="toc-tjgo-cjsg-id_instancia-takes-the-projudi-form-values" class="nav-link" data-scroll-target="#tjgo-cjsg-id_instancia-takes-the-projudi-form-values">TJGO <code>cjsg</code>: <code>id_instancia</code> takes the Projudi form values</a></li>
-  <li><a href="#esaj-cjpg-from-the-magistrado-column-to-relator" id="toc-esaj-cjpg-from-the-magistrado-column-to-relator" class="nav-link" data-scroll-target="#esaj-cjpg-from-the-magistrado-column-to-relator">eSAJ <code>cjpg</code>: from the <code>magistrado</code> column to <code>relator</code></a></li>
+  <li><a href="#esaj-cjpg-and-trf6-cpopg-from-the-magistrado-column-to-relator" id="toc-esaj-cjpg-and-trf6-cpopg-from-the-magistrado-column-to-relator" class="nav-link" data-scroll-target="#esaj-cjpg-and-trf6-cpopg-from-the-magistrado-column-to-relator">eSAJ <code>cjpg</code> and TRF6 <code>cpopg</code>: from the <code>magistrado</code> column to <code>relator</code></a></li>
   <li><a href="#tjsp-cpopgcposg-methodapi-removed" id="toc-tjsp-cpopgcposg-methodapi-removed" class="nav-link" data-scroll-target="#tjsp-cpopgcposg-methodapi-removed">TJSP <code>cpopg</code>/<code>cposg</code>: <code>method="api"</code> removed</a></li>
   <li><a href="#tjsp-cjpgcpopgcposg-failures-stay-in-the-result" id="toc-tjsp-cjpgcpopgcposg-failures-stay-in-the-result" class="nav-link" data-scroll-target="#tjsp-cjpgcpopgcposg-failures-stay-in-the-result">TJSP <code>cjpg</code>/<code>cpopg</code>/<code>cposg</code>: failures stay in the result</a></li>
   <li><a href="#date-format-flexibility" id="toc-date-format-flexibility" class="nav-link" data-scroll-target="#date-format-flexibility">Date format flexibility</a></li>
@@ -492,9 +492,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>tjgo.cjsg(<span class="st">"dano moral"</span>, id_instancia<span class="op">=</span><span class="dv">15</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="esaj-cjpg-from-the-magistrado-column-to-relator" class="level3">
-<h3 class="anchored" data-anchor-id="esaj-cjpg-from-the-magistrado-column-to-relator">eSAJ <code>cjpg</code>: from the <code>magistrado</code> column to <code>relator</code></h3>
-<p>The eSAJ first-instance search (<code>cjpg</code>, in TJSP and TJMS) labels the judge as “Magistrado:”, and the parser used to turn the label into a <code>magistrado</code> column. The column is now <code>relator</code>, the name used by <code>cjsg</code> and by the <code>cjpg</code> of the other courts (TJES and TJTO), also for first-instance decisions. There is no deprecation cycle: a DataFrame cannot keep both names without duplicating the data.</p>
+<section id="esaj-cjpg-and-trf6-cpopg-from-the-magistrado-column-to-relator" class="level3">
+<h3 class="anchored" data-anchor-id="esaj-cjpg-and-trf6-cpopg-from-the-magistrado-column-to-relator">eSAJ <code>cjpg</code> and TRF6 <code>cpopg</code>: from the <code>magistrado</code> column to <code>relator</code></h3>
+<p>The eSAJ first-instance search (<code>cjpg</code>, in TJSP and TJMS) labels the judge as “Magistrado:”, and the parser used to turn the label into a <code>magistrado</code> column. The column is now <code>relator</code>, the name used by <code>cjsg</code> and by the <code>cjpg</code> of the other courts (TJES and TJTO), also for first-instance decisions. The TRF6 <code>cpopg</code> (eproc) made the same change for the judge on the case cover. There is no deprecation cycle: a DataFrame cannot keep both names without duplicating the data.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"magistrado"</span>]</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
