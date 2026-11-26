@@ -3,7 +3,8 @@
 Absorbs the 6 near-identical ``cjsg_parse.py`` modules from the courts.
 ``cjsg_n_results`` le o total do ``input#totalResultadoAbaRetornoFiltro-*``
 quando ele existe. The TJSP version is the canonical reference for the
-fallback cascade of ``cjsg_n_pags`` (see CLAUDE.md) because its cascade of selectors/regex tolerates both the
+fallback cascade of ``cjsg_n_pags`` (see ``CONTRIBUTING.md`` > **Contagem de
+páginas e resultados em HTML**) because its cascade of selectors/regex tolerates both the
 legacy ``bgcolor=#EEEEEE`` layout and the newer ``td Resultados…``
 wording. The parser treats latin-1 as the expected server encoding
 (falls back to utf-8 for test samples that were re-saved).
@@ -53,18 +54,6 @@ _PAGINATION_COUNT_PATTERNS = (
     re.compile(r"(?<=de )\d+"),
     re.compile(r"\d+(?=\s*(?:resultado|registro|página))", re.I),
 )
-_FIELD_STAMPS = {
-    "data_publicacao": (
-        "Data de publicação:",
-        "Data de Publicação:",
-        "Data de publicassapso:",
-    ),
-    "orgao_julgador": (
-        "Órgão julgador:",
-        "Orgão julgador:",
-        "argapso julgador:",
-    ),
-}
 
 
 def _raise_page_error(soup: BeautifulSoup) -> None:
@@ -170,9 +159,9 @@ def cjsg_n_results(html_source: str) -> int:
     uma ementa que cite "resultados" nao muda a contagem.
 
     Sem esse input, ou com valor vazio ou nao numerico, cai numa cascata de
-    seletores e regex, que tolera mudancas de layout. See the
-    "Extração de número de páginas/resultados em raspadores HTML" section of
-    CLAUDE.md for the rationale.
+    seletores e regex, que tolera mudancas de layout. See
+    ``CONTRIBUTING.md`` > **Contagem de páginas e resultados em HTML** for the
+    rationale.
 
     Fallback for the "results table present but pagination marker missing"
     edge case: counts ``tr.fundocinza1`` rows on the page (the row class used
@@ -279,23 +268,13 @@ def _extract_ementa(detail_row: Tag) -> str:
     return text.removeprefix("Ementa:").strip()
 
 
-def _canonicalize_field(key: str, value: str) -> tuple[str, str]:
-    for canonical_key, stamps in _FIELD_STAMPS.items():
-        if canonical_key not in key:
-            continue
-        for stamp in stamps:
-            value = value.replace(stamp, "")
-        return canonical_key, value.strip()
-    return key, value
-
-
 def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
     full_text = detail_row.get_text(" ", strip=True)
     value = normalizar_texto(full_text.replace(label, "", 1).strip().lstrip(":").strip())
     key = _normalize_key(label)
     if key == "outros_numeros":
         return None
-    return _canonicalize_field(key, value)
+    return key, value
 
 
 def _extract_detail(detail_row: Tag, data: dict) -> None:

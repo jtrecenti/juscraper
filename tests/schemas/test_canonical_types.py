@@ -73,6 +73,7 @@ CANONICAL_OUTPUT_TYPES = _collect(_OUTPUT_BASES)
 # Mensagem explica o canonico para facilitar a correcao.
 DEPRECATED_SYNONYMS: dict[str, str] = {
     "magistrado": "relator",
+    "relatora": "relator",
     "nr_processo": "numero_processo (Input) / processo (Output)",
     "numero_unico": "processo (Output)",
     "numero_cnj": "numero_processo (Input) / id_cnj em consulta CNJ",

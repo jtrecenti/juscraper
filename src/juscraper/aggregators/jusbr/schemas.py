@@ -76,7 +76,8 @@ class InputCPOPGJusBR(CnjInputBase):
 class OutputCPOPGJusBR(BaseModel):
     """Colunas observaveis em uma linha do DataFrame de :meth:`JusbrScraper.cpopg`.
 
-    ``processo`` (canonico do projeto — ver CLAUDE.md > "Schemas pydantic")
+    ``processo`` (canonico do projeto — ver ``CONTRIBUTING.md`` > **Schemas
+    pydantic** > **Nomes e tipos canônicos**)
     e a coluna pivot que aparece em todo row, tanto no happy path quanto
     nos fallbacks de CNJ invalido / nao encontrado / erro de detalhes. O
     JusBR retorna uma estrutura rica do PDPJ-CNJ com dezenas de campos

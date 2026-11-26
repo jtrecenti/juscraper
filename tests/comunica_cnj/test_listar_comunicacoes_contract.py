@@ -11,7 +11,8 @@ a API real do CNJ.
 A funcao ``build_listar_comunicacoes_params`` importada do modulo
 ``download`` e a unica fonte da verdade da querystring — capture, client
 e contrato compartilham o mesmo builder, evitando drift silencioso
-(regra 12 do CLAUDE.md).
+(``CONTRIBUTING.md`` > **Adding a new tribunal**, item 13, "Payload
+builders públicos").
 """
 from __future__ import annotations
 

@@ -23,7 +23,8 @@ import pytest
 from juscraper.courts._esaj.cjpg_parse import cjpg_parse_single
 from tests._helpers import load_sample
 
-_SAMPLES = Path(__file__).parent / "samples" / "cjpg"
+_TESTS = Path(__file__).parents[1]
+_SAMPLES = _TESTS / "tjsp" / "samples" / "cjpg"
 
 
 def _resumir(df):
@@ -64,6 +65,25 @@ def test_capturas_reais_tem_saida_fixada(captura):
     assert len(obtido["linhas"]) == len(esperado["linhas"])
     for posicao, (linha, referencia) in enumerate(zip(obtido["linhas"], esperado["linhas"], strict=True)):
         assert linha == referencia, f"linha {posicao}, processo {referencia['id_processo']}"
+
+
+@pytest.mark.parametrize(
+    ("tribunal", "captura"),
+    [
+        ("tjsp", "results_normal_page_01.html"),
+        ("tjsp", "results_legacy.html"),
+        ("tjms", "results_normal_page_01.html"),
+    ],
+)
+def test_rotulo_magistrado_sai_na_coluna_relator(tribunal, captura):
+    """O juiz, rotulado "Magistrado:" nas páginas do TJSP e do TJMS, sai em ``relator``.
+
+    É o nome canônico do ``cjsg`` e dos demais tribunais, também no 1º grau.
+    """
+    df = cjpg_parse_single(_TESTS / tribunal / "samples" / "cjpg" / captura)
+
+    assert "magistrado" not in df.columns
+    assert df["relator"].notna().all()
 
 
 def test_campos_opcionais_ordem_e_normalizacao(tmp_path):

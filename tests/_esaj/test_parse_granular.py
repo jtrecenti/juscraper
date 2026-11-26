@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from juscraper.core.parse_utils import normalizar_texto
 from juscraper.courts._esaj import parse as esaj_parse
 from juscraper.courts._esaj.parse import (
+    _extract_detail,
     _extract_ementa,
     _extract_labeled_value,
     _extract_pagination_count,
@@ -360,6 +361,23 @@ class TestCJSGParseSinglePage:
         linha = BeautifulSoup(html, "html.parser").tr
 
         assert _extract_ementa(linha) == "APELAÇÃO.\nConforme a Ementa: do REsp 1.234, nega-se provimento."
+
+    @pytest.mark.parametrize(
+        ("rotulo", "chave", "valor"),
+        [
+            ("Data de publicação:", "data_publicacao", "02/02/2024 (Data de publicação: 01/02/2024 no DJe)"),
+            ("Órgão julgador:", "orgao_julgador", "Câmara Especial, sucessora do Orgão julgador: 3ª Câmara"),
+            ("argapso julgador:", "orgao_julgador", "Câmara Especial (antes argapso julgador: 3ª Câmara)"),
+        ],
+    )
+    def test_rotulo_citado_no_valor_fica(self, rotulo, chave, valor):
+        """Só o rótulo do ``<strong>`` sai; texto igual a um rótulo no meio do valor fica."""
+        html = f'<tr class="ementaClass2"><td><strong>{rotulo}</strong> {valor}</td></tr>'
+        data: dict = {}
+
+        _extract_detail(BeautifulSoup(html, "html.parser").tr, data)
+
+        assert data == {chave: valor}
 
     @pytest.mark.parametrize(
         ("sigla", "arquivo"),
