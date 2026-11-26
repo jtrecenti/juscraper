@@ -51,18 +51,9 @@ _PAGINATION_COUNT_PATTERNS = (
     re.compile(r"(?<=de )\d+"),
     re.compile(r"\d+(?=\s*(?:resultado|registro|página))", re.I),
 )
-_FIELD_STAMPS = {
-    "data_publicacao": (
-        "Data de publicação:",
-        "Data de Publicação:",
-        "Data de publicassapso:",
-    ),
-    "orgao_julgador": (
-        "Órgão julgador:",
-        "Orgão julgador:",
-        "argapso julgador:",
-    ),
-}
+# Chaves cujas variantes de rótulo (maiúsculas, "Orgão" sem acento, os
+# rótulos corrompidos de ``_TYPO_FIXES``) se reduzem ao nome canônico.
+_CANONICAL_KEYS = ("data_publicacao", "orgao_julgador")
 
 
 def _raise_page_error(soup: BeautifulSoup) -> None:
@@ -286,14 +277,13 @@ def _extract_ementa(detail_row: Tag) -> str:
     return text.removeprefix("Ementa:").strip()
 
 
-def _canonicalize_field(key: str, value: str) -> tuple[str, str]:
-    for canonical_key, stamps in _FIELD_STAMPS.items():
-        if canonical_key not in key:
-            continue
-        for stamp in stamps:
-            value = value.replace(stamp, "")
-        return canonical_key, value.strip()
-    return key, value
+def _canonicalize_key(key: str) -> str:
+    """Leva a chave que contém um nome de ``_CANONICAL_KEYS`` a esse nome.
+
+    Só a chave muda: o rótulo já saiu do valor em ``_extract_labeled_value``,
+    e um texto igual ao rótulo no meio do valor é conteúdo da decisão.
+    """
+    return next((canonical for canonical in _CANONICAL_KEYS if canonical in key), key)
 
 
 def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
@@ -302,7 +292,7 @@ def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | Non
     key = _normalize_key(label)
     if key == "outros_numeros":
         return None
-    return _canonicalize_field(key, value)
+    return _canonicalize_key(key), value
 
 
 def _extract_detail(detail_row: Tag, data: dict) -> None:
