@@ -220,7 +220,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    buscar_em<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -240,7 +240,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>pesquisa</td>
 <td><code>str</code></td>
-<td>Termo de busca livre.</td>
+<td>Termo de busca livre, procurado no campo indicado por <code>buscar_em</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -250,10 +250,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
-<td>campo</td>
-<td><code>str</code></td>
-<td>Campo de busca: <code>"E"</code> para ementa (default), <code>"I"</code> para inteiro teor.</td>
-<td><code>'E'</code></td>
+<td>buscar_em</td>
+<td><code>str</code> | None</td>
+<td>Onde procurar <code>pesquisa</code>: <code>"ementa"</code> (default; <code>None</code> tambem) ou <code>"inteiro_teor"</code> (texto integral da decisao, que inclui a ementa). Outro valor levanta <code>ValidationError</code>.</td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>processo</td>
@@ -269,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>campo</code> -&gt; <code>buscar_em</code>: <code>campo="E"</code> vira <code>buscar_em="ementa"</code> e <code>campo="I"</code>, <code>buscar_em="inteiro_teor"</code>. <code>"E"</code> e <code>"I"</code> em <code>buscar_em</code> (<code>campo</code> por posicao) tambem sao convertidos, com aviso</p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -294,10 +294,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td></td>
+<td><code>ValueError</code></td>
+<td>Quando <code>campo</code> e <code>buscar_em</code> sao passados juntos.</td>
+</tr>
+<tr class="even">
+<td></td>
 <td><code>RuntimeError</code></td>
 <td>Quando o portal redireciona a busca (mudanca de endereco).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td></td>
 <td><code>requests</code>.<code>ConnectionError</code></td>
 <td>Quando o portal derruba a conexao em todas as tentativas do perfil HTTP <code>"cjsg"</code> (ajustavel com <code>politica={"cjsg": {...}}</code> no construtor).</td>
@@ -338,7 +343,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg_download(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    campo<span class="op">=</span><span class="st">'E'</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    buscar_em<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>

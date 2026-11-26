@@ -168,6 +168,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" id="toc-from-data_iniciofim-to-data_julgamento_iniciofim-tjsp" class="nav-link" data-scroll-target="#from-data_iniciofim-to-data_julgamento_iniciofim-tjsp">From <code>data_inicio/fim</code> to <code>data_julgamento_inicio/fim</code> (TJSP)</a></li>
   <li><a href="#pagination-default-change" id="toc-pagination-default-change" class="nav-link" data-scroll-target="#pagination-default-change">Pagination default change</a></li>
   <li><a href="#trf3-cpopg_parse-from-htmls-to-brutos" id="toc-trf3-cpopg_parse-from-htmls-to-brutos" class="nav-link" data-scroll-target="#trf3-cpopg_parse-from-htmls-to-brutos">TRF3 <code>cpopg_parse</code>: from <code>htmls</code> to <code>brutos</code></a></li>
+  <li><a href="#from-campo-query_scope-and-inteiro_teor-to-buscar_em" id="toc-from-campo-query_scope-and-inteiro_teor-to-buscar_em" class="nav-link" data-scroll-target="#from-campo-query_scope-and-inteiro_teor-to-buscar_em">From <code>campo</code>, <code>query_scope</code> and <code>inteiro_teor</code> to <code>buscar_em</code></a></li>
   <li><a href="#tjap-cjsg-from-votacaounanime-to-votacaounânime" id="toc-tjap-cjsg-from-votacaounanime-to-votacaounânime" class="nav-link" data-scroll-target="#tjap-cjsg-from-votacaounanime-to-votacaounânime">TJAP <code>cjsg</code>: from <code>votacao="Unanime"</code> to <code>votacao="Unânime"</code></a></li>
   <li><a href="#tjgo-cjsg-id_instancia-takes-the-projudi-form-values" id="toc-tjgo-cjsg-id_instancia-takes-the-projudi-form-values" class="nav-link" data-scroll-target="#tjgo-cjsg-id_instancia-takes-the-projudi-form-values">TJGO <code>cjsg</code>: <code>id_instancia</code> takes the Projudi form values</a></li>
   <li><a href="#esaj-cjsg-esaj-cjpg-and-trf6-cpopg-from-relatoramagistrado-to-relator" id="toc-esaj-cjsg-esaj-cjpg-and-trf6-cpopg-from-relatoramagistrado-to-relator" class="nav-link" data-scroll-target="#esaj-cjsg-esaj-cjpg-and-trf6-cpopg-from-relatoramagistrado-to-relator">eSAJ <code>cjsg</code>, eSAJ <code>cjpg</code> and TRF6 <code>cpopg</code>: from <code>relatora</code>/<code>magistrado</code> to <code>relator</code></a></li>
@@ -245,7 +246,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Deprecated aliases:</strong> <code>query</code>, <code>termo</code> — accepted with <code>DeprecationWarning</code>, will be removed in v1.0.</p>
 <p><code>buscar_em</code> takes <code>"ementa"</code> (only the headnote) or <code>"inteiro_teor"</code> (the full text of the decision, which includes the headnote). A value only one portal offers stays in that tribunal alone. Each scraper accepts only the values its portal has, and its default is the field the portal searches by default, so <code>pesquisa</code> alone keeps working as before. Use it to search terms in decisions without an ementa, such as single-judge decisions and sentenças:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tjrn.cjsg(<span class="st">"dano moral"</span>, buscar_em<span class="op">=</span><span class="st">"inteiro_teor"</span>, decisoes<span class="op">=</span><span class="st">"Sentença"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>TJRN uses <code>buscar_em</code>. Some scrapers still pick the field under older names (STM and TJSC <code>campo</code>, TJPA <code>query_scope</code>, STF and TJDFT <code>inteiro_teor</code>); they will move to <code>buscar_em</code> with deprecated aliases. In the eSAJ family, TJSP and TRF3, <code>pesquisa</code> already searches the whole document and <code>ementa</code> is a separate text filter that combines with it.</p>
+<p>Every scraper that lets you pick the field uses <code>buscar_em</code>: STM, TJSC, TJPA, TJRN and TJDFT <code>cjsg</code>, and STF <code>listar_decisoes</code>/<code>contar_decisoes</code>. STM also takes <code>"numero"</code> (the case number), which only its portal offers. In STF and TJDFT, <code>"inteiro_teor"</code> adds the full text to the fields of the default search, as the portal option does, and that default search already goes beyond the headnote (in STF, the decision text, indexing and parties; in TJDFT, the <em>espelho</em> of the acórdão). TJPA sends the choice to its API, which ignored it on 26 Nov 2026, as did the portal’s own website: both values searched the headnote and the full text. The older names (STM and TJSC <code>campo</code>, TJPA <code>query_scope</code>, STF and TJDFT <code>inteiro_teor</code>) are deprecated aliases; see the Migration Guide. In the eSAJ family, TJSP and TRF3, <code>pesquisa</code> already searches the whole document and <code>ementa</code> is a separate text filter that combines with it.</p>
 </section>
 <section id="date-filters" class="level3">
 <h3 class="anchored" data-anchor-id="date-filters">Date Filters</h3>
@@ -486,134 +487,181 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> trf3.cpopg_download(cnjs)</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> trf3.cpopg_parse(brutos, cnjs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
+<section id="from-campo-query_scope-and-inteiro_teor-to-buscar_em" class="level3">
+<h3 class="anchored" data-anchor-id="from-campo-query_scope-and-inteiro_teor-to-buscar_em">From <code>campo</code>, <code>query_scope</code> and <code>inteiro_teor</code> to <code>buscar_em</code></h3>
+<p>STM, TJSC, TJPA, STF and TJDFT used their own names and values to pick where to look for <code>pesquisa</code>. They now take <code>buscar_em</code>, with <code>"ementa"</code> or <code>"inteiro_teor"</code>. The old names still work with a <code>DeprecationWarning</code>, which names the new value, and will be removed in 0.7.0. Passing an old name together with <code>buscar_em</code> raises <code>ValueError</code>. Where the old name was an explicit parameter (TJSC, TJPA and TJDFT <code>cjsg_download</code>), an old value given to <code>buscar_em</code>, which is where the old parameter lands when passed by position (<code>tjsc.cjsg("dano moral", 1, "I")</code>), is converted with a warning too.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 32%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tribunal</th>
+<th>Before</th>
+<th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>STM</td>
+<td><code>campo="ementa"</code> / <code>"inteiro_teor"</code> / <code>"numero"</code></td>
+<td><code>buscar_em=</code> with the same value</td>
+</tr>
+<tr class="even">
+<td>TJSC</td>
+<td><code>campo="E"</code> / <code>campo="I"</code></td>
+<td><code>buscar_em="ementa"</code> / <code>buscar_em="inteiro_teor"</code></td>
+</tr>
+<tr class="odd">
+<td>TJPA</td>
+<td><code>query_scope="ementa"</code> / <code>"inteiroTeor"</code> / <code>"inteiroteor"</code></td>
+<td><code>buscar_em="ementa"</code> / <code>"inteiro_teor"</code> / <code>"inteiro_teor"</code></td>
+</tr>
+<tr class="even">
+<td>STF, TJDFT</td>
+<td><code>inteiro_teor=False</code> / <code>inteiro_teor=True</code></td>
+<td><code>buscar_em="ementa"</code> / <code>buscar_em="inteiro_teor"</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tjsc.cjsg(<span class="st">"dano moral"</span>, campo<span class="op">=</span><span class="st">"I"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>stf.listar_decisoes(<span class="st">"pejotização"</span>, inteiro_teor<span class="op">=</span><span class="va">True</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>tjsc.cjsg(<span class="st">"dano moral"</span>, buscar_em<span class="op">=</span><span class="st">"inteiro_teor"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>stf.listar_decisoes(<span class="st">"pejotização"</span>, buscar_em<span class="op">=</span><span class="st">"inteiro_teor"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
 <section id="tjap-cjsg-from-votacaounanime-to-votacaounânime" class="level3">
 <h3 class="anchored" data-anchor-id="tjap-cjsg-from-votacaounanime-to-votacaounânime">TJAP <code>cjsg</code>: from <code>votacao="Unanime"</code> to <code>votacao="Unânime"</code></h3>
 <p>The Tucujuris portal only recognizes <code>"Unânime"</code>, with the accent. On 15 Nov 2026, <code>votacao="Unanime"</code>, the spelling the docstring suggested up to 0.5.0, returned the same decisions as <code>"Maioria"</code>. It is now sent as <code>"Unânime"</code> with a <code>DeprecationWarning</code>, and will be removed in 0.7.0.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tjap.cjsg(<span class="st">"dano"</span>, votacao<span class="op">=</span><span class="st">"Unanime"</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>tjap.cjsg(<span class="st">"dano"</span>, votacao<span class="op">=</span><span class="st">"Unânime"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tjap.cjsg(<span class="st">"dano"</span>, votacao<span class="op">=</span><span class="st">"Unanime"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>tjap.cjsg(<span class="st">"dano"</span>, votacao<span class="op">=</span><span class="st">"Unânime"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="tjgo-cjsg-id_instancia-takes-the-projudi-form-values" class="level3">
 <h3 class="anchored" data-anchor-id="tjgo-cjsg-id_instancia-takes-the-projudi-form-values">TJGO <code>cjsg</code>: <code>id_instancia</code> takes the Projudi form values</h3>
 <p>The “Instância” dropdown of the Projudi search form offers <code>0</code> (all), <code>15</code> (Tribunal) and <code>151</code> (Turma de Uniformização / Turmas Recursais). The docstring suggested <code>1</code>, <code>2</code> and <code>3</code>, which the form never offered. <code>2</code> and <code>3</code> are now sent as <code>151</code> and <code>15</code> with a <code>DeprecationWarning</code>, and will be removed in 0.7.0. <code>1</code> (first degree) has no replacement, because the current form has no first-degree option: it is still sent as is, with a <code>DeprecationWarning</code>, until 0.7.0.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tjgo.cjsg(<span class="st">"dano moral"</span>, id_instancia<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>tjgo.cjsg(<span class="st">"dano moral"</span>, id_instancia<span class="op">=</span><span class="dv">15</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tjgo.cjsg(<span class="st">"dano moral"</span>, id_instancia<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>tjgo.cjsg(<span class="st">"dano moral"</span>, id_instancia<span class="op">=</span><span class="dv">15</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="esaj-cjsg-esaj-cjpg-and-trf6-cpopg-from-relatoramagistrado-to-relator" class="level3">
 <h3 class="anchored" data-anchor-id="esaj-cjsg-esaj-cjpg-and-trf6-cpopg-from-relatoramagistrado-to-relator">eSAJ <code>cjsg</code>, eSAJ <code>cjpg</code> and TRF6 <code>cpopg</code>: from <code>relatora</code>/<code>magistrado</code> to <code>relator</code></h3>
 <p>The parsers used to turn the portal label into the column name. The eSAJ portals (TJAC, TJAL, TJAM, TJCE, TJMS and TJSP) label the rapporteur as “Relator(a):”, which became a <code>relatora</code> column in <code>cjsg</code>; the eSAJ first-instance search (<code>cjpg</code>, in TJSP and TJMS) labels the judge as “Magistrado:”, which became <code>magistrado</code>; the TRF6 <code>cpopg</code> (eproc) did the same for the judge on the case cover. All of them now deliver <code>relator</code>, the name used by the other courts, also for first-instance decisions. In TJSP, <code>cjsg</code> rows labelled “Relator:” already came out as <code>relator</code>, so a search with both labels split the rapporteur across two columns; it is now a single column. There is no deprecation cycle: a DataFrame cannot keep both names without duplicating the data.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"relatora"</span>]    <span class="co"># eSAJ cjsg</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"magistrado"</span>]  <span class="co"># eSAJ cjpg, TRF6 cpopg</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"relator"</span>]</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># DataFrames saved before the change</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.rename(columns<span class="op">=</span>{<span class="st">"relatora"</span>: <span class="st">"relator"</span>, <span class="st">"magistrado"</span>: <span class="st">"relator"</span>})</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"relatora"</span>]    <span class="co"># eSAJ cjsg</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"magistrado"</span>]  <span class="co"># eSAJ cjpg, TRF6 cpopg</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>df[<span class="st">"relator"</span>]</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># DataFrames saved before the change</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.rename(columns<span class="op">=</span>{<span class="st">"relatora"</span>: <span class="st">"relator"</span>, <span class="st">"magistrado"</span>: <span class="st">"relator"</span>})</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="tjdft-cjsg-from-the-api-column-names-to-the-canonical-ones" class="level3">
 <h3 class="anchored" data-anchor-id="tjdft-cjsg-from-the-api-column-names-to-the-canonical-ones">TJDFT <code>cjsg</code>: from the API column names to the canonical ones</h3>
 <p>The TJDFT parser used to pass the API records through untouched, so the DataFrame carried the API’s camelCase keys and lacked the columns every other court returns. Four of them now take the canonical names: <code>nomeRelator</code> becomes <code>relator</code>, <code>descricaoOrgaoJulgador</code> becomes <code>orgao_julgador</code>, <code>dataJulgamento</code> becomes <code>data_julgamento</code> and <code>dataPublicacao</code> becomes <code>data_publicacao</code>. The other API keys (<code>decisao</code>, <code>codigoClasseCnj</code>, <code>turmaRecursal</code>…) keep their names, since they have no canonical counterpart. There is no deprecation cycle: a DataFrame cannot keep both names without duplicating the data.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"nomeRelator"</span>, <span class="st">"descricaoOrgaoJulgador"</span>, <span class="st">"dataJulgamento"</span>, <span class="st">"dataPublicacao"</span>]]</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"relator"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"data_publicacao"</span>]]</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># DataFrames saved before the change</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.rename(columns<span class="op">=</span>{</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"nomeRelator"</span>: <span class="st">"relator"</span>,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"descricaoOrgaoJulgador"</span>: <span class="st">"orgao_julgador"</span>,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dataJulgamento"</span>: <span class="st">"data_julgamento"</span>,</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dataPublicacao"</span>: <span class="st">"data_publicacao"</span>,</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"nomeRelator"</span>, <span class="st">"descricaoOrgaoJulgador"</span>, <span class="st">"dataJulgamento"</span>, <span class="st">"dataPublicacao"</span>]]</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"relator"</span>, <span class="st">"orgao_julgador"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"data_publicacao"</span>]]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># DataFrames saved before the change</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df.rename(columns<span class="op">=</span>{</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"nomeRelator"</span>: <span class="st">"relator"</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"descricaoOrgaoJulgador"</span>: <span class="st">"orgao_julgador"</span>,</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dataJulgamento"</span>: <span class="st">"data_julgamento"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dataPublicacao"</span>: <span class="st">"data_publicacao"</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="tjsp-cpopgcposg-methodapi-removed" class="level3">
 <h3 class="anchored" data-anchor-id="tjsp-cpopgcposg-methodapi-removed">TJSP <code>cpopg</code>/<code>cposg</code>: <code>method="api"</code> removed</h3>
 <p>The <code>api.tjsp.jus.br</code> lookup stopped returning processes (it answers <code>[]</code> even for processes that exist), so <code>method="api"</code> was removed without a deprecation cycle. Passing it raises <code>ValueError</code> before any request. Use <code>method="html"</code>, the default; the HTML pages carry the same data and more.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tjsp.cpopg(<span class="st">"1000149-71.2024.8.26.0346"</span>, method<span class="op">=</span><span class="st">"api"</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>tjsp.cpopg(<span class="st">"1000149-71.2024.8.26.0346"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>tjsp.cpopg(<span class="st">"1000149-71.2024.8.26.0346"</span>, method<span class="op">=</span><span class="st">"api"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>tjsp.cpopg(<span class="st">"1000149-71.2024.8.26.0346"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>cpopg_parse</code> and <code>cposg_parse</code> no longer read the <code>.json</code> files the API download used to save.</p>
 </section>
 <section id="tjsp-cjpgcpopgcposg-failures-stay-in-the-result" class="level3">
 <h3 class="anchored" data-anchor-id="tjsp-cjpgcpopgcposg-failures-stay-in-the-result">TJSP <code>cjpg</code>/<code>cpopg</code>/<code>cposg</code>: failures stay in the result</h3>
 <p>A case or page that fails no longer drops out of the result with only a log line. In <code>cpopg</code> (table <code>basicos</code>) and <code>cposg</code>, every requested CNJ has a row, and the <code>motivo_falha</code> column is <code>None</code> for the cases read. A CNJ that was not downloaded keeps a row with only the number and the reason: <code>nao_encontrado</code> when the public lookup does not show it (no such case, or under seal), <code>entrada_invalida</code>, <code>http_&lt;status&gt;</code>, <code>conexao</code>, <code>timeout</code> or <code>resposta_inesperada</code>. Download and parse failures go into a single <code>UserWarning</code>, and <code>cpopg_download</code>/<code>cposg_download</code> return them as <code>{cnj: motivo_falha}</code>. The download also records them in <code>falhas_download.json</code>, inside its <code>cpopg/</code> or <code>cposg/</code> folder, so <code>cpopg_parse</code>/<code>cposg_parse</code> return the same failure rows as the one-step call. The parse step reads the whole <code>cpopg/</code> or <code>cposg/</code> folder; the one-step <code>cpopg</code>/<code>cposg</code> keeps only the requested CNJs, so cases and failures left in <code>download_path</code> by an earlier <code>*_download</code> stay out of its result.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(cnjs)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>falhas <span class="op">=</span> res[<span class="st">"basicos"</span>].query(<span class="st">"motivo_falha.notna()"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(cnjs)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>falhas <span class="op">=</span> res[<span class="st">"basicos"</span>].query(<span class="st">"motivo_falha.notna()"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A lost <code>cjpg</code> page has no row to carry the reason, so a partial read raises <code>ColetaParcialError</code>, as in the eSAJ auto-chunk; the pages read are in <code>.resultado</code>. Each page from the second on gets up to five requests, and an HTTP error status counts as a failure; a page that fails all of them is lost the same way:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juscraper.core.exceptions <span class="im">import</span> ColetaParcialError</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> tjsp.cjpg(<span class="st">"dano moral"</span>)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ColetaParcialError <span class="im">as</span> erro:</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> erro.resultado</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juscraper.core.exceptions <span class="im">import</span> ColetaParcialError</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> tjsp.cjpg(<span class="st">"dano moral"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ColetaParcialError <span class="im">as</span> erro:</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> erro.resultado</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="date-format-flexibility" class="level3">
 <h3 class="anchored" data-anchor-id="date-format-flexibility">Date format flexibility</h3>
 <p>Wired endpoints accept multiple input formats and coerce to the backend’s expected representation. The four examples below all produce the same request:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)     <span class="co"># eSAJ backend (DD/MM/AAAA)</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">"tjdft"</span>)   <span class="co"># REST JSON backend (AAAA-MM-DD)</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># String, any of the four supported formats — coerced internally:</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Or pass a date / datetime directly:</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span>dt.date(<span class="dv">2024</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime <span class="im">as</span> dt</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)     <span class="co"># eSAJ backend (DD/MM/AAAA)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>tjdft <span class="op">=</span> jus.scraper(<span class="st">"tjdft"</span>)   <span class="co"># REST JSON backend (AAAA-MM-DD)</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># String, any of the four supported formats — coerced internally:</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/03/2024"</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>tjdft.cjsg(<span class="st">"habeas"</span>,    paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"2024-03-01"</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Or pass a date / datetime directly:</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, data_julgamento_inicio<span class="op">=</span>dt.date(<span class="dv">2024</span>, <span class="dv">3</span>, <span class="dv">1</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="auto-chunking-esaj-family" class="level2">
 <h2 class="anchored" data-anchor-id="auto-chunking-esaj-family">Auto-chunking (eSAJ family)</h2>
 <p>Several eSAJ endpoints (<code>cjpg</code>/<code>cjsg</code> in TJSP and TJMS, plus <code>cjsg</code> in TJAC, TJAL, TJAM, TJCE) cap each request at a one-year <code>data_julgamento_*</code> window. When the user asks for a longer interval, the scraper <strong>automatically</strong> splits the request into calendar-year windows, fetches each one, and concatenates the results — deduplicating by <code>cd_acordao</code> (cjsg) or <code>id_processo</code> (cjpg).</p>
 <p>Each window ends the day before the same date one year later (<code>01/01/2013</code>–<code>31/12/2013</code>, then <code>01/01/2014</code>–<code>31/12/2014</code>). The eSAJ backend only accepts <code>data_julgamento_fim</code> strictly before <code>data_julgamento_inicio</code> plus one calendar year and answers HTTP 404 otherwise, so a fixed day count would either drift or produce windows the server rejects.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Six-year span: scraper sends 6 requests under the hood and returns</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># a single deduplicated DataFrame.</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Six-year span: scraper sends 6 requests under the hood and returns</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># a single deduplicated DataFrame.</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The behaviour is controlled by <code>auto_chunk: bool = True</code> (default on). With <code>auto_chunk=False</code>, a <code>data_julgamento_*</code> interval the server would reject (end on or after the same date one year later) raises <code>ValueError</code> before any request. This helps input validation paths that want to fail before submitting a long job. <code>data_publicacao_*</code> is never split, so the same check applies to it in either mode:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 1 ano(s)")</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">False</span>,  <span class="co"># raises ValueError ("aceita no máximo 1 ano(s)")</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>If a window still fails after the HTTP retries (network errors, 4xx, 5xx), the scraper tries the remaining windows and then raises <code>juscraper.core.exceptions.ColetaParcialError</code>. A partial result never comes back as if it were complete. The error carries the work already done: <code>.resultado</code> holds the deduplicated DataFrame of the windows that succeeded, and <code>.falhas</code> lists <code>(inicio, fim, exception)</code> for the ones to retry:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juscraper.core.exceptions <span class="im">import</span> ColetaParcialError</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> tjsp.cjsg(<span class="st">"dano moral"</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>, data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ColetaParcialError <span class="im">as</span> erro:</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> erro.resultado</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(erro.falhas)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> juscraper.core.exceptions <span class="im">import</span> ColetaParcialError</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> tjsp.cjsg(<span class="st">"dano moral"</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2018"</span>, data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> ColetaParcialError <span class="im">as</span> erro:</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> erro.resultado</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(erro.falhas)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>TJMG <code>cjsg</code> and <code>cjsg_download</code> raise it too when a result page fails with another page already downloaded. The search stops at that page: <code>.resultado</code> holds the pages read before it (as a DataFrame, also in <code>cjsg_download</code>), <code>.falhas</code> holds only that failure, and the message lists the missing pages, to request again with <code>paginas=</code>.</p>
 <p>DataJud’s <code>listar_processos</code> follows the same rule. When a page fails (HTTP error, malformed response, a response with <code>_shards.failed &gt; 0</code>, or a page that ends before the exact <code>hits.total</code>), the remaining aliases are still queried and <code>ColetaParcialError</code> is raised at the end. <code>.resultado</code> holds every record received, from all aliases, and each item in <code>.falhas</code> is <code>(None, None, exception)</code>; the error message names the alias and the page that failed.</p>
 <p>Combining <code>auto_chunk=True</code> with <code>paginas</code> is rejected when the interval is long enough to actually trigger chunking: the multi-window semantics for <code>paginas</code> are ambiguous (each window? aggregated budget?) and the design prefers to fail explicitly. For short intervals where chunking is a no-op, <code>paginas</code> works as usual.</p>
 <section id="result-caps-tjba-tjro" class="level3">
 <h3 class="anchored" data-anchor-id="result-caps-tjba-tjro">Result caps (TJBA, TJRO)</h3>
 <p>The <code>cjsg</code> of TJBA and TJRO has a different limit: the portal reports the full total of a search but only serves its first 10,000 results. With <code>paginas=None</code> and <code>auto_chunk=True</code> (default), a search above that cap is split by date (publication date in TJBA, judgment date in TJRO) and every window is downloaded. The split follows the count the portal reports: a window above the cap is halved until each part fits, so no window size has to be guessed. A search that fits the cap is sent exactly as before.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>tjro <span class="op">=</span> jus.scraper(<span class="st">"tjro"</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjro.cjsg(<span class="st">"servidor público"</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>)  <span class="co"># more than 10,000 results</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>tjro <span class="op">=</span> jus.scraper(<span class="st">"tjro"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjro.cjsg(<span class="st">"servidor público"</span>, data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>)  <span class="co"># more than 10,000 results</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>What to expect from a split search:</p>
 <ul>
 <li>Windows come from the most recent to the oldest. The portal order (relevance in TJRO) holds inside each window, not across them.</li>
@@ -631,18 +679,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="pre-scraping-count-count_only" class="level2">
 <h2 class="anchored" data-anchor-id="pre-scraping-count-count_only">Pre-scraping count (<code>count_only</code>)</h2>
 <p>Empirical legal research often benefits from a quick estimate of how many results a query will return before committing to a long collection job (~2 s/result in <code>cjsg</code>/<code>cjpg</code> with <code>sleep_time=0.5</code>, so 5 000 hits ≈ 3 h). The <code>count_only: bool = False</code> flag — accepted by <code>cjsg</code> in TJAC, TJAL, TJAM, TJCE, TJMS, TJSP and by <code>cjpg</code> in TJMS and TJSP — short-circuits the public method to a single network call per window, extracts the total result count from the first-page HTML, and returns an <code>int</code> instead of a <code>pd.DataFrame</code>:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># One POST + one GET. Returns an int.</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> tjsp.cjpg(</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>,</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    count_only<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Estimated wall-clock for full collection: </span><span class="sc">{</span>n <span class="op">*</span> <span class="dv">2</span> <span class="op">/</span> <span class="dv">3600</span><span class="sc">:.1f}</span><span class="ss">h"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># One POST + one GET. Returns an int.</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> tjsp.cjpg(</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="st">"dano moral"</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="st">"31/12/2024"</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    count_only<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Estimated wall-clock for full collection: </span><span class="sc">{</span>n <span class="op">*</span> <span class="dv">2</span> <span class="op">/</span> <span class="dv">3600</span><span class="sc">:.1f}</span><span class="ss">h"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Interaction with <code>auto_chunk</code>: when the interval exceeds one year and <code>auto_chunk=True</code> (default), <code>count_only</code> iterates the disjoint windows produced by <code>iter_date_windows</code> and <strong>sums</strong> the per-window counts. The sum is raw — the de-duplication step that the normal path performs by <code>cd_acordao</code> / <code>id_processo</code> does not apply here, so the returned number can slightly overestimate <code>len(cjsg(...))</code> when documents are republished across windows (same <code>cd_acordao</code> appearing in two windows). For most estimation use cases this is the desired behaviour: the count reflects what the backend will hand over, not the deduplicated final shape.</p>
 <p>Other edge cases:</p>
 <ul>
@@ -656,12 +704,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="full-text-of-acórdãos-esaj" class="level2">
 <h2 class="anchored" data-anchor-id="full-text-of-acórdãos-esaj">Full text of acórdãos (eSAJ)</h2>
 <p><code>cjsg</code> returns the ementa and <code>cd_acordao</code>, not the full decision. In TJAC and TJSP, <code>baixar_acordao(processo, data_julgamento)</code> downloads the PDF of the acórdão and returns its path; <code>baixar_acordaos(df)</code> does the same for each row of a <code>cjsg</code> DataFrame and adds <code>caminho_acordao</code> and <code>motivo_falha</code>:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.baixar_acordaos(df)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.baixar_acordaos(df)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"data_julgamento"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The direct route of the <code>cjsg</code> (<code>cjsg/getArquivo.do</code>) asks for a login in TJSP and for a reCAPTCHA in TJAC. These methods follow the process movements in the second-degree consultation instead, as the R package <a href="https://github.com/jjesusfilho/tjsp"><code>tjsp</code></a> by José de Jesus Filho does in <code>tjsp_baixar_acordaos_cposg</code>: no login and no captcha.</p>
 <ul>
 <li><strong>Which acórdão.</strong> A process may have more than one (the appeal and its embargos de declaração, often with their own <code>cdProcesso</code>). The method takes the first document whose type is an acórdão and whose movement date is on or after <code>data_julgamento</code>. The movement comes on the judgment day or a few days later, and the next acórdão of the same process comes after it. When two incidents have an acórdão on the same day, the date cannot tell them apart: the method returns the one from the incident listed first by the search, and a <code>logging</code> warning names the other.</li>
@@ -674,10 +722,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="tjce-and-tjms-straight-from-cd_acordao" class="level3">
 <h3 class="anchored" data-anchor-id="tjce-and-tjms-straight-from-cd_acordao">TJCE and TJMS: straight from <code>cd_acordao</code></h3>
 <p>In TJCE and TJMS the direct route of the <code>cjsg</code> works without login or captcha, so the methods take the codes of the <code>cjsg</code> row instead of the process number: <code>baixar_acordao(cd_acordao, cd_foro)</code> makes one request to <code>cjsg/getArquivo.do</code> and writes <code>&lt;diretorio&gt;/acordaos/&lt;cd_acordao&gt;.pdf</code>; <code>baixar_acordaos(df)</code> reads the <code>cd_acordao</code> and <code>cd_foro</code> columns and adds <code>caminho_acordao</code> and <code>motivo_falha</code>, as above:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>tjce <span class="op">=</span> jus.scraper(<span class="st">"tjce"</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.baixar_acordaos(df)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"cd_acordao"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>tjce <span class="op">=</span> jus.scraper(<span class="st">"tjce"</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjce.baixar_acordaos(df)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"processo"</span>, <span class="st">"cd_acordao"</span>, <span class="st">"caminho_acordao"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>cd_acordao</code> already identifies one acórdão, so there is no choice by date. When the court answers with an HTML page instead of the PDF (“Arquivo não localizado” for an unknown code, or a captcha or login page), <code>baixar_acordao</code> raises <code>DocumentoNaoPdfError</code>, from <code>juscraper.courts._esaj.pasta</code>, and writes nothing; in <code>baixar_acordaos</code> the row gets <code>nao_pdf</code>. A code that is empty or not only digits raises <code>EntradaInvalidaError</code> (<code>entrada_invalida</code>) before any request.</p>
 <p>TJAL and TJAM do not have these methods yet: the direct route asks for a reCAPTCHA there, as in TJAC.</p>
 </section>
@@ -686,11 +734,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="case-documents-of-the-first-instance-tjsp">Case documents of the first instance (TJSP)</h2>
 <p>Two methods download public documents of the first instance as PDF, with no login and no captcha. Documents that ask for the process password are left out (see jtrecenti/juscraper#481).</p>
 <p><strong>Documents linked to movements.</strong> <code>cpopg(..., download_pecas=True, diretorio=...)</code> downloads, in the same session that lists the movements, the PDF of each public document linked to a movement:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>resultado <span class="op">=</span> tjsp.cpopg(<span class="st">"0000564-95.2025.8.26.0068"</span>, download_pecas<span class="op">=</span><span class="va">True</span>, diretorio<span class="op">=</span><span class="st">"pecas"</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>resultado[<span class="st">"movimentacoes"</span>][[<span class="st">"data"</span>, <span class="st">"movimento"</span>, <span class="st">"cd_documento"</span>, <span class="st">"documento_publico"</span>, <span class="st">"caminho_documento"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>resultado <span class="op">=</span> tjsp.cpopg(<span class="st">"0000564-95.2025.8.26.0068"</span>, download_pecas<span class="op">=</span><span class="va">True</span>, diretorio<span class="op">=</span><span class="st">"pecas"</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>resultado[<span class="st">"movimentacoes"</span>][[<span class="st">"data"</span>, <span class="st">"movimento"</span>, <span class="st">"cd_documento"</span>, <span class="st">"documento_publico"</span>, <span class="st">"caminho_documento"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ul>
 <li><strong>Columns.</strong> Every <code>cpopg</code> call (with or without <code>download_pecas</code>) now fills <code>cd_documento</code> and <code>documento_publico</code> in <code>movimentacoes</code>, read from the movement HTML with no extra request. <code>caminho_documento</code> has the PDF path, or <code>None</code> without <code>download_pecas</code>, for password-protected documents and for documents whose download failed.</li>
 <li><strong>Where files go.</strong> <code>&lt;diretorio&gt;/cpopg/&lt;cnj&gt;/documentos/&lt;cdDocumento&gt;.pdf</code>. <code>cpopg</code> deletes its download folder at the end, so <code>diretorio</code> is required with <code>download_pecas=True</code>, is only accepted with it, and cannot be inside <code>download_path</code>. <code>cpopg_download(..., download_pecas=True)</code> writes the PDFs next to the process HTML.</li>
@@ -699,9 +747,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>download_pecas=True</code> requires <code>baixar_movimentacoes=True</code>; otherwise it raises <code>ValueError</code> before any request.</li>
 </ul>
 <p><strong>Sentences from <code>cjpg</code>.</strong> Each <code>cjpg</code> row has the four codes of the “Visualizar Inteiro Teor” link: <code>cd_processo</code>, <code>cd_foro</code>, <code>nm_alias</code> (often empty) and <code>cd_documento</code>. <code>baixar_sentenca(cd_processo, cd_foro, cd_documento, nm_alias)</code> uses them to download the sentence PDF, and <code>baixar_sentencas(df)</code> does the same for each row of a <code>cjpg</code> DataFrame, adding <code>caminho_sentenca</code> and <code>motivo_falha</code>:</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjpg(<span class="st">"atraso de voo"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.baixar_sentencas(df)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"cd_processo"</span>, <span class="st">"cd_documento"</span>, <span class="st">"caminho_sentenca"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.cjpg(<span class="st">"atraso de voo"</span>, paginas<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> tjsp.baixar_sentencas(df)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>df[[<span class="st">"cd_processo"</span>, <span class="st">"cd_documento"</span>, <span class="st">"caminho_sentenca"</span>, <span class="st">"motivo_falha"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The PDF goes to <code>&lt;diretorio&gt;/sentencas/&lt;cd_processo&gt;_&lt;cd_documento&gt;.pdf</code>. Each sentence takes two requests (<code>cjpg/obterArquivo.do</code>, which redirects to the folder, and the PDF), in any session, spaced by <code>sleep_time</code>. A code outside the eSAJ format raises <code>EntradaInvalidaError</code> before any request; in <code>baixar_sentencas</code> it becomes <code>motivo_falha="entrada_invalida"</code>. The other values are <code>nao_pdf</code>, <code>resposta_inesperada</code>, <code>erro_de_gravacao</code> (the PDF could not be written to disk) and the network reasons of <code>juscraper.core.failures.MOTIVOS_FALHA</code>. The <code>cjpg</code> text column <code>decisao</code> already has the sentence text; the PDF keeps the layout and the signatures.</p>
 <p>The routes are the ones of <code>tjsp_baixar_doc_movimentacao</code> and <code>tjsp_baixar_sentenca_cjpg</code> in the R package <a href="https://github.com/jjesusfilho/tjsp"><code>tjsp</code></a> by José de Jesus Filho. They live in <code>juscraper.courts._esaj.pasta</code>. The movement route answers without login in TJAC, TJAL, TJAM and TJCE as well, but those courts do not have <code>cpopg</code> in juscraper yet.</p>
 <p>TJMS has the same <code>cjpg</code>, with the same filters and columns, and the same <code>baixar_sentenca</code> and <code>baixar_sentencas</code>. The 120-character limit of <code>pesquisa</code> (<code>QueryTooLongError</code>) applies only to TJSP, where it was measured. <code>listar_varas</code> and <code>grau="1"</code> in <code>listar_classes</code> and <code>listar_assuntos</code> exist in both courts, which share the <code>cjpg</code> form.</p>

@@ -241,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos por <code>InputCJSGTJDFT</code>: * <code>sinonimos</code> (bool): Inclui sinônimos do termo na busca. Default <code>True</code>. Backend: <code>sinonimos</code>. * <code>espelho</code> (bool): Pesquisa no espelho do acórdão. Default <code>True</code>. Backend: <code>espelho</code>. * <code>inteiro_teor</code> (bool): Pesquisa também no inteiro teor, o que amplia o resultado. Default <code>False</code>. Backend: <code>inteiroTeor</code>. * <code>tamanho_pagina</code> (int): Resultados por página, de 1 a 40; acima de 40 a API responde HTTP 400, e o schema recusa antes da requisição. Default <code>10</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de julgamento. Aceita <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. <code>None</code> não filtra. Backend: <code>dataJulgamento</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de publicação, nos mesmos formatos. <code>None</code> não filtra. Backend: <code>dataPublicacao</code>.</td>
+<td>Filtros aceitos por <code>InputCJSGTJDFT</code>: * <code>sinonimos</code> (bool): Inclui sinônimos do termo na busca. Default <code>True</code>. Backend: <code>sinonimos</code>. * <code>espelho</code> (bool): Pesquisa no espelho do acórdão. Default <code>True</code>. Backend: <code>espelho</code>. * <code>buscar_em</code> (str): Onde procurar <code>pesquisa</code>. <code>"ementa"</code> (default) busca no espelho do acórdão, que traz a ementa, quando <code>espelho=True</code>. <code>"inteiro_teor"</code> busca também no inteiro teor, o que amplia o resultado. Outro valor levanta <code>ValidationError</code>. Backend: <code>inteiroTeor</code>. * <code>tamanho_pagina</code> (int): Resultados por página, de 1 a 40; acima de 40 a API responde HTTP 400, e o schema recusa antes da requisição. Default <code>10</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de julgamento. Aceita <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. <code>None</code> não filtra. Backend: <code>dataJulgamento</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de publicação, nos mesmos formatos. <code>None</code> não filtra. Backend: <code>dataPublicacao</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -255,6 +255,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code></li>
 <li><code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code></li>
 <li><code>quantidade_por_pagina</code> -&gt; <code>tamanho_pagina</code></li>
+<li><code>inteiro_teor</code> -&gt; <code>buscar_em</code>: <code>inteiro_teor=True</code> vira <code>buscar_em="inteiro_teor"</code> e <code>inteiro_teor=False</code>, <code>buscar_em="ementa"</code>. <code>True</code>/<code>False</code> em <code>buscar_em</code> (<code>inteiro_teor</code> por posicao em <code>cjsg_download</code>) tambem sao convertidos, com aviso</li>
 </ul>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
@@ -276,7 +277,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando uma data é inválida, o início é posterior ao fim, ou um parâmetro e seu alias deprecado são passados juntos (uma data, ou <code>tamanho_pagina</code> com <code>quantidade_por_pagina</code>).</td>
+<td>Quando uma data é inválida, o início é posterior ao fim, ou um parâmetro e seu alias deprecado são passados juntos (uma data, <code>tamanho_pagina</code> com <code>quantidade_por_pagina</code> ou <code>buscar_em</code> com <code>inteiro_teor</code>).</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -332,7 +333,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    sinonimos<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    espelho<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    inteiro_teor<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    buscar_em<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    tamanho_pagina<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -375,10 +376,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>True</code></td>
 </tr>
 <tr class="odd">
-<td>inteiro_teor</td>
-<td><code>bool</code></td>
-<td>Pesquisa também no inteiro teor.</td>
-<td><code>False</code></td>
+<td>buscar_em</td>
+<td><code>str</code> | None</td>
+<td><code>"ementa"</code> (default; <code>None</code> também) ou <code>"inteiro_teor"</code>; ver <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg"><code>cjsg</code></a>.</td>
+<td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>tamanho_pagina</td>
