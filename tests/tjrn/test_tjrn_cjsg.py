@@ -65,3 +65,18 @@ class TestCJSGTJRN:
         hits = brutos[0]["hits"]["hits"]
         assert hits
         assert {h["_source"]["tipo_teor"] for h in hits} == {decisoes}
+
+    def test_inteiro_teor_busca_termo_em_sentencas(self):
+        """Termo no inteiro teor traz sentencas, que nao tem ementa.
+
+        Com o mesmo termo em ``pesquisa`` (ementa), a busca de sentencas volta
+        vazia. O tipo vem em ``tipo_teor`` na resposta bruta.
+        """
+        brutos = self.scraper.cjsg_download(
+            inteiro_teor="dano moral", paginas=1, decisoes="Sentença",
+        )
+        hits = brutos[0]["hits"]["hits"]
+        assert hits
+        assert {h["_source"]["tipo_teor"] for h in hits} == {"Sentença"}
+        na_ementa = self.scraper.cjsg_download("dano moral", paginas=1, decisoes="Sentença")
+        assert na_ementa[0]["hits"]["total"] == 0
