@@ -10,6 +10,7 @@ from juscraper.core.parse_utils import (
     clean_document_text,
     clean_html,
     coerce_date_columns,
+    html_para_texto,
     normalizar_colunas_texto,
     normalizar_texto,
 )
@@ -147,6 +148,56 @@ class TestNormalizarColunasTexto:
         assert df["ementa"].iloc[0] == "a b\nc"
         assert pd.isna(df["ementa"].iloc[1])
         assert df["conteudo_html"].tolist() == ["<p>a\r\n</p>", "x\xa0y"]
+
+
+class TestHtmlParaTexto:
+    def test_paragrafos_e_br_viram_quebra(self):
+        html = "<p>EMENTA: RECURSO.</p><h3>I. CASO</h3><ol><li>Um.</li><li>Dois<br/>tres</li></ol>"
+        assert html_para_texto(html) == "EMENTA: RECURSO.\nI. CASO\nUm.\nDois\ntres"
+
+    def test_tag_inline_some_sem_espaco(self):
+        assert html_para_texto("<p><b>DANO</b>, <font><b>MORAL</b></font>.</p>") == "DANO, MORAL."
+
+    def test_quebra_do_codigo_fonte_vale_espaco(self):
+        assert html_para_texto("<p>Caracteriza\n   do\r\n dano.</p>\n\n<p>Fim.</p>") == "Caracteriza do dano.\nFim."
+
+    def test_preservar_quebras_mantem_o_fim_de_linha_do_texto(self):
+        texto = "TITULO <em>DANO</em>\r\nI. Caso<br/>Trata-se\n\n  de recurso"
+        assert html_para_texto(texto, preservar_quebras=True) == "TITULO DANO\nI. Caso\nTrata-se\nde recurso"
+
+    def test_linhas_vazias_e_espacos_saem(self):
+        html = "<p>&nbsp;</p><p>  a \t  b  </p><p><span>\xa0</span></p><div></div><p>c</p>"
+        assert html_para_texto(html) == "a b\nc"
+
+    def test_entidades_e_caracteres_invisiveis(self):
+        html = "<p>art.&nbsp;14 &lt;CDC&gt; &amp; S&uacute;mula\u200b 7\xad</p>"
+        assert html_para_texto(html) == "art. 14 <CDC> & Súmula 7"
+
+    def test_remove_comentario_style_script_e_title(self):
+        html = (
+            "<html><head><title>Doc</title><style>p{text-align: justify;}</style></head>"
+            "<body><!--[if gte mso 9]><xml>Normal 0 21 false</xml><![endif]-->"
+            "<script>var x = 1;</script><p>Texto.</p></body></html>"
+        )
+        assert html_para_texto(html) == "Texto."
+
+    @pytest.mark.parametrize(
+        "html",
+        ["<p>Texto.</p><style>p{x}", "<p>Texto.</p><!-- comentario", '<p>Texto.</p>   <p dir="ltr" s'],
+        ids=["style", "comentario", "tag"],
+    )
+    def test_trecho_sem_fechamento_vai_ate_o_fim(self, html):
+        assert html_para_texto(html) == "Texto."
+
+    def test_celulas_separadas_por_espaco(self):
+        assert html_para_texto("<table><tr><td>a</td><td>b</td></tr><tr><td>c</td></tr></table>") == "a b\nc"
+
+    @pytest.mark.parametrize("valor", [None, ""], ids=["none", "vazia"])
+    def test_vazio_volta_igual(self, valor):
+        assert html_para_texto(valor) is valor
+
+    def test_html_sem_texto_vira_string_vazia(self):
+        assert html_para_texto("<p>&nbsp;</p>") == ""
 
 
 if __name__ == "__main__":

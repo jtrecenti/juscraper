@@ -1,0 +1,434 @@
+{
+ "documentos": [
+  {
+   "numeroProcesso": "0001051-60.2019.5.90.0000",
+   "siglaClasseProcesso": "CSJT-Cons",
+   "classeProcesso": "Consulta",
+   "relator": "LAIRTO JOSE VELOSO",
+   "tribunal": "CSJT",
+   "idGabinete": null,
+   "gabinete": null,
+   "idTurma": 405,
+   "turma": "Conselho Superior da Justiça do Trabalho",
+   "textoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "ementa": "<html>\n  <head>\n    <style>\n      <!--\n        p.default {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n          SpaceBelow:5.0;\n          SpaceAbove:5.0;\n        }\n        p.CorpoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Tema {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.IstoaPosto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Voto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Relatario {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.NumaProcesso {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:right;\n          SpaceBelow:8.5;\n        }\n        p.CorreaJunto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:right;\n          SpaceBelow:8.5;\n        }\n        p.DefaultaParagraphaFont {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.pageanumber {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.Transcriaaoaa {\n          LeftIndent:184.3;\n          RightIndent:0.0;\n          FirstLineIndent:28.35;\n          Alignment:justify;\n        }\n        p.Transcriaao {\n          LeftIndent:127.55;\n          RightIndent:0.0;\n          FirstLineIndent:28.35;\n          Alignment:justify;\n        }\n        p.DataaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.Date {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.MapaadoaDocumentoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:1;\n        }\n        p.DocumentaMap {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.RodapaaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.footer {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.CabeaalhoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.header {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:right;\n        }\n        p.footnoteareference {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.TextoadeanotaadearodapaaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:2;\n        }\n        p.footnoteatext {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Funaao {\n          LeftIndent:93.55;\n          RightIndent:93.55;\n          FirstLineIndent:0.0;\n          Alignment:center;\n        }\n        p.Autoridade {\n          LeftIndent:93.55;\n          RightIndent:93.55;\n          FirstLineIndent:0.0;\n          Alignment:center;\n        }\n        p.Ementa {\n          LeftIndent:226.8;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:justify;\n        }\n        p.Identificaaao {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:justify;\n        }\n        p.TatuloaaaChar {\n          italic:;\n          bold:bold;\n          underline:;\n          size:4;\n        }\n        p.TatuloaaaChar {\n          italic:italic;\n          bold:bold;\n          underline:;\n          size:4;\n        }\n        p.TatuloaaaChar {\n          italic:;\n          bold:bold;\n          underline:;\n          size:5;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n      -->\n    </style>\n  </head>\n  <body>\n    <p class=Ementa>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        <b>CONSULTA. POSSIBILIDADE DE PAGAMENTO RETROATIVO A TÍTULO DE HORAS EXTRAORDINÁRIAS \n        LABORADAS EM RECESSO FORENSE ANTERIORES AO DE 2017/2018.</b>\n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n         Resta esclarecido que o direito do servidor de optar, pelo recebimento de horas extras ou \n        pela compensação com folgas em dobro, em razão da prestação de serviço no recesso forense, \n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Courier New\">\n        -  condicionada à prévia avaliação pela Presidência do Tribunal da real necessidade do \n        serviço e da viabilidade, inclusive orçamentária, da opção -\n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n         tem seus efeitos somente a partir de 14/11/2017, data da publicação do acórdão proferido \n        nos autos do Processo PCA-1352-46.2015.5.90.0000, visto que o mesmo conferiu novo \n        entendimento às Resoluções CSJT nº 25/2006 e 101/2012. \n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        <b>Consulta conhecida e respondida</b>\n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        . \n      </span>\n    </p>\n    <p class=Corpo>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        \n      </span>\n    </p>\n    <p class=Corpo>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        \n      </span>\n    </p>\n  </body>\n</html>",
+   "possuiEmenta": "S",
+   "idDocumentoAcordao": "da805fd5653ae327dbf503c146a4d57a",
+   "highlightTextoAcordaoAnonimizado": "A C Ó R D Ã O       \n\n        ( Conselho Superior da Justiça do Trabalho )        \n\n       CSLJV         \n\n       CONSULTA .  POSSIBILIDADE DE PAGAMENTO RETROATIVO A TÍTULO DE <MARK>HORAS</MARK> EXTRAORDINÁRIAS        \n\n       LABORADAS EM RECESSO FORENSE ANTERIORES AO DE 2017 / 2018 .        \n\n       Resta esclarecido que o direito do servidor de optar ,  pelo recebimento de <MARK>horas</MARK> <MARK>extras</MARK> ou        \n\n       pela compensação com folgas em dobro ,  em razão da prestação de serviço no recesso forense ,         \n\n        –  condicionada à prévia avaliação pela Presidência…[truncado]",
+   "highlightEmenta": "<html>\n  <head>\n    <style>\n      <!--\n        p.default {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n          SpaceBelow:5.0;\n          SpaceAbove:5.0;\n        }\n        p.CorpoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.…[truncado]",
+   "highlightTextoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "referenciaLegislativa": [
+    "trt5",
+    "trt8",
+    "resolucao_csjt_25_06",
+    "resolucao_csjt_137_14",
+    "resolucao_csjt_101_12",
+    "cnj",
+    "xxxvi_art_5_cf",
+    "trt9"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "25/10/2019",
+   "dataJuntada": "07/11/2019",
+   "score": 175.84091
+  },
+  {
+   "numeroProcesso": "0000101-51.2019.5.90.0000",
+   "siglaClasseProcesso": "CSJT-PP",
+   "classeProcesso": "Pedido de Providências",
+   "relator": "FERNANDO DA SILVA BORGES",
+   "tribunal": "CSJT",
+   "idGabinete": null,
+   "gabinete": null,
+   "idTurma": 405,
+   "turma": "Conselho Superior da Justiça do Trabalho",
+   "textoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "ementa": "<html>\n  <head>\n    <style>\n      <!--\n        p.Estiloapadraeao {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Tema {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.IstoaPosto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Voto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Relatario {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.NumaProcesso {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:right;\n          SpaceBelow:8.5;\n        }\n        p.CorreaJunto {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:right;\n          SpaceBelow:8.5;\n        }\n        p.DefaultaParagraphaFont {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.pageanumber {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.Transcriaaoaa {\n          LeftIndent:184.3;\n          RightIndent:0.0;\n          FirstLineIndent:28.35;\n          Alignment:justify;\n        }\n        p.Transcriaao {\n          LeftIndent:127.55;\n          RightIndent:0.0;\n          FirstLineIndent:28.35;\n          Alignment:justify;\n        }\n        p.DataaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.Date {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.MapaadoaDocumentoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:1;\n        }\n        p.DocumentaMap {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.RodapaaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.footer {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.CabeaalhoaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:3;\n        }\n        p.header {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:right;\n        }\n        p.footnoteareference {\n          italic:;\n          bold:normal;\n          underline:;\n        }\n        p.TextoadeanotaadearodapaaChar {\n          italic:;\n          bold:normal;\n          underline:;\n          size:2;\n        }\n        p.footnoteatext {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Funaao {\n          LeftIndent:93.55;\n          RightIndent:93.55;\n          FirstLineIndent:0.0;\n          Alignment:center;\n        }\n        p.Autoridade {\n          LeftIndent:93.55;\n          RightIndent:93.55;\n          FirstLineIndent:0.0;\n          Alignment:center;\n        }\n        p.Ementa {\n          LeftIndent:226.8;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:justify;\n        }\n        p.Identificaaao {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:justify;\n        }\n        p.TatuloaaaChar {\n          italic:;\n          bold:bold;\n          underline:;\n          size:4;\n        }\n        p.TatuloaaaChar {\n          italic:italic;\n          bold:bold;\n          underline:;\n          size:4;\n        }\n        p.TatuloaaaChar {\n          italic:;\n          bold:bold;\n          underline:;\n          size:5;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n      -->\n    </style>\n  </head>\n  <body>\n    <p class=Ementa>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Times New Roman\">\n        <b>PEDIDO DE PROVIDÊNCIAS. CONCESSÃO DE FOLGAS COMPENSATÓRIAS EM DOBRO A MAGISTRADOS DA \n        JUSTIÇA DO TRABALHO DE 1º E 2º GRAUS PELA ATUAÇÃO EM PLANTÕES JUDICIÁRIOS. IMPOSSIBILIDADE.</b>\n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Times New Roman\">\n         \n      </span>\n    </p>\n    <p class=default>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Courier New\">\n        A concessão de folgas compensatórias em dobro, em plantões judiciários, aos servidores \n        públicos, fundamentada nos arts. 7°, XVI e 39, § 3°, da Constituição Federal, não pode ser \n        estendida aos agentes do Estado que exercem atribuições constitucionais, pois estes não \n        estão adstritos ao cumprimento de carga horária de trabalho definida ou ordinária e, por \n        conseguinte, a um limite de jornada, que extrapolado, enseje o reconhecimento de trabalho \n        extraordinário. Assim, não há possibilidade de extensão aos magistrados da opção \n        estabelecida para os servidores da Justiça do Trabalho no processo \n        CSJT-PCA-1352-46.2015.5.90.0000, quanto à concessão de folga em dobro. Conclusão que não \n        implica qualquer violação ao princípio da isonomia no âmbito da sistemática que rege a \n        compensação dos plantões na Justiça do Trabalho. \n      </span>\n    </p>\n    <p class=default>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Courier New\">\n        <b>Pedido de Providências conhecido e não provido.</b>\n      </span>\n      <span style=\"color: #000000; font-size: 12pt; font-family: Times New Roman\">\n        \n      </span>\n    </p>\n    <p class=Ementa>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        \n      </span>\n    </p>\n    <p class=Corpo>\n      <span style=\"color: #000000; font-size: 12pt; font-family: CourierCourier New\">\n        \n      </span>\n    </p>\n  </body>\n</html>",
+   "possuiEmenta": "S",
+   "idDocumentoAcordao": "828fd538bca8022a929ed97a12f36c10",
+   "highlightTextoAcordaoAnonimizado": "A C Ó R D Ã O       \n\n        ( Conselho Superior da Justiça do Trabalho )        \n\n       CSFSB / at / soc       \n\n       PEDIDO DE PROVIDÊNCIAS .  CONCESSÃO DE FOLGAS COMPENSATÓRIAS EM DOBRO A MAGISTRADOS DA        \n\n       JUSTIÇA DO TRABALHO DE 1º E 2º GRAUS PELA ATUAÇÃO EM PLANTÕES JUDICIÁRIOS .  IMPOSSIBILIDADE .        \n\n       A concessão de folgas compensatórias em dobro ,  em plantões judiciários ,  aos servidores        \n\n       públicos ,  fundamentada nos arts .  7° ,  XVI e 39 ,  § 3° ,  da Constituição Federal ,  não pode ser        \n\n       estendida aos agentes do Estado que e…[truncado]",
+   "highlightEmenta": "<html>\n  <head>\n    <style>\n      <!--\n        p.Estiloapadraeao {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.ListaParagraph {\n          LeftIndent:35.4;\n          RightIndent:0.0;\n          FirstLineIndent:127.6;\n          Alignment:justify;\n        }\n        p.Corpo {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Alignment:justify;\n        }\n        p.Tema {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:127.55;\n          Al…[truncado]",
+   "highlightTextoAcordao": "<html>\n  <head>\n    <style>\n      <!--\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.headingaa {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n        }\n        p.Normal {\n          LeftIndent:0.0;\n          RightIndent:0.0;\n          FirstLineIndent:0.0;\n          Alignment:left;\n      …[truncado]",
+   "referenciaLegislativa": [
+    "art_7_resolucao_csjt_101_12",
+    "resolucao_cnj_13_06",
+    "cnj",
+    "resolucao_csjt_14_05",
+    "art_57_cf",
+    "lc_35_79",
+    "art_2_resolucao_csjt_123_13"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "28/06/2019",
+   "dataJuntada": "04/07/2019",
+   "score": 158.61778
+  },
+  {
+   "numeroProcesso": "0000344-81.2018.5.22.0108",
+   "siglaClasseProcesso": "ROT",
+   "classeProcesso": "Recurso Ordinário Trabalhista",
+   "relator": "FRANCISCO METON MARQUES DE LIMA",
+   "tribunal": "TRT22",
+   "idGabinete": 62,
+   "gabinete": "OJ de Análise de Recurso",
+   "idTurma": 7,
+   "turma": "1ª Turma",
+   "textoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "ementa": "",
+   "possuiEmenta": "N",
+   "idDocumentoAcordao": "3066262",
+   "highlightTextoAcordaoAnonimizado": "PROCESSO TRT22 / 1ªT / RO -  0000344-81.2018.5.22.0108        \n\n       RECORRENTE :  ENERGY INSTALAÇÕES ELÉTRICAS LTDA  -  CNPJ :  ____    \n\n       ADVOGADO :  ____ ____ ____  -  OAB :  PI0003450       \n\n       RECORRIDO :  ____ ____ ____  -  CPF :  ____     \n\n       ADVOGADO :  ____ ____ ____ ____  -  OAB :  PI0009549       \n\n       ORIGEM :  VARA DO TRABALHO DE BOM ____  -  PI       \n\n       RELATOR :  DES .  ____ ____ ____ DE ____       \n\n       Ementa       \n\n       EMENTA       \n\n       SERVIÇO EXTERNO SEM CONTROLE DE JORNADA .  NÃO COMPROVAÇÃO .  <MARK>HORAS</MARK> <MARK>EXTRAS</MARK> . …[truncado]",
+   "highlightEmenta": "",
+   "highlightTextoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "referenciaLegislativa": [
+    "art_791_clt",
+    "prgf_3_art_790_clt",
+    "trt22",
+    "prgf_3_art_791_clt",
+    "prgf_4_art_791_clt",
+    "sumula_264_tst",
+    "ri_trt9",
+    "caput_art_791_clt",
+    "prgf_3_art_941_cpc"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "10/06/2019",
+   "dataJuntada": "14/06/2019",
+   "score": 143.30446
+  },
+  {
+   "numeroProcesso": "0000065-29.2017.5.22.0109",
+   "siglaClasseProcesso": "ROT",
+   "classeProcesso": "Recurso Ordinário Trabalhista",
+   "relator": "FRANCISCO METON MARQUES DE LIMA",
+   "tribunal": "TRT22",
+   "idGabinete": 46,
+   "gabinete": "Gabinete do Desembargador Francisco Meton M. de Lima",
+   "idTurma": 7,
+   "turma": "1ª Turma",
+   "textoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "ementa": "",
+   "possuiEmenta": "N",
+   "idDocumentoAcordao": "2800280",
+   "highlightTextoAcordaoAnonimizado": "PROCESSO TRT22ª RO Nº  0000065-29.2017.5.22.0109        \n\n       RECORRENTE :  E .  ____ ____  -  MOTOPEÇAS  -  ME  -  CNPJ :  ____    \n\n       ADVOGADO :  ____ ____ ____ ____  -  OAB :  PI0003718       \n\n       ADVOGADO :  ____ ____ ____ ____  -  OAB :  PI0007307       \n\n       RECORRIDO :  ____ ____ DA ____  -  CPF :  ____     \n\n       ADVOGADO :  ____ ____ DE ____ ____  -  OAB :  PI0006108       \n\n       ORIGEM :  VARA DO TRABALHO DE VALENÇA / PI       \n\n       RELATOR :  DES .  ____ ____ ____ DE ____       \n\n       Ementa       \n\n       EMENTA       \n\n       <MARK>HORAS</MARK> <MARK>EXTRAS…[truncado]",
+   "highlightEmenta": "",
+   "highlightTextoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "referenciaLegislativa": [
+    "trt22"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "18/02/2019",
+   "dataJuntada": "20/02/2019",
+   "score": 143.24875
+  },
+  {
+   "numeroProcesso": "0002309-95.2016.5.22.0001",
+   "siglaClasseProcesso": "AP",
+   "classeProcesso": "AGRAVO DE PETIÇÃO",
+   "relator": "LIANA FERRAZ DE CARVALHO",
+   "tribunal": "TRT22",
+   "idGabinete": 49,
+   "gabinete": "Gabinete da Desembargadora Liana Ferraz de Carvalho",
+   "idTurma": 7,
+   "turma": "1ª Turma",
+   "textoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "ementa": "",
+   "possuiEmenta": "N",
+   "idDocumentoAcordao": "3132547",
+   "highlightTextoAcordaoAnonimizado": "PROCESSO TRT AP  -  Nº  0002309-95.2016.5.22.0001        \n\n       RELATOR  :  DESEMBARGADORA ____ FERRAZ DE ____       \n\n       AGRAVANTE  :  INTER ____ DISTRIBUIDORA DE BEBIDAS LTDA       \n\n       ADVOGADA  :  ____ ____ DE ____  -  OAB :  PI0002758       \n\n       AGRAVADO  :  ____ ____ VALE       \n\n       ADVOGADO  :  ____ DE ____ ____  -  OAB :  PI0001248       \n\n       ORIGEM  :  1ª VARA DO TRABALHO DE ____  -  PI       \n\n       EMENTA :  AGRAVO DE PETIÇÃO .  EXCESSO DE EXECUÇÃO .  <MARK>HORAS</MARK> <MARK>EXTRAS</MARK> .  DIAS EFETIVAMENTE TRABALHADOS .  INTELIGÊNCIA DA SÚMULA 347 DO TST .…[truncado]",
+   "highlightEmenta": "",
+   "highlightTextoAcordao": "<table width=\"100%\" cellspacing=\"2\" cellpadding=\"2\" border=\"0\" style=\"border-color: white; border-style: none; display: block\">\n<tr>\n\n<td><img src=\"data:image/jpg;base64,/9j/4AAQSkZJRgABAgAAZABkAAD/7AARRHVja3kAAQAEAAAAZAAA/+4ADkFkb2JlAGTA\n\nAAAAAf/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB\n\nAQICAgICAgICAgICAwMDAwMDAwMDAwEBAQEBAQECAQECAgIBAgIDAwMDAwMDAwMDAwMD\n\nAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/8AAEQgAXwBaAwERAAIR\n\nAQMRAf/EAIUAAAEFAQEBAQAAAAAAAAAAAAkABgcICgUDBAEBAQEBAQAAAAAAAAAAAAAA\n\nAAABAgMQAAICAwEAAAYCAAMGBgMAAAQFAwYBAgcIABESExQJFRYhIjViIzNkNlZBUTI0\n\nJRc3VxgRAQ…[truncado]",
+   "referenciaLegislativa": [
+    "trt22",
+    "prgf_1_art_515_cpc",
+    "art_897_clt",
+    "sumula_347_tst",
+    "sumula_393_tst"
+   ],
+   "prioridades": null,
+   "dataJulgamento": "05/08/2019",
+   "dataJuntada": "12/08/2019",
+   "score": 143.18188
+  }
+ ],
+ "temasTopFive": [
+  {
+   "highlightQuestao": "Inclusão do Adicional de Risco de Vida na base de cálculo das <MARK>horas</MARK> <MARK>extras</MARK> de guarda municipal.",
+   "highlightTese": "É infraconstitucional, a ela se aplicando os efeitos da ausência de repercussão geral, controvérsia acerca da inclusão do Adicional de Risco de Vida na base de cálculo das <MARK>horas</MARK> <MARK>extras</MARK> de guarda municipal.",
+   "highlightTextoAcordaoDecisao": null,
+   "highlightTextoAcordaoMerito": null,
+   "highlightTextoDecisaoAdmissao": null,
+   "highlightTextoDecisaoSuspensao": null,
+   "highlightTextoEmentaAdmissao": null,
+   "highlightTextoEmentaMerito": null,
+   "score": 339.77573,
+   "origemDocumentos": "BNP",
+   "tribunal": "STF",
+   "descricaoTribunal": "Supremo Tribunal Federal",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": null,
+   "id": "RG-1257-13891-STF",
+   "numero": "1257",
+   "categoria": "RG",
+   "tituloCategoria": "Repercussão Geral",
+   "orgao": "13891",
+   "descricaoOrgao": "Supremo Tribunal Federal",
+   "relator": "MINISTRO PRESIDENTE",
+   "assuntos": [
+    {
+     "codigo": 10303,
+     "descricao": "Adicional de Horas Extras"
+    }
+   ],
+   "numeroTemaSobrestado": null,
+   "referenciaLegislativa": null,
+   "textoAcordaoMerito": null,
+   "textoDecisaoAdmissao": null,
+   "textoDecisaoSuspensao": null,
+   "textoEmentaAdmissao": null,
+   "textoEmentaMerito": null,
+   "dataAdmissao": "17/06/2023",
+   "dataJulgamento": null,
+   "dataTransitoJulgado": null,
+   "dataSituacao": null,
+   "limiteSuspensao": null,
+   "processosIncidente": null,
+   "questao": "Inclusão do Adicional de Risco de Vida na base de cálculo das horas extras de guarda municipal.",
+   "processosParadigma": [
+    {
+     "classe": "1348",
+     "link": "https://portal.stf.jus.br/processos/detalhe.asp?incidente=6454839",
+     "numero": "1395342"
+    }
+   ],
+   "tese": "É infraconstitucional, a ela se aplicando os efeitos da ausência de repercussão geral, controvérsia acerca da inclusão do Adicional de Risco de Vida na base de cálculo das horas extras de guarda municipal."
+  },
+  {
+   "highlightQuestao": "Definição do divisor aplicável no cálculo das <MARK>horas</MARK> <MARK>extras</MARK> devidas a servidores públicos.",
+   "highlightTese": "É infraconstitucional, a ela se aplicando os efeitos da ausência de repercussão geral, a controvérsia relativa à definição do divisor aplicável ao cálculo de <MARK>horas</MARK> <MARK>extras</MARK> de servidores públicos.",
+   "highlightTextoAcordaoDecisao": null,
+   "highlightTextoAcordaoMerito": null,
+   "highlightTextoDecisaoAdmissao": null,
+   "highlightTextoDecisaoSuspensao": null,
+   "highlightTextoEmentaAdmissao": null,
+   "highlightTextoEmentaMerito": null,
+   "score": 339.77573,
+   "origemDocumentos": "BNP",
+   "tribunal": "STF",
+   "descricaoTribunal": "Supremo Tribunal Federal",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": null,
+   "id": "RG-1163-13891-STF",
+   "numero": "1163",
+   "categoria": "RG",
+   "tituloCategoria": "Repercussão Geral",
+   "orgao": "13891",
+   "descricaoOrgao": "Supremo Tribunal Federal",
+   "relator": "MINISTRO PRESIDENTE",
+   "assuntos": [
+    {
+     "codigo": 10303,
+     "descricao": "Adicional de Horas Extras"
+    }
+   ],
+   "numeroTemaSobrestado": null,
+   "referenciaLegislativa": null,
+   "textoAcordaoMerito": null,
+   "textoDecisaoAdmissao": null,
+   "textoDecisaoSuspensao": null,
+   "textoEmentaAdmissao": null,
+   "textoEmentaMerito": null,
+   "dataAdmissao": "27/08/2021",
+   "dataJulgamento": null,
+   "dataTransitoJulgado": null,
+   "dataSituacao": null,
+   "limiteSuspensao": null,
+   "processosIncidente": null,
+   "questao": "Definição do divisor aplicável no cálculo das horas extras devidas a servidores públicos.",
+   "processosParadigma": [
+    {
+     "classe": "11880",
+     "link": "https://portal.stf.jus.br/processos/detalhe.asp?incidente=6215229",
+     "numero": "1336085"
+    }
+   ],
+   "tese": "É infraconstitucional, a ela se aplicando os efeitos da ausência de repercussão geral, a controvérsia relativa à definição do divisor aplicável ao cálculo de horas extras de servidores públicos."
+  },
+  {
+   "score": 336.66376,
+   "highlightTextoEmenta": "Ementa: Direito Constitucional e Administrativo. Ação direta de inconstitucionalidade. Lei federal. Subsídio. Percepção de Adicionais. Procedência parcial. 1. Ação direta contra os arts. 1º, VII, 5º, caput, X, XI e XII, e 7º, caput, todos da Lei federal nº 11.358, de 19.10.2006, que dispõe, entre outras questões, sobre o regime de subsídios da carreira de Policial Rodoviário Federal. Alegação de violação à isonomia e aos direitos assegurados constitucionalmente aos servidores públicos. 2. O regime de subsídios não impede o pagamento dos direitos trabalhistas aplicáveis aos servidores públicos …[truncado]",
+   "highlightTextoDecisao": "O Tribunal, por unanimidade, julgou parcialmente procedente o pedido formulado na presente ação direta de inconstitucionalidade, para dar interpretação conforme ao caput do art. 1º e ao inciso XI do art. 5º da Lei nº 11.358/2006, de modo a afastar qualquer aplicação que impeça a remuneração dos Policiais Rodoviários Federais pelo serviço extraordinário desempenhado que exceda a jornada de trabalho prevista em lei, e fixou a seguinte tese de julgamento: “O regime de subsídio não é compatível com a percepção de outras parcelas inerentes ao exercício do cargo, mas não afasta o direito à retribuiç…[truncado]",
+   "highlightTextoTese": "O regime de subsídio não é compatível com a percepção de outras parcelas inerentes ao exercício do cargo, mas não afasta o direito à retribuição pelas <MARK>horas</MARK> <MARK>extras</MARK> realizadas que ultrapassem a quantidade remunerada pela parcela única.",
+   "highlightTextoQuestoesDiscussao": null,
+   "highlightTextoFundamentosRelevantes": null,
+   "origemDocumentos": "BNP",
+   "tribunal": "STF",
+   "descricaoTribunal": "Supremo Tribunal Federal",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": null,
+   "id": "CC-13891-ADI-5404-4876404",
+   "numero": "5404",
+   "categoria": "CC",
+   "tituloCategoria": "Controle Concentrado",
+   "orgao": "13891",
+   "descricaoOrgao": "Supremo Tribunal Federal",
+   "relator": "ROBERTO BARROSO",
+   "assuntos": [
+    {
+     "codigo": 10645,
+     "descricao": "Controle de Constitucionalidade"
+    }
+   ],
+   "decisao": {
+    "valor": "MERITO",
+    "descricao": "Mérito"
+   },
+   "dataDecisao": "06/03/2023",
+   "cautelar": null,
+   "linkInteiroTeor": "https://redir.stf.jus.br/paginadorpub/paginador.jsp?docTP=TP&docID=766081759",
+   "numeroProcesso": "00079999020151000000",
+   "textoAtoImpugnado": "LEG-FED CF ANO-1988 ART-00005 INC-00002 ART-00007 INC-00009 INC-00016 ART-00037 ART-00039 PAR-00003 PAR-00004 ART-00040 PAR-00019 ART-00144 INC-00002 PAR-00002 PAR-00009 CF-1988 CONSTITUIÇÃO FEDERAL LEG-FED EMC-000019 ANO-1998 EMENDA CONSTITUCIONAL LEG-FED EMC-000041 ANO-2003 ART-00002 PAR-00005 ART-00003 PAR-00001 EMENDA CONSTITUCIONAL LEG-FED LEI-009654 ANO-1998 ART-0002A PAR-00001 INC-00001 INC-00002 INC-00003 INC-00004 PAR-00002 ART-00009 LEI ORDINÁRIA LEG-FED LEI-011358 ANO-2006 ART-00001 \"CAPUT\" INC-00007 ART-00005 \"CAPUT\" INC-00010 INC-00011 INC-00012 ART-00007 \"CAPUT\" LEI ORDINÁRIA LEG…[truncado]",
+   "textoDecisao": "O Tribunal, por unanimidade, julgou parcialmente procedente o pedido formulado na presente ação direta de inconstitucionalidade, para dar interpretação conforme ao caput do art. 1º e ao inciso XI do art. 5º da Lei nº 11.358/2006, de modo a afastar qualquer aplicação que impeça a remuneração dos Policiais Rodoviários Federais pelo serviço extraordinário desempenhado que exceda a jornada de trabalho prevista em lei, e fixou a seguinte tese de julgamento: “O regime de subsídio não é compatível com a percepção de outras parcelas inerentes ao exercício do cargo, mas não afasta o direito à retribuiç…[truncado]",
+   "textoEmenta": "Ementa: Direito Constitucional e Administrativo. Ação direta de inconstitucionalidade. Lei federal. Subsídio. Percepção de Adicionais. Procedência parcial. 1. Ação direta contra os arts. 1º, VII, 5º, caput, X, XI e XII, e 7º, caput, todos da Lei federal nº 11.358, de 19.10.2006, que dispõe, entre outras questões, sobre o regime de subsídios da carreira de Policial Rodoviário Federal. Alegação de violação à isonomia e aos direitos assegurados constitucionalmente aos servidores públicos. 2. O regime de subsídios não impede o pagamento dos direitos trabalhistas aplicáveis aos servidores públicos …[truncado]",
+   "textoTese": "O regime de subsídio não é compatível com a percepção de outras parcelas inerentes ao exercício do cargo, mas não afasta o direito à retribuição pelas horas extras realizadas que ultrapassem a quantidade remunerada pela parcela única.",
+   "textoQuestoesDiscussao": null,
+   "textoFundamentosRelevantes": null,
+   "classe": "ADI",
+   "descricaoClasse": "Ação Direta de Inconstitucionalidade"
+  },
+  {
+   "highlightQuestao": "É possível a condenação em parcelas vincendas de <MARK>horas</MARK> <MARK>extras</MARK>?",
+   "highlightTese": "São devidas as parcelas vincendas de <MARK>horas</MARK> <MARK>extras</MARK> enquanto a situação de fato que as originou permanecer inalterada.",
+   "highlightTextoAcordaoDecisao": null,
+   "highlightTextoAcordaoMerito": null,
+   "highlightTextoDecisaoAdmissao": null,
+   "highlightTextoDecisaoSuspensao": null,
+   "highlightTextoEmentaAdmissao": null,
+   "highlightTextoEmentaMerito": "REPRESENTATIVO PARA REAFIRMAÇÃO DE JURISPRUDÊNCIA. INCIDENTE DE RECURSO REPETITIVO. <MARK>HORAS</MARK> <MARK>EXTRAS</MARK>. PARCELAS VINCENDAS. ART. 323 DO CPC. Cinge-se a controvérsia em saber se é possível a condenação em parcelas vincendas de <MARK>horas</MARK> <MARK>extras</MARK>. O Tribunal Regional concluiu ser indevida a condenação ao pagamento de parcelas vincendas de <MARK>horas</MARK> <MARK>extras</MARK>. Diante da manifestação de todas as Turmas do Tribunal Superior do Trabalho e da C. SBDI-I, indica-se a matéria a ter a jurisprudência reafirmada, em face da seguinte questão jurídic…[truncado]",
+   "score": 296.5556,
+   "origemDocumentos": "BNP",
+   "tribunal": "TST",
+   "descricaoTribunal": "Tribunal Superior do Trabalho",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": null,
+   "id": "IRR-184-13221-TST",
+   "numero": "184",
+   "categoria": "IRR",
+   "tituloCategoria": "Recurso de Revista Repetitivo",
+   "orgao": "13221",
+   "descricaoOrgao": "Tribunal Superior do Trabalho",
+   "relator": "MINISTRO ALOYSIO SILVA CORRÊA DA VEIGA",
+   "assuntos": [
+    {
+     "codigo": 13769,
+     "descricao": "Horas Extras"
+    }
+   ],
+   "numeroTemaSobrestado": "0",
+   "referenciaLegislativa": "Arts. 891 e 892 da CLT; 4º, 323 e 505, I, do CPC.",
+   "textoAcordaoMerito": "Considerando o limite de caracteres do campo, o inteiro teor da decisão pode ser acessado pelo link:  https://drive.google.com/file/d/1Ze4QnHJzs_WuNYNMWmA_4UqkTAd4F0r8/view?usp=drive_link",
+   "textoDecisaoAdmissao": null,
+   "textoDecisaoSuspensao": null,
+   "textoEmentaAdmissao": null,
+   "textoEmentaMerito": "REPRESENTATIVO PARA REAFIRMAÇÃO DE JURISPRUDÊNCIA. INCIDENTE DE RECURSO REPETITIVO. HORAS EXTRAS. PARCELAS VINCENDAS. ART. 323 DO CPC. Cinge-se a controvérsia em saber se é possível a condenação em parcelas vincendas de horas extras. O Tribunal Regional concluiu ser indevida a condenação ao pagamento de parcelas vincendas de horas extras. Diante da manifestação de todas as Turmas do Tribunal Superior do Trabalho e da C. SBDI-I, indica-se a matéria a ter a jurisprudência reafirmada, em face da seguinte questão jurídica: É possível a condenação em parcelas vincendas de horas extras? Para o fim d…[truncado]",
+   "dataAdmissao": null,
+   "dataJulgamento": null,
+   "dataTransitoJulgado": null,
+   "dataSituacao": "23/08/2025",
+   "limiteSuspensao": {
+    "parametro": "NAO_SUSPENDER",
+    "detalheAbrangenciaEspecifica": null,
+    "linkDecisao": null,
+    "dataSuspensao": null,
+    "dataFimSuspensao": null
+   },
+   "processosIncidente": null,
+   "questao": "É possível a condenação em parcelas vincendas de horas extras?",
+   "processosParadigma": [
+    {
+     "classe": "1380",
+     "link": "https://pje.tst.jus.br/consultaprocessual/detalhe-processo/0021532-54.2015.5.04.0006/3#8c04e66",
+     "numero": "00215325420155040006"
+    }
+   ],
+   "tese": "São devidas as parcelas vincendas de horas extras enquanto a situação de fato que as originou permanecer inalterada."
+  },
+  {
+   "highlightQuestao": "Base de cálculo das <MARK>horas</MARK> <MARK>extras</MARK> e do adicional noturno prestados por policial civil do Estado de Santa Catarina.",
+   "highlightTese": "A questão da determinação da base de cálculo das <MARK>horas</MARK> <MARK>extras</MARK> e do adicional noturno devidos aos policiais civis do Estado de Santa Catarina, bem como a questão acerca da definição da lei local aplicável ao caso têm natureza infraconstitucional e a elas atribuem-se os efeitos da ausência de repercussão geral, nos termos do precedente fixado no RE 584.608, Relatora a Ministra Ellen Gracie, DJe 13/3/2009.",
+   "highlightTextoAcordaoDecisao": null,
+   "highlightTextoAcordaoMerito": null,
+   "highlightTextoDecisaoAdmissao": null,
+   "highlightTextoDecisaoSuspensao": null,
+   "highlightTextoEmentaAdmissao": null,
+   "highlightTextoEmentaMerito": null,
+   "score": 291.11993,
+   "origemDocumentos": "BNP",
+   "tribunal": "STF",
+   "descricaoTribunal": "Supremo Tribunal Federal",
+   "situacao": {
+    "valor": "TRANSITADO_EM_JULGADO",
+    "descricao": "Transitado em Julgado",
+    "temaJulgado": true
+   },
+   "pendenteDecisao": false,
+   "dataPublicacao": null,
+   "id": "RG-654-13891-STF",
+   "numero": "654",
+   "categoria": "RG",
+   "tituloCategoria": "Repercussão Geral",
+   "orgao": "13891",
+   "descricaoOrgao": "Supremo Tribunal Federal",
+   "relator": "RICARDO LEWANDOWSKI",
+   "assuntos": [
+    {
+     "codigo": 10877,
+     "descricao": "Policiais Civis"
+    }
+   ],
+   "numeroTemaSobrestado": null,
+   "referenciaLegislativa": null,
+   "textoAcordaoMerito": null,
+   "textoDecisaoAdmissao": null,
+   "textoDecisaoSuspensao": null,
+   "textoEmentaAdmissao": null,
+   "textoEmentaMerito": null,
+   "dataAdmissao": "10/05/2013",
+   "dataJulgamento": null,
+   "dataTransitoJulgado": null,
+   "dataSituacao": null,
+   "limiteSuspensao": null,
+   "processosIncidente": null,
+   "questao": "Base de cálculo das horas extras e do adicional noturno prestados por policial civil do Estado de Santa Catarina.",
+   "processosParadigma": [
+    {
+     "classe": "1348",
+     "link": "https://portal.stf.jus.br/processos/detalhe.asp?incidente=4348679",
+     "numero": "728428"
+    }
+   ],
+   "tese": "A questão da determinação da base de cálculo das horas extras e do adicional noturno devidos aos policiais civis do Estado de Santa Catarina, bem como a questão acerca da definição da lei local aplicável ao caso têm natureza infraconstitucional e a elas atribuem-se os efeitos da ausência de repercussão geral, nos termos do precedente fixado no RE 584.608, Relatora a Ministra Ellen Gracie, DJe 13/3/2009."
+  }
+ ],
+ "quantidadeTotal": 10000
+}

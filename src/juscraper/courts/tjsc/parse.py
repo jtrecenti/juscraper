@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from juscraper.core.avisos import avisar
+from juscraper.core.parse_utils import html_para_texto
 from juscraper.utils.cnj import format_cnj
 
 _FIELD_MAP = {
@@ -20,6 +21,10 @@ _FIELD_MAP = {
     "DECISAO": "decisao",
 }
 
+# Campos de texto longo. O portal os mostra com ``white-space: pre-line``
+# (classe ``quebraLinha``): o ``\r\n`` do texto separa os parágrafos.
+_CAMPOS_TEXTO_LONGO = frozenset({"ementa", "decisao"})
+
 _LABEL_REPLACEMENTS = str.maketrans({
     "Ã": "A",
     "Õ": "O",
@@ -33,6 +38,25 @@ _LABEL_REPLACEMENTS = str.maketrans({
 def _normalize_label(label: str) -> str:
     """Normalize only the accented characters historically accepted by TJSC."""
     return label.translate(_LABEL_REPLACEMENTS)
+
+
+def _valor_do_rotulo(rotulo: Tag) -> Tag | None:
+    """O ``resValue`` que segue ``rotulo``, antes do próximo rótulo.
+
+    A DECISÃO vem em dois: o ``limitado``, que o portal recorta na tela, e o
+    ``completo``, com o mesmo texto; vale o ``completo``. Parear rótulos e
+    valores pela posição deslocava os campos seguintes, e a ``ementa`` recebia
+    a decisão.
+    """
+    valores: list[Tag] = []
+    for irmao in rotulo.find_next_siblings("div"):
+        classes = irmao.get("class") or []
+        if "resLabel" in classes:
+            break
+        if "resValue" in classes:
+            valores.append(irmao)
+    completos = [valor for valor in valores if "completo" in (valor.get("class") or [])]
+    return (completos or valores or [None])[0]
 
 
 def _resolve_field(label: str) -> str | None:
@@ -98,19 +122,19 @@ def _extract_process_fields(value) -> dict[str, str]:
 def _parse_result_item(item) -> dict:
     """Parse a single resultadoItem div from the TJSC search page."""
     result = {}
-    labels = item.find_all("div", class_="resLabel")
-    values = item.find_all("div", class_="resValue")
-
-    for label, value in zip(labels, values, strict=False):
-        label_text = label.get_text(strip=True).upper()
-        key = _resolve_field(label_text)
-        if not key:
+    for label in item.find_all("div", class_="resLabel"):
+        key = _resolve_field(label.get_text(strip=True).upper())
+        value = _valor_do_rotulo(label)
+        if not key or value is None:
             continue
 
         if key == "processo":
             result.update(_extract_process_fields(value))
             continue
-        result[key] = value.get_text(strip=True)
+        if key in _CAMPOS_TEXTO_LONGO:
+            result[key] = html_para_texto(value.decode_contents(), preservar_quebras=True) or ""
+        else:
+            result[key] = value.get_text(strip=True)
 
     if "decisao" in result:
         result.setdefault("ementa", result["decisao"])
