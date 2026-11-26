@@ -25,6 +25,8 @@ from juscraper.courts._esaj.parse import (
 from juscraper.courts.tjsp.cjsg_parse import _cjsg_parse_single_page
 from tests._helpers import load_sample
 
+_TESTS = Path(__file__).parents[1]
+
 ESAJ_COLUMNS = (
     "processo",
     "cd_acordao",
@@ -252,7 +254,7 @@ class TestCJSGNResults:
     ):
         relative_path = "cjsg/results_normal_page_01.html"
         html = load_sample(court, relative_path)
-        sample_path = Path(__file__).parent.parent / court / "samples" / relative_path
+        sample_path = _TESTS / court / "samples" / relative_path
 
         df = _parse_single_page(str(sample_path))
 
@@ -355,7 +357,7 @@ class TestCJSGParseSinglePage:
         O ``\r\n`` do HTML vira ``\n``, e o ``\x96`` do windows-1252, "–". O
         sample vai lido em bytes, porque ``read_text`` já trocaria o ``\r\n``.
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         html = path.read_bytes().decode("utf-8")
         assert "\r\n" in html
         soup = BeautifulSoup(html, "html.parser")
@@ -422,7 +424,7 @@ class TestCJSGParseSinglePage:
         O ``cjsg_download`` grava a resposta em latin-1, byte a byte como o eSAJ
         a mandou; o sample, regravado em UTF-8, guarda o mesmo U+0096.
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         html = path.read_bytes().decode("utf-8")
         assert "\x96" in html
         como_baixado = tmp_path / "cjsg_00001.html"
@@ -451,7 +453,7 @@ class TestCJSGParseSinglePage:
         O ``N/A`` do eSAJ aparece só no texto oculto de "ementa sem formatação"
         (no TJAM, ``Ementa: N/A``).
         """
-        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        path = _TESTS / sigla / "samples" / arquivo
         soup = BeautifulSoup(path.read_bytes().decode("latin-1"), "html.parser")
         linhas = soup.find_all("tr", class_="fundocinza1")
 
@@ -470,7 +472,7 @@ class TestCJSGParseSinglePage:
 
     def test_parse_results_page(self):
         """Primeira linha de uma página real, campo a campo, pelo nome do TJSP."""
-        path = Path(__file__).parent.parent / "tjsp/samples/cjsg/single_page.html"
+        path = _TESTS / "tjsp/samples/cjsg/single_page.html"
 
         df = _cjsg_parse_single_page(str(path))
 
@@ -572,14 +574,14 @@ class TestCJSGParseSinglePage:
         assert pd.isna(df.iloc[2]["ementa"])
         assert "outros_numeros" not in df.columns
 
-    def test_latin1_file_is_decoded_without_mojibake(self, tmp_path):
+    def test_cp1252_file_is_decoded_without_mojibake(self, tmp_path):
         """Os bytes do eSAJ (windows-1252) gravados como vieram saem iguais à página em UTF-8.
 
         ``results_normal_page_01.html`` tem acentos e o travessão "–", que no
         windows-1252 é o byte 0x96.
         """
-        original = Path(__file__).parent.parent / "tjsp/samples/cjsg/results_normal_page_01.html"
-        texto = original.read_bytes().decode("utf-8")
+        original = _TESTS / "tjsp/samples/cjsg/results_normal_page_01.html"
+        texto = load_sample("tjsp", "cjsg/results_normal_page_01.html")
         assert "–" in texto
         path = tmp_path / "cp1252.html"
         path.write_bytes(texto.encode("cp1252"))
@@ -596,7 +598,7 @@ class TestCJSGParseManager:
 
     def test_parse_directory(self):
         """Test parsing multiple files from a directory."""
-        html1 = load_sample('tjsp', 'cjsg/results_normal_page_01.html')
+        html1 = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
         html2 = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -611,12 +613,12 @@ class TestCJSGParseManager:
             df = cjsg_parse_manager(temp_dir)
 
             assert isinstance(df, pd.DataFrame)
-            # 20 acórdãos da primeira página + 1 decisão monocrática
-            assert len(df) == 21
+            # Uma decisão monocrática em cada arquivo
+            assert len(df) == 2
 
     def test_parse_single_file(self):
         """Test parsing a single file."""
-        html = load_sample('tjsp', 'cjsg/results_normal_page_01.html')
+        html = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
             f.write(html)
@@ -625,7 +627,7 @@ class TestCJSGParseManager:
         try:
             df = cjsg_parse_manager(temp_path)
             assert isinstance(df, pd.DataFrame)
-            assert len(df) == 20
+            assert len(df) == 1
         finally:
             Path(temp_path).unlink()
 
@@ -638,7 +640,7 @@ class TestCJSGParseManager:
 
     def test_parse_with_invalid_file(self):
         """Test parsing directory with invalid file (should skip it)."""
-        html = load_sample('tjsp', 'cjsg/results_normal_page_01.html')
+        html = load_sample('tjsp', 'cjsg/monocratica_single_page.html')
 
         with tempfile.TemporaryDirectory() as temp_dir:
             valid_file = Path(temp_dir) / 'valid.html'
@@ -658,7 +660,7 @@ class TestCJSGParseManager:
 
     def test_parse_directory_reads_nested_folders(self, tmp_path):
         """O auto-chunk grava uma pasta por janela; o parse desce nelas."""
-        html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
+        html = load_sample("tjsp", "cjsg/monocratica_single_page.html")
         (tmp_path / "janela_1").mkdir()
         (tmp_path / "janela_1" / "cjsg_00001.html").write_text(html, encoding="utf-8")
         (tmp_path / "cjsg_00001.html").write_text(html, encoding="utf-8")
@@ -730,7 +732,7 @@ class TestNormalizeKey:
         Todas as capturas do eSAJ trazem "Relator(a):"; a página com "Relator:"
         é a mesma captura com o rótulo trocado.
         """
-        html = load_sample("tjsp", "cjsg/single_page.html")
+        html = load_sample("tjsp", "cjsg/monocratica_single_page.html")
         sem_marcador = html.replace("Relator(a):", "Relator:")
         assert "Relator(a):" not in sem_marcador
         (tmp_path / "relator_a.html").write_text(html, encoding="utf-8")

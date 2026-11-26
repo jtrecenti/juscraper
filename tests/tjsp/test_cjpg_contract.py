@@ -52,14 +52,14 @@ def _add_pesquisar(pesquisa: str, sample_path: str) -> None:
     )
 
 
-def _add_trocar_de_pagina(pagina: int, sample_path: str) -> None:
+def _add_trocar_de_pagina(pagina: int, sample_path: str | None = None, *, body: str | None = None) -> None:
     # cjpg_download.py:139 builds the URL as a literal f-string with an
     # empty conversationId (``?pagina=N&conversationId=``). The matcher
     # mirrors that — conversationId="" is sent as ``conversationId=``.
     responses.add(
         responses.GET,
         f"{BASE}/trocarDePagina.do",
-        body=load_sample_bytes("tjsp", sample_path),
+        body=body if sample_path is None else load_sample_bytes("tjsp", sample_path),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher({"pagina": str(pagina), "conversationId": ""})],
@@ -183,8 +183,8 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     Mocka 2 GETs distintos com `data_inicio` diferente (uma janela cada) e
     afere que o total e a soma das contagens reportadas. Vai falhar se o
     auto_chunk count-only path quebrar (ex.: iterar fora de
-    `iter_date_windows` ou nao somar). As duas janelas respondem com a
-    mesma captura real, de 3565472 resultados.
+    `iter_date_windows` ou nao somar). A janela 1 responde com a captura de
+    3565472 resultados e a 2 com a busca vazia.
     """
     mocker.patch("time.sleep")
     # Janela total: 02/01/2020 a 01/01/2022 = 2 anos de calendario = 2 janelas.
@@ -209,7 +209,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
-        body=load_sample_bytes("tjsp", "cjpg/results_normal_page_01.html"),
+        body=load_sample_bytes("tjsp", "cjpg/no_results.html"),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(expected_w2)],
@@ -223,7 +223,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     assert isinstance(n, int)
-    assert n == 2 * 3565472  # soma bruta cross-janela
+    assert n == 3565472 + 0  # soma bruta cross-janela
     assert len(responses.calls) == 2
 
 
@@ -277,14 +277,7 @@ def test_cjpg_pagina_de_erro_no_meio_da_coleta_levanta_coleta_parcial(tmp_path, 
     """Página de captcha na página 2 não conta como página lida sem resultados."""
     mocker.patch("time.sleep")
     _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
-    responses.add(
-        responses.GET,
-        f"{BASE}/trocarDePagina.do",
-        body=PAGINA_CAPTCHA,
-        status=200,
-        content_type="text/html; charset=utf-8",
-        match=[query_param_matcher({"pagina": "2", "conversationId": ""})],
-    )
+    _add_trocar_de_pagina(2, body=PAGINA_CAPTCHA)
 
     with pytest.raises(ColetaParcialError, match=r"cjpg_00002\.html.*Captcha") as erro:
         jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))

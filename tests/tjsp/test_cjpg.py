@@ -138,27 +138,15 @@ class TestCJPGUnit:
 
     def test_cjpg_parse_single(self):
         """Test parsing a single CJPG results page."""
-        html = load_sample('tjsp', 'cjpg/single_page.html')
+        df = cjpg_parse_single(Path(__file__).parent / "samples/cjpg/single_page.html")
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
-            f.write(html)
-            temp_path = f.name
-
-        try:
-            df = cjpg_parse_single(temp_path)
-
-            assert isinstance(df, pd.DataFrame)
-            assert len(df) == 2  # "jurimétrica" trouxe duas sentenças
-
-            # Check first process
-            assert df.iloc[0]['id_processo'] == '0003880-96.2022.8.26.0529'
-            assert df.iloc[0]['cd_processo'] == 'EP0005URT0000'
-            assert df.iloc[0]['classe'] == 'Cumprimento de sentença'
-            # A segunda sentença vem sem a linha "Classe:".
-            assert pd.isna(df.iloc[1]['classe'])
-            assert df['decisao'].str.startswith('SENTENÇA').all()
-        finally:
-            Path(temp_path).unlink()
+        assert len(df) == 2  # "jurimétrica" trouxe duas sentenças
+        assert df.iloc[0]['id_processo'] == '0003880-96.2022.8.26.0529'
+        assert df.iloc[0]['cd_processo'] == 'EP0005URT0000'
+        assert df.iloc[0]['classe'] == 'Cumprimento de sentença'
+        # A segunda sentença vem sem a linha "Classe:".
+        assert pd.isna(df.iloc[1]['classe'])
+        assert df['decisao'].str.startswith('SENTENÇA').all()
 
     def test_cjpg_parse_manager_directory(self):
         """Test parsing multiple CJPG files from directory."""
@@ -267,11 +255,9 @@ class TestCJPGNResults:
         html = load_sample("tjsp", "cjpg/no_results.html")
         assert cjpg_n_results(html) == 0
 
-    @pytest.mark.parametrize("sample", ["results_normal_page_01.html", "no_results.html"])
-    def test_n_pags_e_wrapper_que_aplica_ceil_div(self, sample):
-        """``cjpg_n_pags`` permanece um wrapper sobre ``cjpg_n_results``."""
-        html = load_sample("tjsp", f"cjpg/{sample}")
-        assert cjpg_n_pags(html) == (cjpg_n_results(html) + 9) // 10
+    def test_n_pags_zero_sem_resultados(self):
+        """Busca sem resultados dá 0 páginas; o caso com resultados está em ``test_cjpg_n_pags_novo_formato``."""
+        assert cjpg_n_pags(load_sample("tjsp", "cjpg/no_results.html")) == 0
 
 
 class TestCJPGDownload1Based:
