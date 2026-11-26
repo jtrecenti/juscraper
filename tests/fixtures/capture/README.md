@@ -108,11 +108,14 @@ desafia, o raspador obtém o cookie pelo Playwright e repete a requisição.
 | `cpopg/search_one_result.html` | busca pelo `FOUND_CNJ` do script, com o token `ca` do detalhe |
 | `cpopg/detail_normal.html` | detalhe do `FOUND_CNJ`: movimentações e documentos numa página só, com 2 ou mais documentos |
 | `cpopg/search_no_results.html` | busca pelo `MISSING_CNJ`, sem token `ca` |
-| `cpopg/waf_challenge.html` | página de desafio do AWS WAF (HTTP 202); o docstring explica como provocá-la |
+| `cpopg/waf_challenge.html` | página de desafio do AWS WAF (HTTP 202), pedida com `curl/8.7.1` + `Accept: text/html` |
 
-O `jsessionid`, o nó do servidor e os tokens dos links das peças mudam a cada
-captura; os contratos leem esses valores do próprio sample. Se o processo passar de uma
-página de movimentações ou de documentos, o script para e pede outro CNJ.
+O `jsessionid`, o nó do servidor, os tokens dos links das peças e as chaves do
+desafio mudam a cada captura; as buscas vêm idênticas. Os contratos leem esses
+valores do próprio sample, mas os IDs JSF do formulário (`j_id245`, `j_id163`)
+ficam escritos no contrato: confira-os a cada recaptura. Se o processo passar
+de uma página de movimentações ou de documentos, o script para e pede outro
+CNJ; nada é gravado antes de todas as respostas serem conferidas.
 
 ## Agregadores
 

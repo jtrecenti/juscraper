@@ -161,6 +161,7 @@ class Leitura:
 
 _ESAJ_CJSG = Leitura(_caminho)
 _PAGINAS = Leitura()
+_MOTIVO_PJE_PIVOT = "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring"
 _PJE_CPOPG = Leitura(
     _detalhe_com_cnj,
     ignorar={
@@ -279,7 +280,7 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     # O ``TJPEScraper`` não expõe ``cpopg_parse``; o parser é o da consulta pública.
     ("tjpe", "cpopg"): Leitura(
         _detalhe_com_cnj,
-        TJPEConsultaPublicaScraper(sleep_time=0).cpopg_parse,
+        lambda htmls, cnjs: TJPEConsultaPublicaScraper(sleep_time=0).cpopg_parse(htmls, cnjs),
         ignorar={
             **_PJE_CPOPG.ignorar,
             "waf_challenge.html": "desafio do AWS WAF, que o download repete com cookie novo",
@@ -337,9 +338,9 @@ SO_NOMES_DEPRECADOS: dict[tuple[str, str], str] = {
     ("falcao", "listar_decisoes"): "garante as colunas canônicas e repassa os campos brutos de cada coleção",
     ("tjsp", "cpopg"): "devolve 4 DataFrames; o Output cobre só o pivot (id_cnj)",
     ("tjsp", "cposg"): "devolve as tabelas do processo em colunas aninhadas; o Output cobre só o pivot",
-    ("trf1", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
-    ("trf5", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
-    ("tjpe", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring",
+    ("trf1", "cpopg"): _MOTIVO_PJE_PIVOT,
+    ("trf5", "cpopg"): _MOTIVO_PJE_PIVOT,
+    ("tjpe", "cpopg"): _MOTIVO_PJE_PIVOT,
     ("trf6", "cpopg"): "o Output cobre só o pivot (id_cnj); o detalhe do eproc vem descrito no docstring",
 }
 

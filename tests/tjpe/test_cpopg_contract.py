@@ -20,7 +20,7 @@ import responses
 
 import juscraper as jus
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
-from juscraper.courts._trf.download import extract_documento_urls, extract_form_field_ids
+from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests._helpers import load_sample, load_sample_bytes
 
@@ -112,10 +112,9 @@ def test_cpopg_sem_desafio_nao_chama_o_playwright(tjpe, obter):
     assert enviado[
         "fPP:numProcesso-inputNumeroProcessoDecoration:numProcesso-inputNumeroProcesso"
     ] == CNJ_FORMATADO
-    # IDs JSF lidos do formulário do TJPE; mudam quando o TJPE atualiza o PJe.
-    ids = extract_form_field_ids(load_sample("tjpe", "cpopg/form_initial.html", encoding="latin-1"), tribunal="TJPE")
-    assert enviado[ids.search_trigger] == ids.search_trigger
-    assert f"fPP:{ids.processo_referencia}:processoReferenciaInput" in enviado
+    # IDs JSF do formulário do TJPE, não os do TRF1; ao recapturar, conferir se mudaram.
+    assert enviado["fPP:j_id245"] == "fPP:j_id245"
+    assert "fPP:j_id163:processoReferenciaInput" in enviado
 
 
 @responses.activate
