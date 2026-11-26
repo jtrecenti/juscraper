@@ -1,0 +1,118 @@
+<!-- Recorte da resposta real de cjpg/assuntoTreeSelect.do?campoId=assuntos do TJSP, capturada em
+     2026-11-26 (UTF-8) e recortada por capture_arvores, em tests/fixtures/capture/tjsp.py:
+     mantidos os 2 primeiros <li> de cada <ul>. -->
+
+<!-- TreeSelect ini -->
+<div class="treeSelect" id="assuntos_treeSelectContainer">
+<div class="treeFilter">
+<form method="get" name="treeForm">
+<div>
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="20">
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="20"> </td>
+<td class="spwCelulaGrid" width="*"><input class="spwCampoTextoGrid" id="assuntos_treeSelectFilter" name="assuntos_treeSelectFilter" type="text"/></td>
+<td bgcolor="#f0f0f0" class="spwCelulaGrid" width="15"> </td>
+</tr></table>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" id="filtroButton" type="submit" value="Procurar"/>
+<input class="spwBotaoGrid" type="button" value="Limpar"/>
+</td>
+</tr></table>
+</div>
+</form>
+</div>
+<div class="treeView">
+<ul class="tree root multiSelect" id="assuntos_tree">
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_899" role="" searchid="899" searchvalue="899-direito civil" tabindex="0" value="899">DIREITO CIVIL</span>
+<ul>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_5237" role="checkbox" searchid="5237" searchvalue="899-direito civil|12935-bem de familia legal" tabindex="0" value="5237">Bem de Família Legal</span>
+</li>
+<li class="leafItem"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_5238" role="checkbox" searchid="5238" searchvalue="899-direito civil|12937-direitos da personalidade" tabindex="0" value="5238">Direitos da Personalidade</span>
+</li>
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+</li>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_4001" role="" searchid="4001" searchvalue="11428-direito eleitoral" tabindex="0" value="4001">DIREITO ELEITORAL</span>
+<ul>
+<li class="last-child-open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_4002" role="" searchid="4002" searchvalue="11428-direito eleitoral|11583-eleicoes" tabindex="0" value="4002">Eleições</span>
+<ul>
+<li class="open"><span class="ie"> </span><span class="node checkable Unchecked" id="assuntos_tree_node_5014" role="" searchid="5014" searchvalue="11428-direito eleitoral|11583-eleicoes|11652-propaganda politica - propaganda eleitoral" tabindex="0" value="5014">Propaganda Política - Propaganda Eleitoral</span>
+<ul>
+<li class="leafItem last-child"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_9504" role="checkbox" searchid="9504" searchvalue="11428-direito eleitoral|11583-eleicoes|11652-propaganda politica - propaganda eleitoral|11683-propaganda eleitoral: truncagem, montagem, gravacao externa, computacao grafica, animacao e efeitos especiais." tabindex="0" value="9504">Propaganda eleitoral: truncagem, montagem, gravação externa, computação gráfica, animação e efeitos especiais.</span>
+</li>
+</ul>
+</li>
+<li class="leafItem last-child"><span class="ie"> </span><span class="node selectable checkable Unchecked" id="assuntos_tree_node_4003" role="checkbox" searchid="4003" searchvalue="11428-direito eleitoral|11583-eleicoes|15236-assedio eleitoral" tabindex="0" value="4003">Assédio Eleitoral</span>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+</div>
+<div class="popupBar">
+<table cellpadding="0" cellspacing="0" width="100%"><tr height="21">
+<td align="right" valign="middle">
+<input class="spwBotaoDefaultGrid" type="button" value="Selecionar"/>
+<input class="spwBotaoGrid" type="button" value="Cancelar"/>
+</td>
+</tr></table>
+</div>
+</div>
+<script>
+	(function($) {
+		var checkBoxElement = $('#assuntos_checkbox');
+		var options = {campoId: 'assuntos'};
+		
+		$.saj.tree('#assuntos_tree', {selecionarSomenteFolhas: true, autoSelecionarFilhosEPais: true, isMultiSelect: true});
+		// Binds do popup
+		var container = $('div#assuntos_treeSelectContainer');
+		
+		$('div.treeFilter form', container).bind('submit', options, $.saj.tree.onFilterEvent);
+		$('input[value=Limpar]', container).bind('click', options, $.saj.tree.onClearFilterEvent);
+		$('input[value=Selecionar]', container).bind('click', options, $.saj.tree.onSaveSelection);
+		
+			$('input[value=Todos]', container).bind('click', options, $.saj.tree.onSelectAll);
+			$('input[value=Nenhum]', container).bind('click', options, $.saj.tree.onSelectNone);
+		
+		$('input[value=Cancelar]', container).bind('click', options, $.saj.tree.onCloseEvent);
+		$('#assuntos_treeSelectFilter').focus();
+
+		
+		
+	})(jQuery);
+</script>
+<!-- TreeSelect fim -->

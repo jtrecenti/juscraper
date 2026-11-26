@@ -21,12 +21,16 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
+import juscraper as jus
 from juscraper.courts._esaj.acordao import paginas_movimentacoes
 
 from ._util import (
@@ -177,10 +181,8 @@ def capture_cjpg() -> None:
 def capture_cpopg_html(cnj: str) -> None:
     """Capture cpopg samples for ``method='html'``.
 
-    Fetches ``search.do`` for ``cnj`` and one ``show.do`` per link returned.
-    Overwrites ``show_standard.html`` — legacy synthetic samples live in the
-    same directory under their kept names (``show_standard.html``,
-    ``show_alternative.html``) and remain for unit tests.
+    Fetches ``search.do`` for ``cnj`` and the ``show.do`` of the first link
+    returned (saved as ``show_real.html``, which no test reads).
     """
     dest = samples_dir_for("tjsp", "cpopg")
     session = build_session(headers=TJSP_CHROME_HEADERS)
@@ -234,6 +236,34 @@ def capture_cpopg_html(cnj: str) -> None:
     dump(dest / "show_real.html", r_show.content)
     print(f"[tjsp] cpopg html show for codigo={cd} → saved")
     _ = id_clean  # referenced for symmetry with scraper internals
+
+
+# Processo com "Outros assuntos" no bloco maisDetalhes, que vira a coluna
+# ``outros_assuntos``. Em 26/11/2026, o show.do dele trazia o campo.
+CPOPG_CNJ_OUTROS_ASSUNTOS = "1009367-76.2017.8.26.0344"
+
+
+def capture_cpopg_outros_assuntos() -> None:
+    """Grava ``cpopg/show_outros_assuntos.html`` como o ``cpopg_download`` o salva.
+
+    O download junta à página as movimentações que o eSAJ carrega à parte
+    (``carregarMovimentacoesAjax.do``); o arquivo é o que o parser lê na
+    pasta de download.
+    """
+    with tempfile.TemporaryDirectory() as pasta:
+        scraper = jus.scraper("tjsp", download_path=pasta)
+        scraper.cpopg_download(CPOPG_CNJ_OUTROS_ASSUNTOS)
+        salvos = list(Path(pasta).rglob("*.html"))
+        if len(salvos) != 1:
+            print(f"[tjsp] cpopg outros_assuntos: {len(salvos)} arquivos salvos; sample mantido")
+            return
+        html = salvos[0].read_bytes()
+    if "Outros assuntos".encode() not in html:
+        # Sem o campo, o sample deixaria de exercitar a coluna outros_assuntos.
+        print("[tjsp] cpopg outros_assuntos: a página não traz mais o campo; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cpopg") / "show_outros_assuntos.html", html)
+    print(f"[tjsp] cpopg outros_assuntos ({CPOPG_CNJ_OUTROS_ASSUNTOS}) → saved")
 
 
 # ---------- cposg html ---------------------------------------------------
@@ -417,6 +447,77 @@ def capture_documentos() -> None:
     print(f"[tjsp] documentos: {len(redirecionamentos)} redirecionamentos em {dest}")
 
 
+# ---------- árvores de seleção (*TreeSelect.do) --------------------------
+
+# (arquivo, rota, campoId): as rotas de tests/tjsp/test_arvore_contract.py.
+ARVORES = [
+    ("classes_2", "cjsg/classesTreeSelect.do", "classes"),
+    ("assuntos_2", "cjsg/assuntosTreeSelect.do", "assuntos"),
+    ("orgaos_2", "cjsg/secaoTreeSelect.do", "secoes"),
+    ("classes_1", "cjpg/classeTreeSelect.do", "classes"),
+    ("assuntos_1", "cjpg/assuntoTreeSelect.do", "assuntos"),
+    ("varas_1", "cjpg/varasTreeSelect.do", "varas"),
+]
+
+# Nós que o recorte mantém além dos primeiros de cada lista, porque os testes
+# de tests/tjsp/test_arvore_granular.py os usam: a classe com acento e hífen
+# no nome, três níveis abaixo da raiz, e a folha selecionável na raiz.
+ARVORE_NOS_EXTRAS = {"classes_2": ("14734", "12227")}
+
+# Itens mantidos em cada <ul> da árvore, além dos de ARVORE_NOS_EXTRAS.
+ARVORE_ITENS_POR_LISTA = 2
+
+
+def recortar_arvore(html: str, nos_extras: tuple[str, ...] = (), itens: int = ARVORE_ITENS_POR_LISTA) -> str:
+    """Recorta a árvore: os primeiros ``itens`` ``<li>`` de cada ``<ul>``, mais os que levam a ``nos_extras``.
+
+    Os nós mantidos saem com textos e atributos intactos; o HTML é
+    reserializado pelo BeautifulSoup, e o espaço em branco entre as tags, que
+    o JSP do eSAJ deixa aos montes, vira uma quebra de linha.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for texto in soup.find_all(string=True):
+        # Só espaço ASCII: o &nbsp; (\xa0) dos <span class="ie"> fica.
+        if not texto.strip(" \t\r\n") and not isinstance(texto, Comment):
+            texto.replace_with("\n")
+    caminhos: set[int] = set()  # id() dos <li> que levam a um nó extra
+    for no in nos_extras:
+        alvo = soup.find("span", id=re.compile(rf"_tree_node_{re.escape(no)}$"))
+        if alvo is None:
+            raise ValueError(f"nó {no} ausente da árvore")
+        caminhos.update(id(item) for item in alvo.find_parents("li"))
+    for lista in soup.find_all("ul"):
+        if lista.decomposed:
+            continue
+        for posicao, item in enumerate(lista.find_all("li", recursive=False)):
+            if posicao >= itens and id(item) not in caminhos:
+                item.decompose()
+    return str(soup)
+
+
+def capture_arvores() -> None:
+    """Grava ``arvore/<arvore>_min.html``: o recorte de cada resposta real de ``*TreeSelect.do``."""
+    dest = samples_dir_for("tjsp", "arvore")
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    hoje = datetime.now(ZoneInfo("America/Sao_Paulo")).date().isoformat()
+    for arquivo, rota, campo_id in ARVORES:
+        resposta = session.get(f"{ESAJ_BASE}{rota}", params={"campoId": campo_id}, timeout=120)
+        resposta.raise_for_status()
+        resposta.encoding = "utf-8"
+        nos_extras = ARVORE_NOS_EXTRAS.get(arquivo, ())
+        cabecalho = (
+            f"<!-- Recorte da resposta real de {rota}?campoId={campo_id} do TJSP, capturada em\n"
+            f"     {hoje} (UTF-8) e recortada por capture_arvores, em tests/fixtures/capture/tjsp.py:\n"
+            f"     mantidos os {ARVORE_ITENS_POR_LISTA} primeiros <li> de cada <ul>"
+            + (f" e os que levam aos nós {', '.join(nos_extras)}" if nos_extras else "")
+            + ". -->\n"
+        )
+        recorte = cabecalho + recortar_arvore(resposta.text, nos_extras)
+        dump(dest / f"{arquivo}_min.html", recorte.encode("utf-8"))
+        print(f"[tjsp] árvore {arquivo}: {len(resposta.content)} → {len(recorte.encode())} bytes")
+        time.sleep(1.5)
+
+
 # ---------- orchestrator -------------------------------------------------
 
 def main() -> None:
@@ -426,7 +527,9 @@ def main() -> None:
         "--skip",
         nargs="*",
         default=[],
-        choices=["cjsg", "cjpg", "cpopg_html", "cposg_html", "acordao", "documentos"],
+        choices=[
+            "cjsg", "cjpg", "cpopg_html", "cpopg_outros_assuntos", "cposg_html", "acordao", "documentos", "arvores",
+        ],
         help="Flows to skip",
     )
     args = parser.parse_args()
@@ -435,9 +538,11 @@ def main() -> None:
         ("cjsg", lambda: capture_cjsg()),
         ("cjpg", lambda: capture_cjpg()),
         ("cpopg_html", lambda: capture_cpopg_html(args.cnj)),
+        ("cpopg_outros_assuntos", capture_cpopg_outros_assuntos),
         ("cposg_html", lambda: capture_cposg_html(args.cnj)),
         ("acordao", capture_acordao),
         ("documentos", capture_documentos),
+        ("arvores", capture_arvores),
     ]
     for name, fn in flows:
         if name in args.skip:
