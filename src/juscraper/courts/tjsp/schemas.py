@@ -61,7 +61,7 @@ class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):
     :class:`OutputCJSGBase` e ``data_publicacao`` de
     :class:`OutputDataPublicacaoMixin`, e acrescenta as colunas do parser
     eSAJ compartilhado. As paginas trazem ``"Classe/Assunto:"`` num rotulo
-    so ou ``"Classe:"`` e ``"Assunto:"`` separados.
+    so.
     """
 
     cd_acordao: str | None = None
@@ -69,8 +69,6 @@ class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):
     relator: str | None = None
     orgao_julgador: str | None = None
     classe_assunto: str | None = None
-    classe: str | None = None
-    assunto: str | None = None
     comarca: str | None = None
 
 
