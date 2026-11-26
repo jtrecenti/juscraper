@@ -32,7 +32,9 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     id_orgao_julgador: str | None = None
     id_relator: str | None = None
     id_colegiado: str | None = None
-    sistema: str | None = None
+    # Valores do seletor "Sistema" do portal (``field-sistema.js``). O backend
+    # diferencia maiusculas: "pje" ou outro valor da 0 resultados sem aviso.
+    sistema: Literal["", "PJE", "SAJ"] | None = None
     # Valores do seletor "Decisoes" do portal (``field-decisao.js``), que o backend
     # compara com ``tipo_teor``: "Decisão" sao as monocraticas, "Acórdão" as
     # colegiadas e "Sentença" as de 1o grau. Vazio (ou ``None``) busca todas.
@@ -41,7 +43,8 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     # (Tribunal de Justica) e "TR" (Turmas Recursais e TUJ). Vazio (ou ``None``)
     # busca todas. Os nomes por extenso fazem o portal responder 502/503.
     jurisdicoes: Literal["", "TJ", "TR"] | None = None
-    grau: str | None = None
+    # Valores dos radios ``radioGrau`` do portal. Outro valor da 0 resultados.
+    grau: Literal["", "1", "2"] | None = None
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
@@ -55,5 +58,7 @@ class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     classe: str | None = None
     colegiado: str | None = None
     tipo_decisao: str | None = None
-    sistema: str | None = None
+    # Valores do seletor "Sistema" do portal (``field-sistema.js``). O backend
+    # diferencia maiusculas: "pje" ou outro valor da 0 resultados sem aviso.
+    sistema: Literal["", "PJE", "SAJ"] | None = None
     sigiloso: bool | str | None = None
