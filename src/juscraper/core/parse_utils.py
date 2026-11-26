@@ -14,6 +14,9 @@ Consolidam lógica duplicada hoje em vários ``courts/<xx>/parse.py``:
 * ``normalizar_texto`` e ``normalizar_colunas_texto`` tiram do texto corrido
   (ementa, decisão, inteiro teor) os caracteres que atrapalham a busca, sem
   mexer em quebras de linha nem em espaços.
+* ``html_para_texto`` converte HTML de texto longo (ementa, inteiro teor) em
+  texto com um parágrafo por linha, para os campos em que ``clean_html``, que
+  põe tudo numa linha só, perderia a estrutura.
 
 Uso (a partir das Fases 1-4 do refactor #194)::
 
@@ -38,6 +41,32 @@ _WHITESPACE_RE = re.compile(r"\s+")
 # largura zero (espaço, não-agregador e agregador).
 _INVISIVEIS = ("\xad", "\u200b", "\u200c", "\u200d")
 
+# Trechos que o navegador não mostra: comentários (o Word guarda neles o XML de
+# estilos, que vira ``"Normal 0 21 false ..."`` no TJAP), o conteúdo de
+# ``<style>``, ``<script>`` e ``<title>`` (``"p{text-align: justify;}"`` no
+# TJRN) e a tag cortada no fim do texto (``'<p dir="ltr" s...'``). Sem o
+# fechamento, o comentário e esses blocos valem até o fim, como no navegador.
+_SEM_TEXTO_RE = re.compile(
+    r"<!--.*?(?:-->|\Z)|<(style|script|title)\b[^>]*>.*?(?:</\1\s*>|\Z)|<[a-zA-Z/][^<>\n]*\Z",
+    re.DOTALL | re.IGNORECASE,
+)
+# Tags de bloco e ``<br>``, que abrem uma linha nova; ``<td>``/``<th>`` separam
+# células com espaço. As demais (``<b>``, ``<span>``, ``<font>``...) somem sem
+# deixar espaço, como no navegador: ``"<b>dano</b>,"`` vira ``"dano,"``.
+_BLOCOS = (
+    "address|article|aside|blockquote|body|br|caption|center|dd|details|div|dl|"
+    "dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hr|html|li|main|"
+    "nav|ol|p|pre|section|summary|table|tbody|tfoot|thead|tr|ul"
+)
+_TAG_BLOCO_RE = re.compile(rf"</?(?:{_BLOCOS})\b[^>]*>", re.IGNORECASE)
+_TAG_CELULA_RE = re.compile(r"</?t[dh]\b[^>]*>", re.IGNORECASE)
+# Só ``<`` seguido de letra, ``/`` ou ``!`` abre tag: ``"(<18 anos)"`` fica.
+_TAG_ABERTA_RE = re.compile(r"<[a-zA-Z/!][^<>]*>")
+_FIM_DE_LINHA_RE = re.compile(r"\r\n?|\n")
+# Marca o fim de linha até o fim da limpeza, para que o ``\n`` do código-fonte
+# e o de ``&#10;`` contem como espaço.
+_SEPARADOR_DE_LINHA = "\x00"
+
 
 def clean_html(text: str | None, decode_entities: bool = True) -> str | None:
     """Remove tags HTML e (opcionalmente) decodifica entidades.
@@ -61,6 +90,50 @@ def clean_html(text: str | None, decode_entities: bool = True) -> str | None:
         text = html.unescape(text)
 
     return _WHITESPACE_RE.sub(" ", text).strip()
+
+
+def html_para_texto(text: str | None, *, preservar_quebras: bool = False) -> str | None:
+    r"""Converte HTML de texto longo em texto com um parágrafo por linha.
+
+    Para ementa e inteiro teor que chegam em HTML. ``<br>`` e as tags de bloco
+    (``<p>``, ``<div>``, ``<li>``, ``<h3>``...) viram ``\n``. Como no
+    navegador, a quebra de linha do código-fonte (e a de ``&#10;``) vale um
+    espaço, as demais tags somem sem deixar espaço, ``<`` que não abre tag
+    (``"<18 anos"``) fica, e comentários, ``<style>``, ``<script>`` e
+    ``<title>`` saem com o conteúdo.
+
+    Depois de decodificar as entidades, o texto passa por
+    :func:`normalizar_texto`. Os espaços seguidos viram um só, as pontas de
+    cada linha são aparadas e as linhas vazias saem.
+
+    Nomes, classes e outros campos curtos continuam com :func:`clean_html`,
+    que põe tudo numa linha só.
+
+    Args:
+        text: HTML bruto. ``None``/string vazia são retornados sem alteração.
+        preservar_quebras: Se ``True``, a quebra de linha do texto também
+            separa linhas, como ``<br>``. Para o texto que o portal exibe com
+            ``white-space: pre-line`` (TJSC) e o texto com marcação esparsa
+            (``<em>``, ``<br/>``) entre parágrafos separados por ``\n`` (TJMT).
+
+    Returns:
+        O texto com um parágrafo por linha (vazio sem texto no HTML), ou o input quando vazio/``None``.
+
+    Examples: Exemplo
+        >>> html_para_texto("<p>EMENTA: <b>DANO</b>, MORAL.</p><p>Recurso&nbsp;provido.</p>")
+        'EMENTA: DANO, MORAL.\nRecurso provido.'
+    """
+    if not text:
+        return text
+
+    text = _SEM_TEXTO_RE.sub("", text)
+    if preservar_quebras:
+        text = _FIM_DE_LINHA_RE.sub(_SEPARADOR_DE_LINHA, text)
+    text = _TAG_BLOCO_RE.sub(_SEPARADOR_DE_LINHA, text)
+    text = _TAG_ABERTA_RE.sub("", _TAG_CELULA_RE.sub(" ", text))
+    text = normalizar_texto(html.unescape(text))
+    linhas = (" ".join(linha.split()) for linha in text.split(_SEPARADOR_DE_LINHA))
+    return "\n".join(linha for linha in linhas if linha)
 
 
 def coerce_date_columns(

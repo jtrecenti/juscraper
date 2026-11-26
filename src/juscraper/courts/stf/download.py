@@ -95,7 +95,7 @@ def build_payload(
     tamanho_pagina: int = 10,
     base: str = "decisoes",
     classe: str | list[str] | None = None,
-    inteiro_teor: bool = False,
+    buscar_em: str = "ementa",
     data_julgamento_inicio: str | None = None,
     data_julgamento_fim: str | None = None,
     data_publicacao_inicio: str | None = None,
@@ -112,7 +112,9 @@ def build_payload(
         tamanho_pagina (int): Documentos por pagina. ``0`` pede so total e agregacoes.
         base (str): ``"decisoes"`` (monocraticas) ou ``"acordaos"``.
         classe (str | list[str] | None): Sigla(s) da classe processual (ex.: ``"Rcl"``).
-        inteiro_teor (bool): Pesquisa tambem no inteiro teor, como a opcao do portal.
+        buscar_em (str): ``"ementa"`` busca nos campos que o portal usa por padrao
+            (ementa, texto da decisao, indexacao, partes...); ``"inteiro_teor"``
+            soma a eles o inteiro teor, como a opcao "pesquisar no inteiro teor".
         data_julgamento_inicio, data_julgamento_fim (str | None): Datas ja no formato ``ddMMyyyy``.
         data_publicacao_inicio, data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
         reference_time (str | None): Referência UTC fixa para o decaimento do score.
@@ -145,7 +147,7 @@ def build_payload(
     for clausula in [busca, *reforcos]:
         clausula["query"] = consulta
 
-    if inteiro_teor:
+    if buscar_em == "inteiro_teor":
         # Mesmos campos e pesos que o portal acrescenta com "pesquisar no inteiro teor".
         busca["fields"].append("inteiro_teor_texto.plural")
         reforcos[0]["fields"].append("inteiro_teor_texto.plural")

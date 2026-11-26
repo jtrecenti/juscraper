@@ -240,6 +240,19 @@ def build_session(
     return session
 
 
+def fetch_cjpg_page1(session: requests.Session, base_url: str, pesquisa: str) -> requests.Response:
+    """Primeira página do cjpg do eSAJ (TJSP e TJMS) para ``pesquisa``.
+
+    Passa antes por ``cjpg/open.do``, que grava o JSESSIONID e os cookies
+    que o servidor passou a exigir de consultas anônimas. O raspador não faz
+    isso, mas o navegador faz.
+    """
+    session.get(f"{base_url}cjpg/open.do", timeout=60)
+    resposta = session.get(f"{base_url}cjpg/pesquisar.do", params=make_tjsp_cjpg_params(pesquisa), timeout=60)
+    resposta.raise_for_status()
+    return resposta
+
+
 def fetch_cjsg_pages(
     session: requests.Session,
     base_url: str,

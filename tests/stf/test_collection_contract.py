@@ -117,7 +117,7 @@ def test_resume_does_not_union_abandoned_attempt(stf, tmp_path):
         {"tamanho_pagina": 1},
         {"paginas": [1]},
         {"classe": "Rcl"},
-        {"inteiro_teor": True},
+        {"buscar_em": "inteiro_teor"},
         {"data_julgamento_fim": "2020-01-01"},
     ],
 )

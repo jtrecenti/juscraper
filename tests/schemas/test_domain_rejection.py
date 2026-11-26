@@ -26,6 +26,7 @@ from juscraper.aggregators.datajud.schemas import InputListarProcessosDataJud
 from juscraper.aggregators.falcao.schemas import InputListarDecisoesFalcao
 from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
 from juscraper.courts.stf.schemas import InputListarDecisoesSTF
+from juscraper.courts.stm.schemas import InputCJSGSTM
 from juscraper.courts.tjap.schemas import InputCJSGTJAP
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
 from juscraper.courts.tjdft.schemas import InputCJSGTJDFT
@@ -118,8 +119,24 @@ _LITERAL_207_CASES = [
     (InputCJSGTJRJ, "origem", ["1", "5", 4], ["6", 0]),
     (InputCJSGTJPA, "sort_by", ["datajulgamento", "datapublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
     (InputCJSGTJPA, "query_type", ["free", "anywords"], ["any", "anyWords"]),
-    (InputCJSGTJPA, "query_scope", ["ementa", "inteiroTeor", "inteiroteor"], ["integra", "xyz"]),
+    # ``buscar_em`` aceita só os valores canônicos que o portal tem. Os nomes e
+    # valores antigos (``query_scope="inteiroTeor"``, ``campo="I"``,
+    # ``inteiro_teor=True``) o client converte com DeprecationWarning.
+    (InputCJSGTJPA, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "inteiroteor", "numero"]),
+    (InputCJSGTJSC, "buscar_em", ["ementa", "inteiro_teor"], ["E", "I", "numero"]),
+    (InputCJSGSTM, "buscar_em", ["ementa", "inteiro_teor", "numero"], ["inteiroTeor", "tudo"]),
+    (InputListarDecisoesSTF, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
+    (InputCJSGTJDFT, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
     (InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
+    # Valores do seletor "Decisoes" do portal; os da docstring antiga davam 0 resultados.
+    (InputCJSGTJRN, "decisoes", ["", "Decisão", "Acórdão", "Sentença"], ["Monocraticas", "Colegiadas", "Sentencas"]),
+    # Valores do seletor "Jurisdicoes" do portal; os da docstring antiga davam HTTP 502/503.
+    (InputCJSGTJRN, "jurisdicoes", ["", "TJ", "TR"], ["Tribunal de Justica", "Turmas Recursais", "tj"]),
+    # Valores do seletor "Sistema" e dos radios de grau; outros davam 0 resultados.
+    (InputCJSGTJRN, "sistema", ["", "PJE", "SAJ"], ["pje", "Pje", "XYZ"]),
+    (InputCJSGTJRN, "grau", ["", "1", "2"], [2, "3", "Primeiro"]),
+    # Campos de texto do portal onde vai ``pesquisa``.
+    (InputCJSGTJRN, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "I", "numero", ""]),
     # 2 e 3 saem do schema: o client os converte em 151 e 15 com DeprecationWarning.
     (InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16]),
     (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),

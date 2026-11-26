@@ -1,7 +1,7 @@
 """Parse raw results from the TJAP jurisprudence search (Tucujuris)."""
 import pandas as pd
 
-from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.core.parse_utils import coerce_date_columns, html_para_texto
 
 
 def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
@@ -31,7 +31,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_julgamento": item.get("datajulgamento"),
                 "data_publicacao": item.get("datapublicacao"),
                 "data_registro": item.get("dataregistro"),
-                "ementa": clean_html(item.get("ementa")),
+                "ementa": html_para_texto(item.get("ementa")),
             }
             registros.append(registro)
 

@@ -68,7 +68,7 @@ def test_filtro_de_classe_preserva_faceta_propria_e_demais_agregacoes(base, clas
 @pytest.mark.parametrize("base", ["decisoes", "acordaos"])
 def test_consulta_e_reforcos_recebem_mesmo_texto_com_pesos_distintos(base):
     original = build_payload(base=base)
-    corpo = build_payload('saúde e "não"', base=base, inteiro_teor=True, reference_time="2024-01-01T00:00:00Z")
+    corpo = build_payload('saúde e "não"', base=base, buscar_em="inteiro_teor", reference_time="2024-01-01T00:00:00Z")
     consulta = corpo["query"]["function_score"]["query"]["bool"]
     clausulas = [consulta["filter"][0]["query_string"], *[item["query_string"] for item in consulta["should"]]]
     assert [item["query"] for item in clausulas] == ['saúde AND "não"'] * 5

@@ -15,7 +15,7 @@ def build_cjsg_payload(
     *,
     sinonimos: bool = True,
     espelho: bool = True,
-    inteiro_teor: bool = False,
+    buscar_em: str = "ementa",
     quantidade_por_pagina: int = 10,
     termos_acessorios: list | None = None,
 ) -> dict:
@@ -24,6 +24,9 @@ def build_cjsg_payload(
     ``pagina`` vai como está no campo ``pagina`` da API, que conta a partir de
     0: a primeira página de resultados é ``pagina=0``. ``cjsg_download`` recebe
     páginas 1-based e subtrai 1.
+
+    ``buscar_em="inteiro_teor"`` liga ``inteiroTeor``, que soma o inteiro
+    teor aos campos buscados.
 
     Shared between the scraper and the offline capture script so both stay
     in sync with the API contract.
@@ -35,7 +38,7 @@ def build_cjsg_payload(
         "tamanho": quantidade_por_pagina,
         "sinonimos": sinonimos,
         "espelho": espelho,
-        "inteiroTeor": inteiro_teor,
+        "inteiroTeor": buscar_em == "inteiro_teor",
         "retornaInteiroTeor": False,
         "retornaTotalizacao": True,
     }
@@ -48,7 +51,7 @@ def cjsg_download(
     request_fn: RequestFn,
     sinonimos=True,
     espelho=True,
-    inteiro_teor=False,
+    buscar_em="ementa",
     quantidade_por_pagina=10,
     base_url=BASE_URL,
     data_julgamento_inicio=None,
@@ -87,7 +90,7 @@ def cjsg_download(
             pagina - 1,
             sinonimos=sinonimos,
             espelho=espelho,
-            inteiro_teor=inteiro_teor,
+            buscar_em=buscar_em,
             quantidade_por_pagina=quantidade_por_pagina,
             termos_acessorios=termos_acessorios,
         )

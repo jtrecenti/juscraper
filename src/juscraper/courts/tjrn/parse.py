@@ -1,7 +1,7 @@
 """Parse raw results from the TJRN jurisprudence search (Elasticsearch)."""
 import pandas as pd
 
-from juscraper.core.parse_utils import clean_html, coerce_date_columns
+from juscraper.core.parse_utils import coerce_date_columns, html_para_texto
 from juscraper.utils.cnj import format_cnj
 
 # Colunas na ordem do DataFrame, para a busca sem resultado também as trazer.
@@ -30,8 +30,8 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "classe": source.get("classe_judicial"),
                 "orgao_julgador": source.get("orgao_julgador"),
                 "colegiado": source.get("colegiado"),
-                "relator": source.get("relator"),
-                "tipo_decisao": source.get("tipo_decisao"),
+                "relator": source.get("magistrado"),
+                "tipo_decisao": source.get("tipo_teor"),
                 "data_julgamento": (
                     source.get("dt_assinatura_teor")
                     or source.get("dt_assinatura_ementa")
@@ -39,7 +39,7 @@ def cjsg_parse_manager(resultados_brutos: list) -> pd.DataFrame:
                 "data_publicacao": source.get("dt_publicacao"),
                 "sistema": source.get("sistema"),
                 "sigiloso": source.get("sigiloso"),
-                "ementa": clean_html(source.get("ementa")),
+                "ementa": html_para_texto(source.get("ementa")),
             })
 
     df = pd.DataFrame(registros, columns=_COLUNAS)

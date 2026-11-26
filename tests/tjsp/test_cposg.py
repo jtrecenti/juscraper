@@ -134,8 +134,13 @@ class TestCPOSGUnit:
             Path(temp_path).unlink()
 
     def test_cposg_parse_complete_sample_contract(self):
-        """Characterize every collection returned by the complete CPOSG sample."""
-        result = cposg_parse_single_html(_SAMPLES / 'results_complete.html')
+        """Caracteriza cada coleção de uma página real com movimentações, partes, julgamento e 1ª instância.
+
+        Sample real do 0022175-24.2003.8.26.0344, com os nomes das partes e dos
+        advogados trocados por fictícios. Processo criminal, a página não traz
+        "Valor da ação"; o rótulo "Volume / Apenso" vem no singular.
+        """
+        result = cposg_parse_single_html(_SAMPLES / 'show_com_incidentes.html')
 
         assert len(result) == 1
         row = result[0]
@@ -160,41 +165,97 @@ class TestCPOSGUnit:
             'primeira_inst',
             'motivo_falha',
         ]
-        assert row['id_original'] == '1234567-89.2025.8.26.0000'
-        assert row['processo'] == '1234567-89.2025.8.26.0000'
-        assert row['status'] == 'Em julgamento / Digital'
-        assert row['classe'] == 'Apelação Cível'
-        assert row['assunto'] == 'Responsabilidade do Fornecedor'
-        assert row['movimentacoes'] == [
-            {'data': '01/07/2025', 'movimento': 'Distribuído', 'descricao': 'Observação vinculada'},
-            {'data': '02/07/2025', 'movimento': 'Movimento sem link', 'descricao': 'Observação livre'},
+        cabecalho = {
+            'id_original': '0022175-24.2003.8.26.0344',
+            'processo': '0022175-24.2003.8.26.0344',
+            'status': 'Encerrado',
+            'classe': 'Apelação Criminal',
+            'assunto': 'DIREITO PENAL-Crimes contra a vida-Homicídio Simples',
+            'secao': 'Direito Criminal',
+            'orgao_julgador': '6ª Câmara de Direito Criminal',
+            'area': 'Criminal',
+            'relator': 'MACHADO DE ANDRADE',
+            'valor_da_acao': None,
+            'origem': 'Comarca de Marília / Foro de Marília / 1ª Vara Criminal',
+            'volume_apenso': '6 / 1',
+        }
+        assert {campo: row[campo] for campo in cabecalho} == cabecalho
+        movimentacoes = row['movimentacoes']
+        assert len(movimentacoes) == 85
+        assert movimentacoes[:2] == [
+            {
+                'data': '25/07/2022',
+                'movimento': 'Informação',
+                'descricao': 'of. comunicando trânsito em julgado para defesa em 29.09.2021',
+            },
+            {
+                'data': '19/10/2020',
+                'movimento': 'Publicado em',
+                'descricao': (
+                    'Disponibilizado em 16/10/2020\nTipo de publicação: Despacho\n'
+                    'Número do Diário Eletrônico: 3149'
+                ),
+            },
         ]
-        assert row['partes'] == [
-            {'id_parte': 1, 'nome': 'Empresa Autora', 'parte': 'Apelante', 'papel': 'Apelante'},
-            {'id_parte': 1, 'nome': 'Ana Silva', 'parte': 'Apelante', 'papel': 'Advogado'},
-            {'id_parte': 1, 'nome': 'Bruno Souza', 'parte': 'Apelante', 'papel': 'Procurador'},
-            {'id_parte': 2, 'nome': 'Empresa Ré', 'parte': 'Apelado', 'papel': 'Apelado'},
-            {'id_parte': 2, 'nome': 'Carla Lima', 'parte': 'Apelado', 'papel': 'Advogado'},
+        assert {
+            'data': '15/10/2020',
+            'movimento': 'Processamento de Recursos Especial / Extraordinário Interpostos',
+            'descricao': '',
+        } in movimentacoes
+        assert len(row['partes']) == 9
+        assert row['partes'][:3] == [
+            {'id_parte': 1, 'nome': 'Fulano de Tal Apelante', 'parte': 'Apte/Apdo', 'papel': 'Apte/Apdo'},
+            {'id_parte': 1, 'nome': 'Advogado Ficticio Um', 'parte': 'Apte/Apdo', 'papel': 'Advogado'},
+            {
+                'id_parte': 2,
+                'nome': 'Ministério Público do Estado de São Paulo',
+                'parte': 'Apdo/Apte',
+                'papel': 'Apdo/Apte',
+            },
         ]
-        assert row['historico'] == [
-            ['01/01/2025', 'Procedimento Comum Cível'],
-            ['15/06/2025', 'Apelação Cível'],
-        ]
-        assert row['decisoes'] == [
-            {'data': '10/07/2025', 'situacao': 'Julgado', 'decisao': 'Recurso não provido'},
-        ]
+        assert row['historico'] == []
+        assert [(decisao['data'], decisao['situacao']) for decisao in row['decisoes']] == [('01/08/2019', 'Julgado')]
+        assert row['decisoes'][0]['decisao'].startswith('Ante o exposto, negaram provimento ao recurso defensivo')
         assert row['composicao'] == [
-            {'participacao': 'Relator', 'magistrado': 'Desembargador A'},
-            {'participacao': '2º Juiz', 'magistrado': 'Desembargador B'},
+            {'participacao': 'Relator', 'magistrado': 'Machado de Andrade\xa0(42162)'},
+            {'participacao': 'Revisor', 'magistrado': 'José Raul Gavião de Almeida\xa0(33955)'},
+            {'participacao': '3º', 'magistrado': 'Marco Antonio Marques da Silva'},
         ]
         assert row['primeira_inst'] == [
             {
-                'id_1a_inst': '0000001-11.2024.8.26.0100',
-                'foro': 'Foro Central',
-                'vara': '1ª Vara Cível',
-                'juiz': 'Juíza C',
-                'obs': 'Digital',
+                'id_1a_inst': '344.01.2003.022175-3',
+                'foro': 'Foro de Marília',
+                'vara': '1ª Vara Criminal',
+                'juiz': 'José Augusto Franca Junior',
+                'obs': '-',
             },
+        ]
+
+    def test_historico_de_classes(self, tmp_path):
+        """``#tdHistoricoDeClasses`` vira uma lista por linha, com o texto de cada célula.
+
+        Nenhuma página capturada traz a tabela (ver ``_extract_history``); o HTML
+        mínimo segue o seletor do parser.
+        """
+        sample = tmp_path / 'historico.html'
+        sample.write_text(
+            '''
+            <html><body>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+                <table id="tdHistoricoDeClasses">
+                    <tr><td>01/01/2025</td><td>Procedimento Comum Cível</td></tr>
+                    <tr><td>15/06/2025</td><td>Apelação Cível</td></tr>
+                </table>
+            </body></html>
+            ''',
+            encoding='utf-8',
+        )
+
+        result = cposg_parse_single_html(sample)
+
+        assert result[0]['historico'] == [
+            ['01/01/2025', 'Procedimento Comum Cível'],
+            ['15/06/2025', 'Apelação Cível'],
         ]
 
     def test_cposg_parse_cabecalho_com_incidentes(self):
@@ -244,7 +305,8 @@ class TestCPOSGUnit:
         assert row['classe'] == 'Apelação Cível'
         assert row['assunto'] == 'DIREITO DO CONSUMIDOR - Contratos de Consumo - Bancários'
         assert row['processo'] == '1000149-71.2024.8.26.0346'
-        assert row['volume_apenso'] is None
+        assert row['valor_da_acao'] == '72.896,87'
+        assert row['volume_apenso'] == '1 / 0'
         assert row['movimentacoes'] == []
         assert len(row['partes']) == 13
         assert row['partes'][:2] == [
@@ -335,10 +397,16 @@ class TestCPOSGUnit:
         ]
 
     def test_cposg_parse_manager_ignora_arquivos_do_cpopg(self, tmp_path):
-        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``."""
-        id_processo = '10001497120248260346'
-        html = load_sample('tjsp', 'cposg/results_complete.html')
-        conteudos = {'cposg': html, 'cpopg': html.replace('1234567-89.2025.8.26.0000', '7654321-98.2025.8.26.0000')}
+        """No mesmo ``download_path``, o cpopg grava ``cpopg/<id>/``: o cposg só lê ``cposg/``.
+
+        Na pasta do cpopg vai uma página que o parser do cposg leria, de outro
+        processo (1000149-71.2024.8.26.0346): se fosse lida, sairia na lista.
+        """
+        id_processo = '00221752420038260344'
+        conteudos = {
+            'cposg': load_sample('tjsp', 'cposg/show_com_incidentes.html'),
+            'cpopg': load_sample('tjsp', 'cposg/search_listagem.html'),
+        }
         for pasta, conteudo in conteudos.items():
             destino = tmp_path / pasta / id_processo
             destino.mkdir(parents=True)
@@ -346,7 +414,7 @@ class TestCPOSGUnit:
 
         result = cposg_parse_manager(str(tmp_path))
 
-        assert result['processo'].tolist() == ['1234567-89.2025.8.26.0000']
+        assert result['processo'].tolist() == ['0022175-24.2003.8.26.0344']
 
     @pytest.mark.parametrize(
         ('cabecalho', 'link', 'esperado'),
@@ -409,19 +477,24 @@ class TestCPOSGUnit:
 
     def test_missing_relator_is_not_recovered_from_raw_html(self, tmp_path):
         """Fields absent from the canonical DOM stay ``None``; loose ``Label: valor`` text is ignored."""
-        html = load_sample('tjsp', 'cposg/results_complete.html')
-        html = html.replace('<div><span class="unj-label">Relator</span><div>Desembargador A</div></div>', '')
-        html = html.replace(
-            '<tr><td>Relator</td><td>Desembargador A</td></tr>',
-            '<tr><td>Relator</td><td></td></tr>',
-        )
-        html = html.replace('<body>', '<body>\n    <div>Relator: Nome Solto</div>', 1)
-        assert 'Nome Solto' in html and 'Desembargador A' not in html
         sample = tmp_path / 'loose_relator.html'
-        sample.write_text(html, encoding='utf-8')
+        sample.write_text(
+            '''
+            <html><body>
+                <div>Relator: Nome Solto</div>
+                <tbody id="tabelaTodasMovimentacoes"></tbody>
+                <div><span class="unj-label">Classe</span><div>Apelação Cível</div></div>
+                <table style="margin-left:15px; margin-top:1px;">
+                    <tr><td>Relator</td><td></td></tr>
+                </table>
+            </body></html>
+            ''',
+            encoding='utf-8',
+        )
 
         result = cposg_parse_single_html(sample)
 
+        assert result[0]['classe'] == 'Apelação Cível'
         assert result[0]['relator'] is None
 
     def test_party_type_keeps_accents_and_slash(self, tmp_path):

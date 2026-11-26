@@ -30,7 +30,7 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
         tamanho_pagina=100,
         base="acordaos",
         classe=["Rcl", "ARE"],
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         data_julgamento_inicio="01012024",
         data_julgamento_fim="31122024",
         data_publicacao_inicio="01022024",
@@ -43,7 +43,7 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
         tamanho_pagina=100,
         base="acordaos",
         classe=["Rcl", "ARE"],
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         data_julgamento_inicio="01/01/2024",
         data_julgamento_fim="31/12/2024",
         data_publicacao_inicio="01/02/2024",
@@ -219,7 +219,7 @@ def test_build_payload_aplica_filtros_como_o_portal():
         tamanho_pagina=50,
         base="acordaos",
         classe="Rcl",
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         data_publicacao_fim="20082023",
     )
     consulta = body["query"]["function_score"]["query"]["bool"]
@@ -273,3 +273,27 @@ def test_build_payload_desempata_score_por_id_sem_mutar_o_template(base):
 )
 def test_traduzir_operadores_como_o_portal(digitado, enviado):
     assert traduzir_operadores(digitado) == enviado
+
+
+@pytest.mark.parametrize(("inteiro_teor", "buscar_em"), [(True, "inteiro_teor"), (False, "ementa")])
+@responses.activate
+def test_alias_inteiro_teor_avisa_e_manda_o_mesmo_que_buscar_em(stf, mocker, inteiro_teor, buscar_em):
+    """``inteiro_teor``, nome antigo de ``buscar_em``, gera o mesmo corpo."""
+    mocker.patch("time.sleep")
+    _add_no_results(pesquisa=PESQUISA, pagina=1, tamanho_pagina=250, buscar_em=buscar_em)
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{buscar_em}' em vez de inteiro_teor={inteiro_teor}"):
+        stf.listar_decisoes(PESQUISA, paginas=1, inteiro_teor=inteiro_teor)
+    n_chamadas = len(responses.calls)
+    stf.listar_decisoes(PESQUISA, paginas=1, buscar_em=buscar_em)
+
+    assert n_chamadas > 0
+    corpos = [json.loads(chamada.request.body) for chamada in responses.calls]
+    for antigo, novo in zip(corpos[:n_chamadas], corpos[n_chamadas:], strict=True):
+        antigo["query"]["function_score"]["functions"] = novo["query"]["function_score"]["functions"]
+        assert antigo == novo
+
+
+def test_alias_inteiro_teor_junto_com_buscar_em_levanta(stf):
+    with pytest.raises(ValueError, match="'buscar_em' e 'inteiro_teor' ao mesmo tempo"):
+        stf.listar_decisoes(PESQUISA, paginas=1, inteiro_teor=True, buscar_em="inteiro_teor")

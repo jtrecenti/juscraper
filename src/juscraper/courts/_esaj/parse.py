@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
@@ -53,6 +54,8 @@ _ERROR_CLASS_RE = re.compile(r"error|erro|mensagem.*erro", re.I)
 _FORM_ID_RE = re.compile(r"form|consulta", re.I)
 _PAGINATION_CLASS_RE = re.compile(r".*pag.*", re.I)
 _RESULT_TABLE_CLASS_RE = re.compile(r"fundocinza|resultado", re.I)
+# Célula acima e abaixo das linhas: "Resultados 1 a 10 de 3565472".
+_RESUMO_RE = re.compile(r"Resultados?\s+\d+\s+a\s+\d+\s+de\s+(\d+)", re.IGNORECASE)
 _PAGINATION_COUNT_PATTERNS = (
     re.compile(r"\d+$"),
     re.compile(r"(?<=de )\d+"),
@@ -136,6 +139,53 @@ def _extract_pagination_count(text: str) -> int | None:
     return None
 
 
+def _total_do_resumo(soup: BeautifulSoup) -> int | None:
+    # A célula tem de ser só o resumo: a de layout, que envolve a página
+    # inteira, também contém "Resultados ..." e termina nos links de
+    # paginação, de onde um ``\d+$`` tiraria o "1" de uma página só.
+    for celula in soup.find_all("td"):
+        resumo = _RESUMO_RE.fullmatch(celula.get_text().strip())
+        if resumo is not None:
+            return int(resumo.group(1))
+    return None
+
+
+def _contar_pelo_texto(
+    soup: BeautifulSoup,
+    *,
+    seletor_linhas: str,
+    contar_linhas: Callable[[BeautifulSoup, int], int],
+) -> int:
+    """Total de resultados lido do texto da página, comum ao ``cjsg`` e ao ``cjpg``.
+
+    As ementas e sentenças ficam nas linhas de ``seletor_linhas`` e citam
+    "resultados" ou "não foram encontrados"; os marcadores de contagem ficam
+    fora delas, e por isso as linhas saem antes da procura. Lê o resumo
+    "Resultados X a Y de N"; sem ele, os marcadores de busca vazia e a
+    cascata de seletores e regex. Sem marcador nenhum, ``contar_linhas``
+    recebe o número de linhas e decide entre contá-las e levantar erro.
+    """
+    n_linhas = len([linha.extract() for linha in soup.select(seletor_linhas)])
+    total = _total_do_resumo(soup)
+    if total is not None:
+        return total
+    if _has_zero_results(soup):
+        return 0
+
+    pagination_element = _find_pagination_element(soup)
+    if pagination_element is None:
+        return contar_linhas(soup, n_linhas)
+
+    pagination_text = pagination_element.get_text()
+    count = _extract_pagination_count(pagination_text)
+    if count is None:
+        raise ValueError(
+            "Não foi possível extrair o número de resultados da paginação. "
+            f"Formato inesperado encontrado. Texto: {pagination_text.strip()[:100]}"
+        )
+    return count
+
+
 def _total_declarado(soup: BeautifulSoup) -> int | None:
     # A página de ``trocaDePagina.do`` traz um único input, o da aba pedida
     # em ``tipoDeDecisao``: ``-A`` (acórdãos) ou ``-D`` (monocráticas).
@@ -186,25 +236,9 @@ def cjsg_n_results(html_source: str) -> int:
     total = _total_declarado(soup)
     if total is not None:
         return total
-    # As ementas ficam nas linhas de resultado e podem citar "resultados" ou
-    # "sem resultados" ("BONIFICAÇÃO POR RESULTADOS"); os marcadores de
-    # contagem ficam fora delas.
-    linhas_de_resultado = [linha.extract() for linha in soup.find_all("tr", class_="fundocinza1")]
-    if _has_zero_results(soup):
-        return 0
-
-    pagination_element = _find_pagination_element(soup)
-    if pagination_element is None:
-        return _count_result_rows_or_raise(soup, len(linhas_de_resultado))
-
-    pagination_text = pagination_element.get_text()
-    count = _extract_pagination_count(pagination_text)
-    if count is None:
-        raise ValueError(
-            "Não foi possível extrair o número de resultados da paginação. "
-            f"Formato inesperado encontrado. Texto: {pagination_text[:100]}"
-        )
-    return count
+    return _contar_pelo_texto(
+        soup, seletor_linhas="tr.fundocinza1", contar_linhas=_count_result_rows_or_raise
+    )
 
 
 def cjsg_n_pags(html_source: str) -> int:

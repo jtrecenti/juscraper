@@ -177,20 +177,8 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjam", "cjsg"): _ESAJ_CJSG,
     ("tjce", "cjsg"): _ESAJ_CJSG,
     ("tjms", "cjsg"): _ESAJ_CJSG,
-    ("tjsp", "cjsg"): Leitura(
-        _caminho,
-        ignorar={
-            "parser_edge_cases.html": "escrito à mão para o parser, com rótulo inventado (Campo especial)",
-        },
-    ),
-    ("tjsp", "cjpg"): Leitura(
-        _caminho,
-        sufixos=(".html",),
-        ignorar={
-            "count_captcha_error.html": "página de captcha, que o parser recusa de propósito",
-            "results_optional_fields.html": "escrito à mão para o parser, com rótulo inventado (Tipo-de ato)",
-        },
-    ),
+    ("tjsp", "cjsg"): _ESAJ_CJSG,
+    ("tjsp", "cjpg"): Leitura(_caminho, sufixos=(".html",)),
     ("tjms", "cjpg"): Leitura(
         _caminho,
         sufixos=(".html",),

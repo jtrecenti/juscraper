@@ -84,6 +84,10 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
     "classes": "classe",
     "assuntos": "assunto",
     "varas": "vara",
+    # Onde procurar ``pesquisa``. ``inteiro_teor`` fica de fora: e coluna de
+    # texto integral no Output de TRF3 e TJPI.
+    "campo": "buscar_em",
+    "query_scope": "buscar_em",
 }
 
 

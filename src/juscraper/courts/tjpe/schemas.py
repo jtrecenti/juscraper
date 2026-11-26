@@ -38,10 +38,13 @@ class OutputCJSGTJPE(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
 
     Reflete ``tjpe.parse.cjsg_parse`` apos renomeacao canonica
     (``classe_cnj`` -> ``classe``, ``assunto_cnj`` -> ``assunto``).
+    O texto do acórdão sai em ``acordao``; o da decisão monocrática (rótulo
+    ``Decisão`` do portal, mesmo nome do ``cjsg`` do TJSC) sai em ``decisao``.
     """
 
     classe: str | None = None
     assunto: str | None = None
     acordao: str | None = None
+    decisao: str | None = None
     meio_tramitacao: str | None = None
     url_inteiro_teor: str | None = None

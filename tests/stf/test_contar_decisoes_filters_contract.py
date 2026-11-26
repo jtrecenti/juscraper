@@ -3,6 +3,7 @@ import json
 
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
@@ -35,7 +36,7 @@ def test_todos_os_filtros_chegam_ao_corpo_e_busca_vazia_da_total_zero(stf):
         PESQUISA,
         base="acordaos",
         classe=["Rcl", "ARE"],
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         data_julgamento_inicio="01012024",
         data_julgamento_fim="31122024",
         data_publicacao_inicio="01022024",
@@ -46,7 +47,7 @@ def test_todos_os_filtros_chegam_ao_corpo_e_busca_vazia_da_total_zero(stf):
         PESQUISA,
         base="acordaos",
         classe=["Rcl", "ARE"],
-        inteiro_teor=True,
+        buscar_em="inteiro_teor",
         data_julgamento_inicio="01/01/2024",
         data_julgamento_fim="31/12/2024",
         data_publicacao_inicio="2024-02-01",
@@ -119,3 +120,28 @@ def test_class_filter_preserves_buckets_and_unfiltered_template(base):
             assert filtered["aggs"][name]["aggs"][name] == aggregation
             assert filtered["aggs"][name]["filter"] == {"bool": {"must": [class_filter]}}
     assert build_payload(base=base) == original
+
+
+@pytest.mark.parametrize(("inteiro_teor", "buscar_em"), [(True, "inteiro_teor"), (False, "ementa")])
+@responses.activate
+def test_alias_inteiro_teor_avisa_e_manda_o_mesmo_que_buscar_em(stf, inteiro_teor, buscar_em):
+    """``inteiro_teor=True``/``False`` vira ``buscar_em="inteiro_teor"``/``"ementa"``."""
+    for _ in range(2):
+        _add_no_results(PESQUISA, buscar_em=buscar_em)
+
+    with pytest.warns(DeprecationWarning, match=f"buscar_em='{buscar_em}' em vez de inteiro_teor={inteiro_teor}"):
+        stf.contar_decisoes(PESQUISA, inteiro_teor=inteiro_teor)
+    stf.contar_decisoes(PESQUISA, buscar_em=buscar_em)
+
+    assert responses.calls[0].request.body == responses.calls[1].request.body
+
+
+def test_alias_inteiro_teor_junto_com_buscar_em_levanta(stf):
+    with pytest.raises(ValueError, match="'buscar_em' e 'inteiro_teor' ao mesmo tempo"):
+        stf.contar_decisoes(PESQUISA, inteiro_teor=False, buscar_em="ementa")
+
+
+@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", "sim", True])
+def test_buscar_em_fora_do_portal_levanta_validation_error(stf, valor):
+    with pytest.raises(ValidationError, match="buscar_em"):
+        stf.contar_decisoes(PESQUISA, buscar_em=valor)

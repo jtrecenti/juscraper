@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from juscraper.core.exceptions import ColetaParcialError
-from juscraper.utils.deprecacao import resolve_deprecated_value
+from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em, resolve_deprecated_value
 from juscraper.utils.params import (
     iter_date_windows,
     normalize_datas,
@@ -456,6 +456,83 @@ class TestResolveDeprecatedValue:
         assert len(avisos) == 1
         assert str(avisos[0].message) == f"x={valor!r} esta deprecado; use x=151."
         assert avisos[0].filename == __file__
+
+
+# --- resolve_buscar_em ---
+
+_E_I = {"E": "ementa", "I": "inteiro_teor"}
+
+
+class TestResolveBuscarEm:
+
+    @pytest.mark.parametrize(
+        ("kwargs", "buscar_em", "valores"),
+        [({}, None, None), ({"x": 1}, None, _E_I), ({"buscar_em": "ementa"}, None, _E_I), ({}, "ementa", _E_I)],
+    )
+    def test_sem_alias_nem_valor_antigo_nao_avisa(self, recwarn, kwargs, buscar_em, valores):
+        esperado = dict(kwargs) | ({"buscar_em": buscar_em} if buscar_em else {})
+        resolve_buscar_em(kwargs, "campo", buscar_em, valores)
+        assert kwargs == esperado
+        assert not recwarn.list
+
+    @pytest.mark.parametrize(
+        ("antigo", "novo"),
+        [(True, "inteiro_teor"), (False, "ementa"), (1, "inteiro_teor"), ("true", "inteiro_teor"), ("no", "ementa")],
+    )
+    def test_alias_converte_o_valor_com_aviso(self, antigo, novo):
+        """``inteiro_teor`` e lido como o ``bool`` do schema antigo."""
+        kwargs = {"inteiro_teor": antigo, "outro": 1}
+        with pytest.warns(DeprecationWarning, match="inteiro_teor") as avisos:
+            resolve_buscar_em(kwargs, "inteiro_teor", valores=buscar_em_de_inteiro_teor)
+        assert kwargs == {"buscar_em": novo, "outro": 1}
+        assert len(avisos) == 1
+        assert str(avisos[0].message) == (
+            f"O parâmetro 'inteiro_teor' está deprecado. Use buscar_em={novo!r} em vez de inteiro_teor={antigo!r}."
+        )
+        assert avisos[0].filename == __file__
+
+    @pytest.mark.parametrize(("valor", "valores"), [("X", _E_I), ([1], _E_I), ("sim", buscar_em_de_inteiro_teor)])
+    def test_alias_com_valor_desconhecido_segue_igual_e_aviso_nao_sugere_valor(self, valor, valores):
+        """O schema recusa o valor; o aviso nao aponta um ``buscar_em`` que tambem seria recusado."""
+        kwargs = {"campo": valor}
+        with pytest.warns(DeprecationWarning, match=r"'campo' está deprecado. Use 'buscar_em'.$"):
+            resolve_buscar_em(kwargs, "campo", valores=valores)
+        assert kwargs == {"buscar_em": valor}
+
+    def test_alias_sem_valores_mantem_o_valor(self):
+        kwargs = {"campo": "numero"}
+        with pytest.warns(DeprecationWarning, match="'campo' está deprecado. Use 'buscar_em', com o mesmo valor."):
+            resolve_buscar_em(kwargs, "campo")
+        assert kwargs == {"buscar_em": "numero"}
+
+    @pytest.mark.parametrize(
+        ("buscar_em", "valores", "novo"),
+        [("I", _E_I, "inteiro_teor"), (True, buscar_em_de_inteiro_teor, "inteiro_teor")],
+    )
+    def test_valor_antigo_em_buscar_em_e_convertido_com_aviso(self, buscar_em, valores, novo):
+        """O parametro antigo passado por posicao chega em ``buscar_em``."""
+        kwargs: dict = {}
+        with pytest.warns(DeprecationWarning, match=f"buscar_em={buscar_em!r} é valor do parâmetro deprecado"):
+            resolve_buscar_em(kwargs, "campo", buscar_em, valores)
+        assert kwargs == {"buscar_em": novo}
+
+    @pytest.mark.parametrize(
+        ("kwargs", "buscar_em", "valores"),
+        [({"buscar_em": "I"}, None, _E_I), ({}, "1", buscar_em_de_inteiro_teor), ({}, "y", buscar_em_de_inteiro_teor)],
+    )
+    def test_valor_antigo_so_e_convertido_no_argumento_e_bool_so_como_bool(self, recwarn, kwargs, buscar_em, valores):
+        """Em ``kwargs`` o nome antigo nunca foi posicional; ``"1"`` nao e o ``bool`` antigo."""
+        valor = buscar_em or kwargs["buscar_em"]
+        resolve_buscar_em(kwargs, "campo", buscar_em, valores)
+        assert kwargs == {"buscar_em": valor}
+        assert not recwarn.list
+
+    @pytest.mark.parametrize("no_argumento", [True, False])
+    def test_alias_e_buscar_em_juntos_levanta_sem_aviso(self, recwarn, no_argumento):
+        kwargs = {"campo": "E"} if no_argumento else {"campo": "E", "buscar_em": "ementa"}
+        with pytest.raises(ValueError, match="'buscar_em' e 'campo' ao mesmo tempo"):
+            resolve_buscar_em(kwargs, "campo", "ementa" if no_argumento else None, _E_I)
+        assert not recwarn.list
 
 
 # --- iter_date_windows ---

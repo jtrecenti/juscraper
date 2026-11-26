@@ -13,8 +13,35 @@ All scrapers in juscraper follow a unified API convention for parameter names.
 | Parameter | Description |
 |-----------|-------------|
 | `pesquisa` | The search query string (canonical name) |
+| `buscar_em` | Where to look for `pesquisa`, when the portal lets you choose |
 
 **Deprecated aliases:** `query`, `termo` — accepted with `DeprecationWarning`, will be removed in v1.0.
+
+`buscar_em` takes `"ementa"` (only the headnote) or `"inteiro_teor"` (the
+full text of the decision, which includes the headnote). A value only one
+portal offers stays in that tribunal alone. Each scraper accepts only the
+values its portal has, and its default is the field the portal searches by
+default, so `pesquisa` alone keeps working as before. Use it to search terms
+in decisions without an ementa, such as single-judge decisions and
+sentenças:
+
+```python
+tjrn.cjsg("dano moral", buscar_em="inteiro_teor", decisoes="Sentença")
+```
+
+Every scraper that lets you pick the field uses `buscar_em`: STM, TJSC,
+TJPA, TJRN and TJDFT `cjsg`, and STF `listar_decisoes`/`contar_decisoes`.
+STM also takes `"numero"` (the case number), which only its portal offers.
+In STF and TJDFT, `"inteiro_teor"` adds the full text to the fields of the
+default search, as the portal option does, and that default search already
+goes beyond the headnote (in STF, the decision text, indexing and parties;
+in TJDFT, the *espelho* of the acórdão). TJPA sends the choice to its API,
+which ignored it on 26 Nov 2026, as did the portal's own website: both
+values searched the headnote and the full text. The older names (STM and TJSC
+`campo`, TJPA `query_scope`, STF and TJDFT `inteiro_teor`) are deprecated
+aliases; see the Migration Guide. In the eSAJ family, TJSP and TRF3,
+`pesquisa` already searches the whole document and `ementa` is a separate
+text filter that combines with it.
 
 ### Date Filters
 
@@ -158,6 +185,34 @@ df = trf3.cpopg_parse(htmls=htmls, id_cnj_list=cnjs)
 # After
 brutos = trf3.cpopg_download(cnjs)
 df = trf3.cpopg_parse(brutos, cnjs)
+```
+
+### From `campo`, `query_scope` and `inteiro_teor` to `buscar_em`
+
+STM, TJSC, TJPA, STF and TJDFT used their own names and values to pick
+where to look for `pesquisa`. They now take `buscar_em`, with `"ementa"` or
+`"inteiro_teor"`. The old names still work with a `DeprecationWarning`,
+which names the new value, and will be removed in 0.7.0. Passing an old name
+together with `buscar_em` raises `ValueError`. Where the old name was an
+explicit parameter (TJSC, TJPA and TJDFT `cjsg_download`), an old value given
+to `buscar_em`, which is where the old parameter lands when passed by
+position (`tjsc.cjsg("dano moral", 1, "I")`), is converted with a warning too.
+
+| Tribunal | Before | After |
+|----------|--------|-------|
+| STM | `campo="ementa"` / `"inteiro_teor"` / `"numero"` | `buscar_em=` with the same value |
+| TJSC | `campo="E"` / `campo="I"` | `buscar_em="ementa"` / `buscar_em="inteiro_teor"` |
+| TJPA | `query_scope="ementa"` / `"inteiroTeor"` / `"inteiroteor"` | `buscar_em="ementa"` / `"inteiro_teor"` / `"inteiro_teor"` |
+| STF, TJDFT | `inteiro_teor=False` / `inteiro_teor=True` | `buscar_em="ementa"` / `buscar_em="inteiro_teor"` |
+
+```python
+# Before
+tjsc.cjsg("dano moral", campo="I")
+stf.listar_decisoes("pejotização", inteiro_teor=True, paginas=1)
+
+# After
+tjsc.cjsg("dano moral", buscar_em="inteiro_teor")
+stf.listar_decisoes("pejotização", buscar_em="inteiro_teor", paginas=1)
 ```
 
 ### TJAP `cjsg`: from `votacao="Unanime"` to `votacao="Unânime"`

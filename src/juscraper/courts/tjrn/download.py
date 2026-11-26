@@ -4,6 +4,8 @@ import math
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import baixar_paginas_pedidas
 
+from ...schemas import BuscarEm
+
 BASE_URL = "https://jurisprudencia.tjrn.jus.br/api/pesquisar"
 RESULTS_PER_PAGE = 10
 
@@ -11,7 +13,7 @@ RESULTS_PER_PAGE = 10
 def build_cjsg_payload(
     pesquisa: str,
     page: int = 1,
-    inteiro_teor: str = "",
+    buscar_em: BuscarEm = "ementa",
     nr_processo: str = "",
     id_classe: str = "",
     id_orgao_julgador: str = "",
@@ -30,12 +32,14 @@ def build_cjsg_payload(
     """Build the JSON payload for the TJRN CJSG search API.
 
     The public parameter ``id_classe`` is the canonical name; the backend
-    PJe field is ``id_classe_judicial`` and stays unchanged.
+    PJe field is ``id_classe_judicial`` and stays unchanged. ``pesquisa``
+    goes in the field named by ``buscar_em`` (``"ementa"`` or
+    ``"inteiro_teor"``); the other one is sent empty.
     """
     return {
         "jurisprudencia": {
-            "ementa": pesquisa,
-            "inteiro_teor": inteiro_teor,
+            "ementa": pesquisa if buscar_em == "ementa" else "",
+            "inteiro_teor": pesquisa if buscar_em == "inteiro_teor" else "",
             "nr_processo": nr_processo,
             "id_classe_judicial": id_classe,
             "id_orgao_julgador": id_orgao_julgador,

@@ -74,12 +74,14 @@ class TJRNScraper(HTTPScraper):
         decisoes: str | None = None,
         jurisdicoes: str | None = None,
         grau: str | None = None,
+        buscar_em: str = "ementa",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
 
         Args:
-            pesquisa (str): Termo de busca livre (busca na ementa).
+            pesquisa (str): Termo de busca, procurado no campo indicado por
+                ``buscar_em`` (por padrao, a ementa).
             paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
             numero_processo (str): Numero CNJ do processo. Aceita o alias
@@ -89,12 +91,31 @@ class TJRNScraper(HTTPScraper):
             id_orgao_julgador (str): ID do orgao julgador.
             id_relator (str): ID do relator.
             id_colegiado (str): ID do colegiado.
-            sistema (str): ``"PJE"``, ``"SAJ"`` ou vazio para todos.
-            decisoes (str): ``"Monocraticas"``, ``"Colegiadas"``,
-                ``"Sentencas"`` ou vazio para todos.
-            jurisdicoes (str): ``"Tribunal de Justica"``, ``"Turmas Recursais"``
-                ou vazio para todos.
-            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para todos.
+            sistema (str): Sistema processual, com os valores do portal:
+                ``"PJE"``, ``"SAJ"`` ou vazio para todos. Outro valor (inclusive
+                ``"pje"``) levanta ``ValidationError``.
+            decisoes (str): Tipo de decisao, com os valores do portal:
+                ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
+                ``"Sentença"`` ou vazio para todas. Outro valor levanta
+                ``ValidationError``. Por padrao, ``pesquisa`` busca na ementa, e no
+                portal so os acordaos tem ementa: para buscar termo em
+                ``"Decisão"`` ou ``"Sentença"``, ver ``buscar_em``.
+            jurisdicoes (str): Jurisdicao, com os valores do portal: ``"TJ"``
+                (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
+                Turma de Uniformizacao) ou vazio para todas. Outro valor
+                levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
+                decisoes de 2o grau: com ``grau="1"`` a busca volta sem
+                resultados (o portal esconde ``"TR"`` quando o grau e ``"1"``).
+            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
+                todos, sempre como texto. Outro valor (inclusive o inteiro
+                ``2``) levanta ``ValidationError``. Decisoes de 1o grau nao tem
+                ementa: com ``grau="1"``, buscar termo com
+                ``buscar_em="inteiro_teor"``.
+            buscar_em (str): Onde procurar ``pesquisa``: ``"ementa"``
+                (default) ou ``"inteiro_teor"`` (texto integral da decisao,
+                campo "Inteiro teor" do portal). No portal so os acordaos tem
+                ementa; o inteiro teor existe em acordaos, monocraticas e
+                sentencas. Outro valor levanta ``ValidationError``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -136,6 +157,7 @@ class TJRNScraper(HTTPScraper):
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
             grau=grau,
+            buscar_em=buscar_em,
             **kwargs,
         ))
 
@@ -152,6 +174,7 @@ class TJRNScraper(HTTPScraper):
         decisoes: str | None = None,
         jurisdicoes: str | None = None,
         grau: str | None = None,
+        buscar_em: str = "ementa",
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.
@@ -185,9 +208,11 @@ class TJRNScraper(HTTPScraper):
             decisoes=decisoes,
             jurisdicoes=jurisdicoes,
             grau=grau,
+            buscar_em=buscar_em,
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
+            buscar_em=inp.buscar_em,
             paginas=inp.paginas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
