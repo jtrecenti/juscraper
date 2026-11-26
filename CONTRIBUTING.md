@@ -154,7 +154,16 @@ Notas:
 - O extra `[tjmg]` não instala no Python 3.15: o `txtcaptcha` depende do `torch`, que ainda não publica wheel para essa versão. Para rodar o TJMG localmente, recriar o `.venv` com o 3.14: `uv sync --python 3.14 --extra dev --extra docs --extra tjmg`. Para voltar ao 3.15, `uv sync --python 3.15 --extra dev`. O workflow `Integração` fixa a própria versão do Python e não é afetado.
 - Falha 5xx em um único notebook normalmente é instabilidade do tribunal — re-rodar o notebook isolado antes de reportar regressão (`pytest --nbmake docs/notebooks/<tribunal>.ipynb`).
 - No DataJud, o mesmo vale para `ColetaParcialError` com HTTP 429 (`es_rejected_execution_exception`), timeout ou resposta parcial de shards: é a fila de busca do cluster cheia. Em 15/11/2026, a busca de um único CNJ levou de 30 a 60 s, o índice do TJSP respondeu 429 e o do TJRJ contou 1 processo e devolveu a página vazia, com um shard rejeitado.
-- Quando o resultado real divergir do output cacheado (ex.: coluna nova, ementa em formato diferente), o notebook deve ser **commitado com outputs limpos** (`jupyter nbconvert --clear-output --inplace docs/notebooks/<tribunal>.ipynb`) para que `git diff` futuro fique focado em código.
+- Os notebooks ficam no repositório **com os outputs gravados**: são a documentação que o site Quarto mostra, e um notebook sem output mostra só o código. Quando o resultado real divergir do output gravado (ex.: coluna nova ou renomeada, ementa em formato diferente), reexecutar o notebook localmente, de IP residencial (ver **Integração local**), e fazer commit com os outputs novos. Antes do commit, tirar o ruído da execução com `scripts/limpar_notebooks.py`:
+
+  ```bash
+  uv sync --extra dev --extra docs
+  uv run jupyter nbconvert --to notebook --execute --inplace docs/notebooks/<tribunal>.ipynb
+  uv run python scripts/limpar_notebooks.py docs/notebooks/<tribunal>.ipynb
+  ```
+
+  O script tira o `metadata.execution` de cada célula (os carimbos de horário que o `nbconvert --execute` grava), junta os streams seguidos e deixa só a linha final de cada barra do tqdm. O `metadata` do notebook (kernel e `language_info`), o `execution_count` e os demais outputs ficam como estão. `--check` só confere e sai com 1 se algum notebook mudaria; sem arquivos, ele percorre todos os de `docs/notebooks/`.
+- Se o portal bloquear a reexecução e a mudança for só de nome (ex.: coluna renomeada), é aceitável editar o nome nos outputs gravados sem reexecutar, desde que a descrição do PR diga que o notebook não foi reexecutado, como no #717 e no #719. Mudança de conteúdo (linhas, valores, formato da ementa) exige reexecução.
 
 ### Integração local
 
