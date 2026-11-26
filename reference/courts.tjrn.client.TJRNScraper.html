@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -229,8 +229,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    jurisdicoes<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    grau<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    buscar_em<span class="op">=</span><span class="st">'ementa'</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Busca jurisprudencia no TJRN.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
@@ -247,7 +248,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>pesquisa</td>
 <td><code>str</code></td>
-<td>Termo de busca livre (busca na ementa).</td>
+<td>Termo de busca, procurado no campo indicado por <code>buscar_em</code> (por padrao, a ementa).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -295,7 +296,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>decisoes</td>
 <td><code>str</code></td>
-<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>pesquisa</code> busca so na ementa, e no portal so os acordaos tem ementa: com <code>"Decisão"</code> ou <code>"Sentença"</code>, passar <code>pesquisa=""</code> e filtrar por data, processo, classe ou orgao julgador.</td>
+<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. Por padrao, <code>pesquisa</code> busca na ementa, e no portal so os acordaos tem ementa: para buscar termo em <code>"Decisão"</code> ou <code>"Sentença"</code>, ver <code>buscar_em</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -307,10 +308,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>grau</td>
 <td><code>str</code></td>
-<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. Decisoes de 1o grau nao tem ementa: com <code>grau="1"</code>, passar <code>pesquisa=""</code> e filtrar por data, processo, classe ou orgao julgador.</td>
+<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. Decisoes de 1o grau nao tem ementa: com <code>grau="1"</code>, buscar termo com <code>buscar_em="inteiro_teor"</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
+<td>buscar_em</td>
+<td><code>str</code></td>
+<td>Onde procurar <code>pesquisa</code>: <code>"ementa"</code> (default) ou <code>"inteiro_teor"</code> (texto integral da decisao, campo “Inteiro teor” do portal). No portal so os acordaos tem ementa; o inteiro teor existe em acordaos, monocraticas e sentencas. Outro valor levanta <code>ValidationError</code>.</td>
+<td><code>'ementa'</code></td>
+</tr>
+<tr class="odd">
 <td>**kwargs</td>
 <td></td>
 <td>Filtros aceitos pelo schema <code>InputCJSGTJRN</code>. Listados abaixo (todos opcionais; <code>None</code> = sem filtro): * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. Convertido para <code>DD-MM-YYYY</code> antes do envio ao backend.</td>
@@ -387,8 +394,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    decisoes<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    jurisdicoes<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    grau<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    buscar_em<span class="op">=</span><span class="st">'ementa'</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download raw CJSG JSON responses from TJRN.</p>
 <p>Aceita os mesmos filtros de <a href="../reference/courts.tjrn.client.TJRNScraper.html#juscraper.courts.tjrn.client.TJRNScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
