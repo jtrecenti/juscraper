@@ -362,13 +362,8 @@ AUXILIARES_NAO_DECLARADAS: dict[tuple[str, str], dict[str, str]] = {
 # Sinônimo deprecado ainda entregue: o PR que o renomeia ou o motivo de a
 # exceção ser permanente. Remover a entrada junto com a correção;
 # ``test_excecoes_ainda_sao_necessarias`` cobra isso.
-_RELATORA_717 = "eSAJ cjsg: relatora vira relator no PR #717 (rótulo Relator(a): em _normalize_key)"
 _LISTA_DE_ASSUNTOS = "lista de assuntos do processo, não o assunto único em texto; plural deliberado"
 SINONIMOS_TOLERADOS: dict[tuple[str, str, str], str] = {
-    **{
-        (tribunal, "cjsg", "relatora"): _RELATORA_717
-        for tribunal in ("tjac", "tjal", "tjam", "tjce", "tjms", "tjsp")
-    },
     # Exceção permanente: ``assuntos`` aqui é a lista de assuntos do processo
     # (código, descrição, principal), não o filtro de busca que o #232 passou
     # ao singular nem o ``assunto`` em texto das outras saídas.

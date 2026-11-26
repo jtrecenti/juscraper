@@ -184,25 +184,30 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
-### eSAJ `cjpg` and TRF6 `cpopg`: from the `magistrado` column to `relator`
+### eSAJ `cjsg`, eSAJ `cjpg` and TRF6 `cpopg`: from `relatora`/`magistrado` to `relator`
 
-The eSAJ first-instance search (`cjpg`, in TJSP and TJMS) labels the judge as
-"Magistrado:", and the parser used to turn the label into a `magistrado`
-column. The column is now `relator`, the name used by `cjsg` and by the
-`cjpg` of the other courts (TJES and TJTO), also for first-instance
-decisions. The TRF6 `cpopg` (eproc) made the same change for the judge on
-the case cover. There is no deprecation cycle: a DataFrame cannot keep both names
+The parsers used to turn the portal label into the column name. The eSAJ
+portals (TJAC, TJAL, TJAM, TJCE, TJMS and TJSP) label the rapporteur as
+"Relator(a):", which became a `relatora` column in `cjsg`; the eSAJ
+first-instance search (`cjpg`, in TJSP and TJMS) labels the judge as
+"Magistrado:", which became `magistrado`; the TRF6 `cpopg` (eproc) did the
+same for the judge on the case cover. All of them now deliver `relator`, the
+name used by the other courts, also for first-instance decisions. In TJSP,
+`cjsg` rows labelled "Relator:" already came out as `relator`, so a search
+with both labels split the rapporteur across two columns; it is now a single
+column. There is no deprecation cycle: a DataFrame cannot keep both names
 without duplicating the data.
 
 ```python
 # Before
-df["magistrado"]
+df["relatora"]    # eSAJ cjsg
+df["magistrado"]  # eSAJ cjpg, TRF6 cpopg
 
 # After
 df["relator"]
 
 # DataFrames saved before the change
-df = df.rename(columns={"magistrado": "relator"})
+df = df.rename(columns={"relatora": "relator", "magistrado": "relator"})
 ```
 
 ### TJDFT `cjsg`: from the API column names to the canonical ones

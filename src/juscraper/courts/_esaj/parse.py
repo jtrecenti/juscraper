@@ -36,6 +36,9 @@ _TYPO_FIXES = {
     "argapso_julgador": "orgao_julgador",
 }
 
+# "Relator(a):" vira ``relator``, e não ``relatora`` (#713).
+_GENDER_MARKER_RE = re.compile(r"\s*\(a\)")
+
 # O eSAJ declara iso-8859-1, mas manda windows-1252: o travessão "–" chega
 # como o byte 0x96, que o latin-1 lê como o caractere de controle U+0096.
 _C1_PARA_CP1252 = {
@@ -43,6 +46,7 @@ _C1_PARA_CP1252 = {
     for byte in range(0x80, 0xA0)
     if byte not in (0x81, 0x8D, 0x8F, 0x90, 0x9D)  # sem caractere no windows-1252
 }
+
 _ERROR_CLASS_RE = re.compile(r"error|erro|mensagem.*erro", re.I)
 _FORM_ID_RE = re.compile(r"form|consulta", re.I)
 _PAGINATION_CLASS_RE = re.compile(r".*pag.*", re.I)
@@ -221,6 +225,7 @@ def cjsg_n_pags(html_source: str) -> int:
 
 def _normalize_key(label: str) -> str:
     key = label.replace(":", "").strip().lower()
+    key = _GENDER_MARKER_RE.sub("", key)
     key = unidecode.unidecode(key)
     key = key.replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
     key = key.replace("_de_", "_").replace("_do_", "_")
