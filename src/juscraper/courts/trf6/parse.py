@@ -26,7 +26,7 @@ _CAPA_FIELD_IDS = {
     "txtNumProcesso": "processo",
     "txtAutuacao": "data_autuacao",
     "txtSituacao": "situacao",
-    "txtMagistrado": "magistrado",
+    "txtMagistrado": "relator",
     "txtClasse": "classe",
 }
 
@@ -210,7 +210,7 @@ em vez de sair só com ``id_cnj`` e ``motivo_falha``.
 def parse_detail(html: str) -> dict[str, Any]:
     """Parse a TRF6 detail page into a flat record.
 
-    Keys: ``processo``, ``data_autuacao``, ``situacao``, ``magistrado``,
+    Keys: ``processo``, ``data_autuacao``, ``situacao``, ``relator``,
     ``classe``, ``orgao_julgador``, ``assuntos`` (list), ``polo_ativo``,
     ``polo_passivo``, ``mpf``, ``perito`` (each a list), ``movimentacoes``
     (list). Any pole the table doesn't have comes back as an empty list.

@@ -184,13 +184,14 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
-### eSAJ `cjpg`: from the `magistrado` column to `relator`
+### eSAJ `cjpg` and TRF6 `cpopg`: from the `magistrado` column to `relator`
 
 The eSAJ first-instance search (`cjpg`, in TJSP and TJMS) labels the judge as
 "Magistrado:", and the parser used to turn the label into a `magistrado`
 column. The column is now `relator`, the name used by `cjsg` and by the
 `cjpg` of the other courts (TJES and TJTO), also for first-instance
-decisions. There is no deprecation cycle: a DataFrame cannot keep both names
+decisions. The TRF6 `cpopg` (eproc) made the same change for the judge on
+the case cover. There is no deprecation cycle: a DataFrame cannot keep both names
 without duplicating the data.
 
 ```python
