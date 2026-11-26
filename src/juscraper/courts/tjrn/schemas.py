@@ -58,7 +58,5 @@ class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     classe: str | None = None
     colegiado: str | None = None
     tipo_decisao: str | None = None
-    # Valores do seletor "Sistema" do portal (``field-sistema.js``). O backend
-    # diferencia maiusculas: "pje" ou outro valor da 0 resultados sem aviso.
-    sistema: Literal["", "PJE", "SAJ"] | None = None
+    sistema: str | None = None
     sigiloso: bool | str | None = None

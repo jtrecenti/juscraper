@@ -389,10 +389,9 @@ def test_cjsg_grau_envia_valor_do_portal(mocker):
 
 @pytest.mark.parametrize("valor", [2, "3", "Primeiro"])
 def test_cjsg_grau_fora_do_portal_levanta_validation_error(valor):
-    """Valores fora dos radios do portal davam 0 resultados (``"3"``,
-    ``"Primeiro"``) ou eram ignorados (o inteiro ``2``, que o schema ja
-    recusava); todos levantam ``ValidationError`` antes de qualquer
-    requisicao."""
+    """Valores fora dos radios do portal (``"3"``, ``"Primeiro"``) davam 0
+    resultados sem aviso; agora levantam ``ValidationError`` antes de qualquer
+    requisicao. O inteiro ``2`` ja levantava, e o caso fica pinado."""
     with pytest.raises(ValidationError, match="grau"):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, grau=valor)
 
