@@ -51,9 +51,6 @@ _PAGINATION_COUNT_PATTERNS = (
     re.compile(r"(?<=de )\d+"),
     re.compile(r"\d+(?=\s*(?:resultado|registro|página))", re.I),
 )
-# Chaves cujas variantes de rótulo (maiúsculas, "Orgão" sem acento, os
-# rótulos corrompidos de ``_TYPO_FIXES``) se reduzem ao nome canônico.
-_CANONICAL_KEYS = ("data_publicacao", "orgao_julgador")
 
 
 def _raise_page_error(soup: BeautifulSoup) -> None:
@@ -277,22 +274,13 @@ def _extract_ementa(detail_row: Tag) -> str:
     return text.removeprefix("Ementa:").strip()
 
 
-def _canonicalize_key(key: str) -> str:
-    """Leva a chave que contém um nome de ``_CANONICAL_KEYS`` a esse nome.
-
-    Só a chave muda: o rótulo já saiu do valor em ``_extract_labeled_value``,
-    e um texto igual ao rótulo no meio do valor é conteúdo da decisão.
-    """
-    return next((canonical for canonical in _CANONICAL_KEYS if canonical in key), key)
-
-
 def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
     full_text = detail_row.get_text(" ", strip=True)
     value = _clean_value(full_text.replace(label, "", 1).strip().lstrip(":").strip())
     key = _normalize_key(label)
     if key == "outros_numeros":
         return None
-    return _canonicalize_key(key), value
+    return key, value
 
 
 def _extract_detail(detail_row: Tag, data: dict) -> None:
