@@ -4,6 +4,8 @@ TJPA's BFF paginates 0-based: user-facing ``paginas=1`` sends ``page=0``.
 The contract asserts both the DataFrame schema and the JSON payload — in
 particular that the 0-based conversion actually happens on the wire.
 """
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -82,3 +84,27 @@ def test_cjsg_download_pausa_so_entre_requisicoes(mocker, paginas, pausas):
     jus.scraper("tjpa").cjsg_download("dano moral", paginas=paginas)
 
     assert sleep.call_args_list == [mocker.call(1)] * pausas
+
+
+@pytest.mark.parametrize(("sample", "sem_ementa"), [
+    ("cjsg/single_page.json", 4),
+    ("cjsg/results_normal_page_01.json", 6),
+])
+@responses.activate
+def test_cjsg_decisao_sem_ementa_sai_ausente(mocker, sample, sem_ementa):
+    """Monocrática com ``ementatextopuro`` vazio sai com ementa ausente, não ``""``."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 1, sample)
+    itens = json.loads(load_sample("tjpa", sample))["data"]["content"]
+
+    df = jus.scraper("tjpa").cjsg("dano moral", paginas=1)
+
+    assert len(df) == len(itens)
+    for ementa, item in zip(df["ementa"], itens, strict=True):
+        if item["ementatextopuro"].strip():
+            assert isinstance(ementa, str)
+            assert ementa
+        else:
+            assert pd.isna(ementa)
+            assert item["tipo"] == "Decisão Monocrática"
+    assert df["ementa"].isna().sum() == sem_ementa
