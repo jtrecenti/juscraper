@@ -11,6 +11,9 @@ Consolidam lógica duplicada hoje em vários ``courts/<xx>/parse.py``:
   repetido em ~13 tribunais.
 * ``clean_document_text`` limpa o texto bruto de documento dos agregadores
   JusBR e PDPJ, que servem a mesma API da PDPJ-CNJ.
+* ``normalizar_texto`` e ``normalizar_colunas_texto`` tiram do texto corrido
+  (ementa, decisão, inteiro teor) os caracteres que atrapalham a busca, sem
+  mexer em quebras de linha nem em espaços.
 
 Uso (a partir das Fases 1-4 do refactor #194)::
 
@@ -22,11 +25,18 @@ from __future__ import annotations
 
 import html
 import re
+from collections.abc import Iterable
+from typing import overload
 
 import pandas as pd
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _WHITESPACE_RE = re.compile(r"\s+")
+
+# Caracteres invisíveis que separam letras de uma mesma palavra: ``"MANDADO\u200c
+# \u200cDE"`` no TJES, ``"§\xad 3º"`` no TJPI. Hífen discricionário e os de
+# largura zero (espaço, não-agregador e agregador).
+_INVISIVEIS = ("\xad", "\u200b", "\u200c", "\u200d")
 
 
 def clean_html(text: str | None, decode_entities: bool = True) -> str | None:
@@ -90,6 +100,63 @@ def coerce_date_columns(
     return df
 
 
+@overload
+def normalizar_texto(texto: str) -> str: ...
+
+
+@overload
+def normalizar_texto(texto: object) -> object: ...
+
+
+def normalizar_texto(texto: object) -> object:
+    r"""Normaliza fins de linha, espaço não separável e caracteres invisíveis.
+
+    Troca ``\r\n`` e ``\r`` por ``\n`` e ``\xa0`` por espaço comum, e remove
+    o hífen discricionário (``\xad``) e os caracteres de largura zero
+    (``\u200b``, ``\u200c`` e ``\u200d``). Uma busca por ``"art. 14"`` passa a
+    achar o texto que o tribunal escreveu ``"art.\xa014"``.
+
+    Não colapsa espaços, não remove tabulações e preserva as quebras de
+    linha, que separam os parágrafos. Serve a colunas de texto corrido; as
+    colunas só de HTML ou RTF (``*_html``, ``*_rtf``) devem ficar como vieram.
+
+    Args:
+        texto: Valor da coluna. O que não for ``str`` (``None``, ``NaN``,
+            números) volta sem alteração.
+
+    Returns:
+        O texto normalizado, ou o próprio valor quando não é ``str``.
+    """
+    if not isinstance(texto, str):
+        return texto
+    texto = texto.replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
+    # ``replace`` em sequência sai bem mais barato que ``translate`` em texto
+    # acentuado, e não aloca nada quando o caractere não aparece.
+    for invisivel in _INVISIVEIS:
+        texto = texto.replace(invisivel, "")
+    return texto
+
+
+def normalizar_colunas_texto(df: pd.DataFrame, colunas: Iterable[str]) -> pd.DataFrame:
+    """Aplica :func:`normalizar_texto` às colunas de texto corrido de ``df``.
+
+    Mutação **in-place** + retorno, como :func:`coerce_date_columns`. Colunas
+    ausentes em ``df`` são ignoradas; valores que não são ``str`` ficam como
+    estão.
+
+    Args:
+        df: DataFrame alvo.
+        colunas: Nomes das colunas de texto corrido.
+
+    Returns:
+        O próprio ``df``.
+    """
+    for coluna in colunas:
+        if coluna in df.columns:
+            df[coluna] = df[coluna].map(normalizar_texto)
+    return df
+
+
 def clean_document_text(text: str | None) -> str | None:
     """Remove caracteres de controle e normaliza quebras de linha e espaços do texto bruto.
 
@@ -102,8 +169,6 @@ def clean_document_text(text: str | None) -> str | None:
     """
     if not text:
         return None
-    cleaned = text.replace("\x00", "").replace("\x1a", "")
-    cleaned = cleaned.replace("\r\n", "\n").replace("\r", "\n")
-    cleaned = cleaned.replace("\xa0", " ")
+    cleaned = normalizar_texto(text.replace("\x00", "").replace("\x1a", ""))
     cleaned = cleaned.replace("\u2028", "\n").replace("\u2029", "\n")
     return cleaned.strip() or None
