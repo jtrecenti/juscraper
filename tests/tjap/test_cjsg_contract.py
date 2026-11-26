@@ -1,4 +1,6 @@
 """Offline contract tests for TJAP cjsg."""
+import json
+
 import pandas as pd
 import pytest
 import responses
@@ -121,9 +123,21 @@ def test_cjsg_security_check_raises(mocker):
 
 @responses.activate
 def test_cjsg_generic_error_raises(mocker):
-    """Any other ERRO envelope raises TJAPApiError carrying the backend message."""
+    """Any other ERRO envelope raises TJAPApiError carrying the backend message.
+
+    O único envelope de erro observado é o da verificação de segurança; o
+    Turnstile barra a busca antes de qualquer outro erro, então o envelope
+    genérico é o real com outra ``mensagem``.
+    """
     mocker.patch("time.sleep")
-    _add_page("dano moral", "cjsg/generic_error.json")
+    envelope = json.loads(load_sample("tjap", "cjsg/security_check_failed.json"))
+    envelope["mensagem"] = "Erro interno ao processar a consulta."
+    responses.add(
+        responses.POST,
+        BASE,
+        json=envelope,
+        match=[json_params_matcher(_payload("dano moral"))],
+    )
 
     with pytest.raises(TJAPApiError) as exc_info:
         jus.scraper("tjap").cjsg("dano moral", paginas=1)
