@@ -35,7 +35,8 @@ uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 | Parâmetros, aliases, datas, paginação | `docs/api-conventions.qmd` e `CONTRIBUTING.md` > **Política de deprecação** |
 | Schemas pydantic | `CONTRIBUTING.md` > **Schemas pydantic** |
 | Docstrings com filtros em `**kwargs` | `CONTRIBUTING.md` > **Docstrings de métodos públicos com kwargs** |
-| HTTP, retry, falhas por linha, coleta parcial, contagem de páginas | `CONTRIBUTING.md` > **Falhas HTTP, falhas por linha e coleta parcial** |
+| HTTP, retry, falhas por linha, coleta parcial | `CONTRIBUTING.md` > **Falhas HTTP, falhas por linha e coleta parcial** |
+| Contagem de páginas/resultados em HTML | `CONTRIBUTING.md` > **Contagem de páginas e resultados em HTML** |
 | Samples, integração, CI | `CONTRIBUTING.md` > **Tests** |
 | Lint e complexidade | `CONTRIBUTING.md` > **Política de lint e adoção gradual** e **Complexidade de código (lizard + complexipy)** |
 

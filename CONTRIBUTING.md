@@ -413,7 +413,7 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 - O auto-chunk do eSAJ pode seguir após falhas múltiplas e registra cada uma em `.falhas`; ele e o DataJud podem levantar `ColetaParcialError` com resultado vazio.
 - Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais.
 
-### Contagem de páginas e resultados em HTML
+## Contagem de páginas e resultados em HTML
 
 Ao alterar contagens, usar seleção e extração em cascata para os formatos observados nos samples. Consultar `src/juscraper/courts/_esaj/parse.py::cjsg_n_results` para eSAJ e `src/juscraper/utils/pagination.py::extract_count_with_cascade` para o helper compartilhado. O fallback pelo maior número exige evidência do layout; não o ativar por padrão, pois pode capturar anos ou identificadores. Cada formato suportado precisa de sample e teste.
 

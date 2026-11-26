@@ -78,7 +78,9 @@ def test_cjpg_pagina_no_host_do_tjms_e_traz_os_codigos_da_sentenca(tmp_path, moc
     df = jus.scraper("tjms", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
 
     assert len(df) == 20
-    assert set(df.columns) >= {"id_processo", "cd_processo", "cd_foro", "nm_alias", "cd_documento", "decisao"}
+    assert set(df.columns) >= {
+        "id_processo", "cd_processo", "cd_foro", "nm_alias", "cd_documento", "relator", "decisao",
+    }
     # A ordem das páginas no DataFrame segue a do diretório, não a numérica.
     (linha,) = df[df["cd_documento"] == CD_DOCUMENTO].itertuples()
     assert (linha.cd_processo, linha.cd_foro, linha.nm_alias, linha.cd_documento) == (

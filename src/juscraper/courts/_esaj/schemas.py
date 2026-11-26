@@ -111,6 +111,11 @@ class OutputCJPGEsaj(BaseModel):
     ``cjpg`` nao entrega ementa nem ``processo`` formatado em CNJ — so o par
     de IDs internos (``id_processo`` / ``cd_processo``) que permitem seguir
     para a consulta de 1o grau.
+
+    O juiz que proferiu a decisao (rotulo ``"Magistrado:"`` na pagina) sai em
+    ``relator``, o nome canonico do ``cjsg``. O campo e declarado aqui, e nao
+    herdado de ``OutputRelatoriaMixin``, porque o mixin traz tambem
+    ``orgao_julgador``, que o ``cjpg`` nao tem.
     """
 
     id_processo: str
@@ -118,5 +123,6 @@ class OutputCJPGEsaj(BaseModel):
     cd_foro: str | None = None
     nm_alias: str | None = None
     cd_documento: str | None = None
+    relator: str | None = None
 
     model_config = ConfigDict(extra="allow")
