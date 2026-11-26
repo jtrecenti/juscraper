@@ -65,3 +65,31 @@ class TestCJSGTJRN:
         hits = brutos[0]["hits"]["hits"]
         assert hits
         assert {h["_source"]["tipo_teor"] for h in hits} == {decisoes}
+
+    @pytest.mark.parametrize(("jurisdicoes", "eh_turma"), [("TJ", False), ("TR", True)])
+    def test_filtro_jurisdicoes_traz_so_a_jurisdicao_pedida(self, jurisdicoes, eh_turma):
+        """Cada valor de ``jurisdicoes`` traz so colegiados da jurisdicao pedida.
+
+        ``"TJ"`` traz orgaos do Tribunal de Justica e ``"TR"``, Turmas Recursais
+        e Turma de Uniformizacao; a jurisdicao e conferida pelo ``colegiado``.
+        """
+        df = self.scraper.cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
+        assert len(df) > 0
+        turmas = ("Turma Recursal", "Turma de Uniformização")
+        assert all(any(t in c for t in turmas) == eh_turma for c in df["colegiado"])
+
+    def test_filtro_jurisdicoes_com_primeiro_grau_volta_vazio(self):
+        """``"TR"`` com ``grau="1"`` volta sem resultados e sem erro.
+
+        ``"TJ"`` e ``"TR"`` so cobrem o 2o grau. Vai sem termo, por periodo,
+        porque decisoes de 1o grau nao tem ementa, onde ``pesquisa`` busca.
+        """
+        brutos = self.scraper.cjsg_download(
+            "",
+            paginas=1,
+            jurisdicoes="TR",
+            grau="1",
+            data_julgamento_inicio="2026-11-01",
+            data_julgamento_fim="2026-11-20",
+        )
+        assert brutos[0]["hits"]["hits"] == []

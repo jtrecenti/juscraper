@@ -37,7 +37,10 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     # compara com ``tipo_teor``: "Decisão" sao as monocraticas, "Acórdão" as
     # colegiadas e "Sentença" as de 1o grau. Vazio (ou ``None``) busca todas.
     decisoes: Literal["", "Decisão", "Acórdão", "Sentença"] | None = None
-    jurisdicoes: str | None = None
+    # Valores do seletor "Jurisdicoes" do portal (``field-jurisdicao.js``): "TJ"
+    # (Tribunal de Justica) e "TR" (Turmas Recursais e TUJ). Vazio (ou ``None``)
+    # busca todas. Os nomes por extenso fazem o portal responder 502/503.
+    jurisdicoes: Literal["", "TJ", "TR"] | None = None
     grau: str | None = None
 
 
