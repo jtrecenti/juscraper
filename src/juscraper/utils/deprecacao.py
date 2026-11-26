@@ -7,15 +7,18 @@ os dois casos: troca o nome antigo e converte o valor.
 """
 from __future__ import annotations
 
-from collections.abc import Hashable, Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, TypeVar
+
+from pydantic import TypeAdapter, ValidationError
 
 from ..core.avisos import avisar
 
 V = TypeVar("V")
 
-#: Valores de ``inteiro_teor`` (bool), alias deprecado de ``buscar_em`` no STF e no TJDFT.
-BUSCAR_EM_DE_INTEIRO_TEOR: Mapping[Any, str] = {True: "inteiro_teor", False: "ementa"}
+_BOOL = TypeAdapter(bool)
+#: Conversao do valor antigo no canonico: mapa, ou funcao que devolve ``None`` para valor desconhecido.
+_Valores = Mapping[Any, str] | Callable[[object], "str | None"]
 
 
 def resolve_deprecated_value(valor: V, substitutos: Mapping[str, V], mensagem: str) -> V:
@@ -45,11 +48,32 @@ def resolve_deprecated_value(valor: V, substitutos: Mapping[str, V], mensagem: s
     return novo
 
 
+def buscar_em_de_inteiro_teor(valor: object) -> str | None:
+    """Converte ``inteiro_teor``, alias deprecado de ``buscar_em`` no STF e no TJDFT.
+
+    Le o valor como o schema lia o ``bool`` antigo (``True``, ``1``,
+    ``"true"``...). ``None`` quando o valor nao e booleano.
+    """
+    try:
+        return "inteiro_teor" if _BOOL.validate_python(valor) else "ementa"
+    except ValidationError:
+        return None
+
+
+def _converter(valores: _Valores, valor: object) -> str | None:
+    if callable(valores):
+        return valores(valor)
+    try:
+        return valores.get(valor)
+    except TypeError:  # valor sem hash: o schema o recusa
+        return None
+
+
 def resolve_buscar_em(
     kwargs: dict[str, Any],
     antigo: str,
-    buscar_em: str | None = None,
-    valores: Mapping[Any, str] | None = None,
+    buscar_em: object = None,
+    valores: _Valores | None = None,
 ) -> None:
     """Grava em ``kwargs["buscar_em"]`` o valor de ``buscar_em`` ou do nome antigo, convertido.
 
@@ -58,15 +82,20 @@ def resolve_buscar_em(
     escolhiam o campo com outro nome (``campo``, ``query_scope``,
     ``inteiro_teor``) e outros valores (``"E"``/``"I"``, ``"inteiroTeor"``,
     ``True``/``False``) aceitam o nome antigo como alias deprecado.
+    ``valores`` converte o valor antigo no canonico: um mapa ou uma funcao
+    que devolve ``None`` para valor que nao conhece. Sem ``valores``, os
+    valores sao os mesmos.
 
     - ``buscar_em`` vem no argumento, quando e parametro explicito do metodo
       (sentinela ``None``), ou em ``kwargs``, quando chega por ``**kwargs``.
-    - ``antigo`` ausente de ``kwargs``: grava ``buscar_em``, se informado.
-    - ``antigo`` presente: sai de ``kwargs``, o valor passa por ``valores``
-      (valor fora do mapa segue igual, para o schema recusa-lo) e vira
-      ``buscar_em``, com ``DeprecationWarning`` que diz o valor novo.
+    - ``antigo`` presente: sai de ``kwargs`` e o valor convertido vira
+      ``buscar_em``, com ``DeprecationWarning``. Valor que ``valores`` nao
+      conhece segue igual, para o schema recusa-lo.
     - ``antigo`` e ``buscar_em`` juntos: ``ValueError``, sem aviso, como em
       :func:`~juscraper.utils.params.resolve_deprecated_alias`.
+    - Valor antigo em ``buscar_em`` (o parametro antigo passado por posicao,
+      como ``cjsg("dano", 1, "I")`` no TJSC): convertido, com
+      ``DeprecationWarning``.
 
     O schema do tribunal valida o resultado, e sem ``buscar_em`` nem
     ``antigo`` vale o default dele.
@@ -74,16 +103,38 @@ def resolve_buscar_em(
     if buscar_em is None:
         buscar_em = kwargs.pop("buscar_em", None)
     if antigo in kwargs:
-        valor = kwargs.pop(antigo)
         if buscar_em is not None:
+            kwargs.pop(antigo)
             raise ValueError(
                 f"Não é possível passar 'buscar_em' e '{antigo}' ao mesmo tempo. Use apenas 'buscar_em'."
             )
-        mapa = valores or {}
-        buscar_em = mapa[valor] if isinstance(valor, Hashable) and valor in mapa else valor
-        avisar(
-            f"O parâmetro '{antigo}' está deprecado. Use buscar_em={buscar_em!r} em vez de {antigo}={valor!r}.",
-            DeprecationWarning,
-        )
+        buscar_em = _valor_do_alias(antigo, kwargs.pop(antigo), valores)
+    elif buscar_em is not None and valores is not None:
+        buscar_em = _valor_antigo_em_buscar_em(antigo, buscar_em, valores)
     if buscar_em is not None:
         kwargs["buscar_em"] = buscar_em
+
+
+def _valor_do_alias(antigo: str, valor: object, valores: _Valores | None) -> object:
+    """Converte o valor do alias, com aviso; o aviso so sugere valor que a conversao conhece."""
+    novo = valor if valores is None else _converter(valores, valor)
+    if valores is None:
+        sugestao = "Use 'buscar_em', com o mesmo valor."
+    elif novo is None:
+        sugestao = "Use 'buscar_em'."
+    else:
+        sugestao = f"Use buscar_em={novo!r} em vez de {antigo}={valor!r}."
+    avisar(f"O parâmetro '{antigo}' está deprecado. {sugestao}", DeprecationWarning)
+    return valor if novo is None else novo
+
+
+def _valor_antigo_em_buscar_em(antigo: str, buscar_em: object, valores: _Valores) -> object:
+    """Converte, com aviso, o valor antigo passado em ``buscar_em`` (o parametro antigo por posicao)."""
+    novo = _converter(valores, buscar_em)
+    if novo is None or novo == buscar_em:
+        return buscar_em
+    avisar(
+        f"buscar_em={buscar_em!r} é valor do parâmetro deprecado '{antigo}'. Use buscar_em={novo!r}.",
+        DeprecationWarning,
+    )
+    return novo

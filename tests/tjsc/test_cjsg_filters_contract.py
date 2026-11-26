@@ -289,8 +289,30 @@ def test_cjsg_alias_campo_junto_com_buscar_em_levanta():
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize("kwargs", [{"buscar_em": "E"}, {"buscar_em": "numero"}, {"campo": "X"}])
+@pytest.mark.parametrize("kwargs", [{"buscar_em": "inteiroTeor"}, {"buscar_em": "numero"}, {"campo": "X"}])
 def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(kwargs):
-    """O TJSC so tem ementa e inteiro teor; o valor antigo ``"E"`` nao vale em ``buscar_em``."""
+    """O TJSC so tem ementa e inteiro teor."""
     with pytest.raises(ValidationError, match="buscar_em"):
         jus.scraper("tjsc").cjsg("dano moral", paginas=1, **kwargs)
+
+
+@responses.activate
+def test_cjsg_campo_por_posicao_vira_buscar_em_com_aviso(mocker):
+    """``campo`` era o terceiro parametro; ``cjsg("x", 1, "I")`` cai em ``buscar_em``
+    e continua buscando no inteiro teor."""
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        cjsg_url_for_page(1),
+        body=load_sample_bytes("tjsc", "cjsg/no_results.html"),
+        status=200,
+        content_type="text/html; charset=iso-8859-1",
+        match=[urlencoded_params_matcher(
+            build_cjsg_form_body("dano moral", page=1, buscar_em="inteiro_teor"), allow_blank=True,
+        )],
+    )
+
+    with pytest.warns(DeprecationWarning, match="buscar_em='I' é valor do parâmetro deprecado 'campo'"):
+        jus.scraper("tjsc").cjsg("dano moral", 1, "I")
+
+    assert corpo_form_enviado(responses.calls[0].request)["rdoCampo"] == "I"

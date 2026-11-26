@@ -263,7 +263,7 @@ def test_cjsg_alias_inteiro_teor_junto_com_buscar_em_levanta():
         jus.scraper("tjdft").cjsg("dano moral", paginas=1, inteiro_teor=False, buscar_em="ementa")
 
 
-@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", True])
+@pytest.mark.parametrize("valor", ["inteiroTeor", "numero", "sim"])
 def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(valor):
     with pytest.raises(ValidationError, match="buscar_em"):
         jus.scraper("tjdft").cjsg("dano moral", paginas=1, buscar_em=valor)

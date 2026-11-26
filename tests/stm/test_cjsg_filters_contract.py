@@ -242,7 +242,7 @@ def test_cjsg_alias_campo_avisa_e_manda_o_mesmo_que_buscar_em(mocker, valor):
     _add_single_page()
     _add_single_page()
 
-    with pytest.warns(DeprecationWarning, match=f"buscar_em='{valor}' em vez de campo='{valor}'"):
+    with pytest.warns(DeprecationWarning, match="'campo' está deprecado. Use 'buscar_em', com o mesmo valor"):
         jus.scraper("stm").cjsg("7000612", paginas=1, campo=valor)
     jus.scraper("stm").cjsg("7000612", paginas=1, buscar_em=valor)
 

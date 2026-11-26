@@ -193,7 +193,9 @@ STM, TJSC, TJPA, STF and TJDFT used their own names and values to pick
 where to look for `pesquisa`. They now take `buscar_em`, with `"ementa"` or
 `"inteiro_teor"`. The old names still work with a `DeprecationWarning`,
 which names the new value, and will be removed in 0.7.0. Passing an old name
-together with `buscar_em` raises `ValueError`.
+together with `buscar_em` raises `ValueError`. An old value given to
+`buscar_em`, which is where the old parameter lands when passed by position
+(`tjsc.cjsg("dano moral", 1, "I")`), is converted with a warning too.
 
 | Tribunal | Before | After |
 |----------|--------|-------|

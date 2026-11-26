@@ -9,7 +9,7 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
-from juscraper.utils.deprecacao import BUSCAR_EM_DE_INTEIRO_TEOR, resolve_buscar_em
+from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
@@ -72,7 +72,7 @@ class TJDFTScraper(HTTPScraper):
         )
         if tamanho_pagina is not None:
             kwargs["tamanho_pagina"] = tamanho_pagina
-        resolve_buscar_em(kwargs, "inteiro_teor", buscar_em, BUSCAR_EM_DE_INTEIRO_TEOR)
+        resolve_buscar_em(kwargs, "inteiro_teor", buscar_em, buscar_em_de_inteiro_teor)
         inp = apply_input_pipeline_search(
             InputCJSGTJDFT,
             "TJDFTScraper.cjsg_download()",
@@ -161,7 +161,9 @@ class TJDFTScraper(HTTPScraper):
             * ``quantidade_por_pagina`` -> ``tamanho_pagina``
             * ``inteiro_teor`` -> ``buscar_em``: ``inteiro_teor=True`` vira
               ``buscar_em="inteiro_teor"`` e ``inteiro_teor=False``,
-              ``buscar_em="ementa"``
+              ``buscar_em="ementa"``. ``True``/``False`` em ``buscar_em``
+              (``inteiro_teor`` por posicao em ``cjsg_download``) tambem sao
+              convertidos, com aviso
 
         Raises:
             TypeError: Quando ``pesquisa`` falta ou quando todos os erros são

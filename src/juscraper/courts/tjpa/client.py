@@ -177,7 +177,8 @@ class TJPAScraper(HTTPScraper):
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
             * ``query_scope`` -> ``buscar_em``: ``"ementa"`` continua
               ``"ementa"``; ``"inteiroTeor"`` e ``"inteiroteor"`` viram
-              ``"inteiro_teor"``
+              ``"inteiro_teor"``, tambem quando passados em ``buscar_em``
+              (``query_scope`` por posicao), com aviso
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.

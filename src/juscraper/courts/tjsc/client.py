@@ -86,7 +86,9 @@ class TJSCScraper(HTTPScraper):
             * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
             * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
             * ``campo`` -> ``buscar_em``: ``campo="E"`` vira
-              ``buscar_em="ementa"`` e ``campo="I"``, ``buscar_em="inteiro_teor"``
+              ``buscar_em="ementa"`` e ``campo="I"``, ``buscar_em="inteiro_teor"``.
+              ``"E"`` e ``"I"`` em ``buscar_em`` (``campo`` por posicao)
+              tambem sao convertidos, com aviso
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.

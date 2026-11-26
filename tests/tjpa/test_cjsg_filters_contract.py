@@ -257,7 +257,7 @@ def test_cjsg_alias_query_scope_junto_com_buscar_em_levanta():
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.parametrize("kwargs", [{"buscar_em": "inteiroTeor"}, {"buscar_em": "numero"}, {"query_scope": "tudo"}])
+@pytest.mark.parametrize("kwargs", [{"buscar_em": "I"}, {"buscar_em": "numero"}, {"query_scope": "tudo"}])
 def test_cjsg_buscar_em_fora_do_portal_levanta_validation_error(kwargs):
     with pytest.raises(ValidationError, match="buscar_em"):
         jus.scraper("tjpa").cjsg("dano moral", paginas=1, **kwargs)

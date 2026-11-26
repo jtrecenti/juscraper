@@ -10,7 +10,7 @@ import requests
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.core.waf import eh_desafio_waf
-from juscraper.utils.deprecacao import BUSCAR_EM_DE_INTEIRO_TEOR, resolve_buscar_em
+from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em
 from juscraper.utils.params import SEARCH_ALIASES
 
 from ._collection import FILTERS, Collection
@@ -191,7 +191,7 @@ class STFScraper(HTTPScraper):
             :class:`InputListarDecisoesSTF` — schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
-        resolve_buscar_em(kwargs, "inteiro_teor", valores=BUSCAR_EM_DE_INTEIRO_TEOR)
+        resolve_buscar_em(kwargs, "inteiro_teor", valores=buscar_em_de_inteiro_teor)
         inp = search_input(
             InputListarDecisoesSTF, "STFScraper.listar_decisoes()",
             _pesquisa_ou_tudo(pesquisa, kwargs), paginas, kwargs,
@@ -227,7 +227,7 @@ class STFScraper(HTTPScraper):
                 facetas o respeitam, como no portal. Uma decisao pode ter mais de um
                 ministro, entao a soma de ``ministro_facet`` pode passar do total.
         """
-        resolve_buscar_em(kwargs, "inteiro_teor", valores=BUSCAR_EM_DE_INTEIRO_TEOR)
+        resolve_buscar_em(kwargs, "inteiro_teor", valores=buscar_em_de_inteiro_teor)
         inp = search_input(
             InputContarDecisoesSTF, "STFScraper.contar_decisoes()",
             _pesquisa_ou_tudo(pesquisa, kwargs), None, kwargs,
