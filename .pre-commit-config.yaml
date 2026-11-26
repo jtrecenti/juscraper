@@ -35,18 +35,6 @@ repos:
         additional_dependencies: [lizard==1.23.0, complexipy==6.0.1]
         pass_filenames: false
         files: ^src/.*\.py$
-      # Suíte offline inteira em paralelo (~30 s numa máquina de 6 núcleos). Roda
-      # em todo commit porque há testes de docs, workflows e CLAUDE.md, não só de
-      # código.
-      # Dentro do hook o git exporta GIT_DIR e GIT_INDEX_FILE; sem o unset, os
-      # testes que criam repositórios temporários (gates de lint, complexidade e
-      # CI) gravariam commits e refs no repositório de quem está commitando.
-      - id: pytest
-        name: Rodar a suíte offline (pytest em paralelo)
-        entry: bash -c 'unset $(git rev-parse --local-env-vars); exec uv run pytest -n auto'
-        language: system
-        pass_filenames: false
-        always_run: true
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0

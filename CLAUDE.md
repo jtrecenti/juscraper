@@ -6,12 +6,12 @@ juscraper é uma biblioteca Python para coletar dados de tribunais e agregadores
 
 ```bash
 uv sync --extra dev                         # ambiente + instalação editável
-uv run pre-commit install                   # hooks, inclusive a suíte offline
-uv run pytest -n auto                       # suíte offline; exclui integration
+uv run pre-commit install                   # hooks de lint e typecheck
+uv run pytest tests/<área afetada>          # só os testes afetados; a suíte inteira roda no CI
 uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 ```
 
-- Antes de concluir, rodar também os testes afetados; em mudança de API ou schema, incluir `tests/schemas/`.
+- Antes de concluir, rodar só os testes afetados, sem `-n auto`: a suíte offline completa roda no CI de cada PR; em mudança de API ou schema, incluir `tests/schemas/`.
 - Testes importam o pacote instalado, sem alterar `sys.path`.
 - O typecheck que reprova é o hook `mypy` do pre-commit (`uv run pre-commit run mypy --all-files`); `uv run mypy src` usa outra versão e não é gate.
 - `# noqa` só para exceção deliberada, com código completo e justificativa. Dívida de lint se corrige no código, não em `# noqa` nem em `ruff.toml`.
