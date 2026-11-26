@@ -53,14 +53,16 @@ def _extract_ementa(
     criterio: str | None,
     request_fn: RequestFn | None,
     action_type: str = "exibirTextoCompleto",
-) -> str:
+) -> str | None:
     """Ementa da linha, completa quando o portal a trunca em "Leia mais..".
 
     O texto sai do ``div#ementa<id>``, sem o link "Leia mais..", sem a nota "A
     expressão foi encontrada..." do TJ e sem a autoria das ementas da Corte
     IDH, e sem separador entre os nós: o destaque do termo buscado pode cair no
     meio da palavra ("<span>DANO</span>S MORAIS"). Sem ``request_fn`` a ementa
-    fica truncada; o ``criterio`` vazio não impede a busca da completa.
+    fica truncada; o ``criterio`` vazio não impede a busca da completa. A
+    decisão sem ementa (monocrática, em geral) vem com o ``div`` vazio e sai
+    ``None``.
     """
     truncada = "leia mais" in ementa_td.get_text().lower()
     ementa_el = ementa_td.find("div", id=f"ementa{id_registro}") or ementa_td
@@ -69,7 +71,7 @@ def _extract_ementa(
         link.decompose()
     ementa = str(ementa_el.get_text()).strip()
     if not truncada or not id_registro or request_fn is None:
-        return ementa
+        return ementa or None
 
     try:
         return get_ementa_completa(request_fn, action_type, id_registro, criterio or "")

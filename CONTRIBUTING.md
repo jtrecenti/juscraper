@@ -460,7 +460,7 @@ O Output reflete o shape real do parser e usa `extra="allow"` para campos auxili
 Quando o teste reprovar:
 
 - Coluna com nome canônico (conteúdo para quem usa o DataFrame): declarar o campo no `Output*`.
-- Sinônimo de um nome canônico: renomear no parser, como breaking change no `CHANGELOG.md`. Se a renomeação vier em outro PR ou depender de decisão de API, registrar `(tribunal, endpoint, coluna)` em `SINONIMOS_TOLERADOS` com o PR ou a decisão pendente.
+- Sinônimo de um nome canônico: renomear no parser, como breaking change no `CHANGELOG.md`. Se a renomeação vier em outro PR, ou se o nome tiver outro sentido naquela saída (como `assuntos`, a lista de assuntos do processo, ao lado do `assunto` em texto), registrar `(tribunal, endpoint, coluna)` em `SINONIMOS_TOLERADOS` com o PR ou o motivo.
 - Código interno do backend, ao lado de um nome já declarado: registrar em `AUXILIARES_NAO_DECLARADAS` com o motivo.
 - Sample novo que não é página de resultado (formulário, captcha, erro que o parser levanta de propósito) ou que foi escrito à mão com rótulos inventados: pôr em `Leitura.ignorar` com o motivo. Arquivo que o parser não lê e não está ali reprova o teste.
 - Endpoint novo em `EXPECTED_*_OUTPUT_SCHEMAS`: incluir em `LEITURAS` ou, sem sample que o parser leia sozinho, em `SEM_LEITURA` com o motivo.
