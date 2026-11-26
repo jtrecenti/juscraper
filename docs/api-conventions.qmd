@@ -2,7 +2,7 @@
 title: "API Conventions"
 ---
 
-For lifecycle stages and the warning-to-removal process, see the project's [deprecation policy](https://github.com/jtrecenti/juscraper/blob/main/CLAUDE.md#política-de-deprecação).
+For lifecycle stages and the warning-to-removal process, see the project's [deprecation policy](https://github.com/jtrecenti/juscraper/blob/main/CONTRIBUTING.md#política-de-deprecação).
 
 ## Standard Parameter Names
 
@@ -27,6 +27,7 @@ All scrapers in juscraper follow a unified API convention for parameter names.
 
 **Generic aliases:** `data_inicio` / `data_fim` map to `data_julgamento_inicio` / `data_julgamento_fim`.
 Cannot be used together with the specific names — raises `ValueError`.
+They do not apply to DataJud `listar_processos`, which filters by filing date: use `data_ajuizamento_inicio` / `data_ajuizamento_fim`.
 
 **Deprecated aliases:** `data_julgamento_de` / `data_julgamento_ate`, `data_publicacao_de` / `data_publicacao_ate` — accepted with `DeprecationWarning`.
 
