@@ -81,7 +81,6 @@ def test_cjpg_pagina_no_host_do_tjms_e_traz_os_codigos_da_sentenca(tmp_path, moc
     assert set(df.columns) >= {
         "id_processo", "cd_processo", "cd_foro", "nm_alias", "cd_documento", "relator", "decisao",
     }
-    assert "magistrado" not in df.columns
     # A ordem das páginas no DataFrame segue a do diretório, não a numérica.
     (linha,) = df[df["cd_documento"] == CD_DOCUMENTO].itertuples()
     assert (linha.cd_processo, linha.cd_foro, linha.nm_alias, linha.cd_documento) == (

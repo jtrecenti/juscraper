@@ -23,7 +23,8 @@ import pytest
 from juscraper.courts._esaj.cjpg_parse import cjpg_parse_single
 from tests._helpers import load_sample
 
-_SAMPLES = Path(__file__).parent / "samples" / "cjpg"
+_TESTS = Path(__file__).parents[1]
+_SAMPLES = _TESTS / "tjsp" / "samples" / "cjpg"
 
 
 def _resumir(df):
@@ -79,7 +80,7 @@ def test_rotulo_magistrado_sai_na_coluna_relator(tribunal, captura):
 
     É o nome canônico do ``cjsg`` e dos demais tribunais, também no 1º grau.
     """
-    df = cjpg_parse_single(_SAMPLES.parents[2] / tribunal / "samples" / "cjpg" / captura)
+    df = cjpg_parse_single(_TESTS / tribunal / "samples" / "cjpg" / captura)
 
     assert "magistrado" not in df.columns
     assert df["relator"].notna().all()
