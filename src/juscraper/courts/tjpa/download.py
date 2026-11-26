@@ -2,7 +2,6 @@
 Downloads raw results from the TJPA jurisprudence search.
 """
 import json
-from datetime import date, timedelta
 
 import requests
 
@@ -19,11 +18,6 @@ CJSG_HEADERS = {
     "Referer": SITE_URL + "/",
     "Origin": SITE_URL,
 }
-
-
-def _dia_anterior(data_iso: str) -> str:
-    """Recua um dia uma data ``YYYY-MM-DD``."""
-    return (date.fromisoformat(data_iso) - timedelta(days=1)).isoformat()
 
 
 def build_cjsg_payload(
@@ -47,12 +41,10 @@ def build_cjsg_payload(
 ) -> dict:
     """Monta o corpo JSON da busca de jurisprudencia do TJPA.
 
-    O BFF desloca o filtro de data de julgamento em um dia: com
-    ``dataJulgamentoInicio`` = ``dataJulgamentoFim`` = D, devolve os acordaos
-    cujo ``datajulgamento`` e D+1. O ``datajulgamento`` devolvido e o certo
-    (bate com o inicio da sessao escrito no inteiro teor), entao as duas
-    datas de julgamento vao ao corpo um dia antes do pedido. O filtro de
-    publicacao nao tem o desvio e segue como recebido (#508).
+    As datas vao ao corpo como recebidas. Em 15/11/2026 o BFF deslocava o
+    filtro de data de julgamento em um dia (#508); em 26/11/2026, com
+    ``dataJulgamentoInicio`` = ``dataJulgamentoFim`` = D, ele ja devolve os
+    acordaos cujo ``datajulgamento`` e D, e a compensacao foi retirada.
     """
     if origem is None:
         origem = ["tribunal de justiça do estado do pará"]
@@ -80,9 +72,9 @@ def build_cjsg_payload(
     if assunto:
         payload["assunto"] = assunto
     if data_julgamento_inicio:
-        payload["dataJulgamentoInicio"] = _dia_anterior(data_julgamento_inicio)
+        payload["dataJulgamentoInicio"] = data_julgamento_inicio
     if data_julgamento_fim:
-        payload["dataJulgamentoFim"] = _dia_anterior(data_julgamento_fim)
+        payload["dataJulgamentoFim"] = data_julgamento_fim
     if data_publicacao_inicio:
         payload["dataPublicacaoInicio"] = data_publicacao_inicio
     if data_publicacao_fim:

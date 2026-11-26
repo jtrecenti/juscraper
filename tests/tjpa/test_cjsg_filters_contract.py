@@ -76,13 +76,42 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         "orgaoJulgadorColegiado": "1a Turma",
         "classe": "Apelacao",
         "assunto": "Dano moral",
-        # O BFF devolve o julgado em D+1 para o filtro D: o julgamento vai um
-        # dia antes do pedido, inclusive na virada de ano; publicacao, nao (#508).
-        "dataJulgamentoInicio": "2023-12-31",
-        "dataJulgamentoFim": "2024-03-30",
+        # As datas de julgamento vao como pedidas: o BFF deixou de deslocar o
+        # filtro em um dia, e a compensacao do #508 trazia o dia anterior.
+        "dataJulgamentoInicio": "2024-01-01",
+        "dataJulgamentoFim": "2024-03-31",
         "dataPublicacaoInicio": "2024-02-01",
         "dataPublicacaoFim": "2024-04-30",
     }
+
+
+@responses.activate
+def test_cjsg_janela_de_um_dia_vai_como_pedida(mocker):
+    """A busca de um dia so envia esse dia nas duas pontas da janela de julgamento.
+
+    Em 26/11/2026, o BFF ja devolvia para ``dataJulgamentoInicio`` =
+    ``dataJulgamentoFim`` = D os julgados em D; recuar a janela em um dia
+    (compensacao do #508) trazia so os julgados do dia anterior.
+    """
+    mocker.patch("time.sleep")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=load_sample("tjpa", "cjsg/no_results.json"),
+        status=200,
+        content_type="application/json",
+    )
+
+    jus.scraper("tjpa").cjsg(
+        "",
+        paginas=1,
+        data_julgamento_inicio="13/03/2025",
+        data_julgamento_fim="13/03/2025",
+    )
+
+    body = json.loads(responses.calls[0].request.body)
+    assert body["dataJulgamentoInicio"] == "2025-03-13"
+    assert body["dataJulgamentoFim"] == "2025-03-13"
 
 
 @responses.activate
