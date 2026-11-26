@@ -172,14 +172,16 @@ def test_documentos_lista_normal():
 
 @responses.activate
 def test_documentos_lista_vazia():
+    """Processo sem documentos: a resposta real com ``documentos`` vazio."""
+    resposta = json.loads(load_sample("pdpj", "documentos/lista_normal.json"))
+    resposta["documentos"] = []
     responses.add(
         responses.GET,
-        f"{BASE_URL}/processos/00000000000000000000/documentos",
-        body=load_sample("pdpj", "documentos/lista_vazia.json"),
+        f"{BASE_URL}/processos/10029886420194014100/documentos",
+        json=resposta,
         status=200,
-        content_type="application/json",
     )
-    df = _mk_scraper().documentos("00000000000000000000")
+    df = _mk_scraper().documentos("10029886420194014100")
     assert df.empty
 
 

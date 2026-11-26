@@ -87,14 +87,10 @@ def _caminho(arquivo: Path) -> tuple:
 
 
 def _paginas(arquivo: Path) -> tuple:
-    """``([pagina],)``: HTML como texto, JSON decodificado.
-
-    Um JSON que já é lista de páginas (o ``parser_edge_cases`` do TJES) vai como está.
-    """
+    """``([pagina],)``: HTML como texto, JSON decodificado."""
     if arquivo.suffix != ".json":
         return ([_texto(arquivo)],)
-    bruto = _json(arquivo)
-    return (bruto if isinstance(bruto, list) else [bruto],)
+    return ([_json(arquivo)],)
 
 
 def _json_solto(arquivo: Path) -> tuple:
@@ -216,7 +212,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjap", "cjsg"): Leitura(
         ignorar={
             "security_check_failed.json": "recusa do portal, que o parser levanta de propósito",
-            "generic_error.json": "erro do portal, que o parser levanta de propósito",
         },
     ),
     ("tjba", "cjsg"): _PAGINAS,
@@ -302,7 +297,6 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         ignorar={
             "list_*.json": "listagem, lida no download para achar o processo",
             "typical_single.json": "listagem, lida no download para achar o processo",
-            "no_results.json": "listagem vazia, sem detalhe",
         },
     ),
     ("falcao", "listar_decisoes"): Leitura(

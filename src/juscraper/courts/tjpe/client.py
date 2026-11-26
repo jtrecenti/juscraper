@@ -245,7 +245,8 @@ class TJPEScraper(HTTPScraper):
                 ``processo``, ``classe``, ``assunto``, ``relator``,
                 ``orgao_julgador``, ``data_julgamento``, ``data_publicacao``,
                 ``ementa``, ``acordao``, ``meio_tramitacao``,
-                ``url_inteiro_teor``.
+                ``url_inteiro_teor``. As decisões monocráticas não têm
+                ementa no portal e saem com ``ementa`` ``None``.
 
         Examples: Exemplo
             >>> import juscraper as jus

@@ -8,8 +8,9 @@ Optional env vars (defaults entre parenteses):
 
 - ``JUSBR_CNJ_1`` — CNJ real para o cenario typical (obrigatorio).
 - ``JUSBR_CNJ_2`` — segundo CNJ real para o cenario ``list[str]`` (obrigatorio).
-- ``JUSBR_CNJ_NO_RESULTS`` — CNJ com formato valido mas sem processo no PDPJ
-  (default: ``9999999-99.9999.9.99.9999``).
+
+Nao ha cenario "sem resultado": a API V2 responde ``HTTP 404`` para CNJ
+inexistente, e esse caminho e coberto por testes com ``status=404``.
 
 **Sanitizacao agressiva** acontece pos-captura, antes de gravar os arquivos:
 
@@ -44,7 +45,6 @@ from ._util import dump, samples_dir_for
 # tem que bater com os contratos (e vice-versa).
 NEUTRAL_CNJ_1_DIGITS = "00000000000000000000"
 NEUTRAL_CNJ_2_DIGITS = "11111111111111111111"
-NEUTRAL_CNJ_NO_RESULTS_DIGITS = "99999999999999999999"
 
 # Campos PII a redatar (lowercase para comparacao case-insensitive).
 _PII_KEYS = {
@@ -398,7 +398,6 @@ def main() -> None:
 
     cnj_1 = os.environ.get("JUSBR_CNJ_1")
     cnj_2 = os.environ.get("JUSBR_CNJ_2")
-    cnj_no_results = os.environ.get("JUSBR_CNJ_NO_RESULTS", "9999999-99.9999.9.99.9999")
 
     if not cnj_1 or not cnj_2:
         raise SystemExit(
@@ -477,21 +476,6 @@ def main() -> None:
     _save_json(cpopg_dest / "list_two_second.json", list2)
     _save_json(cpopg_dest / "list_two_second_details.json", det2)
     print("[jusbr] wrote cpopg/list_two_*.json (4 arquivos)")
-
-    # --- Cenario: no_results ---
-    print(f"[jusbr] capturing no_results para {cnj_no_results!r}...")
-    no_list, no_det, _ = _capture_cpopg_pair(
-        scraper, real_cnj=cnj_no_results, neutral_digits=NEUTRAL_CNJ_NO_RESULTS_DIGITS
-    )
-    if no_det is not None:
-        print(
-            f"[jusbr] WARN: JUSBR_CNJ_NO_RESULTS={cnj_no_results!r} retornou processo. "
-            "Escolha outro CNJ valido mas sem hit no PDPJ."
-        )
-    repl_nr = _build_replacements(cnj_no_results, NEUTRAL_CNJ_NO_RESULTS_DIGITS)
-    no_list = _walk(no_list, repl_nr)
-    _save_json(cpopg_dest / "no_results.json", no_list)
-    print("[jusbr] wrote cpopg/no_results.json")
 
     print(f"[jusbr] ALL samples written under {cpopg_dest.parent}")
 

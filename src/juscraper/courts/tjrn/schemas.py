@@ -50,6 +50,9 @@ class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoM
     Reflete ``tjrn.parse.cjsg_parse_manager`` apos renomeacao canonica
     (``classe_judicial`` -> ``classe``). ``data_publicacao`` vem de
     ``dt_publicacao`` do backend Elasticsearch, convertida para ``date``.
+    ``relator`` vem de ``magistrado`` (na sentenca, o juiz de 1o grau) e
+    ``tipo_decisao`` de ``tipo_teor``: ``"Acórdão"``, ``"Decisão"``
+    (monocratica) ou ``"Sentença"``.
     """
 
     classe: str | None = None

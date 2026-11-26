@@ -9,11 +9,12 @@ import pandas as pd
 import pytest
 from bs4 import BeautifulSoup
 
+from juscraper.core.parse_utils import normalizar_texto
 from juscraper.courts._esaj import parse as esaj_parse
 from juscraper.courts._esaj.parse import (
-    _clean_value,
     _extract_detail,
     _extract_ementa,
+    _extract_labeled_value,
     _extract_pagination_count,
     _normalize_key,
     _parse_single_page,
@@ -295,8 +296,9 @@ class TestCJSGParseSinglePage:
     def test_ementa_longa_devolve_so_a_completa(self, sigla, arquivo):
         r"""Prévia visível + completa oculta devolve só a completa; div única, ela mesma (#713).
 
-        O ``\r\n`` do HTML vira ``\n``, e o ``\x96`` do windows-1252, "–". O
-        sample vai lido em bytes, porque ``read_text`` já trocaria o ``\r\n``.
+        O ``\r\n`` do HTML vira ``\n``, o ``\x96`` do windows-1252, "–", e o
+        ``\xa0``, espaço comum. O sample vai lido em bytes, porque
+        ``read_text`` já trocaria o ``\r\n``.
         """
         path = Path(__file__).parent.parent / sigla / "samples" / arquivo
         html = path.read_bytes().decode("utf-8")
@@ -310,9 +312,7 @@ class TestCJSGParseSinglePage:
         longas = 0
         for ementa, linha in zip(df["ementa"], linhas, strict=True):
             divs = [
-                div.get_text(" ", strip=True)
-                .replace("\r\n", "\n")
-                .replace("\x96", "–")
+                normalizar_texto(div.get_text(" ", strip=True).replace("\x96", "–"))
                 .removeprefix("Ementa:")
                 .strip()
                 for div in linha.select('div[align="justify"]')
@@ -325,7 +325,32 @@ class TestCJSGParseSinglePage:
             elif len(divs) == 1:
                 assert ementa == divs[0]
         assert longas > 0
-        assert not df["ementa"].str.contains("\r").any()
+        assert not df["ementa"].str.contains("[\r\xa0]").any()
+        assert df["ementa"].str.contains("\n").any()
+
+    @pytest.mark.parametrize(
+        ("sigla", "arquivo", "trecho"),
+        [
+            ("tjac", "cjsg/results_normal_page_02.html", "da unidade consumidora"),
+            ("tjal", "cjsg/results_normal_page_01.html", None),
+            ("tjam", "cjsg/results_normal_page_02.html", "art. 14, do CDC"),
+            ("tjce", "cjsg/results_normal_page_02.html", None),
+            ("tjms", "cjsg/results_normal_page_01.html", None),
+            ("tjsp", "cjsg/single_page.html", None),
+        ],
+    )
+    def test_ementa_sem_espaco_nao_separavel(self, sigla, arquivo, trecho):
+        r"""O ``\xa0`` do HTML sai como espaço comum, e a busca por "art. 14" acha a ementa."""
+        path = Path(__file__).parent.parent / sigla / "samples" / arquivo
+        soup = BeautifulSoup(path.read_bytes().decode("utf-8"), "html.parser")
+        divs = soup.select('tr.ementaClass2 div[align="justify"]')
+        assert any("\xa0" in div.get_text() for div in divs)
+
+        ementas = _parse_single_page(str(path))["ementa"].dropna()
+
+        assert not ementas.str.contains("\xa0").any()
+        if trecho is not None:
+            assert ementas.str.contains(trecho, regex=False).any()
 
     def test_ementa_mantem_rotulo_citado_no_corpo(self):
         """Só o rótulo do início sai; "Ementa:" citado no texto fica."""
@@ -658,8 +683,8 @@ class TestExtractPaginationCount:
         assert _extract_pagination_count(texto) == esperado
 
 
-class TestCleanValue:
-    """Caracteres invisíveis que o eSAJ mistura nos valores saem todos."""
+class TestLabeledValue:
+    r"""Caracteres invisíveis e ``\xa0`` que o eSAJ mistura nos valores saem todos."""
 
     @pytest.mark.parametrize(
         "invisivel",
@@ -671,7 +696,10 @@ class TestCleanValue:
         ],
     )
     def test_remove_caractere_invisivel(self, invisivel):
-        assert _clean_value(f"Des. Jo{invisivel}ão{invisivel}") == "Des. João"
+        html = f'<tr class="ementaClass2"><td><strong>Comarca:</strong> Rio\xa0Bra{invisivel}nco{invisivel}</td></tr>'
+        linha = BeautifulSoup(html, "html.parser").tr
+
+        assert _extract_labeled_value(linha, "Comarca:") == ("comarca", "Rio Branco")
 
 
 class TestNormalizeKey:

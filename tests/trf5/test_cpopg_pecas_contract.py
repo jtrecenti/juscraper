@@ -22,6 +22,9 @@ DOC_URL = (
     "https://pje1g.trf5.jus.br/pjeconsulta/"
     "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam"
 )
+# Corpo da peça: o download só grava os bytes, sem ler o conteúdo, então
+# qualquer HTML serve.
+DOCUMENTO = b"<html><body><p>Despacho</p></body></html>"
 
 
 def test_extract_documento_urls_finds_all_pecas_in_detail() -> None:
@@ -68,7 +71,6 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
         content_type="text/html",
     )
-    doc_body = load_sample_bytes("trf5", "cpopg_pecas/documento_html.html")
     from juscraper.courts._trf.download import extract_documento_urls
 
     n_pecas = len(
@@ -78,7 +80,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     )
     for _ in range(n_pecas):
         responses.add(
-            responses.GET, DOC_URL, body=doc_body, content_type="text/html"
+            responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html"
         )
 
     scraper = jus.scraper("trf5", sleep_time=0)

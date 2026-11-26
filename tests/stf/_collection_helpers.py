@@ -66,7 +66,7 @@ class Source:
         if self.before:
             self.before(body)
         rows = self.select(body)
-        response = json.loads(load_sample("stf", "collection/response.json"))
+        response = json.loads(load_sample("stf", "collection/limites.json"))
         result = response["result"]
         result["hits"]["total"]["value"] = len(rows)
         start = body["from"]

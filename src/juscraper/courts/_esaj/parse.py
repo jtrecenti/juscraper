@@ -22,6 +22,8 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from tqdm import tqdm
 
+from ...core.parse_utils import normalizar_texto
+
 logger = logging.getLogger("juscraper._esaj.parse")
 
 _ZERO_RESULT_MARKERS = (
@@ -233,27 +235,18 @@ def _normalize_key(label: str) -> str:
     return _TYPO_FIXES.get(key, key)
 
 
-def _clean_value(value: str) -> str:
-    return (
-        value.replace("\xad", "")  # soft hyphen
-        .replace("\u200b", "")  # zero-width space
-        .replace("\u200c", "")  # zero-width non-joiner
-        .replace("\u200d", "")  # zero-width joiner
-    )
-
-
 def _read_html(path: str) -> str:
-    r"""Lê o HTML salvo com fins de linha ``\n`` e os caracteres do windows-1252.
+    r"""Lê o HTML salvo com os caracteres do windows-1252 (ver ``_C1_PARA_CP1252``).
 
-    O eSAJ responde com ``\r\n``, que passaria para o texto das ementas, como
-    a leitura em modo texto do ``cjpg`` já evita. Ver ``_C1_PARA_CP1252``.
+    O ``\r\n`` das respostas do eSAJ sai do texto em :func:`normalizar_texto`,
+    aplicada à ementa e aos demais campos.
     """
     raw = Path(path).read_bytes()
     try:
         texto = raw.decode("utf-8")
     except UnicodeDecodeError:
         texto = raw.decode("latin1")
-    return texto.replace("\r\n", "\n").replace("\r", "\n").translate(_C1_PARA_CP1252)
+    return texto.translate(_C1_PARA_CP1252)
 
 
 def _extract_process_metadata(details_table: Tag, data: dict) -> None:
@@ -276,13 +269,13 @@ def _extract_ementa(detail_row: Tag) -> str:
     divs = detail_row.find_all("div", align="justify")
     ocultas = [div for div in divs if "display: none" in str(div.get("style", ""))]
     fonte = ocultas[0] if ocultas else divs[0] if divs else detail_row
-    text = cast(str, fonte.get_text(" ", strip=True))
+    text = normalizar_texto(cast(str, fonte.get_text(" ", strip=True)))
     return text.removeprefix("Ementa:").strip()
 
 
 def _extract_labeled_value(detail_row: Tag, label: str) -> tuple[str, str] | None:
     full_text = detail_row.get_text(" ", strip=True)
-    value = _clean_value(full_text.replace(label, "", 1).strip().lstrip(":").strip())
+    value = normalizar_texto(full_text.replace(label, "", 1).strip().lstrip(":").strip())
     key = _normalize_key(label)
     if key == "outros_numeros":
         return None
