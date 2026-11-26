@@ -20,10 +20,9 @@ def cjsg_parse(resultados_brutos):
     A ``ementa`` passa por :func:`normalizar_texto`.
     """
     return [
-        {_RENOMEAR.get(chave, chave): _normalizar_campo(chave, valor) for chave, valor in item.items()}
+        {
+            _RENOMEAR.get(chave, chave): normalizar_texto(valor) if chave == "ementa" else valor
+            for chave, valor in item.items()
+        }
         for item in resultados_brutos
     ]
-
-
-def _normalizar_campo(chave: str, valor: object) -> object:
-    return normalizar_texto(valor) if chave == "ementa" else valor

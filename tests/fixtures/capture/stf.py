@@ -9,10 +9,15 @@ Desde novembro de 2026 o portal responde sem o desafio do AWS WAF; o extra
 Os samples sao saneados para caber no repositorio: ``decisao_texto``,
 ``ementa_texto`` e ``partes_lista_texto`` truncados em 300 caracteres e o bloco
 ``highlight`` de cada hit removido.
+
+``collection/limites.json`` e a resposta a consulta de limites da coleta
+integral (``bounds_payload``, sem hits): o servidor falso de
+``tests/stf/_collection_helpers.py`` a usa como molde do envelope.
 """
 import json
 import time
 
+from juscraper.courts.stf._collection import bounds_payload
 from juscraper.courts.stf.client import STFScraper
 from juscraper.courts.stf.download import build_payload
 
@@ -31,9 +36,10 @@ def _sanear(resposta: dict) -> dict:
     return resposta
 
 
-def _capture(stf: STFScraper, endpoint: str, filename: str, **payload_kwargs) -> None:
+def _capture(stf: STFScraper, endpoint: str, filename: str, payload: dict | None = None, **payload_kwargs) -> None:
     time.sleep(stf.sleep_time)
-    resposta = _sanear(stf._buscar(build_payload(**payload_kwargs)))  # pylint: disable=protected-access
+    payload = build_payload(**payload_kwargs) if payload is None else payload
+    resposta = _sanear(stf._buscar(payload))  # pylint: disable=protected-access
     dest = samples_dir_for("stf", endpoint)
     dump(dest / filename, json.dumps(resposta, ensure_ascii=False, indent=1).encode("utf-8"))
     print(f"[stf] wrote {endpoint}/{filename}")
@@ -57,6 +63,8 @@ def main() -> None:
              pesquisa="Rcl 53688", base="acordaos", tamanho_pagina=2)
     _capture(stf, "contar_decisoes", "acordaos_filtered.json",
              pesquisa="pejotização", base="acordaos", classe="Rcl", tamanho_pagina=0)
+    _capture(stf, "collection", "limites.json",
+             bounds_payload(build_payload(pesquisa="pejotização", classe="Rcl", tamanho_pagina=0), "julgamento_data"))
 
 
 if __name__ == "__main__":

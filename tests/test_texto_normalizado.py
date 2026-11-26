@@ -1,6 +1,7 @@
 r"""Texto corrido sai dos parsers sem ``\r``, ``\xa0`` e caracteres invisíveis.
 
-Cada caso roda o parser sobre um sample real duas vezes: com
+Cada caso roda o parser sobre um sample real, lido como em
+``tests/schemas/test_output_columns.py::LEITURAS``, duas vezes: com
 ``normalizar_texto`` (ou ``normalizar_colunas_texto``) trocada pela identidade,
 para provar que a coluna trazia o problema, e do jeito normal. A saída normal
 tem de ser exatamente a bruta passada por ``normalizar_texto``: nada além
@@ -10,19 +11,15 @@ O cjsg do eSAJ tem os testes em ``tests/_esaj/test_parse_granular.py``.
 """
 from __future__ import annotations
 
-import json
-import re
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from pathlib import Path
+import warnings
+from dataclasses import dataclass
 from types import ModuleType
-from typing import Any, cast
-from unittest import mock
+from typing import Any
 
 import pandas as pd
 import pytest
-import requests
 
+import juscraper as jus
 from juscraper.aggregators.comunica_cnj import parse as comunica_parse
 from juscraper.aggregators.falcao import parse as falcao_parse
 from juscraper.core.parse_utils import normalizar_texto
@@ -35,125 +32,61 @@ from juscraper.courts.tjpb import parse as tjpb_parse
 from juscraper.courts.tjpi import parse as tjpi_parse
 from juscraper.courts.tjrj import parse as tjrj_parse
 from juscraper.courts.tjrr import parse as tjrr_parse
-from juscraper.courts.tjrr.download import _extract_cdata
 from juscraper.courts.tjrs import parse as tjrs_parse
-
-_RAIZ = Path(__file__).parent
-_PROIBIDOS = re.compile("[\r\xa0\xad\u200b‌‍]")
-
-
-def _caminho(tribunal: str, arquivo: str) -> Path:
-    return _RAIZ / tribunal / "samples" / arquivo
-
-
-def _json(tribunal: str, arquivo: str) -> Any:
-    # Em bytes: ``read_text`` trocaria o ``\r\n`` literal de um sample.
-    return json.loads(_caminho(tribunal, arquivo).read_bytes().decode("utf-8"))
-
-
-def _resposta(tribunal: str, arquivo: str) -> requests.Response:
-    resposta = mock.Mock(spec=requests.Response)
-    resposta.json.return_value = _json(tribunal, arquivo)
-    return cast(requests.Response, resposta)
+from tests.schemas.test_output_columns import LEITURAS, TESTS
 
 
 @dataclass(frozen=True)
 class Caso:
+    tribunal: str
+    endpoint: str
+    arquivo: str
     modulo: ModuleType
-    parsear: Callable[[], pd.DataFrame]
     colunas: tuple[str, ...]
     quebra_de_linha: bool = True
-    intactas: tuple[str, ...] = field(default=())
-    """Colunas de HTML que ficam como vieram, com ``\\r``."""
+    intactas: tuple[str, ...] = ()
+    r"""Colunas de HTML que ficam como vieram, com ``\r``."""
+
+    def parsear(self) -> pd.DataFrame:
+        leitura = LEITURAS[(self.tribunal, self.endpoint)]
+        parser = leitura.parser or getattr(jus.scraper(self.tribunal), f"{self.endpoint}_parse")
+        caminho = TESTS / self.tribunal / "samples" / (leitura.pasta or self.endpoint) / self.arquivo
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            resultado = parser(*leitura.entrada(caminho))
+        return resultado if isinstance(resultado, pd.DataFrame) else pd.DataFrame(resultado)
 
 
-CASOS = {
-    "tjsp-cjpg": Caso(
-        esaj_cjpg_parse,
-        lambda: esaj_cjpg_parse.cjpg_parse_single(_caminho("tjsp", "cjpg/results_normal_page_01.html")),
-        ("decisao",),
-    ),
-    "tjms-cjpg": Caso(
-        esaj_cjpg_parse,
-        lambda: esaj_cjpg_parse.cjpg_parse_single(_caminho("tjms", "cjpg/results_normal_page_01.html")),
-        ("decisao",),
-    ),
-    "tjba-cjsg": Caso(
-        tjba_parse,
-        lambda: tjba_parse.cjsg_parse([_json("tjba", "cjsg/results_normal_page_01.json")]),
-        ("ementa",),
-        quebra_de_linha=False,
-    ),
-    "tjdft-cjsg": Caso(
-        tjdft_parse,
-        lambda: pd.DataFrame(tjdft_parse.cjsg_parse(_json("tjdft", "cjsg/results_normal_page_01.json")["registros"])),
-        ("ementa",),
-    ),
-    "tjes-cjsg": Caso(
-        tjes_parse,
-        lambda: tjes_parse.cjsg_parse([_json("tjes", "cjsg/results_legado_page_01.json")]),
-        ("ementa", "acordao"),
-    ),
-    "tjpb-cjsg": Caso(
-        tjpb_parse,
-        lambda: tjpb_parse.cjsg_parse_manager([_json("tjpb", "cjsg/results_normal_page_01.json")]),
-        ("ementa",),
-        quebra_de_linha=False,
-    ),
-    "tjpi-cjsg": Caso(
-        tjpi_parse,
-        lambda: tjpi_parse.cjsg_parse_manager([_caminho("tjpi", "cjsg/results_normal_page_01.html").read_text()]),
-        ("inteiro_teor", "ementa"),
-    ),
-    "tjrj-cjsg": Caso(
-        tjrj_parse,
-        lambda: tjrj_parse.cjsg_parse([_json("tjrj", "cjsg/xhr_page_01.json")["d"]]),
-        ("ementa",),
-    ),
-    "tjrr-cjsg": Caso(
-        tjrr_parse,
-        lambda: tjrr_parse.cjsg_parse_manager(
-            [_extract_cdata(_caminho("tjrr", "cjsg/step_02_search.html").read_text())]
-        ),
-        ("ementa",),
-        quebra_de_linha=False,
-    ),
-    "tjrs-cjsg": Caso(
-        tjrs_parse,
-        lambda: tjrs_parse.cjsg_parse_manager([_json("tjrs", "cjsg/single_page.json")]),
-        ("ementa", "ementa_text", "ementa_referencia"),
-    ),
-    "stf-listar_decisoes": Caso(
+CASOS = [
+    Caso("tjsp", "cjpg", "results_normal_page_01.html", esaj_cjpg_parse, ("decisao",)),
+    Caso("tjms", "cjpg", "results_normal_page_01.html", esaj_cjpg_parse, ("decisao",)),
+    Caso("tjba", "cjsg", "results_normal_page_01.json", tjba_parse, ("ementa",), quebra_de_linha=False),
+    Caso("tjdft", "cjsg", "results_normal_page_01.json", tjdft_parse, ("ementa",)),
+    Caso("tjes", "cjsg", "results_legado_page_01.json", tjes_parse, ("ementa", "acordao")),
+    Caso("tjpb", "cjsg", "results_normal_page_01.json", tjpb_parse, ("ementa",), quebra_de_linha=False),
+    Caso("tjpi", "cjsg", "results_normal_page_01.html", tjpi_parse, ("inteiro_teor", "resumo", "ementa")),
+    Caso("tjrj", "cjsg", "xhr_page_01.json", tjrj_parse, ("ementa",)),
+    Caso("tjrr", "cjsg", "step_02_search.html", tjrr_parse, ("ementa",), quebra_de_linha=False),
+    Caso("tjrs", "cjsg", "single_page.json", tjrs_parse, ("ementa", "ementa_text", "ementa_referencia")),
+    Caso(
+        "stf",
+        "listar_decisoes",
+        "single_page.json",
         stf_parse,
-        lambda: pd.DataFrame(stf_parse.parse_decisoes([
-            _json("stf", "listar_decisoes/single_page.json"),
-            _json("stf", "listar_decisoes/acordaos.json"),
-        ])),
-        (
-            "decisao_texto",
-            "partes_lista_texto",
-            "documental_publicacao_lista_texto",
-            "documental_observacao_texto",
-            "acordao_ata",
-        ),
+        ("decisao_texto", "partes_lista_texto", "documental_publicacao_lista_texto", "documental_observacao_texto"),
         intactas=("documental_observacao_html",),
     ),
-    "comunica_cnj-listar_comunicacoes": Caso(
-        comunica_parse,
-        lambda: pd.DataFrame(comunica_parse.parse_items(
-            _resposta("comunica_cnj", "listar_comunicacoes/results_normal_page_01.json")
-        )),
-        ("texto",),
-    ),
-    "falcao-listar_decisoes": Caso(
+    Caso("stf", "listar_decisoes", "acordaos.json", stf_parse, ("acordao_ata",)),
+    Caso("comunica_cnj", "listar_comunicacoes", "results_normal_page_01.json", comunica_parse, ("texto",)),
+    Caso(
+        "falcao",
+        "listar_decisoes",
+        "precedentes_normal.json",
         falcao_parse,
-        lambda: pd.DataFrame(falcao_parse.parse_documentos(
-            _json("falcao", "pesquisa/precedentes_normal.json"), "precedentes"
-        )),
         ("textoDecisaoAdmissao", "textoEmentaAdmissao", "textoEmentaMerito"),
         intactas=("conteudoDecisao",),
     ),
-}
+]
 
 
 def _sem_normalizar(monkeypatch: pytest.MonkeyPatch, modulo: ModuleType) -> None:
@@ -163,23 +96,43 @@ def _sem_normalizar(monkeypatch: pytest.MonkeyPatch, modulo: ModuleType) -> None
         monkeypatch.setattr(modulo, "normalizar_texto", lambda texto: texto)
 
 
-def _com_problema(serie: pd.Series) -> bool:
-    return any(isinstance(valor, str) and _PROIBIDOS.search(valor) for valor in serie)
+def _textos(serie: pd.Series) -> list[str | None]:
+    """Valores da coluna, com ``None`` no lugar de qualquer ausente (``None`` ou ``NaN``)."""
+    return [valor if isinstance(valor, str) else None for valor in serie]
 
 
-@pytest.mark.parametrize("caso", CASOS.values(), ids=CASOS.keys())
+def _sujo(valor: Any) -> bool:
+    if isinstance(valor, list):
+        return any(_sujo(item) for item in valor)
+    return isinstance(valor, str) and normalizar_texto(valor) != valor
+
+
+@pytest.mark.parametrize("caso", CASOS, ids=[f"{c.tribunal}-{c.endpoint}-{c.arquivo}" for c in CASOS])
 def test_texto_corrido_normalizado(monkeypatch, caso):
     with monkeypatch.context() as contexto:
         _sem_normalizar(contexto, caso.modulo)
         bruto = caso.parsear()
     resultado = caso.parsear()
 
-    assert any(_com_problema(bruto[coluna]) for coluna in caso.colunas)
+    assert any(bruto[coluna].map(_sujo).any() for coluna in caso.colunas)
     for coluna in caso.colunas:
-        assert not _com_problema(resultado[coluna]), coluna
-        esperado = bruto[coluna].map(normalizar_texto)
-        pd.testing.assert_series_equal(resultado[coluna], esperado, check_dtype=False)
+        assert _textos(resultado[coluna]) == [normalizar_texto(texto) for texto in _textos(bruto[coluna])], coluna
     if caso.quebra_de_linha:
         assert any(resultado[coluna].str.contains("\n").any() for coluna in caso.colunas)
     for coluna in caso.intactas:
         assert resultado[coluna].str.contains("\r").any(), coluna
+
+
+def test_stf_normaliza_cada_item_dos_campos_texto_em_lista(monkeypatch):
+    r"""``documental_legislacao_citada_texto`` vem como lista de textos com ``\r\n``."""
+    caso = Caso("stf", "listar_decisoes", "single_page.json", stf_parse, ())
+    coluna = "documental_legislacao_citada_texto"
+    with monkeypatch.context() as contexto:
+        _sem_normalizar(contexto, stf_parse)
+        bruto = caso.parsear()[coluna].dropna()
+    itens = [item for lista in caso.parsear()[coluna].dropna() for item in lista]
+
+    assert bruto.map(_sujo).any()
+    assert itens
+    assert not any(_sujo(item) for item in itens)
+    assert any("\n" in item for item in itens)

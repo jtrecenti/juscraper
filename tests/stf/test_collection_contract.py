@@ -333,7 +333,7 @@ def test_document_identity_is_required_and_unique(stf, kind):
     [{"value": 2, "relation": "gte"}, {"value": True, "relation": "eq"}, {"value": -1, "relation": "eq"}, 2, {}],
 )
 def test_inexact_total_rejected(total):
-    response = json.loads(load_sample("stf", "collection/response.json"))
+    response = json.loads(load_sample("stf", "collection/limites.json"))
     response["result"]["hits"]["total"] = total
     with pytest.raises(ValueError):
         exact_total(response)

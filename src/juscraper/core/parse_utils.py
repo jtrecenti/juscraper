@@ -39,7 +39,7 @@ _WHITESPACE_RE = re.compile(r"\s+")
 # Caracteres invisíveis que separam letras de uma mesma palavra: ``"MANDADO\u200c
 # \u200cDE"`` no TJES, ``"§\xad 3º"`` no TJPI. Hífen discricionário e os de
 # largura zero (espaço, não-agregador e agregador).
-_INVISIVEIS = dict.fromkeys(map(ord, "\xad\u200b\u200c\u200d"))
+_INVISIVEIS = ("\xad", "\u200b", "\u200c", "\u200d")
 
 # Trechos que o navegador não mostra: comentários (o Word guarda neles o XML de
 # estilos, que vira ``"Normal 0 21 false ..."`` no TJAP), o conteúdo de
@@ -190,8 +190,8 @@ def normalizar_texto(texto: object) -> object:
     achar o texto que o tribunal escreveu ``"art.\xa014"``.
 
     Não colapsa espaços, não remove tabulações e preserva as quebras de
-    linha, que separam os parágrafos. Serve a texto corrido; HTML e RTF
-    brutos devem ficar como vieram.
+    linha, que separam os parágrafos. Serve a colunas de texto corrido; as
+    colunas só de HTML ou RTF (``*_html``, ``*_rtf``) devem ficar como vieram.
 
     Args:
         texto: Valor da coluna. O que não for ``str`` (``None``, ``NaN``,
@@ -202,7 +202,12 @@ def normalizar_texto(texto: object) -> object:
     """
     if not isinstance(texto, str):
         return texto
-    return texto.replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ").translate(_INVISIVEIS)
+    texto = texto.replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
+    # ``replace`` em sequência sai bem mais barato que ``translate`` em texto
+    # acentuado, e não aloca nada quando o caractere não aparece.
+    for invisivel in _INVISIVEIS:
+        texto = texto.replace(invisivel, "")
+    return texto
 
 
 def normalizar_colunas_texto(df: pd.DataFrame, colunas: Iterable[str]) -> pd.DataFrame:

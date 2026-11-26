@@ -39,7 +39,7 @@ def _parse_item(item_div) -> dict:
         # Get only the direct text, not hidden children
         visible_text = summary_div.find(string=True, recursive=False)
         if visible_text:
-            result["resumo"] = visible_text.strip()
+            result["resumo"] = normalizar_texto(visible_text.strip())
 
     # Get hidden full text (contains the complete decision)
     hidden_div = item_div.select_one("div.d-none")
@@ -67,7 +67,7 @@ def _parse_item(item_div) -> dict:
         else:
             # Fallback: use visible summary as ementa
             if summary_div:
-                result["ementa"] = summary_div.get_text(strip=True)[:2000]
+                result["ementa"] = normalizar_texto(summary_div.get_text(strip=True)[:2000])
 
     return result
 

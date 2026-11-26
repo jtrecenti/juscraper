@@ -467,7 +467,9 @@ def test_cpopg_falhas_de_download_e_de_leitura_saem_num_unico_aviso(tmp_path, mo
     # Processos já na pasta de download: um legível e um que o parse recusa.
     legivel = tmp_path / "cpopg" / "10093677620178260344"
     legivel.mkdir(parents=True)
-    (legivel / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
+    (legivel / "show_outros_assuntos.html").write_text(
+        load_sample("tjsp", "cpopg/show_outros_assuntos.html"), encoding="utf-8",
+    )
     ilegivel = tmp_path / "cpopg" / "10001497120248260346"
     ilegivel.mkdir()
     (ilegivel / "quebrado.html").write_bytes(b"\xff\xfe\xfa invalido em utf-8")
@@ -507,7 +509,9 @@ def test_cpopg_le_so_os_processos_do_lote(tmp_path, mocker):
         scraper.cpopg_download(CNJ_INEXISTENTE)
     anterior = tmp_path / "cpopg" / "10093677620178260344"
     anterior.mkdir(parents=True)
-    (anterior / "show_standard.html").write_text(load_sample("tjsp", "cpopg/show_standard.html"), encoding="utf-8")
+    (anterior / "show_outros_assuntos.html").write_text(
+        load_sample("tjsp", "cpopg/show_outros_assuntos.html"), encoding="utf-8",
+    )
     # A página de 2º grau do mesmo CNJ, de um cposg_download na mesma pasta, também fica de fora.
     segundo_grau = tmp_path / "cposg" / "10001497120248260346"
     segundo_grau.mkdir(parents=True)

@@ -11,6 +11,7 @@ import json
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
@@ -49,8 +50,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             dt_inicio="01-01-2024",
             dt_fim="31-03-2024",
             sistema="PJE",
-            decisoes="Colegiadas",
-            jurisdicoes="Tribunal de Justica",
+            decisoes="Acórdão",
+            jurisdicoes="TJ",
             grau="2",
         ))],
     )
@@ -66,8 +67,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
         data_julgamento_inicio="2024-01-01",
         data_julgamento_fim="2024-03-31",
         sistema="PJE",
-        decisoes="Colegiadas",
-        jurisdicoes="Tribunal de Justica",
+        decisoes="Acórdão",
+        jurisdicoes="TJ",
         grau="2",
     )
 
@@ -88,8 +89,8 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
             "dt_fim": "31-03-2024",
             "origem": "",
             "sistema": "PJE",
-            "decisoes": "Colegiadas",
-            "jurisdicoes": "Tribunal de Justica",
+            "decisoes": "Acórdão",
+            "jurisdicoes": "TJ",
             "grau": "2",
         },
         "page": 1,
@@ -222,6 +223,170 @@ def test_cjsg_data_inicio_alias_maps_to_data_julgamento(mocker):
     messages = [str(w.message) for w in warning_list]
     assert any("data_inicio" in m and "deprecado" in m for m in messages)
     assert any("data_fim" in m and "deprecado" in m for m in messages)
+
+
+# (valor de ``decisoes``, sample, termo, filtros extras do payload). Monocraticas e
+# sentencas nao tem ementa no portal, e ``pesquisa`` busca so na ementa: os
+# samples desses tipos foram capturados sem termo, recortados por periodo.
+_DECISOES_CASES = [
+    ("Acórdão", "decisoes_acordao.json", "dano moral", {}),
+    ("Decisão", "decisoes_decisao.json", "", {"dt_inicio": "01-11-2026", "dt_fim": "20-11-2026"}),
+    ("Sentença", "decisoes_sentenca.json", "", {"dt_inicio": "01-11-2026", "dt_fim": "20-11-2026"}),
+]
+
+
+@pytest.mark.parametrize(
+    ("decisoes", "sample", "pesquisa", "extras"), _DECISOES_CASES, ids=[c[0] for c in _DECISOES_CASES],
+)
+@responses.activate
+def test_cjsg_decisoes_envia_valor_do_portal(mocker, decisoes, sample, pesquisa, extras):
+    """``decisoes`` vai ao payload com o valor do seletor do portal, que o backend
+    compara com ``tipo_teor``; os samples confirmam que cada valor traz so o
+    tipo pedido."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", f"cjsg/{sample}")
+    hits = json.loads(raw)["hits"]["hits"]
+    assert hits
+    assert {h["_source"]["tipo_teor"] for h in hits} == {decisoes}
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            pesquisa, page=1, decisoes=decisoes, **extras,
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        pesquisa,
+        paginas=1,
+        decisoes=decisoes,
+        data_julgamento_inicio="2026-11-01" if extras else None,
+        data_julgamento_fim="2026-11-20" if extras else None,
+    )
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["decisoes"] == decisoes
+    assert len(df) == len(hits)
+
+
+@pytest.mark.parametrize("valor", ["Monocraticas", "Colegiadas", "Sentencas", "Acordao"])
+def test_cjsg_decisoes_fora_do_portal_levanta_validation_error(valor):
+    """Os valores que a docstring indicava (``"Monocraticas"``, ``"Colegiadas"``,
+    ``"Sentencas"``) nunca existiram no portal e davam 0 resultados sem aviso;
+    agora levantam ``ValidationError`` antes de qualquer requisicao."""
+    with pytest.raises(ValidationError, match="decisoes"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, decisoes=valor)
+
+
+@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+@responses.activate
+def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes):
+    """``jurisdicoes`` vai ao payload com o valor do seletor do portal (``"TJ"``
+    ou ``"TR"``); os samples confirmam que cada valor traz so colegiados da
+    jurisdicao pedida."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", f"cjsg/jurisdicoes_{jurisdicoes.lower()}.json")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload("dano moral", page=1, jurisdicoes=jurisdicoes))],
+    )
+
+    df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
+    assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
+    # Turmas Recursais e Turma de Uniformizacao: so ``"TR"`` traz colegiados "Turma".
+    assert all(("Turma" in c) == (jurisdicoes == "TR") for c in df["colegiado"])
+
+
+@pytest.mark.parametrize("valor", ["Tribunal de Justica", "Turmas Recursais", "tj", "Todas"])
+def test_cjsg_jurisdicoes_fora_do_portal_levanta_validation_error(valor):
+    """Os valores que a docstring indicava (``"Tribunal de Justica"``,
+    ``"Turmas Recursais"``) nunca existiram no portal, que respondia 502/503
+    ate esgotar as tentativas; agora levantam ``ValidationError`` antes de
+    qualquer requisicao."""
+    with pytest.raises(ValidationError, match="jurisdicoes"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=valor)
+
+
+@responses.activate
+def test_cjsg_sistema_envia_valor_do_portal(mocker):
+    """``sistema`` vai ao payload com o valor do seletor do portal; o sample
+    confirma que ``"SAJ"`` traz so processos do SAJ."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", "cjsg/sistema_saj.json")
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload("dano moral", page=1, sistema="SAJ"))],
+    )
+
+    df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema="SAJ")
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["sistema"] == "SAJ"
+    assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
+    assert set(df["sistema"]) == {"SAJ"}
+
+
+@pytest.mark.parametrize("valor", ["pje", "Pje", "XYZ"])
+def test_cjsg_sistema_fora_do_portal_levanta_validation_error(valor):
+    """O backend diferencia maiusculas: ``"pje"`` ou outro valor fora do
+    seletor dava 0 resultados sem aviso; agora levanta ``ValidationError``
+    antes de qualquer requisicao."""
+    with pytest.raises(ValidationError, match="sistema"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema=valor)
+
+
+@responses.activate
+def test_cjsg_grau_envia_valor_do_portal(mocker):
+    """``grau`` vai ao payload com o valor dos radios do portal; o sample
+    confirma que ``"1"`` traz so decisoes de 1o grau. Vai sem termo, por
+    periodo, porque decisoes de 1o grau nao tem ementa."""
+    mocker.patch("time.sleep")
+    raw = load_sample("tjrn", "cjsg/grau_1.json")
+    hits = json.loads(raw)["hits"]["hits"]
+    assert hits
+    # O backend grava ``grau`` como inteiro no PJe e como texto no SAJ.
+    assert {str(h["_source"]["grau"]) for h in hits} == {"1"}
+    responses.add(
+        responses.POST,
+        BASE_URL,
+        body=raw,
+        status=200,
+        content_type="application/json",
+        match=[json_params_matcher(build_cjsg_payload(
+            "", page=1, grau="1", dt_inicio="01-11-2026", dt_fim="20-11-2026",
+        ))],
+    )
+
+    df = jus.scraper("tjrn").cjsg(
+        "",
+        paginas=1,
+        grau="1",
+        data_julgamento_inicio="2026-11-01",
+        data_julgamento_fim="2026-11-20",
+    )
+
+    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["grau"] == "1"
+    assert len(df) == len(hits)
+
+
+@pytest.mark.parametrize("valor", [2, "3", "Primeiro"])
+def test_cjsg_grau_fora_do_portal_levanta_validation_error(valor):
+    """Valores fora dos radios do portal (``"3"``, ``"Primeiro"``) davam 0
+    resultados sem aviso; agora levantam ``ValidationError`` antes de qualquer
+    requisicao. O inteiro ``2`` ja levantava, e o caso fica pinado."""
+    with pytest.raises(ValidationError, match="grau"):
+        jus.scraper("tjrn").cjsg("dano moral", paginas=1, grau=valor)
 
 
 def test_cjsg_unknown_kwarg_raises():
