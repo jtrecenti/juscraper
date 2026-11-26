@@ -4,7 +4,7 @@ on:
       - main
     paths:
       - "docs/**/*"
-      - .github/workflows/docs-publish.yml
+      - .github/workflows/docs.yml
   workflow_dispatch:
 
 name: Docs - Publish

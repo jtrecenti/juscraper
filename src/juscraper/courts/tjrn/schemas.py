@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
+from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
@@ -38,12 +38,12 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     grau: str | None = None
 
 
-class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin):
+class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJRNScraper.cjsg`.
 
     Reflete ``tjrn.parse.cjsg_parse_manager`` apos renomeacao canonica
-    (``classe_judicial`` -> ``classe``). ``data_publicacao`` nao e
-    entregue pelo backend Elasticsearch.
+    (``classe_judicial`` -> ``classe``). ``data_publicacao`` vem de
+    ``dt_publicacao`` do backend Elasticsearch, convertida para ``date``.
     """
 
     classe: str | None = None
