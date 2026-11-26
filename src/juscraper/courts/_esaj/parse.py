@@ -259,8 +259,8 @@ def _extract_process_metadata(details_table: Tag, data: dict) -> None:
     data["cd_foro"] = process_link.get("cdforo")
 
 
-def _extract_ementa(detail_row: Tag) -> str:
-    """Devolve a ementa sem o rótulo ``Ementa:``.
+def _extract_ementa(detail_row: Tag) -> str | None:
+    """Devolve a ementa sem o rótulo ``Ementa:``, ou ``None`` se vier vazia.
 
     Ementa longa vem em duas ``div align="justify"``: a prévia truncada,
     visível e sem ``style``, e a completa, com ``display: none``. Ementa curta
@@ -270,7 +270,7 @@ def _extract_ementa(detail_row: Tag) -> str:
     ocultas = [div for div in divs if "display: none" in str(div.get("style", ""))]
     fonte = ocultas[0] if ocultas else divs[0] if divs else detail_row
     text = cast(str, fonte.get_text(" ", strip=True))
-    return text.replace("Ementa:", "").strip()
+    return text.replace("Ementa:", "").strip() or None
 
 
 def _canonicalize_field(key: str, value: str) -> tuple[str, str]:
@@ -317,7 +317,9 @@ def _parse_result_row(result_row: Tag) -> dict | None:
     if details_table is None:
         return None
 
-    data: dict = {"ementa": ""}
+    # Acórdão sem ementa não tem a linha ``Ementa:``; o ``N/A`` do eSAJ fica
+    # só no texto oculto de "ementa sem formatação" (#713).
+    data: dict = {"ementa": None}
     _extract_process_metadata(details_table, data)
     for detail_row in details_table.find_all("tr", class_="ementaClass2"):
         _extract_detail(detail_row, data)
