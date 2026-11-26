@@ -18,6 +18,71 @@ TRUNCATED_WITH_ID = "Resumo truncado. Leia mais..."
 TRUNCATED_WITHOUT_INPUT = "Resumo sem id documental. Leia mais..."
 TRUNCATED_WITHOUT_VALUE = "Resumo com id sem valor. Leia mais..."
 
+# HTML mínimo com as bordas da tabela de resultados que as páginas reais
+# gravadas não reproduzem: metadados em ``<div>`` ou em texto irmão do
+# ``<span>``, linha sem metadados, ementa truncada ("Leia mais...") com id,
+# sem ``<input>`` e com ``<input>`` sem valor, e linha sem a célula da ementa.
+# Não é resposta do portal; por isso fica aqui e não em ``samples/``.
+PAGINA_COM_BORDAS = """\
+<!DOCTYPE html>
+<html lang="pt-BR">
+<body>
+<table class="resultTable jurisprudencia">
+    <tr>
+        <th>Tipo</th>
+        <th>Ementa</th>
+    </tr>
+    <tr>
+        <td>
+            <input name="idsSelecionados" value="link-id">
+            <a class="decisao negrito"><div><div>0000001-11.2024.8.16.0001</div></div></a>
+            <div>Relator: Relator Inline</div>
+            <div>Órgão Julgador: Câmara Inline</div>
+            <div>Data Julgamento: 01/02/2024</div>
+        </td>
+        <td>Ementa curta sem expansão.</td>
+    </tr>
+    <tr>
+        <td>
+            <input name="idsSelecionados" value="div-id">
+            <div><span>Processo:</span><div>0000002-22.2024.8.16.0002</div></div>
+            <span>Relator:</span> Relator Irmão
+            <div>Órgão Julgador: Câmara Irmã</div>
+            <span>Data Julgamento:</span> 03/04/2024
+        </td>
+        <td>Resumo truncado. Leia mais...</td>
+    </tr>
+    <tr>
+        <td><div>Metadados ausentes</div></td>
+        <td>Ementa sem metadados.</td>
+    </tr>
+    <tr>
+        <td>
+            <div><span>Processo:</span><div>0000003-33.2024.8.16.0003</div></div>
+            <span>Relator:</span> Relator Sem Id
+            <div>Órgão Julgador: Câmara Sem Id</div>
+            <span>Data Julgamento:</span> 05/06/2024
+        </td>
+        <td>Resumo sem id documental. Leia mais...</td>
+    </tr>
+    <tr>
+        <td>
+            <input name="idsSelecionados">
+            <div><span>Processo:</span><div>0000004-44.2024.8.16.0004</div></div>
+            <span>Relator:</span> Relator Id Vazio
+            <div>Órgão Julgador: Câmara Id Vazio</div>
+            <span>Data Julgamento:</span> 07/08/2024
+        </td>
+        <td>Resumo com id sem valor. Leia mais...</td>
+    </tr>
+    <tr>
+        <td>Linha sem a célula de ementa.</td>
+    </tr>
+</table>
+</body>
+</html>
+"""
+
 
 def test_cjsg_parse_preserves_row_variants_and_exact_dtypes():
     # O parser devolve o que o pandas da vez produzir; o metodo publico passa a
@@ -25,7 +90,7 @@ def test_cjsg_parse_preserves_row_variants_and_exact_dtypes():
     # None tambem no pandas 3. O teste confere o valor que o usuario recebe.
     result = _texto_ausente_como_none(
         cjsg_parse(
-            [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+            [PAGINA_COM_BORDAS],
             criterio=None,
         )
     )
@@ -89,7 +154,7 @@ def test_cjsg_parse_fetches_full_ementa_with_injected_request(mocker, criterio, 
     )
 
     result = cjsg_parse(
-        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+        [PAGINA_COM_BORDAS],
         criterio=criterio,
         request_fn=request_fn,
     )
@@ -129,7 +194,7 @@ def test_cjsg_parse_recusa_resposta_que_nao_e_a_ementa(mocker, corpo):
     request_fn = mocker.Mock(return_value=SimpleNamespace(text=corpo))
 
     result = cjsg_parse(
-        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+        [PAGINA_COM_BORDAS],
         criterio="dano moral",
         request_fn=request_fn,
     )
@@ -144,7 +209,7 @@ def test_cjsg_parse_keeps_truncated_ementa_after_row_request_error(mocker):
     request_fn = mocker.Mock(side_effect=requests.RequestException("indisponível"))
 
     result = cjsg_parse(
-        [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+        [PAGINA_COM_BORDAS],
         criterio="dano moral",
         request_fn=request_fn,
     )
@@ -164,7 +229,7 @@ def test_cjsg_parse_propagates_programming_errors_from_full_ementa_fetch(mocker)
 
     with pytest.raises(AttributeError, match="contrato inválido"):
         cjsg_parse(
-            [load_sample("tjpr", "cjsg/parser_edge_cases.html")],
+            [PAGINA_COM_BORDAS],
             criterio="dano moral",
             request_fn=request_fn,
         )

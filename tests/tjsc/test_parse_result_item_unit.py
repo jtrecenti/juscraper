@@ -12,12 +12,69 @@ from bs4 import BeautifulSoup
 from juscraper.courts.tjsc.parse import _parse_result_item, cjsg_parse_manager
 from tests._helpers import load_sample
 
+# HTML mínimo com variantes de rótulo que as páginas reais gravadas não
+# reproduzem: DECISÃO antes e depois de EMENTA, rótulo sem acento, rótulo
+# desconhecido, rótulo conhecido dentro de texto maior e rótulo sem valor.
+# Não é resposta do portal; por isso fica aqui e não em ``samples/``.
+ITENS_COM_VARIANTES = """\
+<!doctype html>
+<html lang="pt-BR">
+<body>
+  <div class="resultadoItem" id="direct-labels">
+    <div class="resLabel">PROCESSO</div>
+    <div class="resValue">
+      <div class="row">
+        <div class="col-12 col-md-auto"><a class="numero-processo">5001234-56.2024.8.24.0000/TJSC</a></div>
+        <div class="col-12 col-md-auto"><span>AI - Agravo de Instrumento</span></div>
+      </div>
+    </div>
+    <div class="resLabel">ÓRGÃO JULGADOR</div>
+    <div class="resValue">Primeira Câmara</div>
+    <div class="resLabel">RELATORA</div>
+    <div class="resValue">Desembargadora Ana</div>
+    <div class="resLabel">EMENTA</div>
+    <div class="resValue">Ementa preferencial</div>
+    <div class="resLabel">DECISÃO</div>
+    <div class="resValue">Decisão posterior</div>
+  </div>
+
+  <div class="resultadoItem" id="normalized-labels">
+    <div class="resLabel">ORGAO JULGADOR</div>
+    <div class="resValue">Segunda Câmara</div>
+    <div class="resLabel">DATA DA PUBLICACAO</div>
+    <div class="resValue">02/07/2025</div>
+    <div class="resLabel">DECISAO</div>
+    <div class="resValue">Decisão usada como ementa</div>
+    <div class="resLabel">CAMPO DESCONHECIDO</div>
+    <div class="resValue">Valor ignorado</div>
+  </div>
+
+  <div class="resultadoItem" id="decision-before-summary">
+    <div class="resLabel">DECISÃO</div>
+    <div class="resValue">Decisão preservada</div>
+    <div class="resLabel">EMENTA</div>
+    <div class="resValue">Ementa preferencial</div>
+  </div>
+
+  <div class="resultadoItem" id="partial-labels">
+    <div class="resLabel">INFORMAÇÃO DO RELATOR</div>
+    <div class="resValue">Desembargador Bruno</div>
+    <div class="resLabel">DATA DO JULGAMENTO DO RECURSO</div>
+    <div class="resValue">01/07/2025</div>
+  </div>
+
+  <div class="resultadoItem" id="truncated-pairs">
+    <div class="resLabel">UF</div>
+    <div class="resLabel">RELATOR</div>
+    <div class="resValue">SC</div>
+  </div>
+</body>
+</html>
+"""
+
 
 def _sample_items() -> dict[str, object]:
-    soup = BeautifulSoup(
-        load_sample("tjsc", "cjsg/result_item_variants.html"),
-        "html.parser",
-    )
+    soup = BeautifulSoup(ITENS_COM_VARIANTES, "html.parser")
     return {item["id"]: item for item in soup.find_all("div", class_="resultadoItem")}
 
 
@@ -83,7 +140,7 @@ def test_cjsg_parse_manager_drops_items_without_ementa_or_processo():
     ``partial-labels`` and ``truncated-pairs`` are dropped; the other three stay.
     """
     with pytest.warns(UserWarning, match="2 registro"):
-        df = cjsg_parse_manager([load_sample("tjsc", "cjsg/result_item_variants.html")])
+        df = cjsg_parse_manager([ITENS_COM_VARIANTES])
 
     assert len(_sample_items()) == 5
     assert len(df) == 3
