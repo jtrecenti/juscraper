@@ -179,7 +179,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             Resultados parseados (colunas conforme
                 :class:`OutputCJPGEsaj` — ``id_processo``, ``cd_processo`` e
                 campos extras emitidos pelo parser via ``extra='allow'`` —
-                ``classe``, ``assunto``, ``magistrado``, ``comarca``,
+                ``classe``, ``assunto``, ``relator``, ``comarca``,
                 ``foro``, ``vara``, ``data_disponibilizacao``, ``decisao``);
                 ``int`` com o total de resultados quando ``count_only=True``.
 

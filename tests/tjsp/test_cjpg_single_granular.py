@@ -66,6 +66,25 @@ def test_capturas_reais_tem_saida_fixada(captura):
         assert linha == referencia, f"linha {posicao}, processo {referencia['id_processo']}"
 
 
+@pytest.mark.parametrize(
+    ("tribunal", "captura"),
+    [
+        ("tjsp", "results_normal_page_01.html"),
+        ("tjsp", "results_legacy.html"),
+        ("tjms", "results_normal_page_01.html"),
+    ],
+)
+def test_rotulo_magistrado_sai_na_coluna_relator(tribunal, captura):
+    """O juiz, rotulado "Magistrado:" nas páginas do TJSP e do TJMS, sai em ``relator``.
+
+    É o nome canônico do ``cjsg`` e dos demais tribunais, também no 1º grau.
+    """
+    df = cjpg_parse_single(_SAMPLES.parents[2] / tribunal / "samples" / "cjpg" / captura)
+
+    assert "magistrado" not in df.columns
+    assert df["relator"].notna().all()
+
+
 def test_campos_opcionais_ordem_e_normalizacao(tmp_path):
     """Mantém linhas incompletas, ordem dos campos e o último span da decisão."""
     caminho = tmp_path / "resultados.html"

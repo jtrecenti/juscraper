@@ -84,6 +84,12 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP)
 
+- **BREAKING:** TJSP e TJMS `cjpg` e `cjpg_parse`: o juiz que proferiu a decisão sai na coluna `relator`, o nome do `cjsg` e do `cjpg` de TJES e TJTO, e não mais em `magistrado`. O portal rotula o campo como "Magistrado:", e o parser usava o rótulo como nome da coluna. `OutputCJPGEsaj` passa a declarar `relator`. Sem ciclo de deprecação, como na padronização de colunas da 0.3.0 (#117), que fez a mesma troca no TJES: o DataFrame não tem como manter as duas colunas sem duplicar o dado. Para migrar, troque `df["magistrado"]` por `df["relator"]`, ou renomeie DataFrames salvos com `df.rename(columns={"magistrado": "relator"})` (refs #12).
+
+  | Nome antigo | Nome canônico |
+  | --- | --- |
+  | `magistrado` | `relator` |
+
 - `cjsg` e `cjpg`, no auto-chunk: uma janela que falha depois dos retries levanta `juscraper.core.exceptions.ColetaParcialError`, depois de tentar as demais. Antes, a falha virava `UserWarning`, e o DataFrame voltava parcial como se estivesse completo. `.resultado` traz o DataFrame deduplicado das janelas que passaram, e `.falhas`, a lista de `(inicio, fim, excecao)` das que falharam; para manter o parcial, capture o erro e use `erro.resultado`.
 - `cjsg` e `cjpg`: com `auto_chunk=False`, e em `data_publicacao_*` em qualquer modo, o limite do intervalo passa de 366 dias para um ano de calendário: o fim deve ser anterior à mesma data do ano seguinte. Intervalos como `01/01/2013`–`01/01/2014`, que o servidor recusava com HTTP 404, levantam `ValueError` antes da requisição, com a mensagem "no máximo 1 ano(s)" (antes, "no máximo 366 dias"). `data_publicacao_*` longo junto com `data_julgamento_*` longo levanta esse `ValueError` antes do auto-chunk, em vez de falhar em cada janela.
 - TJSP e TJMS `cjpg`: o schema de entrada passa a se chamar `InputCJPGEsaj`, comum aos dois tribunais, e é esse o nome que aparece no `ValidationError` de um filtro inválido (antes, `InputCJPGTJSP`). `InputCJPGTJSP` e `OutputCJPGTJSP` continuam importáveis de `juscraper.courts.tjsp.schemas`, como aliases de `InputCJPGEsaj` e `OutputCJPGEsaj`, e `juscraper.courts.tjsp.cjpg_download`/`cjpg_parse` continuam expondo as mesmas funções.
