@@ -441,6 +441,23 @@ As bases e os mixins em `src/juscraper/schemas/` definem os tipos compartilhados
 
 O Output reflete o shape real do parser e usa `extra="allow"` para campos auxiliares do backend. Renomear chaves brutas para os nomes canônicos antes de construir o DataFrame; não preencher lacunas com valores provisórios. Campos específicos, como texto integral ou datas próprias do tribunal, continuam no schema concreto quando não representam o mesmo conceito de um campo compartilhado.
 
+### Colunas entregues
+
+`extra="allow"` deixa passar qualquer coluna, inclusive um sinônimo que o parser gera sem declarar: assim escaparam `relatora` no `cjsg` do eSAJ (#717) e `magistrado` no `cjpg`. `tests/schemas/test_output_columns.py` roda o parser público de cada endpoint de `EXPECTED_*_OUTPUT_SCHEMAS` sobre os samples de `tests/<sigla>/samples/` e confere as colunas efetivamente entregues:
+
+1. Nenhuma coluna tem nome de `DEPRECATED_SYNONYMS`, em todos os endpoints.
+2. Toda coluna está declarada no `Output*` do endpoint. Ficam só com a conferência 1 os endpoints de `SO_NOMES_DEPRECADOS`, que repassam o JSON do backend ou cujo Output cobre só o pivot.
+
+Quando o teste reprovar:
+
+- Coluna com nome canônico (conteúdo para quem usa o DataFrame): declarar o campo no `Output*`.
+- Sinônimo de um nome canônico: renomear no parser, como breaking change no `CHANGELOG.md`. Se a renomeação vier em outro PR ou depender de decisão de API, registrar `(tribunal, endpoint, coluna)` em `SINONIMOS_TOLERADOS` com o PR ou a decisão pendente.
+- Código interno do backend, ao lado de um nome já declarado: registrar em `AUXILIARES_NAO_DECLARADAS` com o motivo.
+- Sample novo que não é página de resultado (formulário, captcha, erro que o parser levanta de propósito) ou que foi escrito à mão com rótulos inventados: pôr em `Leitura.ignorar` com o motivo. Arquivo que o parser não lê e não está ali reprova o teste.
+- Endpoint novo em `EXPECTED_*_OUTPUT_SCHEMAS`: incluir em `LEITURAS` ou, sem sample que o parser leia sozinho, em `SEM_LEITURA` com o motivo.
+
+Exceção cuja coluna sumiu dos samples reprova `test_excecoes_ainda_sao_necessarias`: remover a entrada no PR que faz a correção.
+
 ### Modelos são irmãos de `SearchBase`
 
 Modelos de endpoints diferentes herdam da base apropriada e de mixins, não de outro modelo concreto. Por exemplo, `InputCJSGEsajPuro` e `InputCJSGTJSP` são irmãos porque suas APIs divergem. Para extrair campos compartilhados, aplicar a **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
