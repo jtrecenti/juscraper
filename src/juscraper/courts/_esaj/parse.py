@@ -35,6 +35,11 @@ _TYPO_FIXES = {
     "argapso_julgador": "orgao_julgador",
 }
 
+# Marcador de gênero nos rótulos: "Relator(a):" e "Relator (a):" viram
+# ``relator``, o nome canônico das demais famílias. Sem isso, a remoção dos
+# parênteses colava o sufixo e gerava ``relatora``/``relator_a``.
+_GENDER_MARKER_RE = re.compile(r"\s*\((?:a|o|as|os|s|es)\)")
+
 _ERROR_CLASS_RE = re.compile(r"error|erro|mensagem.*erro", re.I)
 _FORM_ID_RE = re.compile(r"form|consulta", re.I)
 _PAGINATION_CLASS_RE = re.compile(r".*pag.*", re.I)
@@ -225,6 +230,7 @@ def cjsg_n_pags(html_source: str) -> int:
 
 def _normalize_key(label: str) -> str:
     key = label.replace(":", "").strip().lower()
+    key = _GENDER_MARKER_RE.sub("", key)
     key = unidecode.unidecode(key)
     key = key.replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_")
     key = key.replace("_de_", "_").replace("_do_", "_")

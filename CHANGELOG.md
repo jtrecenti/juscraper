@@ -84,6 +84,12 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### eSAJ (TJAC, TJAL, TJAM, TJCE, TJMS e TJSP)
 
+- **BREAKING:** `cjsg` e `cjsg_parse`: o relator sai na coluna `relator`, o nome que os demais tribunais usam, e não mais em `relatora`. O portal rotula o campo como "Relator(a):", e o parser colava o "a" ao nome. No TJSP, as linhas com o rótulo "Relator:" já saíam em `relator`, e uma busca que trouxesse os dois rótulos dividia o relator entre duas colunas, cada uma vazia nas linhas da outra; agora fica tudo em `relator`. Sem ciclo de deprecação, como na padronização de colunas da 0.3.0 (#117): o DataFrame não tem como manter as duas colunas sem duplicar o dado. Para migrar, troque `df["relatora"]` por `df["relator"]`, ou renomeie DataFrames salvos com `df.rename(columns={"relatora": "relator"})` (#713, refs #12).
+
+  | Nome antigo | Nome canônico |
+  | --- | --- |
+  | `relatora` | `relator` |
+
 - `cjsg` e `cjpg`, no auto-chunk: uma janela que falha depois dos retries levanta `juscraper.core.exceptions.ColetaParcialError`, depois de tentar as demais. Antes, a falha virava `UserWarning`, e o DataFrame voltava parcial como se estivesse completo. `.resultado` traz o DataFrame deduplicado das janelas que passaram, e `.falhas`, a lista de `(inicio, fim, excecao)` das que falharam; para manter o parcial, capture o erro e use `erro.resultado`.
 - `cjsg` e `cjpg`: com `auto_chunk=False`, e em `data_publicacao_*` em qualquer modo, o limite do intervalo passa de 366 dias para um ano de calendário: o fim deve ser anterior à mesma data do ano seguinte. Intervalos como `01/01/2013`–`01/01/2014`, que o servidor recusava com HTTP 404, levantam `ValueError` antes da requisição, com a mensagem "no máximo 1 ano(s)" (antes, "no máximo 366 dias"). `data_publicacao_*` longo junto com `data_julgamento_*` longo levanta esse `ValueError` antes do auto-chunk, em vez de falhar em cada janela.
 - TJSP e TJMS `cjpg`: o schema de entrada passa a se chamar `InputCJPGEsaj`, comum aos dois tribunais, e é esse o nome que aparece no `ValidationError` de um filtro inválido (antes, `InputCJPGTJSP`). `InputCJPGTJSP` e `OutputCJPGTJSP` continuam importáveis de `juscraper.courts.tjsp.schemas`, como aliases de `InputCJPGEsaj` e `OutputCJPGEsaj`, e `juscraper.courts.tjsp.cjpg_download`/`cjpg_parse` continuam expondo as mesmas funções.

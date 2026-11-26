@@ -183,6 +183,27 @@ tjgo.cjsg("dano moral", id_instancia=3)
 tjgo.cjsg("dano moral", id_instancia=15)
 ```
 
+### eSAJ `cjsg`: from the `relatora` column to `relator`
+
+The eSAJ portals (TJAC, TJAL, TJAM, TJCE, TJMS and TJSP) label the rapporteur
+as "Relator(a):", and the parser used to turn the label into a `relatora`
+column. The column is now `relator`, as in the other courts, with no
+deprecation cycle: a DataFrame cannot keep both names without duplicating the
+data. In TJSP, rows labelled "Relator:" already came out as `relator`, so a
+search with both labels split the rapporteur across two columns; it is now a
+single `relator` column.
+
+```python
+# Before
+df["relatora"]
+
+# After
+df["relator"]
+
+# DataFrames saved before the change
+df = df.rename(columns={"relatora": "relator"})
+```
+
 ### TJSP `cpopg`/`cposg`: `method="api"` removed
 
 The `api.tjsp.jus.br` lookup stopped returning processes (it answers `[]`
