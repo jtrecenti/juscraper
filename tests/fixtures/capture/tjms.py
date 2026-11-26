@@ -65,6 +65,25 @@ def capture_cjpg() -> None:
     dump(dest / "redirecionamentos.json", json.dumps({f"sentenca_{cd_documento}": local}, indent=1).encode())
 
 
+def capture_cjpg_single_page() -> None:
+    """Grava ``cjpg/single_page.html``: busca cujos resultados cabem numa página de 10.
+
+    Em 26/11/2026, "machine learning" trouxe 2 sentenças ("Resultados 1 a 2
+    de 2"). Confere pelas linhas da página, e não por ``cjpg_n_results``.
+    """
+    session = build_session()
+    session.get(f"{ESAJ_BASE}cjpg/open.do", timeout=60)
+    resposta = session.get(
+        f"{ESAJ_BASE}cjpg/pesquisar.do", params=make_tjsp_cjpg_params("machine learning"), timeout=60
+    )
+    resposta.raise_for_status()
+    linhas = BeautifulSoup(resposta.content, "html.parser").select("#divDadosResultado tr.fundocinza1")
+    if not 0 < len(linhas) < 10:
+        # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.
+        raise RuntimeError(f"cjpg single_page: {len(linhas)} linhas na 1a página; troque a busca")
+    dump(samples_dir_for("tjms", "cjpg") / "single_page.html", resposta.content)
+
+
 def main() -> None:
     """Capture cjsg and cjpg samples for TJMS."""
     capture_cjsg_samples(
@@ -75,6 +94,7 @@ def main() -> None:
         monocratica_query="usucapiao",
     )
     capture_cjpg()
+    capture_cjpg_single_page()
 
 
 if __name__ == "__main__":

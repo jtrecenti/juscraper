@@ -135,8 +135,7 @@ def capture_cjpg_single_page() -> None:
 
     Em 26/11/2026, "jurimétrica" trouxe 2 sentenças. A busca antiga
     ("usucapiao extraordinario predio rural familia juizado") já não trazia
-    nenhuma. Conta as linhas da página, e não usa ``cjpg_n_results``, que
-    numa página só devolve 1 (ver ``test_single_page_conta_os_dois_resultados``).
+    nenhuma. Confere pelas linhas da página, e não por ``cjpg_n_results``.
     """
     session = build_session(headers=TJSP_CHROME_HEADERS)
     resposta = _fetch_cjpg_page1(session, "jurimétrica")

@@ -191,21 +191,15 @@ class TestCJPGNResults:
         html = load_sample("tjsp", "cjpg/results_normal_page_01.html")
         assert cjpg_n_results(html) == 3565472
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "A cascata pega a célula de layout com 'Resultados', e não a do bgcolor; "
-            "o '\\d+$' casa com o link da página '1' no fim dela."
-        ),
-    )
     def test_single_page_conta_os_dois_resultados(self):
-        """A página real com "Resultados 1 a 2 de 2" deveria contar 2."""
+        """Página real com "Resultados 1 a 2 de 2": conta 2, e não o link da página "1" (#740)."""
         html = load_sample("tjsp", "cjpg/single_page.html")
         assert cjpg_n_results(html) == 2
+        assert cjpg_n_pags(html) == 1
 
     @pytest.mark.parametrize(("corpo", "expected"), _CASCATA_CONTAGEM.values(), ids=_CASCATA_CONTAGEM.keys())
     def test_selector_and_text_cascades(self, corpo, expected):
-        """Characterizes the CJPG-only selectors and shared text cascade."""
+        """Caracteriza a cascata de seletores e de regex, a mesma do ``cjsg``."""
         assert cjpg_n_results(_pagina(corpo)) == expected
 
     def test_counts_result_rows_when_pagination_marker_is_missing(self):

@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from ...core.exceptions import ColetaParcialError
 from ...core.parse_utils import normalizar_texto
-from .parse import _extract_pagination_count, _find_page_summary_cell, _has_zero_results, _raise_page_error
+from .parse import _extract_pagination_count, _find_pagination_element, _has_zero_results, _raise_page_error
 
 logger = logging.getLogger("juscraper.cjpg_parse")
 
@@ -26,25 +26,6 @@ _CHAVES_CANONICAS = {
     'data_de_disponibilização': 'data_disponibilizacao',
     'magistrado': 'relator',
 }
-
-
-def _find_cjpg_pagination_element(soup: BeautifulSoup) -> Tag | None:
-    # A cascata do CJPG difere da que o CJSG usa em
-    # ``_esaj.parse._find_pagination_element``. Aqui qualquer ``td`` com
-    # "resultado" vence, sem o limite de 400 caracteres, antes de ``bgcolor``,
-    # e ``bgcolor`` vale em qualquer tag. O CJSG exige "resultados" em célula
-    # curta e ainda tenta ``td`` com classe "pag". A ordem faz parte do
-    # contrato legado do CJPG: unificar as duas mudaria qual célula é lida
-    # em páginas que casam com mais de um seletor.
-    for cell in soup.find_all("td"):
-        if "resultado" in cell.get_text().lower():
-            return cell
-
-    legacy_element = soup.find(attrs={"bgcolor": "#EEEEEE"})
-    if legacy_element is not None:
-        return legacy_element
-
-    return _find_page_summary_cell(soup)
 
 
 def _count_cjpg_result_rows_or_raise(soup: BeautifulSoup) -> int:
@@ -94,7 +75,11 @@ def cjpg_n_results(page_source: str | bytes) -> int:
     if _has_zero_results(soup):
         return 0
 
-    page_element = _find_cjpg_pagination_element(soup)
+    # A mesma cascata do ``cjsg``: célula curta com "Resultados 1 a N de M"
+    # primeiro. Sem o limite de tamanho, a primeira ``td`` com "resultado" é
+    # a de layout, que envolve a página inteira e termina nos links de
+    # paginação; numa página só, o ``\d+$`` lia o link "1" (#740).
+    page_element = _find_pagination_element(soup)
     if page_element is None:
         return _count_cjpg_result_rows_or_raise(soup)
 
