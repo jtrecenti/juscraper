@@ -7,7 +7,7 @@ and granular tests.
 Examples
 --------
 >>> from tests._helpers import load_sample
->>> html = load_sample("tjsp", "cjsg/results_normal.html")
+>>> html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
 """
 import re
 from collections.abc import Callable, Mapping, Sequence
@@ -31,7 +31,7 @@ def load_sample(tribunal: str, relative_path: str, *, encoding: str = "utf-8") -
     tribunal : str
         Court directory under ``tests/`` (e.g., ``"tjsp"``, ``"tjac"``).
     relative_path : str
-        Path inside ``tests/<tribunal>/samples/`` (e.g., ``"cjsg/results_normal.html"``).
+        Path inside ``tests/<tribunal>/samples/`` (e.g., ``"cjsg/results_normal_page_01.html"``).
     encoding : str
         File encoding. Defaults to ``"utf-8"``.
 

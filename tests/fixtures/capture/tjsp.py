@@ -28,6 +28,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from juscraper.courts._esaj.acordao import paginas_movimentacoes
+from juscraper.courts._esaj.cjpg_parse import cjpg_n_results
 
 from ._util import (
     TJSP_CHROME_HEADERS,
@@ -130,6 +131,24 @@ def _fetch_cjpg_page_n(session: requests.Session, page: int) -> requests.Respons
     return r
 
 
+def capture_cjpg_single_page() -> None:
+    """Grava ``cjpg/single_page.html``: busca cujos resultados cabem numa página de 10.
+
+    Em 26/11/2026, "jurimétrica" trouxe 1 sentença. A busca antiga
+    ("usucapiao extraordinario predio rural familia juizado") já não trazia
+    nenhuma.
+    """
+    session = build_session(headers=TJSP_CHROME_HEADERS)
+    resposta = _fetch_cjpg_page1(session, "jurimétrica")
+    total = cjpg_n_results(resposta.content)
+    if not 0 < total <= 10:
+        # Fora de uma página, o sample deixaria de exercitar o caso.
+        print(f"[tjsp] cjpg single_page: {total} resultados; sample mantido")
+        return
+    dump(samples_dir_for("tjsp", "cjpg") / "single_page.html", resposta.content)
+    print(f"[tjsp] cjpg single_page ('jurimétrica', {total} resultado(s)) → saved")
+
+
 def capture_cjpg() -> None:
     """Capture cjpg samples (typical multi-page, single-page, no-results).
 
@@ -154,12 +173,7 @@ def capture_cjpg() -> None:
         print(f"[tjsp] cjpg typical FAILED: {exc}")
 
     try:
-        session = build_session(headers=TJSP_CHROME_HEADERS)
-        r_single = _fetch_cjpg_page1(
-            session, "usucapiao extraordinario predio rural familia juizado"
-        )
-        dump(dest / "single_page.html", r_single.content)
-        print("[tjsp] cjpg single_page → saved")
+        capture_cjpg_single_page()
     except Exception as exc:  # pylint: disable=broad-except
         print(f"[tjsp] cjpg single_page FAILED: {exc}")
 

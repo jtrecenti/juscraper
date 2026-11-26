@@ -1,18 +1,14 @@
 """Offline contract tests for TJSP cjpg.
 
 Mocks ``cjpg/pesquisar.do`` (page 1) and ``cjpg/trocarDePagina.do`` (page
-2+) with live-captured samples, plus synthetic samples kept from the
-unit-test suite for legacy-format coverage. Validates the public
-DataFrame contract and the query-string payload.
+2+) with live-captured samples. Validates the public DataFrame contract and
+the query-string payload.
 
-Samples exercised:
+Samples exercised (all captured by ``tests/fixtures/capture/tjsp.py``):
 
-- ``cjpg/results_normal_page_01.html`` / ``_02.html`` — live capture
-  (``dano moral``), used for multi-page coverage.
-- ``cjpg/results_legacy.html`` — 2 real processes, 25 total hits,
-  "Mostrando …" legacy wording.
-- ``cjpg/results_novo_formato.html`` — current TJSP wording,
-  "Resultados N a M de X".
+- ``cjpg/results_normal_page_01.html`` / ``_02.html`` — ``dano moral``,
+  used for multi-page coverage ("Resultados 1 a 10 de 3565472").
+- ``cjpg/single_page.html`` — ``jurimétrica``, 2 sentences in one page.
 - ``cjpg/no_results.html`` — eSAJ form page returned when the query
   matches zero acórdãos. Guards the fix for #109.
 """
@@ -26,12 +22,21 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
+from juscraper.courts._esaj.cjpg_parse import cjpg_n_results
 from juscraper.courts.tjsp.exceptions import QueryTooLongError
 from tests._helpers import load_sample_bytes
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 BASE = "https://esaj.tjsp.jus.br/cjpg"
 CJPG_MIN_COLUMNS = {"cd_processo", "id_processo", "classe", "relator", "decisao"}
+
+# Página de erro do eSAJ no meio da coleta. Não há captura de captcha do
+# CJPG; o HTML mínimo fica aqui, e não em ``samples/``.
+PAGINA_CAPTCHA = (
+    '<!DOCTYPE html><html><body><div class="mensagemErro">'
+    "Falha na verificação do captcha. Nenhum resultado encontrado."
+    "</div></body></html>"
+)
 
 
 def _add_pesquisar(pesquisa: str, sample_path: str) -> None:
@@ -63,18 +68,18 @@ def _add_trocar_de_pagina(pagina: int, sample_path: str) -> None:
 
 
 @responses.activate
-def test_cjpg_typical_legacy_format(tmp_path, mocker):
-    """Typical query (legacy 'Mostrando N a M de X' wording) — DataFrame with schema."""
+def test_cjpg_single_page(tmp_path, mocker):
+    """Busca cujos resultados cabem numa página — DataFrame with schema."""
     mocker.patch("time.sleep")
-    _add_pesquisar("direito", "cjpg/results_legacy.html")
+    _add_pesquisar("jurimétrica", "cjpg/single_page.html")
 
     df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
-        "direito", paginas=1
+        "jurimétrica", paginas=1
     )
 
     assert isinstance(df, pd.DataFrame)
     assert set(df.columns) >= CJPG_MIN_COLUMNS
-    assert len(df) > 0
+    assert len(df) == 2
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -96,32 +101,16 @@ def test_cjpg_multi_page(tmp_path, mocker):
 
 
 @responses.activate
-def test_cjpg_novo_formato(tmp_path, mocker):
-    """Current TJSP wording 'Resultados N a M de X' — regression for #cjpg_n_pags."""
-    mocker.patch("time.sleep")
-    _add_pesquisar("direito", "cjpg/results_novo_formato.html")
-
-    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
-        "direito", paginas=1
-    )
-
-    # The synthetic sample has 0 result rows in the listing but a real
-    # pagination marker; the contract validates the public call doesn't
-    # raise and the DataFrame shape is correct.
-    assert isinstance(df, pd.DataFrame)
-
-
-@responses.activate
 def test_cjpg_paginas_alem_do_total_devolve_vazio(tmp_path, mocker):
     """Página pedida além do total não gera arquivo, e o resultado é vazio.
 
-    ``results_legacy.html`` informa 25 resultados, ou 3 páginas de 10. Só a
-    página 1 é requisitada; nenhuma página entra no diretório baixado.
+    ``single_page.html`` traz 2 resultados, uma página de 10. Só a página 1 é
+    requisitada; nenhuma página entra no diretório baixado.
     """
     mocker.patch("time.sleep")
-    _add_pesquisar("direito", "cjpg/results_legacy.html")
+    _add_pesquisar("jurimétrica", "cjpg/single_page.html")
 
-    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("direito", paginas=[5])
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("jurimétrica", paginas=[5])
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
@@ -163,14 +152,14 @@ def test_cjpg_query_too_long_via_alias_raises(tmp_path):
 def test_cjpg_count_only_returns_int(tmp_path, mocker):
     """``count_only=True`` short-circuits to int after the initial GET (#92)."""
     mocker.patch("time.sleep")
-    _add_pesquisar("dano moral", "cjpg/results_novo_formato.html")
+    _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
 
     n = jus.scraper("tjsp", download_path=str(tmp_path)).cjpg(
         "dano moral", count_only=True,
     )
 
     assert isinstance(n, int)
-    assert n == 39764  # "Resultados 1 a 10 de 39764" no sample
+    assert n == 3565472  # "Resultados 1 a 10 de 3565472" no sample
     # Apenas 1 GET (pesquisar.do); nenhum trocarDePagina.do.
     assert len(responses.calls) == 1
 
@@ -195,7 +184,9 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     Mocka 2 GETs distintos com `data_inicio` diferente (uma janela cada) e
     afere que o total e a soma das contagens reportadas. Vai falhar se o
     auto_chunk count-only path quebrar (ex.: iterar fora de
-    `iter_date_windows` ou nao somar). 39764 + 25 = 39789.
+    `iter_date_windows` ou nao somar). A soma esperada vem da contagem de
+    cada sample, porque a do ``single_page.html`` hoje sai errada (ver
+    ``test_single_page_conta_os_dois_resultados`` em ``test_cjpg.py``).
     """
     mocker.patch("time.sleep")
     # Janela total: 02/01/2020 a 01/01/2022 = 2 anos de calendario = 2 janelas.
@@ -208,7 +199,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
-        body=load_sample_bytes("tjsp", "cjpg/results_novo_formato.html"),
+        body=load_sample_bytes("tjsp", "cjpg/results_normal_page_01.html"),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(expected_w1)],
@@ -220,7 +211,7 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     responses.add(
         responses.GET,
         f"{BASE}/pesquisar.do",
-        body=load_sample_bytes("tjsp", "cjpg/results_legacy.html"),
+        body=load_sample_bytes("tjsp", "cjpg/single_page.html"),
         status=200,
         content_type="text/html; charset=utf-8",
         match=[query_param_matcher(expected_w2)],
@@ -234,7 +225,12 @@ def test_cjpg_count_only_sums_across_chunks(tmp_path, mocker):
     )
 
     assert isinstance(n, int)
-    assert n == 39764 + 25  # soma bruta cross-janela
+    contagens = [
+        cjpg_n_results(load_sample_bytes("tjsp", f"cjpg/{sample}"))
+        for sample in ("results_normal_page_01.html", "single_page.html")
+    ]
+    assert n == sum(contagens)  # soma bruta cross-janela
+    assert contagens[0] == 3565472
     assert len(responses.calls) == 2
 
 
@@ -288,7 +284,14 @@ def test_cjpg_pagina_de_erro_no_meio_da_coleta_levanta_coleta_parcial(tmp_path, 
     """Página de captcha na página 2 não conta como página lida sem resultados."""
     mocker.patch("time.sleep")
     _add_pesquisar("dano moral", "cjpg/results_normal_page_01.html")
-    _add_trocar_de_pagina(2, "cjpg/count_captcha_error.html")
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocarDePagina.do",
+        body=PAGINA_CAPTCHA,
+        status=200,
+        content_type="text/html; charset=utf-8",
+        match=[query_param_matcher({"pagina": "2", "conversationId": ""})],
+    )
 
     with pytest.raises(ColetaParcialError, match=r"cjpg_00002\.html.*Captcha") as erro:
         jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
