@@ -1,7 +1,7 @@
 """Pydantic schemas for TJRN scraper endpoints."""
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
@@ -33,8 +33,14 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     id_relator: str | None = None
     id_colegiado: str | None = None
     sistema: str | None = None
-    decisoes: str | None = None
-    jurisdicoes: str | None = None
+    # Valores do seletor "Decisoes" do portal (``field-decisao.js``), que o backend
+    # compara com ``tipo_teor``: "Decisão" sao as monocraticas, "Acórdão" as
+    # colegiadas e "Sentença" as de 1o grau. Vazio (ou ``None``) busca todas.
+    decisoes: Literal["", "Decisão", "Acórdão", "Sentença"] | None = None
+    # Valores do seletor "Jurisdicoes" do portal (``field-jurisdicao.js``): "TJ"
+    # (Tribunal de Justica) e "TR" (Turmas Recursais e TUJ). Vazio (ou ``None``)
+    # busca todas. Os nomes por extenso fazem o portal responder 502/503.
+    jurisdicoes: Literal["", "TJ", "TR"] | None = None
     grau: str | None = None
 
 
