@@ -62,7 +62,7 @@ def _itens_esperados(objeto: griffe.Object) -> int | None:
     """Itens que o griffe distribui pelos elementos da ``tuple`` devolvida; ``None`` se variádica."""
     retorno = objeto.returns if objeto.is_function else None
     # ``tuple[int]`` tem um elemento só, sem ``elements``; o griffe não o distribui.
-    elementos = getattr(retorno, "is_tuple", False) and getattr(retorno.slice, "elements", None)
+    elementos = getattr(retorno, "is_tuple", False) and getattr(getattr(retorno, "slice", None), "elements", None)
     if not elementos:
         return 1
     return None if "..." in map(str, elementos) else len(elementos)

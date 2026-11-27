@@ -60,7 +60,7 @@ repos:
           - '--per-file-ignores=tests/*:D100,D101,D102,D103,D104,E302,E303,F401'
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
+    rev: v2.4.1
     hooks:
       - id: mypy
         additional_dependencies: [types-requests==2.33.0.20261006, types-PyYAML==6.0.12.20260906]
