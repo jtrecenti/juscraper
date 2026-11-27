@@ -8,7 +8,7 @@ Hooks a subclass may override:
 
 * ``_configure_session`` — mount custom HTTPAdapter (TJCE TLS).
 * ``INPUT_CJSG`` — swap ``InputCJSGEsajPuro`` for a tribunal-specific
-  schema derived from ``InputCJSGEsajBase`` (TJSP uses ``InputCJSGTJSP``).
+  schema (subclasse de ``InputCJSGEsajBase``; TJSP usa ``InputCJSGTJSP``).
 * ``_validate_pesquisa``: reject the resolved search term before any
   request (TJSP enforces its 120-char limit here).
 """
@@ -249,8 +249,8 @@ class EsajSearchScraper(HTTPScraper):
         BASE_URL: eSAJ root, e.g. ``https://esaj.tjac.jus.br/`` (must end
             with ``/``).
         TRIBUNAL_NAME: Used in logs and :attr:`BaseScraper.tribunal_name`.
-        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs, a subclass
-            of :class:`InputCJSGEsajBase`. Defaults to
+        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs (subclasse de
+            :class:`InputCJSGEsajBase`). Defaults to
             :class:`InputCJSGEsajPuro`. TJSP overrides with its own model.
         CJSG_CHROME_UA: TJSP only — sends the Chrome-flavoured UA that the
             eSAJ form expects from browsers.
@@ -663,7 +663,7 @@ class EsajSearchScraper(HTTPScraper):
             base_url=self.BASE_URL,
             download_path=diretorio or self.download_path,
             body=body,
-            tipo_decisao=getattr(input_model, "tipo_decisao", "acordao"),
+            tipo_decisao=input_model.tipo_decisao,
             # O schema declara ``int`` por refletir a API publica, mas o pipeline
             # ja trocou ``int`` por ``range`` (``normalize_paginas``).
             paginas=cast("list | range | None", input_model.paginas),
