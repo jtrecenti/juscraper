@@ -13,6 +13,9 @@ import responses
 import juscraper as jus
 from tests._helpers import load_sample, load_sample_bytes
 
+# O TRF5 serve o formulário e o detalhe em latin-1, com este cabeçalho; os
+# samples guardam os bytes crus.
+HTML_LATIN1 = "text/html;charset=ISO-8859-1"
 LIST_URL = "https://pje1g.trf5.jus.br/pjeconsulta/ConsultaPublica/listView.seam"
 DETAIL_URL = (
     "https://pje1g.trf5.jus.br/pjeconsulta/"
@@ -56,9 +59,8 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     responses.add(
         responses.GET,
         LIST_URL,
-        # Bytes crus, com o cabeçalho que o TRF5 manda.
         body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
-        content_type="text/html;charset=ISO-8859-1",
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -70,7 +72,7 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
-        content_type="text/html",
+        content_type=HTML_LATIN1,
     )
     from juscraper.courts._trf.download import extract_documento_urls
 

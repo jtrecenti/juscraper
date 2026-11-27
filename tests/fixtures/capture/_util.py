@@ -13,7 +13,8 @@ Usage (from repo root)::
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+import warnings
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -23,6 +24,7 @@ from bs4 import BeautifulSoup
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
 from juscraper.courts._esaj.parse import _total_declarado
+from juscraper.courts._trf.base import TRFConsultaScraper
 
 logger = logging.getLogger(__name__)
 
@@ -449,3 +451,35 @@ def capture_acordao_samples(
             logger.info(
                 "[%s] acordao/%s: %s %s -> %s: %s", tribunal, cenario, cnj, data_julgamento, type(erro).__name__, erro
             )
+
+
+def respostas_do_cpopg(
+    scraper: TRFConsultaScraper,
+    cnj: str,
+    descartar: Callable[[requests.Response], bool] = lambda _resp: False,
+) -> tuple[str | None, list[requests.Response]]:
+    """Roda o ``cpopg_download`` de um raspador do PJe e devolve o detalhe e as respostas que ele usou.
+
+    As respostas vêm de um hook na sessão. Ficam de fora os erros que o retry
+    repetiu, os saltos de redirecionamento e o que ``descartar`` apontar (o
+    desafio do WAF, no TJPE): sobra a resposta final de cada requisição.
+    """
+    respostas: list[requests.Response] = []
+
+    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
+        respostas.append(resp)
+
+    scraper.session.hooks["response"].append(guardar)
+    try:
+        with warnings.catch_warnings():
+            # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
+            warnings.filterwarnings("error", category=UserWarning)
+            (html,) = scraper.cpopg_download(cnj)
+    finally:
+        scraper.session.hooks["response"].remove(guardar)
+    return html, [r for r in respostas if r.ok and not r.is_redirect and not descartar(r)]
+
+
+def rotas(respostas: list[requests.Response]) -> list[str]:
+    """``MÉTODO url`` de cada resposta, sem a query string."""
+    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]
