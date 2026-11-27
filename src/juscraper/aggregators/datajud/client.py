@@ -505,7 +505,7 @@ class DatajudScraper(HTTPScraper):
 
     def listar_processos(
         self,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista processos do DataJud via API publica do CNJ.
