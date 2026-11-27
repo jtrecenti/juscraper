@@ -7,6 +7,7 @@ parecia uma conexão presa.
 """
 import ast
 from pathlib import Path
+from typing import TypeGuard
 
 METODOS = {"cjsg", "cjsg_download"}
 
@@ -17,7 +18,7 @@ def _paginas(chamada: ast.Call) -> ast.expr | None:
     return next((kw.value for kw in chamada.keywords if kw.arg == "paginas"), None)
 
 
-def _baixa_tudo(no: ast.AST) -> bool:
+def _baixa_tudo(no: ast.AST) -> TypeGuard[ast.Call]:
     """Chamada a ``cjsg``/``cjsg_download`` sem ``paginas`` ou com ``paginas=None``."""
     if not (isinstance(no, ast.Call) and isinstance(no.func, ast.Attribute) and no.func.attr in METODOS):
         return False

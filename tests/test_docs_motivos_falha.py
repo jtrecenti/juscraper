@@ -83,7 +83,7 @@ def test_motivo_com_status_montado_da_excecao_esta_documentado(exc):
     assert documentado(motivo_falha(exc))
 
 
-def _subclasses(classe: type) -> list[type]:
+def _subclasses(classe: type[object]) -> list[type]:
     return [classe, *(sub for direta in classe.__subclasses__() for sub in _subclasses(direta))]
 
 
