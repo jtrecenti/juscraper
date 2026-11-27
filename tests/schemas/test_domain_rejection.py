@@ -155,13 +155,14 @@ _LITERAL_207_CASES = [
     ids=[f"{c[0].__name__}.{c[1]}" for c in _LITERAL_207_CASES],
 )
 def test_literal_207_aceita_dominio_e_recusa_o_resto(schema_cls, campo, aceitos, recusados):
-    # Sem termo: no TJRN, termo na ementa com "Sentença" ou grau "1" e recusado
+    # No TJRN, sem termo: termo na ementa com "Sentença" ou grau "1" e recusado
     # por outra regra (``test_tjrn_recusa_termo_na_ementa_sem_ementa``).
+    pesquisa = "" if schema_cls is InputCJSGTJRN else "x"
     for valor in aceitos:
-        schema_cls(pesquisa="", **{campo: valor})
+        schema_cls(pesquisa=pesquisa, **{campo: valor})
     for valor in recusados:
         with pytest.raises(ValidationError):
-            schema_cls(pesquisa="", **{campo: valor})
+            schema_cls(pesquisa=pesquisa, **{campo: valor})
 
 
 @pytest.mark.parametrize("core", sorted(ORDENACOES_POR_CORE.keys() - {"pje1g"}))
@@ -531,7 +532,7 @@ def test_tjrn_aceita_decisao_no_seu_grau(filtros):
     InputCJSGTJRN(pesquisa="", **filtros)
 
 
-@pytest.mark.parametrize("pesquisa", ["dano moral", "x", "A", "a dano"])
+@pytest.mark.parametrize("pesquisa", ["dano moral", "x", "A", "a dano", "de,", '"dano moral"'])
 @pytest.mark.parametrize(
     "filtros",
     [
@@ -541,6 +542,7 @@ def test_tjrn_aceita_decisao_no_seu_grau(filtros):
         {"decisoes": "Decisão", "grau": "1"},
         {"decisoes": "Decisão", "jurisdicoes": "TJ"},
         {"decisoes": "Decisão", "jurisdicoes": "TR", "grau": "2"},
+        {"decisoes": "Decisão", "sistema": "PJE"},
         {"decisoes": "Sentença", "buscar_em": "ementa"},
     ],
 )
@@ -561,6 +563,7 @@ def test_tjrn_recusa_termo_na_ementa_sem_ementa(pesquisa, filtros):
         ("a", {"decisoes": "Sentença"}),
         ("de", {"grau": "1"}),
         ("a de para", {"decisoes": "Decisão", "jurisdicoes": "TJ"}),
+        ('"a"', {"decisoes": "Decisão", "sistema": "PJE"}),
         # No inteiro teor, que sentencas e monocraticas tem.
         ("dano moral", {"decisoes": "Sentença", "buscar_em": "inteiro_teor"}),
         ("dano moral", {"grau": "1", "buscar_em": "inteiro_teor"}),
@@ -572,6 +575,8 @@ def test_tjrn_recusa_termo_na_ementa_sem_ementa(pesquisa, filtros):
         ("dano moral", {"jurisdicoes": "TR"}),
         ("apelação", {"decisoes": "Decisão"}),
         ("apelação", {"decisoes": "Decisão", "grau": "2"}),
+        ("apelação", {"decisoes": "Decisão", "sistema": "SAJ"}),
+        ("dano moral", {"decisoes": "Acórdão", "sistema": "PJE"}),
     ],
 )
 def test_tjrn_aceita_termo_na_ementa_de_quem_tem(pesquisa, filtros):

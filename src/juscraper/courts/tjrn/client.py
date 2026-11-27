@@ -105,10 +105,10 @@ class TJRNScraper(HTTPScraper):
                 ``"Acórdão"`` com ``grau="1"`` levantam ``ValidationError``.
                 Por padrao, ``pesquisa`` busca na ementa, e no portal so os
                 acordaos tem ementa: com termo na ementa, ``"Sentença"`` e
-                ``"Decisão"`` com ``jurisdicoes`` levantam ``ValidationError``.
-                ``"Decisão"`` sem jurisdicao segue aceita, mas so algumas
-                monocraticas do SAJ, de 2008, tem ementa. Para buscar termo
-                nesses tipos, ver ``buscar_em``.
+                ``"Decisão"`` com ``jurisdicoes`` ou ``sistema="PJE"`` levantam
+                ``ValidationError``. ``"Decisão"`` sem esses filtros segue
+                aceita, mas so algumas monocraticas do SAJ, de 2008, tem
+                ementa. Para buscar termo nesses tipos, ver ``buscar_em``.
             jurisdicoes (str): Jurisdicao, com os valores do portal: ``"TJ"``
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
@@ -131,11 +131,11 @@ class TJRNScraper(HTTPScraper):
                 ementa; o inteiro teor existe em acordaos, monocraticas e
                 sentencas. Outro valor levanta ``ValidationError``. Com
                 ``"ementa"`` e termo, ``decisoes="Sentença"``, ``grau="1"`` e
-                ``decisoes="Decisão"`` com ``jurisdicoes`` levantam
-                ``ValidationError``, porque o portal nao devolve resultados.
-                O portal ignora as preposicoes e as conjuncoes ``"e"`` e
-                ``"ou"`` em minusculas: termo so com elas (``"a"``, ``"de"``)
-                conta como busca vazia e nao levanta.
+                ``decisoes="Decisão"`` com ``jurisdicoes`` ou
+                ``sistema="PJE"`` levantam ``ValidationError``, porque o
+                portal nao devolve resultados. O portal ignora as preposicoes
+                e as conjuncoes ``"e"`` e ``"ou"`` em minusculas: termo so com
+                elas (``"a"``, ``"de"``) conta como busca vazia e nao levanta.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

@@ -135,6 +135,7 @@ class TestCJSGTJRN:
             {"grau": "1"},
             {"decisoes": "Decisão", "jurisdicoes": "TJ"},
             {"decisoes": "Decisão", "jurisdicoes": "TR"},
+            {"decisoes": "Decisão", "sistema": "PJE"},
         ],
     )
     def test_termo_na_ementa_sem_ementa_volta_vazio(self, filtros):
@@ -143,7 +144,7 @@ class TestCJSGTJRN:
         E a prova de que ``InputCJSGTJRN`` pode recusar as combinacoes: como a
         API publica levanta ``ValidationError``, o payload vai direto pela
         sessao do scraper. So os acordaos tem ementa; as monocraticas com
-        ementa sao poucas do SAJ, de 2008, fora de ``"TJ"`` e ``"TR"``. Sem
+        ementa sao poucas do SAJ, de 2008, sem jurisdicao. Sem
         data, porque a recusa vale para qualquer periodo; o mesmo termo traz
         resultados sem o filtro e no inteiro teor
         (``test_inteiro_teor_busca_termo_em_sentencas``).
