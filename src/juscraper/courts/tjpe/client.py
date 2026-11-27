@@ -195,7 +195,7 @@ class TJPEScraper(HTTPScraper):
     ) -> list:
         """Baixa as paginas brutas do cjsg do TJPE.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa,
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa,
         e levanta e avisa nos mesmos casos.
 
         Returns:

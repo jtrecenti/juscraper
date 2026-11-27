@@ -181,7 +181,7 @@ class TJPBScraper(HTTPScraper):
     ) -> list:
         """Download raw CJSG JSON responses from TJPB.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista de respostas JSON cruas (uma por pagina).

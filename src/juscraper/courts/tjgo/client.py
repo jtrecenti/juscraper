@@ -72,28 +72,11 @@ class TJGOScraper(HTTPScraper):
     ) -> list:
         """Executa a busca no TJGO e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
-        Args:
-            pesquisa: Termo de busca livre (aliases ``query`` / ``termo`` aceitos).
-            paginas: Páginas a baixar (1-based). ``None`` baixa todas.
-            id_instancia: ``0`` todas / ``15`` tribunal / ``151`` turmas recursais.
-                ``2`` e ``3`` são aliases deprecados de ``151`` e ``15``; ``1`` é
-                deprecado sem substituto.
-            id_area: ``0`` todas / ``1`` cível / ``2`` criminal. Com
-                ``id_instancia=151``, só ``0`` é aceito, como no formulário do site.
-            id_serventia_subtipo: Código do seletor "Orgao" do site (por exemplo,
-                ``14`` Câmaras Cíveis, ``20`` Câmaras Criminais). ``0`` = todos.
-                Código que o formulário não oferece para a instância e a área
-                escolhidas levanta ``ValidationError``.
-            numero_processo: Filtra por um número CNJ específico.
-            tamanho_pagina: Itens por página (default 10). Aceita
-                ``qtde_itens_pagina`` como alias deprecado.
-            data_publicacao_inicio: Início do intervalo de publicação:
-                ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``,
-                ``date`` ou ``datetime``.
-            data_publicacao_fim: Fim do intervalo de publicação (mesmos formatos).
-            **kwargs: Aliases deprecados; ver :meth:`cjsg`.
+        Returns:
+            HTML bruto de cada página baixada.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10

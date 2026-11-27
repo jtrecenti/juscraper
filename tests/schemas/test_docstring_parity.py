@@ -2,8 +2,8 @@
 
 O padrão de ``CONTRIBUTING.md > Docstrings de métodos públicos com kwargs``
 exige correspondência entre filtros documentados e campos do schema.
-``CASES`` cobre métodos principais; ``DOWNLOAD_REFERENCE_CASES`` cobre
-pares de download, que referenciam o principal via ``:meth:`` para evitar
+``CASES`` cobre métodos principais; ``DOWNLOAD_REFERENCE_CASES`` cobre os
+pares de download achados no pacote, que referenciam o principal via ``:meth:`` para evitar
 uma segunda lista de filtros sem validação de paridade.
 """
 from __future__ import annotations
@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
+import pkgutil
 import re
 import types
 import typing
@@ -21,7 +22,9 @@ from typing import Any, Literal
 import pytest
 from pydantic_core import PydanticUndefined
 
+import juscraper
 from juscraper.utils.params import DATE_CANONICAL
+from tests.schemas.test_signature_parity import _accepts_kwargs
 
 # Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
 # secao propria da docstring (``Aliases deprecados``) mas nao sao campos
@@ -327,60 +330,40 @@ def test_docstring_declares_schema_types(
     )
 
 
-# Pares cuja docstring referencia o método principal via ``:meth:``.
+def _pares_download() -> list[tuple[str, str, str]]:
+    """Pares ``*_download`` públicos cujo método principal recebe ``**kwargs``.
+
+    Percorre os módulos do pacote e devolve ``(módulo, classe, método)`` só
+    para o método definido na própria classe: o herdado já é coberto pela
+    classe que o define. Os pares em ``CASES``, que listam os próprios
+    filtros, ficam de fora.
+    """
+    em_cases = {tuple(p.values[:3]) for p in CASES}
+    pares = set()
+    for info in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
+        mod = importlib.import_module(info.name)
+        for class_name, klass in vars(mod).items():
+            if not inspect.isclass(klass) or klass.__module__ != mod.__name__:
+                continue
+            for name, attr in vars(klass).items():
+                if name.startswith("_") or not name.endswith("_download") or not callable(attr):
+                    continue
+                principal = getattr(klass, name.removesuffix("_download"), None)
+                if principal is not None and _accepts_kwargs(principal):
+                    pares.add((mod.__name__, class_name, name))
+    return sorted(pares - em_cases)
+
+
+# Pares que remetem ao método principal via ``:meth:``, achados no pacote.
 # CONTRIBUTING.md > Docstrings de métodos públicos com kwargs > Métodos
-# de download define o contrato; esses métodos ficam fora de ``CASES``.
+# de download define o contrato; download que lista os próprios filtros
+# entra em ``CASES`` e sai daqui.
 DOWNLOAD_REFERENCE_CASES = [
     pytest.param(
-        "juscraper.courts._esaj.base", "EsajSearchScraper",
-        "cjsg_download", "cjsg",
-        id="esaj.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjsp.client", "TJSPScraper",
-        "cjsg_download", "cjsg",
-        id="tjsp.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts._esaj.cjpg", "EsajCjpgScraper",
-        "cjpg_download", "cjpg",
-        id="esaj.cjpg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjrj.client", "TJRJScraper",
-        "cjsg_download", "cjsg",
-        id="tjrj.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.aggregators.falcao.client", "FalcaoScraper",
-        "listar_decisoes_download", "listar_decisoes",
-        id="falcao.listar_decisoes_download",
-    ),
-    pytest.param(
-        "juscraper.courts.trf3.client", "TRF3Scraper",
-        "cjsg_download", "cjsg",
-        id="trf3.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjmt.client", "TJMTScraper",
-        "cjsg_download", "cjsg",
-        id="tjmt.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjpr.client", "TJPRScraper",
-        "cjsg_download", "cjsg",
-        id="tjpr.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjrs.client", "TJRSScraper",
-        "cjsg_download", "cjsg",
-        id="tjrs.cjsg_download",
-    ),
-    pytest.param(
-        "juscraper.courts.tjdft.client", "TJDFTScraper",
-        "cjsg_download", "cjsg",
-        id="tjdft.cjsg_download",
-    ),
+        module_path, class_name, download_method, download_method.removesuffix("_download"),
+        id=f"{module_path.removeprefix('juscraper.')}.{class_name}.{download_method}",
+    )
+    for module_path, class_name, download_method in _pares_download()
 ]
 
 

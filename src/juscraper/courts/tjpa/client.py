@@ -61,11 +61,8 @@ class TJPAScraper(HTTPScraper):
     ) -> list:
         """Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).
 
-        Filtros de data (``data_julgamento_inicio``/``_fim``,
-        ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
-        validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
-        (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
-        da validacao, como ``query_scope``, alias deprecado de ``buscar_em``.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
         Returns:
             Respostas JSON cruas (uma por pagina).
