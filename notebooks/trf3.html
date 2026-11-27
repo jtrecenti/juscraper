@@ -689,10 +689,13 @@ polo_passivo
 <p><code>cpopg_download</code> returns, per CNJ, a dict with the raw JSON envelopes of each API route (or <code>None</code> when the process was not found or the lookup failed, with the failures in a <code>UserWarning</code>); <code>cpopg_parse</code> turns that list into the DataFrame, without the <code>motivo_falha</code> column. Useful to cache the raw responses before processing.</p>
 <div id="73535111" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>brutos <span class="op">=</span> trf3.cpopg_download(<span class="st">"5003536-21.2025.4.03.6342"</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">sorted</span>(brutos[<span class="dv">0</span>]))</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf3.cpopg_parse(brutos, [<span class="st">"50035362120254036342"</span>])</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_distribuicao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> brutos[<span class="dv">0</span>] <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"download failed (see the warning)"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="bu">sorted</span>(brutos[<span class="dv">0</span>]))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>df_again <span class="op">=</span> trf3.cpopg_parse(brutos, [<span class="st">"50035362120254036342"</span>])</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>df_again[[<span class="st">"id_cnj"</span>, <span class="st">"processo"</span>, <span class="st">"data_distribuicao"</span>]]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>TRF3 cpopg: 100%|██████████| 1/1 [00:12&lt;00:00, 12.44s/it]</code></pre>
 </div>
