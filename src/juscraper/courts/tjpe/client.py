@@ -50,7 +50,8 @@ class TJPEScraper(HTTPScraper):
 
         Delega a :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg_download`,
         na mesma sessão de :meth:`cpopg`, inclusive o cookie do AWS WAF obtido
-        quando o desafio aparece. Não baixa as peças: para elas, usar
+        quando o desafio aparece. Não baixa as peças: ``download_pecas=True``
+        ou um ``diretorio`` levantam ``TypeError``; para elas, usar
         :meth:`cpopg` com ``download_pecas=True``.
 
         Args:
@@ -66,7 +67,7 @@ class TJPEScraper(HTTPScraper):
                 :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
 
         Raises:
-            TypeError: Kwarg desconhecido.
+            TypeError: Kwarg desconhecido, ``download_pecas=True`` ou ``diretorio``.
             ValidationError: CNJ em formato inválido.
             ImportError: O WAF desafiou e o Playwright não está instalado.
 

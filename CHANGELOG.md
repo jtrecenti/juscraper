@@ -314,6 +314,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### TRF1, TRF3, TRF5, TRF6 e TJPE (consulta processual do PJe)
 
+- TRF1, TRF3, TRF5 e TJPE `cpopg_download` (e `cposg_download` do TRF3): `download_pecas=True` ou um `diretorio` levantam `TypeError` de argumento inesperado, que indica `cpopg(..., download_pecas=True)` (ou `cposg`, no TRF3), onde as peças são baixadas. Antes, os dois eram aceitos e ignorados, e a chamada devolvia só os HTMLs (no TRF3, os envelopes JSON), sem erro nem aviso. Os valores padrão (`download_pecas=False`, `diretorio=None`) continuam aceitos.
 - TRF1, TRF5, TRF6 e TJPE `cpopg` e `cpopg_download`: o `TypeError` por kwarg desconhecido cita o método público chamado (`TRF5Scraper.cpopg_download`, `TJPEScraper.cpopg`) e sugere o nome válido mais parecido (`(você quis dizer 'X'?)`), como nos demais métodos. Antes, `cpopg_download` saía como `cpopg` e, no TJPE, a mensagem citava a classe interna `TJPEConsultaPublicaScraper`.
 - TRF1, TRF3, TRF5, TRF6 e TJPE `cpopg` e `cpopg_parse`: o DataFrame traz sempre as colunas do detalhe (`processo`, `classe`, `orgao_julgador` etc.), vazias nas linhas que não foram lidas. Antes, quando nenhum CNJ do lote era lido, o resultado saía só com `id_cnj` e `motivo_falha`, e `df[["processo", "classe"]]` levantava `KeyError` (#442).
 - TRF1, TRF3, TRF5 e TJPE `cpopg` e `cpopg_parse`: `orgao_julgador` e `endereco_orgao` deixam de sair `None`. O portal traz os dois num painel sem rótulo, que o parser não lia.

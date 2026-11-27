@@ -22,6 +22,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 from tqdm import tqdm
 
+from ...core.base import recusar_kwargs_sem_efeito
 from ...core.download import gravar_arquivo
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
@@ -274,7 +275,14 @@ class TRFConsultaScraper(HTTPScraper):
         interrompem o batch; um bloqueio anti-bot encerra o batch e os CNJs
         restantes saem ``None``. As falhas entram num único ``UserWarning``
         ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
+        Não baixa as peças: ``download_pecas=True`` ou um ``diretorio``
+        levantam ``TypeError``; para elas, usar :meth:`cpopg` com
+        ``download_pecas=True``.
         """
+        recusar_kwargs_sem_efeito(
+            kwargs, self.INPUT_CPOPG, ("download_pecas", "diretorio"), self._rotulo("cpopg_download"),
+            "para baixar as peças, use cpopg(..., download_pecas=True)",
+        )
         cnjs = self._coerce_id_cnj(id_cnj, "cpopg_download", **kwargs)
         consultas = self._baixar(cnjs)
         self._avisar(cnjs, [c.motivo for c in consultas], "cpopg_download")
