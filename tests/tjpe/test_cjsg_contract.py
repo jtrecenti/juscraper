@@ -34,6 +34,7 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.courts.tjpe.download import BASE_URL
 from tests._helpers import load_sample, urlencoded_body_subset_matcher, urls_enviadas
+from tests.tjpe.test_cjsg_pagination_unit import resultado_sem_cabecalho_com_aviso_na_ementa
 
 CONSULTA_URL = f"{BASE_URL}/consulta.xhtml"
 ESCOLHA_URL = f"{BASE_URL}/escolhaResultado.xhtml"
@@ -246,6 +247,27 @@ def test_cjsg_pagina_desconhecida_levanta_erro(mocker):
 
     with pytest.raises(ValueError, match="fora dos formatos conhecidos"):
         jus.scraper("tjpe").cjsg("dano moral", paginas=1)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_resultado_sem_contagem_levanta_erro(mocker):
+    """Resultado sem "Documentos encontrados: N" levanta, mesmo com o aviso numa ementa.
+
+    Antes, a contagem virava 0 e a busca saía vazia sem aviso.
+    """
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    _add_post_consulta("cjsg/step_02_escolha.html")
+    responses.add(
+        responses.POST,
+        ESCOLHA_URL,
+        body=resultado_sem_cabecalho_com_aviso_na_ementa(),
+        status=200,
+        content_type="text/html; charset=UTF-8",
+    )
+
+    with pytest.raises(ValueError, match="TJPE cjsg: a página lida não traz a contagem"):
+        jus.scraper("tjpe").cjsg("dano moral", paginas=1, tipo_decisao="todos")
 
 
 def _escolha_com_tipo_zerado(botao_zerado: str) -> str:
