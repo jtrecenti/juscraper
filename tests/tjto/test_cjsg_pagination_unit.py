@@ -29,12 +29,13 @@ def test_get_total_results_pagina_alem_do_total_traz_o_total_da_busca():
     assert _get_total_results(_sample("pagina_alem_do_total.html")) == 9
 
 
-def test_get_total_results_falls_back_to_resultados_text():
+def test_get_total_results_sem_a_aba_ativa_nao_le_o_html_bruto():
+    """Sem a aba ativa, um número entre parênteses no texto da página (ano numa ementa) não vira total."""
     html = (
         '<html><body><p>pesquisando por <strong>x</strong> - '
-        "(123 resultados)</p></body></html>"
+        "(123 resultados)</p><p>Lei n. 8.112 (1990)</p></body></html>"
     )
-    assert _get_total_results(html) == 123
+    assert _get_total_results(html) == 0
 
 
 def test_get_total_results_handles_dot_thousands():

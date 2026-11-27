@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -56,14 +56,20 @@ def _collect_candidates(
     soup: Tag,
     html: str,
     css_selectors: Sequence[str],
+    *,
+    fallback_html: bool,
 ) -> list[str]:
+    if not css_selectors:
+        return [html]
     candidates: list[str] = []
     for selector in css_selectors:
         for element in soup.select(selector):
             content = element.get_text(" ", strip=True)
             if content:
                 candidates.append(content)
-    return candidates or [html]
+    if not candidates and fallback_html:
+        return [html]
+    return candidates
 
 
 def _extract_first(
@@ -81,7 +87,10 @@ def _extract_first(
     return None
 
 
-def _extract_fallback_max(candidate: str) -> int | None:
+def _extract_fallback_max(candidates: Sequence[str]) -> int | None:
+    if not candidates:
+        return None
+    candidate = candidates[0]
     values = [
         value
         for raw in _FALLBACK_NUMERO_RE.findall(candidate)
@@ -96,7 +105,7 @@ def extract_count_with_cascade(
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
     zero_markers: Sequence[str] = (),
-    fallback_max_int: bool = False,
+    fallback: Literal["html", "max_int"] | None = None,
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
@@ -105,51 +114,65 @@ def extract_count_with_cascade(
     ``return 0`` (assume zero resultados). Manter essa decisao do lado do
     caller preserva o comportamento legado de cada scraper.
 
+    A ordem é: seletores e regex; ``zero_markers``; ``fallback="max_int"``;
+    ``None``. Os marcadores de busca vazia só valem quando nenhuma contagem foi
+    achada, porque ementas e sentenças citam essas frases ("nenhum documento
+    encontrado nos autos") e uma contagem 0 faz o download parar na primeira
+    página sem aviso.
+
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
             tabela, sem parsear de novo. Com uma ``Tag``, a
-            cascata inteira (seletores, regex no HTML bruto e
+            cascata inteira (seletores, regex, ``fallback`` e
             ``zero_markers``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
             candidato.
             Use ``()`` quando nao houver seletor estruturado confiavel —
-            a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
+            a cascata roda ``regex_patterns`` direto no HTML bruto.
             Se ``css_selectors`` e nao vazio mas nenhum seletor casa em
-            nenhum elemento, a cascata tambem cai no HTML bruto.
+            nenhum elemento com texto, a cascata nao acha contagem, salvo
+            com ``fallback="html"``.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
             valido; caso contrario tenta ``group(0)``. Vence o primeiro
             match valido na ordem da cascata (candidato, depois regex).
-        zero_markers: Substrings (case-insensitive) que, quando presentes
-            em **qualquer lugar** do texto da pagina, fazem o util retornar
-            ``0`` imediatamente — sem rodar a cascata de seletores. Use
-            marcadores especificos do tribunal ("Nenhum documento
-            encontrado", "Sua pesquisa nao retornou resultados") para nao
-            falso-positivar em textos de ajuda.
-        fallback_max_int: Se ``True``, ultimo recurso e pegar ``max(\\d+)``
-            no primeiro candidato — util para layouts onde varios numeros
-            aparecem mas o total e o maior. Default ``False`` (fail-fast:
-            retorna ``None``). Os callers controlam o default semantico
-            (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
-            opt-in explicito para evitar extrair numeros irrelevantes da
-            pagina (ano, codigo, etc.).
+        zero_markers: Substrings (case-insensitive) procuradas no texto da
+            pagina inteira (ou da ``Tag``) quando a cascata nao acha contagem;
+            se alguma aparece, o util retorna ``0``. Use marcadores
+            especificos do tribunal ("Nenhum documento encontrado", "Sua
+            pesquisa nao retornou resultados") para nao falso-positivar em
+            textos de ajuda.
+        fallback: Ultimo recurso, opt-in explicito. Default ``None``
+            (fail-fast: retorna ``None``); os callers controlam o default
+            semantico (1 pagina ou 0 resultados) do lado deles.
+
+            - ``"max_int"``: pega ``max(\\d+)`` no primeiro candidato, depois
+              dos ``zero_markers`` — util para layouts onde varios numeros
+              aparecem mas o total e o maior. Pode extrair numeros
+              irrelevantes da pagina (ano, codigo, etc.).
+            - ``"html"``: as regex rodam no HTML bruto quando nenhum
+              seletor casa elemento com texto. Sem ele, o
+              HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
+              casa "(fevereiro de 2009)" nelas. Só para regex que nenhuma
+              ementa reproduz, como um rótulo inteiro ("Documentos
+              encontrados: N").
 
     Returns:
-        ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
-            nao salvar. ``0`` quando ``zero_markers`` casarem.
+        ``int`` extraido ou ``None`` se nada casar, nenhum
+            ``zero_markers`` aparecer e ``fallback`` nao salvar.
+            ``0`` quando ``zero_markers`` casarem sem contagem achada.
     """
     soup, bruto = (html, str(html)) if isinstance(html, Tag) else (BeautifulSoup(html, "html.parser"), html)
-    if _has_zero_marker(soup, zero_markers):
-        return 0
-
-    candidates = _collect_candidates(soup, bruto, css_selectors)
+    candidates = _collect_candidates(soup, bruto, css_selectors, fallback_html=fallback == "html")
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
-    if fallback_max_int:
-        return _extract_fallback_max(candidates[0])
+    if _has_zero_marker(soup, zero_markers):
+        return 0
+    if fallback == "max_int":
+        return _extract_fallback_max(candidates)
     return None
 
 

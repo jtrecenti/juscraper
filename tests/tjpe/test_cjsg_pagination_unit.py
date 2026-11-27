@@ -23,6 +23,19 @@ def test_extract_total_docs_escolha_page_fallback():
     assert extract_total_docs(_sample("step_02_escolha.html")) == 953
 
 
+def test_extract_total_docs_ementa_com_o_marcador_de_zero_nao_zera():
+    """HTML derivado do sample real ``simples_resultado.html``.
+
+    A primeira ementa passa a dizer "nenhum documento encontrado nos autos";
+    o cabeçalho "Documentos encontrados: 988" continua valendo.
+    """
+    original = _sample("simples_resultado.html")
+    ementa = "DIREITO CIVIL. A&Ccedil;&Atilde;O DE COBRAN&Ccedil;A"
+    assert ementa in original
+    html = original.replace(ementa, "nenhum documento encontrado nos autos", 1)
+    assert extract_total_docs(html) == 988
+
+
 def test_extract_total_docs_no_results_returns_zero():
     assert extract_total_docs(_sample("no_results.html")) == 0
 

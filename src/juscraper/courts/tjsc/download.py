@@ -49,6 +49,8 @@ def cjsg_url_for_page(page: int) -> str:
     return AJAX_URL if page > 1 else SEARCH_URL
 
 
+# Sem o ``h2`` (``fallback="html"``), a regex roda no HTML da página: o rótulo
+# "N documentos encontrados" inteiro é o que ela exige.
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = ("h2.mb-0",)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"(\d+)\s*documentos?\s*encontrados?", re.IGNORECASE),
@@ -61,7 +63,7 @@ def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
-        fallback_max_int=False,
+        fallback="html",
     )
     if total is None:
         return 1

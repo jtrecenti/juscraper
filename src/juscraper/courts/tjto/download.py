@@ -49,7 +49,6 @@ def _get_total_results(html: str) -> int:
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
-        fallback_max_int=False,
     )
     return n if n is not None else 0
 
