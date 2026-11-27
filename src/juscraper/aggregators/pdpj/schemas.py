@@ -4,14 +4,14 @@ Documentam a API publica de :class:`PdpjScraper`. A API REST do PDPJ
 (``api-processo-integracao.data-lake.pdpj.jus.br/processo-api``) e rica
 em filtros para o endpoint de busca profunda; aqui registramos cada um
 com seu nome canonico em snake_case (mapeado para o nome camelCase da
-querystring no :mod:`download`).
+querystring em :mod:`.params`).
 """
 from __future__ import annotations
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import TamanhoPagina
+from ...schemas import PaginasMixin, TamanhoPagina
 from .._pdpj_sso.schemas import InputAuthGovbrBase
 
 
@@ -56,7 +56,7 @@ class _InputFiltrosPdpj(BaseModel):
     """Filtros comuns a :meth:`PdpjScraper.pesquisa` e :meth:`PdpjScraper.contar`.
 
     Cada nome canonico em snake_case vira o parametro camelCase da API
-    (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.client`).
+    (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.params`).
     """
 
     numero_processo: str | None = None
@@ -89,18 +89,17 @@ class _InputFiltrosPdpj(BaseModel):
     )
 
 
-class InputPesquisaPdpj(_InputFiltrosPdpj):
+class InputPesquisaPdpj(PaginasMixin, _InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.pesquisa`.
 
     Cobre os parametros documentados em ``GET /api/v1/processos`` (busca
-    profunda).
+    profunda). ``paginas`` vem de :class:`PaginasMixin`.
     """
 
     fase: str | None = None
     situacao_atual: str | None = None
     tipo_operacao: str | None = None
     campo_ordenacao: str | None = None
-    paginas: int | list[int] | range | None = None
     itens_por_pagina: TamanhoPagina = 100
 
 

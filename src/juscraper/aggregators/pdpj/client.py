@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, ClassVar, cast
@@ -53,7 +53,10 @@ from .download import (
     fetch_processo_movimentos,
     fetch_processo_partes,
 )
+from .params import _to_query_params
 from .parse import (
+    _document_to_row,
+    _iter_documents,
     build_documento_rows,
     build_movimento_rows,
     build_parte_rows,
@@ -70,99 +73,6 @@ from .schemas import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-# Mapeia nomes canonicos snake_case -> nomes camelCase aceitos pela API.
-# Mantido como modulo-level porque e compartilhado entre :meth:`pesquisa`
-# e :meth:`contar` (que aceita um subconjunto; ver :class:`InputContarPdpj`).
-_QUERY_PARAM_MAP: dict[str, str] = {
-    "numero_processo": "numeroProcesso",
-    "numero_processo_sintetico": "numeroProcessoSintetico",
-    "id": "id",
-    "id_fonte_dados_codex": "idFonteDadosCodex",
-    "cpf_cnpj_parte": "cpfCnpjParte",
-    "nome_parte": "nomeParte",
-    "outro_nome_parte": "outroNomeParte",
-    "polo_parte": "poloParte",
-    "situacao_parte": "situacaoParte",
-    "nome_representante": "nomeRepresentante",
-    "oab_representante": "oabRepresentante",
-    "href": "href",
-    "id_assunto_judicial": "idAssuntoJudicial",
-    "id_classe": "idClasse",
-    "id_orgao_julgador": "idOrgaoJulgador",
-    "instancia": "instancia",
-    "fase": "fase",
-    "situacao_atual": "situacaoAtual",
-    "segmento_justica": "segmentoJustica",
-    "tribunal": "tribunal",
-    "tipo_operacao": "tipoOperacao",
-    "numero_historico": "numeroHistorico",
-    "data_atualizacao_inicio": "dataHoraAtualizacaoInicio",
-    "data_atualizacao_fim": "dataHoraAtualizacaoFim",
-    "data_primeiro_ajuizamento_inicio": "dataHoraPrimeiroAjuizamentoInicio",
-    "data_primeiro_ajuizamento_fim": "dataHoraPrimeiroAjuizamentoFim",
-    "campo_ordenacao": "campoOrdenacao",
-}
-
-
-def _to_query_params(model_data: dict[str, Any]) -> dict[str, Any]:
-    """Converte um dict com nomes canonicos para querystring camelCase.
-
-    Valores ``None`` sao ignorados; listas viram strings com itens
-    separados por virgula (formato esperado pela API).
-    """
-    out: dict[str, Any] = {}
-    for key, value in model_data.items():
-        if value is None:
-            continue
-        api_key = _QUERY_PARAM_MAP.get(key, key)
-        if isinstance(value, list):
-            out[api_key] = ",".join(str(v) for v in value)
-        else:
-            out[api_key] = value
-    return out
-
-
-def _iter_documents(details: dict[str, Any]) -> Iterator[Any]:
-    """Itera documentos do topo e das tramitacoes na ordem da API."""
-    top_documents = details.get("documentos")
-    if isinstance(top_documents, list):
-        yield from top_documents
-    traversals = details.get("tramitacoes")
-    if not isinstance(traversals, list):
-        return
-    for traversal in traversals:
-        if isinstance(traversal, dict) and isinstance(traversal.get("documentos"), list):
-            yield from traversal["documentos"]
-
-
-def _document_to_row(
-    document: object,
-    process: object,
-    process_number: object,
-) -> dict[str, Any] | None:
-    """Achata um documento PDPJ bem-formado no formato de download."""
-    if not isinstance(document, dict):
-        return None
-    file_data = document.get("arquivo") or {}
-    document_type = document.get("tipo") or {}
-    return {
-        "processo": process,
-        "numero_processo": process_number,
-        "id_documento": document.get("id"),
-        "id_codex": document.get("idCodex"),
-        "sequencia": document.get("sequencia"),
-        "data_juntada": document.get("dataHoraJuntada"),
-        "nome": document.get("nome"),
-        "nivel_sigilo": document.get("nivelSigilo"),
-        "tipo_codigo": document_type.get("codigo"),
-        "tipo_nome": document_type.get("nome"),
-        "arquivo_id": file_data.get("id"),
-        "arquivo_tipo": file_data.get("tipo"),
-        "arquivo_tamanho": file_data.get("tamanho"),
-        "arquivo_paginas": file_data.get("quantidadePaginas"),
-    }
 
 
 _ITEM_CONSULTA = "consulta(s) de processo"
@@ -264,7 +174,7 @@ def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str,
     return row
 
 
-def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
+def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, Container[int] | None]:
     """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
 
     Com lista, a coleta segue até a maior página pedida, porque o cursor
@@ -272,9 +182,9 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, s
     """
     if paginas is None:
         return None, None
-    if isinstance(paginas, range):
-        return paginas.stop - 1, set(paginas)
-    return (max(paginas) if paginas else 0), set(paginas)
+    if isinstance(paginas, range):  # ``in`` num range nao o percorre
+        return paginas[-1], paginas
+    return max(paginas), set(paginas)
 
 
 def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
@@ -632,27 +542,48 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         Args:
             paginas: Intervalo 1-based. Aceita ``int`` (``3`` -> primeiras
                 3 paginas), ``list``, ``range`` ou ``None`` (todas).
-            **kwargs: Filtros aceitos pelo schema
-                :class:`InputPesquisaPdpj` (todos opcionais; ``None`` =
-                sem filtro):
+            **kwargs: Filtros aceitos por :class:`InputPesquisaPdpj`, todos
+                opcionais (``None`` = sem filtro). Os valores citados vem da
+                especificacao publica da API (``/processo-api/v2/api-docs``,
+                Swagger v1.7.36); o cliente nao os valida.
 
-                * ``numero_processo`` (str)
-                * ``numero_processo_sintetico`` (str)
-                * ``id`` (str): id interno do processo no Data Lake
-                * ``cpf_cnpj_parte`` (str): com formatacao
-                * ``nome_parte`` (str)
-                * ``polo_parte`` (str): "ATIVO" ou "PASSIVO"
-                * ``situacao_parte`` (str)
-                * ``nome_representante`` / ``oab_representante`` (str)
-                * ``id_classe`` (str): codigos separados por virgula
-                * ``id_assunto_judicial`` (str): ids separados por virgula
-                * ``id_orgao_julgador`` (str | list[str])
-                * ``instancia`` (str): "PRIMEIRO_GRAU"/"SEGUNDO_GRAU"/etc.
-                * ``segmento_justica`` (str): "JUSTICA_FEDERAL"/"JUSTICA_ESTADUAL"/etc.
-                * ``tribunal`` (str): siglas separadas por virgula (max 5)
-                * ``data_atualizacao_inicio`` / ``_fim`` (str): ISO datetime
-                * ``data_primeiro_ajuizamento_inicio`` / ``_fim`` (str): ISO datetime
-                * ``campo_ordenacao`` (str): campo de ordenacao decrescente
+                * ``numero_processo`` (str | None): numero do processo
+                * ``numero_processo_sintetico`` (str | None): numero sintetico do processo
+                * ``id`` (str | None): id interno do processo no Data Lake
+                * ``id_fonte_dados_codex`` (str | None): ``idFonteDadosCodex`` do processo, nome da API
+                * ``numero_historico`` (str | None): numero historico da tramitacao no STF, como "HC-244185"
+                * ``cpf_cnpj_parte`` (str | None): CPF ou CNPJ da parte, com ou sem formatacao
+                * ``nome_parte`` (str | None): nome da parte
+                * ``outro_nome_parte`` (str | None): outro nome da parte
+                * ``polo_parte`` (str | None): "ATIVO" ou "PASSIVO"
+                * ``situacao_parte`` (str | None): situacao da parte
+                * ``nome_representante`` (str | None): nome do representante
+                * ``oab_representante`` (str | None): OABs separadas por virgula, como "GO64656,SP12345"
+                * ``href`` (str | None): caminho da pessoa no endpoint ``/pessoas``, como
+                  "/pessoas/1fe353ba-98a2-5ba7-889b-324e2e901d09"
+                * ``id_classe`` (str | None): codigos numericos separados por virgula
+                * ``id_assunto_judicial`` (str | None): ids numericos separados por virgula
+                * ``id_orgao_julgador`` (str | list[str] | None): lista vira texto separado por virgula
+                * ``instancia`` (str | None): "PRIMEIRO_GRAU"/"SEGUNDO_GRAU"/etc.
+                * ``segmento_justica`` (str | None): "JUSTICA_FEDERAL"/"JUSTICA_ESTADUAL"/etc.
+                * ``tribunal`` (str | None): siglas separadas por virgula (max 5)
+                * ``fase`` (str | None): "CONHECIMENTO", "EXECUÇÃO", "INVÁLIDO", "INVESTIGATÓRIA",
+                  "NÃO INFORMADO", "OUTRO" ou "PRÉ-PROCESSUAL"
+                * ``situacao_atual`` (str | None): situacao do processo, com os acentos e maiusculas
+                  da API, como "Tramitando", "Baixado definitivamente", "Arquivado
+                  provisoriamente" ou "Suspenso/sobrestado por Recurso Repetitivo"; a lista
+                  completa esta na especificacao
+                * ``tipo_operacao`` (str | None): tipo de operacao do processo: "Inserção de
+                  processo", "Alteração de documentos", "Alteração de metadados", "Alteração de
+                  movimentos", "Alteração de partes", "Exclusão de processo" ou "Identificação
+                  de petição inicial"
+                * ``data_atualizacao_inicio`` / ``data_atualizacao_fim`` (str | None): atualizacao
+                  no Data Lake, no formato ``yyyy-MM-dd'T'HH:mm:ss.SSS``
+                * ``data_primeiro_ajuizamento_inicio`` / ``data_primeiro_ajuizamento_fim`` (str | None):
+                  primeiro ajuizamento, no mesmo formato
+                * ``campo_ordenacao`` (str | None): campo de ordenacao decrescente:
+                  "dataHoraUltimoMovimento" (padrao da API), "dataHoraAtualizacao",
+                  "dataHoraPrimeiroAjuizamento" ou "dataHoraUltimoAjuizamento"
                 * ``itens_por_pagina`` (int): default 100, minimo 1. Vai a API como
                   ``maxElementsSize``, mas a API ignora o valor: a
                   especificacao publica do data lake traz
@@ -670,6 +601,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 sem resultado devolve DataFrame vazio.
 
         Raises:
+            TypeError: Quando um kwarg desconhecido e passado ou ``paginas`` tem tipo invalido.
+            ValidationError: Quando ``paginas`` (pagina < 1, vazia, ``range`` descendente) ou um filtro e invalido.
             requests.HTTPError: Quando a requisicao de qualquer pagina falha, com status diferente de 404.
                 Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.
             RetryExhaustedError: Quando a requisicao de qualquer pagina falha.
@@ -682,9 +615,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             verdade dos filtros aceitos.
         """
         self._check_auth()
-        paginas_norm = normalize_paginas(paginas)
         try:
-            inp = InputPesquisaPdpj(paginas=paginas_norm, **kwargs)
+            inp = InputPesquisaPdpj(paginas=normalize_paginas(paginas), **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(
                 exc, "PdpjScraper.pesquisa()", schema_cls=InputPesquisaPdpj,
@@ -697,14 +629,14 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         # parâmetro segue na querystring para não mudar a requisição de quem já
         # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
-        max_paginas, permitidas = _limite_de_paginas(paginas_norm)
+        max_paginas, permitidas = _limite_de_paginas(inp.paginas_normalizadas)
         return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
 
     def _paginar(
         self,
         base_params: dict[str, Any],
         max_paginas: int | None,
-        permitidas: set[int] | None,
+        permitidas: Container[int] | None,
     ) -> list[dict[str, Any]]:
         """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 
@@ -751,15 +683,39 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).
 
-        Aceita os filtros de :meth:`pesquisa` menos paginacao, ordenacao, ``fase``, ``situacao_atual``
-        e ``tipo_operacao``, que a API nao declara aqui (ver :class:`InputContarPdpj`). Retorna ``int``.
+        Args:
+            **kwargs: Filtros aceitos por :class:`InputContarPdpj`, todos
+                opcionais (``None`` = sem filtro), com o significado e o formato
+                descritos em :meth:`pesquisa`. Ficam de fora paginacao,
+                ordenacao, ``fase``, ``situacao_atual`` e ``tipo_operacao``, que
+                a especificacao publica da API nao declara neste endpoint.
+
+                * ``numero_processo`` / ``numero_processo_sintetico`` / ``id`` (str | None)
+                * ``id_fonte_dados_codex`` / ``numero_historico`` / ``href`` (str | None)
+                * ``cpf_cnpj_parte`` / ``nome_parte`` / ``outro_nome_parte`` (str | None)
+                * ``polo_parte`` / ``situacao_parte`` (str | None)
+                * ``nome_representante`` / ``oab_representante`` (str | None)
+                * ``id_classe`` / ``id_assunto_judicial`` (str | None)
+                * ``id_orgao_julgador`` (str | list[str] | None)
+                * ``instancia`` / ``segmento_justica`` / ``tribunal`` (str | None)
+                * ``data_atualizacao_inicio`` / ``data_atualizacao_fim`` (str | None)
+                * ``data_primeiro_ajuizamento_inicio`` / ``data_primeiro_ajuizamento_fim`` (str | None)
+
+        Returns:
+            Total informado pela API.
 
         Raises:
+            TypeError: Quando um kwarg desconhecido e passado.
+            ValidationError: Quando um filtro e invalido.
             requests.HTTPError: Quando a requisicao falha.
             RetryExhaustedError: Quando a requisicao falha.
             requests.Timeout: Quando a requisicao falha.
             requests.ConnectionError: Quando a requisicao falha.
             InvalidJSONResponseError: Quando a resposta nao traz um inteiro.
+
+        See Also:
+            :class:`InputContarPdpj` -- schema pydantic e a fonte da
+            verdade dos filtros aceitos.
         """
         self._check_auth()
         try:
