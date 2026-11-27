@@ -157,7 +157,7 @@ class TJGOScraper(HTTPScraper):
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
-            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
             * ``qtde_itens_pagina`` -> ``tamanho_pagina``
             * ``id_instancia=2`` -> ``id_instancia=151``; ``id_instancia=3`` ->
               ``id_instancia=15``; ``id_instancia=1`` sem substituto

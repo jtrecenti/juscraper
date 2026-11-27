@@ -354,7 +354,24 @@ class DatajudScraper(HTTPScraper):
 
         Args:
             **kwargs: Filtros aceitos pelo schema
-                :class:`InputContarProcessosDataJud`.
+                :class:`InputContarProcessosDataJud`, os mesmos de
+                :meth:`listar_processos`, onde está a semântica de cada um:
+
+                * ``numero_processo`` (str | list[str] | None): CNJ ou lista
+                  de CNJs; sem ``tribunal``, o índice vem dos dígitos do CNJ.
+                * ``tribunal`` (str | None): Sigla do tribunal (``"TJSP"``).
+                * ``ano_ajuizamento`` (int | None): Ano de ajuizamento.
+                * ``classe`` (str | None): Código da classe processual CNJ.
+                * ``assunto`` (list[str | int] | None): Códigos de assuntos CNJ.
+                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim``
+                  (str | None): Intervalo de ajuizamento em ``YYYY-MM-DD``.
+                * ``tipos_movimentacao`` (list[str] | None): Categorias de
+                  movimentação (``"decisao"``, ``"sentenca"``...).
+                * ``movimentos_codigo`` (list[int | str] | None): Códigos TPU
+                  de movimentos.
+                * ``orgao_julgador`` (str | None): Nome do órgão julgador.
+                * ``query`` (dict[str, Any] | None): Query Elasticsearch que
+                  substitui todos os filtros acima.
 
         Returns:
             Uma linha por tribunal consultado, com colunas
@@ -513,6 +530,14 @@ class DatajudScraper(HTTPScraper):
         argument(s): '<nome>'`` em vez de serem silenciosamente ignorados.
 
         Args:
+            paginas: Intervalo 1-based. Aceita as 4 formas do contrato
+                único (refs #118): ``int`` (``3`` -> ``range(1, 4)``),
+                ``list`` (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5
+                contiguamente porque o cursor ``search_after`` só avança),
+                ``range`` (respeita ``start``/``stop``/``step``) e ``None``
+                (default, todas). Como o cursor é sequencial, intervalos que
+                começam depois de 1 percorrem e descartam as páginas
+                anteriores antes de devolver apenas as solicitadas.
             **kwargs: Filtros aceitos pelo schema
                 :class:`InputListarProcessosDataJud`. Listados abaixo (todos
                 opcionais; ``None`` = sem filtro):
@@ -581,15 +606,6 @@ class DatajudScraper(HTTPScraper):
                 * ``mostrar_movs`` (bool): Se ``True``, inclui
                   ``movimentos``/``movimentacoes`` no ``_source``. Default
                   ``False`` (paginacao mais leve).
-                * ``paginas`` (int | list[int] | range): Intervalo 1-based.
-                  Aceita as 4 formas do contrato unico (refs #118):
-                  ``int`` (``3`` -> ``range(1, 4)``), ``list``
-                  (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5 contiguamente
-                  porque o cursor ``search_after`` e forwards-only),
-                  ``range`` (respeita ``start``/``stop``/``step``) e ``None``
-                  (default, todas). Como o cursor e sequencial, ranges que
-                  comecam depois de 1 percorrem e descartam as paginas
-                  anteriores antes de devolver apenas as solicitadas.
                 * ``tamanho_pagina`` (int): Hits por requisicao (default
                   5000, range 10-10000 conforme cap da API publica). Em
                   caso de ``HTTP 504``/``Timeout``, o client refaz a

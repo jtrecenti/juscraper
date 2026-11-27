@@ -2,9 +2,11 @@
 
 O padrão de ``CONTRIBUTING.md > Docstrings de métodos públicos com kwargs``
 exige correspondência entre filtros documentados e campos do schema.
-``CASES`` cobre métodos principais; ``DOWNLOAD_REFERENCE_CASES`` cobre os
-pares de download achados no pacote, que referenciam o principal via ``:meth:`` para evitar
-uma segunda lista de filtros sem validação de paridade.
+``CASES`` cobre os métodos públicos com ``**kwargs``, e
+``test_metodo_publico_com_kwargs_tem_paridade_registrada`` reprova o que
+ficar fora dele sem motivo em ``SEM_PARIDADE``; ``DOWNLOAD_REFERENCE_CASES``
+cobre os pares de download achados no pacote, que referenciam o principal via
+``:meth:`` para evitar uma segunda lista de filtros sem validação de paridade.
 """
 from __future__ import annotations
 
@@ -19,11 +21,13 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
+import griffe
 import pytest
 from pydantic_core import PydanticUndefined
 
 import juscraper
-from juscraper.utils.params import DATE_CANONICAL
+from juscraper import _SCRAPERS
+from juscraper.utils.params import DATE_ALIAS_TO_CANONICAL, DATE_CANONICAL, SEARCH_ALIASES
 from tests.schemas.test_signature_parity import _accepts_kwargs
 
 # Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
@@ -106,6 +110,161 @@ CASES = [
         "juscraper.aggregators.pdpj.schemas", "InputContarPdpj",
         id="pdpj.contar",
     ),
+    pytest.param(
+        "juscraper.aggregators._pdpj_sso.mixin", "PdpjSsoMixin", "auth_govbr",
+        "juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj",
+        id="pdpj_sso.auth_govbr",
+    ),
+    pytest.param(
+        "juscraper.aggregators.datajud.client", "DatajudScraper", "contar_processos",
+        "juscraper.aggregators.datajud.schemas", "InputContarProcessosDataJud",
+        id="datajud.contar_processos",
+    ),
+    pytest.param(
+        "juscraper.aggregators.jusbr.client", "JusbrScraper", "auth",
+        "juscraper.aggregators.jusbr.schemas", "InputAuthJusBR",
+        id="jusbr.auth",
+    ),
+    pytest.param(
+        "juscraper.aggregators.jusbr.client", "JusbrScraper", "cpopg",
+        "juscraper.aggregators.jusbr.schemas", "InputCPOPGJusBR",
+        id="jusbr.cpopg",
+    ),
+    pytest.param(
+        "juscraper.aggregators.jusbr.client", "JusbrScraper", "download_documents",
+        "juscraper.aggregators.jusbr.schemas", "InputDownloadDocumentsJusBR",
+        id="jusbr.download_documents",
+    ),
+    pytest.param(
+        "juscraper.courts._trf.base", "TRFConsultaScraper", "cpopg",
+        "juscraper.courts._trf.schemas", "InputCpopgTRF",
+        id="trf.cpopg",
+    ),
+    pytest.param(
+        "juscraper.courts.stf.client", "STFScraper", "contar_decisoes",
+        "juscraper.courts.stf.schemas", "InputContarDecisoesSTF",
+        id="stf.contar_decisoes",
+    ),
+    pytest.param(
+        "juscraper.courts.tjap.client", "TJAPScraper", "cjsg",
+        "juscraper.courts.tjap.schemas", "InputCJSGTJAP",
+        id="tjap.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjba.client", "TJBAScraper", "cjsg",
+        "juscraper.courts.tjba.schemas", "InputCJSGTJBA",
+        id="tjba.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjes.client", "TJESScraper", "cjsg",
+        "juscraper.courts.tjes.schemas", "InputCJSGTJES",
+        id="tjes.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjgo.client", "TJGOScraper", "cjsg",
+        "juscraper.courts.tjgo.schemas", "InputCJSGTJGO",
+        id="tjgo.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjmg.client", "TJMGScraper", "cjsg",
+        "juscraper.courts.tjmg.schemas", "InputCJSGTJMG",
+        id="tjmg.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjmt.client", "TJMTScraper", "cjsg",
+        "juscraper.courts.tjmt.schemas", "InputCJSGTJMT",
+        id="tjmt.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpa.client", "TJPAScraper", "cjsg",
+        "juscraper.courts.tjpa.schemas", "InputCJSGTJPA",
+        id="tjpa.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpb.client", "TJPBScraper", "cjsg",
+        "juscraper.courts.tjpb.schemas", "InputCJSGTJPB",
+        id="tjpb.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpe.client", "TJPEScraper", "cjsg",
+        "juscraper.courts.tjpe.schemas", "InputCJSGTJPE",
+        id="tjpe.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpi.client", "TJPIScraper", "cjsg",
+        "juscraper.courts.tjpi.schemas", "InputCJSGTJPI",
+        id="tjpi.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpr.client", "TJPRScraper", "cjsg",
+        "juscraper.courts.tjpr.schemas", "InputCJSGTJPR",
+        id="tjpr.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjrn.client", "TJRNScraper", "cjsg",
+        "juscraper.courts.tjrn.schemas", "InputCJSGTJRN",
+        id="tjrn.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjro.client", "TJROScraper", "cjsg",
+        "juscraper.courts.tjro.schemas", "InputCJSGTJRO",
+        id="tjro.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjrr.client", "TJRRScraper", "cjsg",
+        "juscraper.courts.tjrr.schemas", "InputCJSGTJRR",
+        id="tjrr.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjrs.client", "TJRSScraper", "cjsg",
+        "juscraper.courts.tjrs.schemas", "InputCJSGTJRS",
+        id="tjrs.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjsc.client", "TJSCScraper", "cjsg",
+        "juscraper.courts.tjsc.schemas", "InputCJSGTJSC",
+        id="tjsc.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjto.client", "TJTOScraper", "cjsg",
+        "juscraper.courts.tjto.schemas", "InputCJSGTJTO",
+        id="tjto.cjsg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjes.client", "TJESScraper", "cjpg",
+        "juscraper.courts.tjes.schemas", "InputCJPGTJES",
+        id="tjes.cjpg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjto.client", "TJTOScraper", "cjpg",
+        "juscraper.courts.tjto.schemas", "InputCJPGTJTO",
+        id="tjto.cjpg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjpe.client", "TJPEScraper", "cpopg",
+        "juscraper.courts._trf.schemas", "InputCpopgTRF",
+        id="tjpe.cpopg",
+    ),
+    pytest.param(
+        "juscraper.courts.tjmg.client", "TJMGScraper", "cposg",
+        "juscraper.courts.tjmg.schemas", "InputCPOSGTJMG",
+        id="tjmg.cposg",
+    ),
+    pytest.param(
+        "juscraper.courts.trf3.client", "TRF3Scraper", "cpopg",
+        "juscraper.courts.trf3.schemas", "InputCpopgTRF3",
+        id="trf3.cpopg",
+    ),
+    pytest.param(
+        "juscraper.courts.trf3.client", "TRF3Scraper", "cposg",
+        "juscraper.courts.trf3.schemas", "InputCposgTRF3",
+        id="trf3.cposg",
+    ),
+    pytest.param(
+        "juscraper.courts.trf6.client", "TRF6Scraper", "cpopg",
+        "juscraper.courts.trf6.schemas", "InputCpopgTRF6",
+        id="trf6.cpopg",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto
@@ -171,6 +330,26 @@ def _schema_filter_fields(module_path: str, class_name: str) -> set[str]:
     return set(klass.model_fields.keys()) - EXPLICIT_PARAMS
 
 
+def _args_documentados(method) -> set[str]:
+    """Nomes das entradas de ``Args:``, lidos pelo parser Google do griffe, como faz o quartodoc."""
+    doc = inspect.getdoc(method) or ""
+    secoes = griffe.Docstring(doc, parser="google").parse()
+    return {
+        entrada.name.lstrip("*")
+        for secao in secoes
+        if isinstance(secao, griffe.DocstringSectionParameters)
+        for entrada in secao.value
+    }
+
+
+def _parametros_explicitos(method) -> set[str]:
+    return {
+        nome
+        for nome, parametro in inspect.signature(method).parameters.items()
+        if nome != "self" and parametro.kind not in (parametro.VAR_POSITIONAL, parametro.VAR_KEYWORD)
+    }
+
+
 @pytest.mark.parametrize(
     "scraper_module,scraper_class,endpoint,schema_module,schema_class",
     CASES,
@@ -178,10 +357,13 @@ def _schema_filter_fields(module_path: str, class_name: str) -> set[str]:
 def test_docstring_lists_schema_fields(
     scraper_module, scraper_class, endpoint, schema_module, schema_class,
 ):
+    """Cada campo do schema está documentado: em ``Args:``, se é parâmetro da assinatura, ou em ``**kwargs``."""
     mod = importlib.import_module(scraper_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
 
-    fields = _schema_filter_fields(schema_module, schema_class)
+    explicitos = _parametros_explicitos(method)
+    todos = set(getattr(importlib.import_module(schema_module), schema_class).model_fields)
+    fields = _schema_filter_fields(schema_module, schema_class) - explicitos
     # Um nome em ``DEPRECATED_ALIASES`` so e subtraido quando NAO e um campo
     # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
     # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas
@@ -190,13 +372,16 @@ def test_docstring_lists_schema_fields(
 
     schema_only = fields - bullets
     docstring_only = bullets - fields
+    sem_args = (todos & explicitos) - _args_documentados(method)
 
-    assert not schema_only and not docstring_only, (
+    assert not schema_only and not docstring_only and not sem_args, (
         f"{scraper_class}.{endpoint} — paridade docstring/schema falhou:\n"
         f"  campos no schema {schema_class} mas nao na docstring: "
         f"{sorted(schema_only) or '-'}\n"
         f"  bullets na docstring mas nao no schema: "
         f"{sorted(docstring_only) or '-'}\n"
+        f"  parametros da assinatura, campos do schema, sem entrada em Args: "
+        f"{sorted(sem_args) or '-'}\n"
         f"  schema = {schema_module}:{schema_class}\n"
         f"  metodo = {scraper_class}.{endpoint}\n"
         "Atualize uma das duas pontas (ver CONTRIBUTING.md > "
@@ -384,4 +569,99 @@ def test_download_docstring_references_toplevel(
         f"para a lista de filtros em vez de duplicar bullets.\n"
         "  Ver CONTRIBUTING.md > Docstrings de métodos públicos com kwargs > "
         "Métodos de download."
+    )
+
+
+#: Método público com ``**kwargs`` que fica fora de ``CASES``, com o motivo.
+#: Só entra aqui o que não tem filtros a conferir contra um schema.
+SEM_PARIDADE: dict[tuple[str, str, str], str] = {
+    ("juscraper.courts.tse.client", "TSEScraper", "cjsg"): (
+        "stub: ``*args``/``**kwargs`` só existem para levantar NotImplementedError; não há schema"
+    ),
+    ("juscraper.courts.trf3.client", "TRF3Scraper", "cpopg_parse"): (
+        "``**kwargs`` só recebe o alias deprecado ``htmls`` (-> ``brutos``); não há filtros nem schema"
+    ),
+}
+
+
+def _metodos_com_kwargs() -> set[tuple[str, str, str]]:
+    """Métodos públicos com ``**kwargs`` da hierarquia de cada raspador registrado.
+
+    Devolve ``(módulo, classe, método)`` pela classe que define o método, como
+    ``CASES`` registra: o herdado conta uma vez, na classe base ou no mixin.
+    Os ``*_download`` ficam com :func:`test_download_docstring_references_toplevel`.
+    """
+    metodos = set()
+    for caminho in _SCRAPERS.values():
+        modulo, nome = caminho.split(":")
+        raspador = getattr(importlib.import_module(modulo), nome)
+        for classe in raspador.__mro__[:-1]:
+            for nome_metodo, atributo in vars(classe).items():
+                if nome_metodo.startswith("_") or nome_metodo.endswith("_download") or not callable(atributo):
+                    continue
+                if _accepts_kwargs(atributo):
+                    metodos.add((classe.__module__, classe.__qualname__, nome_metodo))
+    return metodos
+
+
+def test_metodo_publico_com_kwargs_tem_paridade_registrada():
+    """Todo método público com ``**kwargs`` está em ``CASES`` ou em ``SEM_PARIDADE``.
+
+    Sem isso, um endpoint novo, ou um existente esquecido, fica com a lista de
+    filtros da docstring livre para divergir do schema.
+    """
+    registrados = {tuple(p.values[:3]) for p in CASES}
+    achados = _metodos_com_kwargs()
+    faltam = achados - registrados - set(SEM_PARIDADE)
+    sobram = set(SEM_PARIDADE) - achados
+    assert not faltam and not sobram, (
+        "Métodos públicos com **kwargs sem paridade registrada (incluir em CASES, "
+        "com o schema, ou em SEM_PARIDADE, com o motivo):\n"
+        + "".join(f"  {'.'.join(m)}\n" for m in sorted(faltam))
+        + ("Entradas de SEM_PARIDADE que não existem mais:\n" if sobram else "")
+        + "".join(f"  {'.'.join(m)}\n" for m in sorted(sobram))
+    )
+
+
+def _aliases_aceitos(method, schema) -> set[str]:
+    """Aliases que o pipeline de entrada consome para os campos deste endpoint.
+
+    ``query``/``termo`` quando há ``pesquisa``; o alias de data cujo nome
+    canônico é campo do schema ou parâmetro da assinatura (``DATE_ALIAS_TO_CANONICAL``).
+    """
+    nomes = set(schema.model_fields) | _parametros_explicitos(method)
+    aceitos = {a for a, canonico in DATE_ALIAS_TO_CANONICAL.items() if canonico in nomes}
+    if "pesquisa" in nomes:
+        aceitos |= set(SEARCH_ALIASES)
+    return aceitos
+
+
+#: Endpoint que não consome um alias que :func:`_aliases_aceitos` presume, com o motivo.
+ALIASES_NAO_CONSUMIDOS: dict[tuple[str, str], tuple[frozenset[str], str]] = {
+    ("ComunicaCNJScraper", "listar_comunicacoes"): (
+        frozenset(SEARCH_ALIASES),
+        "chama ``normalize_paginas``, não ``normalize_pesquisa``: ``query``/``termo`` são kwargs desconhecidos",
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    "scraper_module,scraper_class,endpoint,schema_module,schema_class",
+    CASES,
+)
+def test_docstring_cita_aliases_aceitos(
+    scraper_module, scraper_class, endpoint, schema_module, schema_class,
+):
+    """Cada alias deprecado que o endpoint consome aparece na docstring, pelo nome inteiro."""
+    mod = importlib.import_module(scraper_module)
+    method = getattr(getattr(mod, scraper_class), endpoint)
+    schema = getattr(importlib.import_module(schema_module), schema_class)
+    excluidos = ALIASES_NAO_CONSUMIDOS.get((scraper_class, endpoint), (frozenset(), ""))[0]
+    citados = set(_NAME_RE.findall(inspect.getdoc(method) or ""))
+    faltam = _aliases_aceitos(method, schema) - excluidos - citados
+    assert not faltam, (
+        f"{scraper_class}.{endpoint} aceita, com DeprecationWarning, aliases que a "
+        f"docstring não cita: {sorted(faltam)}.\n"
+        "Listar em 'Aliases deprecados:' pelo nome inteiro (``data_julgamento_ate``, "
+        "não ``_ate``). Endpoint que não consome o alias entra em ALIASES_NAO_CONSUMIDOS."
     )
