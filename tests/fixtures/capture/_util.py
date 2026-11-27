@@ -25,34 +25,16 @@ from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
+
+# Mesmos headers que o raspador eSAJ manda, importados para que os samples
+# capturados continuem batendo com o que ele recebe se o cliente mudar. O TJSP
+# usa o UA de Chrome (``CJSG_CHROME_UA``): o eSAJ responde diferente a UAs que
+# não são de navegador, e os matchers de payload dos contratos dependem disso.
+from juscraper.courts._esaj.download import _CHROME_HEADERS as TJSP_CHROME_HEADERS
+from juscraper.courts._esaj.download import _ESAJ_HEADERS as ESAJ_HEADERS
 from juscraper.courts._esaj.parse import _total_declarado
 
 logger = logging.getLogger(__name__)
-
-ESAJ_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-}
-
-# Chrome-flavoured UA that the TJSP cjsg_download.py injects. Mirroring it
-# here keeps the captured samples bit-identical to what the real scraper
-# sends — matters for both contract payload matchers and server-side
-# behaviour (eSAJ behaves differently for non-browser UAs).
-TJSP_CHROME_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-    ),
-}
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 

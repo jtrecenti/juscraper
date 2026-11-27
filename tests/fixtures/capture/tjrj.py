@@ -20,6 +20,7 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
+from juscraper.courts.tjrj.client import TJRJScraper
 from juscraper.courts.tjrj.download import (
     FORM_URL,
     RESULT_URL,
@@ -32,10 +33,7 @@ from ._util import dump, samples_dir_for
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-)
+USER_AGENT = TJRJScraper.USER_AGENT
 
 
 def _form_and_postback(

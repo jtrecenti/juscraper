@@ -14,9 +14,9 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
-from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
+from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes, timeout_enviado, urls_enviadas
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
 
 COLUNAS = {
@@ -130,8 +130,7 @@ def test_cpopg_recurso_com_erro_http_vira_none_e_mantem_o_resto() -> None:
     assert "\n" in row["assunto"] and " \n" not in row["assunto"]
     id_processo = id_processo_do_cenario("cpopg", "erro_recurso")
     url_polo = recurso_url(BASE_URL_1G, id_processo, "poloPassivo")
-    tentativas = [c for c in responses.calls if c.request.url.startswith(url_polo)]
-    assert len(tentativas) == 4  # perfil "api": 4 tentativas antes de desistir
+    assert sum(url.startswith(url_polo) for url in urls_enviadas()) == 4  # perfil "api": 4 tentativas antes de desistir
 
 
 @responses.activate
@@ -307,6 +306,21 @@ def test_cpopg_download_aceita_os_valores_padrao_das_pecas() -> None:
 
 
 @responses.activate
+@pytest.mark.parametrize(("metodo", "base_url"), [("cpopg", BASE_URL_1G), ("cposg", BASE_URL_2G)])
+def test_composto_avisa_diretorio_sem_download_pecas(metodo: str, base_url: str, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    registrar_busca(base_url, metodo, "sem_resultado", "0000000-00.2099.4.03.0000")
+    diretorio = tmp_path / "pecas"
+    scraper = jus.scraper("trf3", sleep_time=0)
+    mensagem = rf"^TRF3Scraper\.{metodo}: diretorio=.*passe download_pecas=True\.$"
+    with pytest.warns(UserWarning, match=mensagem) as avisos:
+        df = getattr(scraper, metodo)(CNJ_SEM_RESULTADO, diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
+
+
+@responses.activate
 def test_cpopg_download_e_parse_separados() -> None:
     """``cpopg_download`` devolve os envelopes; ``cpopg_parse`` monta o mesmo DataFrame."""
     registrar_processo(BASE_URL_1G, "cpopg", "paginado")
@@ -347,7 +361,7 @@ def test_cpopg_aceita_politica_por_perfil() -> None:
     df = jus.scraper("trf3", sleep_time=0, politica={"api": {"timeout": 5}}).cpopg(CNJ_PAGINADO)
 
     assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
-    assert {chamada.request.req_kwargs["timeout"] for chamada in responses.calls} == {5}
+    assert {timeout_enviado(chamada.request) for chamada in responses.calls} == {5}
 
 
 @responses.activate
@@ -379,7 +393,7 @@ def test_cpopg_procura_o_numero_pedido_em_todos_os_resultados() -> None:
     df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
     assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
-    assert not any("tokenDeOutroProcesso" in c.request.url for c in responses.calls)
+    assert not any("tokenDeOutroProcesso" in url for url in urls_enviadas())
 
 
 @pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
@@ -420,7 +434,7 @@ def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha, motivo) -> None
 
     _linha_so_com_id_cnj(df, motivo)
     url_movs = recurso_url(BASE_URL_1G, id_processo, "movimentacoes")
-    assert sum(c.request.url.startswith(url_movs) for c in responses.calls) == 4
+    assert sum(url.startswith(url_movs) for url in urls_enviadas()) == 4
 
 
 @responses.activate
@@ -435,7 +449,7 @@ def test_cpopg_erro_em_dados_derruba_o_processo() -> None:
 
     _linha_so_com_id_cnj(df, "retry_esgotado_500")
     assert len(responses.calls) == 1 + 4
-    assert not any("poloAtivo" in c.request.url for c in responses.calls)
+    assert not any("poloAtivo" in url for url in urls_enviadas())
 
 
 @responses.activate
@@ -525,3 +539,15 @@ def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:
         scraper.cpopg_parse([None])
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg_parse([None], [CNJ_PAGINADO], formato="html")
+
+
+def test_cpopg_parse_kwarg_desconhecido_texto_canonico() -> None:
+    """A mensagem segue o formato canônico, com o rótulo do método e nada depois dos nomes."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("trf3", sleep_time=0).cpopg_parse,
+        ["formato", "outro"],
+        [None],
+        [CNJ_PAGINADO],
+        rotulo="TRF3Scraper.cpopg_parse",
+        exata=True,
+    )

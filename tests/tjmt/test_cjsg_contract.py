@@ -7,7 +7,7 @@ from responses.matchers import query_param_matcher
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import load_sample
+from tests._helpers import load_sample, url_enviada
 
 HOME_URL = "https://jurisprudencia.tjmt.jus.br/"
 CHUNK_URL = "https://jurisprudencia.tjmt.jus.br/assets/chunk-contract.js"
@@ -111,7 +111,7 @@ def test_cjsg_typical_com_paginacao(mocker):
     assert set(df.columns) >= CJSG_MIN_COLUMNS
     assert len(df) > 0
     api_request = next(
-        call.request for call in responses.calls if call.request.url.startswith(API_URL)
+        call.request for call in responses.calls if url_enviada(call.request).startswith(API_URL)
     )
     assert api_request.headers["Token"] == TEST_TOKEN
 

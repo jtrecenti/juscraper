@@ -9,14 +9,17 @@ Examples
 >>> from tests._helpers import load_sample
 >>> html = load_sample("tjsp", "cjsg/results_normal_page_01.html")
 """
+import json
 import re
 from collections.abc import Callable, Mapping, Sequence
 from importlib import import_module
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import parse_qs, parse_qsl, urlparse
 
 import pytest
 import responses
+from requests import PreparedRequest
 from responses import matchers
 
 from juscraper import _SCRAPERS
@@ -72,17 +75,61 @@ def load_sample_bytes(tribunal: str, relative_path: str) -> bytes:
     return path.read_bytes()
 
 
-def corpo_form_enviado(request) -> dict[str, str]:
+def url_enviada(request: PreparedRequest) -> str:
+    """URL de uma requisição já enviada (``responses.calls[i].request``).
+
+    O ``PreparedRequest`` tipa ``url`` como ``str | None``; depois do envio
+    ela sempre existe, e o helper falha alto se não existir.
+    """
+    if request.url is None:
+        raise AssertionError("requisição registrada sem URL")
+    return request.url
+
+
+def urls_enviadas() -> list[str]:
+    """URLs das requisições registradas em ``responses.calls``, na ordem de envio."""
+    return [url_enviada(chamada.request) for chamada in responses.calls]
+
+
+def corpo_enviado(request: PreparedRequest) -> str:
+    """Corpo de uma requisição já enviada como texto; vazio quando não há corpo."""
+    body = request.body or ""
+    return body.decode("utf-8") if isinstance(body, bytes) else body
+
+
+def corpo_json_enviado(request: PreparedRequest) -> Any:
+    """Corpo JSON de uma requisição já enviada, decodificado."""
+    return json.loads(corpo_enviado(request))
+
+
+def corpo_form_enviado(request: PreparedRequest) -> dict[str, str]:
     """Corpo ``application/x-www-form-urlencoded`` de uma requisição já enviada.
 
     Para contratos que conferem os nomes de campo do backend contra um
     dicionário literal, sem depender do builder que o raspador usa (#514).
     Campos vazios ficam no resultado.
     """
-    body = request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
-    return dict(parse_qsl(body, keep_blank_values=True))
+    return dict(parse_qsl(corpo_enviado(request), keep_blank_values=True))
+
+
+def params_enviados(request: PreparedRequest) -> dict[str, str | list[str]]:
+    """Query string de uma requisição já enviada, como o ``responses`` a registrou.
+
+    O ``responses`` acrescenta ``params`` ao ``PreparedRequest`` em tempo de
+    execução, fora dos stubs do ``requests``: chave com um valor vira ``str``,
+    chave repetida em sequência vira lista, e campos vazios ficam.
+    """
+    return cast("dict[str, str | list[str]]", cast("Any", request).params)
+
+
+def timeout_enviado(request: PreparedRequest) -> Any:
+    """``timeout`` que o ``requests`` passou ao adaptador ao enviar a requisição.
+
+    Lido de ``req_kwargs``, que o ``responses`` acrescenta ao
+    ``PreparedRequest`` em tempo de execução, fora dos stubs do ``requests``.
+    ``None`` quando o raspador não definiu timeout.
+    """
+    return cast("Any", request).req_kwargs.get("timeout")
 
 
 def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
@@ -99,10 +146,7 @@ def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
     historico, preservado para os chamadores existentes.
     """
     def matcher(request):
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        parsed_raw = parse_qs(body, keep_blank_values=True)
+        parsed_raw = parse_qs(corpo_enviado(request), keep_blank_values=True)
         missing: dict = {}
         for k, expected_v in expected.items():
             actual = parsed_raw.get(k, [])

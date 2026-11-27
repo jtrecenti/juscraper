@@ -341,6 +341,7 @@ class TRFConsultaScraper(HTTPScraper):
             diretorio: Onde gravar as peças. Sobrescreve ``download_path``
                 para esta chamada. Quando omitido, usa ``download_path`` (que
                 vira um ``tempfile.mkdtemp()`` se nada for passado ao construtor).
+                Só tem efeito com ``download_pecas=True``.
 
         Returns:
             DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
@@ -385,6 +386,10 @@ class TRFConsultaScraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
         """
         cnjs = self._coerce_id_cnj(
             id_cnj,
@@ -393,10 +398,7 @@ class TRFConsultaScraper(HTTPScraper):
             diretorio=diretorio,
             **kwargs,
         )
-        pecas_dir: str | None = None
-        if download_pecas:
-            pecas_dir = diretorio if diretorio is not None else self.download_path
-            Path(pecas_dir).mkdir(parents=True, exist_ok=True)
+        pecas_dir = self._pasta_das_pecas(self._rotulo("cpopg"), diretorio=diretorio, download_pecas=download_pecas)
         consultas = self._baixar(cnjs, pecas_dir)
         htmls = [c.html for c in consultas]
         motivos = [c.motivo for c in consultas]

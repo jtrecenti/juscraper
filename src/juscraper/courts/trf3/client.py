@@ -31,7 +31,7 @@ import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
-from ...core.base import recusar_kwargs_sem_efeito
+from ...core.base import mensagem_de_kwargs_inesperados, recusar_kwargs_sem_efeito
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
@@ -266,10 +266,9 @@ class TRF3Scraper(HTTPScraper):
         cnjs = self._coerce_id_cnj(
             schema, endpoint, id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs
         )
-        pecas_dir: str | None = None
-        if download_pecas:
-            pecas_dir = diretorio if diretorio is not None else self.download_path
-            Path(pecas_dir).mkdir(parents=True, exist_ok=True)
+        pecas_dir = self._pasta_das_pecas(
+            f"{type(self).__name__}.{endpoint}", diretorio=diretorio, download_pecas=download_pecas
+        )
         consultas = self._baixar(cnjs, base_url, endpoint, pecas_dir)
         rows = self._linhas([c.bruto for c in consultas], cnjs, [c.motivo for c in consultas])
         self._avisar(cnjs, [row[COLUNA_MOTIVO_FALHA] for row in rows], endpoint)
@@ -439,8 +438,8 @@ class TRF3Scraper(HTTPScraper):
         """
         brutos = resolve_deprecated_alias(kwargs, "htmls", "brutos", brutos)
         if kwargs:
-            names = ", ".join(repr(k) for k in kwargs)
-            raise TypeError(f"{type(self).__name__}.cpopg_parse got unexpected keyword argument(s): {names}")
+            nomes = [repr(k) for k in kwargs]
+            raise TypeError(mensagem_de_kwargs_inesperados(f"{type(self).__name__}.cpopg_parse", nomes))
         if brutos is None or id_cnj_list is None:
             raise TypeError(f"{type(self).__name__}.cpopg_parse exige brutos e id_cnj_list")
         return self._parse(brutos, id_cnj_list, "cpopg_parse")
@@ -466,7 +465,8 @@ class TRF3Scraper(HTTPScraper):
                 no processo, logo depois dos dados do processo. Só por nome.
                 Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
-                Quando omitido, usa ``download_path`` do construtor.
+                Quando omitido, usa ``download_path`` do construtor. Só tem
+                efeito com ``download_pecas=True``.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
                 levanta ``TypeError``.
 
@@ -510,6 +510,10 @@ class TRF3Scraper(HTTPScraper):
             TypeError: Kwarg desconhecido.
             ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
                 instalado.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
 
         See Also:
             :class:`InputCpopgTRF3`: schema dos argumentos aceitos.
@@ -557,7 +561,8 @@ class TRF3Scraper(HTTPScraper):
                 no processo, logo depois dos dados do processo. Só por nome.
                 Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
-                Quando omitido, usa ``download_path`` do construtor.
+                Quando omitido, usa ``download_path`` do construtor. Só tem
+                efeito com ``download_pecas=True``.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
                 levanta ``TypeError``.
 
@@ -571,6 +576,10 @@ class TRF3Scraper(HTTPScraper):
             TypeError: Kwarg desconhecido.
             ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
                 instalado.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
 
         See Also:
             :class:`InputCposgTRF3`: schema dos argumentos aceitos.

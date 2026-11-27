@@ -18,7 +18,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjsp.exceptions import QueryTooLongError
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample_bytes, params_enviados, url_enviada
 from tests.fixtures.capture._util import make_tjsp_cjsg_body
 
 BASE = "https://esaj.tjsp.jus.br/cjsg"
@@ -80,7 +80,9 @@ def test_cjsg_pagina_repetida_baixa_uma_vez_e_alem_do_total_avisa(tmp_path, mock
         )
 
     paginas_pedidas = [
-        call.request.params["pagina"] for call in responses.calls if "trocaDePagina" in call.request.url
+        params_enviados(call.request)["pagina"]
+        for call in responses.calls
+        if "trocaDePagina" in url_enviada(call.request)
     ]
     assert paginas_pedidas == ["1", "2"]
     assert [(r.name, r.getMessage()) for r in caplog.records if r.name == "juscraper.tjsp"] == [
@@ -99,7 +101,9 @@ def test_cjsg_range_com_passo_baixa_so_as_paginas_do_range(tmp_path, mocker):
     jus.scraper("tjsp", download_path=str(tmp_path)).cjsg_download("dano moral", paginas=range(1, 4, 2))
 
     paginas_pedidas = [
-        call.request.params["pagina"] for call in responses.calls if "trocaDePagina" in call.request.url
+        params_enviados(call.request)["pagina"]
+        for call in responses.calls
+        if "trocaDePagina" in url_enviada(call.request)
     ]
     assert paginas_pedidas == ["1", "3"]
 

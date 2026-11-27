@@ -133,7 +133,6 @@ extend = "pyproject.toml"
 "tests/fixtures/capture/tjrj.py" = ["PLR0913"]
 "tests/fixtures/capture/tjrr.py" = ["ARG001", "PLC0415"]
 "tests/fixtures/capture/tjsp.py" = ["BLE001", "PLC0207", "PLW0108"]
-"tests/fixtures/capture/tjto.py" = ["ARG001"]
 "tests/fixtures/capture/trf3.py" = ["SLF001"]
 "tests/fixtures/capture/trf6.py" = ["PLC0415"]
 "tests/schemas/test_canonical_types.py" = ["PT006"]

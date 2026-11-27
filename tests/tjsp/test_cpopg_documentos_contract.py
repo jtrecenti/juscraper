@@ -22,7 +22,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
+from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, timeout_enviado, url_enviada, urls_enviadas
 from tests.tjsp.test_cpopg_contract import (
     CNJ,
     CNJ_INCIDENTE,
@@ -80,7 +80,7 @@ def _documentos_pedidos():
 
 
 def _indices(rota):
-    return [i for i, c in enumerate(responses.calls) if c.request.url.split("?")[0].endswith(rota)]
+    return [i for i, url in enumerate(urls_enviadas()) if url.split("?")[0].endswith(rota)]
 
 
 @responses.activate
@@ -342,7 +342,7 @@ def test_varios_incidentes_baixam_os_pdfs_de_cada_um_antes_do_show_seguinte(tmp_
 
     jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
-    rotas = [c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls]
+    rotas = [url.split("?")[0].rsplit("/", 1)[-1] for url in urls_enviadas()]
     assert rotas == [
         "search.do",
         "show.do",
@@ -382,9 +382,9 @@ def test_todo_pedido_do_cpopg_tem_timeout(tmp_path, mocker):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     scraper.cpopg_download([CNJ_INCIDENTE, CNJ], download_pecas=True)
 
-    rotas = {c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls}
+    rotas = {url.split("?")[0].rsplit("/", 1)[-1] for url in urls_enviadas()}
     assert rotas >= {"search.do", "show.do", "carregarMovimentacoesAjax.do", ROTA_DOCUMENTO, "getPDF.do"}
-    sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
+    sem_timeout = [url_enviada(c.request) for c in responses.calls if timeout_enviado(c.request) is None]
     assert sem_timeout == []
 
 

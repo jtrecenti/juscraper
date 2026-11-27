@@ -18,7 +18,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample_bytes, url_enviada
 
 ARVORE_COLUNAS = {"id", "nome", "id_pai", "nivel", "selecionavel", "caminho"}
 BASE = "https://esaj.tjsp.jus.br"
@@ -70,7 +70,7 @@ def test_roteamento_e_contrato(label, chamada, path, campo_id):
     assert no["caminho"] == caminho
     assert no["selecionavel"]
     # Bateu exatamente no endpoint esperado.
-    assert path in responses.calls[0].request.url
+    assert path in url_enviada(responses.calls[0].request)
 
 
 @responses.activate
