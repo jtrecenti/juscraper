@@ -19,9 +19,8 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import CnjInputBase, OutputCnjConsultaBase, OutputDataPublicacaoMixin
-from ...schemas.cjsg import OutputCJSGBase
-from .._esaj.schemas import InputCJPGEsaj, InputCJSGEsajBase, OutputCJPGEsaj
+from ...schemas import CnjInputBase, OutputCnjConsultaBase
+from .._esaj.schemas import InputCJPGEsaj, InputCJSGEsajBase, OutputCJPGEsaj, OutputCJSGEsajBase
 
 
 class InputCJSGTJSP(InputCJSGEsajBase):
@@ -41,22 +40,13 @@ class InputCJSGTJSP(InputCJSGEsajBase):
     baixar_sg: bool = True
 
 
-class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):
+class OutputCJSGTJSP(OutputCJSGEsajBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cjsg`.
 
-    Herda ``processo``, ``ementa`` e ``data_julgamento`` de
-    :class:`OutputCJSGBase` e ``data_publicacao`` de
-    :class:`OutputDataPublicacaoMixin`, e acrescenta as colunas do parser
-    eSAJ compartilhado. As paginas trazem ``"Classe/Assunto:"`` num rotulo
-    so.
+    Sao as colunas do parser eSAJ compartilhado, herdadas de
+    :class:`OutputCJSGEsajBase`. As paginas do TJSP trazem
+    ``"Classe/Assunto:"`` num rotulo so, entao nao ha coluna ``classe``.
     """
-
-    cd_acordao: str | None = None
-    cd_foro: str | None = None
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe_assunto: str | None = None
-    comarca: str | None = None
 
 
 InputCJPGTJSP = InputCJPGEsaj

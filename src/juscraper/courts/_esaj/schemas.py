@@ -62,26 +62,34 @@ class InputCJSGEsajPuro(InputCJSGEsajBase, DataPublicacaoMixin):
     origem: Literal["T", "R"] = "T"
 
 
-class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
-    """Columns observable in eSAJ cjsg DataFrames.
+class OutputCJSGEsajBase(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
+    """Colunas que o parser ``cjsg`` compartilhado do eSAJ entrega em todo tribunal.
 
-    Minimum: ``processo``, ``ementa`` (inherited from :class:`OutputCJSGBase`).
-    ``relator`` / ``orgao_julgador`` via :class:`OutputRelatoriaMixin`;
-    ``data_publicacao`` via :class:`OutputDataPublicacaoMixin` (eSAJ
-    entrega a data quando esta presente). ``extra='allow'`` is inherited
-    so tribunal-specific extras (e.g., ``classe_assunto``) don't break
-    validation.
-
-    O rótulo HTML ``"Relator(a):"`` vira a coluna canônica ``relator``.
+    Base de :class:`OutputCJSGEsaj` (TJAC/TJAL/TJAM/TJCE/TJMS) e de
+    :class:`~juscraper.courts.tjsp.schemas.OutputCJSGTJSP`. Minimo:
+    ``processo``, ``ementa`` (de :class:`OutputCJSGBase`); ``relator`` /
+    ``orgao_julgador`` via :class:`OutputRelatoriaMixin` (o rotulo HTML
+    ``"Relator(a):"`` vira ``relator``); ``data_publicacao`` via
+    :class:`OutputDataPublicacaoMixin`, quando presente. ``extra='allow'``
+    e herdado, entao colunas proprias de um tribunal nao quebram a validacao.
     """
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
-    # Rótulos do HTML de resultado: "Classe/Assunto:", "Comarca:" e, em
-    # algumas páginas do TJMS, "Classe:" sozinho.
+    # Rótulos do HTML de resultado: "Classe/Assunto:" e "Comarca:".
     classe_assunto: str | None = None
-    classe: str | None = None
     comarca: str | None = None
+
+
+class OutputCJSGEsaj(OutputCJSGEsajBase):
+    """Columns observable in eSAJ cjsg DataFrames (TJAC/TJAL/TJAM/TJCE/TJMS).
+
+    Herda as colunas do parser compartilhado de :class:`OutputCJSGEsajBase`
+    e acrescenta ``classe``: algumas paginas do TJMS trazem o rotulo
+    ``"Classe:"`` sozinho, em vez de ``"Classe/Assunto:"``.
+    """
+
+    classe: str | None = None
 
 
 class InputCJPGEsaj(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
