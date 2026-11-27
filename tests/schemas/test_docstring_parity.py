@@ -11,8 +11,11 @@ from __future__ import annotations
 import importlib
 import inspect
 import re
+from typing import get_args
 
 import pytest
+
+from juscraper.schemas.types import IdFiltro, IdFiltroUnico
 
 # Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
 # secao propria da docstring (``Aliases deprecados``) mas nao sao campos
@@ -90,6 +93,8 @@ CASES = [
 # "* ``foo`` (tipo): ..." quanto "* ``foo`` / ``bar``".
 _NAME_RE = re.compile(r"``(\w+)``")
 _BULLET_LINE_RE = re.compile(r"^\s*\*\s+")
+# Tipo declarado logo apos o header do bullet: "(int | str)".
+_TYPE_RE = re.compile(r"\(([^)]*)\)")
 # Limites da regiao "**kwargs:" — qualquer secao de top-level subsequente
 # (linha que termina em ":" sem indent, ou "Aliases deprecados ..." que
 # o Google docstring formata sem dois pontos no nome canonico).
@@ -99,8 +104,8 @@ _SECTION_END_RE = re.compile(
 )
 
 
-def _docstring_bullets(method) -> set[str]:
-    """Extract filter names from bullets in the docstring's ``**kwargs`` section.
+def _docstring_bullets(method) -> dict[str, str | None]:
+    """Map filter names to declared types in the docstring's ``**kwargs`` section.
 
     Restringe a varredura a regiao que comeca em ``**kwargs:`` e termina
     na proxima secao top-level (Aliases deprecados, Raises, Returns,
@@ -108,11 +113,12 @@ def _docstring_bullets(method) -> set[str]:
     aparecem **antes** do primeiro ``(`` (tipo pydantic) ou ``:``
     (descricao) — assim defaults inline citados em backticks na
     descricao (ex.: True, acordao) nao sao confundidos com nomes de
-    filtro.
+    filtro. O tipo e o texto entre parenteses logo apos o header
+    (ex.: ``int | str``), ou ``None`` se o bullet nao declara tipo.
     """
     doc = inspect.getdoc(method) or ""
     in_kwargs = False
-    bullets: set[str] = set()
+    bullets: dict[str, str | None] = {}
     for line in doc.splitlines():
         stripped = line.lstrip()
         if stripped.startswith("**kwargs"):
@@ -129,7 +135,10 @@ def _docstring_bullets(method) -> set[str]:
             pos = line.find(delim)
             if pos != -1:
                 cut = min(cut, pos)
-        bullets.update(_NAME_RE.findall(line[:cut]))
+        type_match = _TYPE_RE.match(line[cut:])
+        declared = type_match.group(1) if type_match else None
+        for name in _NAME_RE.findall(line[:cut]):
+            bullets.setdefault(name, declared)
     return bullets
 
 
@@ -154,7 +163,7 @@ def test_docstring_lists_schema_fields(
     # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
     # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas
     # campo real aqui (``query`` no DataJud e o override Elasticsearch).
-    bullets = _docstring_bullets(method) - EXPLICIT_PARAMS - (DEPRECATED_ALIASES - fields)
+    bullets = set(_docstring_bullets(method)) - EXPLICIT_PARAMS - (DEPRECATED_ALIASES - fields)
 
     schema_only = fields - bullets
     docstring_only = bullets - fields
@@ -169,6 +178,56 @@ def test_docstring_lists_schema_fields(
         f"  metodo = {scraper_class}.{endpoint}\n"
         "Atualize uma das duas pontas (ver CONTRIBUTING.md > "
         "Docstrings de métodos públicos com kwargs > Filtros e aliases)."
+    )
+
+
+# Tipo que a docstring deve declarar para campos tipados com os aliases de
+# ``juscraper.schemas.types``. O pydantic desembrulha o ``Annotated`` e guarda
+# o ``BeforeValidator`` em ``FieldInfo.metadata``; e por ele que o alias e
+# reconhecido (por pertencimento, para tolerar ``Field(...)`` extra). Os
+# demais tipos ficam fora: as docstrings escrevem ``Literal[...]``,
+# ``str | None`` etc. de jeitos diferentes.
+_ID_FILTRO_DOC_TYPES = {
+    get_args(IdFiltro)[1]: "int | str | list[int | str]",
+    get_args(IdFiltroUnico)[1]: "int | str",
+}
+
+
+def _id_filtro_doc_type(field) -> str | None:
+    for validator, doc in _ID_FILTRO_DOC_TYPES.items():
+        if validator in field.metadata:
+            return doc
+    return None
+
+
+@pytest.mark.parametrize(
+    "scraper_module,scraper_class,endpoint,schema_module,schema_class",
+    CASES,
+)
+def test_docstring_declares_id_filtro_types(
+    scraper_module, scraper_class, endpoint, schema_module, schema_class,
+):
+    mod = importlib.import_module(scraper_module)
+    method = getattr(getattr(mod, scraper_class), endpoint)
+    klass = getattr(importlib.import_module(schema_module), schema_class)
+
+    bullets = _docstring_bullets(method)
+    # Bullet ausente fica para test_docstring_lists_schema_fields.
+    wrong = {
+        name: (bullets[name], expected)
+        for name, field in klass.model_fields.items()
+        if (expected := _id_filtro_doc_type(field))
+        and bullets.get(name, expected) != expected
+    }
+
+    assert not wrong, (
+        f"{scraper_class}.{endpoint} — tipo de IdFiltro/IdFiltroUnico na "
+        "docstring diverge do schema:\n"
+        + "".join(
+            f"  ``{name}``: docstring ({declared}), esperado ({expected})\n"
+            for name, (declared, expected) in sorted(wrong.items())
+        )
+        + f"  schema = {schema_module}:{schema_class}"
     )
 
 
