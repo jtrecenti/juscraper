@@ -133,14 +133,12 @@ class TJRRScraper(HTTPScraper):
         data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """Download raw HTML pages from TJRR.
+        """Baixa as páginas HTML brutas do TJRR.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw HTML strings (one per page).
+        Returns:
+            Lista do HTML bruto, uma string por página.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJRR,
@@ -179,10 +177,9 @@ class TJRRScraper(HTTPScraper):
         remove_cookie_by_name(self.session.cookies, "JSESSIONID")
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded HTML pages.
+        """Converte as páginas HTML baixadas em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

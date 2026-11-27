@@ -120,20 +120,16 @@ class TJPIScraper(HTTPScraper):
         orgao: str | None = None,
         **kwargs,
     ) -> list:
-        """Download raw HTML pages from TJPI.
+        """Baixa as páginas HTML brutas do TJPI.
 
         Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw HTML strings (one per page).
+        Returns:
+            Lista do HTML bruto, uma string por página.
 
-        Raises
-        ------
-        ValueError
-            Quando a menor página pedida (a 1, com ``paginas=None``) não
-            permite fixar o total de páginas; ver :meth:`cjsg`.
+        Raises:
+            ValueError: Quando a menor página pedida (a 1, com ``paginas=None``)
+                não permite fixar o total de páginas; ver :meth:`cjsg`.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJPI,
@@ -161,10 +157,9 @@ class TJPIScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded HTML pages.
+        """Converte as páginas HTML baixadas em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

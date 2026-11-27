@@ -133,14 +133,12 @@ class TJSCScraper(HTTPScraper):
         processo: str | None = None,
         **kwargs,
     ) -> list:
-        """Download raw HTML pages from TJSC.
+        """Baixa as páginas HTML brutas do TJSC.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw HTML strings (one per page).
+        Returns:
+            Lista do HTML bruto, uma string por página.
         """
         resolve_buscar_em(kwargs, "campo", buscar_em, _CAMPO_PARA_BUSCAR_EM)
         inp = apply_input_pipeline_search(
@@ -166,10 +164,9 @@ class TJSCScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded HTML pages.
+        """Converte as páginas HTML baixadas em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)
