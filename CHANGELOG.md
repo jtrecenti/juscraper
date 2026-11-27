@@ -362,6 +362,10 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 - `cjsg` e `cjsg_download`: a conexão que o portal derruba no meio da coleta (comum em buscas seguidas na mesma instância) ganha nova tentativa; persistindo, o `requests.ConnectionError` original sobe. Ajustável com `jus.scraper("tjsc", politica={"cjsg": {...}})`.
 - `cjsg` e `cjsg_parse`: a coluna `ementa` traz a ementa. No resultado com DECISÃO, o portal manda o texto da decisão duas vezes (uma versão recortada na tela e a completa), e o par de cada rótulo seguinte se deslocava: `ementa` saía com a decisão, e a ementa se perdia. Nas amostras, isso valia para todos os resultados com DECISÃO. `ementa` e `decisao` passam a sair com um parágrafo por linha (ver `Changed` > "Ementa vinda de HTML"), e o termo buscado deixa de colar nas palavras vizinhas (`"danomoral"` passa a `"dano moral"`).
 
+#### TJTO
+
+- `cjsg`, `cjsg_download`, `cjpg` e `cjpg_download`: o total de resultados, que define quantas páginas baixar, passa a vir da aba do `tipo_documento` pedido, e não da aba que o portal marca como ativa. Hoje o portal marca a aba certa, e nada muda. Se deixar de marcar, a busca de decisões ou sentenças sem o "(N resultados)", que o portal só mostra quando há mais de uma página, leria o total de acórdãos, a primeira contagem da página (9 em vez de 3 numa busca real de decisões), e, com mais de 20 acórdãos, pediria ao portal páginas vazias. Se a página não trouxer a contagem da aba pedida, só a primeira página é baixada, com aviso no logger `juscraper.tjto` (refs #759).
+
 #### Demais tribunais e agregadores
 
 - Falcao `listar_decisoes` e `listar_decisoes_download`: `data_juntada_fim` sem `data_juntada_inicio` falhava com `requests.HTTPError` (HTTP 400, "Erro ao tentar processar a sua solicitação"), porque o backend não aceita `dataFim` sozinho. Nesse caso a busca passa a enviar `dataInicio=1900-01-01`, e o limite superior vale sozinho, como a documentação já dizia. `data_juntada_fim` sozinho e anterior a 1900-01-01 levanta `ValueError` antes de qualquer requisição.
