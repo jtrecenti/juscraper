@@ -52,9 +52,9 @@ _LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
 # Cascata da contagem. O rótulo fica num ``<div class="pb-3">`` sem outra
 # classe; o seletor exige a classe exata porque ``div.pb-3`` casaria também o
 # contêiner da página (``content pt-3 pb-3 d-flex``), que guarda as ementas.
-# O HTML da página só entra (``fallback="html"``) quando o seletor não casa nenhum elemento com texto,
-# e por isso as duas regex começam em "Exibindo" e exigem "jurisprudência(s)"
-# depois do número: "de um total de 84 prestações" numa ementa não casa. Se o
+# O HTML da página só entra (``fallback_html``) quando o seletor não casa
+# nenhum elemento com texto, e por isso as duas regex começam em "Exibindo" e
+# exigem "jurisprudência(s)" depois do número: "de um total de 84 prestações" numa ementa não casa. Se o
 # seletor casar um div cujo texto as regex não reconhecem, a contagem vem
 # ``None`` e, sem o marcador de busca vazia, ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ('div[class="pb-3"]',)
@@ -115,7 +115,7 @@ def _get_total_pages(html: str) -> int:
         soup,
         css_selectors=_COUNT_SELECTORS,
         regex_patterns=_COUNT_PATTERNS,
-        fallback="html",
+        fallback_html=True,
     )
     if n_resultados is None and _sem_resultados(soup):
         n_resultados = 0

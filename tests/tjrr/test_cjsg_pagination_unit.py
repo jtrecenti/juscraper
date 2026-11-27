@@ -45,29 +45,14 @@ def test_get_total_pages_falls_back_to_one_without_paginator():
     assert _get_total_pages("<html><body>nada de paginator</body></html>") == 1
 
 
-def test_get_total_pages_sem_o_span_nao_le_o_html_bruto():
-    """Paginador com outra classe: a regex não roda no HTML inteiro, e o total cai no default 1."""
-    html = (
-        '<div class="paginator"><span class="paginator-status">'
-        "(1 of 99)</span></div>"
-    )
-    assert _get_total_pages(html) == 1
-
-
-def _sem_paginador(html: str) -> str:
-    """Tira os ``span.ui-paginator-current`` do sample, mantendo as ementas."""
-    sem = re.sub(r'<span class="ui-paginator-current">[^<]*</span>', "", html)
-    assert "ui-paginator-current" not in sem
-    return sem
-
-
 def test_get_total_pages_sem_o_span_data_em_ementa_nao_vira_total():
     r"""HTML derivado do sample real ``single_page.html``, sem o paginador.
 
     Uma ementa diz "(fevereiro de 2009)", e a regex ``de\s+(\d+)\)`` no HTML
     bruto devolvia 2009 páginas em vez de 65.
     """
-    html = _sem_paginador(_sample("single_page.html"))
+    html = re.sub(r'<span class="ui-paginator-current">[^<]*</span>', "", _sample("single_page.html"))
+    assert "ui-paginator-current" not in html
     assert "(fevereiro de 2009)" in html
     assert _get_total_pages(html) == 1
     assert [n for _, n in _datatables_with_pages(html, _soup(html))] == [1, 1]

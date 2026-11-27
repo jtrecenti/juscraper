@@ -41,7 +41,7 @@ _CURRENT_DATE_HINT = "04/2026"
 DEFAULT_SUBMIT_ID = "formPesquisaJurisprudencia:j_id101"
 
 # Cascata da contagem: o cabeçalho "Documentos encontrados: N" e, sem ele
-# (``fallback="html"``), o HTML da página. O marcador de busca vazia só vale
+# (``fallback_html``), o HTML da página. O marcador de busca vazia só vale
 # quando nenhuma contagem aparece: uma ementa pode citar a frase.
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
     "div.resultado-header table.table-header-resultado",
@@ -70,7 +70,7 @@ def extract_total_docs(html: str) -> int:
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
         zero_markers=_ZERO_MARKERS,
-        fallback="html",
+        fallback_html=True,
     )
     return n if n is not None else 0
 
