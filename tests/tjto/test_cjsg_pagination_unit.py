@@ -54,7 +54,8 @@ def test_get_total_results_sem_active_ainda_le_a_aba_do_tipo_pedido(sample, type
     """Se o portal deixar de marcar ``active``, o total não pode vir da aba de acórdãos.
 
     Antes, a regex do "(N)" rodava também no HTML bruto e pegava o primeiro da
-    página: 9 em vez de 3 em decisões, 14 em vez de 1.284 em sentenças.
+    página: 9 em vez de 3 em decisões. Em sentenças, o "(1.284 resultados)" acima
+    da paginação, que só aparece com mais de uma página, já dava o total certo.
     """
     html = load_sample("tjto", sample).replace("nav-link active", "nav-link")
     assert "nav-link active" not in html
