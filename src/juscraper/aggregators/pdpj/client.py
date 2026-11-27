@@ -87,6 +87,7 @@ _QUERY_PARAM_MAP: dict[str, str] = {
     "situacao_parte": "situacaoParte",
     "nome_representante": "nomeRepresentante",
     "oab_representante": "oabRepresentante",
+    "cpf_representante": "cpfRepresentante",
     "href": "href",
     "id_assunto_judicial": "idAssuntoJudicial",
     "id_classe": "idClasse",
@@ -644,6 +645,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 * ``polo_parte`` (str): "ATIVO" ou "PASSIVO"
                 * ``situacao_parte`` (str)
                 * ``nome_representante`` / ``oab_representante`` (str)
+                * ``cpf_representante`` (str): com ou sem formatacao
                 * ``id_classe`` (str): codigos separados por virgula
                 * ``id_assunto_judicial`` (str): ids separados por virgula
                 * ``id_orgao_julgador`` (str | list[str])

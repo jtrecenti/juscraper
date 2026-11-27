@@ -313,6 +313,21 @@ def test_contar_aceita_resposta_json_dict():
     assert _mk_scraper().contar(tribunal="TRF1") == 7
 
 
+@responses.activate
+@pytest.mark.parametrize(("metodo", "rota"), [("pesquisa", "processos"), ("contar", "processos:contar")])
+def test_cpf_representante_vai_como_cpfRepresentante(metodo, rota):
+    """``cpf_representante`` vira ``cpfRepresentante`` na ``pesquisa`` e no ``contar``."""
+    responses.add(
+        responses.GET,
+        f"{BASE_URL}/{rota}",
+        json={"total": 0, "content": [], "searchAfter": None} if metodo == "pesquisa" else 0,
+        status=200,
+        match=[query_param_subset_matcher({"cpfRepresentante": "111.111.111-11"})],
+    )
+    getattr(_mk_scraper(), metodo)(cpf_representante="111.111.111-11")
+    assert len(responses.calls) == 1
+
+
 @pytest.mark.parametrize("filtro", ["fase", "situacao_atual", "tipo_operacao"])
 def test_contar_rejeita_filtros_so_da_pesquisa(filtro):
     """Motivo no comentario de ``InputContarPdpj``."""

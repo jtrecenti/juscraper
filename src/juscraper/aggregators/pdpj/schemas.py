@@ -70,6 +70,7 @@ class _InputFiltrosPdpj(BaseModel):
     situacao_parte: str | None = None
     nome_representante: str | None = None
     oab_representante: str | None = None
+    cpf_representante: str | None = None
     href: str | None = None
     id_assunto_judicial: str | None = None
     id_classe: str | None = None
@@ -82,6 +83,10 @@ class _InputFiltrosPdpj(BaseModel):
     data_atualizacao_fim: str | None = None
     data_primeiro_ajuizamento_inicio: str | None = None
     data_primeiro_ajuizamento_fim: str | None = None
+    # ``apenasFiltroIdOuNumeroProcesso`` (boolean) fica de fora: a especificacao
+    # publica da API (``processo-api/v2/api-docs``, Swagger v1.7.36, conferida
+    # em 27/11/2026) o declara em ``GET /api/v1/processos`` e em
+    # ``/processos:contar`` sem descricao, e o efeito nao foi testado ao vivo.
 
     model_config = ConfigDict(
         extra="forbid",
