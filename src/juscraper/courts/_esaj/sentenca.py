@@ -69,14 +69,14 @@ class EsajSentencaScraper(EsajSearchScraper):
         assinaturas).
 
         Args:
-            cd_processo (str): Coluna ``cd_processo`` do cjpg.
-            cd_foro (str | float): Coluna ``cd_foro`` do cjpg; o ``float``
+            cd_processo: Coluna ``cd_processo`` do cjpg.
+            cd_foro: Coluna ``cd_foro`` do cjpg; o ``float``
                 inteiro (``126.0``) da coluna lida de CSV também vale.
-            cd_documento (str | float): Coluna ``cd_documento`` do cjpg,
+            cd_documento: Coluna ``cd_documento`` do cjpg,
                 também como ``float`` inteiro.
-            nm_alias (str | float | None): Coluna ``nm_alias`` do cjpg, que costuma
+            nm_alias: Coluna ``nm_alias`` do cjpg, que costuma
                 vir vazia no TJSP (``NaN`` quando lida de CSV). Default ``None``.
-            diretorio (str | None): Pasta de destino. Default
+            diretorio: Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/sentencas/<cd_processo>_<cd_documento>.pdf``.
 
@@ -127,10 +127,10 @@ class EsajSentencaScraper(EsajSearchScraper):
         """Baixa o PDF da sentença de cada linha do cjpg; ver :meth:`baixar_sentenca`.
 
         Args:
-            cjpg (pd.DataFrame): Saída de ``cjpg``, ou qualquer tabela com as
+            cjpg: Saída de ``cjpg``, ou qualquer tabela com as
                 colunas ``cd_processo``, ``cd_foro``, ``nm_alias`` e
                 ``cd_documento``.
-            diretorio (str | None): Pasta de destino. Default :attr:`download_path`.
+            diretorio: Pasta de destino. Default :attr:`download_path`.
 
         Returns:
             As linhas de entrada com ``caminho_sentenca`` (``None``

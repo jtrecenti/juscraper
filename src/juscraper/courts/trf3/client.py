@@ -607,27 +607,27 @@ class TRF3Scraper(HTTPScraper):
         datacenter (medido em 15/11/2026).
 
         Args:
-            pesquisa (str | None): Texto da pesquisa livre, com os operadores do
+            pesquisa: Texto da pesquisa livre, com os operadores do
                 portal (operador padrão ``e``). Pode ficar vazio quando outro
                 critério for informado.
-            paginas (int | list | range | None): Páginas 1-based; ``None`` baixa
+            paginas: Páginas 1-based; ``None`` baixa
                 todas. Páginas além do total são ignoradas sem requisição.
             **kwargs: Filtros aceitos por :class:`InputCJSGTRF3`:
 
-                * ``base`` (str): ``"acordaos"`` (default; acórdãos do TRF3),
+                * ``base`` (BaseCJSGTRF3): ``"acordaos"`` (default; acórdãos do TRF3),
                   ``"turmas_recursais"`` (acórdãos das Turmas Recursais dos
                   JEFs), ``"monocraticas"`` (decisões monocráticas do TRF3) ou
                   ``"monocraticas_turmas_recursais"`` (decisões monocráticas
                   das Turmas Recursais).
-                * ``numero_processo`` (str): Número do processo, com ou sem
+                * ``numero_processo`` (str | None): Número do processo, com ou sem
                   máscara.
-                * ``relator`` (str): Nome do relator ou do relator para o
+                * ``relator`` (str | None): Nome do relator ou do relator para o
                   acórdão, como o portal indexa (ex.: ``"NERY JUNIOR"``, a
                   forma do dropdown do formulário). O portal casa nomes
                   parciais.
-                * ``classe`` (str): Classe como no dropdown, com sigla (ex.:
+                * ``classe`` (str | None): Classe como no dropdown, com sigla (ex.:
                   ``"AI - AGRAVO DE INSTRUMENTO"``).
-                * ``orgao_julgador`` (str): Órgão julgador, pelo rótulo do
+                * ``orgao_julgador`` (str | None): Órgão julgador, pelo rótulo do
                   dropdown do formulário (``"3ª Turma"``,
                   ``"11ª Turma Recursal da Seção Judiciária de São Paulo"``)
                   ou pelo nome indexado da opção (``"TERCEIRA TURMA"``,
@@ -645,17 +645,17 @@ class TRF3Scraper(HTTPScraper):
                   ``ValueError``; texto que não casa com nenhuma opção vai
                   como está e só encontra o que o portal grava com essa
                   grafia. Não existe nas bases de monocráticas.
-                * ``ementa`` (str): Texto pesquisado só na ementa. Não existe
+                * ``ementa`` (str | None): Texto pesquisado só na ementa. Não existe
                   nas bases de monocráticas.
-                * ``indexacao`` (str): Texto pesquisado na indexação ("Objeto
+                * ``indexacao`` (str | None): Texto pesquisado na indexação ("Objeto
                   do Processo" nas Turmas Recursais). Não existe nas bases de
                   monocráticas.
-                * ``numero_classe`` (str): Número do processo dentro da
+                * ``numero_classe`` (str | None): Número do processo dentro da
                   classe, o que vem depois da classe na coluna ``classe`` dos
                   acórdãos antigos (``"1708075"`` em
                   ``"Ap - APELAÇÃO CÍVEL - 1708075"``). Só na base
                   ``"acordaos"``.
-                * ``sistema_interamericano`` (int | str): Caso da Corte IDH
+                * ``sistema_interamericano`` (int | str | None): Caso da Corte IDH
                   do dropdown "Sistema Interamericano" do formulário, pelo ID
                   da opção ou por um trecho do nome (em 15/11/2026, ``1`` era
                   o caso Trabalhadores da Fazenda Brasil Verde e ``2``, o caso
@@ -665,7 +665,7 @@ class TRF3Scraper(HTTPScraper):
                   da aba e tem que corresponder a uma só; senão,
                   ``ValueError`` lista as opções. Texto só de dígitos vale
                   como ID. Só na base ``"acordaos"``.
-                * ``legislacao`` (str): Texto pesquisado nas referências
+                * ``legislacao`` (str | None): Texto pesquisado nas referências
                   legislativas dos documentos (ex.: ``"LEI-8080"``, ou
                   ``"LEI PELÉ FED LEI 9615 1998"``, o texto que o painel de
                   legislações do formulário escreve). Só na base
@@ -677,7 +677,7 @@ class TRF3Scraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str | date | None): Data de publicação, nos mesmos
                   formatos. Não combina com ``data_julgamento_*``.
-                * ``tamanho_pagina`` (int): 10 (default), 30 ou 50 documentos
+                * ``tamanho_pagina`` (Literal[10, 30, 50]): 10 (default), 30 ou 50 documentos
                   por página.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

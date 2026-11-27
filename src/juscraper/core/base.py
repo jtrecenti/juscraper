@@ -275,7 +275,7 @@ class BaseScraper(ABC):
         """Set the verbosity level of the scraper.
 
         Args:
-            verbose (int): Verbosity level.
+            verbose: Verbosity level.
         """
         self.verbose = verbose
 

@@ -558,9 +558,9 @@ def run_chunked_search(
     Args:
         fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
             (same format as the inputs) and returning a ``pd.DataFrame``.
-        data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
-            ``formato`` is configured to). Either may be ``None`` — search is
-            then forwarded to the server with no chunking.
+        data_inicio: Start of the interval in ``DD/MM/YYYY`` (or ``formato``).
+            Either bound ``None`` forwards the search with no chunking.
+        data_fim: End of the interval, in the same format.
         dedup_key: Column used to deduplicate concatenated results.
         max_dias: Window cap, in days.
         max_anos: Teto da janela em anos de calendário; substitui ``max_dias`` (ver :func:`iter_date_windows`).

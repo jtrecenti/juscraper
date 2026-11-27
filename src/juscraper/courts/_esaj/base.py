@@ -455,8 +455,8 @@ class EsajSearchScraper(HTTPScraper):
         diretorio temporario antes de retornar.
 
         Args:
-            pesquisa (str): Termo livre buscado no acordao/ementa.
-            paginas (int | list | range | None): Paginas 1-based;
+            pesquisa: Termo livre buscado no acordao/ementa.
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema configurado em
                 :attr:`INPUT_CJSG` (default :class:`InputCJSGEsajPuro`,
@@ -465,18 +465,18 @@ class EsajSearchScraper(HTTPScraper):
                 usa :class:`InputCJSGTJSP`. Filtros do schema padrao
                 (todos opcionais; ``None`` = sem filtro):
 
-                * ``ementa`` (str): Termo buscado especificamente na
+                * ``ementa`` (str | None): Termo buscado especificamente na
                   ementa.
-                * ``numero_recurso`` (str): Numero do recurso.
-                * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``numero_recurso`` (str | None): Numero do recurso.
+                * ``classe`` (int | str | list[int | str] | None): ID(s) interno(s)
                   da classe processual. Backend:
                   ``classesTreeSelection.values`` (CSV).
-                * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``assunto`` (int | str | list[int | str] | None): ID(s) interno(s)
                   do assunto. Backend: ``assuntosTreeSelection.values``
                   (CSV).
-                * ``comarca`` (int | str): ID interno da comarca. Backend:
+                * ``comarca`` (int | str | None): ID interno da comarca. Backend:
                   ``cdComarca`` (single-value, nao aceita lista).
-                * ``orgao_julgador`` (int | str | list[int | str]): ID(s)
+                * ``orgao_julgador`` (int | str | list[int | str] | None): ID(s)
                   interno(s) do orgao julgador. Backend:
                   ``secoesTreeSelection.values`` (CSV).
                 * ``origem`` (Literal["T", "R"]): ``"T"`` (segundo grau,
@@ -484,11 +484,11 @@ class EsajSearchScraper(HTTPScraper):
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
                   Default ``"acordao"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str | date | datetime): Intervalo de julgamento.
+                  (str | date | None): Intervalo de julgamento.
                   Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
-                  (str | date | datetime): Intervalo de publicacao, nos
+                  (str | date | None): Intervalo de publicacao, nos
                   mesmos formatos.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
                   intervalo ``data_julgamento_*`` excede 1 ano,
@@ -670,10 +670,10 @@ class EsajSearchScraper(HTTPScraper):
         :meth:`cjsg`; consulte la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre buscado.
-            paginas (int | list | range | None): Paginas 1-based;
+            pesquisa: Termo livre buscado.
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            diretorio (str | None): Sobrescreve :attr:`download_path`
+            diretorio: Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjsg` (validados
                 por :attr:`INPUT_CJSG`). Veja a docstring de :meth:`cjsg`

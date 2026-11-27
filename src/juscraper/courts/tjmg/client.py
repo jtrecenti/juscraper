@@ -180,19 +180,19 @@ class TJMGScraper(HTTPScraper):
         """Busca jurisprudencia no TJMG (acordaos com captcha numerico).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. A busca comum com resultados demais
                 levanta ``ValueError`` ("muitos resultados").
                 Quando ha acordaos de repetitivos no resultado, o portal
                 responde com a busca categorizada, uma lista por categoria
                 (repetitivos e demais acordaos), sem esse limite; o ``cjsg``
                 segue cada lista, e ``paginas`` vale para cada uma delas.
-            pesquisar_por ({"ementa", "acordao"}): Campo onde buscar.
+            pesquisar_por: Campo onde buscar.
                 ``"acordao"`` busca no inteiro teor. Default ``"ementa"``.
-            order_by (int | str): Ordenacao: ``2`` data julgamento,
+            order_by: Ordenacao: ``2`` data julgamento,
                 ``1`` data publicacao, ``0`` precisao. Default ``2``.
-            tamanho_pagina (int): Resultados por pagina (10, 20 ou 50).
+            tamanho_pagina: Resultados por pagina (10, 20 ou 50).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJMG`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -305,7 +305,7 @@ class TJMGScraper(HTTPScraper):
         uma linha.
 
         Args:
-            id_cnj (str | list[str]): CNJ (20 digitos) ou numero TJMG
+            id_cnj: CNJ (20 digitos) ou numero TJMG
                 (17 digitos, ex.: ``"1.0000.26.408376-7/001"`` — a coluna
                 ``processo_interno`` do :meth:`cjsg`). Mascara opcional.
                 Com CNJ, vem todos os recursos vinculados; com numero TJMG,

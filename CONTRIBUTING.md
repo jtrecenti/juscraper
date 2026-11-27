@@ -522,11 +522,13 @@ Em `Args:` e `Raises:`, a primeira linha de cada entrada traz o nome inteiro at�
 
 A entrada de `Returns:` traz só a descrição: o tipo vem da anotação de retorno da assinatura. Escrito antes dos dois-pontos, como em `pd.DataFrame: ...` ou `str: ...`, ele sai repetido na tabela. Só quando a assinatura não anota o retorno, escrever o tipo entre parênteses, como em `(dict[str, str]): ...`; numa função anotada, os parênteses sobrepõem a anotação. Sem anotação e sem parênteses, a referência sai sem tipo.
 
+Em `Args:`, o parâmetro anotado na assinatura leva só o nome e a descrição, como em `pesquisa: Termo de busca livre.`: a referência mostra o tipo da anotação. Escrito entre parênteses, como em `pesquisa (str): ...`, ele se sobrepõe à anotação e passa a divergir dela na primeira mudança da assinatura. O tipo entre parênteses fica só para parâmetro sem anotação. Parâmetros anotados não se agrupam numa entrada (`inicio, fim: ...`): o griffe não acha o nome agrupado na assinatura e a referência sai sem tipo; escrever uma entrada para cada um. A descrição continua citando os valores aceitos, inclusive os deprecados, porque a anotação de um `Literal` aparece pelo nome do alias (`TipoDecisao`).
+
 O `quartodoc build` passa em todos esses casos; quem reprova é `tests/test_docstring_griffe.py`.
 
 ### Filtros e aliases
 
-- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
+- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos (ver "Tipo dos filtros em `**kwargs`" abaixo); citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
 - Acrescentar a semântica que o modelo não expressa: interpretação do filtro, formato exigido pelo backend e exemplo de uso. Indicar nomes de campos do backend quando isso explicar por que um filtro exige IDs internos.
 - Documentar defaults não óbvios e o significado de `None` para cada filtro; não presumir que todo campo seja opcional.
 - Listar aliases deprecados em seção própria, conforme os que o endpoint realmente consome em `normalize_pesquisa`, `normalize_datas` e `pop_deprecated_alias`. As constantes em `src/juscraper/utils/params.py` são a fonte dos aliases compartilhados; conferir também a normalização específica do scraper. Informar o `DeprecationWarning` sem remover o campo canônico da documentação.
@@ -539,9 +541,8 @@ Estrutura para o método principal, adaptando parâmetros explícitos, filtros e
 <Efeitos específicos, como delegação e limpeza de downloads.>
 
 Args:
-    pesquisa (str): <Semântica e restrições da busca.>
-    paginas (int | list | range | None): Páginas 1-based;
-        None busca todas.
+    pesquisa: <Semântica e restrições da busca; o tipo vem da assinatura.>
+    paginas: Páginas 1-based; None busca todas.
     **kwargs: Filtros aceitos por :class:`<InputDoEndpoint>`:
 
         * ``<campo_do_schema>`` (<tipo>): <Semântica do filtro.>
@@ -577,6 +578,18 @@ Fora de `See Also:`, e dentro dela quando o nome tem dígito, o quartodoc deixa 
 
 O `:meth:` com nome curto, como `` :meth:`cjsg` ``, vira link para o método da classe que a página documenta, nas duas seções, porque o filtro qualifica o nome pela classe antes de o `interlinks` procurá-lo. Isso só funciona quando o método é público e definido na própria classe, que é o que o quartodoc documenta; herdado ou privado sai como código, sem aviso no build, e `tests/test_docs_papeis_sphinx.py` reprova esse caso nas classes publicadas. O nome curto é, então, a forma certa de citar outro método da mesma classe, inclusive o método principal num par `*_download`. Método de outra classe pede o caminho completo, `` :meth:`juscraper.courts.tjsp.client.TJSPScraper.cjsg` ``, e só vira link se a classe estiver na referência (com `~` na frente, o texto do link mostra só o nome do método); nome com ponto mas sem o caminho completo, como `` :meth:`EsajSearchScraper.cjsg` ``, sai como código.
 
+### Tipo dos filtros em `**kwargs`
+
+Os filtros em `**kwargs` não têm anotação, então o tipo entre parênteses de cada bullet é o que a referência mostra, e ele copia o que o schema aceita:
+
+- a anotação do campo, com `| None` quando o campo aceita `None` (`str | None`, `bool`, `Literal["T", "R"]`);
+- o `json_schema_input_type` do `BeforeValidator`, quando o campo o declara: em `IdFiltro`, `int | str | list[int | str] | None`;
+- `str | date | None` nos campos de data que o cliente converte de `date` antes do pydantic: os de `DATE_CANONICAL` (`src/juscraper/utils/params.py`) e, no Falcão, `data_juntada_*` (`datetime` é subclasse de `date`; a descrição cita os dois).
+
+`Literal` curto vai por extenso, em aspas duplas: `Literal["ementa", "inteiro_teor"]`. Quando ele não cabe na linha do bullet, escrever o nome do alias definido no módulo do schema ou do scraper, como `BaseCJSGTRF3` no TRF3 ou `CompetenciaAceita | None` no TJRJ, e listar os valores na descrição: a referência mostra o nome como texto, sem link nem valores. Valores deprecados não entram no tipo.
+
+Campo que aceita mais do que a anotação por um `field_validator(mode="before")` ou por conversão no cliente, como o `int` que o TJRJ converte em `str`, entra em `AMPLIADOS` de `tests/schemas/test_docstring_parity.py`, com o tipo aceito e o motivo, pela classe que declara o validador.
+
 ### Métodos de download
 
 Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`. O par `*_download` descreve somente suas diferenças, como `diretorio` e o retorno do caminho, e referencia a lista de filtros com `:meth:` apontando para o método principal. Isso evita manter uma segunda lista que pode divergir do schema.
@@ -584,6 +597,8 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 ### Cobertura de paridade
 
 `tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` exige igualdade entre os filtros documentados e os campos do modelo nos endpoints registrados em `CASES`. Ao adicionar um método ou override com schema próprio e filtros em `**kwargs`, registrar o caso. O teste não descobre automaticamente novos endpoints.
+
+`test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
 
 `test_download_docstring_references_toplevel` verifica a referência `:meth:` nos pares registrados em `DOWNLOAD_REFERENCE_CASES`. Registrar novos pares nessa lista. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
 

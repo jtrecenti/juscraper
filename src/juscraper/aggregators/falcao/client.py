@@ -149,9 +149,9 @@ class FalcaoScraper(HTTPScraper):
           checkpoint requisitam as mesmas páginas e gastam a cota em dobro.
 
         Args:
-            pesquisa (str): Termo de busca livre (parametro ``texto``).
+            pesquisa: Termo de busca livre (parametro ``texto``).
                 Obrigatorio.
-            paginas (int | list | range | None): Paginas 1-based; ``None``
+            paginas: Paginas 1-based; ``None``
                 baixa todas as disponiveis, ate o teto de 10000 resultados
                 do backend (acima dele, emite ``UserWarning``). Default
                 ``None``. Páginas selecionadas além do teto são ignoradas
@@ -167,22 +167,22 @@ class FalcaoScraper(HTTPScraper):
                 * ``tamanho_pagina`` (int): Documentos por pagina. So ``5`` ou
                   ``10`` (limite do backend para usuario nao autenticado).
                   Default ``10``.
-                * ``tribunais`` (str | list[str]): Sigla(s) de tribunal
+                * ``tribunais`` (str | list[str] | None): Sigla(s) de tribunal
                   (``"TST"``, ``"TRT3"``, ...). Backend: ``tribunais``.
-                * ``relator`` (str | list[str]): Nome(s) de relator. Backend:
+                * ``relator`` (str | list[str] | None): Nome(s) de relator. Backend:
                   ``nomeRelator``.
-                * ``orgao_julgador`` (str | list[str]): Backend: ``orgaoJulgador``.
-                * ``classe`` (str | list[str]): Sigla(s) da classe processual
+                * ``orgao_julgador`` (str | list[str] | None): Backend: ``orgaoJulgador``.
+                * ``classe`` (str | list[str] | None): Sigla(s) da classe processual
                   (``"ROT"``, ``"ATOrd"``), a mesma da coluna de saida
                   ``classe_sigla``. O nome por extenso devolve zero
                   resultados sem erro. Backend: ``classeProcesso``.
-                * ``fase_processual`` (str | list[str]): Backend: ``faseProcessual``.
-                * ``prioridade`` (str | list[str]): Backend: ``prioridade``.
-                * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
-                * ``somente_ementa`` (bool): Busca ``texto`` so nas ementas.
-                * ``ordenacao`` (str): ``mais_relevante`` (default do backend),
+                * ``fase_processual`` (str | list[str] | None): Backend: ``faseProcessual``.
+                * ``prioridade`` (str | list[str] | None): Backend: ``prioridade``.
+                * ``tem_ementa`` (bool | None): Restringe a documentos com/sem ementa.
+                * ``somente_ementa`` (bool | None): Busca ``texto`` so nas ementas.
+                * ``ordenacao`` (str | None): ``mais_relevante`` (default do backend),
                   ``mais_recente`` ou ``menos_recente``.
-                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
+                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str | date | None):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode
@@ -190,7 +190,7 @@ class FalcaoScraper(HTTPScraper):
                   envia ``dataInicio=1900-01-01``, porque o backend
                   rejeita ``dataFim`` sozinho; limite superior anterior a
                   essa data levanta ``ValueError``.
-                * ``checkpoint_dir`` (str | Path): Diretório de páginas e
+                * ``checkpoint_dir`` (str | Path | None): Diretório de páginas e
                   manifesto da coleta retomável. Diretório ocupado exige
                   ``resume=True``; nunca é sobrescrito por coleta nova.
                 * ``resume`` (bool): Retoma o checkpoint da mesma busca
@@ -288,10 +288,10 @@ class FalcaoScraper(HTTPScraper):
         interrompida sem requisitar as páginas já gravadas.
 
         Args:
-            pesquisa (str): Termo de busca. Obrigatorio.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` =
+            pesquisa: Termo de busca. Obrigatorio.
+            paginas: Paginas 1-based; ``None`` =
                 todas. Default ``None``.
-            diretorio (str | None): Sobrescreve ``download_path`` para esta
+            diretorio: Sobrescreve ``download_path`` para esta
                 chamada. Default ``None`` (usa o ``download_path`` do scraper,
                 que sem configuracao e um diretorio temporario criado no
                 primeiro uso). Cria a pasta e seus pais quando não existem.
@@ -330,7 +330,7 @@ class FalcaoScraper(HTTPScraper):
         checkpoint é ignorado.
 
         Args:
-            diretorio (str | Path): Pasta com os arquivos JSON.
+            diretorio: Pasta com os arquivos JSON.
 
         Returns:
             Resultados concatenados (veja :meth:`listar_decisoes` para as
