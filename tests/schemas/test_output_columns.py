@@ -55,7 +55,6 @@ from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 from juscraper.aggregators.falcao.parse import parse_documentos
 from juscraper.aggregators.jusbr.parse import parse_process_details_response
 from juscraper.courts.stf.parse import parse_contagem, parse_decisoes
-from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests.schemas.test_canonical_types import DEPRECATED_SYNONYMS
 from tests.schemas.test_output_parity import (
     EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
@@ -265,10 +264,8 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjto", "cjpg"): _PAGINAS,
     ("trf1", "cpopg"): _PJE_CPOPG,
     ("trf5", "cpopg"): _PJE_CPOPG,
-    # O ``TJPEScraper`` não expõe ``cpopg_parse``; o parser é o da consulta pública.
     ("tjpe", "cpopg"): Leitura(
         _detalhe_com_cnj,
-        lambda htmls, cnjs: TJPEConsultaPublicaScraper(sleep_time=0).cpopg_parse(htmls, cnjs),
         ignorar={
             **_PJE_CPOPG.ignorar,
             "waf_challenge.html": "desafio do AWS WAF, que o download repete com cookie novo",

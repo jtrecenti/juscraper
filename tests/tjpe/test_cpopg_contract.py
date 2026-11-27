@@ -19,10 +19,11 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
 from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
@@ -331,9 +332,65 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, mocker,
     assert f"processo {CNJ}: resposta_inesperada" in str(aviso.message)
 
 
-def test_cpopg_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        tjpe.cpopg(CNJ, filtro_inexistente="x")
+@responses.activate
+def test_cpopg_download_devolve_o_html_e_cpopg_parse_monta_a_linha_do_cpopg(tjpe, obter):
+    """Baixar e parsear em duas etapas dá a mesma tabela do ``cpopg``, sem ``motivo_falha``."""
+
+    def _encontrado_e_ausente():
+        _form()
+        _busca()
+        _detalhe()
+        _busca("cpopg/search_no_results.html")
+
+    _encontrado_e_ausente()
+    htmls = tjpe.cpopg_download([CNJ, OUTRO_CNJ])
+
+    obter.assert_not_called()
+    assert htmls == [load_sample_bytes("tjpe", "cpopg/detail_normal.html").decode("latin-1"), None]
+    df = tjpe.cpopg_parse(htmls, [CNJ, OUTRO_CNJ])
+    assert df.iloc[0]["documentos"]
+
+    responses.reset()
+    _encontrado_e_ausente()
+    completo = tjpe.cpopg([CNJ, OUTRO_CNJ])
+    pd.testing.assert_frame_equal(df, completo.drop(columns="motivo_falha"))
+
+
+@responses.activate
+def test_cpopg_download_bloqueado_pelo_waf_sai_none_com_aviso_do_metodo(tjpe, obter):
+    _desafio()
+    _desafio()
+
+    with pytest.warns(BloqueioAntiBotWarning, match=r"TJPEScraper\.cpopg_download: 2 consulta"):
+        htmls = tjpe.cpopg_download([CNJ, OUTRO_CNJ])
+
+    assert htmls == [None, None]
+    obter.assert_called_once()
+
+
+@responses.activate
+def test_cpopg_download_sem_playwright_o_erro_chega_ao_usuario(tjpe, mocker):
+    mocker.patch(
+        "juscraper.courts.tjpe.consulta_publica.obter_waf_token",
+        side_effect=ImportError("Instale com `pip install 'juscraper[waf]'`"),
+    )
+    _desafio()
+
+    with pytest.raises(ImportError, match=r"juscraper\[waf\]"):
+        tjpe.cpopg_download(CNJ)
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_rejeita_kwarg_desconhecido_citando_o_metodo_publico(tjpe, metodo):
+    assert_unknown_kwarg_raises(
+        getattr(tjpe, metodo), "filtro_inexistente", CNJ, rotulo=f"TJPEScraper.{metodo}"
+    )
+
+
+def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
+    with pytest.raises(ValueError, match="same length"):
+        tjpe.cpopg_parse([None], [CNJ, OUTRO_CNJ])
+
 
 
 def test_mensagem_de_formulario_inesperado_cita_o_tribunal():

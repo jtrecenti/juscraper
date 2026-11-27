@@ -31,3 +31,13 @@ def test_cpopg_traz_processo_publico_com_documentos(tmp_path) -> None:
     assert row["classe"]
     assert isinstance(row["documentos"], list) and row["documentos"]
     assert row["pecas"], "nenhuma peça pública baixada"
+
+
+@pytest.mark.integration
+def test_cpopg_download_e_parse_em_duas_etapas() -> None:
+    scraper = jus.scraper("tjpe")
+    htmls = scraper.cpopg_download(_PUBLICO_CNJ)
+    assert len(htmls) == 1 and htmls[0]
+    df = scraper.cpopg_parse(htmls, [_PUBLICO_CNJ])
+    assert df.iloc[0]["processo"] == "0096302-25.2021.8.17.2001"
+    assert "motivo_falha" not in df.columns
