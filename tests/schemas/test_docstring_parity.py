@@ -137,7 +137,8 @@ def _docstring_bullets(method) -> dict[str, str | None]:
                 cut = min(cut, pos)
         type_match = _TYPE_RE.match(line[cut:])
         declared = type_match.group(1) if type_match else None
-        bullets.update(dict.fromkeys(_NAME_RE.findall(line[:cut]), declared))
+        for name in _NAME_RE.findall(line[:cut]):
+            bullets.setdefault(name, declared)
     return bullets
 
 
@@ -183,12 +184,20 @@ def test_docstring_lists_schema_fields(
 # Tipo que a docstring deve declarar para campos tipados com os aliases de
 # ``juscraper.schemas.types``. O pydantic desembrulha o ``Annotated`` e guarda
 # o ``BeforeValidator`` em ``FieldInfo.metadata``; e por ele que o alias e
-# reconhecido. Os demais tipos ficam fora: as docstrings escrevem
-# ``Literal[...]``, ``str | None`` etc. de jeitos diferentes.
+# reconhecido (por pertencimento, para tolerar ``Field(...)`` extra). Os
+# demais tipos ficam fora: as docstrings escrevem ``Literal[...]``,
+# ``str | None`` etc. de jeitos diferentes.
 _ID_FILTRO_DOC_TYPES = {
-    get_args(IdFiltro)[1:]: "int | str | list[int | str]",
-    get_args(IdFiltroUnico)[1:]: "int | str",
+    get_args(IdFiltro)[1]: "int | str | list[int | str]",
+    get_args(IdFiltroUnico)[1]: "int | str",
 }
+
+
+def _id_filtro_doc_type(field) -> str | None:
+    for validator, doc in _ID_FILTRO_DOC_TYPES.items():
+        if validator in field.metadata:
+            return doc
+    return None
 
 
 @pytest.mark.parametrize(
@@ -203,11 +212,12 @@ def test_docstring_declares_id_filtro_types(
     klass = getattr(importlib.import_module(schema_module), schema_class)
 
     bullets = _docstring_bullets(method)
+    # Bullet ausente fica para test_docstring_lists_schema_fields.
     wrong = {
-        name: (bullets.get(name), expected)
+        name: (bullets[name], expected)
         for name, field in klass.model_fields.items()
-        if (expected := _ID_FILTRO_DOC_TYPES.get(tuple(field.metadata)))
-        and bullets.get(name) != expected
+        if (expected := _id_filtro_doc_type(field))
+        and bullets.get(name, expected) != expected
     }
 
     assert not wrong, (
