@@ -1,7 +1,6 @@
 """
 Downloads raw pages from the TJTO jurisprudence search.
 """
-import math
 import re
 import time
 from collections.abc import Callable
@@ -11,7 +10,13 @@ from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import descrever_paginas, extract_count_with_cascade, menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import (
+    descrever_paginas,
+    extract_count_with_cascade,
+    menor_pagina,
+    paginas_no_intervalo,
+    resolve_total_pages,
+)
 from juscraper.utils.params import to_br_date
 
 from .parse import cjsg_parse_manager
@@ -38,19 +43,19 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 )
 
 
-def _get_total_results(html: str) -> int:
-    """Extract the total number of results from the active tab's count.
+def _get_total_results(html: str) -> int | None:
+    """Lê o total de resultados na contagem da aba ativa; ``None`` sem ela.
 
     Sem ``zero_markers``: a página além do total também diz "Nenhum documento
     encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
-    a busca sem resultados traz ``(0)`` na aba.
+    a busca sem resultados traz ``(0)`` na aba. Sem a contagem (markup novo),
+    :func:`resolve_total_pages` levanta.
     """
-    n = extract_count_with_cascade(
+    return extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
     )
-    return n if n is not None else 0
 
 
 def build_cjsg_payload(
@@ -135,6 +140,9 @@ def cjsg_download_manager(
 
     Returns:
         List of raw HTML strings, one per page.
+
+    Raises:
+        ValueError: Quando a página lida não traz a contagem da aba ativa (markup novo).
     """
     fetch_kwargs: dict[str, Any] = {
         "type_minuta": type_minuta,
@@ -155,8 +163,9 @@ def cjsg_download_manager(
     # passa do total, as demais também passam, e todas caem no aviso.
     primeira = menor_pagina(paginas)
     html_primeira = _get_page(primeira)
-    total = _get_total_results(html_primeira)
-    n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
+    n_pags = resolve_total_pages(
+        _get_total_results(html_primeira), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
+    )
     validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
     return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
 

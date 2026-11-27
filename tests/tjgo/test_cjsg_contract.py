@@ -116,16 +116,15 @@ def test_cjsg_colunas_sao_as_do_output():
 
 
 @responses.activate
-def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
-    """Results on page 1 with an unreadable count are not a Turnstile block."""
+def test_cjsg_com_resultados_sem_contagem_levanta_sem_avisar(mocker):
+    """Results on page 1 with an unreadable count are new markup, not a Turnstile block."""
     mocker.patch("time.sleep")
-    mocker.patch("juscraper.courts.tjgo.download._extract_total", return_value=0)
+    mocker.patch("juscraper.courts.tjgo.download._extract_total", return_value=None)
     _add_get_prime()
     _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")
 
-    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
-
-    assert not df.empty
+    with pytest.raises(ValueError, match="TJGO"):  # filterwarnings=error: sem aviso do Turnstile
+        jus.scraper("tjgo").cjsg("dano moral", paginas=1)
 
 
 @responses.activate
