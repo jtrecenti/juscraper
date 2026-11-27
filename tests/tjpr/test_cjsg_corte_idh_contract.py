@@ -200,7 +200,8 @@ def test_cjsg_incluir_corte_idh_nao_bool_levanta_antes_da_rede(valor):
 
 def test_cjsg_parse_incluir_corte_idh_nao_bool_levanta():
     with pytest.raises(TypeError, match="incluir_corte_idh deve ser bool"):
-        jus.scraper("tjpr").cjsg_parse([], incluir_corte_idh="false")
+        # Tipo errado de propósito.
+        jus.scraper("tjpr").cjsg_parse([], incluir_corte_idh="false")  # type: ignore[arg-type]
 
 
 @responses.activate

@@ -192,7 +192,8 @@ def test_cpopg_lote_so_com_entrada_invalida_nao_deixa_pasta(tmp_path):
     pasta = tmp_path / "nao_criada"
 
     with pytest.warns(UserWarning, match="123: entrada_invalida"):
-        result = jus.scraper("tjsp", download_path=str(pasta)).cpopg(["123", float("nan")])
+        # Entrada inválida de propósito.
+        result = jus.scraper("tjsp", download_path=str(pasta)).cpopg(["123", float("nan")])  # type: ignore[list-item]
 
     assert result["basicos"]["motivo_falha"].tolist() == ["entrada_invalida", "entrada_invalida"]
     assert result["basicos"]["id_processo"].iloc[0] == "123"
@@ -604,8 +605,10 @@ def test_cpopg_lote_vazio_devolve_as_tabelas_vazias(tmp_path):
 
 def test_cpopg_entrada_que_nao_e_texto_vira_linha_de_falha(tmp_path):
     """Número de uma coluna numérica (``numpy.int64``) e ``None`` saem ``entrada_invalida``, sem quebrar o registro."""
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     with pytest.warns(UserWarning, match="entrada_invalida"):
-        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg([np.int64(123), None])
+        # Entrada inválida de propósito.
+        result = scraper.cpopg([np.int64(123), None])  # type: ignore[list-item]
 
     assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
         {"id_processo": "123", "motivo_falha": "entrada_invalida"},

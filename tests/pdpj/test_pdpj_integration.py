@@ -25,7 +25,7 @@ PROCESSOS_DE_TESTE = [
 
 
 def _scraper():
-    token = os.environ.get("JUSCRAPER_PDPJ_TOKEN")
+    token = os.environ.get("JUSCRAPER_PDPJ_TOKEN", "")
     if not token:
         pytest.skip("Defina JUSCRAPER_PDPJ_TOKEN para rodar testes de integracao.")
     s = jus.scraper("pdpj", sleep_time=0.2)

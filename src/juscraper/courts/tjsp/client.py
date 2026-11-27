@@ -5,7 +5,7 @@ import logging
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 import pandas as pd
 from pydantic import BaseModel
@@ -112,6 +112,37 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         self.method = "html"
 
     # --- cjsg -----------------------------------------------------------
+
+    # Overloads só para o verificador de tipos: ``count_only=True`` devolve o
+    # ``int`` da contagem; sem ``count_only``, o ``DataFrame``. A última não
+    # nomeia ``count_only`` para ``**filtros`` com valores ``str`` continuar casando.
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     def cjsg(
         self,
@@ -452,7 +483,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     # --- cposg ----------------------------------------------------------
 
-    def cposg(self, id_cnj: str, method: Literal["html"] = "html") -> pd.DataFrame:
+    def cposg(self, id_cnj: str | list[str], method: Literal["html"] = "html") -> pd.DataFrame:
         """Fetch a second-degree process by CNJ and return a DataFrame.
 
         ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e

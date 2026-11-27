@@ -294,6 +294,7 @@ def test_cpopg_download_e_parse_separados() -> None:
     brutos = scraper.cpopg_download([CNJ_PAGINADO, CNJ_SEM_RESULTADO])
 
     assert brutos[1] is None
+    assert brutos[0] is not None
     assert set(brutos[0]) == {"busca", "dados", "poloAtivo", "poloPassivo", "outrosInteressados",
                               "movimentacoes", "documentos"}
     assert len(brutos[0]["movimentacoes"]) == 5
@@ -485,11 +486,13 @@ def test_cpopg_parse_recusa_html_do_portal_antigo() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     html = "<html><body>Detalhe do processo</body></html>"
     with pytest.raises(TypeError, match="envelopes JSON da API"):
-        scraper.cpopg_parse([html, None], [CNJ_PAGINADO, CNJ_SEM_RESULTADO])
+        # HTML de propósito.
+        scraper.cpopg_parse([html, None], [CNJ_PAGINADO, CNJ_SEM_RESULTADO])  # type: ignore[list-item]
     with pytest.warns(DeprecationWarning, match="htmls"), pytest.raises(TypeError, match="não o HTML do portal antigo"):
         scraper.cpopg_parse(htmls=[html], id_cnj_list=[CNJ_PAGINADO])
     with pytest.raises(TypeError, match="envelopes JSON da API"):
-        scraper.cposg_parse([html], [CNJ_PAGINADO])
+        # HTML de propósito.
+        scraper.cposg_parse([html], [CNJ_PAGINADO])  # type: ignore[list-item]
 
 
 def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:

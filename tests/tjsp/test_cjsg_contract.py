@@ -8,6 +8,8 @@ Also covers the pre-request guard that raises ``QueryTooLongError`` when
 ``pesquisa`` exceeds 120 characters — exercising it without any HTTP
 interaction.
 """
+from typing import Any
+
 import pandas as pd
 import pytest
 import responses
@@ -283,8 +285,9 @@ def test_cjsg_count_only_alias_de_busca_sem_pesquisa(tmp_path, mocker, alias):
     _add_get(1, "cjsg/results_normal_page_01.html")
 
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
+    filtros: dict[str, Any] = {alias: "dano moral"}
     with pytest.warns(DeprecationWarning, match=f"'{alias}' está deprecado"):
-        n = scraper.cjsg(count_only=True, **{alias: "dano moral"})
+        n = scraper.cjsg(count_only=True, **filtros)
 
     assert n == 2571077
 
