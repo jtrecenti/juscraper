@@ -347,7 +347,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
         ``_validate_pesquisa`` sobre o valor ja resolvido (apos
         consumir ``query``/``termo``), para que o ``QueryTooLongError`` do
         TJSP propague mesmo quando o alias trouxe a string longa. Aceita os
-        mesmos filtros de :meth:`cjpg`; veja la a lista completa.
+        mesmos filtros de :meth:`cjpg`; veja lá a lista completa.
 
         Args:
             pesquisa: Termo livre. Default ``""``. No TJSP, limite

@@ -97,29 +97,12 @@ class TJMGScraper(HTTPScraper):
     ) -> list:
         """Executa a busca de acórdãos no TJMG e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
-        Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai como DataFrame).
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa. Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai
+        como DataFrame).
 
-        Args:
-            pesquisa: Termo de busca livre.
-            paginas: Páginas a baixar (1-based). ``None`` baixa todas. Uma busca
-                comum com resultados demais levanta ``ValueError`` ("muitos
-                resultados"); as listas da busca categorizada não têm esse teto. Na
-                busca categorizada, ``paginas`` vale para cada lista.
-            pesquisar_por: Campo em que buscar: ``"ementa"`` ou ``"acordao"``
-                (inteiro teor).
-            order_by: Ordem: ``2`` data de julgamento, ``1`` data de publicação,
-                ``0`` precisão.
-            tamanho_pagina: Resultados por página (10, 20 ou 50). Aceita
-                ``linhas_por_pagina`` como alias deprecado.
-            data_julgamento_inicio: Início do intervalo de julgamento:
-                ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``,
-                ``date`` ou ``datetime``.
-            data_julgamento_fim: Fim do intervalo de julgamento (mesmos formatos).
-            data_publicacao_inicio: Início do intervalo de publicação (mesmos
-                formatos).
-            data_publicacao_fim: Fim do intervalo de publicação (mesmos formatos).
-            **kwargs: Aliases deprecados; ver :meth:`cjsg`.
+        Returns:
+            HTML bruto de cada página baixada.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "linhas_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10

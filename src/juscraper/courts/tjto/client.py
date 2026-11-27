@@ -119,7 +119,7 @@ class TJTOScraper(HTTPScraper):
     ) -> list:
         """Download raw HTML pages from the TJTO second-instance jurisprudence search.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista de paginas HTML cruas.
@@ -239,7 +239,7 @@ class TJTOScraper(HTTPScraper):
         """Download raw HTML pages from the TJTO first-instance jurisprudence search.
 
         Shortcut for the download with ``instancia='1'``.
-        Aceita os mesmos filtros de :meth:`cjpg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjpg`; veja lá a lista completa.
 
         Returns:
             Lista de paginas HTML cruas.

@@ -277,7 +277,7 @@ class FalcaoScraper(HTTPScraper):
     ) -> str:
         """Baixa as paginas cruas (JSON) da busca para um diretorio.
 
-        Mesma validacao e filtros de :meth:`listar_decisoes` (veja la a lista completa de
+        Mesma validacao e filtros de :meth:`listar_decisoes` (veja lá a lista completa de
         ``**kwargs``). Cada chamada cria um subdiretorio proprio
         ``falcao_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
         no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
