@@ -21,6 +21,7 @@ from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj
+from ...utils.pagination import paginas_no_intervalo
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
 from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
 from .parse import parse_count, parse_items
@@ -126,8 +127,6 @@ class ComunicaCNJScraper(HTTPScraper):
             e a fonte da verdade dos filtros aceitos.
         """
         _exigir_pesquisa_ou_numero(pesquisa, kwargs.get("numero_processo"))
-        paginas_norm = normalize_paginas(paginas)
-
         # Aceita ``DD/MM/YYYY`` na entrada por conveniencia, mas a API
         # espera ISO ``YYYY-MM-DD``. ``to_iso_date`` e idempotente para
         # strings ja em ISO.
@@ -138,7 +137,7 @@ class ComunicaCNJScraper(HTTPScraper):
         try:
             inp = InputListarComunicacoesComunicaCNJ(
                 pesquisa=pesquisa or "",
-                paginas=paginas_norm,
+                paginas=normalize_paginas(paginas),
                 **kwargs,
             )
         except ValidationError as exc:
@@ -178,18 +177,10 @@ class ComunicaCNJScraper(HTTPScraper):
         if self.verbose:
             logger.info("ComunicaCNJ: %d resultados em %d paginas.", total, total_paginas)
 
-        if paginas_norm is None:
-            paginas_iter: range | list = range(1, total_paginas + 1)
-        elif isinstance(paginas_norm, range):
-            paginas_iter = range(
-                max(1, paginas_norm.start),
-                min(paginas_norm.stop, total_paginas + 1),
-            )
-        else:
-            paginas_iter = [p for p in paginas_norm if 1 <= p <= total_paginas]
+        validas = paginas_no_intervalo(inp.paginas_normalizadas, total_paginas, tribunal="ComunicaCNJ")
 
         rows: list[dict] = []
-        for pagina in tqdm(list(paginas_iter), desc="ComunicaCNJ", disable=not self.verbose):
+        for pagina in tqdm(validas, desc="ComunicaCNJ", disable=not self.verbose):
             if pagina == 1:
                 resp = primeira_resp
             else:

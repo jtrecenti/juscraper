@@ -15,9 +15,10 @@ import jwt
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.aggregators.pdpj.client import _to_query_params
+from juscraper.aggregators.pdpj.client import _limite_de_paginas, _to_query_params
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.aggregators.pdpj.parse import (
     build_documento_rows,
@@ -26,6 +27,7 @@ from juscraper.aggregators.pdpj.parse import (
     build_processo_row,
     parse_pesquisa_response,
 )
+from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
 # Token JWT minimo (header + payload com ``exp`` futura) so para passar pelo
@@ -254,6 +256,30 @@ def test_pesquisa_lista_orgao_julgador_vira_csv():
     )
     _mk_scraper().pesquisa(id_orgao_julgador=["12345", "67890"], paginas=1)
     assert captured["idOrgaoJulgador"] == "12345,67890"
+
+
+@responses.activate
+@pytest.mark.parametrize("paginas", [0, -1, [], [0], [2, -1], range(3, 0, -1)])
+def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
+    """``paginas`` fora do contrato de ``PaginasMixin`` falha antes da API.
+
+    Sem mock registrado, qualquer requisicao levantaria ``ConnectionError``.
+    """
+    with pytest.raises(ValidationError, match="paginas"):
+        _mk_scraper().pesquisa(tribunal="TRF1", paginas=paginas)
+    assert len(responses.calls) == 0
+
+
+def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
+    """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
+    assert _limite_de_paginas(range(1, 10, 3)) == (7, range(1, 10, 3))
+
+
+@pytest.mark.parametrize("paginas", [True, [True], [1, True]])
+def test_input_pesquisa_rejeita_paginas_bool(paginas):
+    """Usado direto, o schema nao coage ``True`` para a pagina 1."""
+    with pytest.raises(ValidationError, match="paginas"):
+        InputPesquisaPdpj(paginas=paginas)
 
 
 @responses.activate
