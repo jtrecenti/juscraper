@@ -344,6 +344,27 @@ def test_cjsg_decisoes_fora_do_seu_grau_levanta_validation_error(filtros, metodo
         getattr(jus.scraper("tjrn"), metodo)("", paginas=1, **filtros)
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença"},
+        {"grau": "1"},
+        {"decisoes": "Decisão", "grau": "1"},
+        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+        {"decisoes": "Decisão", "jurisdicoes": "TR"},
+        {"decisoes": "Decisão", "sistema": "PJE"},
+    ],
+)
+def test_cjsg_termo_na_ementa_sem_ementa_levanta_validation_error(filtros, metodo):
+    """So os acordaos tem ementa, onde ``pesquisa`` busca por padrao: com termo,
+    sentencas, decisoes de 1o grau e monocraticas de ``"TJ"``, ``"TR"`` ou do
+    PJe devolviam 0 resultados sem erro; agora levantam ``ValidationError`` antes
+    de qualquer requisicao (``responses`` sem rota levantaria se houvesse)."""
+    with responses.RequestsMock(), pytest.raises(ValidationError, match='buscar_em="inteiro_teor"'):
+        getattr(jus.scraper("tjrn"), metodo)("dano moral", paginas=1, **filtros)
+
+
 @responses.activate
 def test_cjsg_sistema_envia_valor_do_portal(mocker):
     """``sistema`` vai ao payload com o valor do seletor do portal; o sample
