@@ -66,15 +66,15 @@ class TJSCScraper(HTTPScraper):
         """Busca jurisprudencia no TJSC.
 
         Args:
-            pesquisa (str): Termo de busca livre, procurado no campo indicado
+            pesquisa: Termo de busca livre, procurado no campo indicado
                 por ``buscar_em``.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            buscar_em (str | None): Onde procurar ``pesquisa``: ``"ementa"``
+            buscar_em: Onde procurar ``pesquisa``: ``"ementa"``
                 (default; ``None`` tambem) ou ``"inteiro_teor"`` (texto
                 integral da decisao, que inclui a ementa). Outro valor levanta
                 ``ValidationError``.
-            processo (str): Filtro por numero do processo.
+            processo: Filtro por numero do processo.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJSC`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

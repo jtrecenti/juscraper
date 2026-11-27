@@ -5,7 +5,8 @@ errado; o defeito só aparece na referência publicada. O teste reprova aviso de
 falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em duas
 linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
 lê com itens a mais, sem tipo, com o tipo repetido ou com tipo diferente da
-assinatura, e a seção ``Warns:``, que derruba o build. Os casos e as formas
+assinatura, entrada de ``Args:`` com tipo escrito em parâmetro anotado (o
+tipo da docstring se sobrepõe à anotação) e a seção ``Warns:``, que derruba o build. Os casos e as formas
 certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
@@ -55,6 +56,26 @@ def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> s
             return f"Raises com várias exceções numa entrada ({'; '.join(grupos)}); usar uma por entrada"
     if isinstance(secao, griffe.DocstringSectionReturns):
         return _motivo_dos_retornos(objeto, secao.value)
+    if isinstance(secao, griffe.DocstringSectionParameters):
+        return _motivo_dos_parametros(objeto, secao.value)
+    return None
+
+
+def _motivo_dos_parametros(objeto: griffe.Object, entradas: list[griffe.DocstringParameter]) -> str | None:
+    # Função ou classe (os parâmetros do ``__init__``); módulo e atributo não têm.
+    anotacoes = {parametro.name: parametro.annotation for parametro in getattr(objeto, "parameters", None) or []}
+    copiados = []
+    for entrada in entradas:
+        anotacao = anotacoes.get(entrada.name)
+        # Sem tipo na docstring, o griffe põe na entrada o próprio objeto da
+        # anotação; outro objeto é o tipo escrito entre parênteses.
+        if anotacao is not None and entrada.annotation is not anotacao:
+            copiados.append(f"{entrada.name} ({entrada.annotation})")
+    if copiados:
+        return (
+            f"Args com tipo escrito em parâmetro anotado ({'; '.join(copiados)});"
+            " tirar os parênteses: a referência usa a anotação da assinatura"
+        )
     return None
 
 
@@ -220,6 +241,18 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Returns:\n'
         '        DataFrame com uma linha por processo.\n'
         '    """\n',
+        'def f(a: int | None = None):\n'
+        '    """Resumo.\n\n'
+        '    Args:\n'
+        '        a (int | None): Número.\n'
+        '    """\n',
+        'class A:\n'
+        '    """Resumo.\n\n'
+        '    Args:\n'
+        '        a (str): Texto.\n'
+        '    """\n\n'
+        '    def __init__(self, a: str):\n'
+        '        self.a = a\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -237,6 +270,8 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "returns-nome-sem-anotacao",
         "returns-parenteses-com-anotacao",
         "returns-sem-tipo",
+        "args-tipo-com-anotacao",
+        "args-tipo-com-anotacao-na-classe",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
@@ -284,6 +319,14 @@ def test_forma_correta_e_tupla_passam():
         '    """Resumo.\n\n'
         "    Returns:\n"
         "        Único elemento.\n"
+        '    """\n\n'
+        "def m(a: int, b=None, **kwargs):\n"
+        '    """Resumo.\n\n'
+        "    Args:\n"
+        "        a: Número, tipo vindo da anotação.\n"
+        "        b (str | None): Texto, sem anotação.\n"
+        "        **kwargs: Filtros:\n\n"
+        "            * ``c`` (int): Filtro.\n"
         '    """\n'
     )
     assert problemas_do_codigo(codigo) == []
@@ -305,3 +348,20 @@ def test_griffe_parte_retorno_e_perde_excecoes():
         "Resumo.\n\nRaises:\n    ValueError, TypeError,\n        KeyError: Quando falha.\n", parser="google"
     ).parsed
     assert not any(isinstance(s, griffe.DocstringSectionRaises) for s in secoes)
+
+
+def test_griffe_poe_a_anotacao_na_entrada_sem_tipo():
+    """Amarra a premissa da regra de Args: sem tipo escrito, a entrada recebe o objeto da anotação."""
+    raiz = griffe.visit("m", filepath=Path("m.py"), code=(
+        "def f(a: int, b: str):\n"
+        '    """Resumo.\n\n'
+        "    Args:\n"
+        "        a: Número.\n"
+        "        b (str): Texto.\n"
+        '    """\n'
+    ))
+    funcao = raiz["f"]
+    secao = next(s for s in funcao.docstring.parse("google") if isinstance(s, griffe.DocstringSectionParameters))
+    a, b = secao.value
+    assert a.annotation is funcao.parameters["a"].annotation
+    assert b.annotation is not funcao.parameters["b"].annotation

@@ -121,13 +121,13 @@ class TJRJScraper(HTTPScraper):
         documentos em JSON.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None``
                 baixa todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRJ`
                 (todos opcionais; ``None`` = sem filtro):
 
-                * ``ano_inicio`` / ``ano_fim`` (str | int): Ano de
+                * ``ano_inicio`` / ``ano_fim`` (str | int | None): Ano de
                   julgamento. **Granularidade anual e o unico filtro de
                   data exposto pelo backend ASPX** — use estes em vez de
                   ``data_julgamento_*``. ``None`` usa o ano mais recente
@@ -137,14 +137,14 @@ class TJRJScraper(HTTPScraper):
                   antigo da origem (1975). ``ano_inicio`` posterior a
                   ``ano_fim`` levanta ``ValidationError``. Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
-                * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
+                * ``competencia`` (CompetenciaAceita | None): ``"1"`` civel / ``"2"``
                   criminal / ``"3"`` fazendaria (so na Turma Recursal).
                   ``None`` (default) usa a primeira competencia do form da
                   origem: ``"1"`` na 2a instancia, no Alcada Civel e na
                   Turma Recursal, ``"2"`` no Alcada Criminal. O Conselho da
                   Magistratura nao tem competencia: deixe ``None``.
                   Backend: ``cmbCompetencia``.
-                * ``origem`` (str | int): ``"1"`` 2a instancia (default) /
+                * ``origem`` (OrigemAceita): ``"1"`` 2a instancia (default) /
                   ``"2"`` Tribunal de Alcada Civel / ``"3"`` Tribunal de
                   Alcada Criminal / ``"4"`` Turma Recursal / ``"5"``
                   Conselho da Magistratura. Backend: ``cmbOrigem``.
@@ -152,10 +152,10 @@ class TJRJScraper(HTTPScraper):
                   ``True``. Backend: ``chkAcordao``.
                 * ``tipo_monocratica`` (bool): Inclui decisoes
                   monocraticas. Default ``True``. Backend: ``chkDecMon``.
-                * ``magistrado_codigo`` (str): IDs internos do
+                * ``magistrado_codigo`` (str | None): IDs internos do
                   magistrado, separados por virgula. Backend:
                   ``hfCodMags``.
-                * ``orgao_codigo`` (str): IDs internos do orgao
+                * ``orgao_codigo`` (str | None): IDs internos do orgao
                   julgador, separados por virgula. Backend:
                   ``hfCodOrgs``.
 

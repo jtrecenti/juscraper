@@ -375,14 +375,14 @@ class EsajAcordaoScraper(EsajSearchScraper):
         extração de texto fica com quem usa a biblioteca.
 
         Args:
-            processo (str): Número CNJ, como na coluna ``processo`` do cjsg.
-            data_julgamento (str | date): ``DD/MM/AAAA`` ou ``date``, como na
+            processo: Número CNJ, como na coluna ``processo`` do cjsg.
+            data_julgamento: ``DD/MM/AAAA`` ou ``date``, como na
                 coluna ``data_julgamento`` do cjsg. Escolhe o acórdão quando o
                 processo tem mais de um: vale o primeiro documento de acórdão
                 com data de movimentação igual ou posterior a ela. No empate de
                 data entre incidentes, vale o que a busca lista primeiro, e um
                 aviso no log cita o acórdão do outro.
-            diretorio (str | None): Pasta de destino. Default
+            diretorio: Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/acordaos/<cnj>_<cdProcesso>_<cdDocumento>.pdf``.
 
@@ -457,9 +457,9 @@ class EsajAcordaoScraper(EsajSearchScraper):
         """Baixa o PDF do acórdão de cada linha do cjsg; ver :meth:`baixar_acordao`.
 
         Args:
-            cjsg (pd.DataFrame): Saída de ``cjsg``, ou qualquer tabela com as
+            cjsg: Saída de ``cjsg``, ou qualquer tabela com as
                 colunas ``processo`` e ``data_julgamento``.
-            diretorio (str | None): Pasta de destino. Default :attr:`download_path`.
+            diretorio: Pasta de destino. Default :attr:`download_path`.
 
         Returns:
             As linhas de entrada com ``caminho_acordao`` (``None``

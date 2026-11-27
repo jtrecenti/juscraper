@@ -51,10 +51,10 @@ def obter_waf_token(
     """Abre ``pagina`` num Chromium headless e devolve o ``aws-waf-token``.
 
     Args:
-        pagina (str): URL que o WAF protege; o desafio roda ao carrega-la.
-        timeout (float): Segundos de espera pela pagina e pelo cookie. Default ``60``.
-        tribunal (str): Nome usado nas mensagens de erro (ex.: ``"STF"``).
-        alternativa (str): Frase acrescentada ao ``ImportError`` para indicar
+        pagina: URL que o WAF protege; o desafio roda ao carrega-la.
+        timeout: Segundos de espera pela pagina e pelo cookie. Default ``60``.
+        tribunal: Nome usado nas mensagens de erro (ex.: ``"STF"``).
+        alternativa: Frase acrescentada ao ``ImportError`` para indicar
             outro caminho sem Playwright (ex.: passar um cookie ja obtido).
 
     Returns:

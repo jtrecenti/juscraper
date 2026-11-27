@@ -115,9 +115,9 @@ class TJMTScraper(HTTPScraper):
         """Converte as respostas de :meth:`cjsg_download` em registros planos.
 
         Args:
-            resultados_brutos (list[dict]): Respostas JSON brutas, uma por
+            resultados_brutos: Respostas JSON brutas, uma por
                 página.
-            tipo_consulta (str): ``"Acordao"`` ou ``"DecisaoMonocratica"``.
+            tipo_consulta: ``"Acordao"`` ou ``"DecisaoMonocratica"``.
                 Mantido por compatibilidade; a resposta da API já traz o
                 tipo de cada documento.
 
@@ -155,40 +155,40 @@ class TJMTScraper(HTTPScraper):
         consulta; páginas além desse teto respondem HTTP 500.
 
         Args:
-            pesquisa (str | None): Termo livre buscado no documento.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo livre buscado no documento.
+            paginas: Páginas 1-based; ``None``
                 baixa todas, até o teto de 10.000 resultados. Página pedida
                 além do teto levanta ``ValueError``.
-            tipo_consulta (str): ``"Acordao"`` (default) ou
+            tipo_consulta: ``"Acordao"`` (default) ou
                 ``"DecisaoMonocratica"``.
-            relator (str | None): Nome do relator. A API casa só o nome
+            relator: Nome do relator. A API casa só o nome
                 exato; acentos, espaços repetidos e caixa são normalizados
                 (``"João da Silva"`` vai como ``"JOAO DA SILVA"``). A API
                 atual não aceita mais o identificador numérico, que é
                 rejeitado antes da rede. Nome com vírgula levanta
                 ``ValueError``, porque a API a lê como separador e somaria
                 os resultados de cada parte. ``None`` não filtra.
-            orgao_julgador (str | None): Nome do órgão julgador, como
+            orgao_julgador: Nome do órgão julgador, como
                 aparece na coluna ``orgao_julgador`` (ex.:
                 ``"PRIMEIRA CÂMARA DE DIREITO PRIVADO"``), com a mesma
                 normalização de ``relator`` e a mesma recusa de vírgula.
                 ``None`` não filtra.
-            tipo_processo (str | None): ``"Civel"``, ``"Cível"`` ou
+            tipo_processo: ``"Civel"``, ``"Cível"`` ou
                 ``"Criminal"``. ``None`` não filtra.
-            thesaurus (bool): Se ``True``, a API amplia a busca com
+            thesaurus: Se ``True``, a API amplia a busca com
                 sinônimos. Default ``False``.
-            tamanho_pagina (int): Documentos por página, de 1 a 10.000.
+            tamanho_pagina: Documentos por página, de 1 a 10.000.
                 Default 10.
-            data_publicacao_inicio (str | date | None): Início do intervalo
+            data_publicacao_inicio: Início do intervalo
                 de publicação: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                 ``AAAA/MM/DD``, ``date`` ou ``datetime``. Com só
                 ``data_publicacao_fim``, assume o piso
                 ``OPEN_ENDED_DATE_FLOOR`` e emite ``UserWarning``.
-            data_publicacao_fim (str | date | None): Fim do intervalo de
+            data_publicacao_fim: Fim do intervalo de
                 publicação, nos mesmos formatos, inclusivo: o dia informado
                 entra inteiro. Com só ``data_publicacao_inicio``, assume a
                 data de hoje e emite ``UserWarning``.
-            classe (str | list[str] | None): Nome da classe processual, como
+            classe: Nome da classe processual, como
                 aparece na coluna ``classe`` (ex.: ``"Apelação Cível"``), com
                 a mesma normalização de ``relator``. A API casa só o nome
                 exato: ``"Apelação"`` e ``"Apelação Cível"`` são classes

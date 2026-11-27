@@ -520,19 +520,19 @@ class DatajudScraper(HTTPScraper):
                 :class:`InputListarProcessosDataJud`. Listados abaixo (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``numero_processo`` (str | list[str]): CNJ formatado ou
+                * ``numero_processo`` (str | list[str] | None): CNJ formatado ou
                   lista de CNJs. Quando informado sem ``tribunal``, o alias-
                   indice e inferido pelos digitos ``id_justica`` (pos. 14) +
                   ``id_tribunal`` (pos. 15-16). CNJs invalidos ou nao
                   mapeados emitem ``UserWarning`` e sao ignorados.
-                * ``tribunal`` (str): Sigla do tribunal (ex.: ``"TJSP"``,
+                * ``tribunal`` (str | None): Sigla do tribunal (ex.: ``"TJSP"``,
                   ``"TRT2"``, ``"TRE-SP"``). Mutuamente exclusivo com
                   inferencia via ``numero_processo``.
-                * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
+                * ``ano_ajuizamento`` (int | None): Filtra por ano de ajuizamento.
                   Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
                   ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``). Mutuamente
                   exclusivo com ``data_ajuizamento_inicio``/``_fim``.
-                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str):
+                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str | None):
                   Range de data de ajuizamento, formato ``YYYY-MM-DD`` (ISO
                   8601). Backend recebe ``bool.should`` com 2 ``range`` em
                   ``dataAjuizamento`` (ISO + compacto), mesmo padrao dual-
@@ -541,8 +541,8 @@ class DatajudScraper(HTTPScraper):
                   ``data_inicio``/``data_fim`` aqui (a convencao generica
                   do projeto mapeia esses para ``data_julgamento_*``, e o
                   DataJud filtra por ajuizamento, nao julgamento).
-                * ``classe`` (str): Codigo da classe processual CNJ.
-                * ``assunto`` (list[str | int]): Lista de codigos de
+                * ``classe`` (str | None): Codigo da classe processual CNJ.
+                * ``assunto`` (list[str | int] | None): Lista de codigos de
                   assuntos CNJ (TPU). Aceita int e str — int e a forma
                   natural (codigos TPU sao inteiros); str e aceita por
                   compatibilidade. O schema normaliza para str antes do
@@ -550,24 +550,24 @@ class DatajudScraper(HTTPScraper):
                   campos ``keyword``. Backend: ``terms`` em
                   ``assuntos.codigo``. ``assuntos`` (plural) e aceito como
                   alias deprecado. Refs #232.
-                * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
+                * ``tipos_movimentacao`` (list[str] | None): Nomes amigaveis de
                   categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
                   Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
                   de codigos TPU CNJ. Para nomes nao mapeados, usar
                   ``movimentos_codigo`` direto. Categorias atuais:
                   ``decisao``, ``sentenca``, ``julgamento``, ``tutela``,
                   ``transito_julgado``.
-                * ``movimentos_codigo`` (list[int | str]): Codigos TPU
+                * ``movimentos_codigo`` (list[int | str] | None): Codigos TPU
                   CNJ diretos. Aceita int e str — int e a forma natural;
                   str e aceita por conveniencia (ex.: vinda de planilha/
                   CSV) e normalizada para int antes do payload.
                   Concatenado com a lista resolvida de
                   ``tipos_movimentacao`` (uniao). Backend: ``terms`` em
                   ``movimentos.codigo``.
-                * ``orgao_julgador`` (str): Nome do orgao julgador (ex.:
+                * ``orgao_julgador`` (str | None): Nome do orgao julgador (ex.:
                   ``"Vara Civel de Brasilia"``). Backend: ``match`` em
                   ``orgaoJulgador.nome``.
-                * ``query`` (dict): **Override total** da query Elasticsearch.
+                * ``query`` (dict[str, Any] | None): **Override total** da query Elasticsearch.
                   Quando fornecido, vira a chave ``query`` do payload
                   literalmente. Mutuamente exclusivo com TODOS os filtros
                   amigaveis acima (``numero_processo``, ``ano_ajuizamento``,

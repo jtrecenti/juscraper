@@ -62,14 +62,14 @@ class TJPIScraper(HTTPScraper):
         """Busca jurisprudência no TJPI.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            tipo (str): Tipo de decisão. Opções: ``"Acordao"``,
+            tipo: Tipo de decisão. Opções: ``"Acordao"``,
                 ``"Decisao Terminativa"``, ``"Sumula"``.
-            relator (str): Nome do relator (deve bater com o valor do dropdown).
-            classe (str): Classe processual (deve bater com o valor do dropdown).
-            orgao (str): Órgão julgador (deve bater com o valor do dropdown).
+            relator: Nome do relator (deve bater com o valor do dropdown).
+            classe: Classe processual (deve bater com o valor do dropdown).
+            orgao: Órgão julgador (deve bater com o valor do dropdown).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPI`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

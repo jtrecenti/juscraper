@@ -81,21 +81,21 @@ class TJRNScraper(HTTPScraper):
         """Busca jurisprudencia no TJRN.
 
         Args:
-            pesquisa (str): Termo de busca, procurado no campo indicado por
+            pesquisa: Termo de busca, procurado no campo indicado por
                 ``buscar_em`` (por padrao, a ementa).
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            numero_processo (str): Numero CNJ do processo. Aceita o alias
+            numero_processo: Numero CNJ do processo. Aceita o alias
                 deprecado ``nr_processo``.
-            id_classe (str): ID da classe judicial. Aceita o alias deprecado
+            id_classe: ID da classe judicial. Aceita o alias deprecado
                 ``id_classe_judicial`` (refs #129).
-            id_orgao_julgador (str): ID do orgao julgador.
-            id_relator (str): ID do relator.
-            id_colegiado (str): ID do colegiado.
-            sistema (str): Sistema processual, com os valores do portal:
+            id_orgao_julgador: ID do orgao julgador.
+            id_relator: ID do relator.
+            id_colegiado: ID do colegiado.
+            sistema: Sistema processual, com os valores do portal:
                 ``"PJE"``, ``"SAJ"`` ou vazio para todos. Outro valor (inclusive
                 ``"pje"``) levanta ``ValidationError``.
-            decisoes (str): Tipo de decisao, com os valores do portal:
+            decisoes: Tipo de decisao, com os valores do portal:
                 ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
                 ``"Sentença"`` ou vazio para todas. Outro valor levanta
                 ``ValidationError``. ``"Sentença"`` so existe no 1o grau e
@@ -106,14 +106,14 @@ class TJRNScraper(HTTPScraper):
                 Por padrao, ``pesquisa`` busca na ementa, e no
                 portal so os acordaos tem ementa: para buscar termo em
                 ``"Decisão"`` ou ``"Sentença"``, ver ``buscar_em``.
-            jurisdicoes (str): Jurisdicao, com os valores do portal: ``"TJ"``
+            jurisdicoes: Jurisdicao, com os valores do portal: ``"TJ"``
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
                 levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
                 decisoes de 2o grau: com ``grau="1"`` ou
                 ``decisoes="Sentença"``, em que o portal nao devolve
                 resultados, levantam ``ValidationError``.
-            grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
+            grau: ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
                 todos, sempre como texto. Outro valor (inclusive o inteiro
                 ``2``) levanta ``ValidationError``. ``grau="1"`` com
                 ``decisoes="Acórdão"`` e ``grau="2"`` com
@@ -121,7 +121,7 @@ class TJRNScraper(HTTPScraper):
                 devolve resultados para elas. Decisoes de 1o grau nao tem
                 ementa: com ``grau="1"``, buscar termo com
                 ``buscar_em="inteiro_teor"``.
-            buscar_em (str): Onde procurar ``pesquisa``: ``"ementa"``
+            buscar_em: Onde procurar ``pesquisa``: ``"ementa"``
                 (default) ou ``"inteiro_teor"`` (texto integral da decisao,
                 campo "Inteiro teor" do portal). No portal so os acordaos tem
                 ementa; o inteiro teor existe em acordaos, monocraticas e

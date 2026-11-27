@@ -152,23 +152,23 @@ class TJGOScraper(HTTPScraper):
         """Busca jurisprudencia no TJGO (Projudi).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            id_instancia (int | str): ``0`` todas / ``15`` Tribunal / ``151``
+            id_instancia: ``0`` todas / ``15`` Tribunal / ``151``
                 Turma de Uniformizacao e Turmas Recursais, as opcoes do
                 seletor "Instancia" do site. ``1``, ``2`` e ``3`` sao
                 deprecados (ver abaixo); o 1o grau nao esta no seletor, e
                 ``1`` vai ao portal como esta.
-            id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
+            id_area: ``0`` todas / ``1`` civel / ``2`` criminal.
                 Com ``id_instancia=151``, so ``0``, como no formulario do site.
-            id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
+            id_serventia_subtipo: Codigo do seletor "Orgao" do
                 site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
                 Criminais, ``6`` Turma Recursal Civel e Criminal). ``0`` =
                 todos. Codigo fora da lista, ou que o formulario nao oferece
                 para a instancia e a area escolhidas, levanta ``ValidationError``.
-            numero_processo (str): Filtrar por numero CNJ especifico.
-            tamanho_pagina (int): Itens por pagina (default 10).
+            numero_processo: Filtrar por numero CNJ especifico.
+            tamanho_pagina: Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

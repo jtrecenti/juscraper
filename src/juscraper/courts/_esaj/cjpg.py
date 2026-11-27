@@ -155,28 +155,28 @@ class EsajCjpgScraper(EsajSentencaScraper):
         intervalo de datas).
 
         Args:
-            pesquisa (str): Termo livre buscado na decisao. Default
+            pesquisa: Termo livre buscado na decisao. Default
                 ``""`` (sem termo). No TJSP, limite de 120 caracteres
                 (raises ``QueryTooLongError``).
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos por :class:`InputCJPGEsaj` (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``classe`` (int | str | list[int | str]): ID(s) internos
+                * ``classe`` (int | str | list[int | str] | None): ID(s) internos
                   de classe processual. Backend:
                   ``classeTreeSelection.values`` (CSV).
-                * ``assunto`` (int | str | list[int | str]): ID(s) internos
+                * ``assunto`` (int | str | list[int | str] | None): ID(s) internos
                   de assunto. Backend: ``assuntoTreeSelection.values``
                   (CSV).
-                * ``vara`` (int | str | list[int | str]): ID(s) internos de
+                * ``vara`` (int | str | list[int | str] | None): ID(s) internos de
                   vara, no formato em arvore do eSAJ (ex.: ``"1-1-1"``).
                   Backend: ``varasTreeSelection.values`` (CSV).
-                * ``id_processo`` (str): Numero CNJ formatado para
+                * ``id_processo`` (str | None): Numero CNJ formatado para
                   filtrar uma instancia especifica. Normalizado via
                   :func:`clean_cnj` antes do envio.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str | date | datetime): Intervalo de julgamento.
+                  (str | date | None): Intervalo de julgamento.
                   Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
@@ -351,11 +351,11 @@ class EsajCjpgScraper(EsajSentencaScraper):
         mesmos filtros de :meth:`cjpg`; veja la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre. Default ``""``. No TJSP, limite
+            pesquisa: Termo livre. Default ``""``. No TJSP, limite
                 de 120 chars.
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            diretorio (str | None): Sobrescreve :attr:`download_path`
+            diretorio: Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjpg` (validados
                 por :class:`InputCJPGEsaj`).

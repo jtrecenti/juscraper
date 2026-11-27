@@ -67,17 +67,17 @@ class TJPRScraper(HTTPScraper):
 
         Args:
             pesquisa: Search term. ``termo`` is accepted as deprecated alias.
-            paginas (int, list, range, or None): Pages to download (1-based).
+            paginas: Pages to download (1-based).
                 int: paginas=3 downloads pages 1-3.
                 range: range(1, 4) downloads pages 1-3.
                 None: downloads all available pages.
-            data_julgamento_inicio (str | date | None): Início do intervalo
+            data_julgamento_inicio: Início do intervalo
                 de julgamento, nos formatos aceitos por :meth:`cjsg`.
-            data_julgamento_fim (str | date | None): Fim do intervalo de
+            data_julgamento_fim: Fim do intervalo de
                 julgamento.
-            data_publicacao_inicio (str | date | None): Início do intervalo
+            data_publicacao_inicio: Início do intervalo
                 de publicação.
-            data_publicacao_fim (str | date | None): Fim do intervalo de
+            data_publicacao_fim: Fim do intervalo de
                 publicação.
             **kwargs: Aliases deprecados de :meth:`cjsg`.
 
@@ -161,12 +161,12 @@ class TJPRScraper(HTTPScraper):
         Returns a DataFrame with the decisions.
 
         Args:
-            resultados_brutos (list): HTMLs devolvidos por :meth:`cjsg_download`.
-            criterio (str | None): Termo da busca, repassado ao portal ao
+            resultados_brutos: HTMLs devolvidos por :meth:`cjsg_download`.
+            criterio: Termo da busca, repassado ao portal ao
                 buscar a ementa completa das linhas truncadas em "Leia mais..".
                 Só muda o destaque do termo, que o texto descarta: sem ele as
                 ementas também vêm completas.
-            incluir_corte_idh (bool): Mantém os precedentes da Corte IDH que o
+            incluir_corte_idh: Mantém os precedentes da Corte IDH que o
                 portal mistura à tabela, como em :meth:`cjsg`. Default ``False``.
 
         Raises:
@@ -202,19 +202,19 @@ class TJPRScraper(HTTPScraper):
         "registro(s) encontrado(s)" do portal, que soma as duas fontes.
 
         Args:
-            pesquisa (str | None): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; None busca
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; None busca
                 todas.
-            data_julgamento_inicio (str | date | None): Início do intervalo
+            data_julgamento_inicio: Início do intervalo
                 de julgamento. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
                 ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-            data_julgamento_fim (str | date | None): Fim do intervalo de
+            data_julgamento_fim: Fim do intervalo de
                 julgamento, nos mesmos formatos.
-            data_publicacao_inicio (str | date | None): Início do intervalo
+            data_publicacao_inicio: Início do intervalo
                 de publicação, nos mesmos formatos.
-            data_publicacao_fim (str | date | None): Fim do intervalo de
+            data_publicacao_fim: Fim do intervalo de
                 publicação, nos mesmos formatos.
-            incluir_corte_idh (bool): Mantém os precedentes da Corte IDH no
+            incluir_corte_idh: Mantém os precedentes da Corte IDH no
                 resultado. Default ``False``. Ligado, o DataFrame ganha as
                 colunas ``fonte`` ("TJPR" ou "Corte IDH") e ``caso`` (nome do
                 caso, só nas linhas da Corte IDH); nessas linhas ``processo``,
