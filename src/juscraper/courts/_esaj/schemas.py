@@ -1,7 +1,7 @@
 """Schemas pydantic do eSAJ: ``cjsg`` (TJAC/TJAL/TJAM/TJCE/TJMS) e ``cjpg`` (TJSP/TJMS).
 
 O ``cjsg`` do TJSP diverge (``baixar_sg`` em vez de ``origem``, sem
-``numero_recurso``/``data_publicacao_*``) e tem schema próprio em
+``data_publicacao_*``) e tem schema próprio em
 ``juscraper.courts.tjsp.schemas``. Os schemas do ``cjpg`` servem a todo
 tribunal construído sobre :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`.
 """

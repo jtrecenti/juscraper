@@ -3,7 +3,7 @@
 TJSP has a divergent public API from the 5 eSAJ-puros:
 
 - ``cjsg``: uses ``baixar_sg: bool`` instead of ``origem: Literal["T","R"]``;
-  drops ``numero_recurso`` and ``data_publicacao_*``.
+  drops ``data_publicacao_*``.
 - ``cjpg``: schemas comuns com o TJMS, em :mod:`juscraper.courts._esaj.schemas`
   (``InputCJPGEsaj``/``OutputCJPGEsaj``); ``InputCJPGTJSP`` e
   ``OutputCJPGTJSP`` continuam aqui como aliases.
@@ -38,7 +38,11 @@ class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
     Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
-    TJSP **nao** suporta ``data_publicacao_*`` nem ``numero_recurso``.
+    TJSP **nao** suporta ``data_publicacao_*``.
+
+    ``numero_recurso`` vai em ``dados.nuProcOrigem``, como no resto da
+    familia eSAJ, e filtra pelo numero do recurso (a coluna ``processo``),
+    nao pelo de 1o grau (conferido ao vivo em 27/11/2026).
 
     ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
     ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
@@ -46,6 +50,7 @@ class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
     """
 
     ementa: str | None = None
+    numero_recurso: str | None = None
     classe: IdFiltro = None
     assunto: IdFiltro = None
     comarca: IdFiltroUnico = None
