@@ -64,13 +64,23 @@ def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> s
 def _motivo_dos_parametros(objeto: griffe.Object, entradas: list[griffe.DocstringParameter]) -> str | None:
     # Função ou classe (os parâmetros do ``__init__``); módulo e atributo não têm.
     anotacoes = {parametro.name: parametro.annotation for parametro in getattr(objeto, "parameters", None) or []}
-    copiados = []
+    copiados, agrupados = [], []
     for entrada in entradas:
-        anotacao = anotacoes.get(entrada.name)
+        # ``a, b`` fica fora da assinatura para o griffe, que não lhe dá a anotação.
+        nomes = [nome.strip().lstrip("*") for nome in entrada.name.split(",")]
+        if len(nomes) > 1 and any(anotacoes.get(nome) is not None for nome in nomes):
+            agrupados.append(entrada.name)
+            continue
+        anotacao = anotacoes.get(nomes[0])
         # Sem tipo na docstring, o griffe põe na entrada o próprio objeto da
         # anotação; outro objeto é o tipo escrito entre parênteses.
         if anotacao is not None and entrada.annotation is not anotacao:
             copiados.append(f"{entrada.name} ({entrada.annotation})")
+    if agrupados:
+        return (
+            f"Args com parâmetros anotados numa entrada só ({'; '.join(agrupados)});"
+            " uma entrada por parâmetro, sem tipo, para a referência usar a anotação"
+        )
     if copiados:
         return (
             f"Args com tipo escrito em parâmetro anotado ({'; '.join(copiados)});"
@@ -253,6 +263,16 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    """\n\n'
         '    def __init__(self, a: str):\n'
         '        self.a = a\n',
+        'def f(a: int, b: int):\n'
+        '    """Resumo.\n\n'
+        '    Args:\n'
+        '        a, b: Limites.\n'
+        '    """\n',
+        'def f(**kwargs: int):\n'
+        '    """Resumo.\n\n'
+        '    Args:\n'
+        '        **kwargs (int): Filtros.\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -272,6 +292,8 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "returns-sem-tipo",
         "args-tipo-com-anotacao",
         "args-tipo-com-anotacao-na-classe",
+        "args-anotados-agrupados",
+        "kwargs-tipo-com-anotacao",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):

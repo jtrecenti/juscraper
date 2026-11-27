@@ -182,7 +182,7 @@ class FalcaoScraper(HTTPScraper):
                 * ``somente_ementa`` (bool | None): Busca ``texto`` so nas ementas.
                 * ``ordenacao`` (str | None): ``mais_relevante`` (default do backend),
                   ``mais_recente`` ou ``menos_recente``.
-                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str | None):
+                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str | date | None):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode

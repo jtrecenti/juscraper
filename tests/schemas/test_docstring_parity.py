@@ -97,13 +97,11 @@ CASES = [
 # "* ``foo`` (tipo): ..." quanto "* ``foo`` / ``bar``".
 _NAME_RE = re.compile(r"``(\w+)``")
 _BULLET_LINE_RE = re.compile(r"^\s*\*\s+")
-# Tipo declarado logo apos o header do bullet: "(int | str)".
-_TYPE_RE = re.compile(r"\(([^)]*)\)")
 # Limites da regiao "**kwargs:" — qualquer secao de top-level subsequente
 # (linha que termina em ":" sem indent, ou "Aliases deprecados ..." que
 # o Google docstring formata sem dois pontos no nome canonico).
 _SECTION_END_RE = re.compile(
-    r"^(Aliases\s+deprecados|Raises|Returns|Examples|See\s+also|Yields|Note)",
+    r"^(Aliases\s+deprecados|Raises|Returns|Examples|See\s+also|Yields|Note|Avisos|Warning)",
     re.IGNORECASE,
 )
 
@@ -131,7 +129,7 @@ def _kwargs_bullets(method) -> list[str]:
             recuo = len(line) - len(line.lstrip())
             bullets.append(_BULLET_LINE_RE.sub("", line))
         elif bullets and stripped and len(line) - len(line.lstrip()) > recuo:
-            bullets[-1] += " " + stripped
+            bullets[-1] += "\n" + stripped
     return bullets
 
 
@@ -157,12 +155,15 @@ def _docstring_bullets(method) -> dict[str, str | None]:
     """
     bullets: dict[str, str | None] = {}
     for bullet in _kwargs_bullets(method):
-        cut = min((pos for pos in (bullet.find("("), bullet.find(":")) if pos != -1), default=len(bullet))
+        primeira, _, resto = bullet.partition("\n")
+        cut = min((pos for pos in (primeira.find("("), primeira.find(":")) if pos != -1), default=len(primeira))
+        # Os nomes ficam na primeira linha; o tipo pode abrir a continuação.
+        cauda = primeira[cut:] if cut < len(primeira) else resto
         declared = None
-        if bullet[cut:cut + 1] == "(":
-            fim = _fecha_parenteses(bullet[cut:])
-            declared = bullet[cut + 1:cut + fim] if fim > 0 else None
-        for name in _NAME_RE.findall(bullet[:cut]):
+        if cauda.startswith("("):
+            fim = _fecha_parenteses(cauda)
+            declared = " ".join(cauda[1:fim].split()) if fim > 0 else None
+        for name in _NAME_RE.findall(primeira[:cut]):
             bullets.setdefault(name, declared)
     return bullets
 
@@ -209,9 +210,11 @@ def test_docstring_lists_schema_fields(
 # Campos que ``apply_input_pipeline_search`` converte de ``date``/``datetime``
 # em texto antes do pydantic (``coerce_brazilian_date``): a docstring
 # acrescenta ``date`` ao tipo do schema; ``datetime`` é subclasse de ``date``.
+# O Falcão faz o mesmo em ``data_juntada_*``.
 _DATAS_NORMALIZADAS = frozenset({
     "data_julgamento_inicio", "data_julgamento_fim",
     "data_publicacao_inicio", "data_publicacao_fim",
+    "data_juntada_inicio", "data_juntada_fim",
 })
 
 #: Campo que aceita mais do que a anotação do schema, por um
@@ -320,7 +323,11 @@ def test_docstring_declares_schema_types(
         if name not in klass.model_fields or name in EXPLICIT_PARAMS:
             continue
         expected = _tipo_de_entrada(klass, name)
-        if declared is None or _membros(_avaliar(declared, schema_mod, mod)) != _membros(expected):
+        try:
+            ok = declared is not None and _membros(_avaliar(declared, schema_mod, mod)) == _membros(expected)
+        except (SyntaxError, NameError, TypeError):
+            ok = False
+        if not ok:
             wrong[name] = (declared, _formatar(expected))
 
     assert not wrong, (

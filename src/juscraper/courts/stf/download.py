@@ -115,8 +115,10 @@ def build_payload(
         buscar_em: ``"ementa"`` busca nos campos que o portal usa por padrao
             (ementa, texto da decisao, indexacao, partes...); ``"inteiro_teor"``
             soma a eles o inteiro teor, como a opcao "pesquisar no inteiro teor".
-        data_julgamento_inicio, data_julgamento_fim (str | None): Datas ja no formato ``ddMMyyyy``.
-        data_publicacao_inicio, data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
+        data_julgamento_inicio: Data ja no formato ``ddMMyyyy``.
+        data_julgamento_fim: Data ja no formato ``ddMMyyyy``.
+        data_publicacao_inicio: Data ja no formato ``ddMMyyyy``.
+        data_publicacao_fim: Data ja no formato ``ddMMyyyy``.
         reference_time: Referência UTC fixa para o decaimento do score.
             ``None`` mantém o ``now`` do portal.
 
