@@ -204,36 +204,21 @@ def test_download_documents_coage_with_binary_falso_em_string():
 
 @responses.activate
 def test_download_documents_a_partir_de_cpopg_df():
-    """Documentos podem vir aninhados em ``tramitacoes[*].documentos``."""
-    _mock_cpopg_endpoint()
-    s = _mk_scraper()
-    cpopg_df = s.cpopg(PROC)
-    detalhes = cpopg_df.iloc[0]["detalhes"]
-    docs = list(detalhes.get("documentos") or [])
-    for tram in detalhes.get("tramitacoes", []) or []:
-        docs.extend(tram.get("documentos") or [])
-    if not docs:
-        # processo sem nenhum documento -> retorno vazio sem erro
-        out = s.download_documents(cpopg_df)
-        assert out.empty
-        return
-    for doc in docs:
-        _mock_text_endpoint(doc["id"], f"texto:{doc['id']}")
-    out = s.download_documents(cpopg_df)
-    assert len(out) == len(docs)
-
-
-@responses.activate
-def test_download_documents_de_cpopg_tem_as_colunas_de_documentos():
-    """O documento sai com as mesmas colunas, na mesma ordem, venha ``base_df`` de onde vier."""
+    """Documentos aninhados em ``tramitacoes[*].documentos`` saem com as colunas de :meth:`documentos`."""
     _mock_documentos_endpoint()
     _mock_cpopg_endpoint()
     _mock_any_text_endpoint()
     s = _mk_scraper()
     colunas_documentos = [c for c in s.documentos(PROC).columns if c != "motivo_falha"]
+    cpopg_df = s.cpopg(PROC)
+    detalhes = cpopg_df.iloc[0]["detalhes"]
+    docs = list(detalhes.get("documentos") or [])
+    for tram in detalhes.get("tramitacoes", []) or []:
+        docs.extend(tram.get("documentos") or [])
 
-    out = s.download_documents(s.cpopg(PROC))
+    out = s.download_documents(cpopg_df)
 
+    assert len(out) == len(docs)
     assert colunas_documentos == COERCED_DOCUMENT_COLUMNS
     assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto", "motivo_falha"]
     # Valores do sample real do cpopg, em ``tramitacoes[0].documentos[0]``.
