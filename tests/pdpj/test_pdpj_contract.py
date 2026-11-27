@@ -272,7 +272,7 @@ def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
 
 def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
     """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
-    assert _limite_de_paginas(range(1, 10, 3)) == (7, {1, 4, 7})
+    assert _limite_de_paginas(range(1, 10, 3)) == (7, range(1, 10, 3))
 
 
 @pytest.mark.parametrize("paginas", [True, [True], [1, True]])

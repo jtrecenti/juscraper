@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, ClassVar, cast
@@ -264,7 +264,7 @@ def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str,
     return row
 
 
-def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
+def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, Container[int] | None]:
     """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
 
     Com lista, a coleta segue até a maior página pedida, porque o cursor
@@ -272,8 +272,8 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, s
     """
     if paginas is None:
         return None, None
-    if isinstance(paginas, range):
-        return paginas[-1], set(paginas)
+    if isinstance(paginas, range):  # ``in`` num range nao o percorre
+        return paginas[-1], paginas
     return max(paginas), set(paginas)
 
 
@@ -705,7 +705,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         self,
         base_params: dict[str, Any],
         max_paginas: int | None,
-        permitidas: set[int] | None,
+        permitidas: Container[int] | None,
     ) -> list[dict[str, Any]]:
         """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 

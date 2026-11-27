@@ -110,6 +110,29 @@ def test_listar_comunicacoes_range_com_passo_pula_paginas(mocker):
 
 
 @responses.activate
+def test_listar_comunicacoes_pagina_repetida_sai_uma_vez(mocker, caplog):
+    """``[1, 1, 2000]``: a pagina 1 entra uma vez e a 2000, alem do total, vai ao log."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "listar_comunicacoes/results_normal_page_01.json",
+        pesquisa="resolucao",
+        pagina=1,
+        itens_por_pagina=10,
+    )
+
+    with caplog.at_level("WARNING", logger="juscraper.comunicacnj"):
+        df = jus.scraper("comunica_cnj").listar_comunicacoes(
+            pesquisa="resolucao",
+            paginas=[1, 1, 2000],
+            itens_por_pagina=10,
+        )
+
+    assert len(responses.calls) == 1
+    assert len(df) == 10
+    assert "2000" in caplog.text
+
+
+@responses.activate
 def test_listar_comunicacoes_single_page(mocker):
     """``count <= itens_por_pagina`` -- so uma pagina e baixada."""
     mocker.patch("time.sleep")
