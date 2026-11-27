@@ -11,7 +11,7 @@ from __future__ import annotations
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import TamanhoPagina
+from ...schemas import PaginasMixin, TamanhoPagina
 from .._pdpj_sso.schemas import InputAuthGovbrBase
 
 
@@ -89,18 +89,17 @@ class _InputFiltrosPdpj(BaseModel):
     )
 
 
-class InputPesquisaPdpj(_InputFiltrosPdpj):
+class InputPesquisaPdpj(PaginasMixin, _InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.pesquisa`.
 
     Cobre os parametros documentados em ``GET /api/v1/processos`` (busca
-    profunda).
+    profunda). ``paginas`` vem de :class:`PaginasMixin`.
     """
 
     fase: str | None = None
     situacao_atual: str | None = None
     tipo_operacao: str | None = None
     campo_ordenacao: str | None = None
-    paginas: int | list[int] | range | None = None
     itens_por_pagina: TamanhoPagina = 100
 
 
@@ -109,10 +108,10 @@ class InputContarPdpj(_InputFiltrosPdpj):
 
     Endpoint ``/processos:contar``, sem ordenacao nem paginacao.
     """
-    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` nunca foram aceitos
-    # aqui, embora a docstring de ``PdpjScraper.contar`` diga que o endpoint
-    # recebe os mesmos filtros da pesquisa. Falta conferir na API antes de
-    # subi-los para a base.
+    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` ficam de fora: a
+    # especificacao publica da API (``processo-api/v2/api-docs``, Swagger
+    # v1.7.36, conferida em 27/11/2026) os declara em ``GET /api/v1/processos``
+    # e nao em ``/processos:contar``. Aceita-los arriscaria um total sem filtro.
 
 
 class InputDownloadDocumentsPdpj(BaseModel):

@@ -686,9 +686,9 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         requisição e fora do aviso: o metadado já diz por que não há texto.
 
         Args:
-            base_df (pd.DataFrame): Processos com as colunas ``numeroProcesso``
+            base_df: Processos com as colunas ``numeroProcesso``
                 e ``detalhes``, como retornados por :meth:`cpopg`.
-            max_docs_per_process (int | None): Limite de documentos por processo.
+            max_docs_per_process: Limite de documentos por processo.
                 ``None`` baixa todos; ``0`` não faz downloads. Default ``None``.
             **kwargs: Nenhum parâmetro adicional é aceito.
 

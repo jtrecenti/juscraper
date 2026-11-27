@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, ClassVar, cast
@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 
 # Mapeia nomes canonicos snake_case -> nomes camelCase aceitos pela API.
 # Mantido como modulo-level porque e compartilhado entre :meth:`pesquisa`
-# e :meth:`contar` (mesmo conjunto de filtros).
+# e :meth:`contar` (que aceita um subconjunto; ver :class:`InputContarPdpj`).
 _QUERY_PARAM_MAP: dict[str, str] = {
     "numero_processo": "numeroProcesso",
     "numero_processo_sintetico": "numeroProcessoSintetico",
@@ -264,7 +264,7 @@ def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str,
     return row
 
 
-def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, set[int] | None]:
+def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, Container[int] | None]:
     """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
 
     Com lista, a coleta segue até a maior página pedida, porque o cursor
@@ -272,9 +272,9 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, s
     """
     if paginas is None:
         return None, None
-    if isinstance(paginas, range):
-        return paginas.stop - 1, set(paginas)
-    return (max(paginas) if paginas else 0), set(paginas)
+    if isinstance(paginas, range):  # ``in`` num range nao o percorre
+        return paginas[-1], paginas
+    return max(paginas), set(paginas)
 
 
 def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
@@ -670,6 +670,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 sem resultado devolve DataFrame vazio.
 
         Raises:
+            TypeError: Quando um kwarg desconhecido e passado ou ``paginas`` tem tipo invalido.
+            ValidationError: Quando ``paginas`` (pagina < 1, vazia, ``range`` descendente) ou um filtro e invalido.
             requests.HTTPError: Quando a requisicao de qualquer pagina falha, com status diferente de 404.
                 Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.
             RetryExhaustedError: Quando a requisicao de qualquer pagina falha.
@@ -682,9 +684,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             verdade dos filtros aceitos.
         """
         self._check_auth()
-        paginas_norm = normalize_paginas(paginas)
         try:
-            inp = InputPesquisaPdpj(paginas=paginas_norm, **kwargs)
+            inp = InputPesquisaPdpj(paginas=normalize_paginas(paginas), **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(
                 exc, "PdpjScraper.pesquisa()", schema_cls=InputPesquisaPdpj,
@@ -697,14 +698,14 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         # parâmetro segue na querystring para não mudar a requisição de quem já
         # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
-        max_paginas, permitidas = _limite_de_paginas(paginas_norm)
+        max_paginas, permitidas = _limite_de_paginas(inp.paginas_normalizadas)
         return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
 
     def _paginar(
         self,
         base_params: dict[str, Any],
         max_paginas: int | None,
-        permitidas: set[int] | None,
+        permitidas: Container[int] | None,
     ) -> list[dict[str, Any]]:
         """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 
@@ -751,8 +752,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).
 
-        Aceita o mesmo subconjunto de filtros de :meth:`pesquisa` exceto
-        os relacionados a paginacao/ordenacao. Retorna ``int``.
+        Aceita os filtros de :meth:`pesquisa` menos paginacao, ordenacao, ``fase``, ``situacao_atual``
+        e ``tipo_operacao``, que a API nao declara aqui (ver :class:`InputContarPdpj`). Retorna ``int``.
 
         Raises:
             requests.HTTPError: Quando a requisicao falha.

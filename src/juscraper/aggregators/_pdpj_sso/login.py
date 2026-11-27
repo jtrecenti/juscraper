@@ -109,8 +109,8 @@ def obter_credencial_govbr(timeout: float = 300.0, navegador: str | None = None)
     """Abre o portal de servicos do PDPJ, espera o login e devolve a credencial.
 
     Args:
-        timeout (float): Segundos para a pessoa concluir o login. Default ``300``.
-        navegador (str | None): Executavel do Chrome, Chromium ou Edge. ``None``
+        timeout: Segundos para a pessoa concluir o login. Default ``300``.
+        navegador: Executavel do Chrome, Chromium ou Edge. ``None``
             procura um instalado. Default ``None``.
 
     Returns:

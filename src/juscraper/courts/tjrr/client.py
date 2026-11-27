@@ -63,13 +63,13 @@ class TJRRScraper(HTTPScraper):
         """Busca jurisprudencia no TJRR.
 
         Args:
-            pesquisa (str): Termo de busca livre (busca na ementa).
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre (busca na ementa).
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal mostra duas tabelas, cada uma
                 com paginador proprio: acordaos e decisoes monocraticas. A
                 pagina ``n`` traz a pagina ``n`` de cada uma (ate 10 + 10
                 linhas); com ``None``, o download vai ate o fim da mais longa.
-            relator (list[str] | None): Lista de nomes regimentais de
+            relator: Lista de nomes regimentais de
                 magistrados (ex.: ``["ALMIRO PADILHA", "ERICK LINHARES"]``).
                 O backend usa um ``SelectManyCheckbox``
                 (``menuinicial:relatorList``) cujos values sao beans Java
@@ -80,10 +80,10 @@ class TJRRScraper(HTTPScraper):
                 para o mesmo magistrado. ``ValueError`` se algum nome nao
                 bater (a mensagem lista os nomes na forma canonica:
                 UPPERCASE com acento). Refs #158.
-            orgao_julgador (list[str] | None): Codigos do orgao julgador
+            orgao_julgador: Codigos do orgao julgador
                 (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
                 ``menuinicial:tipoOrgaoList``.
-            especie (list[str] | None): Codigos do tipo de decisao
+            especie: Codigos do tipo de decisao
                 (ex.: ``["ACORDAO"]``). Backend: ``menuinicial:tipoEspecieList``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRR`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):

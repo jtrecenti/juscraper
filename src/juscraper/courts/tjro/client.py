@@ -66,29 +66,29 @@ class TJROScraper(HTTPScraper):
         """Busca jurisprudencia no TJRO.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal so entrega os 10.000
                 primeiros resultados de uma busca (1000 paginas): pagina
                 pedida alem da 1000 levanta ``ValueError`` antes de qualquer
                 requisicao, e ``None`` numa busca maior divide a busca por
                 data de julgamento (ver ``auto_chunk``).
-            tipo (list | None): Tipos de documento. Default backend
+            tipo: Tipos de documento. Default backend
                 ``["EMENTA"]``. O backend compara o valor exato, com acento
                 e em maiusculas: ``"EMENTA"``, ``"ACÓRDÃO"``, ``"DECISÃO"``,
                 ``"SENTENÇA"`` e ``"VOTO"``. ``"ACORDAO"`` ou ``"ementa"``
                 devolvem zero resultados.
-            numero_processo (str): Numero CNJ. Aceita o alias deprecado
+            numero_processo: Numero CNJ. Aceita o alias deprecado
                 ``nr_processo``.
-            relator (str): Nome do relator. Aceita o alias deprecado
+            relator: Nome do relator. Aceita o alias deprecado
                 ``magistrado`` (refs #129).
-            orgao_julgador (int | str): ID do orgao julgador.
-            orgao_julgador_colegiado (int | str): ID do orgao colegiado.
-            classe (str): Nome da classe judicial. Aceita o alias deprecado
+            orgao_julgador: ID do orgao julgador.
+            orgao_julgador_colegiado: ID do orgao colegiado.
+            classe: Nome da classe judicial. Aceita o alias deprecado
                 ``classe_judicial`` (refs #129).
-            instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
-            termo_exato (bool): Busca por termo exato.
-            auto_chunk (bool): Default ``True``. Com ``paginas=None``, a busca
+            instancia: Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
+            termo_exato: Busca por termo exato.
+            auto_chunk: Default ``True``. Com ``paginas=None``, a busca
                 com mais de 10.000 resultados e dividida em janelas de data de
                 julgamento que cabem no teto do portal, da mais recente para a
                 mais antiga, e todas sao baixadas: a ordem por relevancia vale

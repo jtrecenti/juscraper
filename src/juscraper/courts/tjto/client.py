@@ -166,22 +166,22 @@ class TJTOScraper(HTTPScraper):
         """Busca jurisprudencia de 2o grau no TJTO (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. A menor pagina pedida sai primeiro, e o
                 total dela descarta as paginas alem do fim da busca, sem pedi-las
                 ao portal, com aviso no logger ``juscraper.tjto``.
-            tipo_documento (str): ``"acordaos"`` (default), ``"decisoes"`` ou
+            tipo_documento: ``"acordaos"`` (default), ``"decisoes"`` ou
                 ``"sentencas"``.
-            ordenacao (str): ``"DESC"`` (mais recentes, default), ``"ASC"``
+            ordenacao: ``"DESC"`` (mais recentes, default), ``"ASC"``
                 (mais antigos), ``"RELEV"`` (mais relevantes).
-            numero_processo (str): Filtro por numero CNJ do processo.
-            data_julgamento_inicio (str | date | datetime | None): Data inicial.
+            numero_processo: Filtro por numero CNJ do processo.
+            data_julgamento_inicio: Data inicial.
                 Aceita ``DD/MM/YYYY``, ``DD-MM-YYYY``, ``YYYY-MM-DD``,
                 ``YYYY/MM/DD``, ``date`` ou ``datetime``.
-            data_julgamento_fim (str | date | datetime | None): Data final
+            data_julgamento_fim: Data final
                 (mesmos formatos).
-            soementa (bool): Se ``True``, restringe busca ao texto da ementa.
+            soementa: Se ``True``, restringe busca ao texto da ementa.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJTO`.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
