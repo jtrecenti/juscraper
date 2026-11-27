@@ -243,7 +243,7 @@ def cjsg_download(
             uso normal, ``TJMGScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), chamada com o perfil
             :data:`PERFIL_CJSG`, que centraliza o backoff exponencial para
-            403/429/500/502/503/504, timeout e conexao derrubada.
+            403/429/500/502/503/504, timeout e conexão derrubada.
         session: Compartilhada com ``request_fn`` (mesma session do
             :class:`HTTPScraper`). Precisamos do handle direto para ler o
             ``JSESSIONID`` do cookie jar e montá-lo no body DWR do captcha.

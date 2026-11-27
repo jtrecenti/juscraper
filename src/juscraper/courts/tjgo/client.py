@@ -72,7 +72,7 @@ class TJGOScraper(HTTPScraper):
     ) -> list:
         """Executa a busca no TJGO e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Args:
             pesquisa: Termo de busca livre (aliases ``query`` / ``termo`` aceitos).

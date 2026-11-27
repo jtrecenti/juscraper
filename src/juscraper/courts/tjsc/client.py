@@ -135,7 +135,7 @@ class TJSCScraper(HTTPScraper):
     ) -> list:
         """Baixa as páginas HTML brutas do TJSC.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista do HTML bruto, uma string por página.

@@ -176,6 +176,7 @@ class TJESScraper(HTTPScraper):
             **kwargs: Aliases deprecados (ver abaixo).
 
         Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``
@@ -263,7 +264,8 @@ class TJESScraper(HTTPScraper):
     ) -> list:
         """Baixa os resultados JSON brutos da pesquisa de primeiro grau do TJES (core ``pje1g``).
 
-        Aceita os mesmos filtros de :meth:`cjpg`; veja lá a lista completa.
+        Aceita os mesmos parâmetros de :meth:`cjpg`, cujos filtros são os de
+        :meth:`cjsg`, exceto ``core``.
         ``per_page`` é aceito como alias deprecado de ``tamanho_pagina``.
 
         Returns:
@@ -307,6 +309,7 @@ class TJESScraper(HTTPScraper):
             **kwargs: Os mesmos filtros de :meth:`cjsg`, exceto ``core``.
 
         Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``

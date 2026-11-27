@@ -97,7 +97,7 @@ class TJMGScraper(HTTPScraper):
     ) -> list:
         """Executa a busca de acórdãos no TJMG e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
         Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai como DataFrame).
 
         Args:

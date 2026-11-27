@@ -189,7 +189,7 @@ class TJRNScraper(HTTPScraper):
     ) -> list:
         """Baixa as respostas JSON brutas da CJSG do TJRN.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista das respostas JSON brutas, uma por página.
