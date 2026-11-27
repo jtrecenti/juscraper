@@ -91,7 +91,7 @@ class TJTOScraper(HTTPScraper):
 
         return cjsg_download_manager(
             termo=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             type_minuta=type_minuta,

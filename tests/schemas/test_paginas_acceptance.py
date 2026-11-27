@@ -139,6 +139,19 @@ def test_paginas_mixin_validates_large_range_without_scanning():
 
 
 @pytest.mark.parametrize(
+    ("paginas", "esperado"),
+    [(None, None), (3, range(1, 4)), ([2, 4], [2, 4]), (range(2, 5), range(2, 5))],
+)
+def test_paginas_normalizadas_iguala_normalize_paginas(paginas, esperado):
+    inp = PaginasMixin(paginas=paginas)
+
+    assert inp.paginas_normalizadas == esperado == normalize_paginas(paginas)
+    # ``paginas`` segue como validado, e a propriedade nao vira campo.
+    assert inp.paginas == paginas
+    assert "paginas_normalizadas" not in inp.model_dump()
+
+
+@pytest.mark.parametrize(
     "paginas",
     [0, -1, [], [0], [-1], range(3, 0, -1), True, np.True_, [True], [1, np.True_], (True,)],
 )

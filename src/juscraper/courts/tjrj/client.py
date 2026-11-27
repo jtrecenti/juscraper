@@ -92,7 +92,7 @@ class TJRJScraper(HTTPScraper):
         return _cjsg_download(
             request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             ano_inicio=ano_inicio_s,
             ano_fim=ano_fim_s,
             competencia=inp.competencia,

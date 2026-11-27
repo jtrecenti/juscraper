@@ -123,7 +123,7 @@ class TJGOScraper(HTTPScraper):
         return _cjsg_download(
             request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa or "",
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             id_instancia=str(inp.id_instancia),
             id_area=str(inp.id_area),
             id_serventia_subtipo=str(inp.id_serventia_subtipo),

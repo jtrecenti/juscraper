@@ -16,12 +16,10 @@ from ...schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
 from .download import MAX_TAMANHO_PAGINA
 
 
-class InputListarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
-    """Accepted input for :meth:`STFScraper.listar_decisoes`.
+class _InputFiltrosSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+    """Filtros comuns a ``listar_decisoes`` e ``contar_decisoes``.
 
     Datas saem para o backend em ``ddMMyyyy``, formato dos filtros ``range`` do portal.
-    O client passa ``pesquisa="*"`` quando o usuario nao informa termo, e a busca
-    devolve tudo o que os filtros selecionam.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d%m%Y"
@@ -29,22 +27,27 @@ class InputListarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixi
     base: Literal["decisoes", "acordaos"] = "decisoes"
     classe: str | list[str] | None = None
     buscar_em: BuscarEm = "ementa"
+
+
+class InputListarDecisoesSTF(_InputFiltrosSTF):
+    """Accepted input for :meth:`STFScraper.listar_decisoes`.
+
+    Filtros de :class:`_InputFiltrosSTF`, mais o tamanho da pagina e o
+    checkpoint. O client passa ``pesquisa="*"`` quando o usuario nao informa
+    termo, e a busca devolve tudo o que os filtros selecionam.
+    """
+
     tamanho_pagina: TamanhoPagina = Field(default=MAX_TAMANHO_PAGINA, le=MAX_TAMANHO_PAGINA)
     checkpoint_dir: str | Path | None = None
     resume: bool = False
 
 
-class InputContarDecisoesSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
+class InputContarDecisoesSTF(_InputFiltrosSTF):
     """Accepted input for :meth:`STFScraper.contar_decisoes`.
 
-    Mesmos filtros de :class:`InputListarDecisoesSTF`, sem ``tamanho_pagina``.
+    Filtros de :class:`_InputFiltrosSTF`, os mesmos de
+    :class:`InputListarDecisoesSTF`, sem ``tamanho_pagina`` nem checkpoint.
     """
-
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%d%m%Y"
-
-    base: Literal["decisoes", "acordaos"] = "decisoes"
-    classe: str | list[str] | None = None
-    buscar_em: BuscarEm = "ementa"
 
 
 class OutputListarDecisoesSTF(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

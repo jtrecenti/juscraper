@@ -23,6 +23,8 @@ Tipos disponiveis:
   proprio declara o seu ``Literal`` (STM: ``"numero"``).
 - :data:`IdFiltroUnico` — IDs single-value (``cdComarca`` no eSAJ). Rejeita
   ``list``/``tuple`` para nao mascarar uso indevido.
+- :data:`PaginasNormalizadas` — ``paginas`` depois da normalizacao, sem o
+  ``int``; tipo de :attr:`PaginasMixin.paginas_normalizadas`.
 """
 from __future__ import annotations
 
@@ -99,3 +101,6 @@ InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
 TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]
 
 BuscarEm = Literal["ementa", "inteiro_teor"]
+
+PaginasNormalizadas = list[int] | range | None
+"""``paginas`` sem o ``int``: ``None`` (todas), ``list`` ou ``range`` de paginas 1-based."""

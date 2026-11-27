@@ -8,12 +8,11 @@ de cada tribunal: o de 120 caracteres é do TJSP.
 """
 from __future__ import annotations
 
-from typing import Any, ClassVar, Literal, cast, overload
+from typing import Any, ClassVar, Literal, overload
 
 import pandas as pd
 
 from ...core.avisos import avisar
-from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
 from .base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .cjpg_download import cjpg_download as cjpg_download_mod
@@ -406,7 +405,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=cast(PaginasNormalizadas, inp.paginas),
+            paginas=inp.paginas_normalizadas,
             tribunal=self.tribunal_name,
         )
         return path

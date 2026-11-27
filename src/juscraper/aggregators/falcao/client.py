@@ -409,7 +409,7 @@ class FalcaoScraper(HTTPScraper):
             )
         self._avisar_teto(inp, total)
 
-        pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
+        pendentes = [p for p in self._resolver_paginas(inp.paginas_normalizadas, total_paginas) if p not in gravadas]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
         self._avisar_ordem_entre_paginas(inp, pendentes, checkpoint)
@@ -432,7 +432,8 @@ class FalcaoScraper(HTTPScraper):
         o checkpoint completo não requisita nada.
         """
         conhecido = _MAX_RESULTADOS if total_anterior is None else total_anterior
-        candidatas = self._resolver_paginas(inp.paginas, self._total_paginas(conhecido, inp.tamanho_pagina))
+        total_paginas = self._total_paginas(conhecido, inp.tamanho_pagina)
+        candidatas = self._resolver_paginas(inp.paginas_normalizadas, total_paginas)
         return next((p for p in candidatas if p not in gravadas), None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
@@ -525,7 +526,7 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:
-        if inp.paginas is None and total >= _MAX_RESULTADOS:
+        if inp.paginas_normalizadas is None and total >= _MAX_RESULTADOS:
             avisar(
                 f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
                 "backend nao informa o total real e o resultado pode estar incompleto. "

@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.deprecacao import resolve_buscar_em
-from juscraper.utils.pagination import PaginasNormalizadas
 from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
 from .download import avisar_expressao_exata, cjsg_download_manager
@@ -175,7 +174,7 @@ class STMScraper(HTTPScraper):
             avisar_expressao_exata(inp.pesquisa, inp.buscar_em)
         return cjsg_download_manager(
             inp.pesquisa,
-            cast(PaginasNormalizadas, inp.paginas),
+            inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             buscar_em=inp.buscar_em,

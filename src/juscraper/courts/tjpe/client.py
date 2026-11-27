@@ -220,7 +220,7 @@ class TJPEScraper(HTTPScraper):
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,

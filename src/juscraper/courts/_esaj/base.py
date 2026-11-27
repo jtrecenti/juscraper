@@ -18,7 +18,7 @@ import functools
 import logging
 import shutil
 from collections.abc import Callable, Mapping
-from typing import Any, ClassVar, Literal, cast, overload
+from typing import Any, ClassVar, Literal, overload
 
 import pandas as pd
 import requests
@@ -27,7 +27,6 @@ from pydantic import BaseModel, ValidationError
 from ...core.avisos import avisar
 from ...core.http import HTTPScraper, RequestPolicy
 from ...core.intervalo import IntervaloEntrePedidos
-from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -707,7 +706,7 @@ class EsajSearchScraper(HTTPScraper):
             download_path=diretorio or self.download_path,
             body=body,
             tipo_decisao=input_model.tipo_decisao,
-            paginas=cast(PaginasNormalizadas, input_model.paginas),
+            paginas=input_model.paginas_normalizadas,
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,

@@ -34,7 +34,6 @@ from unidecode import unidecode
 
 from ...core.http import RequestFn
 from ...utils.pagination import extract_count_with_cascade
-from ...utils.params import normalize_paginas
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
 from .cjsg_schemas import InputCJSGTRF3
@@ -556,9 +555,7 @@ def cjsg_download_manager(
 
     total = cjsg_n_results(primeira)
     n_paginas = None if total is None else math.ceil(total / inp.tamanho_pagina)
-    # O pipeline do client já entrega ``paginas`` como lista, range ou None; a
-    # normalização só muda o inteiro de um modelo montado fora dele.
-    pedidas = _paginas_pedidas(normalize_paginas(inp.paginas), n_paginas)
+    pedidas = _paginas_pedidas(inp.paginas_normalizadas, n_paginas)
 
     resultados: list[str] = []
     for pagina in progress(pedidas, desc="Baixando CJSG TRF3", disable=len(pedidas) <= 1):

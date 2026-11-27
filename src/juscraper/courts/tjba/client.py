@@ -153,7 +153,7 @@ class TJBAScraper(HTTPScraper):
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             numero_recurso=inp.numero_recurso,
             orgaos=inp.orgaos,
             relatores=inp.relatores,

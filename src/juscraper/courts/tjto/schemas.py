@@ -13,7 +13,25 @@ from pydantic import BaseModel, ConfigDict
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
+class _InputFiltrosTJTO(SearchBase, DataJulgamentoMixin):
+    """Filtros comuns ao ``cjsg`` e ao ``cjpg`` do TJTO.
+
+    Os dois endpoints tem a mesma assinatura; so muda a ``instancia`` que o
+    download manager envia. Filtro de data de julgamento herdado de
+    :class:`DataJulgamentoMixin`; o backend espera ``DD/MM/YYYY``
+    (convertido por ``to_br_date`` em
+    :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
+    """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
+
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
+    soementa: bool = False
+
+
+class InputCJSGTJTO(_InputFiltrosTJTO):
     """Accepted input for TJTO ``cjsg`` / ``cjsg_download``.
 
     Wired em :meth:`juscraper.courts.tjto.client.TJTOScraper.cjsg_download`
@@ -24,18 +42,8 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     aceita os aliases deprecados ``query`` / ``termo`` via
     :func:`juscraper.utils.params.normalize_pesquisa`, que roda *antes* deste
     modelo. Datas aceitam os aliases ``data_inicio``/``data_fim`` via
-    :func:`juscraper.utils.params.normalize_datas`. Filtro de data de
-    julgamento herdado de :class:`DataJulgamentoMixin`. Backend espera
-    ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
-    :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
+    :func:`juscraper.utils.params.normalize_datas`.
     """
-
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
-
-    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
-    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
-    numero_processo: str | None = None
-    soementa: bool = False
 
 
 class _OutputCJSGTJTOBase(OutputCJSGBase, OutputRelatoriaMixin):
@@ -59,22 +67,12 @@ class OutputCJSGTJTO(_OutputCJSGTJTOBase):
     """Output do cjsg (2o grau) do TJTO."""
 
 
-class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
+class InputCJPGTJTO(_InputFiltrosTJTO):
     """Accepted input for TJTO ``cjpg`` / ``cjpg_download``.
 
-    A assinatura de ``cjpg`` e identica a de ``cjsg`` — a unica diferenca
-    interna e ``instancia='1'`` em vez de ``'2'`` no download manager.
-    Filtro de data de julgamento herdado de :class:`DataJulgamentoMixin`.
-    Backend espera ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
-    :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
+    Filtros de :class:`_InputFiltrosTJTO`, os mesmos do ``cjsg``; o
+    download manager envia ``instancia='1'`` em vez de ``'2'``.
     """
-
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
-
-    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
-    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
-    numero_processo: str | None = None
-    soementa: bool = False
 
 
 class OutputCJPGTJTO(_OutputCJSGTJTOBase):

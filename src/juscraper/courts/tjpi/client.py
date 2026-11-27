@@ -149,7 +149,7 @@ class TJPIScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             tipo=inp.tipo or "",

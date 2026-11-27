@@ -91,7 +91,7 @@ class TJDFTScraper(HTTPScraper):
         )
         brutos: list = cjsg_download(
             query=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sinonimos=inp.sinonimos,
             espelho=inp.espelho,

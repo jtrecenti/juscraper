@@ -135,7 +135,7 @@ class TJESScraper(HTTPScraper):
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             core=inp.core,
             busca_exata=inp.busca_exata,
             # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)
@@ -249,7 +249,7 @@ class TJESScraper(HTTPScraper):
 
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             core=CJPG_CORE,
             busca_exata=inp.busca_exata,
             # TJES only supports a single date range (dataIni/dataFim mapped to dt_juntada)

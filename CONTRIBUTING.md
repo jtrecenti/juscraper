@@ -198,7 +198,7 @@ git fetch origin
 uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
 ```
 
-No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo.
+No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo. O desafio vem depois de 6 ou 7 requisições (buscas ou GETs de ementa) em uns 10 minutos: em 27/11/2026, de IP residencial, com 90 s entre as buscas a 7ª recebeu o desafio, e com 120 s duas sequências de 14 buscas passaram. Por isso o script de captura (`tests/fixtures/capture/tjto.py`) espera 120 s entre uma requisição e a seguinte (`--pausa`).
 
 Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
 
@@ -439,6 +439,12 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 - `src/juscraper/schemas/consulta.py` — `CnjInputBase` (`id_cnj: str | list[str]`), `OutputCnjConsultaBase` para cpopg/cposg/JusBR.
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
+
+### Campos comuns entre endpoints da mesma família
+
+Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`contar`, `cjsg`/`cjpg`, eSAJ puro/TJSP), os filtros e os validators que valem para os dois ficam numa base comum, e cada schema concreto declara só o que é dele. A base fica no `schemas.py` do pacote quando os dois endpoints são do mesmo tribunal ou agregador (`_InputFiltrosDataJud`, `_InputFiltrosSTF`, `_InputFiltrosTJTO`), ou em `_<familia>/schemas.py` quando atravessa tribunais (`InputCJSGEsajBase`). Isso aplica a **Regra de generalização**: dois schemas que repetem o bloco já são as 2 ocorrências concretas.
+
+`tests/schemas/test_campos_repetidos.py` cobra a regra; a docstring dele diz o que conta como família, repetição e exceção.
 
 ### Registro, paridade e wiring
 
