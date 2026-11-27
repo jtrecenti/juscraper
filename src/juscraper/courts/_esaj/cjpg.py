@@ -13,6 +13,7 @@ from typing import Any, ClassVar, cast
 import pandas as pd
 
 from ...core.avisos import avisar
+from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
 from .base import ESAJ_JANELA_ANOS, EsajSearchScraper, somar_contagens_por_janela
 from .cjpg_download import cjpg_download as cjpg_download_mod
@@ -362,16 +363,14 @@ class EsajCjpgScraper(EsajSentencaScraper):
             u_base=self.BASE_URL,
             download_path=diretorio or self.download_path,
             sleep_time=self.sleep_time,
-            # ``IdFiltro`` e ``paginas`` declaram a entrada (``int``/``list``); o
-            # validador ja devolveu CSV ou ``None``, e o pipeline trocou ``int``
-            # por ``range`` (``normalize_paginas``).
+            # ``IdFiltro``: CSV ou ``None`` (ver ``_probe`` em ``_cjpg_count_only``).
             classe=cast("str | None", inp.classe),
             assunto=cast("str | None", inp.assunto),
             vara=cast("str | None", inp.vara),
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=cast("list[int] | range | None", inp.paginas),
+            paginas=cast(PaginasNormalizadas, inp.paginas),
             tribunal=self.tribunal_name,
         )
         return path

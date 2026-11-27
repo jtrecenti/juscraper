@@ -48,13 +48,7 @@ class InputAuthFirefoxJusBR(BaseModel):
 
 
 class InputAuthGovbrJusBR(InputAuthGovbrBase):
-    """Input aceito por :meth:`JusbrScraper.auth_govbr`.
-
-    ``timeout`` limita a espera pelo login no gov.br; ``salvar`` controla a
-    gravacao da credencial no cache local compartilhado por JusBR e PDPJ;
-    ``navegador`` aponta o executavel do Chrome, Chromium ou Edge. Campos e
-    ``extra="forbid"`` vem de :class:`InputAuthGovbrBase`.
-    """
+    """Input aceito por :meth:`JusbrScraper.auth_govbr`; campos em :class:`InputAuthGovbrBase`."""
 
 
 class InputCPOPGJusBR(CnjInputBase):

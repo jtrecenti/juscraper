@@ -27,7 +27,7 @@ from .._esaj.schemas import InputCJPGEsaj, InputCJSGEsajBase, OutputCJPGEsaj
 class InputCJSGTJSP(InputCJSGEsajBase):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
-    Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
+    Herda filtro de data de julgamento via :class:`InputCJSGEsajBase`.
     TJSP **nao** suporta ``data_publicacao_*`` nem ``numero_recurso``.
 
     ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou

@@ -8,7 +8,7 @@ Hooks a subclass may override:
 
 * ``_configure_session`` — mount custom HTTPAdapter (TJCE TLS).
 * ``INPUT_CJSG`` — swap ``InputCJSGEsajPuro`` for a tribunal-specific
-  schema (subclasse de ``InputCJSGEsajBase``; TJSP usa ``InputCJSGTJSP``).
+  schema (TJSP uses ``InputCJSGTJSP``).
 * ``_validate_pesquisa``: reject the resolved search term before any
   request (TJSP enforces its 120-char limit here).
 """
@@ -27,6 +27,7 @@ from pydantic import BaseModel, ValidationError
 from ...core.avisos import avisar
 from ...core.http import HTTPScraper, RequestPolicy
 from ...core.intervalo import IntervaloEntrePedidos
+from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -664,9 +665,7 @@ class EsajSearchScraper(HTTPScraper):
             download_path=diretorio or self.download_path,
             body=body,
             tipo_decisao=input_model.tipo_decisao,
-            # O schema declara ``int`` por refletir a API publica, mas o pipeline
-            # ja trocou ``int`` por ``range`` (``normalize_paginas``).
-            paginas=cast("list | range | None", input_model.paginas),
+            paginas=cast(PaginasNormalizadas, input_model.paginas),
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,

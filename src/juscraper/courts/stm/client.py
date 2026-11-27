@@ -9,6 +9,7 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.deprecacao import resolve_buscar_em
+from juscraper.utils.pagination import PaginasNormalizadas
 from juscraper.utils.params import DATE_CANONICAL, apply_input_pipeline_search
 
 from .download import avisar_expressao_exata, cjsg_download_manager
@@ -174,8 +175,7 @@ class STMScraper(HTTPScraper):
             avisar_expressao_exata(inp.pesquisa, inp.buscar_em)
         return cjsg_download_manager(
             inp.pesquisa,
-            # O pipeline ja trocou ``int`` por ``range`` (``normalize_paginas``).
-            cast("range | list[int] | None", inp.paginas),
+            cast(PaginasNormalizadas, inp.paginas),
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             buscar_em=inp.buscar_em,
