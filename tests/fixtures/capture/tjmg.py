@@ -15,8 +15,9 @@ Saves raw responses for the four endpoints TJMG hits per ``cjsg`` call:
 - ``results_normal_page_NN.html`` — typical multi-page scenario.
 - ``single_page.html`` — single-page scenario.
 - ``no_results.html`` — zero-hit scenario.
-- ``erro_ora.html`` — search without a date filter: the portal answers with
-  ``ORA-20000 ... DRG-10599`` instead of results.
+- ``erro_ora.html`` — search without a date filter answered with
+  ``ORA-20000 ... DRG-10599`` instead of results (seen on 15/11/2026); only
+  saved when the portal answers with that error.
 - ``muitos_resultados.html`` — a common search with too many hits (11,170;
   1,905 are still listed): the portal answers "Sua pesquisa encontrou muitos
   resultados (N) e não pode ser exibida" instead of results.
@@ -90,6 +91,8 @@ def main() -> None:
             return resp
         method = (resp.request.method or "GET").upper()
         filename = _classify(resp.url, method, scenario, counters)
+        if filename == "erro_ora.html" and b"ORA-20000" not in resp.content:
+            return resp
         if filename and filename not in seen_files:
             (dest / filename).write_bytes(resp.content)
             print(f"[tjmg/{scenario}] -> {filename}")
@@ -111,8 +114,7 @@ def main() -> None:
     print(f"[tjmg/typical] DataFrame columns: {list(df.columns)}")
     print(f"[tjmg/typical] rows: {len(df)}")
 
-    # Single page: a narrower phrase whose hits fit in one page. Without a
-    # date filter the portal answers with ORA-20000 (see ``erro_ora``).
+    # Single page: a narrower phrase whose hits fit in one page.
     state["scenario"] = "single_page"
     counters.clear()
     df = scraper.cjsg(
@@ -123,7 +125,7 @@ def main() -> None:
     )
     print(f"[tjmg/single_page] rows: {len(df)}")
 
-    # Zero hits (with a date filter, for the same reason).
+    # Zero hits.
     state["scenario"] = "no_results"
     counters.clear()
     df = scraper.cjsg(
@@ -140,6 +142,10 @@ def main() -> None:
         scraper.cjsg_download("dano moral", paginas=1)
     except TJMGBuscaSemListaError as exc:
         print(f"[tjmg/erro_ora] {exc}")
+    except ValueError as exc:
+        print(f"[tjmg/erro_ora] no ORA-20000 this time ({exc}); erro_ora.html kept")
+    else:
+        print("[tjmg/erro_ora] the portal listed the hits; erro_ora.html kept")
     # A common search with too many hits: the download raises ValueError.
     state["scenario"] = "muitos_resultados"
     try:
