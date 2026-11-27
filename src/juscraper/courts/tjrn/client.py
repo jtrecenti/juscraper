@@ -103,9 +103,12 @@ class TJRNScraper(HTTPScraper):
                 portal nao devolve resultados para as combinacoes cruzadas,
                 ``"Sentença"`` com ``grau="2"``, ``"TJ"`` ou ``"TR"`` e
                 ``"Acórdão"`` com ``grau="1"`` levantam ``ValidationError``.
-                Por padrao, ``pesquisa`` busca na ementa, e no
-                portal so os acordaos tem ementa: para buscar termo em
-                ``"Decisão"`` ou ``"Sentença"``, ver ``buscar_em``.
+                Por padrao, ``pesquisa`` busca na ementa, e no portal so os
+                acordaos tem ementa: com termo na ementa, ``"Sentença"`` e
+                ``"Decisão"`` com ``jurisdicoes`` ou ``sistema="PJE"`` levantam
+                ``ValidationError``. ``"Decisão"`` sem esses filtros segue
+                aceita, mas so algumas monocraticas do SAJ, de 2008, tem
+                ementa. Para buscar termo nesses tipos, ver ``buscar_em``.
             jurisdicoes: Jurisdicao, com os valores do portal: ``"TJ"``
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
@@ -119,13 +122,20 @@ class TJRNScraper(HTTPScraper):
                 ``decisoes="Acórdão"`` e ``grau="2"`` com
                 ``decisoes="Sentença"`` tambem levantam, porque o portal nao
                 devolve resultados para elas. Decisoes de 1o grau nao tem
-                ementa: com ``grau="1"``, buscar termo com
+                ementa: ``grau="1"`` com termo na ementa levanta
+                ``ValidationError``; buscar o termo com
                 ``buscar_em="inteiro_teor"``.
             buscar_em: Onde procurar ``pesquisa``: ``"ementa"``
                 (default) ou ``"inteiro_teor"`` (texto integral da decisao,
                 campo "Inteiro teor" do portal). No portal so os acordaos tem
                 ementa; o inteiro teor existe em acordaos, monocraticas e
-                sentencas. Outro valor levanta ``ValidationError``.
+                sentencas. Outro valor levanta ``ValidationError``. Com
+                ``"ementa"`` e termo, ``decisoes="Sentença"``, ``grau="1"`` e
+                ``decisoes="Decisão"`` com ``jurisdicoes`` ou
+                ``sistema="PJE"`` levantam ``ValidationError``, porque o
+                portal nao devolve resultados. O portal ignora as preposicoes
+                e as conjuncoes ``"e"`` e ``"ou"`` em minusculas: termo so com
+                elas (``"a"``, ``"de"``) conta como busca vazia e nao levanta.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRN`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -187,14 +197,12 @@ class TJRNScraper(HTTPScraper):
         buscar_em: BuscarEm = "ementa",
         **kwargs,
     ) -> list:
-        """Download raw CJSG JSON responses from TJRN.
+        """Baixa as respostas JSON brutas da CJSG do TJRN.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
+        Returns:
+            Lista das respostas JSON brutas, uma por página.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo
@@ -240,15 +248,12 @@ class TJRNScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded CJSG JSON responses.
+        """Converte as respostas JSON baixadas da CJSG em DataFrame.
 
-        Parameters
-        ----------
-        resultados_brutos : list
-            List of raw JSON responses from the TJRN API.
+        Args:
+            resultados_brutos: Lista das respostas JSON brutas da API do TJRN.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

@@ -26,6 +26,14 @@ Grau = Literal["", "1", "2"]
 # e termo (26 e 27/11/2026). O formulario do portal esconde "TR" quando o grau e "1".
 _GRAU_DO_VALOR = {"Sentença": "1", "Acórdão": "2", "TJ": "2", "TR": "2"}
 
+# Palavras que o portal ignora no termo: as preposicoes essenciais e as conjuncoes
+# "e" e "ou", so em minusculas, com ou sem aspas. Termo feito so delas conta como
+# busca vazia e traz tudo; "A", "o", "da" e "de," ja sao termos (27/11/2026).
+_PALAVRAS_IGNORADAS = frozenset({
+    "a", "ante", "após", "até", "com", "contra", "de", "desde", "e", "em",
+    "entre", "ou", "para", "perante", "por", "sem", "sob", "sobre", "trás",
+})
+
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRN ``cjsg`` / ``cjsg_download``.
@@ -91,7 +99,34 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
                 '"Sentença" e do 1o grau, "Acórdão" do 2o e "Decisão" (monocratica) dos dois; '
                 'jurisdicoes "TJ" e "TR" so cobrem o 2o grau. Para o 1o grau, use grau="1", '
                 '"Sentença" ou "Decisão", sem jurisdicoes; para o 2o, grau="2", "Acórdão" ou '
-                '"Decisão", com ou sem jurisdicoes.'
+                '"Decisão", com ou sem jurisdicoes. No 1o grau nao ha ementa: busque o termo com '
+                'buscar_em="inteiro_teor".'
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _termo_na_ementa_de_quem_tem(self) -> InputCJSGTJRN:
+        # No portal so os acordaos tem ementa. As monocraticas com ementa sao poucas
+        # do SAJ, de 2008, sem jurisdicao. Com termo na ementa, os filtros abaixo
+        # voltam com 0 resultados sem erro, em qualquer periodo e termo (27/11/2026).
+        if self.buscar_em != "ementa" or set(self.pesquisa.replace('"', " ").split()) <= _PALAVRAS_IGNORADAS:
+            return self
+        sem_ementa = []
+        if self.decisoes == "Sentença":
+            sem_ementa.append('decisoes="Sentença"')
+        if self.grau == "1":
+            sem_ementa.append('grau="1"')
+        if self.decisoes == "Decisão":
+            if self.jurisdicoes:
+                sem_ementa.append(f'decisoes="Decisão" com jurisdicoes="{self.jurisdicoes}"')
+            if self.sistema == "PJE":
+                sem_ementa.append('decisoes="Decisão" com sistema="PJE"')
+        if sem_ementa:
+            raise ValueError(
+                f"pesquisa busca na ementa, e no portal so os acordaos tem ementa: com "
+                f'{", ".join(sem_ementa)}, a busca nao traz resultados. Para buscar o termo '
+                'no texto integral da decisao, use buscar_em="inteiro_teor"; para trazer '
+                'todas as decisoes do filtro, use pesquisa="" com periodo de julgamento.'
             )
         return self
 

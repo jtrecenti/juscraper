@@ -166,14 +166,12 @@ class TJROScraper(HTTPScraper):
         auto_chunk: bool = True,
         **kwargs,
     ) -> list:
-        """Download raw CJSG JSON responses from TJRO.
+        """Baixa as respostas JSON brutas da CJSG do TJRO.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
+        Returns:
+            Lista das respostas JSON brutas, uma por página.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo
@@ -222,10 +220,9 @@ class TJROScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded CJSG JSON responses.
+        """Converte as respostas JSON baixadas da CJSG em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

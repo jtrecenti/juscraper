@@ -136,32 +136,34 @@ def cjsg_download(
     *,
     request_fn: RequestFn,
 ) -> list:
-    """
-    Download raw results from TJBA jurisprudence search (multiple pages).
+    """Baixa os resultados brutos da pesquisa de jurisprudência do TJBA (várias páginas).
 
-    Parameters
-    ----------
-    pesquisa : str
-        Search term.
-    paginas : list, range, or None
-        Pages to download (1-based). None downloads all available pages.
-    numero_recurso : str, optional
-        Case/appeal number filter.
-    items_per_page : int
-        Results per page (default 10).
-    auto_chunk : bool
-        Com ``paginas=None``, divide por data de publicação a busca que passa
-        de ``MAX_RESULTS`` (ver
-        :func:`juscraper.utils.divisao_por_data.baixar_dividindo_por_data`).
-    request_fn : RequestFn
-        HTTP callable that handles retry + raise_for_status — em uso normal e
-        ``TJBAScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
-        centralizando backoff exponencial para 429/5xx.
+    Args:
+        pesquisa: Termo de busca.
+        paginas (list | range | None): Páginas a baixar (1-based). ``None``
+            baixa todas as páginas disponíveis.
+        numero_recurso: Número do processo/recurso.
+        orgaos: Lista de IDs de órgão julgador.
+        relatores: Lista de IDs de relator.
+        classes: Lista de IDs de classe.
+        data_publicacao_inicio: Data inicial de publicação.
+        data_publicacao_fim: Data final de publicação.
+        segundo_grau: Inclui resultados do segundo grau.
+        turmas_recursais: Inclui resultados das turmas recursais.
+        tipo_acordaos: Inclui acórdãos.
+        tipo_decisoes_monocraticas: Inclui decisões monocráticas.
+        ordenado_por: ``"dataPublicacao"`` ou ``"relevancia"``.
+        items_per_page: Resultados por página (default 10).
+        auto_chunk: Com ``paginas=None``, divide por data de publicação a busca
+            que passa de ``MAX_RESULTS`` (ver
+            :func:`juscraper.utils.divisao_por_data.baixar_dividindo_por_data`).
+        request_fn: Função HTTP que cuida do retry e do ``raise_for_status``; em
+            uso normal, ``TJBAScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), que centraliza o backoff exponencial para
+            429/5xx.
 
-    Returns
-    -------
-    list
-        List of raw GraphQL response dicts (one per page).
+    Returns:
+        Lista dos dicionários brutos da resposta GraphQL, um por página.
     """
     filtro_da_janela = partial(
         _build_filter,

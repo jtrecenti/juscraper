@@ -223,20 +223,33 @@ def cjsg_download(
     request_fn: RequestFn,
     session: requests.Session,
 ) -> list:
-    """Run the TJMG acórdão search and return the raw HTML of each page.
+    """Executa a busca de acórdãos no TJMG e devolve o HTML bruto de cada página.
 
-    Parameters
-    ----------
-    request_fn : RequestFn
-        HTTP callable that handles retry + raise_for_status — em uso normal e
-        ``TJMGScraper._request_with_retry`` (via ``core.http.HTTPScraper``),
-        chamado com o perfil :data:`PERFIL_CJSG`, que centraliza o backoff
-        exponencial para 403/429/500/502/503/504, timeout e
-        conexao derrubada.
-    session : requests.Session
-        Compartilhada com ``request_fn`` (mesma session do
-        :class:`HTTPScraper`). Precisamos do handle direto para ler o
-        ``JSESSIONID`` do cookie jar e montá-lo no body DWR do captcha.
+    Args:
+        pesquisa: Termo de busca livre.
+        paginas (int | list | range | None): Páginas a baixar (1-based), em
+            cada lista da busca; ``None`` baixa todas.
+        pesquisar_por: Campo em que buscar: ``"ementa"`` ou ``"acordao"``.
+        order_by: Ordem, como o portal a recebe (``"2"``, ``"1"`` ou ``"0"``).
+        data_julgamento_inicial: Início do intervalo de julgamento
+            (``DD/MM/AAAA``).
+        data_julgamento_final: Fim do intervalo de julgamento (``DD/MM/AAAA``).
+        data_publicacao_inicial: Início do intervalo de publicação
+            (``DD/MM/AAAA``).
+        data_publicacao_final: Fim do intervalo de publicação (``DD/MM/AAAA``).
+        linhas_por_pagina: Resultados por página.
+        sleep_time: Pausa, em segundos, entre as páginas.
+        request_fn: Função HTTP que cuida do retry e do ``raise_for_status``; em
+            uso normal, ``TJMGScraper._request_with_retry`` (via
+            ``core.http.HTTPScraper``), chamada com o perfil
+            :data:`PERFIL_CJSG`, que centraliza o backoff exponencial para
+            403/429/500/502/503/504, timeout e conexão derrubada.
+        session: Compartilhada com ``request_fn`` (mesma session do
+            :class:`HTTPScraper`). Precisamos do handle direto para ler o
+            ``JSESSIONID`` do cookie jar e montá-lo no body DWR do captcha.
+
+    Returns:
+        HTML bruto de cada página baixada.
     """
     _validate_session(request_fn, session)
 

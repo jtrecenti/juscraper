@@ -55,66 +55,13 @@ class TJBAScraper(HTTPScraper):
         auto_chunk: bool = True,
         **kwargs,
     ) -> list:
-        """
-        Download raw results from the TJBA jurisprudence search.
+        """Baixa os resultados brutos da pesquisa de jurisprudência do TJBA.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-        paginas : int, list, range, or None
-            Pages to download (1-based). int: paginas=3 downloads pages 1-3.
-            range: range(1, 4) downloads pages 1-3. None: downloads all.
-            O portal só entrega os 10.000 primeiros resultados de uma busca
-            (1000 páginas de 10): página pedida além desse teto levanta
-            ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
-            maior divide a busca por data de publicação (ver ``auto_chunk``).
-        numero_recurso : str, optional
-            Case/appeal number filter.
-        orgaos : list, optional
-            List of orgao julgador IDs to filter.
-        relatores : list, optional
-            List of relator IDs to filter.
-        classe : list, optional
-            List of class IDs to filter. ``classes`` (plural) e aceito como
-            alias deprecado (emite :class:`DeprecationWarning`). Refs #232.
-        data_publicacao_inicio : str, date or None
-            Start date for publication filter: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
-            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-        data_publicacao_fim : str, date or None
-            End date for publication filter (mesmos formatos).
-        segundo_grau : bool
-            Include second-instance results (default True).
-        turmas_recursais : bool
-            Include turmas recursais results (default True).
-        tipo_acordaos : bool
-            Include acordaos (default True).
-        tipo_decisoes_monocraticas : bool
-            Include monocratic decisions (default True).
-        ordenado_por : str
-            ``"dataPublicacao"`` (default) or ``"relevancia"``.
-        tamanho_pagina : int
-            Results per page (default 10). Aceita ``items_per_page`` como
-            alias deprecado (emite ``DeprecationWarning``).
-        auto_chunk : bool
-            Default ``True``. Com ``paginas=None``, a busca com mais de 10.000
-            resultados é dividida em janelas de data de publicação que cabem
-            no teto do portal, da mais recente para a mais antiga, e todas são
-            baixadas; a soma pode diferir do total inicial, porque o portal
-            segue indexando. A primeira divisão emite ``UserWarning`` com o
-            total e o número aproximado de requisições (~1 s cada). O dia que
-            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
-            requisição falha depois da divisão, levanta
-            ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
-            baixado (também em ``cjsg_download``), e a mensagem diz o
-            intervalo que falta. Com ``False``, ``None`` baixa as páginas até
-            o teto e emite ``UserWarning``. Sem efeito com ``paginas``
-            explícito.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw GraphQL response dicts (one per page).
+        Returns:
+            Lista dos dicionários brutos da resposta GraphQL, um por página.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "items_per_page", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -171,18 +118,14 @@ class TJBAScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """
-        Parse raw results from TJBA into a DataFrame.
+        """Converte os resultados brutos do TJBA em DataFrame.
 
-        Parameters
-        ----------
-        resultados_brutos : list
-            Raw response dicts as returned by ``cjsg_download``.
+        Args:
+            resultados_brutos: Dicionários da resposta, como devolvidos por
+                :meth:`cjsg_download`.
 
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame with one row per decision.
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse(resultados_brutos)
 
@@ -205,54 +148,61 @@ class TJBAScraper(HTTPScraper):
         auto_chunk: bool = True,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Search TJBA jurisprudence (download + parse).
+        """Pesquisa jurisprudência do TJBA (download + parse).
 
-        Returns a ready-to-analyze DataFrame.
+        Devolve um DataFrame pronto para análise.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None = all pages.
-            O portal só entrega os 10.000 primeiros resultados de uma busca
-            (1000 páginas de 10): página pedida além desse teto levanta
-            ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
-            maior divide a busca por data de publicação (ver ``auto_chunk``).
-        data_publicacao_inicio : str, date or None
-            Start date: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
-            ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-        data_publicacao_fim : str, date or None
-            End date (mesmos formatos).
-        ordenado_por : str
-            ``"dataPublicacao"`` (default) or ``"relevancia"``.
-        tamanho_pagina : int
-            Results per page (default 10).
-        auto_chunk : bool
-            Default ``True``. Com ``paginas=None``, a busca com mais de 10.000
-            resultados é dividida em janelas de data de publicação que cabem
-            no teto do portal, da mais recente para a mais antiga, e todas são
-            baixadas; a soma pode diferir do total inicial, porque o portal
-            segue indexando. A primeira divisão emite ``UserWarning`` com o
-            total e o número aproximado de requisições (~1 s cada). O dia que
-            sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
-            requisição falha depois da divisão, levanta
-            ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
-            baixado (também em ``cjsg_download``), e a mensagem diz o
-            intervalo que falta. Com ``False``, ``None`` baixa as páginas até
-            o teto e emite ``UserWarning``. Sem efeito com ``paginas``
-            explícito.
+        Args:
+            pesquisa: Termo de busca. ``query`` e ``termo`` são aceitos como
+                aliases deprecados.
+            paginas: Páginas a baixar (1-based). ``int``: ``paginas=3`` baixa as
+                páginas 1 a 3. ``range``: ``range(1, 4)`` baixa as páginas 1 a 3.
+                ``None``: baixa todas.
+                O portal só entrega os 10.000 primeiros resultados de uma busca
+                (1000 páginas de 10): página pedida além desse teto levanta
+                ``ValueError`` antes de qualquer requisição, e ``None`` numa busca
+                maior divide a busca por data de publicação (ver ``auto_chunk``).
+            numero_recurso: Número do processo/recurso.
+            orgaos: Lista de IDs de órgão julgador.
+            relatores: Lista de IDs de relator.
+            classe: Lista de IDs de classe. ``classes`` (plural) é aceito como
+                alias deprecado (emite :class:`DeprecationWarning`). Refs #232.
+            data_publicacao_inicio: Data inicial de publicação: ``DD/MM/AAAA``,
+                ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou
+                ``datetime``.
+            data_publicacao_fim: Data final de publicação (mesmos formatos).
+            segundo_grau: Inclui resultados do segundo grau (default ``True``).
+            turmas_recursais: Inclui resultados das turmas recursais (default
+                ``True``).
+            tipo_acordaos: Inclui acórdãos (default ``True``).
+            tipo_decisoes_monocraticas: Inclui decisões monocráticas (default
+                ``True``).
+            ordenado_por: ``"dataPublicacao"`` (default) ou ``"relevancia"``.
+            tamanho_pagina: Resultados por página (default 10). Aceita
+                ``items_per_page`` como alias deprecado (emite
+                ``DeprecationWarning``).
+            auto_chunk: Default ``True``. Com ``paginas=None``, a busca com mais de
+                10.000 resultados é dividida em janelas de data de publicação que
+                cabem no teto do portal, da mais recente para a mais antiga, e todas
+                são baixadas; a soma pode diferir do total inicial, porque o portal
+                segue indexando. A primeira divisão emite ``UserWarning`` com o
+                total e o número aproximado de requisições (~1 s cada). O dia que
+                sozinho passa do teto vem até o teto, com ``UserWarning``. Se uma
+                requisição falha depois da divisão, levanta
+                ``ColetaParcialError``: ``.resultado`` traz o DataFrame do que foi
+                baixado (também em ``cjsg_download``), e a mensagem diz o
+                intervalo que falta. Com ``False``, ``None`` baixa as páginas até
+                o teto e emite ``UserWarning``. Sem efeito com ``paginas``
+                explícito.
+            **kwargs: Aliases deprecados (ver abaixo).
 
-        Aliases deprecados
-        ------------------
-        * ``items_per_page`` -> ``tamanho_pagina``
-        * ``classes`` -> ``classe`` (refs #232)
+        Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``items_per_page`` -> ``tamanho_pagina``
+            * ``classes`` -> ``classe`` (refs #232)
 
-        Returns
-        -------
-        pd.DataFrame
-            Jurisprudence results.
+        Returns:
+            Resultados de jurisprudência, uma linha por decisão.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
