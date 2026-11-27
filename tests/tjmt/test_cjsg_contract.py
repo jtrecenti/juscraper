@@ -1,5 +1,7 @@
 """Contratos offline do cjsg do TJMT."""
 import json
+import logging
+from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 import responses
@@ -210,3 +212,30 @@ def test_cjsg_no_results(mocker):
         "julgamento",
         "uuid",
     ]
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_repetida_uma_vez_e_alem_do_total_no_log(mocker, caplog):
+    """A página 3 pedida duas vezes sai num pedido só; a além do total vai para o log, sem pedido.
+
+    O total (25 acórdãos, 3 páginas) vem da menor página pedida, que sai primeiro.
+    """
+    mocker.patch("time.sleep")
+    _add_config()
+    body = json.loads(load_sample("tjmt", "cjsg/results_normal_page_01.json"))
+    body["value"]["countAcordaoDocumento"] = 25
+    for pagina in (2, 3):
+        responses.add(
+            responses.GET, API_URL, json=body, match=[query_param_matcher(_params("dano moral", pagina))],
+        )
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjmt"):
+        brutos = jus.scraper("tjmt").cjsg_download("dano moral", paginas=[3, 2, 3, 7])
+
+    paginas_pedidas = [
+        int(parse_qs(urlparse(url_enviada(call.request)).query)["indicePagina"][0]) + 1
+        for call in responses.calls if url_enviada(call.request).startswith(API_URL)
+    ]
+    assert paginas_pedidas == [2, 3]
+    assert len(brutos) == 2
+    assert "TJMT: página 7 fora do intervalo 1-3" in caplog.text

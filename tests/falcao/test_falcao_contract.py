@@ -11,6 +11,7 @@ Validam, sem tocar a rede (``responses``):
 - que bloqueios definitivos do backend (WAF, 429 de horas) nao sao retentados.
 """
 import json
+import logging
 import tempfile
 import warnings
 from pathlib import Path
@@ -366,6 +367,28 @@ def test_listar_decisoes_range_com_passo_respeita_o_passo(falcao):
         _register("acordaos", total=100, pagina=pagina)
     falcao.listar_decisoes("dano moral", paginas=range(1, 6, 2))
     assert _paginas_pedidas() == [1, 3, 5]
+
+
+@ordem_padrao_avisa
+@responses.activate
+@pytest.mark.parametrize("com_checkpoint", [False, True])
+@pytest.mark.parametrize("fora_e_ultima", [(9, 4), (5000, 1000)])
+def test_pagina_repetida_uma_vez_e_fora_do_total_num_aviso_so(falcao, tmp_path, caplog, com_checkpoint, fora_e_ultima):
+    """Repetida sai uma vez; a além do total real (9) ou do teto (5000) vai para o log uma vez, sem requisição.
+
+    O corte acontece antes da primeira requisição (teto) e depois de ler o total (real);
+    cada página de fora aparece em um só deles.
+    """
+    fora, ultima = fora_e_ultima
+    for pagina in (2, 3):
+        _register("acordaos", total=40, pagina=pagina)
+    destino = {"checkpoint_dir": tmp_path / "coleta"} if com_checkpoint else {"diretorio": str(tmp_path)}
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.falcao"):
+        falcao.listar_decisoes_download("dano moral", paginas=[2, 3, 3, fora], **destino)
+
+    assert _paginas_pedidas() == [2, 3]
+    assert [r.getMessage() for r in caplog.records] == [f"Falcao: página {fora} fora do intervalo 1-{ultima}"]
 
 
 @ordem_padrao_avisa

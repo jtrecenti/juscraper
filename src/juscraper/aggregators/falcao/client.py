@@ -31,6 +31,7 @@ from tqdm.auto import tqdm
 from ...core.avisos import avisar
 from ...core.base import mensagem_de_kwargs_inesperados
 from ...core.http import HTTPScraper, RequestPolicy
+from ...utils.pagination import paginas_no_intervalo
 from ...utils.params import (
     coerce_brazilian_date,
     normalize_paginas,
@@ -386,9 +387,12 @@ class FalcaoScraper(HTTPScraper):
         """
         gravadas = checkpoint.gravadas if checkpoint is not None else set()
         total_anterior = checkpoint.total if checkpoint is not None else None
+        # O teto é conhecido antes da consulta: a página além dele sai do pedido,
+        # com aviso, antes de qualquer requisição; a além do total real, depois de lê-lo.
+        alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
         # A primeira pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = self._primeira_pendente(inp, gravadas, total_anterior)
+        primeira = self._primeira_pendente(inp, alcancaveis, gravadas, total_anterior)
         if primeira is None:
             if total_anterior is not None:
                 self._avisar_teto(inp, total_anterior)
@@ -409,7 +413,9 @@ class FalcaoScraper(HTTPScraper):
             )
         self._avisar_teto(inp, total)
 
-        pendentes = [p for p in self._resolver_paginas(inp.paginas_normalizadas, total_paginas) if p not in gravadas]
+        pendentes = [
+            p for p in paginas_no_intervalo(alcancaveis, total_paginas, tribunal="Falcao") if p not in gravadas
+        ]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
         self._avisar_ordem_entre_paginas(inp, pendentes, checkpoint)
@@ -422,19 +428,19 @@ class FalcaoScraper(HTTPScraper):
             _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
     def _primeira_pendente(
-        self, inp: InputListarDecisoesFalcao, gravadas: set[int], total_anterior: int | None,
+        self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, gravadas: set[int],
+        total_anterior: int | None,
     ) -> int | None:
         """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
-        O teto é conhecido antes da consulta: nenhuma página fora dele pode
-        servir de primeira requisição, pois o backend a rejeita. Na retomada,
-        vale o total da sessão anterior: página além dele não gasta a cota, e
-        o checkpoint completo não requisita nada.
+        ``alcancaveis`` são as páginas pedidas dentro do teto (``None``, todas):
+        o backend rejeita as demais. Na retomada, vale o total da sessão
+        anterior: página além dele não gasta a cota, e o checkpoint completo
+        não requisita nada.
         """
-        conhecido = _MAX_RESULTADOS if total_anterior is None else total_anterior
-        total_paginas = self._total_paginas(conhecido, inp.tamanho_pagina)
-        candidatas = self._resolver_paginas(inp.paginas_normalizadas, total_paginas)
-        return next((p for p in candidatas if p not in gravadas), None)
+        ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, inp.tamanho_pagina)
+        candidatas = range(1, ultima + 1) if alcancaveis is None else alcancaveis
+        return next((p for p in candidatas if p <= ultima and p not in gravadas), None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         return build_pesquisa_params(
@@ -507,9 +513,9 @@ class FalcaoScraper(HTTPScraper):
         """Sem checkpoint, avisa da ordem instável só na coleta de mais de uma página.
 
         Com checkpoint, ``_baixar`` já avisou antes de requisitar, pois as páginas se
-        somam entre sessões. Em lista, ``paginas`` pode repetir a mesma página.
+        somam entre sessões.
         """
-        if checkpoint is None and len(set(pendentes)) > 1:
+        if checkpoint is None and len(pendentes) > 1:
             self._avisar_ordem_instavel(inp)
 
     @staticmethod
@@ -539,17 +545,15 @@ class FalcaoScraper(HTTPScraper):
         alcancavel = min(total, _MAX_RESULTADOS)
         return max(1, math.ceil(alcancavel / tamanho_pagina))
 
-    @staticmethod
-    def _resolver_paginas(paginas, total_paginas: int):
+    @classmethod
+    def _paginas_ate(cls, paginas: list[int] | range | None, total: int, tamanho_pagina: int) -> list[int] | None:
+        """As páginas pedidas que ``total`` resultados alcançam, uma vez cada; ``None`` continua todas.
+
+        As de fora vão para o log, num aviso só (:func:`paginas_no_intervalo`).
+        """
         if paginas is None:
-            return range(1, total_paginas + 1)
-        if isinstance(paginas, range):
-            return range(
-                max(1, paginas.start),
-                min(paginas.stop, total_paginas + 1),
-                paginas.step,
-            )
-        return [p for p in paginas if 1 <= p <= total_paginas]
+            return None
+        return paginas_no_intervalo(paginas, cls._total_paginas(total, tamanho_pagina), tribunal="Falcao")
 
 
 def _validar_data(valor, nome: str) -> None:

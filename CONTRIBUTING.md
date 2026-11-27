@@ -420,7 +420,18 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 
 - TJMG `_baixar_lista`, TJPR `_baixar_paginas` e TJTO `_baixar_paginas` preservam as páginas já baixadas em `ColetaParcialError.resultado`, com a causa original; se nada foi baixado, relançam a falha original. TJMG mantém categorias e TJTO mantém a detecção de WAF.
 - O auto-chunk do eSAJ pode seguir após falhas múltiplas e registra cada uma em `.falhas`; ele e o DataJud podem levantar `ColetaParcialError` com resultado vazio.
-- Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais.
+- Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais. O laço próprio lê a seleção pelos helpers de **Seleção de páginas**.
+
+## Seleção de páginas (`paginas`)
+
+O contrato de `paginas` explícito vale para todo raspador: a página repetida é baixada uma vez só, na posição em que aparece primeiro; a página além do total não é pedida e sai num aviso só no logger do tribunal (`juscraper.<sigla>`); o `range` não é percorrido (`paginas=range(1, 10**7)` custa o mesmo que `range(1, 8)`); e o passo do `range` é respeitado. Ele mora nos helpers de `src/juscraper/utils/pagination.py`, e o raspador lê a seleção só por eles:
+
+- `baixar_paginas_pedidas(paginas, buscar, contar_paginas, tribunal=...)`: o portal informa o total em toda página. Pede a menor página, lê nela o total e baixa as demais. É o caso comum (TJRN, TJSC, TJDFT, TJMT, TJRS...); com teto de resultados, combinar com `contador_com_teto` (TJBA, TJPB, TJRO, TJMT).
+- `paginas_no_intervalo(paginas, n_pags, tribunal=...)`: o total já é conhecido, ou o laço é próprio (coleta parcial, checkpoint, primeira página fixa). Devolve as páginas a baixar, na ordem pedida.
+- `menor_pagina` e `maior_pagina`: a página a pedir primeiro e até onde ir antes de ler o total (cursor que só avança, como no PDPJ e no DataJud; teto conhecido antes da busca).
+- `paginas_unicas`: o portal não informa o total no pedido explícito (TJAP, TJPR, TJRR). Tira só as repetidas.
+
+`tests/test_selecao_de_paginas.py` reprova, fora de `utils/pagination.py`, `utils/params.py` e `schemas/mixins.py`, a leitura da seleção à mão: `.start`/`.stop`/`.step`, índice, `isinstance(..., range)`, `max`/`min`/`list`/`sorted`/`set`/`tuple` e laço direto sobre `paginas`, `paginas_norm` ou `.paginas_normalizadas`. A exceção vai na lista `EXCECOES` do teste, com o motivo: variável `paginas` com as respostas já baixadas, ou contrato próprio declarado (o STF recusa página repetida com erro). Caso novo que os helpers não cobrem entra em `utils/pagination.py`, com teste em `tests/utils/test_pagination_util.py`, e não no raspador. O contrato de cada portal fica em `tests/test_contrato_paginas_explicitas.py`, quando a busca é de uma URL só, ou no `test_cjsg_contract.py` do tribunal.
 
 ## Contagem de páginas e resultados em HTML
 

@@ -24,6 +24,7 @@ from ...core.failures import (
 )
 from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from ...utils.pagination import maior_pagina, menor_pagina
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
     STATUS_REPETIVEIS,
@@ -677,7 +678,7 @@ class DatajudScraper(HTTPScraper):
         # Listas viram o intervalo contiguo exigido pelo cursor forwards-only.
         paginas_datajud = inp.paginas_normalizadas
         if isinstance(paginas_datajud, list):
-            paginas_datajud = range(min(paginas_datajud), max(paginas_datajud) + 1)
+            paginas_datajud = range(menor_pagina(paginas_datajud), maior_pagina(paginas_datajud) + 1)
 
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
@@ -810,7 +811,7 @@ class DatajudScraper(HTTPScraper):
         # Teto de cada busca: começa em ``tamanho_pagina`` e só cai com o fallback.
         size_maximo = tamanho_pagina
         search_after: list[Any] | None = None
-        last_page = None if paginas is None else paginas[-1]
+        last_page = None if paginas is None else maior_pagina(paginas)
         # Alimentam o diagnóstico do ColetaParcialError: quanto já veio das páginas pedidas e
         # quanto a consulta encontrou (``hits.total`` da página 1).
         recebidos = 0

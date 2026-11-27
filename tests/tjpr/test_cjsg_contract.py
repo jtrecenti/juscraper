@@ -267,3 +267,16 @@ def test_cjsg_falha_na_primeira_pagina_levanta_a_excecao_original():
 
     with pytest.raises(requests.ReadTimeout):
         jus.scraper("tjpr").cjsg("dano moral", paginas=2)
+
+
+@responses.activate
+def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
+    """Com ``paginas`` explícito a seleção não é cortada, mas a página pedida duas vezes sai num pedido só."""
+    mocker.patch("time.sleep")
+    add_home()
+    add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
+
+    brutos = jus.scraper("tjpr").cjsg_download("dano moral", paginas=[2, 2])
+
+    assert len(brutos) == 1
+    assert sum(url_enviada(c.request).startswith(SEARCH_URL) for c in responses.calls) == 1

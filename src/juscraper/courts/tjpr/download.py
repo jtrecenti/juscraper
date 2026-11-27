@@ -13,6 +13,7 @@ from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
     descrever_paginas,
     extract_count_with_cascade,
+    paginas_unicas,
     parse_page_number,
     resolve_total_pages,
 )
@@ -268,7 +269,7 @@ def cjsg_download(
         first_html = _fetch_page(1)
         n_pags = extract_total_pages(first_html)
         return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first_html], ler_parcial)
-    return _baixar_paginas(_fetch_page, list(paginas), [], ler_parcial)
+    return _baixar_paginas(_fetch_page, list(paginas_unicas(paginas)), [], ler_parcial)
 
 
 def _baixar_paginas(
