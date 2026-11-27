@@ -64,17 +64,17 @@ class STMScraper(HTTPScraper):
         """Busca jurisprudência do STM.
 
         Args:
-            pesquisa (str): Termo de busca. Aceita os operadores do portal:
+            pesquisa: Termo de busca. Aceita os operadores do portal:
                 ``E`` (padrão entre palavras), ``OU``, ``NÃO``, aspas para
                 expressão exata, ``*`` e ``?`` como curingas.
-            paginas (int | list | range | None): Páginas 1-based, de 100
+            paginas: Páginas 1-based, de 100
                 documentos cada; ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGSTM`.
                 Os cinco últimos são os da coluna "Filtrar por" do portal:
                 opcionais (``None`` = sem filtro) e comparados com o valor
                 exato que o portal exibe, em maiúsculas.
 
-                * ``buscar_em`` (str): Onde procurar ``pesquisa``:
+                * ``buscar_em`` (Literal["ementa", "inteiro_teor", "numero"]): Onde procurar ``pesquisa``:
                   ``"ementa"`` (default), ``"inteiro_teor"`` (texto integral
                   do acórdão, que inclui a ementa) ou ``"numero"`` (número do
                   processo, completo ou parcial; só o STM tem essa opção).

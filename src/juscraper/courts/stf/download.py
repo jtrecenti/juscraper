@@ -107,17 +107,19 @@ def build_payload(
     Compartilhado entre o scraper e o script de captura de samples.
 
     Args:
-        pesquisa (str | None): Termos de busca na sintaxe do portal. ``None`` busca tudo.
-        pagina (int): Pagina 1-based.
-        tamanho_pagina (int): Documentos por pagina. ``0`` pede so total e agregacoes.
-        base (str): ``"decisoes"`` (monocraticas) ou ``"acordaos"``.
-        classe (str | list[str] | None): Sigla(s) da classe processual (ex.: ``"Rcl"``).
-        buscar_em (str): ``"ementa"`` busca nos campos que o portal usa por padrao
+        pesquisa: Termos de busca na sintaxe do portal. ``None`` busca tudo.
+        pagina: Pagina 1-based.
+        tamanho_pagina: Documentos por pagina. ``0`` pede so total e agregacoes.
+        base: ``"decisoes"`` (monocraticas) ou ``"acordaos"``.
+        classe: Sigla(s) da classe processual (ex.: ``"Rcl"``).
+        buscar_em: ``"ementa"`` busca nos campos que o portal usa por padrao
             (ementa, texto da decisao, indexacao, partes...); ``"inteiro_teor"``
             soma a eles o inteiro teor, como a opcao "pesquisar no inteiro teor".
-        data_julgamento_inicio, data_julgamento_fim (str | None): Datas ja no formato ``ddMMyyyy``.
-        data_publicacao_inicio, data_publicacao_fim (str | None): Datas ja no formato ``ddMMyyyy``.
-        reference_time (str | None): Referência UTC fixa para o decaimento do score.
+        data_julgamento_inicio: Data ja no formato ``ddMMyyyy``.
+        data_julgamento_fim: Data ja no formato ``ddMMyyyy``.
+        data_publicacao_inicio: Data ja no formato ``ddMMyyyy``.
+        data_publicacao_fim: Data ja no formato ``ddMMyyyy``.
+        reference_time: Referência UTC fixa para o decaimento do score.
             ``None`` mantém o ``now`` do portal.
 
     Raises:

@@ -84,16 +84,16 @@ class ComunicaCNJScraper(HTTPScraper):
             **kwargs: Filtros opcionais aceitos pelo schema
                 :class:`InputListarComunicacoesComunicaCNJ`:
 
-                * ``numero_processo`` (str): Numero CNJ, com ou sem
+                * ``numero_processo`` (str | None): Numero CNJ, com ou sem
                   formatacao; vai a API como ``numeroProcesso``, so com os
                   digitos. Use este filtro para as comunicacoes de um
                   processo: o termo livre nao encontra o processo pelo
                   numero.
-                * ``data_disponibilizacao_inicio`` (str): Inicio do
+                * ``data_disponibilizacao_inicio`` (str | None): Inicio do
                   intervalo de ``dataDisponibilizacao``. Aceita ISO
                   ``YYYY-MM-DD`` ou formato brasileiro ``DD/MM/YYYY``
                   (convertido para ISO antes do schema).
-                * ``data_disponibilizacao_fim`` (str): Fim do intervalo de
+                * ``data_disponibilizacao_fim`` (str | None): Fim do intervalo de
                   ``dataDisponibilizacao``. Mesmos formatos aceitos.
                 * ``itens_por_pagina`` (int): Resultados por requisicao
                   (1-100, default 100).

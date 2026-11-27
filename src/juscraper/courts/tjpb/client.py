@@ -82,22 +82,22 @@ class TJPBScraper(HTTPScraper):
         """Busca jurisprudencia no TJPB.
 
         Args:
-            pesquisa (str): Termo de busca livre (busca na ementa).
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre (busca na ementa).
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal so entrega os 10.000
                 primeiros resultados de uma busca (1000 paginas): pagina
                 pedida alem da 1000 levanta ``ValueError`` antes de qualquer
                 requisicao, e ``None`` numa busca maior baixa as 1000
                 primeiras e emite ``UserWarning``.
-            numero_processo (str): Numero CNJ do processo. Aceita o alias
+            numero_processo: Numero CNJ do processo. Aceita o alias
                 deprecado ``nr_processo``.
-            id_classe (str): ID da classe judicial. Aceita o alias deprecado
+            id_classe: ID da classe judicial. Aceita o alias deprecado
                 ``id_classe_judicial`` (refs #129).
-            id_orgao_julgador (str): ID do orgao julgador.
-            id_relator (str): ID do relator.
-            id_origem (str): Filtro de origem. ``"8,2"`` para todos (default),
+            id_orgao_julgador: ID do orgao julgador.
+            id_relator: ID do relator.
+            id_origem: Filtro de origem. ``"8,2"`` para todos (default),
                 ``"8"`` para Turmas Recursais, ``"2"`` para Tribunal Pleno/Camaras.
-            decisoes (bool): Se ``True``, inclui decisoes monocraticas.
+            decisoes: Se ``True``, inclui decisoes monocraticas.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPB`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
