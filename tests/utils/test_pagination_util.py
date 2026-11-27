@@ -14,7 +14,10 @@ from juscraper.utils.pagination import (
     contador_com_teto,
     descrever_paginas,
     extract_count_with_cascade,
+    maior_pagina,
+    menor_pagina,
     paginas_no_intervalo,
+    paginas_unicas,
     parse_page_number,
     resolve_total_pages,
 )
@@ -329,6 +332,23 @@ def test_paginas_no_intervalo_aceita_range_e_devolve_lista_vazia_sem_validas():
 
 def test_paginas_no_intervalo_sem_paginas_pedidas_devolve_todas():
     assert paginas_no_intervalo(None, 3, tribunal="TJXX") == [1, 2, 3]
+
+
+@pytest.mark.parametrize(
+    ("paginas", "menor", "maior"),
+    [([3, 1, 5, 1], 1, 5), (range(2, 10**12, 3), 2, 10**12 - 2), (range(9, 0, -4), 1, 9), ([7], 7, 7)],
+)
+def test_menor_e_maior_pagina_sem_percorrer_range(paginas, menor, maior):
+    assert (menor_pagina(paginas), maior_pagina(paginas)) == (menor, maior)
+
+
+def test_paginas_unicas_tira_repetidas_na_ordem_pedida():
+    assert paginas_unicas([3, 1, 3, 2, 1]) == [3, 1, 2]
+
+
+def test_paginas_unicas_devolve_range_sem_percorrer():
+    paginas = range(1, 10**12, 2)
+    assert paginas_unicas(paginas) is paginas
 
 
 class TestBaixarPaginasPedidas:

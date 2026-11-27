@@ -31,6 +31,7 @@ from ...core.failures import (
 from ...core.http import HTTPScraper, RequestFn, RequestPolicy
 from ...core.parse_utils import clean_document_text
 from ...utils.cnj import clean_cnj
+from ...utils.pagination import maior_pagina
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
 from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
@@ -178,13 +179,11 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, C
     """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
 
     Com lista, a coleta segue até a maior página pedida, porque o cursor
-    ``searchAfter`` só se obtém percorrendo as anteriores.
+    ``searchAfter`` só se obtém percorrendo as anteriores. ``in`` num ``range`` não o percorre.
     """
     if paginas is None:
         return None, None
-    if isinstance(paginas, range):  # ``in`` num range nao o percorre
-        return paginas[-1], paginas
-    return max(paginas), set(paginas)
+    return maior_pagina(paginas), paginas
 
 
 def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:

@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
 
 logger = logging.getLogger(__name__)
 
@@ -406,10 +406,8 @@ def cjsg_download(
 
     form_id, scroller_id = extract_pagination_ids(results_html)
 
-    # Determine pages to download
-    pages_iter: list = (
-        list(range(1, total_pages + 1)) if paginas is None else list(paginas)
-    )
+    # A repetida sai uma vez; a além do total vai para o log, sem requisição.
+    pages_iter = paginas_no_intervalo(paginas, total_pages, tribunal="TJPE")
 
     results = []
 

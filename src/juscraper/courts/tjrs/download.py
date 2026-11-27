@@ -1,12 +1,10 @@
 """Downloads raw files from the TJRS jurisprudence search."""
 import json
-import math
 from urllib.parse import urlencode
-
-from tqdm import tqdm
 
 from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import baixar_paginas_pedidas, resolve_total_pages
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -178,19 +176,8 @@ def cjsg_download_manager(
         resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG)
         return _exigir_resultados(resp.json())
 
-    if paginas is None:
-        first = _fetch_page(1)
-        resultados = [first]
-        num_found = first.get('response', {}).get('numFound', 0)
-        n_pags = math.ceil(num_found / RESULTS_PER_PAGE) if num_found else 1
-        if n_pags > 1:
-            for pagina in tqdm(range(2, n_pags + 1), desc='Baixando páginas TJRS'):
-                # laco de I/O (rede por iteracao sob tqdm): comprehension esconderia o efeito
-                resultados.append(_fetch_page(pagina))  # noqa: PERF401
-        return resultados
+    def _n_pags(data):
+        num_found = data.get('response', {}).get('numFound', 0)
+        return resolve_total_pages(num_found, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJRS")
 
-    paginas_iter = list(paginas)
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc='Baixando páginas TJRS'):
-        resultados.append(_fetch_page(pagina_1based))
-    return resultados
+    return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS")

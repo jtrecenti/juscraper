@@ -144,3 +144,15 @@ def test_cjsg_generic_error_raises(mocker):
 
     assert not isinstance(exc_info.value, TJAPSecurityCheckError)
     assert "Erro interno ao processar a consulta." in str(exc_info.value)
+
+
+@responses.activate
+def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
+    """Sem o total, a seleção não é cortada, mas a página pedida duas vezes sai num pedido só."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", "cjsg/results_normal_page_02.json", offset=20)
+
+    brutos = jus.scraper("tjap").cjsg_download("dano moral", paginas=[2, 2])
+
+    assert len(responses.calls) == 1
+    assert len(brutos) == 1

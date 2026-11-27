@@ -27,7 +27,7 @@ from responses.matchers import urlencoded_params_matcher
 import juscraper as jus
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body
-from tests._helpers import load_sample, query_param_subset_matcher, url_enviada
+from tests._helpers import chamadas_para, load_sample, query_param_subset_matcher, url_enviada
 from tests.tjpr._helpers import SEARCH_URL, add_ementa_completa, add_home, add_search_page
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
@@ -267,3 +267,16 @@ def test_cjsg_falha_na_primeira_pagina_levanta_a_excecao_original():
 
     with pytest.raises(requests.ReadTimeout):
         jus.scraper("tjpr").cjsg("dano moral", paginas=2)
+
+
+@responses.activate
+def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
+    """Com ``paginas`` explícito a seleção não é cortada, mas a página pedida duas vezes sai num pedido só."""
+    mocker.patch("time.sleep")
+    add_home()
+    add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
+
+    brutos = jus.scraper("tjpr").cjsg_download("dano moral", paginas=[2, 2])
+
+    assert len(brutos) == 1
+    assert len(chamadas_para(SEARCH_URL)) == 1

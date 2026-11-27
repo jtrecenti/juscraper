@@ -1,5 +1,6 @@
 """Offline contract tests for TJDFT cjsg."""
 import json
+import logging
 from datetime import date
 
 import pandas as pd
@@ -195,3 +196,22 @@ def test_cjsg_paginas_none_sem_resultados_faz_uma_requisicao(mocker):
 
     assert len(responses.calls) == 1
     assert df.empty
+
+
+@responses.activate
+def test_cjsg_pagina_repetida_uma_vez_e_alem_do_total_no_log(mocker, caplog):
+    """A página 2 pedida duas vezes sai num pedido só; a além do total vai para o log, sem pedido.
+
+    O total vem de ``hits.value`` da menor página pedida, que sai primeiro.
+    """
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 2, "cjsg/results_normal_page_02.json")
+    _add_page("dano moral", 3, "cjsg/results_normal_page_02.json")
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjdft"):
+        registros = jus.scraper("tjdft").cjsg_download("dano moral", paginas=[3, 2, 3, 10**6])
+
+    por_pagina = len(json.loads(load_sample("tjdft", "cjsg/results_normal_page_02.json"))["registros"])
+    assert [corpo_json_enviado(call.request)["pagina"] for call in responses.calls] == [1, 2]
+    assert len(registros) == 2 * por_pagina
+    assert "TJDFT: página 1000000 fora do intervalo" in caplog.text

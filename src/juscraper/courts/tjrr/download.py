@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import extract_count_with_cascade, paginas_unicas
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
 RESULTS_PER_PAGE = 10
@@ -409,7 +409,7 @@ def _plano_de_paginacao(
     página além da 1. Sem tabela, o form fica vazio e ``_download_page``
     levanta antes de qualquer requisição.
     """
-    paginas_iter = [] if paginas is None else list(paginas)
+    paginas_iter = [] if paginas is None else list(paginas_unicas(paginas))
     if paginas is not None and all(p == 1 for p in paginas_iter):
         return paginas_iter, [], {}
     soup = BeautifulSoup(first_html, "html.parser")

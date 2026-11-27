@@ -2,7 +2,7 @@
 Functions for downloading specific to TJDFT
 """
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import resolve_total_pages
+from juscraper.utils.pagination import baixar_paginas_pedidas, resolve_total_pages
 
 BASE_URL = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
 # Maior ``tamanho`` que a API aceita; acima disso ela responde HTTP 400.
@@ -97,16 +97,12 @@ def cjsg_download(
         resp = request_fn("POST", base_url, json=payload, headers=headers, perfil="cjsg")
         return resp.json()
 
-    resultados = []
-    if paginas is None:
-        data = _fetch_page(1)
-        resultados.extend(data.get("registros", []))
-        n_pags = resolve_total_pages(
+    def _n_pags(data):
+        return resolve_total_pages(
             (data.get("hits") or {}).get("value"),
             resultados_por_pagina=quantidade_por_pagina,
             tribunal="TJDFT",
         )
-        paginas = range(2, n_pags + 1)
-    for pagina in paginas:
-        resultados.extend(_fetch_page(pagina).get("registros", []))
-    return resultados
+
+    pages = baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJDFT")
+    return [registro for data in pages for registro in data.get("registros", [])]

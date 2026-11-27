@@ -209,3 +209,17 @@ def test_cjsg_get_sem_form_de_busca_falha_alto(mocker):
     )
     with pytest.raises(RuntimeError, match="menuinicial"):
         jus.scraper("tjrr").cjsg("usucapiao", paginas=1)
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
+    """A página 2 pedida duas vezes sai num par de pedidos AJAX só (um por tabela)."""
+    mocker.patch("time.sleep")
+    add_get_initial()
+    _add_post_initial("cjsg/step_02_search.html")
+    add_page_2_ajax()
+
+    brutos = jus.scraper("tjrr").cjsg_download("dano moral", paginas=[1, 2, 2])
+
+    assert len(brutos) == 2
+    assert len(responses.calls) == 4
