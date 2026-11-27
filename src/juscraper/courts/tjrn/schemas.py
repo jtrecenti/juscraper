@@ -12,9 +12,7 @@ from ...schemas import (
     SearchBase,
 )
 
-# Dominios dos filtros de ``cjsg``: o schema e as assinaturas de
-# :class:`juscraper.courts.tjrn.client.TJRNScraper` usam os mesmos aliases.
-# Os comentarios em :class:`InputCJSGTJRN` dizem de onde vem cada valor.
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJRNScraper``.
 Sistema = Literal["", "PJE", "SAJ"]
 Decisoes = Literal["", "Decisão", "Acórdão", "Sentença"]
 Jurisdicoes = Literal["", "TJ", "TR"]
