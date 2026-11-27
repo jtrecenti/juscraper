@@ -161,6 +161,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_download" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_download">cjsg_download</a></li>
   <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cjsg_parse">cjsg_parse</a></li>
   <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</a></li>
+  <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cpopg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download">cpopg_download</a></li>
+  <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse">cpopg_parse</a></li>
   <li><a href="#juscraper.courts.tjpe.client.TJPEScraper.cposg" id="toc-juscraper.courts.tjpe.client.TJPEScraper.cposg" class="nav-link" data-scroll-target="#juscraper.courts.tjpe.client.TJPEScraper.cposg">cposg</a></li>
   </ul></li>
   </ul></li>
@@ -202,6 +204,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg">cpopg</a></td>
 <td>Consulta processos de 1º grau na consulta pública do PJe do TJPE.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download">cpopg_download</a></td>
+<td>Baixa o HTML do detalhe de cada <code>id_cnj</code> na consulta pública do PJe do TJPE.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse">cpopg_parse</a></td>
+<td>Parseia os HTMLs de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download"><code>cpopg_download</code></a> em DataFrame, uma linha por processo.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjpe.client.TJPEScraper.cposg">cposg</a></td>
@@ -504,9 +514,167 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>InputCpopgTRF</code> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
 </section>
 </section>
+<section id="juscraper.courts.tjpe.client.TJPEScraper.cpopg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cpopg_download">cpopg_download</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cpopg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa o HTML do detalhe de cada <code>id_cnj</code> na consulta pública do PJe do TJPE.</p>
+<p>Delega a <code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg_download</code>, na mesma sessão de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg"><code>cpopg</code></a>, inclusive o cookie do AWS WAF obtido quando o desafio aparece. Não baixa as peças: para elas, usar <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg"><code>cpopg</code></a> com <code>download_pecas=True</code>.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>CNJ único ou lista, com ou sem máscara.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code>[<code>str</code> | None]</td>
+<td>Lista na ordem da entrada, com o HTML do detalhe de cada CNJ. <code>None</code> indica processo que a consulta pública não devolveu: segredo de justiça, CNJ inexistente ou falha da requisição. Falhas individuais não interrompem o lote; um bloqueio do WAF encerra o lote, e o CNJ bloqueado e os seguintes saem <code>None</code>. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValidationError</code></td>
+<td>CNJ em formato inválido.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>ImportError</code></td>
+<td>O WAF desafiou e o Playwright não está instalado.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo-2" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-2">Exemplo</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjpe <span class="op">=</span> jus.scraper(<span class="st">"tjpe"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> cnjs <span class="op">=</span> [<span class="st">"0000000-00.0000.8.17.0000"</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> htmls <span class="op">=</span> tjpe.cpopg_download(cnjs)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjpe.cpopg_parse(htmls, cnjs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="see-also-2" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
+<p><code>InputCpopgTRF</code> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cpopg_parse">cpopg_parse</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cpopg_parse(htmls, id_cnj_list)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parseia os HTMLs de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download"><code>cpopg_download</code></a> em DataFrame, uma linha por processo.</p>
+<p>Delega a <code>juscraper.courts._trf.base.TRFConsultaScraper.cpopg_parse</code>, o parser da família PJe; não faz requisição.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>htmls</td>
+<td><code>list</code>[<code>str</code> | None]</td>
+<td>HTMLs do detalhe, como <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download"><code>cpopg_download</code></a> devolve.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>id_cnj_list</td>
+<td><code>list</code>[<code>str</code>]</td>
+<td>CNJs na mesma ordem de <code>htmls</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por CNJ, com as colunas do detalhe de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg"><code>cpopg</code></a>, exceto <code>motivo_falha</code>: um <code>None</code> de <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg_download"><code>cpopg_download</code></a> pode ser processo ausente ou requisição que falhou, e só <a href="../reference/courts.tjpe.client.TJPEScraper.html#juscraper.courts.tjpe.client.TJPEScraper.cpopg"><code>cpopg</code></a> sabe qual. A linha de um <code>None</code> traz só <code>id_cnj</code>; um HTML que o parser recusa também, com <code>UserWarning</code>, e o lote continua.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td><code>htmls</code> e <code>id_cnj_list</code> com tamanhos diferentes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
 <section id="juscraper.courts.tjpe.client.TJPEScraper.cposg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpe.client.TJPEScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>courts.tjpe.client.TJPEScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Stub: second instance case consultation not implemented for TJPE.</p>
 
 

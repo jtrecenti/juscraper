@@ -296,19 +296,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>decisoes</td>
 <td><code>str</code></td>
-<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. Por padrao, <code>pesquisa</code> busca na ementa, e no portal so os acordaos tem ementa: para buscar termo em <code>"Decisão"</code> ou <code>"Sentença"</code>, ver <code>buscar_em</code>.</td>
+<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"Sentença"</code> so existe no 1o grau e <code>"Acórdão"</code> so no 2o; <code>"Decisão"</code> existe nos dois. Como o portal nao devolve resultados para as combinacoes cruzadas, <code>"Sentença"</code> com <code>grau="2"</code>, <code>"TJ"</code> ou <code>"TR"</code> e <code>"Acórdão"</code> com <code>grau="1"</code> levantam <code>ValidationError</code>. Por padrao, <code>pesquisa</code> busca na ementa, e no portal so os acordaos tem ementa: para buscar termo em <code>"Decisão"</code> ou <code>"Sentença"</code>, ver <code>buscar_em</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>jurisdicoes</td>
 <td><code>str</code></td>
-<td>Jurisdicao, com os valores do portal: <code>"TJ"</code> (orgaos do Tribunal de Justica), <code>"TR"</code> (Turmas Recursais e Turma de Uniformizacao) ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"TJ"</code> e <code>"TR"</code> so trazem decisoes de 2o grau: com <code>grau="1"</code>, em que o portal nao devolve resultados, levantam <code>ValidationError</code>.</td>
+<td>Jurisdicao, com os valores do portal: <code>"TJ"</code> (orgaos do Tribunal de Justica), <code>"TR"</code> (Turmas Recursais e Turma de Uniformizacao) ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"TJ"</code> e <code>"TR"</code> so trazem decisoes de 2o grau: com <code>grau="1"</code> ou <code>decisoes="Sentença"</code>, em que o portal nao devolve resultados, levantam <code>ValidationError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>grau</td>
 <td><code>str</code></td>
-<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. Decisoes de 1o grau nao tem ementa: com <code>grau="1"</code>, buscar termo com <code>buscar_em="inteiro_teor"</code>.</td>
+<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. <code>grau="1"</code> com <code>decisoes="Acórdão"</code> e <code>grau="2"</code> com <code>decisoes="Sentença"</code> tambem levantam, porque o portal nao devolve resultados para elas. Decisoes de 1o grau nao tem ementa: com <code>grau="1"</code>, buscar termo com <code>buscar_em="inteiro_teor"</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
