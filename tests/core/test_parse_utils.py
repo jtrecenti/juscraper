@@ -50,6 +50,31 @@ class TestCleanHtml:
         # acute/grave/etc do _clean_html original do TJAP.
         assert clean_html("&copy; 2024 &hellip; &deg;C") == "© 2024 … °C"
 
+    @pytest.mark.parametrize(
+        ("entrada", "esperado"),
+        [
+            ("<b>DANOS</b>.", "DANOS."),
+            ("(<i>ii</i>)", "(ii)"),
+        ],
+    )
+    def test_tag_inline_some_sem_deixar_espaco(self, entrada, esperado):
+        assert clean_html(entrada) == esperado
+
+    def test_bloco_e_br_viram_espaco(self):
+        assert clean_html("<p>Primeira</p><p>Segunda<br>Terceira</p>") == "Primeira Segunda Terceira"
+
+    def test_remove_conteudo_de_style(self):
+        assert clean_html("<style>p{text-align: justify;}</style><p>Ementa</p>") == "Ementa"
+
+    def test_remove_comentario(self):
+        assert clean_html("<!--[if gte mso 9]>Normal 0 21 false<![endif]-->Texto") == "Texto"
+
+    def test_menor_que_solto_fica(self):
+        assert clean_html("menor (<18 anos) e maior (>60 anos)") == "menor (<18 anos) e maior (>60 anos)"
+
+    def test_sem_decodificar_ainda_normaliza(self):
+        assert clean_html("a\xa0b&nbsp;c\u200b", decode_entities=False) == "a b&nbsp;c"
+
 
 class TestCoerceDateColumns:
     def test_empty_df_no_raise(self):

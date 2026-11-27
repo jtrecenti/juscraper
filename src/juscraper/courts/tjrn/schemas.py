@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
+from pydantic import model_validator
+
 from ...schemas import (
     BuscarEm,
     DataJulgamentoMixin,
@@ -11,6 +13,12 @@ from ...schemas import (
     OutputRelatoriaMixin,
     SearchBase,
 )
+
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJRNScraper``.
+Sistema = Literal["", "PJE", "SAJ"]
+Decisoes = Literal["", "Decisão", "Acórdão", "Sentença"]
+Jurisdicoes = Literal["", "TJ", "TR"]
+Grau = Literal["", "1", "2"]
 
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
@@ -45,18 +53,32 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     id_colegiado: str | None = None
     # Valores do seletor "Sistema" do portal (``field-sistema.js``). O backend
     # diferencia maiusculas: "pje" ou outro valor da 0 resultados sem aviso.
-    sistema: Literal["", "PJE", "SAJ"] | None = None
+    sistema: Sistema | None = None
     # Valores do seletor "Decisoes" do portal (``field-decisao.js``), que o backend
     # compara com ``tipo_teor``: "Decisão" sao as monocraticas, "Acórdão" as
     # colegiadas e "Sentença" as de 1o grau. Vazio (ou ``None``) busca todas.
-    decisoes: Literal["", "Decisão", "Acórdão", "Sentença"] | None = None
+    decisoes: Decisoes | None = None
     # Valores do seletor "Jurisdicoes" do portal (``field-jurisdicao.js``): "TJ"
     # (Tribunal de Justica) e "TR" (Turmas Recursais e TUJ). Vazio (ou ``None``)
     # busca todas. Os nomes por extenso fazem o portal responder 502/503.
-    jurisdicoes: Literal["", "TJ", "TR"] | None = None
+    jurisdicoes: Jurisdicoes | None = None
     # Valores dos radios ``radioGrau`` do portal. Outro valor da 0 resultados.
-    grau: Literal["", "1", "2"] | None = None
+    grau: Grau | None = None
     buscar_em: BuscarEm = "ementa"
+
+    @model_validator(mode="after")
+    def _jurisdicao_so_no_segundo_grau(self) -> InputCJSGTJRN:
+        # "TJ" e "TR" so cobrem o 2o grau: com ``grau="1"`` o portal devolve 0
+        # resultados sem erro, em qualquer periodo e termo (26/11/2026). O
+        # formulario do portal esconde "TR" quando o grau e "1".
+        if self.jurisdicoes and self.grau == "1":
+            raise ValueError(
+                f'jurisdicoes="{self.jurisdicoes}" so cobre decisoes de 2o grau e, '
+                'com grau="1", o portal nao devolve resultados. Para o 1o grau, '
+                'deixe jurisdicoes vazio; para filtrar por jurisdicao, use grau="2" '
+                "ou vazio."
+            )
+        return self
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

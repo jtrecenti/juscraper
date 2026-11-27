@@ -1,11 +1,11 @@
 """Contratos offline do ``cpopg`` do TJPE (PJe ConsultaPública + AWS WAF).
 
-O fluxo de busca, detalhe e parse é o da família ``_trf``, já coberto pelos
-contratos do TRF1/TRF5; aqui ficam o que o TJPE tem de próprio: o host,
-o formulário capturado do TJPE e o cookie do AWS WAF obtido só quando o
-desafio aparece. As respostas de busca e de detalhe reaproveitam os samples
-do TRF1, porque o HTML do PJe é o mesmo e nenhum dado de processo do TJPE
-precisa entrar no repositório.
+O fluxo de busca, detalhe e parse é o da família ``_trf``, também coberto
+pelos contratos do TRF1/TRF5; aqui ficam o que o TJPE tem de próprio: o host,
+os IDs JSF do formulário do TJPE e o cookie do AWS WAF obtido só quando o
+desafio aparece. Todas as respostas são do PJe de 1º grau do TJPE, gravadas
+por ``tests/fixtures/capture/tjpe_cpopg.py``: o processo encontrado é uma
+execução fiscal pública de um município contra uma pessoa jurídica.
 """
 from __future__ import annotations
 
@@ -19,10 +19,11 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
 from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
@@ -31,8 +32,11 @@ DOC_URL = BASE + "ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLog
 # Corpo da peça: o download só grava os bytes, sem ler o conteúdo, então
 # qualquer HTML serve.
 DOCUMENTO = b"<html><body><p>Despacho</p></body></html>"
-CNJ = "00000011220248170001"
-CNJ_FORMATADO = "0000001-12.2024.8.17.0001"
+# O processo de ``search_one_result.html`` e ``detail_normal.html``
+# (``FOUND_CNJ`` do script de captura).
+CNJ = "00147006920218172370"
+CNJ_FORMATADO = "0014700-69.2021.8.17.2370"
+# Segundo CNJ dos lotes; a busca devolve o mesmo sample.
 OUTRO_CNJ = "00000021220248170001"
 
 
@@ -75,7 +79,7 @@ def _busca(sample: str = "cpopg/search_one_result.html"):
     responses.add(
         responses.POST,
         LIST_URL,
-        body=load_sample("trf1", sample),
+        body=load_sample("tjpe", sample),
         content_type="text/xml; charset=utf-8",
     )
 
@@ -84,7 +88,7 @@ def _detalhe():
     responses.add(
         responses.GET,
         DETAIL_URL,
-        body=load_sample_bytes("trf1", "cpopg/detail_normal.html"),
+        body=load_sample_bytes("tjpe", "cpopg/detail_normal.html"),
         content_type="text/html",
     )
 
@@ -102,13 +106,14 @@ def test_cpopg_sem_desafio_nao_chama_o_playwright(tjpe, obter):
     assert len(df) == 1
     row = df.iloc[0]
     assert row["id_cnj"] == CNJ
-    assert row["processo"] is not None
+    assert row["processo"] == CNJ_FORMATADO
+    assert row["documentos"]
     assert {"classe", "polo_ativo", "movimentacoes", "documentos"} <= set(df.columns)
     enviado = dict(parse_qsl(responses.calls[1].request.body, keep_blank_values=True))
     assert enviado[
         "fPP:numProcesso-inputNumeroProcessoDecoration:numProcesso-inputNumeroProcesso"
     ] == CNJ_FORMATADO
-    # IDs JSF do formulário capturado do TJPE, não os do TRF1.
+    # IDs JSF do formulário do TJPE, não os do TRF1; ao recapturar, conferir se mudaram.
     assert enviado["fPP:j_id245"] == "fPP:j_id245"
     assert "fPP:j_id163:processoReferenciaInput" in enviado
 
@@ -260,33 +265,45 @@ def test_cjsg_continua_em_sessao_propria():
     assert tjpe.session.headers["User-Agent"] != USER_AGENT
 
 
+@pytest.mark.parametrize(
+    "falha",
+    [
+        pytest.param(1, id="1a_peca-as-seguintes-nao-sao-pedidas"),
+        pytest.param(2, id="2a_peca-a-anterior-fica"),
+    ],
+)
+@pytest.mark.usefixtures("obter")
 @responses.activate
-def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, mocker, tmp_path, caplog):
-    """Disco cheio na 2ª peça do 1º CNJ: ele sai com detalhe, a 1ª peça e o motivo; o 2º CNJ sai completo."""
-    detalhe = load_sample_bytes("trf1", "cpopg/detail_normal.html")
+def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, mocker, tmp_path, caplog, falha):
+    """Disco cheio na peça ``falha`` do 1º CNJ: ele sai com o detalhe, as peças já gravadas e o motivo.
+
+    O 2º CNJ sai completo. O processo do sample tem duas peças: falhar na 1ª
+    mostra que a 2ª não é pedida; falhar na 2ª, que a 1ª continua em ``pecas``.
+    """
+    detalhe = load_sample_bytes("tjpe", "cpopg/detail_normal.html")
     ids = [doc_id for _, doc_id in extract_documento_urls(detalhe.decode("latin-1"))]
-    assert len(ids) > 2
+    assert len(ids) >= 2
     _form()
     for _ in range(2):
         _busca()
         _detalhe()
-    for _ in range(2 + len(ids)):
+    for _ in range(falha + len(ids)):
         responses.add(responses.GET, DOC_URL, body=DOCUMENTO, content_type="text/html")
     # Cópia de uma coleta anterior, que a gravação que falha não pode apagar.
-    anterior = tmp_path / CNJ / f"{ids[1]}.html"
+    anterior = tmp_path / CNJ / f"{ids[falha - 1]}.html"
     anterior.parent.mkdir()
     anterior.write_bytes(b"coleta anterior")
 
     gravar = Path.write_bytes
     gravacao = itertools.count(1)
 
-    def disco_cheio_na_segunda(caminho, conteudo):
-        if next(gravacao) == 2:
+    def disco_cheio(caminho, conteudo):
+        if next(gravacao) == falha:
             gravar(caminho, conteudo[:10])  # o disco enche no meio da escrita
             raise OSError(errno.ENOSPC, "No space left on device")
         return gravar(caminho, conteudo)
 
-    mocker.patch.object(Path, "write_bytes", autospec=True, side_effect=disco_cheio_na_segunda)
+    mocker.patch.object(Path, "write_bytes", autospec=True, side_effect=disco_cheio)
 
     with (
         caplog.at_level("WARNING", logger="juscraper._trf"),
@@ -297,15 +314,17 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, 
     primeiro, segundo = df.iloc[0], df.iloc[1]
     assert primeiro["processo"] is not None
     assert primeiro["motivo_falha"] == "resposta_inesperada"
-    assert [Path(p).stem for p in primeiro["pecas"]] == ids[:1]
-    assert primeiro["pecas_falhas"] == [{"id": i, "motivo_falha": "resposta_inesperada"} for i in ids[1:]]
+    assert [Path(p).stem for p in primeiro["pecas"]] == ids[: falha - 1]
+    assert primeiro["pecas_falhas"] == [
+        {"id": i, "motivo_falha": "resposta_inesperada"} for i in ids[falha - 1 :]
+    ]
     assert anterior.read_bytes() == b"coleta anterior"
     assert not list(anterior.parent.glob("*.tmp"))
     assert segundo["motivo_falha"] is None
     assert [Path(p).stem for p in segundo["pecas"]] == ids
     assert segundo["pecas_falhas"] == []
     # As peças seguintes do 1º CNJ não são pedidas.
-    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == 2 + len(ids)
+    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == falha + len(ids)
     assert "No space left on device" in caplog.text
     # Um aviso só, o dos processos: as peças que o erro encerrou não se repetem no das peças.
     (aviso,) = avisos
@@ -313,9 +332,65 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, obter, 
     assert f"processo {CNJ}: resposta_inesperada" in str(aviso.message)
 
 
-def test_cpopg_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        tjpe.cpopg(CNJ, filtro_inexistente="x")
+@responses.activate
+def test_cpopg_download_devolve_o_html_e_cpopg_parse_monta_a_linha_do_cpopg(tjpe, obter):
+    """Baixar e parsear em duas etapas dá a mesma tabela do ``cpopg``, sem ``motivo_falha``."""
+
+    def _encontrado_e_ausente():
+        _form()
+        _busca()
+        _detalhe()
+        _busca("cpopg/search_no_results.html")
+
+    _encontrado_e_ausente()
+    htmls = tjpe.cpopg_download([CNJ, OUTRO_CNJ])
+
+    obter.assert_not_called()
+    assert htmls == [load_sample_bytes("tjpe", "cpopg/detail_normal.html").decode("latin-1"), None]
+    df = tjpe.cpopg_parse(htmls, [CNJ, OUTRO_CNJ])
+    assert df.iloc[0]["documentos"]
+
+    responses.reset()
+    _encontrado_e_ausente()
+    completo = tjpe.cpopg([CNJ, OUTRO_CNJ])
+    pd.testing.assert_frame_equal(df, completo.drop(columns="motivo_falha"))
+
+
+@responses.activate
+def test_cpopg_download_bloqueado_pelo_waf_sai_none_com_aviso_do_metodo(tjpe, obter):
+    _desafio()
+    _desafio()
+
+    with pytest.warns(BloqueioAntiBotWarning, match=r"TJPEScraper\.cpopg_download: 2 consulta"):
+        htmls = tjpe.cpopg_download([CNJ, OUTRO_CNJ])
+
+    assert htmls == [None, None]
+    obter.assert_called_once()
+
+
+@responses.activate
+def test_cpopg_download_sem_playwright_o_erro_chega_ao_usuario(tjpe, mocker):
+    mocker.patch(
+        "juscraper.courts.tjpe.consulta_publica.obter_waf_token",
+        side_effect=ImportError("Instale com `pip install 'juscraper[waf]'`"),
+    )
+    _desafio()
+
+    with pytest.raises(ImportError, match=r"juscraper\[waf\]"):
+        tjpe.cpopg_download(CNJ)
+
+
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_rejeita_kwarg_desconhecido_citando_o_metodo_publico(tjpe, metodo):
+    assert_unknown_kwarg_raises(
+        getattr(tjpe, metodo), "filtro_inexistente", CNJ, rotulo=f"TJPEScraper.{metodo}"
+    )
+
+
+def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
+    with pytest.raises(ValueError, match="same length"):
+        tjpe.cpopg_parse([None], [CNJ, OUTRO_CNJ])
+
 
 
 def test_mensagem_de_formulario_inesperado_cita_o_tribunal():
