@@ -311,6 +311,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### TRF1, TRF3, TRF5, TRF6 e TJPE (consulta processual do PJe)
 
+- TRF1, TRF5 e TJPE `cpopg` e `cpopg_download`: o `TypeError` por kwarg desconhecido cita o método público chamado (`TRF5Scraper.cpopg_download`, `TJPEScraper.cpopg`). Antes, `cpopg_download` saía como `cpopg` e, no TJPE, a mensagem citava a classe interna `TJPEConsultaPublicaScraper`.
 - TRF1, TRF3, TRF5, TRF6 e TJPE `cpopg` e `cpopg_parse`: o DataFrame traz sempre as colunas do detalhe (`processo`, `classe`, `orgao_julgador` etc.), vazias nas linhas que não foram lidas. Antes, quando nenhum CNJ do lote era lido, o resultado saía só com `id_cnj` e `motivo_falha`, e `df[["processo", "classe"]]` levantava `KeyError` (#442).
 - TRF1, TRF3, TRF5 e TJPE `cpopg` e `cpopg_parse`: `orgao_julgador` e `endereco_orgao` deixam de sair `None`. O portal traz os dois num painel sem rótulo, que o parser não lia.
 - TRF1, TRF5 e TJPE `cpopg`: no documento que o PJe lista como `ID: <id> - <data> - <descrição>`, `data` traz a data inteira, com a hora (`"2026-04-29 12:37:07.255"`), e `descricao`, só a descrição. Antes, `data` ficava só com o ano, e o resto ia para o início de `descricao`.

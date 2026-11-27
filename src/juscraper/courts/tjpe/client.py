@@ -67,6 +67,7 @@ class TJPEScraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
+            ValidationError: CNJ em formato inválido.
             ImportError: O WAF desafiou e o Playwright não está instalado.
 
         Examples: Exemplo

@@ -387,7 +387,7 @@ def test_cpopg_download_sem_playwright_o_erro_chega_ao_usuario(tjpe, mocker):
 
 
 def test_cpopg_download_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match="unexpected keyword"):
+    with pytest.raises(TypeError, match=r"^TJPEScraper\.cpopg_download got unexpected keyword"):
         tjpe.cpopg_download(CNJ, filtro_inexistente="x")
 
 
@@ -397,7 +397,7 @@ def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
 
 
 def test_cpopg_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match="unexpected keyword"):
+    with pytest.raises(TypeError, match=r"^TJPEScraper\.cpopg got unexpected keyword"):
         tjpe.cpopg(CNJ, filtro_inexistente="x")
 
 

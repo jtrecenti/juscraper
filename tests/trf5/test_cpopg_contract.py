@@ -165,11 +165,12 @@ def test_colunas_detalhe_sao_as_chaves_de_parse_detail() -> None:
     assert tuple(record) == COLUNAS_DETALHE
 
 
-def test_cpopg_rejects_unknown_kwargs() -> None:
-    """Passing an unknown kwarg surfaces as a friendly ``TypeError``."""
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_cpopg_rejects_unknown_kwargs(metodo: str) -> None:
+    """Kwarg desconhecido vira ``TypeError`` que cita o método público chamado."""
     scraper = jus.scraper("trf5", sleep_time=0)
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        scraper.cpopg("00584573120254058000", magistrado="x")
+    with pytest.raises(TypeError, match=rf"^TRF5Scraper\.{metodo} got unexpected keyword"):
+        getattr(scraper, metodo)("00584573120254058000", magistrado="x")
 
 
 @responses.activate

@@ -165,8 +165,12 @@ class TRFConsultaScraper(HTTPScraper):
             logger.debug("%s field IDs: %s", self.TRIBUNAL_NAME, self._field_ids)
         return self._field_ids
 
-    def _coerce_id_cnj(self, id_cnj: str | list[str], **kwargs: Any) -> list[str]:
-        """Validate via pydantic and return a list of cleaned 20-digit CNJs."""
+    def _coerce_id_cnj(self, id_cnj: str | list[str], metodo: str, /, **kwargs: Any) -> list[str]:
+        """Valida via pydantic e devolve os CNJs limpos, com 20 dígitos.
+
+        ``metodo`` é o método público chamado, citado no ``TypeError`` de kwarg
+        desconhecido (no TJPE, o ``TJPEScraper`` delega a esta classe).
+        """
         try:
             inp = self.INPUT_CPOPG(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
@@ -174,7 +178,7 @@ class TRFConsultaScraper(HTTPScraper):
             if extras and len(extras) == len(exc.errors()):
                 names = ", ".join(repr(err["loc"][-1]) for err in extras)
                 raise TypeError(
-                    f"{type(self).__name__}.cpopg got unexpected keyword argument(s): {names}"
+                    f"{self.TRIBUNAL_NAME}Scraper.{metodo} got unexpected keyword argument(s): {names}"
                 ) from exc
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
@@ -267,7 +271,7 @@ class TRFConsultaScraper(HTTPScraper):
         restantes saem ``None``. As falhas entram num único ``UserWarning``
         ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
         """
-        cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
+        cnjs = self._coerce_id_cnj(id_cnj, "cpopg_download", **kwargs)
         consultas = self._baixar(cnjs)
         self._avisar(cnjs, [c.motivo for c in consultas], "cpopg_download")
         return [c.html for c in consultas]
@@ -372,6 +376,7 @@ class TRFConsultaScraper(HTTPScraper):
         """
         cnjs = self._coerce_id_cnj(
             id_cnj,
+            "cpopg",
             download_pecas=download_pecas,
             diretorio=diretorio,
             **kwargs,
