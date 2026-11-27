@@ -438,6 +438,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#parâmetros-principais-1" id="toc-parâmetros-principais-1" class="nav-link" data-scroll-target="#parâmetros-principais-1">Parâmetros Principais</a></li>
   <li><a href="#retorno-1" id="toc-retorno-1" class="nav-link" data-scroll-target="#retorno-1">Retorno</a></li>
   <li><a href="#exemplo-de-uso-1" id="toc-exemplo-de-uso-1" class="nav-link" data-scroll-target="#exemplo-de-uso-1">Exemplo de Uso</a></li>
+  <li><a href="#buscas-grandes-divida-em-intervalos-de-datas" id="toc-buscas-grandes-divida-em-intervalos-de-datas" class="nav-link" data-scroll-target="#buscas-grandes-divida-em-intervalos-de-datas">Buscas grandes: divida em intervalos de datas</a></li>
+  <li><a href="#busca-pelo-número-do-processo" id="toc-busca-pelo-número-do-processo" class="nav-link" data-scroll-target="#busca-pelo-número-do-processo">Busca pelo número do processo</a></li>
   </ul></li>
   <li><a href="#cpopg---consulta-processual-de-primeiro-grau" id="toc-cpopg---consulta-processual-de-primeiro-grau" class="nav-link" data-scroll-target="#cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</a>
   <ul class="collapse">
@@ -568,6 +570,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># baixa dados da [c]onsulta de [j]ulgados de [s]egundo [g]rau - cjsgdados_cjsg = tjsp.cjsg('golpe do pix', paginas=range(1,3))print(dados_cjsg.shape)dados_cjsg.head(3)</span></span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="buscas-grandes-divida-em-intervalos-de-datas" class="level3">
+<h3 class="anchored" data-anchor-id="buscas-grandes-divida-em-intervalos-de-datas">Buscas grandes: divida em intervalos de datas</h3>
+<p>A paginação do TJSP fica mais lenta à medida que a coleta avança nas páginas de uma mesma busca. Até cerca de 100 páginas (2.000 resultados, com 20 por página) a coleta costuma ser rápida; daí em diante cada página demora mais. Para baixar um volume grande, não peça um <code>range</code> longo de páginas: divida a busca em intervalos de data de julgamento menores e junte os resultados no final. A mesma estratégia vale para o <code>cjpg()</code>.</p>
+<p>Em vez de:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cjsg <span class="op">=</span> tjsp.cjsg(<span class="st">'termo de busca'</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">501</span>))</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>faça uma busca por mês:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>partes <span class="op">=</span> []</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> inicio <span class="kw">in</span> pd.date_range(<span class="st">'2026-01-01'</span>, <span class="st">'2026-06-30'</span>, freq<span class="op">=</span><span class="st">'MS'</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    fim <span class="op">=</span> inicio <span class="op">+</span> pd.offsets.MonthEnd(<span class="dv">0</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    partes.append(tjsp.cjsg(</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'termo de busca'</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        data_julgamento_inicio<span class="op">=</span>inicio.strftime(<span class="st">'</span><span class="sc">%d</span><span class="st">/%m/%Y'</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        data_julgamento_fim<span class="op">=</span>fim.strftime(<span class="st">'</span><span class="sc">%d</span><span class="st">/%m/%Y'</span>),</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>cjsg <span class="op">=</span> pd.concat(partes, ignore_index<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Para escolher o tamanho do intervalo, use <code>count_only=True</code>, que faz só a primeira requisição e devolve o total de resultados da busca. Se um mês passar de uns 2.000 resultados, divida em quinzenas ou semanas:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(<span class="st">'termo de busca'</span>, count_only<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>          data_julgamento_inicio<span class="op">=</span><span class="st">'01/01/2026'</span>, data_julgamento_fim<span class="op">=</span><span class="st">'31/01/2026'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>O <code>auto_chunk</code> (ativo por padrão) não resolve esse problema: ele só divide intervalos maiores que 1 ano, que é o limite de datas do formulário do eSAJ.</p>
+</section>
+<section id="busca-pelo-número-do-processo" class="level3">
+<h3 class="anchored" data-anchor-id="busca-pelo-número-do-processo">Busca pelo número do processo</h3>
+<p>O <code>cjsg()</code> não busca pelo número do processo ou do recurso: o termo de <code>pesquisa</code> procura no texto dos acórdãos, e o <code>juscraper</code> não tem filtro por número no CJSG do TJSP. Para consultar um processo específico em segundo grau, use <code>cposg()</code> com o número CNJ (seção abaixo). Numa coleta já feita, filtre a coluna <code>processo</code>.</p>
+</section>
 </section>
 <section id="cpopg---consulta-processual-de-primeiro-grau" class="level2">
 <h2 class="anchored" data-anchor-id="cpopg---consulta-processual-de-primeiro-grau">CPOPG - Consulta Processual de Primeiro Grau</h2>
@@ -590,9 +619,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo-de-uso-2" class="level3">
 <h3 class="anchored" data-anchor-id="exemplo-de-uso-2">Exemplo de Uso</h3>
-<div id="cell-9" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-10" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 1/1 [00:00&lt;00:00,  1.53it/s]
 Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00, 51.78it/s]</code></pre>
@@ -757,9 +786,9 @@ Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00
 <section id="exemplo-de-uso-3" class="level3">
 <h3 class="anchored" data-anchor-id="exemplo-de-uso-3">Exemplo de Uso</h3>
 <p>Você pode consultar um único processo ou múltiplos processos de uma vez:</p>
-<div id="cell-11" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-12" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 3/3 [00:03&lt;00:00,  1.25s/it]
 /var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn/T/ipykernel_37002/1905175911.py:1: UserWarning: cposg: a consulta de 2º grau não mostra 1 processo(s), que fica(m) fora do resultado: 00039417120248260048. O número pode não existir no 2º grau, ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública.
@@ -864,9 +893,9 @@ Processando arquivos: 100%|██████████| 3/3 [00:00&lt;00:00, 
 </div>
 </div>
 </div>
-<div id="cell-12" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-13" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 
@@ -930,7 +959,7 @@ Processando arquivos: 100%|██████████| 3/3 [00:00&lt;00:00, 
 <h3 class="anchored" data-anchor-id="performance-e-limites">Performance e Limites</h3>
 <ul>
 <li><strong>Rate Limiting</strong>: O sistema ESAJ pode ter limites de requisições. Use <code>sleep_time</code> no construtor do scraper para adicionar delays entre requisições se necessário.</li>
-<li><strong>Páginas</strong>: Use o parâmetro <code>paginas</code> com cuidado. Baixar muitas páginas pode levar muito tempo e sobrecarregar o servidor.</li>
+<li><strong>Páginas</strong>: Use o parâmetro <code>paginas</code> com cuidado. A paginação fica mais lenta depois de cerca de 100 páginas de uma mesma busca; para volumes grandes, divida a busca em intervalos de datas (veja “Buscas grandes: divida em intervalos de datas”, na seção do CJSG).</li>
 <li><strong>Dados Temporários</strong>: Por padrão, os arquivos HTML baixados são salvos em um diretório temporário e removidos após o parse. Para manter os arquivos, use <code>cjsg_download()</code> ou <code>cjpg_download()</code> separadamente.</li>
 </ul>
 </section>

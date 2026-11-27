@@ -439,7 +439,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>diretorio</td>
 <td><code>str</code> | None</td>
-<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor.</td>
+<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor. Só tem efeito com <code>download_pecas=True</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -494,6 +494,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: <code>diretorio</code> sem <code>download_pecas=True</code>. A consulta segue, sem as peças.</p>
+</section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
 <p><code>InputCpopgTRF3</code>: schema dos argumentos aceitos.</p>
@@ -503,7 +507,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_download">cpopg_download</h3>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cpopg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.</p>
-<p>Aceita os mesmos argumentos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a>. <code>download_pecas</code> e <code>diretorio</code> passam pela validação e são ignorados, porque este método não baixa peças. Devolve uma lista alinhada à entrada: um dicionário por processo (chaves <code>busca</code>, <code>dados</code> e uma por recurso paginado) ou <code>None</code> para o CNJ que a consulta pública não devolveu ou cuja consulta falhou. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>. Um bloqueio anti-bot encerra o lote, e os CNJs restantes saem <code>None</code>.</p>
+<p>Aceita os argumentos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a>, mas não baixa peças: <code>download_pecas=True</code> ou um <code>diretorio</code> levantam <code>TypeError</code>. Devolve uma lista alinhada à entrada: um dicionário por processo (chaves <code>busca</code>, <code>dados</code> e uma por recurso paginado) ou <code>None</code> para o CNJ que a consulta pública não devolveu ou cuja consulta falhou. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>. Um bloqueio anti-bot encerra o lote, e os CNJs restantes saem <code>None</code>.</p>
 </section>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cpopg_parse">cpopg_parse</h3>
@@ -616,7 +620,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>diretorio</td>
 <td><code>str</code> | None</td>
-<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor.</td>
+<td>Onde gravar as peças, em <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.pdf</code>. Quando omitido, usa <code>download_path</code> do construtor. Só tem efeito com <code>download_pecas=True</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
@@ -671,6 +675,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
+<section id="avisos-1" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos-1">Avisos</h4>
+<p><code>UserWarning</code>: <code>diretorio</code> sem <code>download_pecas=True</code>. A consulta segue, sem as peças.</p>
+</section>
 <section id="see-also-2" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
 <p><code>InputCposgTRF3</code>: schema dos argumentos aceitos.</p>
@@ -680,7 +688,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cposg_download">cposg_download</h3>
 <div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.trf3.client.TRF3Scraper.cposg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.</p>
-<p>Mesmo retorno e mesmos avisos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a>, consultando a aplicação de 2º grau. Os argumentos são os de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg"><code>cposg</code></a>; <code>download_pecas</code> e <code>diretorio</code> passam pela validação e são ignorados, porque este método não baixa peças.</p>
+<p>Mesmo retorno e mesmos avisos de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cpopg_download"><code>cpopg_download</code></a>, consultando a aplicação de 2º grau. Os argumentos são os de <a href="../reference/courts.trf3.client.TRF3Scraper.html#juscraper.courts.trf3.client.TRF3Scraper.cposg"><code>cposg</code></a>, mas não baixa peças: <code>download_pecas=True</code> ou um <code>diretorio</code> levantam <code>TypeError</code>.</p>
 </section>
 <section id="juscraper.courts.trf3.client.TRF3Scraper.cposg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf3.client.TRF3Scraper.cposg_parse">cposg_parse</h3>
