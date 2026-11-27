@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, ClassVar, ParamSpec, TypeVar, cast
 
 import pandas as pd
+from pydantic import BaseModel
 
 from juscraper.core.exceptions import ColetaParcialError
 
@@ -149,6 +150,28 @@ def recusar_argumentos_desconhecidos(classe: type, kwargs: Mapping[str, Any], di
     if kwargs:
         nomes = ", ".join(repr(nome) for nome in kwargs)
         raise TypeError(f"{classe.__name__}() não aceita o(s) argumento(s) {nomes}.{dica}")
+
+
+def mensagem_de_kwargs_inesperados(metodo: str, nomes: list[str]) -> str:
+    """O texto canônico do ``TypeError`` de kwarg desconhecido; ``nomes`` já vêm formatados."""
+    return f"{metodo} got unexpected keyword argument(s): {', '.join(nomes)}"
+
+
+def recusar_kwargs_sem_efeito(
+    kwargs: Mapping[str, Any], schema: type[BaseModel], campos: tuple[str, ...], metodo: str, dica: str
+) -> None:
+    """``TypeError`` de kwarg desconhecido para campo do ``schema`` que este método ignoraria.
+
+    Serve aos ``*_download`` que validam pelo schema do método composto, em que
+    ``campos`` só têm efeito no composto; sem isto, o pedido some em silêncio.
+    O default do campo no ``schema``, que não pede nada, continua aceito.
+    ``dica`` diz onde o campo tem efeito e fecha a mensagem, entre parênteses.
+    """
+    recusados = [
+        repr(nome) for nome, valor in kwargs.items() if nome in campos and valor != schema.model_fields[nome].default
+    ]
+    if recusados:
+        raise TypeError(f"{mensagem_de_kwargs_inesperados(metodo, recusados)} ({dica})")
 
 
 class BaseScraper(ABC):

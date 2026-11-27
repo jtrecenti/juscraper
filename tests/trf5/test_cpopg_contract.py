@@ -13,6 +13,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
@@ -176,6 +177,27 @@ def test_cpopg_rejects_unknown_kwargs(metodo: str) -> None:
     assert_unknown_kwarg_raises(
         getattr(scraper, metodo), "magistrado", "00584573120254058000", rotulo=f"TRF5Scraper.{metodo}"
     )
+
+
+@responses.activate
+def test_cpopg_download_recusa_os_parametros_das_pecas() -> None:
+    """``cpopg_download`` não baixa peças: pedir peças vira ``TypeError``, sem requisição."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    assert_unknown_kwarg_raises(
+        scraper.cpopg_download, ["download_pecas", "diretorio"], "00584573120254058000",
+        rotulo="TRF5Scraper.cpopg_download",
+    )
+    with pytest.raises(TypeError, match=r"\(para baixar as peças, use cpopg\(\.\.\., download_pecas=True\)\)$"):
+        scraper.cpopg_download("00584573120254058000", download_pecas=True)
+
+
+def test_cpopg_download_aceita_os_valores_padrao_das_pecas(mocker) -> None:
+    """``download_pecas=False`` e ``diretorio=None`` não pedem nada e seguem aceitos."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta("<html/>", None, [], []))
+    htmls = scraper.cpopg_download("00584573120254058000", download_pecas=False, diretorio=None)
+    assert htmls == ["<html/>"]
+    consultar.assert_called_once_with("00584573120254058000", None)
 
 
 @responses.activate
