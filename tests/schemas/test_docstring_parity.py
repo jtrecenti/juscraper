@@ -205,9 +205,9 @@ AMPLIADOS: dict[tuple[str, str], object] = {
     # int, que o field_validator do schema converte em str.
     ("InputCJSGTJRJ", "competencia"): Literal["1", "2", "3", 1, 2, 3] | None,
     ("InputCJSGTJRJ", "origem"): Literal["1", "2", "3", "4", "5", 1, 2, 3, 4, 5],
-    ("_DatajudCoercaoMixin", "assunto"): list[str | int] | None,
+    ("_InputFiltrosDataJud", "assunto"): list[str | int] | None,
     # str numérica, que o field_validator do schema converte em int.
-    ("_DatajudCoercaoMixin", "movimentos_codigo"): list[int | str] | None,
+    ("_InputFiltrosDataJud", "movimentos_codigo"): list[int | str] | None,
 }
 
 
