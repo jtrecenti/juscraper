@@ -122,7 +122,7 @@ def test_baixar_sentenca_usa_download_path_sem_diretorio(tmp_path, mocker):
 
 
 @responses.activate
-def test_baixar_sentenca_espaca_oschamadas_para(tmp_path, mocker):
+def test_baixar_sentenca_espaca_os_pedidos(tmp_path, mocker):
     """Os dois pedidos da sentença respeitam ``sleep_time``, como os do acórdão."""
     sleep = mocker.patch("juscraper.core.intervalo.time.sleep")
     _registrar_sentenca()
