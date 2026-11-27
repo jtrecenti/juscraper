@@ -4,13 +4,15 @@ TJPI is a GET endpoint with query-string parameters. The page count is
 read from the last-page link (``»``) of the ``ul.pagination`` paginator;
 ``single_page`` has no paginator at all, which is the 1-page path.
 """
+import logging
+
 import pandas as pd
 import pytest
 import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
+from juscraper.courts.tjpi.download import BASE_URL, _get_total_pages, build_cjsg_params
 from tests._helpers import load_sample
 
 CJSG_MIN_COLUMNS = {"processo", "tipo", "classe", "assunto", "data_publicacao", "ementa"}
@@ -133,3 +135,56 @@ def test_cjsg_no_results(mocker):
 
     assert isinstance(df, pd.DataFrame)
     assert df.empty
+
+
+def _paginas_pedidas() -> list[str]:
+    return [chamada.request.params["page"] for chamada in responses.calls]
+
+
+@responses.activate
+def test_cjsg_download_alem_do_total_avisa_com_o_total_da_busca(mocker, caplog):
+    """A página além do total responde "Sem resultados para:"; o total do aviso sai da página 1.
+
+    ``no_results.html`` é a resposta real a uma busca vazia, que traz o mesmo
+    marcador da resposta à página além do total.
+    """
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 10**6, "cjsg/no_results.html")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+    total = _get_total_pages(load_sample("tjpi", "cjsg/results_normal_page_01.html"))
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjpi"):
+        brutos = jus.scraper("tjpi").cjsg_download("dano moral", paginas=[10**6, 10**6 + 1])
+
+    assert brutos == []
+    assert total > 1
+    assert caplog.messages == [f"TJPI: páginas 1000000, 1000001 fora do intervalo 1-{total}"]
+    assert _paginas_pedidas() == ["1000000", "1"]
+
+
+@responses.activate
+def test_cjsg_download_pagina_2_de_busca_vazia_avisa_uma_pagina(mocker, caplog):
+    """Busca sem resultados: a página 1 também responde "Sem resultados para:", e o total é 1."""
+    mocker.patch("time.sleep")
+    for pagina in (2, 1):
+        _add_page("juscraper_probe_zero_hits_xyzqwe", pagina, "cjsg/no_results.html")
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjpi"):
+        brutos = jus.scraper("tjpi").cjsg_download("juscraper_probe_zero_hits_xyzqwe", paginas=[2])
+
+    assert brutos == []
+    assert caplog.messages == ["TJPI: página 2 fora do intervalo 1-1"]
+    assert _paginas_pedidas() == ["2", "1"]
+
+
+@responses.activate
+def test_cjsg_download_pagina_vazia_dentro_do_total_levanta(mocker):
+    """Página 2 sem resultados numa busca cuja página 1 informa várias páginas: não dá para fixar o total."""
+    mocker.patch("time.sleep")
+    _add_page("dano moral", 2, "cjsg/no_results.html")
+    _add_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+
+    with pytest.raises(ValueError, match="a página 2 veio sem resultados, mas a página 1 informa"):
+        jus.scraper("tjpi").cjsg_download("dano moral", paginas=[2, 3])
+
+    assert _paginas_pedidas() == ["2", "1"]
