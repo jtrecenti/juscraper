@@ -43,37 +43,18 @@ def build_documento_rows(
     """Cada documento da resposta vira uma linha do DataFrame.
 
     A API embute a lista em ``documentos``; o restante do JSON descreve
-    o processo. Achatamos os campos de ``arquivo`` (id, tipo, tamanho) e
-    ``tipo`` (codigo, nome) para facilitar uso direto em pandas.
+    o processo. O achatamento de cada documento fica em
+    :func:`_document_to_row`, o mesmo do caminho do ``cpopg`` em
+    :meth:`PdpjScraper.download_documents`.
     """
     if not json_data:
         return []
     numero_processo = json_data.get("numeroProcesso")
     rows: list[dict[str, Any]] = []
     for doc in json_data.get("documentos", []) or []:
-        if not isinstance(doc, dict):
-            continue
-        arquivo = doc.get("arquivo") or {}
-        tipo = doc.get("tipo") or {}
-        rows.append({
-            "processo": cnj_pesquisado,
-            "numero_processo": numero_processo,
-            "id_documento": doc.get("id"),
-            "id_codex": doc.get("idCodex"),
-            "id_origem": doc.get("idOrigem"),
-            "sequencia": doc.get("sequencia"),
-            "data_juntada": doc.get("dataHoraJuntada"),
-            "nome": doc.get("nome"),
-            "nivel_sigilo": doc.get("nivelSigilo"),
-            "tipo_codigo": tipo.get("codigo"),
-            "tipo_nome": tipo.get("nome"),
-            "arquivo_id": arquivo.get("id"),
-            "arquivo_tipo": arquivo.get("tipo"),
-            "arquivo_tamanho": arquivo.get("tamanho"),
-            "arquivo_tamanho_texto": arquivo.get("tamanhoTexto"),
-            "arquivo_paginas": arquivo.get("quantidadePaginas"),
-            "_raw": doc,
-        })
+        row = _document_to_row(doc, cnj_pesquisado, numero_processo)
+        if row is not None:
+            rows.append(row)
     return rows
 
 
@@ -189,7 +170,13 @@ def _document_to_row(
     process: object,
     process_number: object,
 ) -> dict[str, Any] | None:
-    """Achata um documento PDPJ bem-formado no formato de download."""
+    """Achata um documento PDPJ bem-formado numa linha de DataFrame.
+
+    Fonte unica das colunas de documento: serve a :meth:`PdpjScraper.documentos`
+    (via :func:`build_documento_rows`) e a :meth:`PdpjScraper.download_documents`
+    quando ``base_df`` vem de :meth:`PdpjScraper.cpopg`. Item que nao e objeto
+    devolve ``None`` e o caller o pula.
+    """
     if not isinstance(document, dict):
         return None
     file_data = document.get("arquivo") or {}
@@ -199,6 +186,7 @@ def _document_to_row(
         "numero_processo": process_number,
         "id_documento": document.get("id"),
         "id_codex": document.get("idCodex"),
+        "id_origem": document.get("idOrigem"),
         "sequencia": document.get("sequencia"),
         "data_juntada": document.get("dataHoraJuntada"),
         "nome": document.get("nome"),
@@ -208,5 +196,7 @@ def _document_to_row(
         "arquivo_id": file_data.get("id"),
         "arquivo_tipo": file_data.get("tipo"),
         "arquivo_tamanho": file_data.get("tamanho"),
+        "arquivo_tamanho_texto": file_data.get("tamanhoTexto"),
         "arquivo_paginas": file_data.get("quantidadePaginas"),
+        "_raw": document,
     }
