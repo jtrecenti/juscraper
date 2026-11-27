@@ -10,7 +10,6 @@ def test_cjsg_basico():
         pesquisa="direito penal",
         paginas=1,
     )
-    print(df.head())
     assert not df.empty
     assert "ementa" in df.columns
     assert "processo" in df.columns
