@@ -14,7 +14,8 @@ Tipos disponiveis:
 - :data:`TamanhoPagina` — :data:`InteiroSemBool` positivo. Limites proprios do
   endpoint entram como ``Field(...)`` no campo.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
-  ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
+  ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista;
+  o campo validado e anotado como ``str | None``.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
   ``assuntosTreeSelection.values``, ``secoesTreeSelection.values``,
   ``varasTreeSelection.values``).
@@ -84,10 +85,17 @@ def _coerce_id_filtro_unico(value):
     return _coerce_id_filtro(value)
 
 
+# O tipo base e o de saida (o validador sempre devolve ``str | None``), para
+# quem le o campo validado nao precisar de ``cast``. ``json_schema_input_type``
+# mantem no JSON schema de entrada as formas aceitas.
 IdFiltro = Annotated[
-    int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
+    str | None,
+    BeforeValidator(_coerce_id_filtro, json_schema_input_type=int | str | list[int | str] | None),
 ]
-IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
+IdFiltroUnico = Annotated[
+    str | None,
+    BeforeValidator(_coerce_id_filtro_unico, json_schema_input_type=int | str | None),
+]
 InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
 TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]
 

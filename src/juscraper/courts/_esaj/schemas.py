@@ -30,11 +30,22 @@ class InputCJSGEsajBase(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOn
 
     Tipo de :attr:`~juscraper.courts._esaj.base.EsajSearchScraper.INPUT_CJSG`:
     o schema de cada tribunal herda daqui, e o codigo compartilhado le
-    ``data_julgamento_*``, ``auto_chunk``, ``tipo_decisao`` e ``paginas``
-    sem depender do schema concreto.
+    ``data_julgamento_*``, ``auto_chunk``, ``tipo_decisao``, ``paginas`` e
+    os filtros do formulario sem depender do schema concreto.
+
+    ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
+    ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
+    ``int`` ou ``str`` (single-value, backend ``cdComarca``). Depois da
+    validacao, os quatro sao ``str | None``.
     """
 
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
+    ementa: str | None = None
+    numero_recurso: str | None = None
+    classe: IdFiltro = None
+    assunto: IdFiltro = None
+    comarca: IdFiltroUnico = None
+    orgao_julgador: IdFiltro = None
 
 
 class InputCJSGEsajPuro(InputCJSGEsajBase, DataPublicacaoMixin):
@@ -43,19 +54,11 @@ class InputCJSGEsajPuro(InputCJSGEsajBase, DataPublicacaoMixin):
     Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword
     arguments raise ``ValidationError`` instead of being silently ignored.
     Herda tambem os filtros de data de julgamento e de publicacao via
-    :class:`DataJulgamentoMixin` / :class:`DataPublicacaoMixin`.
-
-    ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
-    ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
-    ``int`` ou ``str`` (single-value, backend ``cdComarca``).
+    :class:`DataJulgamentoMixin` / :class:`DataPublicacaoMixin`, e os
+    filtros do formulario (``classe``, ``comarca`` etc.) via
+    :class:`InputCJSGEsajBase`.
     """
 
-    ementa: str | None = None
-    numero_recurso: str | None = None
-    classe: IdFiltro = None
-    assunto: IdFiltro = None
-    comarca: IdFiltroUnico = None
-    orgao_julgador: IdFiltro = None
     origem: Literal["T", "R"] = "T"
 
 

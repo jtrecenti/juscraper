@@ -24,6 +24,7 @@ from ...core.failures import (
 )
 from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
     STATUS_REPETIVEIS,
@@ -677,7 +678,7 @@ class DatajudScraper(HTTPScraper):
         # ``normalize_paginas`` acima garante que ``int`` ja virou ``range``;
         # o cast registra essa invariante sem repetir a normalizacao. Listas
         # continuam virando o intervalo contiguo exigido pelo cursor forwards-only.
-        paginas_datajud = cast(list[int] | range | None, inp.paginas)
+        paginas_datajud = cast(PaginasNormalizadas, inp.paginas)
         if isinstance(paginas_datajud, list):
             paginas_datajud = range(min(paginas_datajud), max(paginas_datajud) + 1)
 
