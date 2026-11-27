@@ -302,7 +302,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>jurisdicoes</td>
 <td><code>str</code></td>
-<td>Jurisdicao, com os valores do portal: <code>"TJ"</code> (orgaos do Tribunal de Justica), <code>"TR"</code> (Turmas Recursais e Turma de Uniformizacao) ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"TJ"</code> e <code>"TR"</code> so trazem decisoes de 2o grau: com <code>grau="1"</code> a busca volta sem resultados (o portal esconde <code>"TR"</code> quando o grau e <code>"1"</code>).</td>
+<td>Jurisdicao, com os valores do portal: <code>"TJ"</code> (orgaos do Tribunal de Justica), <code>"TR"</code> (Turmas Recursais e Turma de Uniformizacao) ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"TJ"</code> e <code>"TR"</code> so trazem decisoes de 2o grau: com <code>grau="1"</code>, em que o portal nao devolve resultados, levantam <code>ValidationError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
