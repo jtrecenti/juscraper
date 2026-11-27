@@ -390,11 +390,13 @@ class FalcaoScraper(HTTPScraper):
         # O teto é conhecido antes da consulta: a página além dele sai do pedido,
         # com aviso, antes de qualquer requisição; a além do total real, depois de lê-lo.
         alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
-        # A primeira pagina pendente serve tambem para ler o total; com
+        # A menor pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
         primeira = self._primeira_pendente(inp, alcancaveis, gravadas, total_anterior)
         if primeira is None:
             if total_anterior is not None:
+                # Nada a requisitar: as pedidas além do total registrado só vão para o log.
+                self._paginas_ate(alcancaveis, total_anterior, inp.tamanho_pagina)
                 self._avisar_teto(inp, total_anterior)
             return
         primeiro_json = self._buscar_pagina(inp, primeira)
@@ -431,16 +433,19 @@ class FalcaoScraper(HTTPScraper):
         self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, gravadas: set[int],
         total_anterior: int | None,
     ) -> int | None:
-        """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
+        """Menor página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
+        É a menor, como em :func:`baixar_paginas_pedidas`: se ela passa do
+        total, as demais também passam, e nenhuma outra requisição é gasta.
         ``alcancaveis`` são as páginas pedidas dentro do teto (``None``, todas):
         o backend rejeita as demais. Na retomada, vale o total da sessão
         anterior: página além dele não gasta a cota, e o checkpoint completo
         não requisita nada.
         """
         ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, inp.tamanho_pagina)
-        candidatas = range(1, ultima + 1) if alcancaveis is None else alcancaveis
-        return next((p for p in candidatas if p <= ultima and p not in gravadas), None)
+        if alcancaveis is None:
+            return next((p for p in range(1, ultima + 1) if p not in gravadas), None)
+        return min((p for p in alcancaveis if p <= ultima and p not in gravadas), default=None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         return build_pesquisa_params(

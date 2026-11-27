@@ -424,7 +424,7 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 
 ## Seleção de páginas (`paginas`)
 
-O contrato de `paginas` explícito vale para todo raspador: a página repetida é baixada uma vez só, na posição em que aparece primeiro; a página além do total não é pedida e sai num aviso só no logger do tribunal (`juscraper.<sigla>`); o `range` não é percorrido (`paginas=range(1, 10**7)` custa o mesmo que `range(1, 8)`); e o passo do `range` é respeitado. Ele mora nos helpers de `src/juscraper/utils/pagination.py`, e o raspador lê a seleção só por eles:
+O contrato de `paginas` explícito: a página repetida é baixada uma vez só, na posição em que aparece primeiro, e o passo do `range` é respeitado. Quando o portal informa o total, a página além dele também não é pedida e sai num aviso só no logger do tribunal (`juscraper.<sigla>`), e o `range` não é percorrido (`paginas=range(1, 10**7)` custa o mesmo que `range(1, 8)`). Sem o total no pedido explícito (TJAP, TJPR e TJRR) ou com cursor que só avança (PDPJ e DataJud), a seleção é percorrida até a maior página pedida, sem esse aviso. Ele mora nos helpers de `src/juscraper/utils/pagination.py`, e o raspador lê a seleção só por eles:
 
 - `baixar_paginas_pedidas(paginas, buscar, contar_paginas, tribunal=...)`: o portal informa o total em toda página. Pede a menor página, lê nela o total e baixa as demais. É o caso comum (TJRN, TJSC, TJDFT, TJMT, TJRS...); com teto de resultados, combinar com `contador_com_teto` (TJBA, TJPB, TJRO, TJMT).
 - `paginas_no_intervalo(paginas, n_pags, tribunal=...)`: o total já é conhecido, ou o laço é próprio (coleta parcial, checkpoint, primeira página fixa). Devolve as páginas a baixar, na ordem pedida.

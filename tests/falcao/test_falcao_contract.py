@@ -322,15 +322,15 @@ def test_mais_de_uma_pagina_na_ordem_padrao_avisa_que_ela_varia(falcao, tmp_path
 
 @responses.activate
 def test_aviso_de_ordem_convertido_em_erro_preserva_so_as_paginas_pedidas(falcao, temporarios):
-    """A página 5, requisitada só para ler o total, fica além dele e não sobra no resultado parcial."""
-    _register("acordaos", total=20, pagina=5)
+    """A página 1, requisitada para ler o total, sobra no resultado parcial; a 9, além dele, nem é requisitada."""
+    _register("acordaos", total=20, pagina=1)
     with warnings.catch_warnings():
         warnings.simplefilter("error", UserWarning)
         with pytest.raises(UserWarning, match=AVISO_DE_ORDEM):
-            falcao.listar_decisoes("dano moral", paginas=[5, 1, 2])
+            falcao.listar_decisoes("dano moral", paginas=[9, 2, 1])
 
-    assert _paginas_pedidas() == [5]
-    assert not list(temporarios.rglob("*.json"))
+    assert _paginas_pedidas() == [1]
+    assert [a.name for a in temporarios.rglob("*.json")] == ["acordaos_0001.json"]
 
 
 @responses.activate
@@ -393,6 +393,20 @@ def test_pagina_repetida_uma_vez_e_fora_do_total_num_aviso_so(falcao, tmp_path, 
 
 @ordem_padrao_avisa
 @responses.activate
+def test_pagina_alem_do_total_no_inicio_da_lista_nao_e_requisitada(falcao, caplog):
+    """A menor página pedida sai primeiro, para ler o total: a 9, além dele, não gasta requisição."""
+    for pagina in (2, 3):
+        _register("acordaos", total=40, pagina=pagina)
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.falcao"):
+        falcao.listar_decisoes("dano moral", paginas=[9, 3, 2])
+
+    assert _paginas_pedidas() == [2, 3]
+    assert "Falcao: página 9 fora do intervalo 1-4" in caplog.text
+
+
+@ordem_padrao_avisa
+@responses.activate
 def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
     for pagina in (2, 3):
         _register("acordaos", total=100, pagina=pagina)
@@ -410,7 +424,7 @@ def test_primeira_pagina_fora_do_teto_nao_impede_paginas_validas(falcao, tamanho
     df = falcao.listar_decisoes(
         "dano moral", paginas=[ultima + 1, ultima, 1], tamanho_pagina=tamanho_pagina,
     )
-    assert _paginas_pedidas() == [ultima, 1]
+    assert _paginas_pedidas() == [1, ultima]
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 

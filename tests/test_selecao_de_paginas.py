@@ -12,7 +12,8 @@ respeitado) mora nos helpers: :func:`paginas_no_intervalo`,
 O teste reprova, fora de ``utils/pagination.py`` e da normalização
 (``utils/params.py``, ``schemas/mixins.py``), o código que lê a seleção à mão:
 ``.start``/``.stop``/``.step``, índice, ``isinstance(..., range)``,
-``max``/``min``/``list``/``sorted``/``set``/``tuple`` e laço direto sobre ela.
+``max``/``min``/``list``/``sorted``/``set``/``tuple``, laço direto sobre ela ou
+por ``tqdm``/``enumerate``/``iter``/``reversed`` e ``[*paginas]``.
 A seleção é reconhecida pelo nome: ``paginas``, ``paginas_norm`` e o atributo
 ``paginas_normalizadas``. Variável ``paginas`` com outro conteúdo (páginas já
 baixadas) entra em :data:`EXCECOES`, com o motivo.
@@ -29,7 +30,8 @@ RAIZ_PACOTE = Path(__file__).resolve().parents[1] / "src" / "juscraper"
 ARQUIVOS_LIVRES = {"utils/pagination.py", "utils/params.py", "schemas/mixins.py"}
 
 NOMES_DA_SELECAO = {"paginas", "paginas_norm", "paginas_normalizadas"}
-CHAMADAS_PROIBIDAS = {"max", "min", "list", "sorted", "set", "tuple"}
+# Também os envoltórios de laço (``for p in tqdm(paginas)``), que percorrem a seleção como veio.
+CHAMADAS_PROIBIDAS = {"max", "min", "list", "sorted", "set", "tuple", "tqdm", "enumerate", "iter", "reversed"}
 
 # (caminho relativo a src/juscraper, nome qualificado da função) -> motivo.
 EXCECOES = {
@@ -41,6 +43,7 @@ EXCECOES = {
     # ``paginas`` com as respostas já baixadas, não a seleção pedida.
     ("courts/_esaj/acordao.py", "EsajAcordaoScraper.baixar_acordao"): "páginas do processo já abertas",
     ("courts/stm/parse.py", "cjsg_parse_manager"): "HTML das páginas baixadas",
+    ("courts/tjsp/cposg_download.py", "_incluir_movimentacoes"): "páginas de movimentações do processo",
     ("courts/trf3/parse.py", "_itens"): "respostas JSON baixadas",
     ("utils/divisao_por_data.py", "_sem_repetidos"): "páginas baixadas de cada janela de datas",
 }
@@ -60,8 +63,8 @@ def _leitura_a_mao(no: ast.AST) -> tuple[int, str] | None:
     """``(linha, leitura)`` da leitura da seleção feita em ``no``, ou ``None``."""
     if isinstance(no, ast.Attribute) and no.attr in {"start", "stop", "step"} and _e_selecao(no.value):
         return no.lineno, f".{no.attr}"
-    if isinstance(no, ast.Subscript) and _e_selecao(no.value):
-        return no.lineno, "índice"
+    if isinstance(no, (ast.Subscript, ast.Starred)) and _e_selecao(no.value):
+        return no.lineno, "índice" if isinstance(no, ast.Subscript) else "desempacotamento"
     if isinstance(no, ast.Call) and isinstance(no.func, ast.Name) and no.args and _e_selecao(no.args[0]):
         if no.func.id in CHAMADAS_PROIBIDAS:
             return no.lineno, f"{no.func.id}()"
@@ -131,8 +134,14 @@ def test_excecoes_ainda_existem():
         "def f(paginas, baixar):\n    return [baixar(p) for p in list(paginas)]\n",
         "def f(paginas_norm):\n    return sorted(paginas_norm)\n",
         "def f(paginas):\n    return isinstance(paginas, (list, range))\n",
+        "def f(paginas, baixar):\n    for p in tqdm(paginas, desc='x'):\n        baixar(p)\n",
+        "def f(paginas):\n    return [i for i, p in enumerate(paginas)]\n",
+        "def f(paginas):\n    return [*paginas]\n",
     ],
-    ids=["start-stop-step", "isinstance-range-e-max", "min-do-atributo", "laco", "list", "sorted", "tupla-de-tipos"],
+    ids=[
+        "start-stop-step", "isinstance-range-e-max", "min-do-atributo", "laco", "list", "sorted",
+        "tupla-de-tipos", "tqdm", "enumerate", "desempacotamento",
+    ],
 )
 def test_leitura_a_mao_e_reprovada(codigo):
     assert leituras_a_mao(codigo)
