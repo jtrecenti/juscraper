@@ -10,7 +10,6 @@ The TJPE website is a stateful JSF/RichFaces application.  The search flow is:
 """
 
 import logging
-import math
 import re
 import time
 
@@ -19,7 +18,7 @@ from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade
+from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade, resolve_total_pages
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +40,9 @@ _CURRENT_DATE_HINT = "04/2026"
 DEFAULT_SUBMIT_ID = "formPesquisaJurisprudencia:j_id101"
 
 # Cascata da contagem: o cabeçalho "Documentos encontrados: N" e, sem ele
-# (``fallback_html``), o HTML da página. O marcador de busca vazia só vale
-# quando nenhuma contagem aparece: uma ementa pode citar a frase.
+# (``fallback_html``), o HTML da página. O aviso de busca vazia só vale
+# quando nenhuma contagem aparece, e só no contêiner dele: uma ementa pode
+# citar a frase.
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
     "div.resultado-header table.table-header-resultado",
 )
@@ -50,10 +50,11 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE),
     re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
 )
-_ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
-# Na contagem, o aviso só vale nas células da tabela de escolha do tipo, onde
-# o portal o põe no lugar de "N documentos encontrados".
-_AVISO_VAZIO = AvisoVazio(("div.escolha-resultado-table td",), _ZERO_MARKERS)
+# O portal põe o aviso numa célula da tabela de escolha do tipo, no lugar do
+# link "N documentos encontrados" (samples ``no_results*.html``). A outra
+# célula da linha só traz o rótulo do tipo.
+_TABELA_DA_ESCOLHA = "div.escolha-resultado-table"
+_AVISO_VAZIO = AvisoVazio((f"{_TABELA_DA_ESCOLHA} td",), ("nenhum documento encontrado",))
 
 
 def extract_viewstate(html: str) -> str:
@@ -66,16 +67,24 @@ def extract_viewstate(html: str) -> str:
     return match.group(1)
 
 
-def extract_total_docs(html: str) -> int:
-    """Extract total document count using cascading selectors + regexes (refs #87)."""
-    n = extract_count_with_cascade(
+def extract_total_docs(html: str) -> int | None:
+    """Lê o total de documentos no cabeçalho "Documentos encontrados: N" (refs #87).
+
+    Na escolha do tipo, lê "N documentos encontrados". Sem contagem, o aviso
+    "Nenhum documento encontrado" na tabela de escolha dá ``0``.
+
+    Returns:
+        O total; ``None`` quando a página não traz a contagem nem o aviso de
+            busca vazia (markup novo, resposta parcial). O download levanta
+            nesse caso, por :func:`resolve_total_pages`.
+    """
+    return extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
         aviso_vazio=_AVISO_VAZIO,
         fallback_html=True,
     )
-    return n if n is not None else 0
 
 
 def is_results_page(html: str) -> bool:
@@ -103,11 +112,11 @@ def is_sem_resultados_page(html: str) -> bool:
     """Diz se o portal respondeu que nenhum tipo de decisão tem documento.
 
     É a página de escolha em que cada tipo pedido traz ``Nenhum documento
-    encontrado`` no lugar de ``N documentos encontrados``.
+    encontrado`` no lugar de ``N documentos encontrados``. O aviso só conta
+    na tabela de escolha: na página de resultados, uma ementa pode citar a
+    frase.
     """
-    html_lower = html.lower()
-    sem_documento = any(marcador in html_lower for marcador in _ZERO_MARKERS)
-    return sem_documento and "documentos encontrados" not in html_lower
+    return "documentos encontrados" not in html.lower() and _AVISO_VAZIO.presente(html)
 
 
 def _link_corresponde_tipo(link: Tag, tipo: str) -> bool:
@@ -148,11 +157,11 @@ def tipo_zerado_na_escolha(html: str, tipo: str) -> bool:
     A linha fora do formato conhecido não conta como zerada.
     """
     soup = BeautifulSoup(html, "html.parser")
-    for texto in soup.find_all(string=lambda t: any(m in t.lower() for m in _ZERO_MARKERS)):
-        linha = texto.find_parent("tr")
-        if linha is not None and _rotulo_da_linha(linha) == tipo:
-            return True
-    return False
+    # Com a linha, o seletor do aviso casa as células dela (o ``div`` é ancestral).
+    return any(
+        _rotulo_da_linha(linha) == tipo and _AVISO_VAZIO.presente(linha)
+        for linha in soup.select(f"{_TABELA_DA_ESCOLHA} tr")
+    )
 
 
 def extract_pagination_ids(html: str) -> tuple[str, str]:
@@ -354,6 +363,11 @@ def cjsg_download(
             ``core.http.HTTPScraper``).
 
     Returns a list of HTML strings, one per page.
+
+    Raises:
+        ValueError: Quando a busca devolve uma página fora dos formatos
+            conhecidos, ou uma página de resultados sem a contagem
+            "Documentos encontrados: N".
     """
     tipo_label = {
         "acordaos": "Acórdãos",
@@ -407,7 +421,7 @@ def cjsg_download(
         logger.info("TJPE: no documents found for '%s'", pesquisa)
         return []
 
-    total_pages = math.ceil(total_docs / RESULTS_PER_PAGE)
+    total_pages = resolve_total_pages(total_docs, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJPE cjsg")
     logger.info("TJPE: %d documents found (%d pages)", total_docs, total_pages)
 
     form_id, scroller_id = extract_pagination_ids(results_html)

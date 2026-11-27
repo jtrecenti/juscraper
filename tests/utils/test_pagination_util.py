@@ -454,3 +454,21 @@ def test_descrever_paginas_resume_a_sequencia_sem_saltos(paginas, texto):
 def test_descrever_paginas_vale_como_paginas(paginas):
     # O texto da mensagem é o que o usuário cola em ``paginas=``.
     assert list(eval(descrever_paginas(paginas))) == paginas
+
+
+def test_aviso_vazio_presente_so_nos_seletores():
+    """``presente`` acha o marcador só nos elementos dos seletores, com HTML ou ``Tag``."""
+    aviso = AvisoVazio(("div.tabela td.aviso",), ("Nenhum documento encontrado",))
+    html = """
+    <div class="tabela"><table>
+      <tr id="vazia"><td>A</td><td class="aviso">Nenhum documento encontrado</td></tr>
+      <tr id="cheia"><td>B</td><td class="aviso"><a>3 documentos encontrados</a></td></tr>
+    </table></div>
+    <p>nenhum documento encontrado nos autos</p>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    assert aviso.presente(html) is True
+    assert aviso.presente(soup.find(id="vazia")) is True
+    assert aviso.presente(soup.find(id="cheia")) is False
+    assert aviso.presente("<p>nenhum documento encontrado nos autos</p>") is False

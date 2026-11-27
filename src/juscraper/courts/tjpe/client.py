@@ -295,7 +295,8 @@ class TJPEScraper(HTTPScraper):
                 fora dos formatos aceitos, ``tipo_decisao`` fora do enum).
             ValueError: Quando a busca devolve uma pagina fora dos formatos
                 conhecidos (nem resultados, nem escolha do tipo, nem "Nenhum
-                documento encontrado").
+                documento encontrado"), ou uma pagina de resultados sem o
+                cabecalho "Documentos encontrados: N".
 
         Avisos:
             ``UserWarning``: Quando o portal responde "Nenhum documento
