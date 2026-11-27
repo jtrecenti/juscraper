@@ -50,7 +50,9 @@ class AvisoVazio(NamedTuple):
     Ementas e sentenças citam as frases do aviso ("nenhum documento
     encontrado nos autos"), e por isso o texto da página inteira não serve:
     o marcador é procurado só nos elementos que o portal usa para o aviso
-    (``div.alert-danger`` no STM, por exemplo).
+    (``div.alert-danger`` no STM, por exemplo). Fora da contagem, o caller
+    usa :meth:`presente` para checar o aviso, em vez de procurar os
+    marcadores no HTML.
 
     Attributes:
         seletores: Seletores CSS do contêiner do aviso.
@@ -61,16 +63,15 @@ class AvisoVazio(NamedTuple):
     seletores: tuple[str, ...]
     marcadores: tuple[str, ...]
 
-    def presente(self, soup: Tag) -> bool:
+    def presente(self, html: str | Tag) -> bool:
         """Diz se algum marcador aparece no texto de algum elemento dos seletores.
 
-        É a regra de onde o aviso vale, a mesma da contagem: nunca o texto da
-        página inteira.
-
         Args:
-            soup: Página parseada, ou o trecho (``Tag``) onde o aviso fica;
-                os seletores casam os descendentes dele.
+            html: HTML bruto ou trecho já parseado. Com uma ``Tag``, os
+                seletores casam os descendentes dela (os combinadores podem
+                subir aos ancestrais, como em ``select``).
         """
+        soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
         marcadores = [marcador.lower() for marcador in self.marcadores]
         textos = (
             elemento.get_text(" ", strip=True).lower()
