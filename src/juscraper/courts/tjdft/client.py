@@ -9,12 +9,16 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.schemas import BuscarEm
 from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJDFT
+
+#: ``buscar_em`` mais o ``bool`` de ``inteiro_teor`` (convertido, com aviso) e ``None`` (default do schema).
+BuscarEmAceito = BuscarEm | bool | None
 
 
 class TJDFTScraper(HTTPScraper):
@@ -43,7 +47,7 @@ class TJDFTScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         sinonimos: bool = True,
         espelho: bool = True,
-        buscar_em: str | None = None,
+        buscar_em: BuscarEmAceito = None,
         tamanho_pagina: int | None = None,
         **kwargs,
     ) -> list:
@@ -53,14 +57,16 @@ class TJDFTScraper(HTTPScraper):
         a lista completa.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None``
                 busca todas.
-            sinonimos (bool): Inclui sinônimos do termo na busca.
-            espelho (bool): Pesquisa no espelho do acórdão.
-            buscar_em (str | None): ``"ementa"`` (default; ``None`` também)
-                ou ``"inteiro_teor"``; ver :meth:`cjsg`.
-            tamanho_pagina (int | None): Resultados por página, de 1 a 40
+            sinonimos: Inclui sinônimos do termo na busca.
+            espelho: Pesquisa no espelho do acórdão.
+            buscar_em: ``"ementa"`` (default; ``None`` também)
+                ou ``"inteiro_teor"``; ``True``/``False``, valores do alias
+                deprecado ``inteiro_teor`` passado por posição, são
+                convertidos com aviso. Ver :meth:`cjsg`.
+            tamanho_pagina: Resultados por página, de 1 a 40
                 (acima disso a API responde HTTP 400). ``None`` usa 10.
 
         Returns:
@@ -85,7 +91,7 @@ class TJDFTScraper(HTTPScraper):
         )
         brutos: list = cjsg_download(
             query=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sinonimos=inp.sinonimos,
             espelho=inp.espelho,
@@ -106,7 +112,7 @@ class TJDFTScraper(HTTPScraper):
         da API: quem as converte é :meth:`cjsg`.
 
         Args:
-            resultados_brutos (list): Registros devolvidos por
+            resultados_brutos: Registros devolvidos por
                 :meth:`cjsg_download`.
 
         Returns:
@@ -127,8 +133,8 @@ class TJDFTScraper(HTTPScraper):
         data viram entradas de ``termosAcessorios`` no JSON enviado à API.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None``
                 busca todas. ``paginas=3`` baixa as páginas 1 a 3.
             **kwargs: Filtros aceitos por :class:`InputCJSGTJDFT`:
 
@@ -136,7 +142,7 @@ class TJDFTScraper(HTTPScraper):
                   Default ``True``. Backend: ``sinonimos``.
                 * ``espelho`` (bool): Pesquisa no espelho do acórdão.
                   Default ``True``. Backend: ``espelho``.
-                * ``buscar_em`` (str): Onde procurar ``pesquisa``.
+                * ``buscar_em`` (Literal["ementa", "inteiro_teor"]): Onde procurar ``pesquisa``.
                   ``"ementa"`` (default) busca no espelho do acórdão, que traz
                   a ementa, quando ``espelho=True``. ``"inteiro_teor"`` busca
                   também no inteiro teor, o que amplia o resultado. Outro

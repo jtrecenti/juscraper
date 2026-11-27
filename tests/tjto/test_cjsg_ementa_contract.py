@@ -9,7 +9,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import EMENTA_URL
-from tests._helpers import load_sample
+from tests._helpers import load_sample, url_enviada
 
 _UUID_1 = "f4b3440350bb6c8e6bdd708d78c43e85"
 _UUID_2 = "a9a493e88b4575de7c18f6411c49348b"
@@ -37,7 +37,7 @@ def test_cjsg_ementa_returns_doc_dict():
     assert doc  # at least one populated field
     # The endpoint URL was hit once with the right id param.
     assert len(responses.calls) == 1
-    assert responses.calls[0].request.url.endswith(f"id={_UUID_1}")
+    assert url_enviada(responses.calls[0].request).endswith(f"id={_UUID_1}")
 
 
 @responses.activate

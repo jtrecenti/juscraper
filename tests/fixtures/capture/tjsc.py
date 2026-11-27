@@ -8,6 +8,7 @@ Saves raw HTML responses (eproc) under ``tests/tjsc/samples/cjsg/``.
 TJSC is dual-URL: page 1 hits ``listar_resultados``; page 2+ hit
 ``ajax_paginar_resultado``. The script exercises both.
 """
+import logging
 from typing import Any
 
 import requests
@@ -15,6 +16,8 @@ import requests
 from juscraper.courts.tjsc.download import build_cjsg_form_body, cjsg_url_for_page
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _capture(
@@ -29,7 +32,7 @@ def _capture(
     # eproc serves latin-1 pages — persist raw bytes so tests can load via
     # ``load_sample_bytes`` and the parser decodes with its own encoding rule.
     dump(dest / filename, response.content)
-    print(f"[tjsc] wrote {filename} (page={pagina_1based}, url={url.split('@')[-1]})")
+    logger.info("[tjsc] wrote %s (page=%s, url=%s)", filename, pagina_1based, url.split('@')[-1])
 
 
 def main() -> None:
@@ -69,4 +72,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

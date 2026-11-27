@@ -2,10 +2,14 @@
 Integration tests for TJSP CJSG functionality.
 These tests actually hit the TJSP website and may be slow.
 """
+import re
+
 import pandas as pd
 import pytest
 
 import juscraper
+
+NUMERO_RECURSO = '1507541-25.2025.8.26.0425'
 
 
 @pytest.mark.integration
@@ -37,6 +41,15 @@ class TestCJSGIntegration:
         )
 
         assert isinstance(results, pd.DataFrame)
+
+    @pytest.mark.parametrize('numero', [NUMERO_RECURSO, re.sub(r'\D', '', NUMERO_RECURSO)])
+    def test_cjsg_numero_recurso(self, numero):
+        """``numero_recurso`` (``dados.nuProcOrigem``) traz só o recurso pedido, com ou sem máscara."""
+        results = self.scraper.cjsg(numero_recurso=numero, paginas=1)
+
+        # Embargos posteriores no mesmo recurso podem somar linhas.
+        assert len(results) > 0
+        assert set(results['processo']) == {NUMERO_RECURSO}
 
     def test_cjsg_pagination(self):
         """Test CJSG pagination handling."""

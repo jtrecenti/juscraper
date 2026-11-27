@@ -10,10 +10,10 @@ import requests
 
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import HTTPScraper, RequestPolicy
-from juscraper.core.waf import USER_AGENT, eh_desafio_waf
+from juscraper.core.waf import USER_AGENT
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
+from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager, eh_bloqueio_waf
 from .parse import cjsg_parse_manager
 from .schemas import InputCJPGTJTO, InputCJSGTJTO
 
@@ -57,8 +57,7 @@ class TJTOScraper(HTTPScraper):
         residencial). Sem esta checagem, o 202 vazio sairia como busca sem
         resultados.
         """
-        # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
-        if resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
+        if eh_bloqueio_waf(resp):
             raise BotChallengeBlockedError(
                 self.tribunal_name, resp.url, bot_manager="AWS WAF",
                 mensagem=(
@@ -92,7 +91,7 @@ class TJTOScraper(HTTPScraper):
 
         return cjsg_download_manager(
             termo=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             type_minuta=type_minuta,
@@ -120,7 +119,7 @@ class TJTOScraper(HTTPScraper):
     ) -> list:
         """Download raw HTML pages from the TJTO second-instance jurisprudence search.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista de paginas HTML cruas.
@@ -167,22 +166,22 @@ class TJTOScraper(HTTPScraper):
         """Busca jurisprudencia de 2o grau no TJTO (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. A menor pagina pedida sai primeiro, e o
                 total dela descarta as paginas alem do fim da busca, sem pedi-las
                 ao portal, com aviso no logger ``juscraper.tjto``.
-            tipo_documento (str): ``"acordaos"`` (default), ``"decisoes"`` ou
+            tipo_documento: ``"acordaos"`` (default), ``"decisoes"`` ou
                 ``"sentencas"``.
-            ordenacao (str): ``"DESC"`` (mais recentes, default), ``"ASC"``
+            ordenacao: ``"DESC"`` (mais recentes, default), ``"ASC"``
                 (mais antigos), ``"RELEV"`` (mais relevantes).
-            numero_processo (str): Filtro por numero CNJ do processo.
-            data_julgamento_inicio (str | date | datetime | None): Data inicial.
+            numero_processo: Filtro por numero CNJ do processo.
+            data_julgamento_inicio: Data inicial.
                 Aceita ``DD/MM/YYYY``, ``DD-MM-YYYY``, ``YYYY-MM-DD``,
                 ``YYYY/MM/DD``, ``date`` ou ``datetime``.
-            data_julgamento_fim (str | date | datetime | None): Data final
+            data_julgamento_fim: Data final
                 (mesmos formatos).
-            soementa (bool): Se ``True``, restringe busca ao texto da ementa.
+            soementa: Se ``True``, restringe busca ao texto da ementa.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJTO`.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
@@ -240,7 +239,7 @@ class TJTOScraper(HTTPScraper):
         """Download raw HTML pages from the TJTO first-instance jurisprudence search.
 
         Shortcut for the download with ``instancia='1'``.
-        Aceita os mesmos filtros de :meth:`cjpg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjpg`; veja lá a lista completa.
 
         Returns:
             Lista de paginas HTML cruas.

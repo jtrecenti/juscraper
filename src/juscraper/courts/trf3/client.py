@@ -31,6 +31,7 @@ import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
+from ...core.base import mensagem_de_kwargs_inesperados, recusar_kwargs_sem_efeito
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
@@ -237,6 +238,10 @@ class TRF3Scraper(HTTPScraper):
     ) -> list[dict[str, Any] | None]:
         """Os brutos de ``cpopg_download``/``cposg_download``, com as falhas num aviso."""
         schema, base_url = self._alvo(endpoint)
+        recusar_kwargs_sem_efeito(
+            kwargs, schema, ("download_pecas", "diretorio"), f"{type(self).__name__}.{metodo}",
+            f"para baixar as peças, use {endpoint}(..., download_pecas=True)",
+        )
         cnjs = self._coerce_id_cnj(schema, metodo, id_cnj, **kwargs)
         consultas = self._baixar(cnjs, base_url, endpoint)
         self._avisar(cnjs, [c.motivo for c in consultas], metodo)
@@ -261,10 +266,9 @@ class TRF3Scraper(HTTPScraper):
         cnjs = self._coerce_id_cnj(
             schema, endpoint, id_cnj, download_pecas=download_pecas, diretorio=diretorio, **kwargs
         )
-        pecas_dir: str | None = None
-        if download_pecas:
-            pecas_dir = diretorio if diretorio is not None else self.download_path
-            Path(pecas_dir).mkdir(parents=True, exist_ok=True)
+        pecas_dir = self._pasta_das_pecas(
+            f"{type(self).__name__}.{endpoint}", diretorio=diretorio, download_pecas=download_pecas
+        )
         consultas = self._baixar(cnjs, base_url, endpoint, pecas_dir)
         rows = self._linhas([c.bruto for c in consultas], cnjs, [c.motivo for c in consultas])
         self._avisar(cnjs, [row[COLUNA_MOTIVO_FALHA] for row in rows], endpoint)
@@ -388,9 +392,9 @@ class TRF3Scraper(HTTPScraper):
     def cpopg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict[str, Any] | None]:
         """Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.
 
-        Aceita os mesmos argumentos de :meth:`cpopg`. ``download_pecas`` e
-        ``diretorio`` passam pela validação e são ignorados, porque este
-        método não baixa peças. Devolve uma lista alinhada à entrada: um
+        Aceita os argumentos de :meth:`cpopg`, mas não baixa peças:
+        ``download_pecas=True`` ou um ``diretorio`` levantam ``TypeError``.
+        Devolve uma lista alinhada à entrada: um
         dicionário por processo (chaves ``busca``, ``dados`` e uma por recurso
         paginado) ou ``None`` para o CNJ que a consulta pública não devolveu
         ou cuja consulta falhou. As falhas entram num único ``UserWarning`` ao
@@ -434,8 +438,8 @@ class TRF3Scraper(HTTPScraper):
         """
         brutos = resolve_deprecated_alias(kwargs, "htmls", "brutos", brutos)
         if kwargs:
-            names = ", ".join(repr(k) for k in kwargs)
-            raise TypeError(f"{type(self).__name__}.cpopg_parse got unexpected keyword argument(s): {names}")
+            nomes = [repr(k) for k in kwargs]
+            raise TypeError(mensagem_de_kwargs_inesperados(f"{type(self).__name__}.cpopg_parse", nomes))
         if brutos is None or id_cnj_list is None:
             raise TypeError(f"{type(self).__name__}.cpopg_parse exige brutos e id_cnj_list")
         return self._parse(brutos, id_cnj_list, "cpopg_parse")
@@ -461,7 +465,8 @@ class TRF3Scraper(HTTPScraper):
                 no processo, logo depois dos dados do processo. Só por nome.
                 Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
-                Quando omitido, usa ``download_path`` do construtor.
+                Quando omitido, usa ``download_path`` do construtor. Só tem
+                efeito com ``download_pecas=True``.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
                 levanta ``TypeError``.
 
@@ -506,6 +511,10 @@ class TRF3Scraper(HTTPScraper):
             ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
                 instalado.
 
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
+
         See Also:
             :class:`InputCpopgTRF3`: schema dos argumentos aceitos.
         """
@@ -515,9 +524,9 @@ class TRF3Scraper(HTTPScraper):
         """Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.
 
         Mesmo retorno e mesmos avisos de :meth:`cpopg_download`, consultando a
-        aplicação de 2º grau. Os argumentos são os de :meth:`cposg`;
-        ``download_pecas`` e ``diretorio`` passam pela validação e são
-        ignorados, porque este método não baixa peças.
+        aplicação de 2º grau. Os argumentos são os de :meth:`cposg`, mas não
+        baixa peças: ``download_pecas=True`` ou um ``diretorio`` levantam
+        ``TypeError``.
         """
         return self._download("cposg", "cposg_download", id_cnj, **kwargs)
 
@@ -552,7 +561,8 @@ class TRF3Scraper(HTTPScraper):
                 no processo, logo depois dos dados do processo. Só por nome.
                 Default ``False``.
             diretorio: Onde gravar as peças, em ``<diretorio>/<cnj>/<id>.pdf``.
-                Quando omitido, usa ``download_path`` do construtor.
+                Quando omitido, usa ``download_path`` do construtor. Só tem
+                efeito com ``download_pecas=True``.
             **kwargs: Nenhum outro argumento é aceito; nome desconhecido
                 levanta ``TypeError``.
 
@@ -566,6 +576,10 @@ class TRF3Scraper(HTTPScraper):
             TypeError: Kwarg desconhecido.
             ImportError: O extra ``juscraper[tls]`` (``curl_cffi``) não está
                 instalado.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
 
         See Also:
             :class:`InputCposgTRF3`: schema dos argumentos aceitos.
@@ -593,27 +607,27 @@ class TRF3Scraper(HTTPScraper):
         datacenter (medido em 15/11/2026).
 
         Args:
-            pesquisa (str | None): Texto da pesquisa livre, com os operadores do
+            pesquisa: Texto da pesquisa livre, com os operadores do
                 portal (operador padrão ``e``). Pode ficar vazio quando outro
                 critério for informado.
-            paginas (int | list | range | None): Páginas 1-based; ``None`` baixa
+            paginas: Páginas 1-based; ``None`` baixa
                 todas. Páginas além do total são ignoradas sem requisição.
             **kwargs: Filtros aceitos por :class:`InputCJSGTRF3`:
 
-                * ``base`` (str): ``"acordaos"`` (default; acórdãos do TRF3),
+                * ``base`` (BaseCJSGTRF3): ``"acordaos"`` (default; acórdãos do TRF3),
                   ``"turmas_recursais"`` (acórdãos das Turmas Recursais dos
                   JEFs), ``"monocraticas"`` (decisões monocráticas do TRF3) ou
                   ``"monocraticas_turmas_recursais"`` (decisões monocráticas
                   das Turmas Recursais).
-                * ``numero_processo`` (str): Número do processo, com ou sem
+                * ``numero_processo`` (str | None): Número do processo, com ou sem
                   máscara.
-                * ``relator`` (str): Nome do relator ou do relator para o
+                * ``relator`` (str | None): Nome do relator ou do relator para o
                   acórdão, como o portal indexa (ex.: ``"NERY JUNIOR"``, a
                   forma do dropdown do formulário). O portal casa nomes
                   parciais.
-                * ``classe`` (str): Classe como no dropdown, com sigla (ex.:
+                * ``classe`` (str | None): Classe como no dropdown, com sigla (ex.:
                   ``"AI - AGRAVO DE INSTRUMENTO"``).
-                * ``orgao_julgador`` (str): Órgão julgador, pelo rótulo do
+                * ``orgao_julgador`` (str | None): Órgão julgador, pelo rótulo do
                   dropdown do formulário (``"3ª Turma"``,
                   ``"11ª Turma Recursal da Seção Judiciária de São Paulo"``)
                   ou pelo nome indexado da opção (``"TERCEIRA TURMA"``,
@@ -631,17 +645,17 @@ class TRF3Scraper(HTTPScraper):
                   ``ValueError``; texto que não casa com nenhuma opção vai
                   como está e só encontra o que o portal grava com essa
                   grafia. Não existe nas bases de monocráticas.
-                * ``ementa`` (str): Texto pesquisado só na ementa. Não existe
+                * ``ementa`` (str | None): Texto pesquisado só na ementa. Não existe
                   nas bases de monocráticas.
-                * ``indexacao`` (str): Texto pesquisado na indexação ("Objeto
+                * ``indexacao`` (str | None): Texto pesquisado na indexação ("Objeto
                   do Processo" nas Turmas Recursais). Não existe nas bases de
                   monocráticas.
-                * ``numero_classe`` (str): Número do processo dentro da
+                * ``numero_classe`` (str | None): Número do processo dentro da
                   classe, o que vem depois da classe na coluna ``classe`` dos
                   acórdãos antigos (``"1708075"`` em
                   ``"Ap - APELAÇÃO CÍVEL - 1708075"``). Só na base
                   ``"acordaos"``.
-                * ``sistema_interamericano`` (int | str): Caso da Corte IDH
+                * ``sistema_interamericano`` (int | str | None): Caso da Corte IDH
                   do dropdown "Sistema Interamericano" do formulário, pelo ID
                   da opção ou por um trecho do nome (em 15/11/2026, ``1`` era
                   o caso Trabalhadores da Fazenda Brasil Verde e ``2``, o caso
@@ -651,7 +665,7 @@ class TRF3Scraper(HTTPScraper):
                   da aba e tem que corresponder a uma só; senão,
                   ``ValueError`` lista as opções. Texto só de dígitos vale
                   como ID. Só na base ``"acordaos"``.
-                * ``legislacao`` (str): Texto pesquisado nas referências
+                * ``legislacao`` (str | None): Texto pesquisado nas referências
                   legislativas dos documentos (ex.: ``"LEI-8080"``, ou
                   ``"LEI PELÉ FED LEI 9615 1998"``, o texto que o painel de
                   legislações do formulário escreve). Só na base
@@ -663,7 +677,7 @@ class TRF3Scraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str | date | None): Data de publicação, nos mesmos
                   formatos. Não combina com ``data_julgamento_*``.
-                * ``tamanho_pagina`` (int): 10 (default), 30 ou 50 documentos
+                * ``tamanho_pagina`` (Literal[10, 30, 50]): 10 (default), 30 ou 50 documentos
                   por página.
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):

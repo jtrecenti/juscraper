@@ -20,6 +20,7 @@ uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 
 - **Regra de generalização:** mover para `_<familia>/` ou criar mixin/base só com **2+ ocorrências concretas**. Duplicar com 1 caso é mais barato que abstrair errado.
 - Nas famílias, acomodar diferenças por hooks/atributos ou manter scraper próprio; nunca `if tribunal == "X"` no código compartilhado.
+- A seleção `paginas` só é lida pelos helpers de `utils/pagination.py` (`baixar_paginas_pedidas`, `paginas_no_intervalo`, `menor_pagina`, `maior_pagina`, `paginas_unicas`), também em laço próprio; `tests/test_selecao_de_paginas.py` reprova o corte à mão.
 
 ## Testes
 
@@ -36,6 +37,7 @@ uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 | Schemas pydantic | `CONTRIBUTING.md` > **Schemas pydantic** |
 | Docstrings com filtros em `**kwargs` | `CONTRIBUTING.md` > **Docstrings de métodos públicos com kwargs** |
 | HTTP, retry, falhas por linha, coleta parcial | `CONTRIBUTING.md` > **Falhas HTTP, falhas por linha e coleta parcial** |
+| Laço de páginas, `paginas` explícito | `CONTRIBUTING.md` > **Seleção de páginas** |
 | Contagem de páginas/resultados em HTML | `CONTRIBUTING.md` > **Contagem de páginas e resultados em HTML** |
 | Samples, integração, CI | `CONTRIBUTING.md` > **Tests** |
 | Lint e complexidade | `CONTRIBUTING.md` > **Política de lint e adoção gradual** e **Complexidade de código (lizard + complexipy)** |

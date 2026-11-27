@@ -9,12 +9,15 @@ Saves raw JSON responses (Elasticsearch) under
 user-facing page is ``(p-1)*RESULTS_PER_PAGE``.
 """
 import json
+import logging
 
 import requests
 
 from juscraper.courts.tjro.download import BASE_URL, RESULTS_PER_PAGE, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Heavy field on each hit: truncate HTML blob to keep samples small.
 _HIT_TRUNCATE = {"ds_modelo_documento": 500}
@@ -44,7 +47,7 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina_1based: int,
     response = session.post(BASE_URL, json=payload, timeout=30)
     response.raise_for_status()
     dump(dest / filename, _minify(response.content))
-    print(f"[tjro] wrote {filename}")
+    logger.info("[tjro] wrote %s", filename)
 
 
 def main() -> None:
@@ -64,4 +67,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

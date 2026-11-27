@@ -1,7 +1,7 @@
 """Schemas pydantic do eSAJ: ``cjsg`` (TJAC/TJAL/TJAM/TJCE/TJMS) e ``cjpg`` (TJSP/TJMS).
 
 O ``cjsg`` do TJSP diverge (``baixar_sg`` em vez de ``origem``, sem
-``numero_recurso``/``data_publicacao_*``) e tem schema próprio em
+``data_publicacao_*``) e tem schema próprio em
 ``juscraper.courts.tjsp.schemas``. Os schemas do ``cjpg`` servem a todo
 tribunal construído sobre :class:`~juscraper.courts._esaj.cjpg.EsajCjpgScraper`.
 """
@@ -25,51 +25,70 @@ from ...schemas import (
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGEsajPuro(
-    SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, AutoChunkMixin, CountOnlyMixin,
-):
-    """Accepted input for TJAC/TJAL/TJAM/TJCE/TJMS ``cjsg``.
+class InputCJSGEsajBase(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
+    """Campos do ``cjsg`` que a base eSAJ le em todo tribunal.
 
-    Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword
-    arguments raise ``ValidationError`` instead of being silently ignored.
-    Herda tambem os filtros de data de julgamento e de publicacao via
-    :class:`DataJulgamentoMixin` / :class:`DataPublicacaoMixin`.
+    Tipo de :attr:`~juscraper.courts._esaj.base.EsajSearchScraper.INPUT_CJSG`:
+    o schema de cada tribunal herda daqui, e o codigo compartilhado le
+    ``data_julgamento_*``, ``auto_chunk``, ``tipo_decisao``, ``paginas`` e
+    os filtros do formulario sem depender do schema concreto.
 
     ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
     ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
     ``int`` ou ``str`` (single-value, backend ``cdComarca``).
     """
 
+    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
     ementa: str | None = None
     numero_recurso: str | None = None
     classe: IdFiltro = None
     assunto: IdFiltro = None
     comarca: IdFiltroUnico = None
     orgao_julgador: IdFiltro = None
+
+
+class InputCJSGEsajPuro(InputCJSGEsajBase, DataPublicacaoMixin):
+    """Accepted input for TJAC/TJAL/TJAM/TJCE/TJMS ``cjsg``.
+
+    Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword
+    arguments raise ``ValidationError`` instead of being silently ignored.
+    Herda tambem os filtros de data de julgamento e de publicacao via
+    :class:`DataJulgamentoMixin` / :class:`DataPublicacaoMixin`, e os
+    filtros do formulario (``classe``, ``comarca`` etc.) via
+    :class:`InputCJSGEsajBase`.
+    """
+
     origem: Literal["T", "R"] = "T"
-    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
-class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
-    """Columns observable in eSAJ cjsg DataFrames.
+class OutputCJSGEsajBase(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
+    """Colunas que o parser ``cjsg`` compartilhado do eSAJ entrega em todo tribunal.
 
-    Minimum: ``processo``, ``ementa`` (inherited from :class:`OutputCJSGBase`).
-    ``relator`` / ``orgao_julgador`` via :class:`OutputRelatoriaMixin`;
-    ``data_publicacao`` via :class:`OutputDataPublicacaoMixin` (eSAJ
-    entrega a data quando esta presente). ``extra='allow'`` is inherited
-    so tribunal-specific extras (e.g., ``classe_assunto``) don't break
-    validation.
-
-    O rótulo HTML ``"Relator(a):"`` vira a coluna canônica ``relator``.
+    Base de :class:`OutputCJSGEsaj` (TJAC/TJAL/TJAM/TJCE/TJMS) e de
+    :class:`~juscraper.courts.tjsp.schemas.OutputCJSGTJSP`. Minimo:
+    ``processo``, ``ementa`` (de :class:`OutputCJSGBase`); ``relator`` /
+    ``orgao_julgador`` via :class:`OutputRelatoriaMixin` (o rotulo HTML
+    ``"Relator(a):"`` vira ``relator``); ``data_publicacao`` via
+    :class:`OutputDataPublicacaoMixin`, quando presente. ``extra='allow'``
+    e herdado, entao colunas proprias de um tribunal nao quebram a validacao.
     """
 
     cd_acordao: str | None = None
     cd_foro: str | None = None
-    # Rótulos do HTML de resultado: "Classe/Assunto:", "Comarca:" e, em
-    # algumas páginas do TJMS, "Classe:" sozinho.
+    # Rótulos do HTML de resultado: "Classe/Assunto:" e "Comarca:".
     classe_assunto: str | None = None
-    classe: str | None = None
     comarca: str | None = None
+
+
+class OutputCJSGEsaj(OutputCJSGEsajBase):
+    """Columns observable in eSAJ cjsg DataFrames (TJAC/TJAL/TJAM/TJCE/TJMS).
+
+    Herda as colunas do parser compartilhado de :class:`OutputCJSGEsajBase`
+    e acrescenta ``classe``: algumas paginas do TJMS trazem o rotulo
+    ``"Classe:"`` sozinho, em vez de ``"Classe/Assunto:"``.
+    """
+
+    classe: str | None = None
 
 
 class InputCJPGEsaj(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):

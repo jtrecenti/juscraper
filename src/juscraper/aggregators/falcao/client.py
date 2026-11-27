@@ -29,7 +29,9 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
+from ...core.base import mensagem_de_kwargs_inesperados
 from ...core.http import HTTPScraper, RequestPolicy
+from ...utils.pagination import paginas_no_intervalo
 from ...utils.params import (
     coerce_brazilian_date,
     normalize_paginas,
@@ -100,7 +102,7 @@ class FalcaoScraper(HTTPScraper):
     def listar_decisoes(
         self,
         pesquisa: str | None = None,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
@@ -148,9 +150,9 @@ class FalcaoScraper(HTTPScraper):
           checkpoint requisitam as mesmas páginas e gastam a cota em dobro.
 
         Args:
-            pesquisa (str): Termo de busca livre (parametro ``texto``).
+            pesquisa: Termo de busca livre (parametro ``texto``).
                 Obrigatorio.
-            paginas (int | list | range | None): Paginas 1-based; ``None``
+            paginas: Paginas 1-based; ``None``
                 baixa todas as disponiveis, ate o teto de 10000 resultados
                 do backend (acima dele, emite ``UserWarning``). Default
                 ``None``. Páginas selecionadas além do teto são ignoradas
@@ -166,22 +168,22 @@ class FalcaoScraper(HTTPScraper):
                 * ``tamanho_pagina`` (int): Documentos por pagina. So ``5`` ou
                   ``10`` (limite do backend para usuario nao autenticado).
                   Default ``10``.
-                * ``tribunais`` (str | list[str]): Sigla(s) de tribunal
+                * ``tribunais`` (str | list[str] | None): Sigla(s) de tribunal
                   (``"TST"``, ``"TRT3"``, ...). Backend: ``tribunais``.
-                * ``relator`` (str | list[str]): Nome(s) de relator. Backend:
+                * ``relator`` (str | list[str] | None): Nome(s) de relator. Backend:
                   ``nomeRelator``.
-                * ``orgao_julgador`` (str | list[str]): Backend: ``orgaoJulgador``.
-                * ``classe`` (str | list[str]): Sigla(s) da classe processual
+                * ``orgao_julgador`` (str | list[str] | None): Backend: ``orgaoJulgador``.
+                * ``classe`` (str | list[str] | None): Sigla(s) da classe processual
                   (``"ROT"``, ``"ATOrd"``), a mesma da coluna de saida
                   ``classe_sigla``. O nome por extenso devolve zero
                   resultados sem erro. Backend: ``classeProcesso``.
-                * ``fase_processual`` (str | list[str]): Backend: ``faseProcessual``.
-                * ``prioridade`` (str | list[str]): Backend: ``prioridade``.
-                * ``tem_ementa`` (bool): Restringe a documentos com/sem ementa.
-                * ``somente_ementa`` (bool): Busca ``texto`` so nas ementas.
-                * ``ordenacao`` (str): ``mais_relevante`` (default do backend),
+                * ``fase_processual`` (str | list[str] | None): Backend: ``faseProcessual``.
+                * ``prioridade`` (str | list[str] | None): Backend: ``prioridade``.
+                * ``tem_ementa`` (bool | None): Restringe a documentos com/sem ementa.
+                * ``somente_ementa`` (bool | None): Busca ``texto`` so nas ementas.
+                * ``ordenacao`` (str | None): ``mais_relevante`` (default do backend),
                   ``mais_recente`` ou ``menos_recente``.
-                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str):
+                * ``data_juntada_inicio`` / ``data_juntada_fim`` (str | date | None):
                   Intervalo de data de juntada. Aceita ``DD/MM/AAAA``,
                   ``AAAA-MM-DD`` ou ``date``; convertido para ISO antes do
                   backend (``dataInicio`` / ``dataFim``). Cada limite pode
@@ -189,7 +191,7 @@ class FalcaoScraper(HTTPScraper):
                   envia ``dataInicio=1900-01-01``, porque o backend
                   rejeita ``dataFim`` sozinho; limite superior anterior a
                   essa data levanta ``ValueError``.
-                * ``checkpoint_dir`` (str | Path): Diretório de páginas e
+                * ``checkpoint_dir`` (str | Path | None): Diretório de páginas e
                   manifesto da coleta retomável. Diretório ocupado exige
                   ``resume=True``; nunca é sobrescrito por coleta nova.
                 * ``resume`` (bool): Retoma o checkpoint da mesma busca
@@ -240,12 +242,12 @@ class FalcaoScraper(HTTPScraper):
             :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
+        metodo = "FalcaoScraper.listar_decisoes()"
         if "diretorio" in kwargs:
             raise TypeError(
-                "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
-                "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
+                mensagem_de_kwargs_inesperados(metodo, ["'diretorio'"])
+                + ". Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        metodo = "FalcaoScraper.listar_decisoes()"
         if kwargs.get("checkpoint_dir") is not None:
             return self.listar_decisoes_parse(self._baixar(pesquisa, paginas, None, kwargs, metodo))
         # Não usa download_path: listar_decisoes_parse lê a pasta recursivamente, e
@@ -270,13 +272,13 @@ class FalcaoScraper(HTTPScraper):
     def listar_decisoes_download(
         self,
         pesquisa: str | None = None,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         diretorio: str | None = None,
         **kwargs,
     ) -> str:
         """Baixa as paginas cruas (JSON) da busca para um diretorio.
 
-        Mesma validacao e filtros de :meth:`listar_decisoes` (veja la a lista completa de
+        Mesma validacao e filtros de :meth:`listar_decisoes` (veja lá a lista completa de
         ``**kwargs``). Cada chamada cria um subdiretorio proprio
         ``falcao_{colecao}_<sufixo aleatorio>``, entao buscas diferentes
         no mesmo ``diretorio`` nunca se misturam. Cada pagina vira um arquivo
@@ -287,10 +289,10 @@ class FalcaoScraper(HTTPScraper):
         interrompida sem requisitar as páginas já gravadas.
 
         Args:
-            pesquisa (str): Termo de busca. Obrigatorio.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` =
+            pesquisa: Termo de busca. Obrigatorio.
+            paginas: Paginas 1-based; ``None`` =
                 todas. Default ``None``.
-            diretorio (str | None): Sobrescreve ``download_path`` para esta
+            diretorio: Sobrescreve ``download_path`` para esta
                 chamada. Default ``None`` (usa o ``download_path`` do scraper,
                 que sem configuracao e um diretorio temporario criado no
                 primeiro uso). Cria a pasta e seus pais quando não existem.
@@ -329,7 +331,7 @@ class FalcaoScraper(HTTPScraper):
         checkpoint é ignorado.
 
         Args:
-            diretorio (str | Path): Pasta com os arquivos JSON.
+            diretorio: Pasta com os arquivos JSON.
 
         Returns:
             Resultados concatenados (veja :meth:`listar_decisoes` para as
@@ -385,12 +387,15 @@ class FalcaoScraper(HTTPScraper):
         """
         gravadas = checkpoint.gravadas if checkpoint is not None else set()
         total_anterior = checkpoint.total if checkpoint is not None else None
-        # A primeira pagina pendente serve tambem para ler o total; com
+        # O teto é conhecido antes da consulta: a página além dele sai do pedido,
+        # com aviso, antes de qualquer requisição; a além do total real, depois de lê-lo.
+        alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
+        # A menor pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = self._primeira_pendente(inp, gravadas, total_anterior)
+        primeira = self._primeira_pendente(alcancaveis, gravadas, total_anterior, inp.tamanho_pagina)
         if primeira is None:
             if total_anterior is not None:
-                self._avisar_teto(inp, total_anterior)
+                self._avisar_sem_pendentes(inp, alcancaveis, total_anterior)
             return
         primeiro_json = self._buscar_pagina(inp, primeira)
         # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
@@ -408,7 +413,9 @@ class FalcaoScraper(HTTPScraper):
             )
         self._avisar_teto(inp, total)
 
-        pendentes = [p for p in self._resolver_paginas(inp.paginas, total_paginas) if p not in gravadas]
+        pendentes = [
+            p for p in paginas_no_intervalo(alcancaveis, total_paginas, tribunal="Falcao") if p not in gravadas
+        ]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
         self._avisar_ordem_entre_paginas(inp, pendentes, checkpoint)
@@ -420,19 +427,30 @@ class FalcaoScraper(HTTPScraper):
             conteudo = self._buscar_pagina(inp, pagina)
             _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
-    def _primeira_pendente(
-        self, inp: InputListarDecisoesFalcao, gravadas: set[int], total_anterior: int | None,
-    ) -> int | None:
-        """Primeira página a requisitar, ou ``None`` se nenhuma das pedidas falta.
+    def _avisar_sem_pendentes(
+        self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, total_anterior: int,
+    ) -> None:
+        """Retomada sem nada a requisitar: avisa das pedidas além do total registrado e do teto."""
+        if alcancaveis is not None:
+            ultima = self._total_paginas(total_anterior, inp.tamanho_pagina)
+            paginas_no_intervalo(alcancaveis, ultima, tribunal="Falcao")
+        self._avisar_teto(inp, total_anterior)
 
-        O teto é conhecido antes da consulta: nenhuma página fora dele pode
-        servir de primeira requisição, pois o backend a rejeita. Na retomada,
-        vale o total da sessão anterior: página além dele não gasta a cota, e
-        o checkpoint completo não requisita nada.
+    def _primeira_pendente(
+        self, alcancaveis: list[int] | None, gravadas: set[int], total_anterior: int | None, tamanho_pagina: int,
+    ) -> int | None:
+        """Menor página a requisitar, ou ``None`` se nenhuma das pedidas falta.
+
+        É a menor, como em :func:`baixar_paginas_pedidas`: se ela passa do
+        total, as demais também passam, e nenhuma outra requisição é gasta.
+        ``alcancaveis`` são as páginas pedidas dentro do teto (``None``, todas):
+        o backend rejeita as demais. Na retomada, vale o total da sessão
+        anterior: página além dele não gasta a cota, e o checkpoint completo
+        não requisita nada.
         """
-        conhecido = _MAX_RESULTADOS if total_anterior is None else total_anterior
-        candidatas = self._resolver_paginas(inp.paginas, self._total_paginas(conhecido, inp.tamanho_pagina))
-        return next((p for p in candidatas if p not in gravadas), None)
+        ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, tamanho_pagina)
+        candidatas = range(1, ultima + 1) if alcancaveis is None else alcancaveis
+        return min((p for p in candidatas if p <= ultima and p not in gravadas), default=None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         return build_pesquisa_params(
@@ -473,7 +491,11 @@ class FalcaoScraper(HTTPScraper):
                 kwargs[nome] = coerce_brazilian_date(kwargs[nome], _FORMATO_BACKEND)
                 _validar_data(kwargs[nome], nome)
         try:
-            inp = InputListarDecisoesFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
+            # ``model_validate`` porque ``pesquisa`` chega como ``str | None``:
+            # quem recusa ``None`` (sem termo nem alias) e o proprio schema.
+            inp: InputListarDecisoesFalcao = InputListarDecisoesFalcao.model_validate(
+                {"pesquisa": pesquisa, "paginas": paginas_norm, **kwargs},
+            )
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, metodo, schema_cls=InputListarDecisoesFalcao)
             raise
@@ -501,9 +523,9 @@ class FalcaoScraper(HTTPScraper):
         """Sem checkpoint, avisa da ordem instável só na coleta de mais de uma página.
 
         Com checkpoint, ``_baixar`` já avisou antes de requisitar, pois as páginas se
-        somam entre sessões. Em lista, ``paginas`` pode repetir a mesma página.
+        somam entre sessões.
         """
-        if checkpoint is None and len(set(pendentes)) > 1:
+        if checkpoint is None and len(pendentes) > 1:
             self._avisar_ordem_instavel(inp)
 
     @staticmethod
@@ -520,7 +542,7 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:
-        if inp.paginas is None and total >= _MAX_RESULTADOS:
+        if inp.paginas_normalizadas is None and total >= _MAX_RESULTADOS:
             avisar(
                 f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
                 "backend nao informa o total real e o resultado pode estar incompleto. "
@@ -533,17 +555,15 @@ class FalcaoScraper(HTTPScraper):
         alcancavel = min(total, _MAX_RESULTADOS)
         return max(1, math.ceil(alcancavel / tamanho_pagina))
 
-    @staticmethod
-    def _resolver_paginas(paginas, total_paginas: int):
+    @classmethod
+    def _paginas_ate(cls, paginas: list[int] | range | None, total: int, tamanho_pagina: int) -> list[int] | None:
+        """As páginas pedidas que ``total`` resultados alcançam, uma vez cada; ``None`` continua todas.
+
+        As de fora vão para o log, num aviso só (:func:`paginas_no_intervalo`).
+        """
         if paginas is None:
-            return range(1, total_paginas + 1)
-        if isinstance(paginas, range):
-            return range(
-                max(1, paginas.start),
-                min(paginas.stop, total_paginas + 1),
-                paginas.step,
-            )
-        return [p for p in paginas if 1 <= p <= total_paginas]
+            return None
+        return paginas_no_intervalo(paginas, cls._total_paginas(total, tamanho_pagina), tribunal="Falcao")
 
 
 def _validar_data(valor, nome: str) -> None:

@@ -198,7 +198,7 @@ git fetch origin
 uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
 ```
 
-No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo.
+No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo. O desafio vem depois de 6 ou 7 requisições (buscas ou GETs de ementa) em uns 10 minutos: em 27/11/2026, de IP residencial, com 90 s entre as buscas a 7ª recebeu o desafio, e com 120 s duas sequências de 14 buscas passaram. Por isso o script de captura (`tests/fixtures/capture/tjto.py`) espera 120 s entre uma requisição e a seguinte (`--pausa`).
 
 Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
 
@@ -261,7 +261,7 @@ As correções automáticas desse comando exigem revisão antes de salvar; sem `
 
 ### CI
 
-O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele confere o `uv.lock` e executa Ruff, o controle de dispensas e os testes do próprio gate, comparando o PR com a ponta da branch de destino e o push com o SHA anterior, com histórico Git completo. O job `pre-commit` do mesmo workflow roda todos os hooks em todos os arquivos (`pre-commit run --all-files`), o que leva mypy, pylint, flake8, isort e bandit ao PR; `lint-policy`, `complexity` e `pytest` ficam de fora dele: os dois primeiros têm passo próprio, com a base de cada evento, e a suíte offline do `pytest` já roda no workflow `Testes`, em todas as versões. Os hooks rodam nas versões fixadas no `.pre-commit-config.yaml`, em ambientes próprios, e não nas do `uv.lock`; as dependências adicionais deles também têm versão fixa. Como nenhum hook do job usa o ambiente do projeto, o job não instala o extra `dev`: roda o pre-commit com `uvx`, restrito pelo `uv export` às versões do `uv.lock`, as mesmas de quem roda os hooks localmente. O `check-added-large-files` só olha arquivo acrescentado no commit, então não confere nada nesse job. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
+O workflow `Lint` roda em todo PR e em pushes para `main`, sem coletar dados externos. Ele confere o `uv.lock` e executa Ruff, o controle de dispensas e os testes do próprio gate, comparando o PR com a ponta da branch de destino e o push com o SHA anterior, com histórico Git completo. O job `pre-commit` do mesmo workflow roda todos os hooks em todos os arquivos (`pre-commit run --all-files`), o que leva mypy, pylint, flake8, isort e bandit ao PR; `lint-policy`, `complexity` e `pytest` ficam de fora dele: os dois primeiros têm passo próprio, com a base de cada evento, e a suíte offline do `pytest` já roda no workflow `Testes`, em todas as versões. Os hooks rodam nas versões fixadas no `.pre-commit-config.yaml`, em ambientes próprios, e não nas do `uv.lock`; as dependências adicionais deles também têm versão fixa. O ambiente do hook `mypy` não tem o juscraper nem as bibliotecas de terceiros, salvo as dependências adicionais: os stubs `types-requests` e `types-PyYAML` e o `responses`, que traz tipos próprios; o `mypy_path = "src"` de `[tool.mypy]` deixa o juscraper visível mesmo quando o hook recebe só arquivos de `tests/`, e as demais bibliotecas, como `pandas` e `pydantic`, continuam como `Any`. Com o `responses` tipado, `request.url` (`str | None`), `request.body` (`bytes | str | None`) e os atributos que ele acrescenta em tempo de execução (`params`, `req_kwargs`) reprovam no hook quando lidos direto de `responses.calls`; nesses casos, os testes leem a requisição enviada pelos helpers de `tests/_helpers.py` (`url_enviada`, `corpo_json_enviado`, `params_enviados` e afins). As dependências adicionais que também estão no `uv.lock` seguem a versão dele, conferida por `tests/ci_workflows/test_workflows.py`. Como nenhum hook do job usa o ambiente do projeto, o job não instala o extra `dev`: roda o pre-commit com `uvx`, restrito pelo `uv export` às versões do `uv.lock`, as mesmas de quem roda os hooks localmente. O `check-added-large-files` só olha arquivo acrescentado no commit, então não confere nada nesse job. O job precisa ser selecionado nas regras de proteção da branch para que uma falha impeça o merge; adicionar o workflow não altera essas regras do GitHub.
 
 A comparação usa a lista de `ruff.toml` versionada na base. Uma base sem `ruff.toml` é anterior à adoção da régua ([#396](https://github.com/jtrecenti/juscraper/pull/396)): a referência local está desatualizada ou a branch ainda não integrou a `main`. Nesse caso o gate falha e orienta a atualizar a referência e integrar a `main`.
 
@@ -420,15 +420,26 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 
 - TJMG `_baixar_lista`, TJPR `_baixar_paginas` e TJTO `_baixar_paginas` preservam as páginas já baixadas em `ColetaParcialError.resultado`, com a causa original; se nada foi baixado, relançam a falha original. TJMG mantém categorias e TJTO mantém a detecção de WAF.
 - O auto-chunk do eSAJ pode seguir após falhas múltiplas e registra cada uma em `.falhas`; ele e o DataJud podem levantar `ColetaParcialError` com resultado vazio.
-- Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais.
+- Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais. O laço próprio lê a seleção pelos helpers de **Seleção de páginas**.
+
+## Seleção de páginas (`paginas`)
+
+O contrato de `paginas` explícito: a página repetida é baixada uma vez só, na posição em que aparece primeiro, e o passo do `range` é respeitado. Quando o portal informa o total, a página além dele também não é pedida e sai num aviso só no logger do tribunal (`juscraper.<sigla>`), e o `range` não é percorrido (`paginas=range(1, 10**7)` custa o mesmo que `range(1, 8)`). Sem o total no pedido explícito (TJAP, TJPR e TJRR) ou com cursor que só avança (PDPJ e DataJud), a seleção é percorrida até a maior página pedida, sem esse aviso. Ele mora nos helpers de `src/juscraper/utils/pagination.py`, e o raspador lê a seleção só por eles:
+
+- `baixar_paginas_pedidas(paginas, buscar, contar_paginas, tribunal=...)`: o portal informa o total em toda página. Pede a menor página, lê nela o total e baixa as demais. É o caso comum (TJRN, TJSC, TJDFT, TJMT, TJRS...); com teto de resultados, combinar com `contador_com_teto` (TJBA, TJPB, TJRO, TJMT).
+- `paginas_no_intervalo(paginas, n_pags, tribunal=...)`: o total já é conhecido, ou o laço é próprio (coleta parcial, checkpoint, primeira página fixa). Devolve as páginas a baixar, na ordem pedida.
+- `menor_pagina` e `maior_pagina`: a página a pedir primeiro e até onde ir antes de ler o total (cursor que só avança, como no PDPJ e no DataJud; teto conhecido antes da busca).
+- `paginas_unicas`: o portal não informa o total no pedido explícito (TJAP, TJPR, TJRR). Tira só as repetidas.
+
+`tests/test_selecao_de_paginas.py` reprova, fora de `utils/pagination.py`, `utils/params.py` e `schemas/mixins.py`, a leitura da seleção à mão: `.start`/`.stop`/`.step`, índice, `isinstance(..., range)`, `max`/`min`/`list`/`sorted`/`set`/`tuple` e laço direto sobre `paginas`, `paginas_norm` ou `.paginas_normalizadas`. A exceção vai na lista `EXCECOES` do teste, com o motivo: variável `paginas` com as respostas já baixadas, ou contrato próprio declarado (o STF recusa página repetida com erro). Caso novo que os helpers não cobrem entra em `utils/pagination.py`, com teste em `tests/utils/test_pagination_util.py`, e não no raspador. O contrato de cada portal fica em `tests/test_contrato_paginas_explicitas.py`, quando a busca é de uma URL só, ou no `test_cjsg_contract.py` do tribunal.
 
 ## Contagem de páginas e resultados em HTML
 
 Ao alterar contagens, usar seleção e extração em cascata para os formatos observados nos samples. Consultar `src/juscraper/courts/_esaj/parse.py::cjsg_n_results` para eSAJ e `src/juscraper/utils/pagination.py::extract_count_with_cascade` para o helper compartilhado. Cada formato suportado precisa de sample e teste.
 
 - Ler o número na célula cujo texto inteiro é o resumo ("Resultados 1 a 10 de 25", com `fullmatch`), e não na primeira que contém uma palavra-chave nem só pelo tamanho do texto: a célula de layout que envolve a página também contém "Resultados" e termina nos links de paginação, e no `cjpg` do eSAJ um `\d+$` lia ali o link "1".
-- Procurar os marcadores de busca vazia ("não foram encontrados", "nenhum resultado") fora das linhas de resultado. Ementas e sentenças citam essas frases, e uma contagem 0 faz o download parar na primeira página sem aviso. No helper, `zero_markers` só vale depois da cascata, quando nenhum seletor nem regex acha a contagem.
-- Não rodar regex de contagem no HTML inteiro, onde estão as ementas: com seletores, o helper não cai no HTML bruto quando nenhum casa, e o caller decide o default (ou levanta). `fallback_html=True` só quando todas as regex exigem as palavras do rótulo do resumo ("Documentos encontrados: N", "N registro(s) encontrado(s)", "N documentos encontrados"), nunca com regex de número solto: `de\s+(\d+)\)` no HTML bruto do TJRR leu "(fevereiro de 2009)" de uma ementa como 2009 páginas. No HTML bruto, a regex roda antes de `zero_markers`, e por isso ela não pode casar com o aviso de busca vazia.
+- Procurar os marcadores de busca vazia ("não foram encontrados", "nenhum resultado") fora das linhas de resultado. Ementas e sentenças citam essas frases, e uma contagem 0 faz o download parar na primeira página sem aviso. No helper, `aviso_vazio` (`AvisoVazio(seletores, marcadores)`) só vale depois da cascata, quando nenhum seletor nem regex acha a contagem, e só no texto dos elementos dos seletores dele, o contêiner do aviso que os samples `no_results*` mostram.
+- Não rodar regex de contagem no HTML inteiro, onde estão as ementas: com seletores, o helper não cai no HTML bruto quando nenhum casa, e o caller decide o default (ou levanta). `fallback_html=True` só quando todas as regex exigem as palavras do rótulo do resumo ("Documentos encontrados: N", "N registro(s) encontrado(s)", "N documentos encontrados"), nunca com regex de número solto: `de\s+(\d+)\)` no HTML bruto do TJRR leu "(fevereiro de 2009)" de uma ementa como 2009 páginas. No HTML bruto, a regex roda antes de `aviso_vazio`, e por isso ela não pode casar com o aviso de busca vazia.
 - Conferir a contagem em samples reais de uma página só e de página cheia: no layout do eSAJ, a página cheia acertava por acaso.
 
 ## Schemas pydantic
@@ -441,11 +452,19 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 - `src/juscraper/courts/_<familia>/schemas.py`: schemas compartilhados pela família, sujeitos à **Regra de generalização** em `CLAUDE.md` > **Arquitetura**.
 - `src/juscraper/courts/<xx>/schemas.py` / `aggregators/<yy>/schemas.py` — um arquivo por tribunal/agregador com Input/Output de todos os endpoints.
 
+### Campos comuns entre endpoints da mesma família
+
+Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`contar`, `cjsg`/`cjpg`, eSAJ puro/TJSP), os filtros e os validators que valem para os dois ficam numa base comum, e cada schema concreto declara só o que é dele. A base fica no `schemas.py` do pacote quando os dois endpoints são do mesmo tribunal ou agregador (`_InputFiltrosDataJud`, `_InputFiltrosSTF`, `_InputFiltrosTJTO`), ou em `_<familia>/schemas.py` quando atravessa tribunais (`InputCJSGEsajBase`). Isso aplica a **Regra de generalização**: dois schemas que repetem o bloco já são as 2 ocorrências concretas.
+
+`tests/schemas/test_campos_repetidos.py` cobra a regra; a docstring dele diz o que conta como família, repetição e exceção.
+
 ### Registro, paridade e wiring
 
 `tests/schemas/test_schema_coverage.py` mantém `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS`, os registros de endpoints com modelos Input. Métodos stub com `NotImplementedError` ficam fora desse contrato. O schema pode existir como documentação executável antes de ser usado pelo método em runtime.
 
 `tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando infraestrutura e aliases conhecidos. Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. `_is_wired` reconhece atributos `INPUT_<ENDPOINT>`, inclusive herdados, e as exceções declaradas em `WIRED_WITHOUT_CLASS_ATTR`; esses casos são pulados na paridade. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
+
+`tests/schemas/test_signature_types.py` compara a anotação de cada parâmetro explícito com a do campo no schema. A assinatura só difere quando o pipeline converte o valor antes do pydantic; essas diferenças ficam nas regras por categoria do arquivo (`REGRAS`) e, campo a campo, em `AMPLIADOS` e `ESPECIFICAS`, cada uma com o motivo. Ao divergir, usar na assinatura o tipo do schema; regra ou exceção nova só quando o runtime aceita mais do que o schema declara.
 
 Para decidir quando conectar o schema ao método, seguir `CLAUDE.md` > **Testes**, que separa o PR de contratos da mudança de runtime.
 
@@ -509,17 +528,21 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 
 Métodos públicos que recebem filtros em `**kwargs` precisam documentá-los, pois `inspect.signature` não mostra os campos aceitos pelo schema. Escrever docstrings em português, no estilo Google (`Args:`, `Returns:`, `Raises:`), seguindo o método `EsajSearchScraper.cjsg` em `src/juscraper/courts/_esaj/base.py`. Para override com schema próprio, usar `TJSPScraper.cjsg` como referência.
 
+Toda docstring do pacote segue o estilo Google, inclusive em funções de módulo e métodos sem filtros em `**kwargs`. O estilo numpy, com o título da seção sublinhado por traços (`Parameters` seguido de `----------` e entradas como `orgao : str`), sai quebrado na referência: o quartodoc lê as docstrings com o parser Google do griffe (`parser: google` em `docs/_quarto.yml`), que não reconhece essas seções e as publica como texto corrido, sem a tabela de parâmetros e com o tipo escrito à mão no lugar da anotação. O `quartodoc build` passa assim mesmo. O Ruff, configurado com `convention = "google"`, acusa `Returns` e `Raises` sublinhados como D416, por falta dos dois-pontos, mas não `Parameters` nem `Notes`, que não são nomes de seção do estilo Google; a correção é converter a docstring, não dispensar a regra. Quem reprova é `tests/test_docstring_griffe.py`, que recusa, em qualquer docstring do pacote, uma linha de texto seguida de uma linha só de `-` (três ou mais), inclusive com título próprio, como `Aliases deprecados`, e título em Markdown sublinhado.
+
 O nome das seções que o estilo Google reconhece fica em inglês, porque é por ele que o griffe, parser usado pelo quartodoc, identifica a seção; `tests/test_docstring_secoes.py` reprova o nome traduzido, como `Argumentos:` ou `Retorno:`. Na seção de exemplos, escrever `Examples: Exemplo`: `Examples` faz o griffe ler as linhas `>>>` como código, e `Exemplo`, depois dos dois-pontos, é o título que a referência publica. Escrita só como `Exemplo:`, a seção vira texto livre, o Pandoc lê cada `>>>` como três citações aninhadas e o código sai colado num parágrafo, com aspas tipográficas. `tests/test_docstring_examples.py` reprova linha `>>>` fora dessa seção.
 
 Em `Args:` e `Raises:`, a primeira linha de cada entrada traz o nome inteiro até os dois-pontos; nessas seções e em `Returns:`, as linhas de continuação levam recuo a mais. Em `Raises:`, uma exceção por entrada, repetindo a descrição quando ela for a mesma: numa entrada só, várias exceções separadas por vírgula viram um tipo único e, partidas em duas linhas, se perdem: o griffe guarda só a última ou descarta a seção inteira. Em `Returns:`, cada linha no recuo do item vira um retorno novo, e um único `pd.DataFrame` sai na referência como tabela de várias linhas; mais de um item só cabe em função que devolve `tuple`, um por elemento.
 
 A entrada de `Returns:` traz só a descrição: o tipo vem da anotação de retorno da assinatura. Escrito antes dos dois-pontos, como em `pd.DataFrame: ...` ou `str: ...`, ele sai repetido na tabela. Só quando a assinatura não anota o retorno, escrever o tipo entre parênteses, como em `(dict[str, str]): ...`; numa função anotada, os parênteses sobrepõem a anotação. Sem anotação e sem parênteses, a referência sai sem tipo.
 
+Em `Args:`, o parâmetro anotado na assinatura leva só o nome e a descrição, como em `pesquisa: Termo de busca livre.`: a referência mostra o tipo da anotação. Escrito entre parênteses, como em `pesquisa (str): ...`, ele se sobrepõe à anotação e passa a divergir dela na primeira mudança da assinatura. O tipo entre parênteses fica só para parâmetro sem anotação. Parâmetros anotados não se agrupam numa entrada (`inicio, fim: ...`): o griffe não acha o nome agrupado na assinatura e a referência sai sem tipo; escrever uma entrada para cada um. A descrição continua citando os valores aceitos, inclusive os deprecados, porque a anotação de um `Literal` aparece pelo nome do alias (`TipoDecisao`).
+
 O `quartodoc build` passa em todos esses casos; quem reprova é `tests/test_docstring_griffe.py`.
 
 ### Filtros e aliases
 
-- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos; citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
+- Listar em `**kwargs` os filtros do schema correspondente, com os mesmos nomes e tipos (ver "Tipo dos filtros em `**kwargs`" abaixo); citar o schema em `See Also:`, com A maiúsculo, porque é o nome de seção que a regra D405 do Ruff aceita e arquivo novo não tem dispensa dela. Mudanças de campos e docstring devem entrar juntas.
 - Acrescentar a semântica que o modelo não expressa: interpretação do filtro, formato exigido pelo backend e exemplo de uso. Indicar nomes de campos do backend quando isso explicar por que um filtro exige IDs internos.
 - Documentar defaults não óbvios e o significado de `None` para cada filtro; não presumir que todo campo seja opcional.
 - Listar aliases deprecados em seção própria, conforme os que o endpoint realmente consome em `normalize_pesquisa`, `normalize_datas` e `pop_deprecated_alias`. As constantes em `src/juscraper/utils/params.py` são a fonte dos aliases compartilhados; conferir também a normalização específica do scraper. Informar o `DeprecationWarning` sem remover o campo canônico da documentação.
@@ -532,9 +555,8 @@ Estrutura para o método principal, adaptando parâmetros explícitos, filtros e
 <Efeitos específicos, como delegação e limpeza de downloads.>
 
 Args:
-    pesquisa (str): <Semântica e restrições da busca.>
-    paginas (int | list | range | None): Páginas 1-based;
-        None busca todas.
+    pesquisa: <Semântica e restrições da busca; o tipo vem da assinatura.>
+    paginas: Páginas 1-based; None busca todas.
     **kwargs: Filtros aceitos por :class:`<InputDoEndpoint>`:
 
         * ``<campo_do_schema>`` (<tipo>): <Semântica do filtro.>
@@ -570,6 +592,18 @@ Fora de `See Also:`, e dentro dela quando o nome tem dígito, o quartodoc deixa 
 
 O `:meth:` com nome curto, como `` :meth:`cjsg` ``, vira link para o método da classe que a página documenta, nas duas seções, porque o filtro qualifica o nome pela classe antes de o `interlinks` procurá-lo. Isso só funciona quando o método é público e definido na própria classe, que é o que o quartodoc documenta; herdado ou privado sai como código, sem aviso no build, e `tests/test_docs_papeis_sphinx.py` reprova esse caso nas classes publicadas. O nome curto é, então, a forma certa de citar outro método da mesma classe, inclusive o método principal num par `*_download`. Método de outra classe pede o caminho completo, `` :meth:`juscraper.courts.tjsp.client.TJSPScraper.cjsg` ``, e só vira link se a classe estiver na referência (com `~` na frente, o texto do link mostra só o nome do método); nome com ponto mas sem o caminho completo, como `` :meth:`EsajSearchScraper.cjsg` ``, sai como código.
 
+### Tipo dos filtros em `**kwargs`
+
+Os filtros em `**kwargs` não têm anotação, então o tipo entre parênteses de cada bullet é o que a referência mostra, e ele copia o que o schema aceita:
+
+- a anotação do campo, com `| None` quando o campo aceita `None` (`str | None`, `bool`, `Literal["T", "R"]`);
+- o `json_schema_input_type` do `BeforeValidator`, quando o campo o declara: em `IdFiltro`, `int | str | list[int | str] | None`;
+- `str | date | None` nos campos de data que o cliente converte de `date` antes do pydantic: os de `DATE_CANONICAL` (`src/juscraper/utils/params.py`) e, no Falcão, `data_juntada_*` (`datetime` é subclasse de `date`; a descrição cita os dois).
+
+`Literal` curto vai por extenso, em aspas duplas: `Literal["ementa", "inteiro_teor"]`. Quando ele não cabe na linha do bullet, escrever o nome do alias definido no módulo do schema ou do scraper, como `BaseCJSGTRF3` no TRF3 ou `CompetenciaAceita | None` no TJRJ, e listar os valores na descrição: a referência mostra o nome como texto, sem link nem valores. Valores deprecados não entram no tipo.
+
+Campo que aceita mais do que a anotação por um `field_validator(mode="before")` ou por conversão no cliente, como o `int` que o TJRJ converte em `str`, entra em `AMPLIADOS` de `tests/schemas/test_docstring_parity.py`, com o tipo aceito e o motivo, pela classe que declara o validador.
+
 ### Métodos de download
 
 Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`. O par `*_download` descreve somente suas diferenças, como `diretorio` e o retorno do caminho, e referencia a lista de filtros com `:meth:` apontando para o método principal. Isso evita manter uma segunda lista que pode divergir do schema.
@@ -578,7 +612,9 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 
 `tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` exige igualdade entre os filtros documentados e os campos do modelo nos endpoints registrados em `CASES`. Ao adicionar um método ou override com schema próprio e filtros em `**kwargs`, registrar o caso. O teste não descobre automaticamente novos endpoints.
 
-`test_download_docstring_references_toplevel` verifica a referência `:meth:` nos pares registrados em `DOWNLOAD_REFERENCE_CASES`. Registrar novos pares nessa lista. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
+`test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
+
+`test_download_docstring_references_toplevel` verifica a referência `:meth:` em todo método público `*_download` cujo método principal (o mesmo nome sem `_download`) recebe `**kwargs`. Os pares saem do próprio pacote, em `DOWNLOAD_REFERENCE_CASES`, sem registro manual; o download registrado em `CASES` fica de fora. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
 
 Executar `uv run pytest tests/schemas/test_docstring_parity.py` após alterar esses contratos.
 

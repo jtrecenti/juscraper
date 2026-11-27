@@ -9,11 +9,15 @@ a GET with query-string parameters and has no filters for date ranges.
 ``single_page`` must have no ``ul.pagination`` paginator, which is how
 ``_get_total_pages`` recognizes a one-page result and returns 1.
 """
+import logging
+
 import requests
 
 from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
@@ -22,7 +26,7 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filena
     response.raise_for_status()
     response.encoding = "utf-8"
     dump(dest / filename, response.content)
-    print(f"[tjpi] wrote {filename}")
+    logger.info("[tjpi] wrote %s", filename)
 
 
 def main() -> None:
@@ -40,4 +44,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

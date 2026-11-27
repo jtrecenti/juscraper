@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
+    AvisoVazio,
     baixar_paginas_pedidas,
     extract_count_with_cascade,
     parse_page_number,
@@ -54,9 +55,10 @@ _LAST_PAGE_TEXT = "\u00bb"  # », rótulo do link de última página
 # contêiner da página (``content pt-3 pb-3 d-flex``), que guarda as ementas.
 # O HTML da página só entra (``fallback_html``) quando o seletor não casa
 # nenhum elemento com texto, e por isso as duas regex começam em "Exibindo" e
-# exigem "jurisprudência(s)" depois do número: "de um total de 84 prestações" numa ementa não casa. Se o
-# seletor casar um div cujo texto as regex não reconhecem, a contagem vem
-# ``None`` e, sem o marcador de busca vazia, ``resolve_total_pages`` levanta.
+# exigem "jurisprudência(s)" depois do número: "de um total de 84 prestações"
+# numa ementa não casa. Se o seletor casar um div cujo texto as regex não
+# reconhecem, a contagem vem ``None`` e, sem o aviso de busca vazia,
+# ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ('div[class="pb-3"]',)
 # O número vem em ``<b>``; ``_SEP`` aceita espaço e tag entre as palavras para
 # que a mesma regex sirva ao texto do rótulo e ao HTML do fallback.
@@ -70,11 +72,11 @@ _COUNT_PATTERNS = (
     # Página única: "Exibindo <b>5</b> jurisprudência(s)".
     re.compile(rf"Exibindo{_SEP}([\d.]+){_SEP}jurisprud", re.IGNORECASE),
 )
-# Busca sem resultados: um nó de texto que começa com o marcador, seguido do
-# termo pesquisado em outro div. O marcador só é consultado quando a contagem
-# não aparece, e tem que abrir o nó de texto: "sem resultados para a
-# localização de bens" no meio de uma ementa não zera a contagem.
-_ZERO_MARKER = "Sem resultados para:"
+# Busca sem resultados: "Sem resultados para:" e o termo pesquisado num
+# ``div.col-md-6`` dentro de ``div.p-4``, contêiner que a página de resultados
+# não tem (lá é ``div.p-md-4``). O marcador só vale nesse contêiner: "sem
+# resultados para a localização de bens" numa ementa não zera a contagem.
+_AVISO_VAZIO = AvisoVazio(("div.p-4 div.col-md-6",), ("Sem resultados para:",))
 
 
 def _last_page_links(soup: BeautifulSoup) -> set[int]:
@@ -94,10 +96,6 @@ def _last_page_links(soup: BeautifulSoup) -> set[int]:
     return totais
 
 
-def _sem_resultados(soup: BeautifulSoup) -> bool:
-    return any(texto.strip().startswith(_ZERO_MARKER) for texto in soup.find_all(string=True))
-
-
 def _get_total_pages(html: str) -> int:
     """Extrai o total de páginas de uma página de resultados.
 
@@ -115,10 +113,9 @@ def _get_total_pages(html: str) -> int:
         soup,
         css_selectors=_COUNT_SELECTORS,
         regex_patterns=_COUNT_PATTERNS,
+        aviso_vazio=_AVISO_VAZIO,
         fallback_html=True,
     )
-    if n_resultados is None and _sem_resultados(soup):
-        n_resultados = 0
     return resolve_total_pages(
         n_resultados,
         resultados_por_pagina=RESULTS_PER_PAGE,

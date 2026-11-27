@@ -190,23 +190,18 @@ def test_get_total_pages_pagina_unica_com_contagem_inteira_na_ementa_continua_um
     assert _get_total_pages(html) == 1
 
 
-# Parecido com o marcador, mas sem a caixa nem os dois-pontos dele.
-_EMENTA_PARECIDA = "as diligências restaram sem resultados para a localização de bens"
-# O marcador literal, abrindo o nó de texto da ementa e no meio dele.
-_EMENTA_ABRE_COM_MARCADOR = "Sem resultados para: bens penhoráveis, conforme certidão"
-_EMENTA_MARCADOR_NO_MEIO = "Certidão negativa. Sem resultados para: bens penhoráveis"
+# Ementas com o aviso de busca vazia fora do contêiner dele: parecido (sem a
+# caixa nem os dois-pontos), literal no meio do texto e literal abrindo o nó de
+# texto, que a regra antiga ("o nó de texto começa com o marcador") aceitava.
+_EMENTAS_COM_MARCADOR = [
+    pytest.param("as diligências restaram sem resultados para a localização de bens", id="texto-parecido"),
+    pytest.param("Certidão negativa. Sem resultados para: bens penhoráveis", id="marcador-no-meio"),
+    pytest.param("Sem resultados para: bens penhoráveis, conforme certidão", id="marcador-abre-a-ementa"),
+]
 
 
 @pytest.mark.parametrize("sem_link", [False, True], ids=["com-link-ultima", "sem-link-ultima"])
-@pytest.mark.parametrize(
-    "texto",
-    [
-        pytest.param(_EMENTA_PARECIDA, id="texto-parecido"),
-        pytest.param(_EMENTA_MARCADOR_NO_MEIO, id="marcador-no-meio"),
-        # A ementa abre com o marcador, e a página tem contagem: a contagem vence.
-        pytest.param(_EMENTA_ABRE_COM_MARCADOR, id="marcador-abre-a-ementa"),
-    ],
-)
+@pytest.mark.parametrize("texto", _EMENTAS_COM_MARCADOR)
 def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str, *, sem_link: bool):
     """Com a contagem na página, o marcador de busca vazia numa ementa não é consultado."""
     html = _com_texto_na_ementa(_primeira_pagina(), texto)
@@ -215,15 +210,9 @@ def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str
     assert _get_total_pages(html) == 5515
 
 
-@pytest.mark.parametrize(
-    "texto",
-    [
-        pytest.param(_EMENTA_PARECIDA, id="texto-parecido"),
-        pytest.param(_EMENTA_MARCADOR_NO_MEIO, id="marcador-no-meio"),
-    ],
-)
+@pytest.mark.parametrize("texto", _EMENTAS_COM_MARCADOR)
 def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta(texto: str):
-    """Sem contagem nem », só o marcador que abre um nó de texto vale como busca vazia (1 página)."""
+    """Sem contagem nem », o marcador só vale no contêiner do aviso, mesmo abrindo o texto da ementa."""
     html = _sem_rotulo(_primeira_pagina()).replace(_LINK_ULTIMA, "")
     html = _com_texto_na_ementa(html, texto)
     with pytest.raises(ValueError, match="não traz a contagem"):

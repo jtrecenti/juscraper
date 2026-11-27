@@ -10,7 +10,7 @@ from juscraper.utils.params import apply_input_pipeline_search, coerce_brazilian
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJPB
+from .schemas import IdOrigem, InputCJSGTJPB
 
 
 def _to_date(value, fallback: date) -> date:
@@ -75,29 +75,29 @@ class TJPBScraper(HTTPScraper):
         id_classe: str | None = None,
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
-        id_origem: str = "8,2",
+        id_origem: IdOrigem = "8,2",
         decisoes: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPB.
 
         Args:
-            pesquisa (str): Termo de busca livre (busca na ementa).
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre (busca na ementa).
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal so entrega os 10.000
                 primeiros resultados de uma busca (1000 paginas): pagina
                 pedida alem da 1000 levanta ``ValueError`` antes de qualquer
                 requisicao, e ``None`` numa busca maior baixa as 1000
                 primeiras e emite ``UserWarning``.
-            numero_processo (str): Numero CNJ do processo. Aceita o alias
+            numero_processo: Numero CNJ do processo. Aceita o alias
                 deprecado ``nr_processo``.
-            id_classe (str): ID da classe judicial. Aceita o alias deprecado
+            id_classe: ID da classe judicial. Aceita o alias deprecado
                 ``id_classe_judicial`` (refs #129).
-            id_orgao_julgador (str): ID do orgao julgador.
-            id_relator (str): ID do relator.
-            id_origem (str): Filtro de origem. ``"8,2"`` para todos (default),
+            id_orgao_julgador: ID do orgao julgador.
+            id_relator: ID do relator.
+            id_origem: Filtro de origem. ``"8,2"`` para todos (default),
                 ``"8"`` para Turmas Recursais, ``"2"`` para Tribunal Pleno/Camaras.
-            decisoes (bool): Se ``True``, inclui decisoes monocraticas.
+            decisoes: Se ``True``, inclui decisoes monocraticas.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPB`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -175,13 +175,13 @@ class TJPBScraper(HTTPScraper):
         id_classe: str | None = None,
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
-        id_origem: str = "8,2",
+        id_origem: IdOrigem = "8,2",
         decisoes: bool = False,
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJPB.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
         Returns:
             Lista de respostas JSON cruas (uma por pagina).
@@ -208,7 +208,7 @@ class TJPBScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             nr_processo=inp.numero_processo or "",
             id_classe=inp.id_classe or "",

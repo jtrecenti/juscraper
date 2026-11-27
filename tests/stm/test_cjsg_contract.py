@@ -12,9 +12,9 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.core.exceptions import BotChallengeBlockedError
-from juscraper.courts.stm.download import BASE_URL, build_cjsg_params
+from juscraper.courts.stm.download import BASE_URL, build_cjsg_params, cjsg_n_resultados
 from juscraper.courts.stm.parse import COLUNAS
-from tests._helpers import load_sample
+from tests._helpers import load_sample, params_enviados
 
 INDEX_URL = "https://jurisprudencia.stm.jus.br/index.php"
 
@@ -39,7 +39,7 @@ def test_cjsg_paginas_none_baixa_todas(mocker):
 
     df = jus.scraper("stm", sleep_time=3).cjsg('"corrupção ativa"')
 
-    assert [call.request.params["start"] for call in responses.calls] == ["0", "100", "200"]
+    assert [params_enviados(call.request)["start"] for call in responses.calls] == ["0", "100", "200"]
     assert sleep.call_args_list == [mocker.call(3), mocker.call(3)]
     assert list(df.columns) == COLUNAS
     assert len(df) == 205
@@ -156,3 +156,16 @@ def test_cjsg_pagina_sem_contador_levanta():
 
     with pytest.raises(ValueError, match="não traz a contagem"):
         jus.scraper("stm").cjsg("deserção")
+
+
+def test_cjsg_n_resultados_ementa_com_o_aviso_sem_contador_nao_zera():
+    """Sem o contador, a ementa que cita o aviso de busca vazia fora do ``div.alert-danger`` não vira 0."""
+    html = load_sample("stm", "cjsg/single_page.html")
+    contador = '<div class="row message">'
+    ementa = '<blockquote data-id="ementa">'
+    assert html.count(contador) == 1
+    assert html.count(ementa) == 1
+    html = html.replace(contador, '<div class="row">')
+    html = html.replace(ementa, f"{ementa}Nenhum documento encontrado nos autos. ")
+    assert cjsg_n_resultados(html) is None
+    assert cjsg_n_resultados(load_sample("stm", "cjsg/no_results.html")) == 0

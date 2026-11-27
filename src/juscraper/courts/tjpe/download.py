@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +40,21 @@ _CURRENT_DATE_HINT = "04/2026"
 # O ID real vem do JS `jsfcljs(...)` na pagina de consulta.
 DEFAULT_SUBMIT_ID = "formPesquisaJurisprudencia:j_id101"
 
-# Cascata da contagem: o cabeçalho "Documentos encontrados: N" e, sem ele
-# (``fallback_html``), o HTML da página. O marcador de busca vazia só vale
-# quando nenhuma contagem aparece: uma ementa pode citar a frase.
+# Cascata da contagem: o cabeçalho "Documentos encontrados: N" da página de
+# resultados e as células "N documentos encontrados" da página de escolha.
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
     "div.resultado-header table.table-header-resultado",
+    "div.escolha-resultado-table td.text-right",
 )
+_ROTULO_RE = re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE),
+    _ROTULO_RE,
     re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
 )
 _ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
+# Na contagem, o aviso só vale nas células da tabela de escolha do tipo, onde
+# o portal o põe no lugar de "N documentos encontrados".
+_AVISO_VAZIO = AvisoVazio(("div.escolha-resultado-table td",), _ZERO_MARKERS)
 
 
 def extract_viewstate(html: str) -> str:
@@ -64,14 +68,19 @@ def extract_viewstate(html: str) -> str:
 
 
 def extract_total_docs(html: str) -> int:
-    """Extract total document count using cascading selectors + regexes (refs #87)."""
-    n = extract_count_with_cascade(
-        html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-        zero_markers=_ZERO_MARKERS,
-        fallback_html=True,
-    )
+    """Lê o total de documentos do cabeçalho ou da página de escolha (refs #87).
+
+    Sem os seletores, o HTML da página (``fallback_html``) só é lido com o
+    rótulo "Documentos encontrados: N", que exige os dois-pontos: "3 documentos
+    encontrados" numa ementa não vira total. O aviso de busca vazia só vale
+    quando nenhuma contagem aparece, e só nas células da tabela de escolha.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    n = extract_count_with_cascade(soup, css_selectors=_PAGINATION_CSS_SELECTORS, regex_patterns=_PAGINATION_REGEXES)
+    if n is None:
+        n = extract_count_with_cascade(
+            soup, regex_patterns=(_ROTULO_RE,), aviso_vazio=_AVISO_VAZIO, fallback_html=True
+        )
     return n if n is not None else 0
 
 
@@ -409,10 +418,8 @@ def cjsg_download(
 
     form_id, scroller_id = extract_pagination_ids(results_html)
 
-    # Determine pages to download
-    pages_iter: list = (
-        list(range(1, total_pages + 1)) if paginas is None else list(paginas)
-    )
+    # A repetida sai uma vez; a além do total vai para o log, sem requisição.
+    pages_iter = paginas_no_intervalo(paginas, total_pages, tribunal="TJPE")
 
     results = []
 

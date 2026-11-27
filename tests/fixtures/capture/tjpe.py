@@ -41,6 +41,7 @@ byte-identical to what the live backend served.
 """
 from __future__ import annotations
 
+import logging
 import sys
 from urllib.parse import urlparse
 
@@ -49,6 +50,8 @@ import requests
 import juscraper as jus
 
 from ._util import samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Cenário -> (pesquisa, kwargs do ``cjsg``), na ordem em que rodam.
 CENARIOS: dict[str, tuple[str, dict]] = {
@@ -131,7 +134,7 @@ def main() -> None:
         filename = _classify(method, url, scenario, counters)
         if filename and filename not in seen_files:
             (dest / filename).write_bytes(resp.content)
-            print(f"[tjpe/{scenario}] -> {filename} ({len(resp.content)} bytes)")
+            logger.info("[tjpe/%s] -> %s (%s bytes)", scenario, filename, len(resp.content))
             seen_files.add(filename)
         return resp
 
@@ -160,9 +163,10 @@ def main() -> None:
         state["scenario"] = scenario
         counters.clear()
         df = scraper.cjsg(pesquisa, **kwargs)
-        print(f"[tjpe/{scenario}] DataFrame columns: {list(df.columns)}")
-        print(f"[tjpe/{scenario}] rows: {len(df)}")
+        logger.info("[tjpe/%s] DataFrame columns: %s", scenario, list(df.columns))
+        logger.info("[tjpe/%s] rows: %s", scenario, len(df))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

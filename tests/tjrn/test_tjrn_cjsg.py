@@ -50,14 +50,24 @@ class TestCJSGTJRN:
         assert len(df_int) == len(df_range)
 
     @pytest.mark.parametrize(
-        ("decisoes", "pesquisa"),
-        [("Acórdão", "dano moral"), ("Decisão", ""), ("Sentença", "")],
+        ("decisoes", "pesquisa", "filtros"),
+        [
+            ("Acórdão", "dano moral", {}),
+            ("Decisão", "", {}),
+            ("Sentença", "", {}),
+            ("Sentença", "", {"grau": "1"}),
+            ("Decisão", "", {"grau": "1"}),
+            ("Decisão", "", {"jurisdicoes": "TJ"}),
+            ("Decisão", "", {"jurisdicoes": "TR"}),
+        ],
     )
-    def test_filtro_decisoes_traz_so_o_tipo_pedido(self, decisoes, pesquisa):
+    def test_filtro_decisoes_traz_so_o_tipo_pedido(self, decisoes, pesquisa, filtros):
         """Cada valor de ``decisoes`` traz resultados, todos do tipo pedido.
 
         O tipo vem em ``tipo_teor`` na resposta bruta. Monocraticas e sentencas
         nao tem ementa, onde ``pesquisa`` busca: vao sem termo, por periodo.
+        ``filtros`` cobre as combinacoes com grau e jurisdicao que o schema
+        aceita: a sentenca no 1o grau e a monocratica nos dois graus.
         """
         brutos = self.scraper.cjsg_download(
             pesquisa,
@@ -65,6 +75,7 @@ class TestCJSGTJRN:
             decisoes=decisoes,
             data_julgamento_inicio="2026-11-01",
             data_julgamento_fim="2026-11-20",
+            **filtros,
         )
         hits = brutos[0]["hits"]["hits"]
         assert hits
@@ -81,28 +92,68 @@ class TestCJSGTJRN:
         colegiados = df["colegiado"].dropna()
         assert len(colegiados) > 0
         assert all(("Turma" in c) == (jurisdicoes == "TR") for c in colegiados)
+        # Busca na ementa, que so os acordaos tem: "Acórdão" existe nas duas jurisdicoes.
+        assert set(df["tipo_decisao"]) == {"Acórdão"}
 
-    @pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
-    def test_filtro_jurisdicoes_com_primeiro_grau_volta_vazio(self, jurisdicoes):
-        """``jurisdicoes`` com ``grau="1"`` volta sem resultados no portal.
+    @pytest.mark.parametrize(
+        "filtros",
+        [
+            {"jurisdicoes": "TJ", "grau": "1"},
+            {"jurisdicoes": "TR", "grau": "1"},
+            {"decisoes": "Sentença", "grau": "2"},
+            {"decisoes": "Sentença", "jurisdicoes": "TJ"},
+            {"decisoes": "Sentença", "jurisdicoes": "TR"},
+            {"decisoes": "Acórdão", "grau": "1"},
+        ],
+    )
+    def test_filtros_de_graus_diferentes_voltam_vazios(self, filtros):
+        """Filtros de graus diferentes voltam sem resultados no portal.
 
-        E a prova de que ``InputCJSGTJRN`` pode recusar a combinacao: como a
+        E a prova de que ``InputCJSGTJRN`` pode recusar as combinacoes: como a
         API publica levanta ``ValidationError``, o payload vai direto pela
-        sessao do scraper, sem passar pelo schema. ``"TJ"`` e ``"TR"`` so
-        cobrem o 2o grau. Vai sem termo, por periodo, porque decisoes de 1o
-        grau nao tem ementa; o mesmo periodo sem ``jurisdicoes`` traz decisoes
-        de 1o grau (``test_filtro_grau_traz_so_o_grau_pedido``).
+        sessao do scraper, sem passar pelo schema. ``"TJ"``, ``"TR"`` e
+        ``"Acórdão"`` so existem no 2o grau, e ``"Sentença"`` so no 1o. Vai sem
+        termo, por periodo, porque sentencas e decisoes de 1o grau nao tem
+        ementa; o mesmo periodo traz resultados sem o filtro cruzado
+        (``test_filtro_decisoes_traz_so_o_tipo_pedido`` e
+        ``test_filtro_grau_traz_so_o_grau_pedido``).
         """
         payload = build_cjsg_payload(
             "",
-            jurisdicoes=jurisdicoes,
-            grau="1",
             dt_inicio=_to_tjrn_date("2026-11-01"),
             dt_fim=_to_tjrn_date("2026-11-20"),
+            **filtros,
         )
         resp = self.scraper.session.post(BASE_URL, json=payload, timeout=60)
         resp.raise_for_status()
         assert resp.json()["hits"]["hits"] == []
+
+    @pytest.mark.parametrize(
+        "filtros",
+        [
+            {"decisoes": "Sentença"},
+            {"grau": "1"},
+            {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+            {"decisoes": "Decisão", "jurisdicoes": "TR"},
+            {"decisoes": "Decisão", "sistema": "PJE"},
+        ],
+    )
+    def test_termo_na_ementa_sem_ementa_volta_vazio(self, filtros):
+        """Com termo na ementa, os filtros sem ementa voltam sem resultados.
+
+        E a prova de que ``InputCJSGTJRN`` pode recusar as combinacoes: como a
+        API publica levanta ``ValidationError``, o payload vai direto pela
+        sessao do scraper. So os acordaos tem ementa; as monocraticas com
+        ementa sao poucas do SAJ, de 2008, sem jurisdicao. Sem
+        data, porque a recusa vale para qualquer periodo; o mesmo termo traz
+        resultados sem o filtro e no inteiro teor
+        (``test_inteiro_teor_busca_termo_em_sentencas``).
+        """
+        resp = self.scraper.session.post(
+            BASE_URL, json=build_cjsg_payload("dano moral", **filtros), timeout=60,
+        )
+        resp.raise_for_status()
+        assert resp.json()["hits"]["total"] == 0
 
     @pytest.mark.parametrize("sistema", ["PJE", "SAJ"])
     def test_filtro_sistema_traz_so_o_sistema_pedido(self, sistema):

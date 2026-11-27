@@ -44,9 +44,9 @@ def parse_datajud_api_response(
     como buscas sem resultados.
 
     Args:
-        api_response_json (dict[str, Any] | None): Resposta JSON da API,
+        api_response_json: Resposta JSON da API,
             obtida por ``call_datajud_api``.
-        mostrar_movs (bool): Inclui movimentações no DataFrame quando verdadeiro.
+        mostrar_movs: Inclui movimentações no DataFrame quando verdadeiro.
 
     Returns:
         Processos encontrados. Retorna um DataFrame vazio quando

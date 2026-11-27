@@ -4,11 +4,15 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjba
 """
+import logging
+
 import requests
 
 from juscraper.courts.tjba.download import FILTER_QUERY
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://jurisprudenciaws.tjba.jus.br/graphql"
 
@@ -40,7 +44,7 @@ def _capture(session: requests.Session, dest, pesquisa: str, page_number: int, f
     response = session.post(BASE_URL, json=_payload(pesquisa, page_number), timeout=60)
     response.raise_for_status()
     dump(dest / filename, response.content)
-    print(f"[tjba] wrote {filename}")
+    logger.info("[tjba] wrote %s", filename)
 
 
 def main() -> None:
@@ -61,4 +65,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import TypeVar
+from typing import NamedTuple, TypeGuard, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -44,11 +44,34 @@ def _extract_from_match(match: re.Match[str]) -> int | None:
     return _coerce_int(match.group(0))
 
 
-def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
-    if not zero_markers:
+class AvisoVazio(NamedTuple):
+    """Aviso de busca vazia: os marcadores só valem no texto dos ``seletores``.
+
+    Ementas e sentenças citam as frases do aviso ("nenhum documento
+    encontrado nos autos"), e por isso o texto da página inteira não serve:
+    o marcador é procurado só nos elementos que o portal usa para o aviso
+    (``div.alert-danger`` no STM, por exemplo).
+
+    Attributes:
+        seletores: Seletores CSS do contêiner do aviso.
+        marcadores: Substrings (sem diferença de maiúsculas) procuradas no
+            texto de cada elemento que os seletores casam.
+    """
+
+    seletores: tuple[str, ...]
+    marcadores: tuple[str, ...]
+
+
+def _tem_aviso_vazio(soup: Tag, aviso: AvisoVazio | None) -> bool:
+    if aviso is None:
         return False
-    text_lower = soup.get_text(" ", strip=True).lower()
-    return any(marker.lower() in text_lower for marker in zero_markers)
+    marcadores = [marcador.lower() for marcador in aviso.marcadores]
+    textos = (
+        elemento.get_text(" ", strip=True).lower()
+        for seletor in aviso.seletores
+        for elemento in soup.select(seletor)
+    )
+    return any(marcador in texto for texto in textos for marcador in marcadores)
 
 
 def _collect_candidates(
@@ -88,7 +111,7 @@ def extract_count_with_cascade(
     *,
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
-    zero_markers: Sequence[str] = (),
+    aviso_vazio: AvisoVazio | None = None,
     fallback_html: bool = False,
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
@@ -97,17 +120,18 @@ def extract_count_with_cascade(
     :func:`resolve_total_pages` ou levanta: assumir 1 página ou 0 resultados
     faz o download parar na primeira página sem aviso.
 
-    A ordem é: seletores e regex; ``zero_markers``; ``None``. Os marcadores
-    de busca vazia só valem quando nenhuma contagem foi achada, porque
-    ementas e sentenças citam essas frases ("nenhum documento encontrado nos
-    autos") e uma contagem 0 faz o download parar na primeira página sem aviso.
+    A ordem é: seletores e regex; ``aviso_vazio``; ``None``. O aviso de busca
+    vazia só vale quando nenhuma contagem foi achada, e só dentro dos
+    seletores dele, porque ementas e sentenças citam essas frases ("nenhum
+    documento encontrado nos autos") e uma contagem 0 faz o download parar na
+    primeira página sem aviso.
 
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
             tabela, sem parsear de novo. Com uma ``Tag``, a
             cascata inteira (seletores, regex, ``fallback_html`` e
-            ``zero_markers``) olha so o trecho.
+            ``aviso_vazio``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
             candidato. Se nenhum seletor casa elemento com texto (ou se a
@@ -117,23 +141,23 @@ def extract_count_with_cascade(
             Se a regex tem grupos, retorna o primeiro grupo numerico
             valido; caso contrario tenta ``group(0)``. Vence o primeiro
             match valido na ordem da cascata (candidato, depois regex).
-        zero_markers: Substrings (case-insensitive) procuradas no texto da
-            pagina inteira (ou da ``Tag``) quando a cascata nao acha contagem;
-            se alguma aparece, o util retorna ``0``. Use marcadores
-            especificos do tribunal ("Nenhum documento encontrado", "Sua
-            pesquisa nao retornou resultados") para nao falso-positivar em
-            textos de ajuda.
+        aviso_vazio: Contêiner e frases do aviso de busca vazia
+            (:class:`AvisoVazio`), consultado quando a cascata nao acha
+            contagem; se algum marcador aparece no texto de algum elemento
+            dos seletores do aviso, o util retorna ``0``. Fora desses
+            elementos o marcador nao conta. Com uma ``Tag``, os seletores
+            casam os descendentes dela, como ``css_selectors``.
         fallback_html: Se ``True``, as regex rodam no HTML bruto quando
             nenhum seletor casa elemento com texto. Default ``False``: o
             HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
             casa "(fevereiro de 2009)" nelas. So quando todas as regex exigem
             as palavras do rotulo do resumo ("Documentos encontrados: N"),
             que tambem nao podem casar com o aviso de busca vazia, porque a
-            regex roda antes de ``zero_markers``.
+            regex roda antes de ``aviso_vazio``.
 
     Returns:
-        ``int`` extraido; ``0`` quando a cascata nao acha contagem e algum
-            ``zero_markers`` aparece; ``None`` nos demais casos. O caller
+        ``int`` extraido; ``0`` quando a cascata nao acha contagem e o
+            ``aviso_vazio`` aparece; ``None`` nos demais casos. O caller
             decide o default (1 pagina, 0 resultados) ou levanta.
     """
     soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
@@ -141,7 +165,7 @@ def extract_count_with_cascade(
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
-    if _has_zero_marker(soup, zero_markers):
+    if _tem_aviso_vazio(soup, aviso_vazio):
         return 0
     return None
 
@@ -204,6 +228,11 @@ def resolve_total_pages(
 _PAGINAS_FORA_NO_AVISO = 5
 
 
+def _range_crescente(paginas: Iterable[int]) -> TypeGuard[range]:
+    """``range`` crescente, cortado pelos limites sem ser percorrido."""
+    return isinstance(paginas, range) and paginas.step > 0
+
+
 def menor_pagina(paginas: Iterable[int] | None) -> int:
     """A página a pedir primeiro quando o total só vem numa resposta: a menor pedida, ou 1 com ``None``.
 
@@ -213,9 +242,34 @@ def menor_pagina(paginas: Iterable[int] | None) -> int:
     """
     if paginas is None:
         return 1
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         return paginas.start
     return min(paginas)
+
+
+def maior_pagina(paginas: Iterable[int]) -> int:
+    """A maior página pedida, sem percorrer o ``range`` crescente.
+
+    Para o laço que precisa saber até onde ir antes de ler o total: o teto de
+    resultados de :func:`contador_com_teto`, o cursor que só avança (PDPJ,
+    DataJud) e a validação do payload antes da primeira requisição (STF).
+    """
+    if _range_crescente(paginas):
+        return paginas[-1]
+    return max(paginas)
+
+
+def paginas_unicas(paginas: Iterable[int]) -> Sequence[int]:
+    """As páginas pedidas na ordem pedida, cada uma uma vez só, na posição em que aparece primeiro.
+
+    Para o portal que não informa o total e por isso não corta a seleção com
+    :func:`paginas_no_intervalo`: a página repetida é baixada uma vez só,
+    como nos demais. O ``range`` volta como veio, sem ser percorrido, porque
+    não repete página.
+    """
+    if isinstance(paginas, range):
+        return paginas
+    return list(dict.fromkeys(paginas))
 
 
 def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
@@ -230,10 +284,10 @@ def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal
     """
     if paginas is None:
         return list(range(1, n_pags + 1))
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         validas, primeiras_fora, n_fora = _range_no_intervalo(paginas, n_pags)
     else:
-        unicas = list(dict.fromkeys(paginas))
+        unicas = paginas_unicas(paginas)
         validas = [pagina for pagina in unicas if 1 <= pagina <= n_pags]
         fora = [pagina for pagina in unicas if not 1 <= pagina <= n_pags]
         primeiras_fora, n_fora = fora[:_PAGINAS_FORA_NO_AVISO], len(fora)
@@ -290,13 +344,11 @@ def contador_com_teto(
         ``UserWarning``, emitido pelo contador: com ``paginas=None``, quando o
         total passa de ``teto``, porque o download para nele.
     """
-    if paginas is not None:
-        maior = paginas[-1] if isinstance(paginas, range) and paginas.step > 0 else max(paginas)
-        if maior > teto:
-            raise ValueError(
-                f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
-                f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
-            )
+    if paginas is not None and (maior := maior_pagina(paginas)) > teto:
+        raise ValueError(
+            f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
+            f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
+        )
 
     def contar(first: _Pagina) -> int:
         n_pags = contar_paginas(first)

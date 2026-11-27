@@ -14,6 +14,15 @@ from pydantic import BeforeValidator, model_validator
 from ...schemas import DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
 from ...schemas.types import _coerce_id_filtro_unico
 
+# Codigos do seletor "Orgao" (lista ``tipos`` de ``js/ConsultaJurisprudencia.js``
+# do Projudi, nov/2026). ``"0"`` = todos. Usado tambem nas assinaturas de ``TJGOScraper``.
+IdServentiaSubtipo = Literal[
+    "0", "1", "2", "3", "6", "7", "8", "9", "10", "11", "12", "14", "20", "21", "22",
+    "26", "27", "34", "35", "36", "37", "39", "41", "42", "43", "44", "45", "46",
+    "47", "49", "58", "60", "61", "63", "64", "66", "67", "68", "69", "70", "71",
+    "72", "81", "82", "83",
+]
+
 # Codigos do seletor "Orgao" por instancia (``servTipoId``) e area (``areaId``),
 # da lista ``tipos`` de ``js/ConsultaJurisprudencia.js`` do Projudi (nov/2026).
 # A instancia ``16`` (1o grau) saiu do seletor "Instancia": seus orgaos so
@@ -54,17 +63,8 @@ class InputCJSGTJGO(SearchBase, DataPublicacaoMixin):
     # Mais ``1``, deprecado (ver ``_resolver_id_instancia`` no client).
     id_instancia: Literal[0, 15, 151, 1, "0", "15", "151", "1"] = 0
     id_area: Literal[0, 1, 2, "0", "1", "2"] = 0
-    # Codigos do seletor "Orgao" (lista ``tipos`` de ``js/ConsultaJurisprudencia.js``
-    # do Projudi, nov/2026). ``"0"`` = todos. Inteiros sao aceitos e viram string.
-    id_serventia_subtipo: Annotated[
-        Literal[
-            "0", "1", "2", "3", "6", "7", "8", "9", "10", "11", "12", "14", "20", "21", "22",
-            "26", "27", "34", "35", "36", "37", "39", "41", "42", "43", "44", "45", "46",
-            "47", "49", "58", "60", "61", "63", "64", "66", "67", "68", "69", "70", "71",
-            "72", "81", "82", "83",
-        ],
-        BeforeValidator(_coerce_id_filtro_unico),
-    ] = "0"
+    # Inteiros sao aceitos e viram string.
+    id_serventia_subtipo: Annotated[IdServentiaSubtipo, BeforeValidator(_coerce_id_filtro_unico)] = "0"
     numero_processo: str | None = None
     tamanho_pagina: TamanhoPagina = 10
 

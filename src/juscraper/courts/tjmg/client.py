@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.cnj import clean_cnj
-from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
+from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, resolve_deprecated_alias
 
 from .cposg_download import PERFIL_CPOSG
 from .cposg_download import cposg_download as _cposg_download
@@ -95,35 +95,14 @@ class TJMGScraper(HTTPScraper):
         data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """Run a TJMG acórdão search and return the raw HTML of each page.
+        """Executa a busca de acórdãos no TJMG e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
-        Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai como DataFrame).
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa. Falhas: ver Raises de :meth:`cjsg` (``.resultado`` sai
+        como DataFrame).
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range or None
-            Pages to download (1-based). ``None`` downloads every page. A
-            common search with too many results raises ``ValueError``
-            ("muitos resultados"); the lists of the categorized search have
-            no such cap. In the categorized search, ``paginas`` applies to
-            each list.
-        pesquisar_por : str
-            Field to search in: ``"ementa"`` or ``"acordao"``
-            (inteiro teor).
-        order_by : int
-            Sort order: ``2`` data julgamento, ``1`` data publicação,
-            ``0`` precisão.
-        tamanho_pagina : int
-            Results per page (10, 20 or 50). Aceita ``linhas_por_pagina``
-            como alias deprecado.
-        data_julgamento_inicio, data_julgamento_fim : str, date or None
-            Julgamento date range: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
-            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-        data_publicacao_inicio, data_publicacao_fim : str, date or None
-            Publicação date range (mesmos formatos).
+        Returns:
+            HTML bruto de cada página baixada.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "linhas_por_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -146,7 +125,7 @@ class TJMGScraper(HTTPScraper):
 
         return _cjsg_download(
             pesquisa=inp.pesquisa or "",
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             pesquisar_por=inp.pesquisar_por,
             order_by=str(inp.order_by),
             data_julgamento_inicial=_br_date(inp.data_julgamento_inicio),
@@ -180,19 +159,19 @@ class TJMGScraper(HTTPScraper):
         """Busca jurisprudencia no TJMG (acordaos com captcha numerico).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. A busca comum com resultados demais
                 levanta ``ValueError`` ("muitos resultados").
                 Quando ha acordaos de repetitivos no resultado, o portal
                 responde com a busca categorizada, uma lista por categoria
                 (repetitivos e demais acordaos), sem esse limite; o ``cjsg``
                 segue cada lista, e ``paginas`` vale para cada uma delas.
-            pesquisar_por ({"ementa", "acordao"}): Campo onde buscar.
+            pesquisar_por: Campo onde buscar.
                 ``"acordao"`` busca no inteiro teor. Default ``"ementa"``.
-            order_by (int | str): Ordenacao: ``2`` data julgamento,
+            order_by: Ordenacao: ``2`` data julgamento,
                 ``1`` data publicacao, ``0`` precisao. Default ``2``.
-            tamanho_pagina (int): Resultados por pagina (10, 20 ou 50).
+            tamanho_pagina: Resultados por pagina (10, 20 ou 50).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJMG`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
@@ -255,12 +234,7 @@ class TJMGScraper(HTTPScraper):
         try:
             inp = InputCPOSGTJMG(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
-            extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
-            if extras and len(extras) == len(exc.errors()):
-                names = ", ".join(repr(err["loc"][-1]) for err in extras)
-                raise TypeError(
-                    f"TJMGScraper.cposg got unexpected keyword argument(s): {names}"
-                ) from exc
+            raise_on_extra_kwargs(exc, "TJMGScraper.cposg")
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
         numeros = [clean_cnj(c) for c in raw]
@@ -310,7 +284,7 @@ class TJMGScraper(HTTPScraper):
         uma linha.
 
         Args:
-            id_cnj (str | list[str]): CNJ (20 digitos) ou numero TJMG
+            id_cnj: CNJ (20 digitos) ou numero TJMG
                 (17 digitos, ex.: ``"1.0000.26.408376-7/001"`` — a coluna
                 ``processo_interno`` do :meth:`cjsg`). Mascara opcional.
                 Com CNJ, vem todos os recursos vinculados; com numero TJMG,

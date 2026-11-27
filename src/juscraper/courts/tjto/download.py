@@ -6,10 +6,13 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
+from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.pagination import (
     descrever_paginas,
     extract_count_with_cascade,
@@ -33,28 +36,31 @@ TYPE_MINUTA_MAP = {
 }
 
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
-    ".nav-link.active .num_minuta",
-    ".nav-link.active span",
-)
-_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
-    re.compile(r"\(([\d.]+)\)"),
-)
+_NUM_ABA_RE = re.compile(r"\(([\d.]+)\)")
+_N_RESULTADOS_RE = re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE)
 
 
-def _get_total_results(html: str) -> int | None:
-    """Lê o total de resultados na contagem da aba ativa; ``None`` sem ela.
+def eh_bloqueio_waf(resp: requests.Response) -> bool:
+    """Diz se o AWS WAF do TJTO desafiou (HTTP 202) ou pediu CAPTCHA em vez de responder."""
+    # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
+    return resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha"
 
-    Sem ``zero_markers``: a página além do total também diz "Nenhum documento
-    encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
-    a busca sem resultados traz ``(0)`` na aba.
+
+def _get_total_results(html: str, type_minuta: str) -> int | None:
+    """Total de resultados da aba do ``type_minuta`` pedido, ou ``None`` sem a contagem.
+
+    A aba é escolhida pelo ``type_minuta``, e não pela classe ``active``: sem
+    ela, o primeiro "(N)" da página é sempre o da aba de acórdãos. Sem a aba,
+    vale o "(N resultados)" acima da paginação, que só aparece em busca de mais
+    de uma página e já traz o total do tipo pedido. Sem ``aviso_vazio``: a
+    página além do total também diz "Nenhum documento encontrado", mas a aba
+    traz o total da busca (``pagina_alem_do_total.html``); a busca sem
+    resultados traz ``(0)`` na aba.
     """
-    return extract_count_with_cascade(
-        html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-    )
+    aba = BeautifulSoup(html, "html.parser").select_one(f'li[type_minuta="{type_minuta}"] .num_minuta')
+    if aba is not None:
+        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,), fallback_html=True)
+    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,), fallback_html=True)
 
 
 def build_cjsg_payload(
@@ -141,7 +147,9 @@ def cjsg_download_manager(
         List of raw HTML strings, one per page.
 
     Raises:
-        ValueError: Quando a página lida não traz a contagem da aba ativa (markup novo).
+        ValueError: Quando a primeira página não traz a contagem da aba do
+            ``type_minuta`` pedido nem o "(N resultados)"; ver
+            :func:`~juscraper.utils.pagination.resolve_total_pages`.
     """
     fetch_kwargs: dict[str, Any] = {
         "type_minuta": type_minuta,
@@ -163,16 +171,16 @@ def cjsg_download_manager(
     primeira = menor_pagina(paginas)
     html_primeira = _get_page(primeira)
     n_pags = resolve_total_pages(
-        _get_total_results(html_primeira), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
+        _get_total_results(html_primeira, type_minuta), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
     )
     validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
     return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
 
 
 def _baixar_paginas(
-    get_page: Callable[[int], str], paginas: list[int], primeira: int, html_primeira: str, sleep_time: float
+    get_page: Callable[[int], str], pendentes: list[int], primeira: int, html_primeira: str, sleep_time: float
 ) -> list:
-    """Baixa as ``paginas`` (1-based), com ``sleep_time`` antes de cada requisição.
+    """Baixa as ``pendentes`` (1-based), com ``sleep_time`` antes de cada requisição.
 
     ``primeira`` já foi baixada, para ler o total, e entra na sua posição sem
     nova requisição. Por isso a página que falha aqui sempre tem outra baixada
@@ -183,7 +191,7 @@ def _baixar_paginas(
     antes, como a exceção original.
     """
     resultados: list[str] = []
-    for posicao, page_num in enumerate(tqdm(paginas, desc="Baixando páginas TJTO")):
+    for posicao, page_num in enumerate(tqdm(pendentes, desc="Baixando páginas TJTO")):
         if page_num == primeira:
             resultados.append(html_primeira)
             continue
@@ -191,7 +199,7 @@ def _baixar_paginas(
         try:
             resultados.append(get_page(page_num))
         except Exception as exc:  # vai para ColetaParcialError
-            faltando = paginas[posicao:]
+            faltando = pendentes[posicao:]
             if primeira in faltando:
                 resultados.append(html_primeira)
                 faltando.remove(primeira)

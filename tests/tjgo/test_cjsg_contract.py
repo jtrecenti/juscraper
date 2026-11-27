@@ -19,7 +19,7 @@ from juscraper.courts.tjgo.download import SEARCH_URL, _extract_total, build_cjs
 from juscraper.courts.tjgo.parse import _split_blocks, cjsg_parse
 from juscraper.courts.tjgo.schemas import OutputCJSGTJGO
 from juscraper.schemas import OutputCJSGBase
-from tests._helpers import load_sample_bytes
+from tests._helpers import corpo_enviado, load_sample_bytes
 
 CJSG_FIELDS = {
     "processo", "id_arquivo", "serventia", "relator",
@@ -219,5 +219,5 @@ def test_cjsg_payload_carries_empty_turnstile_token(mocker):
 
     post_calls = [c for c in responses.calls if c.request.method == "POST"]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
+    body = corpo_enviado(post_calls[0].request)
     assert "cf-turnstile-response=" in body

@@ -13,11 +13,14 @@ fields per hit (parser only reads ``ementatextopuro``). Keeps samples
 under ~200 KB.
 """
 import json
+import logging
 
 from juscraper.courts.tjpa.client import TJPAScraper
 from juscraper.courts.tjpa.download import build_cjsg_payload, post_cjsg
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Top-level keys the parser ignores under ``data``; drop from samples.
 # ``highlighting`` is a defensive entry — not present in current captures,
@@ -53,7 +56,7 @@ def _capture(scraper: TJPAScraper, dest, pesquisa: str, pagina_1based: int, file
     response = post_cjsg(scraper._request_with_retry, payload)
     response.encoding = "utf-8"
     dump(dest / filename, _minify(response.content))
-    print(f"[tjpa] wrote {filename}")
+    logger.info("[tjpa] wrote %s", filename)
 
 
 def main() -> None:
@@ -68,4 +71,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

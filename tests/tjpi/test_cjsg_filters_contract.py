@@ -12,7 +12,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpi.download import BASE_URL, build_cjsg_params
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, params_enviados
 
 
 @responses.activate
@@ -56,7 +56,7 @@ def test_cjsg_all_filters_land_in_query_params(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de parâmetro do backend ficam pinados aqui.
-    assert responses.calls[0].request.params == {
+    assert params_enviados(responses.calls[0].request) == {
         "q": "dano moral",
         "page": "1",
         "tipo": "Acordao",

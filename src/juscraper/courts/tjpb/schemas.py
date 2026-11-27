@@ -5,6 +5,9 @@ from typing import ClassVar, Literal
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, SearchBase
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJPBScraper``.
+IdOrigem = Literal["8", "2", "8,2"]
+
 
 class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJPB ``cjsg`` / ``cjsg_download``.
@@ -35,7 +38,7 @@ class InputCJSGTJPB(SearchBase, DataJulgamentoMixin):
     # Valores de ``ids_jurisdicoes`` em ``/api/pje/origens/list``: ``"8"`` Turmas
     # Recursais, ``"2"`` Tribunal Pleno/Camaras/Secoes e ``"8,2"`` todas. A lista
     # separada por virgula e o formato do proprio backend, nao uma lista do usuario.
-    id_origem: Literal["8", "2", "8,2"] = "8,2"
+    id_origem: IdOrigem = "8,2"
     decisoes: bool = False
 
 
