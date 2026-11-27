@@ -4,6 +4,8 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
+from juscraper.courts.tjrn.client import _to_tjrn_date
+from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
 
 
 @pytest.mark.integration
@@ -82,20 +84,25 @@ class TestCJSGTJRN:
 
     @pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
     def test_filtro_jurisdicoes_com_primeiro_grau_volta_vazio(self, jurisdicoes):
-        """``jurisdicoes`` com ``grau="1"`` volta sem resultados e sem erro.
+        """``jurisdicoes`` com ``grau="1"`` volta sem resultados no portal.
 
-        ``"TJ"`` e ``"TR"`` so cobrem o 2o grau. Vai sem termo, por periodo,
-        porque decisoes de 1o grau nao tem ementa, onde ``pesquisa`` busca.
+        E a prova de que ``InputCJSGTJRN`` pode recusar a combinacao: como a
+        API publica levanta ``ValidationError``, o payload vai direto pela
+        sessao do scraper, sem passar pelo schema. ``"TJ"`` e ``"TR"`` so
+        cobrem o 2o grau. Vai sem termo, por periodo, porque decisoes de 1o
+        grau nao tem ementa; o mesmo periodo sem ``jurisdicoes`` traz decisoes
+        de 1o grau (``test_filtro_grau_traz_so_o_grau_pedido``).
         """
-        brutos = self.scraper.cjsg_download(
+        payload = build_cjsg_payload(
             "",
-            paginas=1,
             jurisdicoes=jurisdicoes,
             grau="1",
-            data_julgamento_inicio="2026-11-01",
-            data_julgamento_fim="2026-11-20",
+            dt_inicio=_to_tjrn_date("2026-11-01"),
+            dt_fim=_to_tjrn_date("2026-11-20"),
         )
-        assert brutos[0]["hits"]["hits"] == []
+        resp = self.scraper.session.post(BASE_URL, json=payload, timeout=60)
+        resp.raise_for_status()
+        assert resp.json()["hits"]["hits"] == []
 
     @pytest.mark.parametrize("sistema", ["PJE", "SAJ"])
     def test_filtro_sistema_traz_so_o_sistema_pedido(self, sistema):
