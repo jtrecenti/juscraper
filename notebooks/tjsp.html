@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -550,10 +550,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas. Limite de 120 caracteres.</li>
 <li><code>paginas</code> (int | list | range, opcional): Páginas 1-based; <code>None</code> (default) baixa todas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas</li>
 <li><code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas</li>
-<li><code>classe</code> (str, opcional): ID interno da classe processual</li>
-<li><code>assunto</code> (str, opcional): ID interno do assunto</li>
-<li><code>comarca</code> (str, opcional): ID interno da comarca</li>
-<li><code>orgao_julgador</code> (str, opcional): ID interno do órgão julgador</li>
+<li><code>classe</code> (int | str | list, opcional): ID(s) interno(s) de classes processuais para filtrar</li>
+<li><code>assunto</code> (int | str | list, opcional): ID(s) interno(s) de assuntos para filtrar</li>
+<li><code>comarca</code> (int | str, opcional): ID interno de uma comarca para filtrar (um só)</li>
+<li><code>orgao_julgador</code> (int | str | list, opcional): ID(s) interno(s) de órgãos julgadores para filtrar</li>
 <li><code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str, opcional): Intervalo de julgamento no formato <code>DD/MM/AAAA</code></li>
 <li><code>baixar_sg</code> (bool, opcional): Se <code>True</code> (padrão), busca em segundo grau. Se <code>False</code>, busca em colégio recursal</li>
 <li><code>tipo_decisao</code> (str, opcional): Tipo de decisão - <code>'acordao'</code> (padrão) ou <code>'monocratica'</code></li>
