@@ -45,6 +45,67 @@ class TJPEScraper(HTTPScraper):
             self._consulta_publica = TJPEConsultaPublicaScraper(politica=self._politica_cpopg)
         return self._consulta_publica
 
+    def cpopg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[str | None]:
+        """Baixa o HTML do detalhe de cada ``id_cnj`` na consulta pública do PJe do TJPE.
+
+        Delega a :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg_download`,
+        na mesma sessão de :meth:`cpopg`, inclusive o cookie do AWS WAF obtido
+        quando o desafio aparece. Não baixa as peças: para elas, usar
+        :meth:`cpopg` com ``download_pecas=True``.
+
+        Args:
+            id_cnj (str | list[str]): CNJ único ou lista, com ou sem máscara.
+
+        Returns:
+            Lista na ordem da entrada, com o HTML do detalhe de cada CNJ.
+                ``None`` indica processo que a consulta pública não devolveu:
+                segredo de justiça, CNJ inexistente ou falha da requisição.
+                Falhas individuais não interrompem o lote; um bloqueio do WAF
+                encerra o lote, e o CNJ bloqueado e os seguintes saem ``None``.
+                As falhas entram num único ``UserWarning`` ao fim;
+                :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
+
+        Raises:
+            TypeError: Kwarg desconhecido.
+            ImportError: O WAF desafiou e o Playwright não está instalado.
+
+        Examples: Exemplo
+            >>> import juscraper as jus
+            >>> tjpe = jus.scraper("tjpe")
+            >>> cnjs = ["0000000-00.0000.8.17.0000"]
+            >>> htmls = tjpe.cpopg_download(cnjs)
+            >>> df = tjpe.cpopg_parse(htmls, cnjs)
+
+        See Also:
+            :class:`InputCpopgTRF` — schema pydantic e a fonte da verdade dos
+            parâmetros aceitos.
+        """
+        return self._consulta().cpopg_download(id_cnj, **kwargs)
+
+    def cpopg_parse(self, htmls: list[str | None], id_cnj_list: list[str]) -> pd.DataFrame:
+        """Parseia os HTMLs de :meth:`cpopg_download` em DataFrame, uma linha por processo.
+
+        Delega a :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg_parse`,
+        o parser da família PJe; não faz requisição.
+
+        Args:
+            htmls (list[str | None]): HTMLs do detalhe, como
+                :meth:`cpopg_download` devolve.
+            id_cnj_list (list[str]): CNJs na mesma ordem de ``htmls``.
+
+        Returns:
+            Uma linha por CNJ, com as colunas do detalhe de :meth:`cpopg`,
+                exceto ``motivo_falha``: um ``None`` de :meth:`cpopg_download`
+                pode ser processo ausente ou requisição que falhou, e só
+                :meth:`cpopg` sabe qual. A linha de um ``None`` traz só
+                ``id_cnj``; um HTML que o parser recusa também, com
+                ``UserWarning``, e o lote continua.
+
+        Raises:
+            ValueError: ``htmls`` e ``id_cnj_list`` com tamanhos diferentes.
+        """
+        return self._consulta().cpopg_parse(htmls, id_cnj_list)
+
     def cpopg(
         self,
         id_cnj: str | list[str],
