@@ -31,6 +31,7 @@ COERCED_DOCUMENT_COLUMNS = [
     "numero_processo",
     "id_documento",
     "id_codex",
+    "id_origem",
     "sequencia",
     "data_juntada",
     "nome",
@@ -40,7 +41,9 @@ COERCED_DOCUMENT_COLUMNS = [
     "arquivo_id",
     "arquivo_tipo",
     "arquivo_tamanho",
+    "arquivo_tamanho_texto",
     "arquivo_paginas",
+    "_raw",
 ]
 
 
@@ -221,6 +224,26 @@ def test_download_documents_a_partir_de_cpopg_df():
 
 
 @responses.activate
+def test_download_documents_de_cpopg_tem_as_colunas_de_documentos():
+    """O documento sai com as mesmas colunas, na mesma ordem, venha ``base_df`` de onde vier."""
+    _mock_documentos_endpoint()
+    _mock_cpopg_endpoint()
+    _mock_any_text_endpoint()
+    s = _mk_scraper()
+    colunas_documentos = [c for c in s.documentos(PROC).columns if c != "motivo_falha"]
+
+    out = s.download_documents(s.cpopg(PROC))
+
+    assert colunas_documentos == COERCED_DOCUMENT_COLUMNS
+    assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto", "motivo_falha"]
+    # Valores do sample real do cpopg, em ``tramitacoes[0].documentos[0]``.
+    primeira = out.iloc[0]
+    assert primeira["id_origem"] == "141530864"
+    assert primeira["arquivo_tamanho_texto"] == 875
+    assert primeira["_raw"]["id"] == primeira["id_documento"]
+
+
+@responses.activate
 def test_download_documents_with_binary_baixa_bytes():
     _mock_documentos_endpoint()
     s = _mk_scraper()
@@ -323,6 +346,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
     top_document = {
         "id": "doc-top",
         "idCodex": "codex-top",
+        "idOrigem": "origem-top",
         "sequencia": 1,
         "dataHoraJuntada": "2026-01-02T03:04:05",
         "nome": "Documento do topo",
@@ -332,6 +356,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
             "id": "arquivo-top",
             "tipo": "application/pdf",
             "tamanho": 123,
+            "tamanhoTexto": 45,
             "quantidadePaginas": 2,
         },
     }
@@ -394,6 +419,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "numero_processo": "cnj-retornado-1",
         "id_documento": "doc-top",
         "id_codex": "codex-top",
+        "id_origem": "origem-top",
         "sequencia": 1,
         "data_juntada": "2026-01-02T03:04:05",
         "nome": "Documento do topo",
@@ -403,7 +429,9 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "arquivo_id": "arquivo-top",
         "arquivo_tipo": "application/pdf",
         "arquivo_tamanho": 123,
+        "arquivo_tamanho_texto": 45,
         "arquivo_paginas": 2,
+        "_raw": top_document,
     }
 
 
