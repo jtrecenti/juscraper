@@ -14,6 +14,7 @@ import pytest
 import responses
 
 import juscraper as jus
+from juscraper.courts._trf.base import _Consulta
 from tests._helpers import load_sample, load_sample_bytes
 
 
@@ -213,3 +214,16 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf1", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("10030632720234013304", filtro_inexistente="x")
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(mocker, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    scraper = jus.scraper("trf1", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    with pytest.warns(UserWarning, match=r"^TRF1Scraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = scraper.cpopg("10030632720234013304", diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with("10030632720234013304", None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()

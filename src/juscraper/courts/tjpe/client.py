@@ -133,7 +133,7 @@ class TJPEScraper(HTTPScraper):
                 (HTML do visualizador do PJe). Default ``False``.
             diretorio (str | None): Onde gravar as peças, em
                 ``<diretorio>/<cnj>/<id>.html``. Default ``None`` (diretório
-                temporário).
+                temporário). Só tem efeito com ``download_pecas=True``.
 
         Returns:
             Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
@@ -158,6 +158,10 @@ class TJPEScraper(HTTPScraper):
             TypeError: Kwarg desconhecido.
             ImportError: O WAF desafiou e o Playwright não está instalado,
                 inclusive durante o download das peças.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
 
         Examples: Exemplo
             >>> import juscraper as jus

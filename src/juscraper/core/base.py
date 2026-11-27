@@ -16,6 +16,7 @@ from typing import Any, ClassVar, ParamSpec, TypeVar, cast
 import pandas as pd
 from pydantic import BaseModel
 
+from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import ColetaParcialError
 
 logger = logging.getLogger("juscraper.core.base")
@@ -248,6 +249,27 @@ class BaseScraper(ABC):
     @download_path.setter
     def download_path(self, path: str) -> None:
         self._download_path = path
+
+    def _pasta_das_pecas(self, metodo: str, *, diretorio: str | None, download_pecas: bool) -> str | None:
+        """A pasta, já criada, onde o método composto grava as peças; ``None`` sem ``download_pecas``.
+
+        ``diretorio`` vale sobre :attr:`download_path`, que só é lido (e, sem
+        caminho informado, criado) quando há peças a baixar. Sem
+        ``download_pecas=True`` nada é baixado, e um ``diretorio`` informado
+        sumiria em silêncio: sai um ``UserWarning`` que cita ``metodo``. É
+        aviso, e não erro, porque o resultado (os dados do processo) continua
+        usável.
+        """
+        if not download_pecas:
+            if diretorio is not None:
+                avisar(
+                    f"{metodo}: diretorio={diretorio!r} só tem efeito com download_pecas=True, "
+                    "e as peças não foram baixadas. Para baixá-las, passe download_pecas=True."
+                )
+            return None
+        pasta = diretorio if diretorio is not None else self.download_path
+        Path(pasta).mkdir(parents=True, exist_ok=True)
+        return pasta
 
     def set_verbose(self, verbose: int):
         """Set the verbosity level of the scraper.

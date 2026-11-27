@@ -14,7 +14,7 @@ from responses import matchers
 
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
-from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
+from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
 from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
@@ -304,6 +304,21 @@ def test_cpopg_download_aceita_os_valores_padrao_das_pecas() -> None:
     scraper = jus.scraper("trf3", sleep_time=0)
     brutos = scraper.cpopg_download(CNJ_PAGINADO, download_pecas=False, diretorio=None)
     assert brutos[0] is not None
+
+
+@responses.activate
+@pytest.mark.parametrize(("metodo", "base_url"), [("cpopg", BASE_URL_1G), ("cposg", BASE_URL_2G)])
+def test_composto_avisa_diretorio_sem_download_pecas(metodo: str, base_url: str, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    registrar_busca(base_url, metodo, "sem_resultado", "0000000-00.2099.4.03.0000")
+    diretorio = tmp_path / "pecas"
+    scraper = jus.scraper("trf3", sleep_time=0)
+    mensagem = rf"^TRF3Scraper\.{metodo}: diretorio=.*passe download_pecas=True\.$"
+    with pytest.warns(UserWarning, match=mensagem) as avisos:
+        df = getattr(scraper, metodo)(CNJ_SEM_RESULTADO, diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
 
 
 @responses.activate
