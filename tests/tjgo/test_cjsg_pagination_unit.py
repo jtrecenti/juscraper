@@ -33,9 +33,10 @@ def test_extract_total_handles_dot_separated_thousands():
     assert _extract_total(html) == 1234
 
 
-def test_extract_total_resilient_to_legend_class_change():
+def test_extract_total_sem_o_legend_nao_le_o_html_bruto():
+    """Sem ``legend.formLocalizarLegenda``, "N resultados" fora dele (numa ementa) não vira total."""
     html = (
         '<div class="painel-resultados">'
-        "<span>456 resultados encontrados</span></div>"
+        "<p>a diligência teve 456 resultados negativos</p></div>"
     )
-    assert _extract_total(html) == 456
+    assert _extract_total(html) == 0

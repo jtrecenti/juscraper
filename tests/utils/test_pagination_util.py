@@ -36,13 +36,31 @@ def test_selector_and_regex_match():
     ) == 45
 
 
-def test_selector_miss_falls_back_to_raw_html():
+def test_selector_miss_nao_le_o_html_bruto():
+    """Com seletores, as regex não rodam no HTML inteiro, onde estão as ementas."""
+    html = "<html><body><p>Contrato de compra e venda (fevereiro de 2009).</p></body></html>"
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.ui-paginator-current",),
+        regex_patterns=(re.compile(r"de\s+(\d+)\)"),),
+    ) is None
+
+
+def test_selector_miss_falls_back_to_raw_html_com_fallback_html():
     html = "<html><body><span>120 documentos encontrados</span></body></html>"
     assert extract_count_with_cascade(
         html,
         css_selectors=("td.totalResultados",),
         regex_patterns=(re.compile(r"(\d+)\s+documentos\s+encontrados",),),
+        fallback_html=True,
     ) == 120
+
+
+def test_sem_seletores_html_bruto_so_com_fallback_html():
+    html = "<html><body><span>120 documentos encontrados</span></body></html>"
+    regex = (re.compile(r"(\d+)\s+documentos\s+encontrados"),)
+    assert extract_count_with_cascade(html, regex_patterns=regex) is None
+    assert extract_count_with_cascade(html, regex_patterns=regex, fallback_html=True) == 120
 
 
 def test_tag_restringe_a_cascata_ao_trecho():
@@ -57,45 +75,42 @@ def test_tag_restringe_a_cascata_ao_trecho():
 
     assert extract_count_with_cascade(trecho, css_selectors=("span.n",), regex_patterns=regex) == 45
     assert extract_count_with_cascade(
-        trecho, css_selectors=("td.ausente",), regex_patterns=regex, zero_markers=("nenhum documento",)
+        trecho, css_selectors=("td.ausente",), regex_patterns=regex, fallback_html=True
     ) == 45
-    assert extract_count_with_cascade(soup.find(id="b"), regex_patterns=regex, zero_markers=("nenhum documento",)) == 0
-
-
-def test_fallback_max_int_picks_largest():
-    html = "<html><body>pagina 1 de 12, mostrando 10 itens</body></html>"
     assert extract_count_with_cascade(
-        html,
-        regex_patterns=(),
-        fallback_max_int=True,
-    ) == 12
-
-
-def test_no_match_without_fallback_returns_none():
-    html = "<html><body>nada aqui</body></html>"
-    assert extract_count_with_cascade(
-        html,
-        regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
-        fallback_max_int=False,
+        trecho, css_selectors=("td.ausente",), regex_patterns=regex, zero_markers=("nenhum documento",)
     ) is None
+    assert extract_count_with_cascade(
+        soup.find(id="b"), css_selectors=("span.n",), regex_patterns=regex, zero_markers=("nenhum documento",)
+    ) == 0
 
 
-def test_default_fallback_is_off():
-    """Default ``fallback_max_int=False`` evita extrair numero qualquer da pagina."""
-    html = "<html><body>pagina 1 de 12, mostrando 10 itens</body></html>"
-    assert extract_count_with_cascade(html, regex_patterns=()) is None
-
-
-def test_zero_marker_short_circuits():
+def test_contagem_achada_vence_o_marcador_de_zero():
+    """Uma ementa que cita o marcador não zera a contagem que a cascata achou."""
     html = """
     <html><body>
-      <p>Nenhum resultado foi encontrado</p>
-      <span>pagina 1 de 5</span>
+      <span class="total">pagina 1 de 5</span>
+      <p>Ementa: nenhum resultado foi encontrado nas buscas de bens.</p>
     </body></html>
     """
     assert extract_count_with_cascade(
         html,
-        css_selectors=("span",),
+        css_selectors=("span.total",),
+        regex_patterns=(re.compile(r"de\s+(\d+)"),),
+        zero_markers=("nenhum resultado",),
+    ) == 5
+
+
+def test_zero_marker_vale_quando_a_cascata_nao_acha_contagem():
+    html = """
+    <html><body>
+      <p>Nenhum resultado foi encontrado</p>
+      <span class="total"></span>
+    </body></html>
+    """
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.total",),
         regex_patterns=(re.compile(r"de\s+(\d+)"),),
         zero_markers=("nenhum resultado",),
     ) == 0
@@ -146,7 +161,7 @@ def test_regex_without_groups_uses_group_zero():
 
 
 def test_zero_marker_case_insensitive():
-    html = "<body><p>NENHUM RESULTADO</p><span>10 paginas</span></body>"
+    html = "<body><p>NENHUM RESULTADO</p><span>sem paginas</span></body>"
     assert extract_count_with_cascade(
         html,
         regex_patterns=(re.compile(r"(\d+)\s+pagina"),),
@@ -181,7 +196,13 @@ def test_empty_selector_candidates_fall_back_to_raw_html():
         html,
         css_selectors=("span.empty",),
         regex_patterns=(re.compile(r"data-total=['\"](\d+)"),),
+        fallback_html=True,
     ) == 77
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.empty",),
+        regex_patterns=(re.compile(r"data-total=['\"](\d+)"),),
+    ) is None
 
 
 def test_first_preserves_selector_and_element_order_while_skipping_empty():
@@ -196,17 +217,6 @@ def test_first_preserves_selector_and_element_order_while_skipping_empty():
         html,
         css_selectors=("span.primary", "span.secondary"),
         regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
-    ) == 12
-
-
-def test_fallback_max_int_only_reads_first_candidate():
-    html = "<span class='first'>page 1 of 12</span><span class='second'>page 99</span>"
-
-    assert extract_count_with_cascade(
-        html,
-        css_selectors=("span.first", "span.second"),
-        regex_patterns=(),
-        fallback_max_int=True,
     ) == 12
 
 

@@ -59,8 +59,8 @@ def _get_total_results(html: str, type_minuta: str) -> int | None:
     """
     aba = BeautifulSoup(html, "html.parser").select_one(f'li[type_minuta="{type_minuta}"] .num_minuta')
     if aba is not None:
-        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,))
-    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,))
+        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,), fallback_html=True)
+    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,), fallback_html=True)
 
 
 def build_cjsg_payload(

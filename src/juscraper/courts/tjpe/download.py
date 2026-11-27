@@ -40,11 +40,15 @@ _CURRENT_DATE_HINT = "04/2026"
 # O ID real vem do JS `jsfcljs(...)` na pagina de consulta.
 DEFAULT_SUBMIT_ID = "formPesquisaJurisprudencia:j_id101"
 
+# Cascata da contagem: o cabeçalho "Documentos encontrados: N" da página de
+# resultados e as células "N documentos encontrados" da página de escolha.
 _PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
     "div.resultado-header table.table-header-resultado",
+    "div.escolha-resultado-table td.text-right",
 )
+_ROTULO_RE = re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE)
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"Documentos\s+encontrados:\s*(\d+)", re.IGNORECASE),
+    _ROTULO_RE,
     re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
 )
 _ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
@@ -61,14 +65,19 @@ def extract_viewstate(html: str) -> str:
 
 
 def extract_total_docs(html: str) -> int:
-    """Extract total document count using cascading selectors + regexes (refs #87)."""
-    n = extract_count_with_cascade(
-        html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
-        regex_patterns=_PAGINATION_REGEXES,
-        zero_markers=_ZERO_MARKERS,
-        fallback_max_int=False,
-    )
+    """Lê o total de documentos do cabeçalho ou da página de escolha (refs #87).
+
+    Sem os seletores, o HTML da página (``fallback_html``) só é lido com o
+    rótulo "Documentos encontrados: N", que exige os dois-pontos: "3 documentos
+    encontrados" numa ementa não vira total. O marcador de busca vazia só vale
+    quando nenhuma contagem aparece.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    n = extract_count_with_cascade(soup, css_selectors=_PAGINATION_CSS_SELECTORS, regex_patterns=_PAGINATION_REGEXES)
+    if n is None:
+        n = extract_count_with_cascade(
+            soup, regex_patterns=(_ROTULO_RE,), zero_markers=_ZERO_MARKERS, fallback_html=True
+        )
     return n if n is not None else 0
 
 
