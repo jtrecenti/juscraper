@@ -4,7 +4,7 @@ Documentam a API publica de :class:`PdpjScraper`. A API REST do PDPJ
 (``api-processo-integracao.data-lake.pdpj.jus.br/processo-api``) e rica
 em filtros para o endpoint de busca profunda; aqui registramos cada um
 com seu nome canonico em snake_case (mapeado para o nome camelCase da
-querystring no :mod:`download`).
+querystring em :mod:`.params`).
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class _InputFiltrosPdpj(BaseModel):
     """Filtros comuns a :meth:`PdpjScraper.pesquisa` e :meth:`PdpjScraper.contar`.
 
     Cada nome canonico em snake_case vira o parametro camelCase da API
-    (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.client`).
+    (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.params`).
     """
 
     numero_processo: str | None = None

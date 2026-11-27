@@ -93,6 +93,16 @@ CASES = [
         "juscraper.courts.tjdft.schemas", "InputCJSGTJDFT",
         id="tjdft.cjsg",
     ),
+    pytest.param(
+        "juscraper.aggregators.pdpj.client", "PdpjScraper", "pesquisa",
+        "juscraper.aggregators.pdpj.schemas", "InputPesquisaPdpj",
+        id="pdpj.pesquisa",
+    ),
+    pytest.param(
+        "juscraper.aggregators.pdpj.client", "PdpjScraper", "contar",
+        "juscraper.aggregators.pdpj.schemas", "InputContarPdpj",
+        id="pdpj.contar",
+    ),
 ]
 
 # Captura nomes em backticks duplos (RST inline literal). Cobre tanto

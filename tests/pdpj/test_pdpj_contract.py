@@ -18,8 +18,9 @@ import responses
 from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.aggregators.pdpj.client import _limite_de_paginas, _to_query_params
+from juscraper.aggregators.pdpj.client import _limite_de_paginas
 from juscraper.aggregators.pdpj.download import BASE_URL
+from juscraper.aggregators.pdpj.params import _to_query_params
 from juscraper.aggregators.pdpj.parse import (
     build_documento_rows,
     build_movimento_rows,
