@@ -43,11 +43,7 @@ LIMITE_CAMPOS = 3
 # (schema_a, schema_b) -> motivo. Nomes no formato ``pacote.Classe``, em
 # ordem alfabetica dentro do par. ``test_excecoes_ainda_repetem`` exige tirar
 # a excecao quando o par deixa de repetir.
-EXCECOES: dict[tuple[str, str], str] = {
-    ("courts._esaj.InputCJSGEsajPuro", "courts.tjsp.InputCJSGTJSP"): (
-        "Base comum do cjsg eSAJ em andamento no #787."
-    ),
-}
+EXCECOES: dict[tuple[str, str], str] = {}
 
 _FAMILIA_COMPARTILHADA = re.compile(r"juscraper\.(courts|aggregators)\._")
 
