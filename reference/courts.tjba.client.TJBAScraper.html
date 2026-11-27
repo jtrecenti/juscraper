@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -189,15 +189,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjba.client.TJBAScraper.cjsg">cjsg</a></td>
-<td>Search TJBA jurisprudence (download + parse).</td>
+<td>Pesquisa jurisprudência do TJBA (download + parse).</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjba.client.TJBAScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw results from the TJBA jurisprudence search.</td>
+<td>Baixa os resultados brutos da pesquisa de jurisprudência do TJBA.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjba.client.TJBAScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse raw results from TJBA into a DataFrame.</td>
+<td>Converte os resultados brutos do TJBA em DataFrame.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjba.client.TJBAScraper.cpopg">cpopg</a></td>
@@ -229,22 +229,145 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJBA jurisprudence (download + parse).</p>
-<p>Returns a ready-to-analyze DataFrame.</p>
+<p>Pesquisa jurisprudência do TJBA (download + parse).</p>
+<p>Devolve um DataFrame pronto para análise.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). None = all pages. O portal só entrega os 10.000 primeiros resultados de uma busca (1000 páginas de 10): página pedida além desse teto levanta <code>ValueError</code> antes de qualquer requisição, e <code>None</code> numa busca maior divide a busca por data de publicação (ver <code>auto_chunk</code>). data_publicacao_inicio : str, date or None Start date: <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. data_publicacao_fim : str, date or None End date (mesmos formatos). ordenado_por : str <code>"dataPublicacao"</code> (default) or <code>"relevancia"</code>. tamanho_pagina : int Results per page (default 10). auto_chunk : bool Default <code>True</code>. Com <code>paginas=None</code>, a busca com mais de 10.000 resultados é dividida em janelas de data de publicação que cabem no teto do portal, da mais recente para a mais antiga, e todas são baixadas; a soma pode diferir do total inicial, porque o portal segue indexando. A primeira divisão emite <code>UserWarning</code> com o total e o número aproximado de requisições (~1 s cada). O dia que sozinho passa do teto vem até o teto, com <code>UserWarning</code>. Se uma requisição falha depois da divisão, levanta <code>ColetaParcialError</code>: <code>.resultado</code> traz o DataFrame do que foi baixado (também em <code>cjsg_download</code>), e a mensagem diz o intervalo que falta. Com <code>False</code>, <code>None</code> baixa as páginas até o teto e emite <code>UserWarning</code>. Sem efeito com <code>paginas</code> explícito.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><code>str</code> | None</td>
+<td>Termo de busca. <code>query</code> e <code>termo</code> são aceitos como aliases deprecados.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
+<td>Páginas a baixar (1-based). <code>int</code>: <code>paginas=3</code> baixa as páginas 1 a 3. <code>range</code>: <code>range(1, 4)</code> baixa as páginas 1 a 3. <code>None</code>: baixa todas. O portal só entrega os 10.000 primeiros resultados de uma busca (1000 páginas de 10): página pedida além desse teto levanta <code>ValueError</code> antes de qualquer requisição, e <code>None</code> numa busca maior divide a busca por data de publicação (ver <code>auto_chunk</code>).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>numero_recurso</td>
+<td><code>str</code> | None</td>
+<td>Número do processo/recurso.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>orgaos</td>
+<td><code>list</code> | None</td>
+<td>Lista de IDs de órgão julgador.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>relatores</td>
+<td><code>list</code> | None</td>
+<td>Lista de IDs de relator.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>classe</td>
+<td><code>list</code> | None</td>
+<td>Lista de IDs de classe. <code>classes</code> (plural) é aceito como alias deprecado (emite <code>DeprecationWarning</code>). Refs #232.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>data_publicacao_inicio</td>
+<td><code>str</code> | <code>date</code> | None</td>
+<td>Data inicial de publicação: <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>data_publicacao_fim</td>
+<td><code>str</code> | <code>date</code> | None</td>
+<td>Data final de publicação (mesmos formatos).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>segundo_grau</td>
+<td><code>bool</code></td>
+<td>Inclui resultados do segundo grau (default <code>True</code>).</td>
+<td><code>True</code></td>
+</tr>
+<tr class="even">
+<td>turmas_recursais</td>
+<td><code>bool</code></td>
+<td>Inclui resultados das turmas recursais (default <code>True</code>).</td>
+<td><code>True</code></td>
+</tr>
+<tr class="odd">
+<td>tipo_acordaos</td>
+<td><code>bool</code></td>
+<td>Inclui acórdãos (default <code>True</code>).</td>
+<td><code>True</code></td>
+</tr>
+<tr class="even">
+<td>tipo_decisoes_monocraticas</td>
+<td><code>bool</code></td>
+<td>Inclui decisões monocráticas (default <code>True</code>).</td>
+<td><code>True</code></td>
+</tr>
+<tr class="odd">
+<td>ordenado_por</td>
+<td><code>OrdenadoPor</code></td>
+<td><code>"dataPublicacao"</code> (default) ou <code>"relevancia"</code>.</td>
+<td><code>'dataPublicacao'</code></td>
+</tr>
+<tr class="even">
+<td>tamanho_pagina</td>
+<td><code>int</code></td>
+<td>Resultados por página (default 10). Aceita <code>items_per_page</code> como alias deprecado (emite <code>DeprecationWarning</code>).</td>
+<td><code>10</code></td>
+</tr>
+<tr class="odd">
+<td>auto_chunk</td>
+<td><code>bool</code></td>
+<td>Default <code>True</code>. Com <code>paginas=None</code>, a busca com mais de 10.000 resultados é dividida em janelas de data de publicação que cabem no teto do portal, da mais recente para a mais antiga, e todas são baixadas; a soma pode diferir do total inicial, porque o portal segue indexando. A primeira divisão emite <code>UserWarning</code> com o total e o número aproximado de requisições (~1 s cada). O dia que sozinho passa do teto vem até o teto, com <code>UserWarning</code>. Se uma requisição falha depois da divisão, levanta <code>ColetaParcialError</code>: <code>.resultado</code> traz o DataFrame do que foi baixado (também em <code>cjsg_download</code>), e a mensagem diz o intervalo que falta. Com <code>False</code>, <code>None</code> baixa as páginas até o teto e emite <code>UserWarning</code>. Sem efeito com <code>paginas</code> explícito.</td>
+<td><code>True</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td></td>
+<td>Aliases deprecados (ver abaixo).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
 <h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
 <ul>
+<li><code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></li>
 <li><code>items_per_page</code> -&gt; <code>tamanho_pagina</code></li>
 <li><code>classes</code> -&gt; <code>classe</code> (refs #232)</li>
 </ul>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame Jurisprudence results.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Resultados de jurisprudência, uma linha por decisão.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjba.client.TJBAScraper.cjsg_download" class="level3">
@@ -267,27 +390,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    auto_chunk<span class="op">=</span><span class="va">True</span>,</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw results from the TJBA jurisprudence search.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<p>pesquisa : str Search term. <code>query</code> and <code>termo</code> are accepted as deprecated aliases. paginas : int, list, range, or None Pages to download (1-based). int: paginas=3 downloads pages 1-3. range: range(1, 4) downloads pages 1-3. None: downloads all. O portal só entrega os 10.000 primeiros resultados de uma busca (1000 páginas de 10): página pedida além desse teto levanta <code>ValueError</code> antes de qualquer requisição, e <code>None</code> numa busca maior divide a busca por data de publicação (ver <code>auto_chunk</code>). numero_recurso : str, optional Case/appeal number filter. orgaos : list, optional List of orgao julgador IDs to filter. relatores : list, optional List of relator IDs to filter. classe : list, optional List of class IDs to filter. <code>classes</code> (plural) e aceito como alias deprecado (emite <code>DeprecationWarning</code>). Refs #232. data_publicacao_inicio : str, date or None Start date for publication filter: <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. data_publicacao_fim : str, date or None End date for publication filter (mesmos formatos). segundo_grau : bool Include second-instance results (default True). turmas_recursais : bool Include turmas recursais results (default True). tipo_acordaos : bool Include acordaos (default True). tipo_decisoes_monocraticas : bool Include monocratic decisions (default True). ordenado_por : str <code>"dataPublicacao"</code> (default) or <code>"relevancia"</code>. tamanho_pagina : int Results per page (default 10). Aceita <code>items_per_page</code> como alias deprecado (emite <code>DeprecationWarning</code>). auto_chunk : bool Default <code>True</code>. Com <code>paginas=None</code>, a busca com mais de 10.000 resultados é dividida em janelas de data de publicação que cabem no teto do portal, da mais recente para a mais antiga, e todas são baixadas; a soma pode diferir do total inicial, porque o portal segue indexando. A primeira divisão emite <code>UserWarning</code> com o total e o número aproximado de requisições (~1 s cada). O dia que sozinho passa do teto vem até o teto, com <code>UserWarning</code>. Se uma requisição falha depois da divisão, levanta <code>ColetaParcialError</code>: <code>.resultado</code> traz o DataFrame do que foi baixado (também em <code>cjsg_download</code>), e a mensagem diz o intervalo que falta. Com <code>False</code>, <code>None</code> baixa as páginas até o teto e emite <code>UserWarning</code>. Sem efeito com <code>paginas</code> explícito.</p>
-</section>
+<p>Baixa os resultados brutos da pesquisa de jurisprudência do TJBA.</p>
+<p>Aceita os mesmos parâmetros e aliases deprecados de <a href="../reference/courts.tjba.client.TJBAScraper.html#juscraper.courts.tjba.client.TJBAScraper.cjsg"><code>cjsg</code></a>; veja lá a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw GraphQL response dicts (one per page).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code></td>
+<td>Lista dos dicionários brutos da resposta GraphQL, um por página.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjba.client.TJBAScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjba.client.TJBAScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjba.client.TJBAScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse raw results from TJBA into a DataFrame.</p>
-<section id="parameters-2" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
-<p>resultados_brutos : list Raw response dicts as returned by <code>cjsg_download</code>.</p>
+<p>Converte os resultados brutos do TJBA em DataFrame.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>resultados_brutos</td>
+<td><code>list</code></td>
+<td>Dicionários da resposta, como devolvidos por <a href="../reference/courts.tjba.client.TJBAScraper.html#juscraper.courts.tjba.client.TJBAScraper.cjsg_download"><code>cjsg_download</code></a>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame DataFrame with one row per decision.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por decisão.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjba.client.TJBAScraper.cpopg" class="level3">

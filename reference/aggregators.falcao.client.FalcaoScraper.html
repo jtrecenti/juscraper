@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -343,7 +343,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas cruas (JSON) da busca para um diretorio.</p>
-<p>Mesma validacao e filtros de <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes"><code>listar_decisoes</code></a> (veja la a lista completa de <code>**kwargs</code>). Cada chamada cria um subdiretorio proprio <code>falcao_{colecao}_&lt;sufixo aleatorio&gt;</code>, entao buscas diferentes no mesmo <code>diretorio</code> nunca se misturam. Cada pagina vira um arquivo <code>{colecao}_{pagina:04d}.json</code>.</p>
+<p>Mesma validacao e filtros de <a href="../reference/aggregators.falcao.client.FalcaoScraper.html#juscraper.aggregators.falcao.client.FalcaoScraper.listar_decisoes"><code>listar_decisoes</code></a> (veja lá a lista completa de <code>**kwargs</code>). Cada chamada cria um subdiretorio proprio <code>falcao_{colecao}_&lt;sufixo aleatorio&gt;</code>, entao buscas diferentes no mesmo <code>diretorio</code> nunca se misturam. Cada pagina vira um arquivo <code>{colecao}_{pagina:04d}.json</code>.</p>
 <p>Com <code>checkpoint_dir</code>, os arquivos vão direto para esse diretório, junto de um <code>manifest.json</code>, e <code>resume=True</code> continua a coleta interrompida sem requisitar as páginas já gravadas.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>

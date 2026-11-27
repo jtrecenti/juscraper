@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -190,15 +190,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg">cjsg</a></td>
-<td>Search TJAP jurisprudence.</td>
+<td>Pesquisa jurisprudência do TJAP.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw CJSG JSON responses from TJAP.</td>
+<td>Baixa as respostas JSON brutas da CJSG do TJAP.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjap.client.TJAPScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse downloaded CJSG JSON responses.</td>
+<td>Converte as respostas JSON baixadas da CJSG em DataFrame.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjap.client.TJAPScraper.cpopg">cpopg</a></td>
@@ -227,18 +227,142 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Search TJAP jurisprudence.</p>
+<p>Pesquisa jurisprudência do TJAP.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<p>pesquisa : str Free-text search term. paginas : int, list, range, or None Pages to download (1-based). None downloads all. orgao : str <code>"0"</code> for all (default), <code>"tj"</code> for Tribunal, <code>"recursal"</code> for Turma Recursal. numero_processo : str, optional CNJ unique case number. Accepts the deprecated alias <code>numero_cnj</code>. numero_acordao : str, optional Decision number. numero_ano : str, optional Number/year (e.g.&nbsp;<code>"001858/1999"</code>). palavras_exatas : bool If True, search for exact words. relator : str, optional Reporting judge name. secretaria : str, optional Court division. classe : str, optional Procedural class. votacao : str <code>"0"</code> for all (default), <code>"Unânime"</code>, <code>"Maioria"</code>. <code>"Unanime"</code> (sem acento) e alias deprecado de <code>"Unânime"</code>. origem : str, optional Origin (comarca).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><code>str</code> | None</td>
+<td>Termo de busca livre.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
+<td>Páginas a baixar (1-based); <code>None</code> baixa todas.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>orgao</td>
+<td><code>Orgao</code></td>
+<td><code>"0"</code> para todos (default), <code>"tj"</code> para o Tribunal e <code>"recursal"</code> para a Turma Recursal.</td>
+<td><code>'0'</code></td>
+</tr>
+<tr class="even">
+<td>numero_processo</td>
+<td><code>str</code> | None</td>
+<td>Número único CNJ do processo. Aceita o alias deprecado <code>numero_cnj</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>numero_acordao</td>
+<td><code>str</code> | None</td>
+<td>Número do acórdão.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>numero_ano</td>
+<td><code>str</code> | None</td>
+<td>Número/ano (por exemplo, <code>"001858/1999"</code>).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>palavras_exatas</td>
+<td><code>bool</code></td>
+<td>Se <code>True</code>, busca as palavras exatas.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="even">
+<td>relator</td>
+<td><code>str</code> | None</td>
+<td>Nome do relator.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>secretaria</td>
+<td><code>str</code> | None</td>
+<td>Secretaria do órgão julgador.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>classe</td>
+<td><code>str</code> | None</td>
+<td>Classe processual.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>votacao</td>
+<td><code>VotacaoAceita</code></td>
+<td><code>"0"</code> para todas (default), <code>"Unânime"</code> ou <code>"Maioria"</code>. <code>"Unanime"</code> (sem acento) é alias deprecado de <code>"Unânime"</code>.</td>
+<td><code>'0'</code></td>
+</tr>
+<tr class="even">
+<td>origem</td>
+<td><code>str</code> | None</td>
+<td>Origem (comarca).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Aliases deprecados, como <code>numero_cnj</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por decisão.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
-<p>TJAPSecurityCheckError Quando o TJAP devolve “A verificação de segurança falhou” — desde ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado server-side, que o raspador HTTP não consegue produzir (issue #279). TJAPApiError Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve DataFrame vazio.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TJAPSecurityCheckError</code></td>
+<td>Quando o TJAP devolve “A verificação de segurança falhou” — desde ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado server-side, que o raspador HTTP não consegue produzir (issue #279).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>TJAPApiError</code></td>
+<td>Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve DataFrame vazio.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_download" class="level3">
@@ -258,28 +382,95 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    origem<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw CJSG JSON responses from TJAP.</p>
-<p>Parameters are the same as <a href="../reference/courts.tjap.client.TJAPScraper.html#juscraper.courts.tjap.client.TJAPScraper.cjsg"><code>cjsg</code></a>. <code>numero_cnj</code> is accepted as a deprecated alias for <code>numero_processo</code>, and <code>votacao="Unanime"</code> as a deprecated alias for <code>votacao="Unânime"</code>.</p>
+<p>Baixa as respostas JSON brutas da CJSG do TJAP.</p>
+<p>Aceita os mesmos parâmetros de <a href="../reference/courts.tjap.client.TJAPScraper.html#juscraper.courts.tjap.client.TJAPScraper.cjsg"><code>cjsg</code></a>. <code>numero_cnj</code> é aceito como alias deprecado de <code>numero_processo</code>, e <code>votacao="Unanime"</code>, como alias deprecado de <code>votacao="Unânime"</code>.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw JSON responses (one per page).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code></td>
+<td>Lista das respostas JSON brutas, uma por página.</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="raises-1" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
-<p>TJAPSecurityCheckError Quando o TJAP devolve “A verificação de segurança falhou” (CAPTCHA Cloudflare Turnstile exigido desde ~2026; issue #279). TJAPApiError Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve lista sem registros.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TJAPSecurityCheckError</code></td>
+<td>Quando o TJAP devolve “A verificação de segurança falhou” (CAPTCHA Cloudflare Turnstile exigido desde ~2026; issue #279).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>TJAPApiError</code></td>
+<td>Para qualquer outro envelope de erro (<code>status == "ERRO"</code>) do Tucujuris. Busca com zero resultados devolve lista sem registros.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjap.client.TJAPScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjap.client.TJAPScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjap.client.TJAPScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse downloaded CJSG JSON responses.</p>
+<p>Converte as respostas JSON baixadas da CJSG em DataFrame.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<p>resultados_brutos : list List of raw JSON responses from the TJAP API.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>resultados_brutos</td>
+<td><code>list</code></td>
+<td>Lista das respostas JSON brutas da API do TJAP.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por decisão.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjap.client.TJAPScraper.cpopg" class="level3">

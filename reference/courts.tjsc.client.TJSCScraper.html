@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -199,11 +199,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_download">cjsg_download</a></td>
-<td>Download raw HTML pages from TJSC.</td>
+<td>Baixa as páginas HTML brutas do TJSC.</td>
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Parse downloaded HTML pages.</td>
+<td>Converte as páginas HTML baixadas em DataFrame.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjsc.client.TJSCScraper.cpopg">cpopg</a></td>
@@ -347,20 +347,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    processo<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Download raw HTML pages from TJSC.</p>
-<p>Aceita os mesmos filtros de <a href="../reference/courts.tjsc.client.TJSCScraper.html#juscraper.courts.tjsc.client.TJSCScraper.cjsg"><code>cjsg</code></a>; veja la a lista completa.</p>
+<p>Baixa as páginas HTML brutas do TJSC.</p>
+<p>Aceita os mesmos filtros de <a href="../reference/courts.tjsc.client.TJSCScraper.html#juscraper.courts.tjsc.client.TJSCScraper.cjsg"><code>cjsg</code></a>; veja lá a lista completa.</p>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<p>list List of raw HTML strings (one per page).</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>list</code></td>
+<td>Lista do HTML bruto, uma string por página.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjsc.client.TJSCScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjsc.client.TJSCScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Parse downloaded HTML pages.</p>
+<p>Converte as páginas HTML baixadas em DataFrame.</p>
 <section id="returns-2" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<p>pd.DataFrame</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por decisão.</td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="juscraper.courts.tjsc.client.TJSCScraper.cpopg" class="level3">
