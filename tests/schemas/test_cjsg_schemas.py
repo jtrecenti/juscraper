@@ -74,6 +74,7 @@ class TestInputCJSGTJSP:
             pesquisa="dano moral",
             paginas=range(1, 3),
             ementa="responsabilidade",
+            numero_recurso="1507541-25.2025.8.26.0425",
             classe="Apelação Cível",
             assunto="Indenização por Dano Moral",
             comarca="São Paulo",
@@ -85,16 +86,16 @@ class TestInputCJSGTJSP:
         )
         assert model.baixar_sg is False
         assert model.tipo_decisao == "monocratica"
+        assert model.numero_recurso == "1507541-25.2025.8.26.0425"
 
     def test_defaults(self):
         model = InputCJSGTJSP(pesquisa="x")
+        assert model.numero_recurso is None
         assert model.baixar_sg is True
         assert model.tipo_decisao == "acordao"
 
     def test_rejects_esaj_puro_fields_that_tjsp_doesnt_have(self):
-        """TJSP doesn't expose numero_recurso / data_publicacao_* — must reject."""
-        with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJSGTJSP(pesquisa="x", numero_recurso="1000123")
+        """TJSP doesn't expose data_publicacao_* / origem — must reject."""
         with pytest.raises(ValidationError, match="extra_forbidden"):
             InputCJSGTJSP(pesquisa="x", data_publicacao_inicio="01/01/2024")
         with pytest.raises(ValidationError, match="extra_forbidden"):

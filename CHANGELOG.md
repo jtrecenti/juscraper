@@ -25,6 +25,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 - `cpopg` e `cpopg_download` aceitam `baixar_movimentacoes` (default `True`). Com `False`, a tabela de movimentações sai vazia, sem aviso; no método `"html"`, isso poupa uma requisição a cada cinco movimentações, mais uma, por processo. Um `cpopg_download` com `True` no mesmo diretório baixa de novo o processo salvo sem elas.
 - `cjpg_download`, `cpopg_download` e `cposg_download` aceitam `diretorio`, para definir o diretório de download por chamada (#451, de vihumelo).
+- `cjsg` e `cjsg_download` aceitam `numero_recurso`, como o resto da família eSAJ: traz os acórdãos do recurso pedido, o número que sai na coluna `processo`, com ou sem máscara, e dispensa o termo de `pesquisa`. Também vale com `count_only=True`. Antes, o filtro levantava `TypeError` (#69, refs #265).
 
 #### TRF3
 
