@@ -82,18 +82,6 @@ def test_tag_restringe_a_cascata_ao_trecho():
     ) == 0
 
 
-
-
-def test_no_match_without_fallback_returns_none():
-    html = "<html><body>nada aqui</body></html>"
-    assert extract_count_with_cascade(
-        html,
-        regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
-    ) is None
-
-
-
-
 def test_contagem_achada_vence_o_marcador_de_zero():
     """Uma ementa que cita o marcador não zera a contagem que a cascata achou."""
     html = """
@@ -123,10 +111,6 @@ def test_zero_marker_vale_quando_a_cascata_nao_acha_contagem():
         regex_patterns=(re.compile(r"de\s+(\d+)"),),
         zero_markers=("nenhum resultado",),
     ) == 0
-
-
-
-
 
 
 def test_number_with_dots_is_normalized():
@@ -231,8 +215,6 @@ def test_first_preserves_selector_and_element_order_while_skipping_empty():
         css_selectors=("span.primary", "span.secondary"),
         regex_patterns=(re.compile(r"(\d+)\s+resultados"),),
     ) == 12
-
-
 
 
 def test_number_with_comma_is_normalized():

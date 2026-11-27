@@ -48,8 +48,9 @@ _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
 # Cascata da contagem: o rótulo "394770 registro(s) encontrado(s)" fica em
 # ``#navigator .navLeft``. O HTML da página só entra (``fallback_html``)
 # quando o seletor não casa nenhum elemento com texto, e lá a expressão
-# "registro(s) encontrado(s)" continua específica. Se o seletor casar um elemento cujo texto a regex não
-# reconhece, a contagem vem ``None`` e ``resolve_total_pages`` levanta.
+# "registro(s) encontrado(s)" continua específica. Se o seletor casar um
+# elemento cujo texto a regex não reconhece, a contagem vem ``None`` e
+# ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ("#navigator .navLeft",)
 _COUNT_PATTERNS = (re.compile(r"([\d.]+)\s*registro\(s\)\s*encontrado", re.IGNORECASE),)
 
