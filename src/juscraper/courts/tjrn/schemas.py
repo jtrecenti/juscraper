@@ -20,6 +20,12 @@ Decisoes = Literal["", "Decisão", "Acórdão", "Sentença"]
 Jurisdicoes = Literal["", "TJ", "TR"]
 Grau = Literal["", "1", "2"]
 
+# Grau dos valores de ``decisoes`` e ``jurisdicoes`` que so existem num grau no
+# portal; "Decisão" (monocratica) existe nos dois. Valores de graus diferentes,
+# entre si ou com ``grau``, devolvem 0 resultados sem erro, em qualquer periodo
+# e termo (26 e 27/11/2026). O formulario do portal esconde "TR" quando o grau e "1".
+_GRAU_DO_VALOR = {"Sentença": "1", "Acórdão": "2", "TJ": "2", "TR": "2"}
+
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRN ``cjsg`` / ``cjsg_download``.
@@ -67,16 +73,25 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     buscar_em: BuscarEm = "ementa"
 
     @model_validator(mode="after")
-    def _jurisdicao_so_no_segundo_grau(self) -> InputCJSGTJRN:
-        # "TJ" e "TR" so cobrem o 2o grau: com ``grau="1"`` o portal devolve 0
-        # resultados sem erro, em qualquer periodo e termo (26/11/2026). O
-        # formulario do portal esconde "TR" quando o grau e "1".
-        if self.jurisdicoes and self.grau == "1":
+    def _filtros_do_mesmo_grau(self) -> InputCJSGTJRN:
+        pedidos = {
+            f'{campo}="{valor}"': valor if campo == "grau" else _GRAU_DO_VALOR.get(valor)
+            for campo, valor in (
+                ("decisoes", self.decisoes),
+                ("jurisdicoes", self.jurisdicoes),
+                ("grau", self.grau),
+            )
+            if valor
+        }
+        graus = {filtro: grau for filtro, grau in pedidos.items() if grau}
+        if len(set(graus.values())) > 1:
+            conflito = ", ".join(f"{filtro} ({grau}o grau)" for filtro, grau in graus.items())
             raise ValueError(
-                f'jurisdicoes="{self.jurisdicoes}" so cobre decisoes de 2o grau e, '
-                'com grau="1", o portal nao devolve resultados. Para o 1o grau, '
-                'deixe jurisdicoes vazio; para filtrar por jurisdicao, use grau="2" '
-                "ou vazio."
+                f"Os filtros pedem graus diferentes, e o portal nao devolve resultados: {conflito}. "
+                '"Sentença" e do 1o grau, "Acórdão" do 2o e "Decisão" (monocratica) dos dois; '
+                'jurisdicoes "TJ" e "TR" so cobrem o 2o grau. Para o 1o grau, use grau="1", '
+                '"Sentença" ou "Decisão", sem jurisdicoes; para o 2o, grau="2", "Acórdão" ou '
+                '"Decisão", com ou sem jurisdicoes.'
             )
         return self
 

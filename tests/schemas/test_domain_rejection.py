@@ -491,3 +491,37 @@ def test_tjrn_recusa_jurisdicao_com_primeiro_grau(jurisdicoes):
 )
 def test_tjrn_aceita_jurisdicao_sem_primeiro_grau(filtros):
     InputCJSGTJRN(pesquisa="x", **filtros)
+
+
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença", "grau": "2"},
+        {"decisoes": "Sentença", "jurisdicoes": "TJ"},
+        {"decisoes": "Sentença", "jurisdicoes": "TR", "grau": ""},
+        {"decisoes": "Sentença", "jurisdicoes": "TJ", "grau": "1"},
+        {"decisoes": "Acórdão", "grau": "1"},
+    ],
+)
+def test_tjrn_recusa_decisao_fora_do_seu_grau(filtros):
+    """``"Sentença"`` so existe no 1o grau e ``"Acórdão"`` so no 2o; cruzadas, o portal da 0 resultados."""
+    with pytest.raises(ValidationError, match="graus diferentes"):
+        InputCJSGTJRN(pesquisa="x", **filtros)
+
+
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença", "grau": "1"},
+        {"decisoes": "Sentença", "jurisdicoes": None, "grau": None},
+        {"decisoes": "Acórdão", "grau": "2"},
+        {"decisoes": "Acórdão", "jurisdicoes": "TJ"},
+        {"decisoes": "Acórdão", "jurisdicoes": "TR"},
+        {"decisoes": "Decisão", "grau": "1"},
+        {"decisoes": "Decisão", "grau": "2"},
+        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+        {"decisoes": "Decisão", "jurisdicoes": "TR"},
+    ],
+)
+def test_tjrn_aceita_decisao_no_seu_grau(filtros):
+    InputCJSGTJRN(pesquisa="x", **filtros)
