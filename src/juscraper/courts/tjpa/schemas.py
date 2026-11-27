@@ -14,6 +14,10 @@ from ...schemas import (
     SearchBase,
 )
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJPAScraper``.
+SortBy = Literal["datajulgamento", "datapublicacao", "relevancia"]
+QueryType = Literal["free", "anywords"]
+
 
 class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     """Accepted input for TJPA ``cjsg`` / ``cjsg_download``.
@@ -39,8 +43,8 @@ class InputCJSGTJPA(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
     origem: list | None = None
     tipo: list | None = None
     sort_order: Literal["asc", "desc"] = "desc"
-    sort_by: Literal["datajulgamento", "datapublicacao", "relevancia"] = "datajulgamento"
-    query_type: Literal["free", "anywords"] = "free"
+    sort_by: SortBy = "datajulgamento"
+    query_type: QueryType = "free"
     # O portal recebe "ementa" ou "inteiroTeor" em ``queryScope``.
     buscar_em: BuscarEm = "ementa"
 

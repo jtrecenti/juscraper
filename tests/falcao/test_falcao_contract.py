@@ -26,7 +26,13 @@ import juscraper as jus
 from juscraper.aggregators.falcao import client as falcao_client
 from juscraper.aggregators.falcao.download import SEARCH_URL
 from juscraper.core.exceptions import BotChallengeBlockedError
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
+from tests._helpers import (
+    assert_unknown_kwarg_raises,
+    load_sample,
+    query_param_subset_matcher,
+    url_enviada,
+    urls_enviadas,
+)
 
 AVISO_DE_ORDEM = "A ordem padrão do Falcao"
 
@@ -59,7 +65,7 @@ def _register(amostra: str = "acordaos", cenario: str = "normal", *, total: int 
 def _paginas_pedidas() -> list[int]:
     from urllib.parse import parse_qs, urlparse
 
-    return [int(parse_qs(urlparse(c.request.url).query)["page"][0]) + 1 for c in responses.calls]
+    return [int(parse_qs(urlparse(url).query)["page"][0]) + 1 for url in urls_enviadas()]
 
 
 @pytest.fixture
@@ -97,7 +103,7 @@ def test_listar_decisoes_querystring_guardas_obrigatorias(falcao):
     _register("acordaos", colecao="acordaos", texto="dano moral", page=0, size=5)
     falcao.listar_decisoes("dano moral", paginas=1, tamanho_pagina=5)
     assert len(responses.calls) == 1
-    assert falcao.session_id in responses.calls[0].request.url
+    assert falcao.session_id in url_enviada(responses.calls[0].request)
 
 
 @responses.activate
@@ -464,6 +470,16 @@ def test_download_cria_diretorio_e_pais_ausentes(falcao, tmp_path):
 def test_listar_decisoes_rejeita_diretorio(falcao):
     with pytest.raises(TypeError, match=r"'diretorio'.*listar_decisoes_download"):
         falcao.listar_decisoes("dano moral", paginas=1, diretorio="out")
+
+
+def test_listar_decisoes_rejeita_diretorio_com_texto_canonico(falcao):
+    """Mensagem completa: prefixo canônico de kwarg desconhecido mais a dica."""
+    with pytest.raises(TypeError) as excinfo:
+        falcao.listar_decisoes("dano moral", paginas=1, diretorio="out")
+    assert str(excinfo.value) == (
+        "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
+        "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
+    )
 
 
 @responses.activate

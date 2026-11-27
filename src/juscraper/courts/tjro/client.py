@@ -66,29 +66,29 @@ class TJROScraper(HTTPScraper):
         """Busca jurisprudencia no TJRO.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal so entrega os 10.000
                 primeiros resultados de uma busca (1000 paginas): pagina
                 pedida alem da 1000 levanta ``ValueError`` antes de qualquer
                 requisicao, e ``None`` numa busca maior divide a busca por
                 data de julgamento (ver ``auto_chunk``).
-            tipo (list | None): Tipos de documento. Default backend
+            tipo: Tipos de documento. Default backend
                 ``["EMENTA"]``. O backend compara o valor exato, com acento
                 e em maiusculas: ``"EMENTA"``, ``"ACÓRDÃO"``, ``"DECISÃO"``,
                 ``"SENTENÇA"`` e ``"VOTO"``. ``"ACORDAO"`` ou ``"ementa"``
                 devolvem zero resultados.
-            numero_processo (str): Numero CNJ. Aceita o alias deprecado
+            numero_processo: Numero CNJ. Aceita o alias deprecado
                 ``nr_processo``.
-            relator (str): Nome do relator. Aceita o alias deprecado
+            relator: Nome do relator. Aceita o alias deprecado
                 ``magistrado`` (refs #129).
-            orgao_julgador (int | str): ID do orgao julgador.
-            orgao_julgador_colegiado (int | str): ID do orgao colegiado.
-            classe (str): Nome da classe judicial. Aceita o alias deprecado
+            orgao_julgador: ID do orgao julgador.
+            orgao_julgador_colegiado: ID do orgao colegiado.
+            classe: Nome da classe judicial. Aceita o alias deprecado
                 ``classe_judicial`` (refs #129).
-            instancia (list | None): Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
-            termo_exato (bool): Busca por termo exato.
-            auto_chunk (bool): Default ``True``. Com ``paginas=None``, a busca
+            instancia: Instancias (ex.: ``[1]``, ``[2]``, ``[1, 2]``).
+            termo_exato: Busca por termo exato.
+            auto_chunk: Default ``True``. Com ``paginas=None``, a busca
                 com mais de 10.000 resultados e dividida em janelas de data de
                 julgamento que cabem no teto do portal, da mais recente para a
                 mais antiga, e todas sao baixadas: a ordem por relevancia vale
@@ -166,14 +166,12 @@ class TJROScraper(HTTPScraper):
         auto_chunk: bool = True,
         **kwargs,
     ) -> list:
-        """Download raw CJSG JSON responses from TJRO.
+        """Baixa as respostas JSON brutas da CJSG do TJRO.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
+        Returns:
+            Lista das respostas JSON brutas, uma por página.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "nr_processo", "numero_processo", numero_processo
@@ -203,7 +201,7 @@ class TJROScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             auto_chunk=inp.auto_chunk,
@@ -222,10 +220,9 @@ class TJROScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded CJSG JSON responses.
+        """Converte as respostas JSON baixadas da CJSG em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

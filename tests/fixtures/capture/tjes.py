@@ -4,11 +4,15 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjes
 """
+import logging
+
 import requests
 
 from juscraper.courts.tjes.download import BASE_URL, CJPG_CORE, DEFAULT_CORE, _build_params
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str, *, core: str) -> None:
@@ -30,7 +34,7 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filena
     response = session.get(f"{BASE_URL}/search", params=params, timeout=30)
     response.raise_for_status()
     dump(dest / filename, response.content)
-    print(f"[tjes] wrote {dest.name}/{filename}")
+    logger.info("[tjes] wrote %s/%s", dest.name, filename)
 
 
 def main() -> None:
@@ -50,4 +54,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

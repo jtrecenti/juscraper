@@ -22,7 +22,7 @@ from juscraper.courts.tjrj.download import (
     extract_default_year,
     extract_viewstate_fields,
 )
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import corpo_enviado, load_sample, url_enviada, urlencoded_body_subset_matcher
 
 CJSG_FIELDS = {
     "processo", "classe", "orgao_julgador", "relator", "ementa",
@@ -174,11 +174,9 @@ def test_cjsg_payload_carries_blocked_words_hidden(mocker):
     )
 
     post_calls = [c for c in responses.calls if c.request.method == "POST"
-                  and c.request.url.startswith(FORM_URL)]
+                  and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24hfListaPalavrasBloqueadas=" in body
     # Value comes from the GET sample — non-empty stopword list.
     assert "ACIMA" in body  # one of the words in the canonical TJRJ stopword list
@@ -222,11 +220,9 @@ def test_cjsg_sem_ano_usa_ano_corrente(mocker):
     jus.scraper("tjrj").cjsg("dano moral", paginas=1)
 
     post_calls = [c for c in responses.calls if c.request.method == "POST"
-                  and c.request.url.startswith(FORM_URL)]
+                  and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2026" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
     # Nunca vazio — vazio e exatamente o que disparava o 500.
@@ -250,11 +246,9 @@ def test_cjsg_so_ano_inicio_completa_o_fim_com_ano_corrente(mocker):
     jus.scraper("tjrj").cjsg("dano moral", ano_inicio=2020, paginas=1)
 
     post_calls = [c for c in responses.calls if c.request.method == "POST"
-                  and c.request.url.startswith(FORM_URL)]
+                  and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2020" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
 
@@ -374,8 +368,7 @@ def test_cjsg_turma_recursal_respeita_o_ano(mocker):
         "cancelamento de voo", origem="4", ano_inicio=2025, ano_fim=2025, paginas=1,
     )
 
-    busca = responses.calls[2].request.body
-    assert "chkEmentario" not in (busca.decode() if isinstance(busca, bytes) else busca)
+    assert "chkEmentario" not in corpo_enviado(responses.calls[2].request)
     assert len(df) == 10
     assert {d.year for d in df["data_julgamento"]} == {2025}
 

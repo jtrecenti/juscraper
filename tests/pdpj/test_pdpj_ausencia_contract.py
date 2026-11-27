@@ -21,7 +21,7 @@ import juscraper as jus
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.failures import MOTIVOS_FALHA
-from tests._helpers import load_sample
+from tests._helpers import chamadas_para, load_sample, url_enviada
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -50,10 +50,6 @@ def _mock(url: str, status: int = 200, body: str = "") -> None:
     responses.add(responses.GET, url, body=body, status=status, content_type="application/json")
 
 
-def _chamadas(url: str) -> int:
-    return sum(1 for call in responses.calls if call.request.url.split("?")[0] == url)
-
-
 def _pagina_1() -> None:
     _mock(PESQUISA, body=load_sample("pdpj", "pesquisa/single_page.json"))
 
@@ -76,8 +72,8 @@ def test_pesquisa_404_depois_da_ultima_pagina_encerra_a_coleta():
         df = _mk_scraper().pesquisa(tribunal="TRF1")
 
     assert len(df) == 1
-    assert _chamadas(PESQUISA) == 2
-    assert "searchAfter" in responses.calls[1].request.url
+    assert len(chamadas_para(PESQUISA)) == 2
+    assert "searchAfter" in url_enviada(responses.calls[1].request)
 
 
 @responses.activate
@@ -87,7 +83,7 @@ def test_pesquisa_404_na_primeira_pagina_devolve_vazio():
     df = _mk_scraper().pesquisa(numero_processo=OUTRO)
 
     assert df.empty
-    assert _chamadas(PESQUISA) == 1
+    assert len(chamadas_para(PESQUISA)) == 1
 
 
 @pytest.mark.parametrize(("status", "erro"), [(403, requests.HTTPError), (500, RetryExhaustedError)])
@@ -130,9 +126,9 @@ def test_500_com_pesquisa_404_para_na_primeira_tentativa(metodo, esperas_do_back
     with pytest.warns(UserWarning, match=f"processo {OUTRO}: nao_encontrado"):
         df = getattr(_mk_scraper(), metodo)(OUTRO)
 
-    assert _chamadas(endpoint) == 1
-    assert _chamadas(PESQUISA) == 1
-    assert f"numeroProcesso={OUTRO}" in responses.calls[1].request.url
+    assert len(chamadas_para(endpoint)) == 1
+    assert len(chamadas_para(PESQUISA)) == 1
+    assert f"numeroProcesso={OUTRO}" in url_enviada(responses.calls[1].request)
     assert df["motivo_falha"].tolist() == ["nao_encontrado"]
     esperas_do_backoff.assert_not_called()
 
@@ -146,8 +142,8 @@ def test_500_com_pesquisa_200_retenta_pelo_perfil():
     with pytest.warns(UserWarning, match="retry_esgotado_500"):
         df = _mk_scraper().documentos(PROC)
 
-    assert _chamadas(endpoint) == 6
-    assert _chamadas(PESQUISA) == 1
+    assert len(chamadas_para(endpoint)) == 6
+    assert len(chamadas_para(PESQUISA)) == 1
     assert df["motivo_falha"].tolist() == ["retry_esgotado_500"]
 
 
@@ -162,7 +158,7 @@ def test_500_passageiro_com_pesquisa_200_entrega_o_processo():
         warnings.simplefilter("error")
         df = _mk_scraper().documentos(PROC)
 
-    assert _chamadas(endpoint) == 2
+    assert len(chamadas_para(endpoint)) == 2
     assert df["motivo_falha"].isna().all()
 
 
@@ -176,9 +172,9 @@ def test_500_com_falha_da_propria_pesquisa_retenta_pelo_perfil(status):
     with pytest.warns(UserWarning, match="retry_esgotado_500"):
         df = _mk_scraper().partes(PROC)
 
-    assert _chamadas(endpoint) == 6
+    assert len(chamadas_para(endpoint)) == 6
     # Uma tentativa só na confirmação, mesmo com status retentável.
-    assert _chamadas(PESQUISA) == 1
+    assert len(chamadas_para(PESQUISA)) == 1
     assert df["motivo_falha"].tolist() == ["retry_esgotado_500"]
 
 
@@ -201,8 +197,8 @@ def test_502_nao_dispara_a_confirmacao():
     with pytest.warns(UserWarning, match="retry_esgotado_502"):
         _mk_scraper().partes(PROC)
 
-    assert _chamadas(endpoint) == 6
-    assert _chamadas(PESQUISA) == 0
+    assert len(chamadas_para(endpoint)) == 6
+    assert len(chamadas_para(PESQUISA)) == 0
 
 
 @responses.activate
@@ -217,7 +213,7 @@ def test_confirmacao_vale_por_processo():
         df = _mk_scraper().documentos([OUTRO, PROC])
 
     assert df["motivo_falha"].tolist() == ["nao_encontrado", "retry_esgotado_500"]
-    assert _chamadas(PESQUISA) == 2
+    assert len(chamadas_para(PESQUISA)) == 2
 
 
 # ---------------------------------------------------------------------
@@ -247,7 +243,7 @@ def test_500_com_pesquisa_404_sem_o_corpo_medido_retenta_pelo_perfil():
     with pytest.warns(UserWarning, match="retry_esgotado_500"):
         df = _mk_scraper().documentos(PROC)
 
-    assert _chamadas(endpoint) == 6
+    assert len(chamadas_para(endpoint)) == 6
     assert df["motivo_falha"].tolist() == ["retry_esgotado_500"]
 
 
@@ -260,7 +256,7 @@ def test_existe_com_lista_500_com_pesquisa_404_sai_nao_encontrado(esperas_do_bac
     with pytest.warns(UserWarning, match=f"processo {OUTRO}: nao_encontrado"):
         df = _mk_scraper().existe([OUTRO])
 
-    assert _chamadas(endpoint) == 1
+    assert len(chamadas_para(endpoint)) == 1
     assert df["existe"].tolist() == [None]
     assert df["motivo_falha"].tolist() == ["nao_encontrado"]
     esperas_do_backoff.assert_not_called()

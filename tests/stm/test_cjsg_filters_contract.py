@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 import juscraper as jus
 from juscraper.courts.stm.download import BASE_URL, montar_consulta_avancada
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, params_enviados
 
 
 def _add_single_page() -> None:
@@ -35,7 +35,7 @@ def test_cjsg_todos_os_filtros_chegam_na_query(mocker):
         assunto="PECULATO",
     )
 
-    assert responses.calls[0].request.params == {
+    assert params_enviados(responses.calls[0].request) == {
         "search_filter_option": "jurisprudencia",
         "search_filter": "inteiro_teor",
         "search_input": "peculato OU furto",
@@ -58,7 +58,7 @@ def test_cjsg_sem_filtros_manda_so_a_busca(mocker):
 
     jus.scraper("stm").cjsg("deserção", paginas=1)
 
-    assert responses.calls[0].request.params == {
+    assert params_enviados(responses.calls[0].request) == {
         "search_filter_option": "jurisprudencia",
         "search_filter": "ementa",
         "search_input": "deserção",
@@ -78,7 +78,7 @@ def test_cjsg_alias_deprecado_de_pesquisa(mocker, alias):
     with pytest.warns(DeprecationWarning, match=alias):
         df = jus.scraper("stm").cjsg(paginas=1, **{alias: "deserção"})
 
-    assert responses.calls[0].request.params["q"] == "deserção"
+    assert params_enviados(responses.calls[0].request)["q"] == "deserção"
     assert len(df) == 1
 
 
@@ -112,7 +112,7 @@ def test_cjsg_intervalo_de_julgamento_sem_termo(mocker):
         relator="CLAUDIO PORTUGAL DE VIVEIROS",
     )
 
-    assert responses.calls[0].request.params == {
+    assert params_enviados(responses.calls[0].request) == {
         "search_filter_option": "jurisprudencia",
         "search_filter": "busca_avancada",
         "q": JULGAMENTO,
@@ -150,7 +150,7 @@ def test_cjsg_termo_e_intervalos_na_consulta_avancada(mocker, recwarn, pesquisa,
         data_publicacao_fim="31/10/2021",
     )
 
-    assert responses.calls[0].request.params["q"] == f"{clausula} AND {JULGAMENTO} AND {PUBLICACAO}"
+    assert params_enviados(responses.calls[0].request)["q"] == f"{clausula} AND {JULGAMENTO} AND {PUBLICACAO}"
     assert not recwarn.list
 
 
@@ -165,7 +165,7 @@ def test_cjsg_termo_com_operador_ou_curinga_sem_aspas_avisa_uma_vez(mocker, pesq
         jus.scraper("stm").cjsg(pesquisa, data_publicacao_inicio="01/10/2021", data_publicacao_fim="31/10/2021")
 
     assert len(avisos) == 1
-    assert responses.calls[0].request.params["q"] == f'(ementa:"{pesquisa}") AND {PUBLICACAO}'
+    assert params_enviados(responses.calls[0].request)["q"] == f'(ementa:"{pesquisa}") AND {PUBLICACAO}'
 
 
 @pytest.mark.parametrize(
@@ -208,7 +208,7 @@ def test_cjsg_intervalo_aberto_e_preenchido_com_aviso(mocker):
     with pytest.warns(UserWarning, match="data_julgamento_inicio"):
         jus.scraper("stm").cjsg("", data_julgamento_fim="08/06/2022")
 
-    assert responses.calls[0].request.params["q"] == (
+    assert params_enviados(responses.calls[0].request)["q"] == (
         "(data_decisao:[1990-01-01T00:00:00.000Z TO 2022-06-08T23:59:59.000Z])"
     )
 
@@ -226,7 +226,7 @@ def test_cjsg_alias_deprecado_de_data(mocker):
     with pytest.warns(DeprecationWarning, match="data_inicio"), pytest.warns(DeprecationWarning, match="data_fim"):
         jus.scraper("stm").cjsg("", data_inicio="01/01/2010", data_fim="08/06/2022")
 
-    assert responses.calls[0].request.params["q"] == JULGAMENTO
+    assert params_enviados(responses.calls[0].request)["q"] == JULGAMENTO
 
 
 def test_cjsg_buscar_em_fora_do_dominio_levanta():
@@ -246,8 +246,9 @@ def test_cjsg_alias_campo_avisa_e_manda_o_mesmo_que_buscar_em(mocker, valor):
         jus.scraper("stm").cjsg("7000612", paginas=1, campo=valor)
     jus.scraper("stm").cjsg("7000612", paginas=1, buscar_em=valor)
 
-    assert responses.calls[0].request.params == responses.calls[1].request.params
-    assert responses.calls[0].request.params["search_filter"] == valor
+    com_alias, com_canonico = (params_enviados(c.request) for c in responses.calls)
+    assert com_alias == com_canonico
+    assert com_alias["search_filter"] == valor
 
 
 def test_cjsg_alias_campo_junto_com_buscar_em_levanta():

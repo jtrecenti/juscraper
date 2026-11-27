@@ -23,6 +23,8 @@ Tipos disponiveis:
   proprio declara o seu ``Literal`` (STM: ``"numero"``).
 - :data:`IdFiltroUnico` — IDs single-value (``cdComarca`` no eSAJ). Rejeita
   ``list``/``tuple`` para nao mascarar uso indevido.
+- :data:`PaginasNormalizadas` — ``paginas`` depois da normalizacao, sem o
+  ``int``; tipo de :attr:`PaginasMixin.paginas_normalizadas`.
 """
 from __future__ import annotations
 
@@ -84,11 +86,21 @@ def _coerce_id_filtro_unico(value):
     return _coerce_id_filtro(value)
 
 
+# O tipo base e o de saida (o validador sempre devolve ``str | None``), para
+# quem le o campo validado nao precisar de ``cast``. ``json_schema_input_type``
+# mantem no JSON schema de entrada as formas aceitas.
 IdFiltro = Annotated[
-    int | str | list[int | str] | None, BeforeValidator(_coerce_id_filtro)
+    str | None,
+    BeforeValidator(_coerce_id_filtro, json_schema_input_type=int | str | list[int | str] | None),
 ]
-IdFiltroUnico = Annotated[int | str | None, BeforeValidator(_coerce_id_filtro_unico)]
+IdFiltroUnico = Annotated[
+    str | None,
+    BeforeValidator(_coerce_id_filtro_unico, json_schema_input_type=int | str | None),
+]
 InteiroSemBool = Annotated[int, BeforeValidator(_reject_bool)]
 TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]
 
 BuscarEm = Literal["ementa", "inteiro_teor"]
+
+PaginasNormalizadas = list[int] | range | None
+"""``paginas`` sem o ``int``: ``None`` (todas), ``list`` ou ``range`` de paginas 1-based."""

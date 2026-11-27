@@ -45,6 +45,7 @@ ORDENACOES_POR_CORE: dict[str, tuple[str, ...]] = {
     ),
 }
 
+CoreCJSG = Literal["pje2g", "pje2g_mono", "legado", "turma_recursal_legado"]
 OrdenacaoCJSG = Literal[
     "dt_juntada desc",
     "dt_juntada asc",
@@ -62,7 +63,31 @@ OrdenacaoCJSG = Literal[
 OrdenacaoCJPG = Literal["dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"]
 
 
-class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
+class _InputFiltrosTJES(SearchBase, DataJulgamentoMixin):
+    """Filtros comuns ao ``cjsg`` e ao ``cjpg`` do TJES.
+
+    Os dois endpoints usam o mesmo backend Solr e aceitam os mesmos filtros;
+    :class:`InputCJSGTJES` acrescenta ``core``, e cada schema declara as
+    ``ordenacao`` do seu core.
+
+    Apenas filtro de ``data_julgamento_*`` — o backend Solr expoe um unico
+    intervalo (``dataIni``/``dataFim``) mapeado para ``dt_juntada``. Nao ha
+    filtro de data de publicacao; ``data_publicacao_*`` levanta
+    ``TypeError`` em vez de ser silenciosamente descartado.
+    """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+
+    busca_exata: bool = False
+    relator: str | None = None
+    orgao_julgador: str | None = None
+    classe: str | None = None
+    jurisdicao: str | None = None
+    assunto: str | None = None
+    tamanho_pagina: TamanhoPagina = 20
+
+
+class InputCJSGTJES(_InputFiltrosTJES):
     """Accepted input for TJES ``cjsg`` / ``cjsg_download``.
 
     Endpoint Elasticsearch (Solr) DSL. ``pesquisa`` aceita os aliases
@@ -70,11 +95,6 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     que roda *antes* deste modelo. Apos a normalizacao, os kwargs que
     sobram caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
     :class:`SearchBase`.
-
-    Apenas filtro de ``data_julgamento_*`` — o backend Solr expoe um unico
-    intervalo (``dataIni``/``dataFim``) mapeado para ``dt_juntada``. Nao ha
-    filtro de data de publicacao; ``data_publicacao_*`` levanta
-    ``TypeError`` em vez de ser silenciosamente descartado.
 
     O parametro ``core`` e restrito aos cores de segundo grau; para primeiro
     grau (``pje1g``), use :class:`InputCJPGTJES`.
@@ -88,17 +108,8 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     relevancia.
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
-
-    core: Literal["pje2g", "pje2g_mono", "legado", "turma_recursal_legado"] = "pje2g"
-    busca_exata: bool = False
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe: str | None = None
-    jurisdicao: str | None = None
-    assunto: str | None = None
+    core: CoreCJSG = "pje2g"
     ordenacao: OrdenacaoCJSG | None = None
-    tamanho_pagina: TamanhoPagina = 20
 
     @model_validator(mode="after")
     def _ordenacao_do_core(self) -> InputCJSGTJES:
@@ -144,27 +155,16 @@ class OutputCJSGTJES(_OutputCJSGTJESBase, OutputDataPublicacaoMixin):
     """
 
 
-class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
+class InputCJPGTJES(_InputFiltrosTJES):
     """Accepted input for TJES ``cjpg`` / ``cjpg_download``.
 
     Endpoint Elasticsearch (Solr) de primeiro grau — sempre usa o core
-    ``pje1g``, por isso o campo ``core`` nao existe aqui. Aceita os mesmos
-    filtros de :class:`InputCJSGTJES` (exceto ``core``) como kwargs.
-    Apenas filtro de ``data_julgamento_*`` — mesmo motivo de
-    :class:`InputCJSGTJES`.
+    ``pje1g``, por isso o campo ``core`` nao existe aqui. Os filtros vem de
+    :class:`_InputFiltrosTJES`.
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
-
-    busca_exata: bool = False
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe: str | None = None
-    jurisdicao: str | None = None
-    assunto: str | None = None
     # Opcoes do core ``pje1g`` (ver ORDENACOES_POR_CORE).
     ordenacao: OrdenacaoCJPG | None = None
-    tamanho_pagina: TamanhoPagina = 20
 
 
 class OutputCJPGTJES(_OutputCJSGTJESBase):

@@ -20,7 +20,7 @@ def obter_waf_token(timeout: float = 60.0) -> str:
     """Abre a pagina de busca do STF num Chromium headless e devolve o ``aws-waf-token``.
 
     Args:
-        timeout (float): Segundos de espera pela pagina e pelo cookie. Default ``60``.
+        timeout: Segundos de espera pela pagina e pelo cookie. Default ``60``.
 
     Returns:
         Valor do cookie ``aws-waf-token``.

@@ -10,12 +10,15 @@ on each hit; the contract parser only reads ementa/metadados and the
 full documento stays behind a separate endpoint.
 """
 import json
+import logging
 
 import requests
 
 from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Heavy fields on each hit: truncate to keep samples small while preserving
 # structure. The parser in ``courts/tjrn/parse.py`` consumes ``ementa`` (via
@@ -46,7 +49,7 @@ def _capture(
     response = session.post(BASE_URL, json=payload, timeout=30)
     response.raise_for_status()
     dump(dest / filename, _minify(response.content))
-    print(f"[tjrn] wrote {filename}")
+    logger.info("[tjrn] wrote %s", filename)
 
 
 def main() -> None:
@@ -85,4 +88,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

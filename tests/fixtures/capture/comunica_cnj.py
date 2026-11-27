@@ -78,7 +78,7 @@ def _capture(
         json.dumps(body, ensure_ascii=False, indent=2).encode("utf-8"),
     )
     n_items = len(body.get("items") or body.get("itens") or [])
-    print(f"[comunica_cnj] wrote {filename} ({n_items} items, count={body.get('count')})")
+    logger.info("[comunica_cnj] wrote %s (%s items, count=%s)", filename, n_items, body.get('count'))
     return body
 
 
@@ -140,7 +140,7 @@ def main() -> None:
     )
     _capture(session, params_nr, dest, "no_results.json")
 
-    print(f"[comunica_cnj] all samples written to {dest}")
+    logger.info("[comunica_cnj] all samples written to %s", dest)
 
 
 if __name__ == "__main__":

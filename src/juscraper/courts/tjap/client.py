@@ -1,7 +1,7 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
 
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
@@ -11,7 +11,10 @@ from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecat
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJAP
+from .schemas import InputCJSGTJAP, Orgao, Votacao
+
+# Mais ``"Unanime"``, valor deprecado que ``cjsg_download`` troca por ``"Unânime"``.
+VotacaoAceita = Votacao | Literal["Unanime"]
 
 
 class TJAPScraper(HTTPScraper):
@@ -42,7 +45,7 @@ class TJAPScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        orgao: str = "0",
+        orgao: Orgao = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
@@ -50,53 +53,40 @@ class TJAPScraper(HTTPScraper):
         relator: str | None = None,
         secretaria: str | None = None,
         classe: str | None = None,
-        votacao: str = "0",
+        votacao: VotacaoAceita = "0",
         origem: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """Search TJAP jurisprudence.
+        """Pesquisa jurisprudência do TJAP.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term.
-        paginas : int, list, range, or None
-            Pages to download (1-based). None downloads all.
-        orgao : str
-            ``"0"`` for all (default), ``"tj"`` for Tribunal, ``"recursal"`` for Turma Recursal.
-        numero_processo : str, optional
-            CNJ unique case number. Accepts the deprecated alias ``numero_cnj``.
-        numero_acordao : str, optional
-            Decision number.
-        numero_ano : str, optional
-            Number/year (e.g. ``"001858/1999"``).
-        palavras_exatas : bool
-            If True, search for exact words.
-        relator : str, optional
-            Reporting judge name.
-        secretaria : str, optional
-            Court division.
-        classe : str, optional
-            Procedural class.
-        votacao : str
-            ``"0"`` for all (default), ``"Unânime"``, ``"Maioria"``.
-            ``"Unanime"`` (sem acento) e alias deprecado de ``"Unânime"``.
-        origem : str, optional
-            Origin (comarca).
+        Args:
+            pesquisa: Termo de busca livre.
+            paginas: Páginas a baixar (1-based); ``None`` baixa todas.
+            orgao: ``"0"`` para todos (default), ``"tj"`` para o Tribunal e
+                ``"recursal"`` para a Turma Recursal.
+            numero_processo: Número único CNJ do processo. Aceita o alias
+                deprecado ``numero_cnj``.
+            numero_acordao: Número do acórdão.
+            numero_ano: Número/ano (por exemplo, ``"001858/1999"``).
+            palavras_exatas: Se ``True``, busca as palavras exatas.
+            relator: Nome do relator.
+            secretaria: Secretaria do órgão julgador.
+            classe: Classe processual.
+            votacao: ``"0"`` para todas (default), ``"Unânime"`` ou ``"Maioria"``.
+                ``"Unanime"`` (sem acento) é alias deprecado de ``"Unânime"``.
+            origem: Origem (comarca).
+            **kwargs: Aliases deprecados, como ``numero_cnj``.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
 
-        Raises
-        ------
-        TJAPSecurityCheckError
-            Quando o TJAP devolve "A verificação de segurança falhou" — desde
-            ~2026 a busca exige um CAPTCHA Cloudflare Turnstile, validado
-            server-side, que o raspador HTTP não consegue produzir (issue #279).
-        TJAPApiError
-            Para qualquer outro envelope de erro (``status == "ERRO"``) do
-            Tucujuris. Busca com zero resultados devolve DataFrame vazio.
+        Raises:
+            TJAPSecurityCheckError: Quando o TJAP devolve "A verificação de segurança
+                falhou" — desde ~2026 a busca exige um CAPTCHA Cloudflare Turnstile,
+                validado server-side, que o raspador HTTP não consegue produzir
+                (issue #279).
+            TJAPApiError: Para qualquer outro envelope de erro (``status == "ERRO"``)
+                do Tucujuris. Busca com zero resultados devolve DataFrame vazio.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -119,7 +109,7 @@ class TJAPScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        orgao: str = "0",
+        orgao: Orgao = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
@@ -127,29 +117,24 @@ class TJAPScraper(HTTPScraper):
         relator: str | None = None,
         secretaria: str | None = None,
         classe: str | None = None,
-        votacao: str = "0",
+        votacao: VotacaoAceita = "0",
         origem: str | None = None,
         **kwargs,
     ) -> list:
-        """Download raw CJSG JSON responses from TJAP.
+        """Baixa as respostas JSON brutas da CJSG do TJAP.
 
-        Parameters are the same as :meth:`cjsg`. ``numero_cnj`` is accepted
-        as a deprecated alias for ``numero_processo``, and ``votacao="Unanime"``
-        as a deprecated alias for ``votacao="Unânime"``.
+        Aceita os mesmos parâmetros de :meth:`cjsg`. ``numero_cnj`` é aceito
+        como alias deprecado de ``numero_processo``, e ``votacao="Unanime"``,
+        como alias deprecado de ``votacao="Unânime"``.
 
-        Returns
-        -------
-        list
-            List of raw JSON responses (one per page).
+        Returns:
+            Lista das respostas JSON brutas, uma por página.
 
-        Raises
-        ------
-        TJAPSecurityCheckError
-            Quando o TJAP devolve "A verificação de segurança falhou" (CAPTCHA
-            Cloudflare Turnstile exigido desde ~2026; issue #279).
-        TJAPApiError
-            Para qualquer outro envelope de erro (``status == "ERRO"``) do
-            Tucujuris. Busca com zero resultados devolve lista sem registros.
+        Raises:
+            TJAPSecurityCheckError: Quando o TJAP devolve "A verificação de segurança
+                falhou" (CAPTCHA Cloudflare Turnstile exigido desde ~2026; issue #279).
+            TJAPApiError: Para qualquer outro envelope de erro (``status == "ERRO"``)
+                do Tucujuris. Busca com zero resultados devolve lista sem registros.
         """
         numero_processo = resolve_deprecated_alias(
             kwargs, "numero_cnj", "numero_processo", numero_processo
@@ -181,7 +166,7 @@ class TJAPScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             orgao=inp.orgao,
             numero_cnj=inp.numero_processo,
@@ -196,15 +181,12 @@ class TJAPScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded CJSG JSON responses.
+        """Converte as respostas JSON baixadas da CJSG em DataFrame.
 
-        Parameters
-        ----------
-        resultados_brutos : list
-            List of raw JSON responses from the TJAP API.
+        Args:
+            resultados_brutos: Lista das respostas JSON brutas da API do TJAP.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)

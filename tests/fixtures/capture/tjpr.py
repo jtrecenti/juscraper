@@ -35,11 +35,14 @@ ementa until 2026-11.
 """
 from __future__ import annotations
 
+import logging
 from urllib.parse import parse_qs, urlparse
 
 import juscraper as jus
 
 from ._util import samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _classify(url: str, kind: str, scenario: str, page_counter: dict[str, int]) -> str | None:
@@ -80,7 +83,7 @@ def main() -> None:
         filename = _classify(resp.url, kind, scenario, page_counter)
         if filename and filename not in seen_files:
             (dest / filename).write_bytes(resp.content)
-            print(f"[tjpr/{scenario}] -> {filename}")
+            logger.info("[tjpr/%s] -> %s", scenario, filename)
             seen_files.add(filename)
         return resp
 
@@ -90,28 +93,29 @@ def main() -> None:
     state["scenario"] = "typical"
     seen_files.clear()
     df = scraper.cjsg("dano moral", paginas=range(1, 3))
-    print(f"[tjpr/typical] DataFrame columns: {list(df.columns)}")
-    print(f"[tjpr/typical] rows: {len(df)}")
+    logger.info("[tjpr/typical] DataFrame columns: %s", list(df.columns))
+    logger.info("[tjpr/typical] rows: %s", len(df))
 
     # Single page: a query whose hits fit on one page, so the paginator
     # renders "Última Página" disabled.
     state["scenario"] = "single_page"
     seen_files.clear()
     df = scraper.cjsg("quilombola", paginas=1)
-    print(f"[tjpr/single_page] rows: {len(df)}")
+    logger.info("[tjpr/single_page] rows: %s", len(df))
 
     # Empty search: no term, every row's ementa without highlight.
     state["scenario"] = "results_sem_termo"
     seen_files.clear()
     df = scraper.cjsg("", paginas=1)
-    print(f"[tjpr/results_sem_termo] rows: {len(df)}")
+    logger.info("[tjpr/results_sem_termo] rows: %s", len(df))
 
     # Zero hits.
     state["scenario"] = "no_results"
     seen_files.clear()
     df = scraper.cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=1)
-    print(f"[tjpr/no_results] rows: {len(df)} (expected 0)")
+    logger.info("[tjpr/no_results] rows: %s (expected 0)", len(df))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

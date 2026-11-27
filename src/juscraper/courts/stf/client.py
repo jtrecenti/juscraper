@@ -66,11 +66,11 @@ class STFScraper(HTTPScraper):
         """Cria o scraper.
 
         Args:
-            waf_token (str | None): Cookie ``aws-waf-token`` ja obtido. Sem ele, as
+            waf_token: Cookie ``aws-waf-token`` ja obtido. Sem ele, as
                 buscas vao sem cookie; se o WAF desafiar, o scraper obtem um com o
                 Playwright (extra ``juscraper[waf]``) e o renova a cada novo desafio.
-            verbose (int): Nivel de log.
-            sleep_time (float): Pausa em segundos entre paginas. Default ``1.0``.
+            verbose: Nivel de log.
+            sleep_time: Pausa em segundos entre paginas. Default ``1.0``.
         """
         self._waf_token = waf_token
         super().__init__("STF", verbose=verbose, sleep_time=sleep_time, **kwargs)
@@ -125,20 +125,20 @@ class STFScraper(HTTPScraper):
         incompleta reinicia na página 1, sem unir tentativas.
 
         Args:
-            pesquisa (str | None): Termos na sintaxe do portal: ``$`` como curinga
+            pesquisa: Termos na sintaxe do portal: ``$`` como curinga
                 (``terceiriz$``), ``ou`` como disjuncao, ``AND``/``NOT`` e aspas do
                 Elasticsearch. ``None`` busca tudo o que os filtros selecionam.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesSTF`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``base`` (str): ``"decisoes"`` (monocraticas, default) ou
+                * ``base`` (Literal["decisoes", "acordaos"]): ``"decisoes"`` (monocraticas, default) ou
                   ``"acordaos"``. Backend: ``post_filter`` em ``base``.
-                * ``classe`` (str | list[str]): Sigla da classe processual (ex.:
+                * ``classe`` (str | list[str] | None): Sigla da classe processual (ex.:
                   ``"Rcl"``). Backend:
                   ``processo_classe_processual_unificada_classe_sigla.keyword``.
-                * ``buscar_em`` (str): Onde procurar ``pesquisa``. ``"ementa"``
+                * ``buscar_em`` (Literal["ementa", "inteiro_teor"]): Onde procurar ``pesquisa``. ``"ementa"``
                   (default) busca nos campos que o portal usa por padrao: a
                   ementa e tambem o texto da decisao, a indexacao, as partes e
                   outros dados do documento, sem o inteiro teor.
@@ -146,13 +146,13 @@ class STFScraper(HTTPScraper):
                   opcao "pesquisar no inteiro teor" do portal. Outro valor
                   levanta ``ValidationError``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str | date): ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
-                  (str | date): nos mesmos formatos.
+                  (str | date | None): nos mesmos formatos.
                 * ``tamanho_pagina`` (int): Documentos por pagina, de 1 a 250.
                   Default ``250``.
-                * ``checkpoint_dir`` (str | Path): Diretório opcional de páginas
+                * ``checkpoint_dir`` (str | Path | None): Diretório opcional de páginas
                   e manifesto. Sem ele, não grava arquivos. Diretório ocupado
                   exige retomada compatível, nunca é sobrescrito por coleta nova.
                 * ``resume`` (bool): Retoma o checkpoint compatível. Default ``False``.
@@ -207,7 +207,7 @@ class STFScraper(HTTPScraper):
         :meth:`listar_decisoes`, exceto ``tamanho_pagina``, ``checkpoint_dir`` e ``resume``.
 
         Args:
-            pesquisa (str | None): Termos na sintaxe do portal. ``None`` conta tudo o
+            pesquisa: Termos na sintaxe do portal. ``None`` conta tudo o
                 que os filtros selecionam.
             **kwargs: Filtros aceitos pelo schema :class:`InputContarDecisoesSTF`.
 

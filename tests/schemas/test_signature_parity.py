@@ -30,6 +30,7 @@ from tests.schemas.test_schema_coverage import (
     EXPECTED_COURT_SCHEMAS,
     _iter_aggregator_scrapers,
     _iter_court_scrapers,
+    _schemas_mapeados,
 )
 
 # Parametros que a assinatura do metodo aceita mas que nao fazem parte
@@ -132,22 +133,8 @@ def _is_wired(scraper_cls: type, endpoint: str) -> bool:
     return (module_name, endpoint) in WIRED_WITHOUT_CLASS_ATTR
 
 
-def _build_parity_cases(
-    expected_map: dict,
-    scraper_iter,
-) -> list[tuple[str, str, type, str, str]]:
-    scrapers = dict(scraper_iter())
-    cases = []
-    for (name, endpoint), (module_path, class_name) in expected_map.items():
-        cls = scrapers.get(name)
-        if cls is None:
-            continue
-        cases.append((name, endpoint, cls, module_path, class_name))
-    return cases
-
-
-COURT_CASES = _build_parity_cases(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
-AGG_CASES = _build_parity_cases(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
+COURT_CASES = _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
+AGG_CASES = _schemas_mapeados(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
 
 
 @pytest.mark.parametrize(

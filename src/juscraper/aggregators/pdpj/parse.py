@@ -8,6 +8,7 @@ campos aninhados. A limpeza do texto de documento fica em
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -168,3 +169,44 @@ def parse_pesquisa_response(
     if not isinstance(total, int):
         total = None
     return rows, search_after, total
+
+
+def _iter_documents(details: dict[str, Any]) -> Iterator[Any]:
+    """Itera documentos do topo e das tramitacoes na ordem da API."""
+    top_documents = details.get("documentos")
+    if isinstance(top_documents, list):
+        yield from top_documents
+    traversals = details.get("tramitacoes")
+    if not isinstance(traversals, list):
+        return
+    for traversal in traversals:
+        if isinstance(traversal, dict) and isinstance(traversal.get("documentos"), list):
+            yield from traversal["documentos"]
+
+
+def _document_to_row(
+    document: object,
+    process: object,
+    process_number: object,
+) -> dict[str, Any] | None:
+    """Achata um documento PDPJ bem-formado no formato de download."""
+    if not isinstance(document, dict):
+        return None
+    file_data = document.get("arquivo") or {}
+    document_type = document.get("tipo") or {}
+    return {
+        "processo": process,
+        "numero_processo": process_number,
+        "id_documento": document.get("id"),
+        "id_codex": document.get("idCodex"),
+        "sequencia": document.get("sequencia"),
+        "data_juntada": document.get("dataHoraJuntada"),
+        "nome": document.get("nome"),
+        "nivel_sigilo": document.get("nivelSigilo"),
+        "tipo_codigo": document_type.get("codigo"),
+        "tipo_nome": document_type.get("nome"),
+        "arquivo_id": file_data.get("id"),
+        "arquivo_tipo": file_data.get("tipo"),
+        "arquivo_tamanho": file_data.get("tamanho"),
+        "arquivo_paginas": file_data.get("quantidadePaginas"),
+    }

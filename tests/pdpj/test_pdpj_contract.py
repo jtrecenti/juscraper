@@ -15,10 +15,12 @@ import jwt
 import pandas as pd
 import pytest
 import responses
+from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.aggregators.pdpj.client import _to_query_params
+from juscraper.aggregators.pdpj.client import _limite_de_paginas
 from juscraper.aggregators.pdpj.download import BASE_URL
+from juscraper.aggregators.pdpj.params import _QUERY_PARAM_MAP, _to_query_params
 from juscraper.aggregators.pdpj.parse import (
     build_documento_rows,
     build_movimento_rows,
@@ -26,6 +28,7 @@ from juscraper.aggregators.pdpj.parse import (
     build_processo_row,
     parse_pesquisa_response,
 )
+from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
 # Token JWT minimo (header + payload com ``exp`` futura) so para passar pelo
@@ -257,6 +260,30 @@ def test_pesquisa_lista_orgao_julgador_vira_csv():
 
 
 @responses.activate
+@pytest.mark.parametrize("paginas", [0, -1, [], [0], [2, -1], range(3, 0, -1)])
+def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
+    """``paginas`` fora do contrato de ``PaginasMixin`` falha antes da API.
+
+    Sem mock registrado, qualquer requisicao levantaria ``ConnectionError``.
+    """
+    with pytest.raises(ValidationError, match="paginas"):
+        _mk_scraper().pesquisa(tribunal="TRF1", paginas=paginas)
+    assert len(responses.calls) == 0
+
+
+def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
+    """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
+    assert _limite_de_paginas(range(1, 10, 3)) == (7, range(1, 10, 3))
+
+
+@pytest.mark.parametrize("paginas", [True, [True], [1, True]])
+def test_input_pesquisa_rejeita_paginas_bool(paginas):
+    """Usado direto, o schema nao coage ``True`` para a pagina 1."""
+    with pytest.raises(ValidationError, match="paginas"):
+        InputPesquisaPdpj(paginas=paginas)
+
+
+@responses.activate
 def test_pesquisa_kwarg_desconhecido_raises_typeerror():
     s = _mk_scraper()
     assert_unknown_kwarg_raises(s.pesquisa, "parametro_inventado", paginas=1)
@@ -285,6 +312,12 @@ def test_contar_aceita_resposta_json_dict():
         status=200,
     )
     assert _mk_scraper().contar(tribunal="TRF1") == 7
+
+
+@pytest.mark.parametrize("filtro", ["fase", "situacao_atual", "tipo_operacao"])
+def test_contar_rejeita_filtros_so_da_pesquisa(filtro):
+    """Motivo no comentario de ``InputContarPdpj``."""
+    assert_unknown_kwarg_raises(_mk_scraper().contar, filtro)
 
 
 # ---------------------------------------------------------------------
@@ -410,6 +443,13 @@ def test_parse_pesquisa_response_lida_com_none():
     assert rows == []
     assert search_after is None
     assert total is None
+
+
+def test_query_param_map_cobre_todos_os_filtros():
+    """Filtro fora do mapa iria a API em snake_case, que ela ignora sem erro."""
+    # InputContarPdpj aceita um subconjunto destes campos.
+    filtros = set(InputPesquisaPdpj.model_fields) - {"paginas", "itens_por_pagina"}
+    assert filtros - set(_QUERY_PARAM_MAP) == set()
 
 
 def test_to_query_params_filtra_none_e_serializa_lista():

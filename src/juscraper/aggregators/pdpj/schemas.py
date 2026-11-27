@@ -4,14 +4,15 @@ Documentam a API publica de :class:`PdpjScraper`. A API REST do PDPJ
 (``api-processo-integracao.data-lake.pdpj.jus.br/processo-api``) e rica
 em filtros para o endpoint de busca profunda; aqui registramos cada um
 com seu nome canonico em snake_case (mapeado para o nome camelCase da
-querystring no :mod:`download`).
+querystring em :mod:`.params`).
 """
 from __future__ import annotations
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import TamanhoPagina
+from ...schemas import PaginasMixin, TamanhoPagina
+from .._pdpj_sso.schemas import InputAuthGovbrBase
 
 
 class InputAuthPdpj(BaseModel):
@@ -30,22 +31,8 @@ class InputAuthPdpj(BaseModel):
     )
 
 
-class InputAuthGovbrPdpj(BaseModel):
-    """Input aceito por :meth:`PdpjScraper.auth_govbr`.
-
-    ``timeout`` limita a espera pelo login no gov.br; ``salvar`` controla a
-    gravacao da credencial no cache local compartilhado por JusBR e PDPJ;
-    ``navegador`` aponta o executavel do Chrome, Chromium ou Edge.
-    """
-
-    timeout: float = Field(default=300.0, gt=0)
-    salvar: bool = True
-    navegador: str | None = None
-
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
+class InputAuthGovbrPdpj(InputAuthGovbrBase):
+    """Input aceito por :meth:`PdpjScraper.auth_govbr`; campos em :class:`InputAuthGovbrBase`."""
 
 
 class InputCnjPdpj(BaseModel):
@@ -65,86 +52,66 @@ class InputCnjPdpj(BaseModel):
     )
 
 
-class InputPesquisaPdpj(BaseModel):
+class _InputFiltrosPdpj(BaseModel):
+    """Filtros comuns a :meth:`PdpjScraper.pesquisa` e :meth:`PdpjScraper.contar`.
+
+    Cada nome canonico em snake_case vira o parametro camelCase da API
+    (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.params`).
+    """
+
+    numero_processo: str | None = None
+    numero_processo_sintetico: str | None = None
+    id: str | None = None
+    id_fonte_dados_codex: str | None = None
+    cpf_cnpj_parte: str | None = None
+    nome_parte: str | None = None
+    outro_nome_parte: str | None = None
+    polo_parte: str | None = None
+    situacao_parte: str | None = None
+    nome_representante: str | None = None
+    oab_representante: str | None = None
+    href: str | None = None
+    id_assunto_judicial: str | None = None
+    id_classe: str | None = None
+    id_orgao_julgador: str | list[str] | None = None
+    instancia: str | None = None
+    segmento_justica: str | None = None
+    tribunal: str | None = None
+    numero_historico: str | None = None
+    data_atualizacao_inicio: str | None = None
+    data_atualizacao_fim: str | None = None
+    data_primeiro_ajuizamento_inicio: str | None = None
+    data_primeiro_ajuizamento_fim: str | None = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+
+
+class InputPesquisaPdpj(PaginasMixin, _InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.pesquisa`.
 
     Cobre os parametros documentados em ``GET /api/v1/processos`` (busca
-    profunda). O client converte cada nome canonico em snake_case para o
-    parametro camelCase da API antes de enviar a requisicao.
+    profunda). ``paginas`` vem de :class:`PaginasMixin`.
     """
 
-    numero_processo: str | None = None
-    numero_processo_sintetico: str | None = None
-    id: str | None = None
-    id_fonte_dados_codex: str | None = None
-    cpf_cnpj_parte: str | None = None
-    nome_parte: str | None = None
-    outro_nome_parte: str | None = None
-    polo_parte: str | None = None
-    situacao_parte: str | None = None
-    nome_representante: str | None = None
-    oab_representante: str | None = None
-    href: str | None = None
-    id_assunto_judicial: str | None = None
-    id_classe: str | None = None
-    id_orgao_julgador: str | list[str] | None = None
-    instancia: str | None = None
     fase: str | None = None
     situacao_atual: str | None = None
-    segmento_justica: str | None = None
-    tribunal: str | None = None
     tipo_operacao: str | None = None
-    numero_historico: str | None = None
-    data_atualizacao_inicio: str | None = None
-    data_atualizacao_fim: str | None = None
-    data_primeiro_ajuizamento_inicio: str | None = None
-    data_primeiro_ajuizamento_fim: str | None = None
     campo_ordenacao: str | None = None
-    paginas: int | list[int] | range | None = None
     itens_por_pagina: TamanhoPagina = 100
 
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
 
-
-class InputContarPdpj(BaseModel):
+class InputContarPdpj(_InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.contar`.
 
-    O endpoint ``/processos:contar`` aceita o mesmo conjunto de filtros
-    do ``/processos`` exceto os campos de paginacao/ordenacao
-    (``campoOrdenacao``, ``searchAfter``, ``id``).
+    Endpoint ``/processos:contar``, sem ordenacao nem paginacao.
     """
-
-    numero_processo: str | None = None
-    numero_processo_sintetico: str | None = None
-    id: str | None = None
-    id_fonte_dados_codex: str | None = None
-    cpf_cnpj_parte: str | None = None
-    nome_parte: str | None = None
-    outro_nome_parte: str | None = None
-    polo_parte: str | None = None
-    situacao_parte: str | None = None
-    nome_representante: str | None = None
-    oab_representante: str | None = None
-    href: str | None = None
-    id_assunto_judicial: str | None = None
-    id_classe: str | None = None
-    id_orgao_julgador: str | list[str] | None = None
-    instancia: str | None = None
-    segmento_justica: str | None = None
-    tribunal: str | None = None
-    numero_historico: str | None = None
-    data_atualizacao_inicio: str | None = None
-    data_atualizacao_fim: str | None = None
-    data_primeiro_ajuizamento_inicio: str | None = None
-    data_primeiro_ajuizamento_fim: str | None = None
-
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
+    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` ficam de fora: a
+    # especificacao publica da API (``processo-api/v2/api-docs``, Swagger
+    # v1.7.36, conferida em 27/11/2026) os declara em ``GET /api/v1/processos``
+    # e nao em ``/processos:contar``. Aceita-los arriscaria um total sem filtro.
 
 
 class InputDownloadDocumentsPdpj(BaseModel):

@@ -8,10 +8,9 @@ de cada tribunal: o de 120 caracteres é do TJSP.
 """
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal, overload
 
 import pandas as pd
-from pydantic import BaseModel
 
 from ...core.avisos import avisar
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
@@ -61,7 +60,7 @@ def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
 class EsajCjpgScraper(EsajSentencaScraper):
     """Base eSAJ com ``cjpg`` e o PDF da sentença de cada linha dele (``baixar_sentenca``)."""
 
-    INPUT_CJPG: type[BaseModel] = InputCJPGEsaj
+    INPUT_CJPG: type[InputCJPGEsaj] = InputCJPGEsaj
 
     # Alem das arvores de cjsg herdadas de EsajSearchScraper, as de 1o grau
     # (cjpg). Os stems do cjpg sao no SINGULAR (``classeTreeSelect`` etc.),
@@ -101,6 +100,45 @@ class EsajCjpgScraper(EsajSentencaScraper):
     # (``cjpg_download.py`` + ``cjpg_parse.py``) entram em
     # ``_run_search`` como hooks resolvidos por nome.
 
+    # Mesmas overloads de ``EsajSearchScraper.cjsg``, pelo ``count_only``.
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
     def cjpg(
         self,
         pesquisa: str = "",
@@ -116,28 +154,28 @@ class EsajCjpgScraper(EsajSentencaScraper):
         intervalo de datas).
 
         Args:
-            pesquisa (str): Termo livre buscado na decisao. Default
+            pesquisa: Termo livre buscado na decisao. Default
                 ``""`` (sem termo). No TJSP, limite de 120 caracteres
                 (raises ``QueryTooLongError``).
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos por :class:`InputCJPGEsaj` (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``classe`` (int | str | list[int | str]): ID(s) internos
+                * ``classe`` (int | str | list[int | str] | None): ID(s) internos
                   de classe processual. Backend:
                   ``classeTreeSelection.values`` (CSV).
-                * ``assunto`` (int | str | list[int | str]): ID(s) internos
+                * ``assunto`` (int | str | list[int | str] | None): ID(s) internos
                   de assunto. Backend: ``assuntoTreeSelection.values``
                   (CSV).
-                * ``vara`` (int | str | list[int | str]): ID(s) internos de
+                * ``vara`` (int | str | list[int | str] | None): ID(s) internos de
                   vara, no formato em arvore do eSAJ (ex.: ``"1-1-1"``).
                   Backend: ``varasTreeSelection.values`` (CSV).
-                * ``id_processo`` (str): Numero CNJ formatado para
+                * ``id_processo`` (str | None): Numero CNJ formatado para
                   filtrar uma instancia especifica. Normalizado via
                   :func:`clean_cnj` antes do envio.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str | date | datetime): Intervalo de julgamento.
+                  (str | date | None): Intervalo de julgamento.
                   Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
@@ -312,11 +350,11 @@ class EsajCjpgScraper(EsajSentencaScraper):
         mesmos filtros de :meth:`cjpg`; veja la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre. Default ``""``. No TJSP, limite
+            pesquisa: Termo livre. Default ``""``. No TJSP, limite
                 de 120 chars.
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            diretorio (str | None): Sobrescreve :attr:`download_path`
+            diretorio: Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjpg` (validados
                 por :class:`InputCJPGEsaj`).
@@ -367,7 +405,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             tribunal=self.tribunal_name,
         )
         return path

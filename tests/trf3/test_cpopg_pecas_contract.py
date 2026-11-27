@@ -19,7 +19,7 @@ from responses import matchers
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, baixar_documento, documento_download_url
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample_bytes, urls_enviadas
 from tests.trf3._api import (
     carregar,
     documentos_em_duas_paginas,
@@ -209,7 +209,7 @@ def test_download_pecas_pula_id_de_documento_fora_do_alfabeto(tmp_path, caplog, 
     assert _arquivos(tmp_path) == [destino / CNJ_PAGINADO / f"{valido['id']}.pdf"]
     assert [c.args[2] for c in espiao.call_args_list] == [valido["id"]]
     assert "id de documento inválido" in caplog.text
-    assert not any("/v1/documentos/" in c.request.url and valido["id"] not in c.request.url for c in responses.calls)
+    assert not any("/v1/documentos/" in url and valido["id"] not in url for url in urls_enviadas())
 
 
 @responses.activate

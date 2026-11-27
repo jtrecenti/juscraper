@@ -125,7 +125,7 @@ class TestCoerceDateColumns:
     def test_date_format_keyword_only(self):
         df = pd.DataFrame({"data_julgamento": ["03/02/2024"]})
         with pytest.raises(TypeError):
-            coerce_date_columns(df, ["data_julgamento"], "%d/%m/%Y")  # type: ignore[misc]
+            coerce_date_columns(df, ["data_julgamento"], "%d/%m/%Y")  # type: ignore[call-arg]
 
     def test_date_format_invalid_for_content_returns_nat(self):
         # Conteúdo ISO não bate com ``%d/%m/%Y`` -> ``errors="coerce"`` vira NaT.

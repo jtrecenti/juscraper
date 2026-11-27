@@ -156,6 +156,27 @@ def test_dependencias_adicionais_dos_hooks_tem_versao_fixa():
     assert soltas == []
 
 
+def test_dependencias_adicionais_dos_hooks_seguem_o_uv_lock():
+    # Hook que checa contra outra versão do pacote que os testes usam passa ou
+    # reprova por motivo que não existe no projeto (ex.: tipos do responses no mypy).
+    texto = (RAIZ / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    fixadas = [
+        item.strip().split("==")
+        for lista in re.findall(r"additional_dependencies: \[(.*)\]", texto)
+        for item in lista.split(",")
+    ]
+    travadas = {
+        pacote["name"]: pacote["version"]
+        for pacote in tomllib.loads((RAIZ / "uv.lock").read_text(encoding="utf-8"))["package"]
+    }
+    divergentes = [
+        (nome, versao, travadas[nome.lower()])
+        for nome, versao in fixadas
+        if nome.lower() in travadas and travadas[nome.lower()] != versao
+    ]
+    assert divergentes == []
+
+
 def test_changelog_reprova_codigo_sem_entrada_e_aceita_a_etiqueta():
     changelog = linhas("changelog.yml")
     assert "types: [opened, synchronize, reopened, labeled, unlabeled]" in changelog

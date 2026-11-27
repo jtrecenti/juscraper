@@ -63,13 +63,13 @@ class TJRRScraper(HTTPScraper):
         """Busca jurisprudencia no TJRR.
 
         Args:
-            pesquisa (str): Termo de busca livre (busca na ementa).
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre (busca na ementa).
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``. O portal mostra duas tabelas, cada uma
                 com paginador proprio: acordaos e decisoes monocraticas. A
                 pagina ``n`` traz a pagina ``n`` de cada uma (ate 10 + 10
                 linhas); com ``None``, o download vai ate o fim da mais longa.
-            relator (list[str] | None): Lista de nomes regimentais de
+            relator: Lista de nomes regimentais de
                 magistrados (ex.: ``["ALMIRO PADILHA", "ERICK LINHARES"]``).
                 O backend usa um ``SelectManyCheckbox``
                 (``menuinicial:relatorList``) cujos values sao beans Java
@@ -80,10 +80,10 @@ class TJRRScraper(HTTPScraper):
                 para o mesmo magistrado. ``ValueError`` se algum nome nao
                 bater (a mensagem lista os nomes na forma canonica:
                 UPPERCASE com acento). Refs #158.
-            orgao_julgador (list[str] | None): Codigos do orgao julgador
+            orgao_julgador: Codigos do orgao julgador
                 (ex.: ``["PRIMEIRA_TURMA_CIVEL"]``). Backend:
                 ``menuinicial:tipoOrgaoList``.
-            especie (list[str] | None): Codigos do tipo de decisao
+            especie: Codigos do tipo de decisao
                 (ex.: ``["ACORDAO"]``). Backend: ``menuinicial:tipoEspecieList``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRR`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
@@ -133,14 +133,12 @@ class TJRRScraper(HTTPScraper):
         data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """Download raw HTML pages from TJRR.
+        """Baixa as páginas HTML brutas do TJRR.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
 
-        Returns
-        -------
-        list
-            List of raw HTML strings (one per page).
+        Returns:
+            Lista do HTML bruto, uma string por página.
         """
         inp = apply_input_pipeline_search(
             InputCJSGTJRR,
@@ -158,7 +156,7 @@ class TJRRScraper(HTTPScraper):
         self._descartar_sessao_jsf()
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             relator=inp.relator,
@@ -179,10 +177,9 @@ class TJRRScraper(HTTPScraper):
         remove_cookie_by_name(self.session.cookies, "JSESSIONID")
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """Parse downloaded HTML pages.
+        """Converte as páginas HTML baixadas em DataFrame.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse_manager(resultados_brutos)
