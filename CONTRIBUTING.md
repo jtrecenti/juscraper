@@ -198,7 +198,7 @@ git fetch origin
 uv run python scripts/integration_report.py alvo-pr --base-ref origin/main   # na raiz do repositório
 ```
 
-No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo.
+No TJTO, esperar 15 minutos entre um comando e o seguinte. O AWS WAF do portal desafia quem volta a buscar logo depois de uma sequência de buscas: de IP residencial, em 16/11/2026, os três comandos passaram com 600 s e com 900 s entre eles, e com 300 s o primeiro POST do comando seguinte já recebeu o desafio (`BotChallengeBlockedError`). Os 900 s deixam folga sobre o menor valor que passou; de IP de datacenter o cooldown não foi medido. O workflow `Integração` faz a mesma espera (`PAUSA_TJTO`) antes dos notebooks e antes do teste `release` quando o TJTO está no alvo. O desafio vem depois de 6 ou 7 requisições (buscas ou GETs de ementa) em uns 10 minutos: em 27/11/2026, de IP residencial, com 90 s entre as buscas a 7ª recebeu o desafio, e com 120 s duas sequências de 14 buscas passaram. Por isso o script de captura (`tests/fixtures/capture/tjto.py`) espera 120 s entre uma requisição e a seguinte (`--pausa`).
 
 Código comum, como `core/` e `utils/`, não aponta tribunal; nesse caso, e antes de versão ou depois de refatoração ampla, rodar a execução completa: `uv run pytest tests -m "integration and not release"` e os notebooks pelo comando de **Notebooks como sanity check**.
 
@@ -451,6 +451,8 @@ Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`con
 `tests/schemas/test_schema_coverage.py` mantém `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS`, os registros de endpoints com modelos Input. Métodos stub com `NotImplementedError` ficam fora desse contrato. O schema pode existir como documentação executável antes de ser usado pelo método em runtime.
 
 `tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando infraestrutura e aliases conhecidos. Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. `_is_wired` reconhece atributos `INPUT_<ENDPOINT>`, inclusive herdados, e as exceções declaradas em `WIRED_WITHOUT_CLASS_ATTR`; esses casos são pulados na paridade. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
+
+`tests/schemas/test_signature_types.py` compara a anotação de cada parâmetro explícito com a do campo no schema. A assinatura só difere quando o pipeline converte o valor antes do pydantic; essas diferenças ficam nas regras por categoria do arquivo (`REGRAS`) e, campo a campo, em `AMPLIADOS` e `ESPECIFICAS`, cada uma com o motivo. Ao divergir, usar na assinatura o tipo do schema; regra ou exceção nova só quando o runtime aceita mais do que o schema declara.
 
 Para decidir quando conectar o schema ao método, seguir `CLAUDE.md` > **Testes**, que separa o PR de contratos da mudança de runtime.
 

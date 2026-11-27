@@ -70,7 +70,7 @@ class ComunicaCNJScraper(HTTPScraper):
     def listar_comunicacoes(
         self,
         pesquisa: str | None = None,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista comunicacoes processuais publicadas pelos tribunais via PJe.
