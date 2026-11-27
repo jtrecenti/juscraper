@@ -10,6 +10,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from juscraper.utils.pagination import (
+    AvisoVazio,
     baixar_paginas_pedidas,
     contador_com_teto,
     descrever_paginas,
@@ -77,12 +78,11 @@ def test_tag_restringe_a_cascata_ao_trecho():
     assert extract_count_with_cascade(
         trecho, css_selectors=("td.ausente",), regex_patterns=regex, fallback_html=True
     ) == 45
-    assert extract_count_with_cascade(
-        trecho, css_selectors=("td.ausente",), regex_patterns=regex, zero_markers=("nenhum documento",)
-    ) is None
-    assert extract_count_with_cascade(
-        soup.find(id="b"), css_selectors=("span.n",), regex_patterns=regex, zero_markers=("nenhum documento",)
-    ) == 0
+    aviso = AvisoVazio(("div",), ("nenhum documento",))
+    ausente = ("td.ausente",)
+    assert extract_count_with_cascade(trecho, css_selectors=ausente, regex_patterns=regex, aviso_vazio=aviso) is None
+    assert extract_count_with_cascade(soup, css_selectors=("span.n",), regex_patterns=regex, aviso_vazio=aviso) == 45
+    assert extract_count_with_cascade(soup, css_selectors=ausente, regex_patterns=regex, aviso_vazio=aviso) == 0
 
 
 def test_contagem_achada_vence_o_marcador_de_zero():
@@ -97,14 +97,14 @@ def test_contagem_achada_vence_o_marcador_de_zero():
         html,
         css_selectors=("span.total",),
         regex_patterns=(re.compile(r"de\s+(\d+)"),),
-        zero_markers=("nenhum resultado",),
+        aviso_vazio=AvisoVazio(("p",), ("nenhum resultado",)),
     ) == 5
 
 
-def test_zero_marker_vale_quando_a_cascata_nao_acha_contagem():
+def test_aviso_vazio_vale_quando_a_cascata_nao_acha_contagem():
     html = """
     <html><body>
-      <p>Nenhum resultado foi encontrado</p>
+      <div class="aviso">Nenhum resultado foi encontrado</div>
       <span class="total"></span>
     </body></html>
     """
@@ -112,8 +112,24 @@ def test_zero_marker_vale_quando_a_cascata_nao_acha_contagem():
         html,
         css_selectors=("span.total",),
         regex_patterns=(re.compile(r"de\s+(\d+)"),),
-        zero_markers=("nenhum resultado",),
+        aviso_vazio=AvisoVazio(("div.aviso",), ("nenhum resultado",)),
     ) == 0
+
+
+def test_aviso_vazio_fora_dos_seletores_nao_zera():
+    """Sem contagem, a ementa que cita o marcador fora do contêiner do aviso não vira 0."""
+    html = """
+    <html><body>
+      <div class="aviso"></div>
+      <p class="ementa">Nenhum resultado foi encontrado nas buscas de bens.</p>
+    </body></html>
+    """
+    assert extract_count_with_cascade(
+        html,
+        css_selectors=("span.total",),
+        regex_patterns=(re.compile(r"de\s+(\d+)"),),
+        aviso_vazio=AvisoVazio(("div.aviso", "td.aviso"), ("nenhum resultado",)),
+    ) is None
 
 
 def test_number_with_dots_is_normalized():
@@ -160,12 +176,12 @@ def test_regex_without_groups_uses_group_zero():
     ) == 42
 
 
-def test_zero_marker_case_insensitive():
-    html = "<body><p>NENHUM RESULTADO</p><span>sem paginas</span></body>"
+def test_aviso_vazio_sem_diferenca_de_maiusculas_e_em_qualquer_seletor():
+    html = "<body><div class='a'>outro aviso</div><p>NENHUM RESULTADO</p><span>sem paginas</span></body>"
     assert extract_count_with_cascade(
         html,
         regex_patterns=(re.compile(r"(\d+)\s+pagina"),),
-        zero_markers=("nenhum resultado",),
+        aviso_vazio=AvisoVazio(("div.a", "p"), ("nao achado", "Nenhum Resultado")),
     ) == 0
 
 

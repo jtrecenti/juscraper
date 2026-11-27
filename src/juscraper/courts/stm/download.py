@@ -6,12 +6,12 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 import requests
-from bs4 import BeautifulSoup
 
 from juscraper.core.avisos import avisar
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
+    AvisoVazio,
     baixar_paginas_pedidas,
     extract_count_with_cascade,
     menor_pagina,
@@ -48,8 +48,7 @@ _COUNT_TRECHO = 2000
 _COUNT_PATTERNS = (re.compile(r"[\d.]+\s*-\s*[\d.]+\s*de\s*([\d.]+)\s*documentos", re.IGNORECASE),)
 # Busca sem resultados: o portal redireciona para ``index.php`` e mostra o
 # aviso num ``div.alert-danger``. O marcador só vale dentro desse aviso.
-_ZERO_SELECTOR = "div.alert-danger"
-_ZERO_MARKER = "Nenhum documento encontrado"
+_AVISO_VAZIO = AvisoVazio(("div.alert-danger",), ("Nenhum documento encontrado",))
 # Página do WAF, servida com HTTP 200 no lugar do portal.
 _WAF_MARKER = b"<title>Request Rejected</title>"
 _WAF_SUPPORT_ID = re.compile(r"support ID is:\s*(\d+)")
@@ -189,11 +188,9 @@ def cjsg_n_resultados(html: str) -> int | None:
         no_trecho = extract_count_with_cascade(trecho, css_selectors=_COUNT_SELECTORS, regex_patterns=_COUNT_PATTERNS)
         if no_trecho is not None:
             return no_trecho
-    soup = BeautifulSoup(html, "html.parser")
-    n_resultados = extract_count_with_cascade(soup, css_selectors=_COUNT_SELECTORS, regex_patterns=_COUNT_PATTERNS)
-    if n_resultados is None and any(_ZERO_MARKER in aviso.get_text() for aviso in soup.select(_ZERO_SELECTOR)):
-        return 0
-    return n_resultados
+    return extract_count_with_cascade(
+        html, css_selectors=_COUNT_SELECTORS, regex_patterns=_COUNT_PATTERNS, aviso_vazio=_AVISO_VAZIO
+    )
 
 
 def cjsg_n_pags(html: str) -> int:

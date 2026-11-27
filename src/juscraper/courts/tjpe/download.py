@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
+from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,9 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
 )
 _ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
+# Na contagem, o aviso só vale nas células da tabela de escolha do tipo, onde
+# o portal o põe no lugar de "N documentos encontrados".
+_AVISO_VAZIO = AvisoVazio(("div.escolha-resultado-table td",), _ZERO_MARKERS)
 
 
 def extract_viewstate(html: str) -> str:
@@ -69,14 +72,14 @@ def extract_total_docs(html: str) -> int:
 
     Sem os seletores, o HTML da página (``fallback_html``) só é lido com o
     rótulo "Documentos encontrados: N", que exige os dois-pontos: "3 documentos
-    encontrados" numa ementa não vira total. O marcador de busca vazia só vale
-    quando nenhuma contagem aparece.
+    encontrados" numa ementa não vira total. O aviso de busca vazia só vale
+    quando nenhuma contagem aparece, e só nas células da tabela de escolha.
     """
     soup = BeautifulSoup(html, "html.parser")
     n = extract_count_with_cascade(soup, css_selectors=_PAGINATION_CSS_SELECTORS, regex_patterns=_PAGINATION_REGEXES)
     if n is None:
         n = extract_count_with_cascade(
-            soup, regex_patterns=(_ROTULO_RE,), zero_markers=_ZERO_MARKERS, fallback_html=True
+            soup, regex_patterns=(_ROTULO_RE,), aviso_vazio=_AVISO_VAZIO, fallback_html=True
         )
     return n if n is not None else 0
 
