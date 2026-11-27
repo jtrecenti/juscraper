@@ -19,7 +19,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes, params_enviados, url_enviada
+from tests._helpers import chamadas_para, load_sample, load_sample_bytes, params_enviados
 
 ESAJ = "https://esaj.tjsp.jus.br"
 
@@ -246,10 +246,6 @@ def _registrar_pagina_movimentacoes(pagina, cursor=None, body=None):
     )
 
 
-def _chamadas(rota):
-    return [chamada.request for chamada in responses.calls if url_enviada(chamada.request).split("?")[0].endswith(rota)]
-
-
 @responses.activate
 def test_cpopg_html_carrega_todas_as_paginas_de_movimentacoes(tmp_path, mocker):
     """A página só traz o botão; o download segue o cursor até a última página."""
@@ -261,7 +257,7 @@ def test_cpopg_html_carrega_todas_as_paginas_de_movimentacoes(tmp_path, mocker):
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert [r.params.get("cursor") for r in _chamadas("carregarMovimentacoesAjax.do")] == [
+    assert [params_enviados(r).get("cursor") for r in chamadas_para("carregarMovimentacoesAjax.do")] == [
         None, CURSOR_PAGINA_2, CURSOR_PAGINA_3,
     ]
     movimentacoes = result["movimentacoes"]
@@ -298,7 +294,7 @@ def test_cpopg_html_refaz_a_busca_quando_o_esaj_recusa_as_movimentacoes(tmp_path
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
     assert len(result["movimentacoes"]) == 14
 
 
@@ -318,7 +314,7 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
 
     assert falhas == {CNJ_INCIDENTE: "resposta_inesperada"}
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 2
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 2
     assert "a paginação não avançaria" in str(erro.call_args.args[-1])
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
@@ -344,7 +340,7 @@ def test_cpopg_html_para_quando_a_pagina_se_repete_com_cursor_novo(tmp_path, moc
 
     assert falhas == {CNJ_INCIDENTE: "resposta_inesperada"}
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 3
     assert "repetiu a página anterior" in str(erro.call_args.args[-1])
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
@@ -380,7 +376,7 @@ def test_cpopg_html_refaz_a_busca_quando_a_primeira_pagina_vem_fora_do_formato(t
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
     assert len(result["movimentacoes"]) == 14
 
 
@@ -394,7 +390,7 @@ def test_cpopg_html_sem_movimentacoes_nao_chama_o_ajax(tmp_path, mocker):
         CNJ_INCIDENTE, method="html", baixar_movimentacoes=False,
     )
 
-    assert not _chamadas("carregarMovimentacoesAjax.do")
+    assert not chamadas_para("carregarMovimentacoesAjax.do")
     assert result["movimentacoes"].empty
     assert result["basicos"].iloc[0]["situacao"] == "Extinto"
 
@@ -421,7 +417,7 @@ def test_cpopg_download_com_movimentacoes_baixa_de_novo_o_salvo_sem_elas(tmp_pat
 
     scraper.cpopg_download(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 3
     assert len(scraper.cpopg_parse(str(tmp_path / "cpopg"))["movimentacoes"]) == 14
 
 
@@ -439,7 +435,7 @@ def test_cpopg_download_pula_o_processo_ja_salvo(tmp_path, mocker, primeiro, seg
     scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=primeiro)
     scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=segundo)
 
-    assert len(_chamadas("search.do")) == 1
+    assert len(chamadas_para("search.do")) == 1
 
 
 # ---------- method='api': removido ----------------------------------------
