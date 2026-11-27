@@ -14,7 +14,6 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 import responses
 from bs4 import BeautifulSoup
-from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpr.download import VISUALIZAR_URL, get_ementa_completa

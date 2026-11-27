@@ -7,7 +7,6 @@ different form field IDs (``j_id162`` vs ``j_id165``).
 from __future__ import annotations
 
 import tempfile
-from urllib.parse import parse_qsl
 
 import pandas as pd
 import pytest
@@ -16,17 +15,14 @@ import responses
 import juscraper as jus
 from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, load_sample_bytes
 
 
 def _subset_form_matcher(expected: dict[str, str]):
     """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
 
     def _match(request) -> tuple[bool, str]:
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        actual = dict(parse_qsl(body, keep_blank_values=True))
+        actual = corpo_form_enviado(request)
         for key, value in expected.items():
             if actual.get(key) != value:
                 return False, (

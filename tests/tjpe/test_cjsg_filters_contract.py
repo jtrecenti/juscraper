@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import warnings
 from datetime import date, datetime, timezone
-from urllib.parse import parse_qs
 
 import pandas as pd
 import pytest
@@ -28,7 +27,7 @@ import responses
 from responses.registries import OrderedRegistry
 
 import juscraper as jus
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, urlencoded_body_subset_matcher
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, urlencoded_body_subset_matcher
 from tests.tjpe.test_cjsg_contract import CONSULTA_URL
 
 FORM = "formPesquisaJurisprudencia"
@@ -121,13 +120,7 @@ def test_cjsg_tipo_decisao_monocraticas_marks_only_monocratica_checkbox(mocker):
     todos = f"{FORM}:tipoTodos"
 
     def assert_only_monocratica(request):
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        parsed = {
-            k: v[0] if v else ""
-            for k, v in parse_qs(body, keep_blank_values=True).items()
-        }
+        parsed = corpo_form_enviado(request)
         if parsed.get(monocratica) != "on":
             return False, "tipoDecisaoMonocratica ausente"
         if acordao in parsed:

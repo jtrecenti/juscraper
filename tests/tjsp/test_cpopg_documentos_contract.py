@@ -22,14 +22,22 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, timeout_enviado, url_enviada, urls_enviadas
+from tests._helpers import (
+    PDF_FALSO,
+    chamadas_para,
+    load_sample,
+    load_sample_bytes,
+    params_enviados,
+    rotas_enviadas,
+    timeout_enviado,
+    url_enviada,
+)
 from tests.tjsp.test_cpopg_contract import (
     CNJ,
     CNJ_INCIDENTE,
     CURSOR_PAGINA_2,
     CURSOR_PAGINA_3,
     ESAJ,
-    _chamadas,
     _registrar_busca_incidente,
     _registrar_pagina_movimentacoes,
 )
@@ -76,11 +84,11 @@ def _registrar_documento(cd_documento, pasta=None, pdf=PDF_FALSO):
 
 
 def _documentos_pedidos():
-    return [r.params["cdDocumento"] for r in _chamadas(ROTA_DOCUMENTO)]
+    return [params_enviados(r)["cdDocumento"] for r in chamadas_para(ROTA_DOCUMENTO)]
 
 
 def _indices(rota):
-    return [i for i, url in enumerate(urls_enviadas()) if url.split("?")[0].endswith(rota)]
+    return [i for i, enviada in enumerate(rotas_enviadas()) if enviada == rota]
 
 
 @responses.activate
@@ -99,7 +107,7 @@ def test_download_pecas_baixa_so_os_publicos_e_move_para_diretorio(tmp_path, moc
     # A pasta só libera documento de página que a sessão já carregou: os
     # pedidos de documento vêm depois da última página de movimentações.
     assert min(_indices(ROTA_DOCUMENTO)) > max(_indices("carregarMovimentacoesAjax.do"))
-    assert len(_chamadas("getPDF.do")) == 2
+    assert len(chamadas_para("getPDF.do")) == 2
     assert not download_path.exists()
 
     movimentacoes = result["movimentacoes"].set_index("cd_documento", drop=False)
@@ -212,7 +220,7 @@ def test_erro_de_rede_em_documento_vira_aviso(tmp_path, mocker, resposta, motivo
     with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: {motivo}"):
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
-    assert len(_chamadas("search.do")) == 1
+    assert len(chamadas_para("search.do")) == 1
     assert [p.stem for p in tmp_path.rglob("*.pdf")] == [PUBLICOS[0]]
     assert list(tmp_path.rglob("*.html"))
 
@@ -290,7 +298,7 @@ def test_erro_de_requests_no_documento_vira_aviso_e_nao_refaz_o_processo(tmp_pat
     with pytest.warns(UserWarning, match=f"{PUBLICOS[1]}: {motivo}"):
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
-    assert len(_chamadas("search.do")) == 1
+    assert len(chamadas_para("search.do")) == 1
     assert [p.stem for p in tmp_path.rglob("*.pdf")] == [PUBLICOS[0]]
     assert len(list(tmp_path.rglob("*.html"))) == 1
 
@@ -342,7 +350,7 @@ def test_varios_incidentes_baixam_os_pdfs_de_cada_um_antes_do_show_seguinte(tmp_
 
     jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
-    rotas = [url.split("?")[0].rsplit("/", 1)[-1] for url in urls_enviadas()]
+    rotas = rotas_enviadas()
     assert rotas == [
         "search.do",
         "show.do",
@@ -382,7 +390,7 @@ def test_todo_pedido_do_cpopg_tem_timeout(tmp_path, mocker):
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     scraper.cpopg_download([CNJ_INCIDENTE, CNJ], download_pecas=True)
 
-    rotas = {url.split("?")[0].rsplit("/", 1)[-1] for url in urls_enviadas()}
+    rotas = set(rotas_enviadas())
     assert rotas >= {"search.do", "show.do", "carregarMovimentacoesAjax.do", ROTA_DOCUMENTO, "getPDF.do"}
     sem_timeout = [url_enviada(c.request) for c in responses.calls if timeout_enviado(c.request) is None]
     assert sem_timeout == []
@@ -423,7 +431,7 @@ def test_documento_pedido_de_novo_no_processo_refeito_sai_uma_vez_no_aviso(tmp_p
         warnings.simplefilter("always")
         jus.scraper("tjsp", download_path=str(tmp_path)).cpopg_download(CNJ_INCIDENTE, download_pecas=True)
 
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
     assert _documentos_pedidos() == [*PUBLICOS, PUBLICOS[1]]
     mensagens = [str(a.message) for a in avisos if "documento público" in str(a.message)]
     if segunda_vez_falha:

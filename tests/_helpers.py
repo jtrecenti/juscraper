@@ -91,6 +91,31 @@ def urls_enviadas() -> list[str]:
     return [url_enviada(chamada.request) for chamada in responses.calls]
 
 
+def _sem_query(url: str) -> str:
+    return url.split("?", 1)[0]
+
+
+def rotas_enviadas() -> list[str]:
+    """Último segmento do caminho de cada requisição registrada, na ordem de envio.
+
+    ``https://esaj.tjsp.jus.br/cpopg/search.do?x=1`` vira ``"search.do"``.
+    """
+    return [_sem_query(url).rsplit("/", 1)[-1] for url in urls_enviadas()]
+
+
+def chamadas_para(rota: str) -> list[PreparedRequest]:
+    """Requisições registradas cuja URL, sem a query, termina em ``rota``.
+
+    ``rota`` pode ser o fim do caminho (``"search.do"``) ou a URL inteira sem
+    query, quando o último segmento não basta para separar os endpoints.
+    """
+    return [
+        chamada.request
+        for chamada in responses.calls
+        if _sem_query(url_enviada(chamada.request)).endswith(rota)
+    ]
+
+
 def corpo_enviado(request: PreparedRequest) -> str:
     """Corpo de uma requisição já enviada como texto; vazio quando não há corpo."""
     body = request.body or ""
