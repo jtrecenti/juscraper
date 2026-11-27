@@ -38,10 +38,14 @@ need it unless they use TJMG.
 """
 from __future__ import annotations
 
+import logging
+
 import juscraper as jus
 from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError
 
 from ._util import samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _classify(
@@ -92,7 +96,7 @@ def main() -> None:
         filename = _classify(resp.url, method, scenario, counters)
         if filename and filename not in seen_files:
             (dest / filename).write_bytes(resp.content)
-            print(f"[tjmg/{scenario}] -> {filename}")
+            logger.info("[tjmg/%s] -> %s", scenario, filename)
             seen_files.add(filename)
         return resp
 
@@ -108,8 +112,8 @@ def main() -> None:
         data_julgamento_inicio="01/01/2025",
         data_julgamento_fim="31/01/2025",
     )
-    print(f"[tjmg/typical] DataFrame columns: {list(df.columns)}")
-    print(f"[tjmg/typical] rows: {len(df)}")
+    logger.info("[tjmg/typical] DataFrame columns: %s", list(df.columns))
+    logger.info("[tjmg/typical] rows: %s", len(df))
 
     # Single page: a narrower phrase whose hits fit in one page. Without a
     # date filter the portal answers with ORA-20000 (see ``erro_ora``).
@@ -121,7 +125,7 @@ def main() -> None:
         data_julgamento_inicio="01/01/2025",
         data_julgamento_fim="31/01/2025",
     )
-    print(f"[tjmg/single_page] rows: {len(df)}")
+    logger.info("[tjmg/single_page] rows: %s", len(df))
 
     # Zero hits (with a date filter, for the same reason).
     state["scenario"] = "no_results"
@@ -132,14 +136,14 @@ def main() -> None:
         data_julgamento_inicio="01/01/2025",
         data_julgamento_fim="31/01/2025",
     )
-    print(f"[tjmg/no_results] rows: {len(df)} (expected 0)")
+    logger.info("[tjmg/no_results] rows: %s (expected 0)", len(df))
 
     # The database error: only the download, which raises on it.
     state["scenario"] = "erro_ora"
     try:
         scraper.cjsg_download("dano moral", paginas=1)
     except TJMGBuscaSemListaError as exc:
-        print(f"[tjmg/erro_ora] {exc}")
+        logger.info("[tjmg/erro_ora] %s", exc)
     # A common search with too many hits: the download raises ValueError.
     state["scenario"] = "muitos_resultados"
     try:
@@ -150,7 +154,7 @@ def main() -> None:
             data_julgamento_fim="31/03/2025",
         )
     except ValueError as exc:
-        print(f"[tjmg/muitos_resultados] {exc}")
+        logger.info("[tjmg/muitos_resultados] %s", exc)
     else:
         raise SystemExit("[tjmg/muitos_resultados] the portal listed the hits; pick a broader search")
     # The categorized search, followed into each category's list.
@@ -165,4 +169,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

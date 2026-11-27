@@ -87,7 +87,7 @@ def _capture(
         json.dumps(body, ensure_ascii=False, indent=2).encode("utf-8"),
     )
     n_hits = len(body.get("hits", {}).get("hits") or [])
-    print(f"[datajud] wrote {filename} ({n_hits} hits)")
+    logger.info("[datajud] wrote %s (%s hits)", filename, n_hits)
     return body
 
 
@@ -141,7 +141,7 @@ def main() -> None:
             "[datajud] page 1 hit 0 missing _source.numeroProcesso; "
             "cannot build single_page query."
         )
-    print(f"[datajud] single_page CNJ: {cnj_p1}")
+    logger.info("[datajud] single_page CNJ: %s", cnj_p1)
     payload_sp = build_payload(numero_processo=cnj_p1, tamanho_pagina=1000)
     _capture(session, "api_publica_tjsp", payload_sp, dest, "single_page.json")
 
@@ -159,7 +159,7 @@ def main() -> None:
     # tribunal index we hit.
     _capture(session, "api_publica_tjsp", payload_nr, dest, "no_results.json")
 
-    print(f"[datajud] all samples written to {dest}")
+    logger.info("[datajud] all samples written to %s", dest)
 
 
 if __name__ == "__main__":

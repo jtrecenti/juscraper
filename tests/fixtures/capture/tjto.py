@@ -8,6 +8,7 @@ Saves the Solr-style HTML responses for each public method (cjsg, cjpg)
 plus two ``ementa_<uuid>.json`` payloads from the ``ementa.php`` endpoint
 that powers ``cjsg_ementa(uuid)``.
 """
+import logging
 import re
 
 import requests
@@ -16,6 +17,8 @@ from bs4 import BeautifulSoup
 from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = "juscraper/0.1 (https://github.com/jtrecenti/juscraper)"
 _UUID_RE = re.compile(r'data-id="([a-f0-9-]{30,})"')
@@ -52,8 +55,14 @@ def _capture_endpoint(session: requests.Session, dest, endpoint: str,
             response = _post(session, query, start=start, instancia=instancia)
             stripped = _minify(response.content)
             dump(out / filename, stripped)
-            print(f"[tjto/{endpoint}] wrote {filename} (page={page}, "
-                  f"raw={len(response.content)}, minified={len(stripped)})")
+            logger.info(
+                "[tjto/%s] wrote %s (page=%s, raw=%s, minified=%s)",
+                endpoint,
+                filename,
+                page,
+                len(response.content),
+                len(stripped),
+            )
 
 
 def _capture_ementas(session: requests.Session, sample_path) -> None:
@@ -72,7 +81,7 @@ def _capture_ementas(session: requests.Session, sample_path) -> None:
         response.raise_for_status()
         filename = f"ementa_{uuid}.json"
         dump(out / filename, response.content)
-        print(f"[tjto/cjsg] wrote {filename} (bytes={len(response.content)})")
+        logger.info("[tjto/cjsg] wrote %s (bytes=%s)", filename, len(response.content))
 
 
 def main() -> None:
@@ -105,4 +114,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

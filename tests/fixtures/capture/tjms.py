@@ -6,6 +6,7 @@ answer datacenter IPs)::
     python -m tests.fixtures.capture.tjms
 """
 import json
+import logging
 import time
 
 from bs4 import BeautifulSoup
@@ -106,4 +107,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

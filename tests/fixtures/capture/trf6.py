@@ -20,6 +20,7 @@ downloads a HuggingFace pretrained CRNN on first call (cached afterwards).
 """
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -37,6 +38,8 @@ from juscraper.courts.trf6.download import (
     submit_search,
 )
 from juscraper.utils.cnj import clean_cnj, format_cnj
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -61,20 +64,17 @@ def _capture_detail(dest: Path, max_attempts: int = 5) -> None:
         form_html = fetch_form(s)
         if attempt == 1:
             (dest / "form_initial.html").write_text(form_html, encoding="latin-1")
-            print(f"[trf6]   saved form_initial.html ({len(form_html)} chars)")
+            logger.info("[trf6]   saved form_initial.html (%s chars)", len(form_html))
         captcha_b64 = extract_captcha_b64(form_html)
         captcha_text = solve_captcha(captcha_b64)
         payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), captcha_text)
         response = submit_search(s, payload)
         if is_detail_page(response):
             (dest / "detail_normal.html").write_text(response, encoding="latin-1")
-            print(
-                f"[trf6]   saved detail_normal.html "
-                f"(attempt {attempt}, captcha={captcha_text!r})"
-            )
+            logger.info("[trf6]   saved detail_normal.html (attempt %s, captcha=%r)", attempt, captcha_text)
             return
         if is_captcha_error(response):
-            print(f"[trf6]   attempt {attempt}: captcha {captcha_text!r} rejected")
+            logger.info("[trf6]   attempt %s: captcha %r rejected", attempt, captcha_text)
             time.sleep(1)
             continue
         raise RuntimeError(
@@ -101,11 +101,11 @@ def _capture_no_results(dest: Path, max_attempts: int = 5) -> None:
                 "pick a different synthetic value."
             )
         if is_captcha_error(response):
-            print(f"[trf6]   attempt {attempt}: captcha {captcha_text!r} rejected")
+            logger.info("[trf6]   attempt %s: captcha %r rejected", attempt, captcha_text)
             time.sleep(1)
             continue
         (dest / "search_no_results.html").write_text(response, encoding="latin-1")
-        print(f"[trf6]   saved search_no_results.html (attempt {attempt})")
+        logger.info("[trf6]   saved search_no_results.html (attempt %s)", attempt)
         return
     raise RuntimeError(
         f"[trf6] captcha solver failed {max_attempts} attempts on MISSING_CNJ"
@@ -119,7 +119,7 @@ def _capture_bad_captcha(dest: Path) -> None:
     payload = build_search_payload(format_cnj(clean_cnj(FOUND_CNJ)), "WRONG")
     response = submit_search(s, payload)
     (dest / "search_bad_captcha.html").write_text(response, encoding="latin-1")
-    print("[trf6]   saved search_bad_captcha.html")
+    logger.info("[trf6]   saved search_bad_captcha.html")
 
 
 def main() -> None:
@@ -145,8 +145,9 @@ def main() -> None:
     _capture_no_results(dest)
     time.sleep(2)
     _capture_bad_captcha(dest)
-    print(f"[trf6] ALL samples written to {dest}")
+    logger.info("[trf6] ALL samples written to %s", dest)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

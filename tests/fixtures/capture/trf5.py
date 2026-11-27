@@ -1,79 +1,95 @@
-"""Capture cpopg samples for TRF5 against the live PJe deployment.
+"""Captura os samples do ``cpopg`` do TRF5 (PJe de 1º grau) no ar.
 
-Run from repo root::
+Rodar da raiz do repositório::
 
-    python -m tests.fixtures.capture.trf5
+    uv run python -m tests.fixtures.capture.trf5
 
-Writes ``form_initial.html``, ``search_one_result.html``,
-``search_no_results.html`` and ``detail_normal.html`` to
-``tests/trf5/samples/cpopg/``.
+Grava em ``tests/trf5/samples/cpopg/`` ``form_initial.html``,
+``search_one_result.html``, ``detail_normal.html`` e
+``search_no_results.html``. O ``movs_page_2.html`` não sai daqui.
 
-Goes through the *real* scraper helpers in
-:mod:`juscraper.courts._trf.download` — using the same payload-builder and
-field-extraction code as the production code path, so any drift between the
-scraper and what the live tribunal actually accepts breaks this script first
-(instead of silently producing stale samples).
+Os arquivos saem do ``cpopg_download`` de :class:`TRF5Scraper`, o fluxo de
+produção, por um hook de resposta na sessão: se o TRF5 deixar de aceitar o que
+o raspador manda, este script quebra antes, em vez de gravar samples velhos.
+Os bytes são gravados como vieram, sem decodificar.
 """
 from __future__ import annotations
 
-from pathlib import Path
+import logging
+import warnings
 
-import juscraper as jus
-from juscraper.courts._trf.download import (
-    build_search_payload,
-    extract_ca_token,
-    extract_form_field_ids,
-    fetch_detail,
-    fetch_form,
-    submit_search,
-)
-from juscraper.utils.cnj import clean_cnj, format_cnj
+import requests
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+from juscraper.courts._trf.download import DETAIL_PATH, LISTVIEW_PATH, extract_ca_token
+from juscraper.courts.trf5.client import TRF5Scraper
 
-# Single-result CNJ taken from data/amostra_jf_primeiro_grau.csv —
-# CEJUSC Maceió (AL).
+from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
+
+# CNJ com um único resultado, de data/amostra_jf_primeiro_grau.csv: CEJUSC
+# Maceió (AL).
 FOUND_CNJ = "00584573120254058000"
 
-# Synthetic CNJ shaped like a TRF5 process so the form mask validation passes;
-# backend returns an empty Ajax fragment with no ca token.
+# CNJ com a forma de um processo do TRF5, para passar pela máscara do
+# formulário; a busca volta sem token ``ca``.
 MISSING_CNJ = "00000000020994050000"
 
 
+def _respostas_de(scraper: TRF5Scraper, cnj: str) -> tuple[str | None, list[requests.Response]]:
+    """Roda o ``cpopg_download`` do raspador e devolve o detalhe e as respostas que ele usou."""
+    respostas: list[requests.Response] = []
+
+    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
+        respostas.append(resp)
+
+    scraper.session.hooks["response"].append(guardar)
+    try:
+        with warnings.catch_warnings():
+            # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
+            warnings.simplefilter("error", UserWarning)
+            (html,) = scraper.cpopg_download(cnj)
+    finally:
+        scraper.session.hooks["response"].remove(guardar)
+    return html, respostas
+
+
+def _rotas(respostas: list[requests.Response]) -> list[str]:
+    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]
+
+
+def _descrever(respostas: list[requests.Response]) -> list[str]:
+    """As rotas com o status HTTP, para a mensagem de erro (uma nova tentativa aparece aqui)."""
+    return [f"{rota} -> HTTP {r.status_code}" for rota, r in zip(_rotas(respostas), respostas, strict=True)]
+
+
 def main() -> None:
-    """Capture cpopg samples for TRF5."""
-    dest = REPO_ROOT / "tests" / "trf5" / "samples" / "cpopg"
-    dest.mkdir(parents=True, exist_ok=True)
-    scraper = jus.scraper("trf5", sleep_time=0.5)
+    """Grava os samples do ``cpopg`` do TRF5."""
+    dest = samples_dir_for("trf5", "cpopg")
+    scraper = TRF5Scraper(sleep_time=0.5)
+    listview = scraper.BASE_URL + LISTVIEW_PATH
+    detalhe = scraper.BASE_URL + DETAIL_PATH
 
-    form_html = fetch_form(scraper, scraper.BASE_URL)
-    (dest / "form_initial.html").write_text(form_html, encoding="utf-8")
-    field_ids = extract_form_field_ids(form_html, scraper.CLASSE_FIELD_NAME)
-    print(f"[trf5] field ids: {field_ids}")
-
-    found_payload = build_search_payload(
-        format_cnj(clean_cnj(FOUND_CNJ)), field_ids, scraper._classe_payload_fields(field_ids)
-    )
-    found_html = submit_search(scraper, scraper.BASE_URL, found_payload)
-    (dest / "search_one_result.html").write_text(found_html, encoding="utf-8")
-    ca = extract_ca_token(found_html)
-    if not ca:
+    html, respostas = _respostas_de(scraper, FOUND_CNJ)
+    # Sem página extra de movimentações ou documentos: o contrato só registra estas três.
+    esperado = [f"GET {listview}", f"POST {listview}", f"GET {detalhe}"]
+    if html is None or _rotas(respostas) != esperado:
         raise RuntimeError(
-            f"[trf5] sample capture failed: no ca token for {FOUND_CNJ!r} — "
-            "process may have been archived or sigilo-protected."
+            f"[trf5] {FOUND_CNJ}: esperava formulário, busca e detalhe numa página só, "
+            f"veio {_descrever(respostas)} (processo arquivado, em segredo, grande demais ou erro passageiro?)"
         )
-    print(f"[trf5]   found ca token: {ca}")
+    nomes = ("form_initial.html", "search_one_result.html", "detail_normal.html")
+    for nome, resp in zip(nomes, respostas, strict=True):
+        dump(dest / nome, resp.content)
+        logger.info("[trf5] cpopg/%s (HTTP %d, %d bytes)", nome, resp.status_code, len(resp.content))
 
-    detail_html = fetch_detail(scraper, scraper.BASE_URL, ca)
-    (dest / "detail_normal.html").write_text(detail_html, encoding="latin-1")
-
-    missing_payload = build_search_payload(
-        format_cnj(clean_cnj(MISSING_CNJ)), field_ids, scraper._classe_payload_fields(field_ids)
-    )
-    missing_html = submit_search(scraper, scraper.BASE_URL, missing_payload)
-    (dest / "search_no_results.html").write_text(missing_html, encoding="utf-8")
-    print(f"[trf5] ALL samples written to {dest}")
+    html, respostas = _respostas_de(scraper, MISSING_CNJ)
+    if html is not None or _rotas(respostas) != [f"POST {listview}"] or extract_ca_token(respostas[0].text):
+        raise RuntimeError(f"[trf5] {MISSING_CNJ}: esperava uma busca sem resultado, veio {_descrever(respostas)}")
+    dump(dest / "search_no_results.html", respostas[0].content)
+    logger.info("[trf5] cpopg/search_no_results.html (%d bytes)", len(respostas[0].content))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

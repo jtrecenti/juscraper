@@ -4,6 +4,7 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjdft
 """
+import logging
 from pathlib import Path
 
 import requests
@@ -11,6 +12,8 @@ import requests
 from juscraper.courts.tjdft.download import BASE_URL, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Em 26/11/2026, "direito penal" publicado neste dia trazia 8 acórdãos e 2
 # decisões monocráticas na página 1.
@@ -29,7 +32,7 @@ def _capture(
     response = session.post(BASE_URL, json=payload, timeout=30)
     response.raise_for_status()
     dump(destino, response.content)
-    print(f"[tjdft] wrote {destino.name}")
+    logger.info("[tjdft] wrote %s", destino.name)
 
 
 def main() -> None:
@@ -57,4 +60,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

@@ -48,8 +48,9 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
+        # Bytes crus, com o cabeçalho que o TRF5 manda.
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type="text/html;charset=ISO-8859-1",
     )
     responses.add(
         responses.POST,
@@ -120,7 +121,9 @@ def test_cpopg_missing_process_keeps_detail_columns_empty() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        # Bytes crus, com o cabeçalho que o TRF5 manda.
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type="text/html;charset=ISO-8859-1",
     )
     responses.add(
         responses.POST,
@@ -220,7 +223,9 @@ def test_cpopg_batch_continues_after_download_error() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        # Bytes crus, com o cabeçalho que o TRF5 manda.
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type="text/html;charset=ISO-8859-1",
     )
     responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
     responses.add(
@@ -250,7 +255,9 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        # Bytes crus, com o cabeçalho que o TRF5 manda.
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type="text/html;charset=ISO-8859-1",
     )
     responses.add(
         responses.POST,

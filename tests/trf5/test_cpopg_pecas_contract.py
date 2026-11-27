@@ -56,8 +56,9 @@ def test_cpopg_with_download_pecas_writes_files_and_adds_column(tmp_path) -> Non
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
+        # Bytes crus, com o cabeçalho que o TRF5 manda.
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type="text/html;charset=ISO-8859-1",
     )
     responses.add(
         responses.POST,
