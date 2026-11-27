@@ -7,7 +7,6 @@ on the parsed DataFrame against ``data_julgamento`` — for filter contracts
 we use the ``no_results`` sample so the post-filter is a no-op regardless
 of date ranges.
 """
-import json
 
 import pandas as pd
 import pytest
@@ -16,7 +15,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpb.download import SEARCH_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_json_enviado, load_sample
 from tests.tjpb._helpers import add_get_classes
 
 
@@ -65,7 +64,7 @@ def test_cjsg_all_filters_land_in_body(mocker):
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do backend ficam pinados aqui.
     busca = next(c for c in responses.calls if c.request.method == "POST")
-    assert json.loads(busca.request.body) == {
+    assert corpo_json_enviado(busca.request) == {
         "jurisprudencia": {
             "ementa": "dano moral",
             "teor": "",

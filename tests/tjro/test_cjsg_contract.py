@@ -12,7 +12,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjro.download import BASE_URL, RESULTS_PER_PAGE, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import corpo_json_enviado, load_sample
 
 CJSG_MIN_COLUMNS = {
     "processo", "tipo", "classe", "orgao_julgador", "orgao_julgador_colegiado",
@@ -73,7 +73,7 @@ def test_cjsg_single_page(mocker):
 
     # O matcher deriva o esperado de ``build_cjsg_payload``; a chave do filtro
     # se confere no corpo enviado, para não depender do próprio builder.
-    campos = json.loads(responses.calls[0].request.body)["fields"]
+    campos = corpo_json_enviado(responses.calls[0].request)["fields"]
     assert campos["tipo.raw"] == ["EMENTA"]
     assert "tipo" not in campos
 

@@ -12,7 +12,7 @@ from responses.registries import OrderedRegistry
 import juscraper as jus
 from juscraper.core.exceptions import HTTPSemanticError, InvalidJSONResponseError
 from juscraper.courts.tjrs.download import TJRSBuscaError
-from tests._helpers import load_sample
+from tests._helpers import load_sample, timeout_enviado
 
 BASE = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 CJSG_MIN_COLUMNS = {"processo", "ementa", "url", "relator", "orgao_julgador", "data_julgamento"}
@@ -195,7 +195,7 @@ def test_cjsg_timeout_vem_do_perfil_http(mocker, politica, timeout_esperado):
 
     jus.scraper("tjrs", politica=politica).cjsg("mandado de seguranca", paginas=1)
 
-    assert responses.calls[0].request.req_kwargs["timeout"] == timeout_esperado
+    assert timeout_enviado(responses.calls[0].request) == timeout_esperado
 
 
 @pytest.mark.parametrize("paginas", [1, None], ids=["pagina_pedida", "todas_as_paginas"])

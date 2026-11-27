@@ -16,7 +16,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_json_enviado, load_sample
 
 
 @responses.activate
@@ -74,7 +74,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do PJe ficam pinados aqui.
-    assert json.loads(responses.calls[0].request.body) == {
+    assert corpo_json_enviado(responses.calls[0].request) == {
         "jurisprudencia": {
             "ementa": "dano moral",
             "inteiro_teor": "",
@@ -267,7 +267,7 @@ def test_cjsg_decisoes_envia_valor_do_portal(mocker, decisoes, sample, pesquisa,
         data_julgamento_fim="2026-11-20" if extras else None,
     )
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["decisoes"] == decisoes
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["decisoes"] == decisoes
     assert len(df) == len(hits)
 
 
@@ -299,7 +299,7 @@ def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes):
 
     df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
     assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
     # Turmas Recursais e Turma de Uniformizacao: so ``"TR"`` traz colegiados "Turma".
     assert all(("Turma" in c) == (jurisdicoes == "TR") for c in df["colegiado"])
@@ -361,7 +361,7 @@ def test_cjsg_sistema_envia_valor_do_portal(mocker):
 
     df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema="SAJ")
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["sistema"] == "SAJ"
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["sistema"] == "SAJ"
     assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
     assert set(df["sistema"]) == {"SAJ"}
 
@@ -405,7 +405,7 @@ def test_cjsg_grau_envia_valor_do_portal(mocker):
         data_julgamento_fim="2026-11-20",
     )
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["grau"] == "1"
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["grau"] == "1"
     assert len(df) == len(hits)
 
 
@@ -447,7 +447,7 @@ def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):
         "dano moral", paginas=1, buscar_em="inteiro_teor", decisoes="Sentença",
     )
 
-    corpo = json.loads(responses.calls[0].request.body)["jurisprudencia"]
+    corpo = corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]
     assert (corpo["ementa"], corpo["inteiro_teor"]) == ("", "dano moral")
     if metodo == "cjsg":
         assert len(resultado) == len(hits)

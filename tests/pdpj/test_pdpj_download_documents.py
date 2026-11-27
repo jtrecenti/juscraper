@@ -19,7 +19,7 @@ from pydantic import ValidationError
 import juscraper as jus
 from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.pdpj.download import BASE_URL
-from tests._helpers import load_sample
+from tests._helpers import load_sample, urls_enviadas
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -459,7 +459,7 @@ def test_download_documents_falha_consome_limite_e_gera_um_aviso_agregado():
     assert out["texto"].isna().all()
     assert out["motivo_falha"].tolist() == ["retry_esgotado_500", "http_404"]
     # O 500 é retentado até o fim das tentativas; o 404 não.
-    documentos_pedidos = [call.request.url.rsplit("/", 2)[-2] for call in responses.calls]
+    documentos_pedidos = [url.rsplit("/", 2)[-2] for url in urls_enviadas()]
     assert list(dict.fromkeys(documentos_pedidos)) == ["doc-a", "doc-b"]
     assert documentos_pedidos.count("doc-b") == 1
     assert len(avisos) == 1
@@ -567,7 +567,7 @@ def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao(caplog):
 
     assert out["id_documento"].tolist() == ["doc-b"]
     assert out.iloc[0]["texto"] == "texto b"
-    assert [call.request.url.rsplit("/", 2)[-2] for call in responses.calls] == ["doc-b"]
+    assert [url.rsplit("/", 2)[-2] for url in urls_enviadas()] == ["doc-b"]
 
 
 @responses.activate

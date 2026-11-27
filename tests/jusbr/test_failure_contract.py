@@ -26,7 +26,7 @@ from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.jusbr.client import JusbrScraper
 from juscraper.core.failures import STATUS_CONSULTA_FALHA
 from juscraper.core.http import RETRYABLE_STATUSES
-from tests._helpers import load_sample
+from tests._helpers import load_sample, urls_enviadas
 
 LIST_URL = "https://portaldeservicos.pdpj.jus.br/api/v2/processos/"
 BASE_TEXT_URL = "https://api-processo.data-lake.pdpj.jus.br/processo-api/api/v1/processos"
@@ -610,6 +610,6 @@ def test_peca_com_arquivo_no_mesmo_lote_continua_baixando():
 
     df = _scraper().download_documents(_base_df([sem_arquivo, _doc(UUID_TEXT_2)]))
 
-    assert [call.request.url.split("?")[0] for call in responses.calls] == [_texto_url(UUID_TEXT_2)]
+    assert [url.split("?")[0] for url in urls_enviadas()] == [_texto_url(UUID_TEXT_2)]
     assert df["texto"].tolist() == [None, "texto da peca"]
     assert df["motivo_falha"].tolist() == [None, None]

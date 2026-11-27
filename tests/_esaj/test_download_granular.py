@@ -14,6 +14,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts._esaj.download import download_cjsg_pages
+from tests._helpers import params_enviados
 
 BASE = "https://esaj.tjac.jus.br/"
 
@@ -50,7 +51,7 @@ def test_paginas_seguintes_pedem_a_aba_do_tipo_de_decisao(tmp_path, tipo_decisao
 
     pasta = _baixar(tmp_path, tipo_decisao=tipo_decisao, n_pags=2)
 
-    gets = [chamada.request.params for chamada in responses.calls if chamada.request.method == "GET"]
+    gets = [params_enviados(chamada.request) for chamada in responses.calls if chamada.request.method == "GET"]
     assert [(params["tipoDeDecisao"], params["pagina"]) for params in gets] == [(aba, "1"), (aba, "2")]
     assert len(list(pasta.iterdir())) == 2
 
