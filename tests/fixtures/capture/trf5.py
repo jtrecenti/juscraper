@@ -5,8 +5,8 @@ Rodar da raiz do repositório::
     uv run python -m tests.fixtures.capture.trf5
 
 Grava em ``tests/trf5/samples/cpopg/`` ``form_initial.html``,
-``search_one_result.html``, ``detail_normal.html`` e
-``search_no_results.html``. O ``movs_page_2.html`` não sai daqui.
+``search_one_result.html``, ``detail_normal.html``, ``search_no_results.html``
+e ``movs_page_2.html``.
 
 Os arquivos saem do ``cpopg_download`` de :class:`TRF5Scraper`, o fluxo de
 produção, por um hook de resposta na sessão: se o TRF5 deixar de aceitar o que
@@ -29,13 +29,20 @@ logger = logging.getLogger(__name__)
 # Maceió (AL).
 FOUND_CNJ = "00584573120254058000"
 
+# Execução fiscal da ANP contra uma pessoa jurídica (posto de combustível),
+# na Seção Judiciária de Pernambuco: processo público, sem pessoa física nas
+# partes, com 16 a 30 movimentações (uma página extra no paginador do
+# Richfaces, de 15 linhas) e documentos numa página só. Achado em 27/11/2026
+# sondando CNJs vizinhos no PJe.
+PAGINATED_CNJ = "08102157820254058300"
+
 # CNJ com a forma de um processo do TRF5, para passar pela máscara do
 # formulário; a busca volta sem token ``ca``.
 MISSING_CNJ = "00000000020994050000"
 
 
 def capturar_consulta() -> dict[str, bytes]:
-    """Formulário, buscas e detalhe, pelo ``cpopg_download`` do raspador."""
+    """Formulário, buscas, detalhe e página 2 de movimentações, pelo ``cpopg_download`` do raspador."""
     scraper = TRF5Scraper(sleep_time=0.5)
     listview = scraper.BASE_URL + LISTVIEW_PATH
     detalhe = scraper.BASE_URL + DETAIL_PATH
@@ -58,6 +65,16 @@ def capturar_consulta() -> dict[str, bytes]:
     if obtidas != [f"POST {listview}"]:
         raise RuntimeError(f"[trf5] {MISSING_CNJ}: esperava uma busca sem resultado, veio {obtidas}")
     arquivos["search_no_results.html"] = respostas[0].content
+
+    # Mais de 15 movimentações: o detalhe pede a página 2 num POST do Richfaces.
+    _, respostas = respostas_do_cpopg(scraper, PAGINATED_CNJ)
+    obtidas = rotas(respostas)
+    if obtidas != [f"POST {listview}", f"GET {detalhe}", f"POST {detalhe}"]:
+        raise RuntimeError(
+            f"[trf5] {PAGINATED_CNJ}: esperava busca, detalhe e uma página extra de movimentações, "
+            f"veio {obtidas} (o processo ganhou movimentações ou documentos?)"
+        )
+    arquivos["movs_page_2.html"] = respostas[2].content
     return arquivos
 
 

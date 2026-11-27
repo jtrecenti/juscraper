@@ -184,11 +184,11 @@ def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
 
     Regression for the double-encoding bug where accented movimentação text came
     back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
-    response was decoded as latin-1. Serves the *raw bytes* of a fragment
-    captured live (TRF5 process with 505 movs) and asserts the decoded text
-    carries clean accents.
+    response was decoded as latin-1. Serves the *raw bytes* of the page-2
+    fragment recorded by ``tests/fixtures/capture/trf5.py`` and asserts the
+    decoded text carries clean accents.
 
-    TRF5 ships no paginated-detail sample, so we build a synthetic
+    The paginated process's detail page is not kept as a sample, so we build a synthetic
     ``MovsPagination`` — the focus here is the decode, not the slider extraction
     (covered live by ``test_cpopg_returns_all_movs_pages``).
     """
