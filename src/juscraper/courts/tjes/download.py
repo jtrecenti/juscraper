@@ -1,4 +1,6 @@
 """Downloads raw results from the TJES jurisprudence search."""
+from typing import Final
+
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import baixar_paginas_pedidas
 
@@ -13,7 +15,7 @@ CORES = {
     "turma_recursal_legado": "turma_recursal_legado",
 }
 
-DEFAULT_CORE = "pje2g"
+DEFAULT_CORE: Final = "pje2g"
 CJSG_CORES = {"pje2g", "pje2g_mono", "legado", "turma_recursal_legado"}
 CJPG_CORE = "pje1g"
 DEFAULT_PER_PAGE = 20

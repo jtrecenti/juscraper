@@ -17,6 +17,9 @@ from ...schemas import (
     TamanhoPagina,
 )
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJMTScraper``.
+TipoConsulta = Literal["Acordao", "DecisaoMonocratica"]
+
 
 class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
     """Entradas aceitas por ``cjsg`` e ``cjsg_download`` do TJMT.
@@ -48,7 +51,7 @@ class InputCJSGTJMT(SearchBase, DataPublicacaoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    tipo_consulta: Literal["Acordao", "DecisaoMonocratica"] = "Acordao"
+    tipo_consulta: TipoConsulta = "Acordao"
     relator: str | None = None
     orgao_julgador: str | None = None
     tipo_processo: str | None = None

@@ -7,17 +7,20 @@ from typing import Any, ClassVar, Literal
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.schemas import BuscarEm
 from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import QUERY_SCOPE, cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJPA
+from .schemas import InputCJSGTJPA, QueryType, SortBy
 
 #: Valores do alias deprecado ``query_scope`` -> ``buscar_em``; ``"inteiroteor"`` e a grafia da docstring antiga.
 _QUERY_SCOPE_PARA_BUSCAR_EM = {scope: buscar_em for buscar_em, scope in QUERY_SCOPE.items()} | {
     "inteiroteor": "inteiro_teor",
 }
+#: ``buscar_em`` mais os valores de ``query_scope`` (convertidos, com aviso) e ``None`` (default do schema).
+BuscarEmAceito = BuscarEm | Literal["inteiroTeor", "inteiroteor"] | None
 
 
 class TJPAScraper(HTTPScraper):
@@ -50,10 +53,10 @@ class TJPAScraper(HTTPScraper):
         assunto: str | None = None,
         origem: list | None = None,
         tipo: list | None = None,
-        sort_by: str = "datajulgamento",
+        sort_by: SortBy = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
-        query_type: str = "free",
-        buscar_em: str | None = None,
+        query_type: QueryType = "free",
+        buscar_em: BuscarEmAceito = None,
         **kwargs,
     ) -> list:
         """Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).
@@ -126,10 +129,10 @@ class TJPAScraper(HTTPScraper):
         assunto: str | None = None,
         origem: list | None = None,
         tipo: list | None = None,
-        sort_by: str = "datajulgamento",
+        sort_by: SortBy = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
-        query_type: str = "free",
-        buscar_em: str | None = None,
+        query_type: QueryType = "free",
+        buscar_em: BuscarEmAceito = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPA (download + parse).

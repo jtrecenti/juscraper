@@ -16,7 +16,7 @@ from .._trf.schemas import InputCpopgTRF
 from .consulta_publica import TJPEConsultaPublicaScraper
 from .download import cjsg_download
 from .parse import cjsg_parse
-from .schemas import InputCJSGTJPE
+from .schemas import InputCJSGTJPE, TipoDecisao
 
 
 class TJPEScraper(HTTPScraper):
@@ -185,7 +185,7 @@ class TJPEScraper(HTTPScraper):
         classe: str | None = None,
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
-        tipo_decisao: str = "acordaos",
+        tipo_decisao: TipoDecisao = "acordaos",
         **kwargs,
     ) -> list:
         """Baixa as paginas brutas do cjsg do TJPE.
@@ -240,7 +240,7 @@ class TJPEScraper(HTTPScraper):
         classe: str | None = None,
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
-        tipo_decisao: str = "acordaos",
+        tipo_decisao: TipoDecisao = "acordaos",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPE.
