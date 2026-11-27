@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import TypeVar
+from typing import NamedTuple, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -44,11 +44,34 @@ def _extract_from_match(match: re.Match[str]) -> int | None:
     return _coerce_int(match.group(0))
 
 
-def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
-    if not zero_markers:
+class AvisoVazio(NamedTuple):
+    """Aviso de busca vazia: os marcadores só valem no texto dos ``seletores``.
+
+    Ementas e sentenças citam as frases do aviso ("nenhum documento
+    encontrado nos autos"), e por isso o texto da página inteira não serve:
+    o marcador é procurado só nos elementos que o portal usa para o aviso
+    (``div.alert-danger`` no STM, por exemplo).
+
+    Attributes:
+        seletores: Seletores CSS do contêiner do aviso.
+        marcadores: Substrings (sem diferença de maiúsculas) procuradas no
+            texto de cada elemento que os seletores casam.
+    """
+
+    seletores: Sequence[str]
+    marcadores: Sequence[str]
+
+
+def _tem_aviso_vazio(soup: Tag, aviso: AvisoVazio | None) -> bool:
+    if aviso is None:
         return False
-    text_lower = soup.get_text(" ", strip=True).lower()
-    return any(marker.lower() in text_lower for marker in zero_markers)
+    marcadores = [marcador.lower() for marcador in aviso.marcadores]
+    textos = (
+        elemento.get_text(" ", strip=True).lower()
+        for seletor in aviso.seletores
+        for elemento in soup.select(seletor)
+    )
+    return any(marcador in texto for texto in textos for marcador in marcadores)
 
 
 def _collect_candidates(
@@ -88,7 +111,7 @@ def extract_count_with_cascade(
     *,
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
-    zero_markers: Sequence[str] = (),
+    aviso_vazio: AvisoVazio | None = None,
     fallback_html: bool = False,
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
@@ -98,17 +121,18 @@ def extract_count_with_cascade(
     ``return 0`` (assume zero resultados). Manter essa decisao do lado do
     caller preserva o comportamento legado de cada scraper.
 
-    A ordem é: seletores e regex; ``zero_markers``; ``None``. Os marcadores
-    de busca vazia só valem quando nenhuma contagem foi achada, porque
-    ementas e sentenças citam essas frases ("nenhum documento encontrado nos
-    autos") e uma contagem 0 faz o download parar na primeira página sem aviso.
+    A ordem é: seletores e regex; ``aviso_vazio``; ``None``. O aviso de busca
+    vazia só vale quando nenhuma contagem foi achada, e só dentro dos
+    seletores dele, porque ementas e sentenças citam essas frases ("nenhum
+    documento encontrado nos autos") e uma contagem 0 faz o download parar na
+    primeira página sem aviso.
 
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
             tabela, sem parsear de novo. Com uma ``Tag``, a
             cascata inteira (seletores, regex, ``fallback_html`` e
-            ``zero_markers``) olha so o trecho.
+            ``aviso_vazio``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
             candidato. Se nenhum seletor casa elemento com texto (ou se a
@@ -118,23 +142,22 @@ def extract_count_with_cascade(
             Se a regex tem grupos, retorna o primeiro grupo numerico
             valido; caso contrario tenta ``group(0)``. Vence o primeiro
             match valido na ordem da cascata (candidato, depois regex).
-        zero_markers: Substrings (case-insensitive) procuradas no texto da
-            pagina inteira (ou da ``Tag``) quando a cascata nao acha contagem;
-            se alguma aparece, o util retorna ``0``. Use marcadores
-            especificos do tribunal ("Nenhum documento encontrado", "Sua
-            pesquisa nao retornou resultados") para nao falso-positivar em
-            textos de ajuda.
+        aviso_vazio: Contêiner e frases do aviso de busca vazia
+            (:class:`AvisoVazio`), consultado quando a cascata nao acha
+            contagem; se algum marcador aparece no texto de algum elemento
+            dos seletores do aviso, o util retorna ``0``. Fora desses
+            elementos o marcador nao conta.
         fallback_html: Se ``True``, as regex rodam no HTML bruto quando
             nenhum seletor casa elemento com texto. Default ``False``: o
             HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
             casa "(fevereiro de 2009)" nelas. So quando todas as regex exigem
             as palavras do rotulo do resumo ("Documentos encontrados: N"),
             que tambem nao podem casar com o aviso de busca vazia, porque a
-            regex roda antes de ``zero_markers``.
+            regex roda antes de ``aviso_vazio``.
 
     Returns:
-        ``int`` extraido; ``0`` quando a cascata nao acha contagem e algum
-            ``zero_markers`` aparece; ``None`` nos demais casos. O caller
+        ``int`` extraido; ``0`` quando a cascata nao acha contagem e o
+            ``aviso_vazio`` aparece; ``None`` nos demais casos. O caller
             decide o default (1 pagina, 0 resultados) ou levanta.
     """
     soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
@@ -142,7 +165,7 @@ def extract_count_with_cascade(
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
-    if _has_zero_marker(soup, zero_markers):
+    if _tem_aviso_vazio(soup, aviso_vazio):
         return 0
     return None
 

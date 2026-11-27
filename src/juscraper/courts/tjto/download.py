@@ -41,7 +41,7 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 def _get_total_results(html: str) -> int:
     """Extract the total number of results from the active tab's count.
 
-    Sem ``zero_markers``: a página além do total também diz "Nenhum documento
+    Sem ``aviso_vazio``: a página além do total também diz "Nenhum documento
     encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
     a busca sem resultados traz ``(0)`` na aba.
     """

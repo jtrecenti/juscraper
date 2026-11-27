@@ -220,10 +220,11 @@ def test_get_total_pages_sem_resultados_na_ementa_nao_zera_a_contagem(texto: str
     [
         pytest.param(_EMENTA_PARECIDA, id="texto-parecido"),
         pytest.param(_EMENTA_MARCADOR_NO_MEIO, id="marcador-no-meio"),
+        pytest.param(_EMENTA_ABRE_COM_MARCADOR, id="marcador-abre-a-ementa"),
     ],
 )
 def test_get_total_pages_sem_resultados_na_ementa_sem_contagem_nem_link_levanta(texto: str):
-    """Sem contagem nem », só o marcador que abre um nó de texto vale como busca vazia (1 página)."""
+    """Sem contagem nem », o marcador só vale no contêiner do aviso, mesmo abrindo o texto da ementa."""
     html = _sem_rotulo(_primeira_pagina()).replace(_LINK_ULTIMA, "")
     html = _com_texto_na_ementa(html, texto)
     with pytest.raises(ValueError, match="não traz a contagem"):

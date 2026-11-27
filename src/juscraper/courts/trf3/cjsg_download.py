@@ -33,7 +33,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 from ...core.http import RequestFn
-from ...utils.pagination import extract_count_with_cascade
+from ...utils.pagination import AvisoVazio, extract_count_with_cascade
 from ...utils.params import normalize_paginas
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
@@ -383,6 +383,8 @@ _TOTAL_PATTERNS = (re.compile(r"^\s*(\d[\d.]*)\s*$"),)
 _CONTAGEM_SELECTORS = (f"{SELETOR_DOCUMENTO} .contagem",)
 _CONTAGEM_PATTERNS = (re.compile(r"^\s*\d+\s*/\s*(\d[\d.]*)\)\s*$"),)
 _ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
+# Na contagem, o aviso só vale no lugar dos links de página, onde o portal o põe.
+_AVISO_VAZIO = AvisoVazio(("section.secao-paginas",), _ZERO_MARKERS)
 
 
 def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> None:
@@ -449,7 +451,7 @@ def cjsg_n_results(html: str) -> int | None:
         soup,
         css_selectors=_CONTAGEM_SELECTORS,
         regex_patterns=_CONTAGEM_PATTERNS,
-        zero_markers=_ZERO_MARKERS,
+        aviso_vazio=_AVISO_VAZIO,
     )
 
 

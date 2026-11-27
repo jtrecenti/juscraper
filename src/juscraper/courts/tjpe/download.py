@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade
+from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,9 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"(\d+)\s+documentos\s+encontrados", re.IGNORECASE),
 )
 _ZERO_MARKERS: tuple[str, ...] = ("nenhum documento encontrado",)
+# Na contagem, o aviso só vale nas células da tabela de escolha do tipo, onde
+# o portal o põe no lugar de "N documentos encontrados".
+_AVISO_VAZIO = AvisoVazio(("div.escolha-resultado-table td",), _ZERO_MARKERS)
 
 
 def extract_viewstate(html: str) -> str:
@@ -69,7 +72,7 @@ def extract_total_docs(html: str) -> int:
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
-        zero_markers=_ZERO_MARKERS,
+        aviso_vazio=_AVISO_VAZIO,
         fallback_html=True,
     )
     return n if n is not None else 0
