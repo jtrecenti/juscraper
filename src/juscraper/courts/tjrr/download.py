@@ -460,6 +460,10 @@ def cjsg_download_manager(
             paginação. Default 1.0; o client normalmente passa
             ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
+
+    Raises:
+        ValueError: Quando, com páginas além da 1, uma tabela de resultados
+            vem sem o paginador (markup novo).
     """
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)

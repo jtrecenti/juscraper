@@ -57,7 +57,7 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 )
 
 
-def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
+def _get_total_pages(html: str) -> int:
     """Total de páginas pela contagem "N documentos encontrados".
 
     A busca vazia traz "0 documentos encontrados" e dá 1 página; sem a
@@ -69,7 +69,7 @@ def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
         regex_patterns=_PAGINATION_REGEXES,
         fallback_html=True,
     )
-    return resolve_total_pages(total, resultados_por_pagina=per_page, tribunal="TJSC")
+    return resolve_total_pages(total, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJSC")
 
 
 def cjsg_download_manager(

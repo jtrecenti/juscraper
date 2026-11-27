@@ -154,8 +154,9 @@ def cjsg_download(
         # busca bloqueada; por isso o aviso sai em toda busca vazia. Esse HTML
         # nao traz marcador proprio: a falta de resultados e o unico sinal.
         avisar(AVISO_TURNSTILE)
-        total = 0
-    n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
+        n_pags = 1
+    else:
+        n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
     results: list = []
     for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJGO"):
