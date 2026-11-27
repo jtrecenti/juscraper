@@ -6,6 +6,7 @@ different form field IDs (``j_id162`` vs ``j_id165``).
 """
 from __future__ import annotations
 
+import tempfile
 from urllib.parse import parse_qsl
 
 import pandas as pd
@@ -198,6 +199,22 @@ def test_cpopg_download_aceita_os_valores_padrao_das_pecas(mocker) -> None:
     htmls = scraper.cpopg_download("00584573120254058000", download_pecas=False, diretorio=None)
     assert htmls == ["<html/>"]
     consultar.assert_called_once_with("00584573120254058000", None)
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(mocker, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    mkdtemp = mocker.spy(tempfile, "mkdtemp")
+    with pytest.warns(UserWarning, match=r"^TRF5Scraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = scraper.cpopg("00584573120254058000", diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with("00584573120254058000", None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
+    # Sem peças, o diretório temporário padrão não é criado.
+    mkdtemp.assert_not_called()
 
 
 @responses.activate

@@ -21,6 +21,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
+from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
@@ -394,6 +395,19 @@ def test_cpopg_download_recusa_os_parametros_das_pecas(tjpe):
     )
     with pytest.raises(TypeError, match=r"use cpopg\(\.\.\., download_pecas=True\)"):
         tjpe.cpopg_download(CNJ, download_pecas=True)
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(tjpe, mocker, tmp_path):
+    """``diretorio`` sem ``download_pecas=True`` vira aviso que cita o ``TJPEScraper``, sem baixar peças."""
+    consultar = mocker.patch.object(tjpe._consulta(), "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    with pytest.warns(UserWarning, match=r"^TJPEScraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = tjpe.cpopg(CNJ, diretorio=str(diretorio))
+    # A delegação à consulta pública não desloca o aviso para dentro do juscraper.
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with(CNJ, None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
 
 
 def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
