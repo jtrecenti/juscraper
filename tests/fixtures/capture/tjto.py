@@ -10,13 +10,20 @@ Saves the Solr-style HTML responses for each public method (cjsg, cjpg)
 plus two ``ementa_<uuid>.json`` payloads from the ``ementa.php`` endpoint
 that powers ``cjsg_ementa(uuid)``.
 
-A captura completa faz 12 buscas e 2 GETs de ementa. O AWS WAF do TJTO
-desafia (HTTP 202) depois de cerca de 7 buscas do mesmo IP e só volta a
-responder depois de uns 15 minutos (CONTRIBUTING.md > Integração local), então
-ela não termina de uma vez. ``--only`` recebe um ou mais padrões ``fnmatch``
-no formato ``<endpoint>/<arquivo>`` e captura só os samples que casam com
-algum deles; os demais ficam como estão. As ementas saem dos dois primeiros
-UUIDs de ``cjsg/results_normal_page_01.html`` lidos do disco antes de qualquer
+A captura completa faz 11 buscas e 2 GETs de ementa. O AWS WAF do TJTO
+desafia (HTTP 202) a 7ª busca feita do mesmo IP em menos de uns 10 minutos e
+só volta a responder depois de uns 15 minutos (CONTRIBUTING.md > Integração
+local). Por isso o script espera ``--pausa`` segundos (padrão: 120) entre o
+fim de uma requisição e o início da seguinte, e a captura completa leva uns 24
+minutos. Medido de IP residencial em 27/11/2026: com 90 s entre as buscas, a
+7ª já recebeu o desafio; com 120 s, 14 buscas seguidas passaram, e a captura
+completa também. ``--pausa 0`` desliga a espera, o que serve com ``--only`` de
+poucos arquivos.
+
+``--only`` recebe um ou mais padrões ``fnmatch`` no formato
+``<endpoint>/<arquivo>`` e captura só os samples que casam com algum deles; os
+demais ficam como estão. As ementas saem dos dois primeiros UUIDs de
+``cjsg/results_normal_page_01.html`` lidos do disco antes de qualquer
 requisição (os mesmos que os testes de contrato usam), e não da página que a
 própria execução regrava. O desafio do WAF interrompe o script antes de gravar
 a resposta, para não sobrescrever um sample bom com a página vazia; depois de
@@ -26,10 +33,12 @@ import argparse
 import fnmatch
 import logging
 import re
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
 
+from juscraper.core.intervalo import IntervaloEntrePedidos
 from juscraper.core.waf import USER_AGENT
 from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL, TYPE_MINUTA_MAP, build_cjsg_payload, eh_bloqueio_waf
 
@@ -57,6 +66,7 @@ CJPG_QUERIES: list[tuple] = [
 ]
 # Instância do ``tip_criterio_inst`` de cada endpoint.
 ENDPOINTS = {"cjsg": ("2", CJSG_QUERIES), "cjpg": ("1", CJPG_QUERIES)}
+PAUSA_PADRAO = 120.0  # segundos entre requisições (docstring do módulo)
 
 
 def _minify(raw: bytes) -> bytes:
@@ -76,6 +86,19 @@ def _minify(raw: bytes) -> bytes:
 
 def _selecionado(nome: str, padroes: list[str] | None) -> bool:
     return padroes is None or any(fnmatch.fnmatch(nome, padrao) for padrao in padroes)
+
+
+class _SessaoEspacada(requests.Session):
+    """Sessão que espera ``pausa`` segundos entre uma requisição e a seguinte."""
+
+    def __init__(self, pausa: float) -> None:
+        super().__init__()
+        self.pausa = pausa
+        self._intervalo = IntervaloEntrePedidos()
+
+    def request(self, *args: Any, **kwargs: Any) -> requests.Response:
+        with self._intervalo.pedido(self.pausa):
+            return super().request(*args, **kwargs)
 
 
 def _conferir_waf(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
@@ -161,14 +184,22 @@ def main(argv: list[str] | None = None) -> None:
         metavar="ENDPOINT/ARQUIVO",
         help="Padrões fnmatch (ex.: cjsg/single_page.html, 'cjpg/*'); captura só os samples que casam.",
     )
-    padroes = parser.parse_args(argv).only
+    parser.add_argument(
+        "--pausa",
+        type=float,
+        default=PAUSA_PADRAO,
+        metavar="SEGUNDOS",
+        help=f"Espera entre uma requisição e a seguinte (padrão: {PAUSA_PADRAO:g}).",
+    )
+    args = parser.parse_args(argv)
+    padroes = args.only
     ementa_uuids = _ementa_uuids()
     if padroes:
         alvos = _alvos(ementa_uuids)
         if sem_alvo := [p for p in padroes if not fnmatch.filter(alvos, p)]:
             parser.error(f"nenhum sample casa com {sem_alvo}; opções: {', '.join(alvos)}")
 
-    session = requests.Session()
+    session = _SessaoEspacada(args.pausa)
     session.headers.update({"User-Agent": USER_AGENT})
     session.hooks["response"].append(_conferir_waf)
 
