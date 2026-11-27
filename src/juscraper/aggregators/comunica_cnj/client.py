@@ -126,8 +126,6 @@ class ComunicaCNJScraper(HTTPScraper):
             e a fonte da verdade dos filtros aceitos.
         """
         _exigir_pesquisa_ou_numero(pesquisa, kwargs.get("numero_processo"))
-        paginas_norm = normalize_paginas(paginas)
-
         # Aceita ``DD/MM/YYYY`` na entrada por conveniencia, mas a API
         # espera ISO ``YYYY-MM-DD``. ``to_iso_date`` e idempotente para
         # strings ja em ISO.
@@ -138,7 +136,7 @@ class ComunicaCNJScraper(HTTPScraper):
         try:
             inp = InputListarComunicacoesComunicaCNJ(
                 pesquisa=pesquisa or "",
-                paginas=paginas_norm,
+                paginas=normalize_paginas(paginas),
                 **kwargs,
             )
         except ValidationError as exc:
@@ -178,6 +176,7 @@ class ComunicaCNJScraper(HTTPScraper):
         if self.verbose:
             logger.info("ComunicaCNJ: %d resultados em %d paginas.", total, total_paginas)
 
+        paginas_norm = inp.paginas_normalizadas
         if paginas_norm is None:
             paginas_iter: range | list = range(1, total_paginas + 1)
         elif isinstance(paginas_norm, range):

@@ -24,12 +24,14 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import pkgutil
 from typing import Any, get_args, get_origin
 
 import numpy as np
 import pytest
 from pydantic import BaseModel, ValidationError
 
+import juscraper
 from juscraper.schemas import PaginasMixin
 from juscraper.utils.params import normalize_paginas
 from tests.schemas.test_schema_coverage import (
@@ -158,6 +160,32 @@ def test_paginas_normalizadas_iguala_normalize_paginas(paginas, esperado):
 def test_paginas_mixin_rejects_invalid_selections(paginas):
     with pytest.raises(ValidationError, match="paginas"):
         PaginasMixin(paginas=paginas)
+
+
+def _schemas_com_paginas() -> list[type[BaseModel]]:
+    """Todo modelo pydantic de ``juscraper.*.schemas`` com campo ``paginas``."""
+    found: dict[str, type[BaseModel]] = {}
+    for modinfo in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
+        if not modinfo.name.endswith(".schemas"):
+            continue
+        mod = importlib.import_module(modinfo.name)
+        for obj in vars(mod).values():
+            if (
+                inspect.isclass(obj)
+                and issubclass(obj, BaseModel)
+                and obj is not PaginasMixin
+                and "paginas" in getattr(obj, "model_fields", {})
+            ):
+                found[f"{obj.__module__}.{obj.__qualname__}"] = obj
+    return [found[k] for k in sorted(found)]
+
+
+@pytest.mark.parametrize("schema_cls", _schemas_com_paginas(), ids=lambda c: c.__name__)
+def test_schema_com_paginas_herda_paginas_mixin(schema_cls):
+    """Quem declara ``paginas`` sem o mixin perde o validador (``paginas=0`` passa)."""
+    assert issubclass(schema_cls, PaginasMixin)
+    field = schema_cls.model_fields["paginas"]
+    assert field.annotation == PaginasMixin.model_fields["paginas"].annotation
 
 
 @pytest.mark.parametrize(

@@ -11,7 +11,7 @@ from __future__ import annotations
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import TamanhoPagina
+from ...schemas import PaginasMixin, TamanhoPagina
 from .._pdpj_sso.schemas import InputAuthGovbrBase
 
 
@@ -89,18 +89,17 @@ class _InputFiltrosPdpj(BaseModel):
     )
 
 
-class InputPesquisaPdpj(_InputFiltrosPdpj):
+class InputPesquisaPdpj(PaginasMixin, _InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.pesquisa`.
 
     Cobre os parametros documentados em ``GET /api/v1/processos`` (busca
-    profunda).
+    profunda). ``paginas`` vem de :class:`PaginasMixin`.
     """
 
     fase: str | None = None
     situacao_atual: str | None = None
     tipo_operacao: str | None = None
     campo_ordenacao: str | None = None
-    paginas: int | list[int] | range | None = None
     itens_por_pagina: TamanhoPagina = 100
 
 

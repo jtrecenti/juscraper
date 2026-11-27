@@ -274,7 +274,7 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, s
         return None, None
     if isinstance(paginas, range):
         return paginas.stop - 1, set(paginas)
-    return (max(paginas) if paginas else 0), set(paginas)
+    return max(paginas), set(paginas)
 
 
 def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
@@ -682,9 +682,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             verdade dos filtros aceitos.
         """
         self._check_auth()
-        paginas_norm = normalize_paginas(paginas)
         try:
-            inp = InputPesquisaPdpj(paginas=paginas_norm, **kwargs)
+            inp = InputPesquisaPdpj(paginas=normalize_paginas(paginas), **kwargs)
         except ValidationError as exc:
             raise_on_extra_kwargs(
                 exc, "PdpjScraper.pesquisa()", schema_cls=InputPesquisaPdpj,
@@ -697,7 +696,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         # parâmetro segue na querystring para não mudar a requisição de quem já
         # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
-        max_paginas, permitidas = _limite_de_paginas(paginas_norm)
+        max_paginas, permitidas = _limite_de_paginas(inp.paginas_normalizadas)
         return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
 
     def _paginar(
