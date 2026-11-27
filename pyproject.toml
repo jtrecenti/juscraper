@@ -337,6 +337,10 @@ exclude = [
 
 [tool.mypy]
 python_version = "3.11"
+# O hook do pre-commit roda num ambiente sem o juscraper instalado e, num commit
+# que só muda testes, recebe só esses arquivos: sem src/ no caminho, todo
+# `import juscraper` viraria Any e os testes não seriam conferidos contra a API.
+mypy_path = "src"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
