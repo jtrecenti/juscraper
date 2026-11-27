@@ -15,23 +15,7 @@ import responses
 import juscraper as jus
 from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, load_sample_bytes
-
-
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        actual = corpo_form_enviado(request)
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
-
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_parcial_matcher, load_sample, load_sample_bytes
 
 # O TRF5 serve o formulário e o detalhe em latin-1, com este cabeçalho; os
 # samples guardam os bytes crus.
@@ -58,7 +42,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         body=load_sample("trf5", "cpopg/search_one_result.html"),
         content_type="text/xml; charset=utf-8",
         match=[
-            _subset_form_matcher(
+            corpo_form_parcial_matcher(
                 {
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "0058457-31.2025.4.05.8000",

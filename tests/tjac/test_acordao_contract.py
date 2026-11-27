@@ -10,7 +10,7 @@ embargos (julgados em 27/10/2026, movimentação de 28/10, documento 33, tipo
 import logging
 from datetime import date, datetime, timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 
 import pandas as pd
 import pytest
@@ -27,7 +27,7 @@ from juscraper.courts._esaj.acordao import (
     RespostaNaoPdfError,
 )
 from juscraper.courts._esaj.pasta import parse_parametros_pasta, tipo_documento
-from tests._helpers import PDF_FALSO, load_sample, registrar_rota_acordao
+from tests._helpers import PDF_FALSO, chamadas_para, load_sample, params_enviados, registrar_rota_acordao, url_enviada
 
 BASE = "https://esaj.tjac.jus.br/"
 CNJ = "0700021-98.2018.8.01.0001"
@@ -40,10 +40,6 @@ def tjac(tmp_path, mocker):
     return jus.scraper("tjac", download_path=str(tmp_path))
 
 
-def _chamadas(rota):
-    return [c for c in responses.calls if urlparse(c.request.url).path.endswith(rota)]
-
-
 @responses.activate
 def test_baixa_acordao_da_apelacao_pela_data_de_julgamento(tjac, tmp_path):
     registrar_rota_acordao("tjac", "dois_acordaos", BASE, "cposg5/")
@@ -52,16 +48,16 @@ def test_baixa_acordao_da_apelacao_pela_data_de_julgamento(tjac, tmp_path):
 
     assert caminho == str(tmp_path / "acordaos" / f"07000219820188010001_{CD_PROCESSO}_8.pdf")
     assert Path(caminho).read_bytes() == PDF_FALSO
-    busca = parse_qs(urlparse(_chamadas("search.do")[0].request.url).query, keep_blank_values=True)
-    assert busca["dePesquisaNuUnificado"] == [CNJ]
-    assert busca["numeroDigitoAnoUnificado"] == ["0700021-98.2018"]
-    assert busca["foroNumeroUnificado"] == ["0001"]
-    assert busca["uuidCaptcha"] == [""]
+    busca = params_enviados(chamadas_para("search.do")[0])
+    assert busca["dePesquisaNuUnificado"] == CNJ
+    assert busca["numeroDigitoAnoUnificado"] == "0700021-98.2018"
+    assert busca["foroNumeroUnificado"] == "0001"
+    assert busca["uuidCaptcha"] == ""
     parametros = parse_parametros_pasta(load_sample("tjac", f"acordao/dois_acordaos/pasta_{CD_PROCESSO}_8.html"))
-    assert _chamadas("getPDF.do")[0].request.url == f"{BASE}pastadigital/getPDF.do?{parametros}"
+    assert url_enviada(chamadas_para("getPDF.do")[0]) == f"{BASE}pastadigital/getPDF.do?{parametros}"
     # As movimentações vêm na página do processo: sem AJAX nem show.do.
-    assert not _chamadas("carregarMovimentacoesAjax.do")
-    assert not _chamadas("show.do")
+    assert not chamadas_para("carregarMovimentacoesAjax.do")
+    assert not chamadas_para("show.do")
 
 
 @responses.activate
@@ -73,7 +69,7 @@ def test_pula_documentos_com_senha_e_aceita_acordao_de_embargos(tjac, caplog):
 
     assert caminho.endswith(f"_{CD_PROCESSO}_33.pdf")
     verificados = [
-        parse_qs(urlparse(c.request.url).query)["cdDocumento"][0] for c in _chamadas("verificarAcessoMovimentacao.do")
+        params_enviados(r)["cdDocumento"] for r in chamadas_para("verificarAcessoMovimentacao.do")
     ]
     # Do mais antigo ao mais novo a partir da data; cada 403 de senha uma vez só, sem retry.
     assert verificados == ["10", "11", "12", "13", "14", "16", "17", "19", "20", "21", "22", "23", "27", "33"]
@@ -207,7 +203,7 @@ def test_baixar_acordaos_registra_entrada_invalida_e_segue(tjac):
     assert saida["caminho_acordao"].isna().tolist() == [True, True, True, False]
     assert saida["caminho_acordao"].iloc[-1].endswith(f"_{CD_PROCESSO}_8.pdf")
     # A linha válida foi a única a consultar o tribunal.
-    assert len(_chamadas("search.do")) == 1
+    assert len(chamadas_para("search.do")) == 1
 
 
 @pytest.mark.parametrize("data", [date(2026, 4, 13), datetime(2026, 4, 13, 10, 30, tzinfo=timezone.utc), "2026-04-13"])
@@ -282,7 +278,7 @@ def test_baixar_acordaos_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(tj
 
     assert saida["caminho_acordao"].isna().tolist() == [False, True, True]
     assert saida["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
 
 
 def test_parametros_sem_tipo_de_documento():

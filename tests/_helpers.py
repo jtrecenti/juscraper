@@ -188,6 +188,24 @@ def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
     return matcher
 
 
+def corpo_form_parcial_matcher(esperado: Mapping[str, str]):
+    """Matcher do ``responses`` que confere só alguns campos de um corpo de formulário.
+
+    Cada campo de ``esperado`` precisa estar no corpo com exatamente aquele
+    valor; os demais campos (ViewState, tokens) ficam livres. Difere de
+    :func:`urlencoded_body_subset_matcher` em dois pontos: campo ausente não
+    casa com ``""``, e campo repetido vale pela última ocorrência, como em
+    :func:`corpo_form_enviado`.
+    """
+    def matcher(request: PreparedRequest) -> tuple[bool, str]:
+        enviado = corpo_form_enviado(request)
+        for campo, valor in esperado.items():
+            if enviado.get(campo) != valor:
+                return False, f"expected {campo!r}={valor!r}, got {enviado.get(campo)!r}"
+        return True, ""
+    return matcher
+
+
 def assert_unknown_kwarg_raises(
     method: Callable,
     kwarg: str | Sequence[str],

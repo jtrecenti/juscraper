@@ -19,7 +19,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts.trf6.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_parcial_matcher, load_sample, load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
 GET_PARAMS = {"acao": "processo_consulta_publica"}
@@ -41,21 +41,6 @@ def _form(sample: str = "cpopg/form_initial.html") -> None:
 def _busca(sample: str) -> None:
     """Registra uma resposta ao POST da busca, a partir de um sample."""
     responses.add(responses.POST, POST_URL, body=load_sample_bytes("trf6", sample))
-
-
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        actual = corpo_form_enviado(request)
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
 
 
 @pytest.fixture
@@ -121,7 +106,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns(fake_captcha_solver):
         body=load_sample_bytes("trf6", "cpopg/detail_normal.html"),
         match=[
             responses.matchers.query_param_matcher(POST_PARAMS),
-            _subset_form_matcher(
+            corpo_form_parcial_matcher(
                 {
                     "txtNumProcesso": "1005229-55.2023.4.06.3801",
                     "txtInfraCaptcha": fake_captcha_solver,
