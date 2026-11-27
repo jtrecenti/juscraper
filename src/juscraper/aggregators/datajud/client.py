@@ -6,7 +6,7 @@ import logging
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Mapping
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
@@ -24,6 +24,7 @@ from ...core.failures import (
 )
 from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
+from ...utils.pagination import maior_pagina, menor_pagina
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
     STATUS_REPETIVEIS,
@@ -501,7 +502,7 @@ class DatajudScraper(HTTPScraper):
 
     def listar_processos(
         self,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Lista processos do DataJud via API publica do CNJ.
@@ -516,19 +517,19 @@ class DatajudScraper(HTTPScraper):
                 :class:`InputListarProcessosDataJud`. Listados abaixo (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``numero_processo`` (str | list[str]): CNJ formatado ou
+                * ``numero_processo`` (str | list[str] | None): CNJ formatado ou
                   lista de CNJs. Quando informado sem ``tribunal``, o alias-
                   indice e inferido pelos digitos ``id_justica`` (pos. 14) +
                   ``id_tribunal`` (pos. 15-16). CNJs invalidos ou nao
                   mapeados emitem ``UserWarning`` e sao ignorados.
-                * ``tribunal`` (str): Sigla do tribunal (ex.: ``"TJSP"``,
+                * ``tribunal`` (str | None): Sigla do tribunal (ex.: ``"TJSP"``,
                   ``"TRT2"``, ``"TRE-SP"``). Mutuamente exclusivo com
                   inferencia via ``numero_processo``.
-                * ``ano_ajuizamento`` (int): Filtra por ano de ajuizamento.
+                * ``ano_ajuizamento`` (int | None): Filtra por ano de ajuizamento.
                   Backend recebe ``range`` dual em ``dataAjuizamento`` (ISO
                   ``YYYY-01-01`` + compacto ``YYYYMMDDhhmmss``). Mutuamente
                   exclusivo com ``data_ajuizamento_inicio``/``_fim``.
-                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str):
+                * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim`` (str | None):
                   Range de data de ajuizamento, formato ``YYYY-MM-DD`` (ISO
                   8601). Backend recebe ``bool.should`` com 2 ``range`` em
                   ``dataAjuizamento`` (ISO + compacto), mesmo padrao dual-
@@ -537,8 +538,8 @@ class DatajudScraper(HTTPScraper):
                   ``data_inicio``/``data_fim`` aqui (a convencao generica
                   do projeto mapeia esses para ``data_julgamento_*``, e o
                   DataJud filtra por ajuizamento, nao julgamento).
-                * ``classe`` (str): Codigo da classe processual CNJ.
-                * ``assunto`` (list[str | int]): Lista de codigos de
+                * ``classe`` (str | None): Codigo da classe processual CNJ.
+                * ``assunto`` (list[str | int] | None): Lista de codigos de
                   assuntos CNJ (TPU). Aceita int e str — int e a forma
                   natural (codigos TPU sao inteiros); str e aceita por
                   compatibilidade. O schema normaliza para str antes do
@@ -546,24 +547,24 @@ class DatajudScraper(HTTPScraper):
                   campos ``keyword``. Backend: ``terms`` em
                   ``assuntos.codigo``. ``assuntos`` (plural) e aceito como
                   alias deprecado. Refs #232.
-                * ``tipos_movimentacao`` (list[str]): Nomes amigaveis de
+                * ``tipos_movimentacao`` (list[str] | None): Nomes amigaveis de
                   categorias de movimentacao (ex.: ``["decisao", "sentenca"]``).
                   Resolvidos via ``TIPOS_MOVIMENTACAO`` para uma lista plana
                   de codigos TPU CNJ. Para nomes nao mapeados, usar
                   ``movimentos_codigo`` direto. Categorias atuais:
                   ``decisao``, ``sentenca``, ``julgamento``, ``tutela``,
                   ``transito_julgado``.
-                * ``movimentos_codigo`` (list[int | str]): Codigos TPU
+                * ``movimentos_codigo`` (list[int | str] | None): Codigos TPU
                   CNJ diretos. Aceita int e str — int e a forma natural;
                   str e aceita por conveniencia (ex.: vinda de planilha/
                   CSV) e normalizada para int antes do payload.
                   Concatenado com a lista resolvida de
                   ``tipos_movimentacao`` (uniao). Backend: ``terms`` em
                   ``movimentos.codigo``.
-                * ``orgao_julgador`` (str): Nome do orgao julgador (ex.:
+                * ``orgao_julgador`` (str | None): Nome do orgao julgador (ex.:
                   ``"Vara Civel de Brasilia"``). Backend: ``match`` em
                   ``orgaoJulgador.nome``.
-                * ``query`` (dict): **Override total** da query Elasticsearch.
+                * ``query`` (dict[str, Any] | None): **Override total** da query Elasticsearch.
                   Quando fornecido, vira a chave ``query`` do payload
                   literalmente. Mutuamente exclusivo com TODOS os filtros
                   amigaveis acima (``numero_processo``, ``ano_ajuizamento``,
@@ -674,12 +675,10 @@ class DatajudScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
-        # ``normalize_paginas`` acima garante que ``int`` ja virou ``range``;
-        # o cast registra essa invariante sem repetir a normalizacao. Listas
-        # continuam virando o intervalo contiguo exigido pelo cursor forwards-only.
-        paginas_datajud = cast(list[int] | range | None, inp.paginas)
+        # Listas viram o intervalo contiguo exigido pelo cursor forwards-only.
+        paginas_datajud = inp.paginas_normalizadas
         if isinstance(paginas_datajud, list):
-            paginas_datajud = range(min(paginas_datajud), max(paginas_datajud) + 1)
+            paginas_datajud = range(menor_pagina(paginas_datajud), maior_pagina(paginas_datajud) + 1)
 
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
@@ -812,7 +811,7 @@ class DatajudScraper(HTTPScraper):
         # Teto de cada busca: começa em ``tamanho_pagina`` e só cai com o fallback.
         size_maximo = tamanho_pagina
         search_after: list[Any] | None = None
-        last_page = None if paginas is None else paginas[-1]
+        last_page = None if paginas is None else maior_pagina(paginas)
         # Alimentam o diagnóstico do ColetaParcialError: quanto já veio das páginas pedidas e
         # quanto a consulta encontrou (``hits.total`` da página 1).
         recebidos = 0

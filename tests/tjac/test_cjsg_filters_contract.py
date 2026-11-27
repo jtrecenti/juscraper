@@ -102,7 +102,8 @@ def test_cjsg_query_alias_emits_deprecation_warning(tmp_path, mocker):
 
     scraper = jus.scraper("tjac", download_path=str(tmp_path))
     with pytest.warns(DeprecationWarning, match="query.*deprecado"):
-        df = scraper.cjsg(pesquisa=None, query="dano moral", paginas=1)
+        # Alias deprecado.
+        df = scraper.cjsg(pesquisa=None, query="dano moral", paginas=1)  # type: ignore[call-overload]
     assert isinstance(df, pd.DataFrame)
 
 

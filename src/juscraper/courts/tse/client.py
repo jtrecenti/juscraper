@@ -114,7 +114,7 @@ class TSEScraper(HTTPScraper):
         """Lista as classes processuais do formulário de jurisprudência do TSE ou dos TREs.
 
         Args:
-            tribunal (str): ``"tse"`` (default), um TRE (``"tre-sp"``) ou
+            tribunal: ``"tse"`` (default), um TRE (``"tre-sp"``) ou
                 ``"tres"``, os 27 TREs juntos. Vale o mesmo nos demais
                 ``listar_*``.
 
@@ -138,7 +138,7 @@ class TSEScraper(HTTPScraper):
         """Lista os relatores do formulário de jurisprudência do TSE ou dos TREs.
 
         Args:
-            tribunal (str): Ver :meth:`listar_classes`.
+            tribunal: Ver :meth:`listar_classes`.
 
         Returns:
             Coluna ``relator``, com o nome como o portal o devolve. Nos TREs
@@ -151,7 +151,7 @@ class TSEScraper(HTTPScraper):
         """Lista as eleições do formulário de jurisprudência do TSE ou dos TREs.
 
         Args:
-            tribunal (str): Ver :meth:`listar_classes`.
+            tribunal: Ver :meth:`listar_classes`.
 
         Returns:
             Coluna ``eleicao``, com o ano em texto, como o portal o devolve.
@@ -162,7 +162,7 @@ class TSEScraper(HTTPScraper):
         """Lista as normas (legislação) do formulário de jurisprudência do TSE ou dos TREs.
 
         Args:
-            tribunal (str): Ver :meth:`listar_classes`.
+            tribunal: Ver :meth:`listar_classes`.
 
         Returns:
             Colunas ``sigla``, ``tipo``, ``numero``, ``ano`` e ``norma`` (a
@@ -181,10 +181,10 @@ class TSEScraper(HTTPScraper):
         processo; processos diferentes não se enxergam.
 
         Args:
-            codigo_decisao (int | str): Código da decisão no portal (o
+            codigo_decisao: Código da decisão no portal (o
                 ``codigoDecisao`` da busca, que também aparece no fim do link
                 de inteiro teor, ``.../rest/download/pdf/<codigo>``).
-            diretorio (str | None): Pasta de destino. Default
+            diretorio: Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/inteiro_teor/<codigo_decisao>.pdf``.
 
@@ -225,10 +225,10 @@ class TSEScraper(HTTPScraper):
         encerra o lote: a linha e as seguintes saem ``erro_de_gravacao``.
 
         Args:
-            codigos_decisao (Iterable[int | str]): Códigos das decisões, como
+            codigos_decisao: Códigos das decisões, como
                 em :meth:`baixar_inteiro_teor`; uma lista ou a coluna de um
                 DataFrame. Código repetido é baixado de novo.
-            diretorio (str | None): Pasta de destino, como em
+            diretorio: Pasta de destino, como em
                 :meth:`baixar_inteiro_teor`.
 
         Raises:

@@ -7,33 +7,13 @@ uses the autocomplete ``classeJudicial`` + ``dataAutuacaoDecoration`` form.
 """
 from __future__ import annotations
 
-from urllib.parse import parse_qsl
-
 import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
-
-
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        actual = dict(parse_qsl(body, keep_blank_values=True))
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
-
+from juscraper.courts._trf.base import _Consulta
+from tests._helpers import corpo_form_parcial_matcher, load_sample, load_sample_bytes
 
 LIST_URL = (
     "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
@@ -137,7 +117,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         body=load_sample("trf1", "cpopg/search_one_result.html"),
         content_type="text/xml; charset=utf-8",
         match=[
-            _subset_form_matcher(
+            corpo_form_parcial_matcher(
                 {
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "1003063-27.2023.4.01.3304",
@@ -213,3 +193,16 @@ def test_cpopg_rejects_unknown_kwargs() -> None:
     scraper = jus.scraper("trf1", sleep_time=0)
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg("10030632720234013304", filtro_inexistente="x")
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(mocker, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    scraper = jus.scraper("trf1", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    with pytest.warns(UserWarning, match=r"^TRF1Scraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = scraper.cpopg("10030632720234013304", diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with("10030632720234013304", None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()

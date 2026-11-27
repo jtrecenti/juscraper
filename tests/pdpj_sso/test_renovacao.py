@@ -26,7 +26,8 @@ def _scraper_do_cache(credencial, nome="pdpj"):
 
 
 def test_access_vencido_renova_uma_vez_e_regrava_o_cache():
-    antigo = CredencialPdpj(token(-60, sub="antigo"), token(3600, sub="refresh"))
+    refresh_antigo = token(3600, sub="refresh")
+    antigo = CredencialPdpj(token(-60, sub="antigo"), refresh_antigo)
     novo_access, novo_refresh = token(sub="novo"), token(7200, sub="refresh-novo")
     scraper = _scraper_do_cache(antigo)
     with responses.RequestsMock() as mocked:
@@ -35,7 +36,7 @@ def test_access_vencido_renova_uma_vez_e_regrava_o_cache():
             json={"access_token": novo_access, "refresh_token": novo_refresh},
             match=[responses.matchers.urlencoded_params_matcher({
                 "grant_type": "refresh_token",
-                "refresh_token": antigo.refresh_token,
+                "refresh_token": refresh_antigo,
                 "client_id": CLIENT_ID,
             })],
         )

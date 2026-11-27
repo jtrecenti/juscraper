@@ -22,6 +22,7 @@ documento do cenário ``paginado`` do ``cpopg``.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,8 @@ from juscraper.courts.trf3.download import (
     baixar_processo,
     buscar_processo,
 )
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SAMPLES = REPO_ROOT / "tests" / "trf3" / "samples"
@@ -86,7 +89,7 @@ def _gravador(scraper, cenario: str, dest: Path):
         nome = _nome_arquivo(cenario, url, kwargs.get("params"))
         corpo = json.dumps(resp.json(), ensure_ascii=False, indent=1) + "\n"
         (dest / nome).write_text(corpo, encoding="utf-8")
-        print(f"[trf3]   {nome}")
+        logger.info("[trf3]   %s", nome)
         time.sleep(0.5)
         return resp
 
@@ -101,7 +104,7 @@ def capturar_endpoint(scraper, endpoint: str) -> dict[str, Any]:
         antigo.unlink()
     brutos: dict[str, Any] = {}
     for cenario, cnj in CENARIOS[endpoint]:
-        print(f"[trf3] {endpoint}/{cenario}: {cnj}")
+        logger.info("[trf3] %s/%s: %s", endpoint, cenario, cnj)
         request_fn = _gravador(scraper, cenario, dest)
         if cenario == "sem_resultado":
             busca = buscar_processo(request_fn, BASE_URLS[endpoint], cnj)
@@ -114,7 +117,7 @@ def capturar_endpoint(scraper, endpoint: str) -> dict[str, Any]:
         brutos[cenario] = bruto
         for recurso in ("movimentacoes", "documentos", "poloAtivo", "poloPassivo"):
             info = bruto[recurso][0]["pageInfo"] if bruto[recurso] else "falhou"
-            print(f"[trf3]   {recurso}: {info}")
+            logger.info("[trf3]   %s: %s", recurso, info)
     return brutos
 
 
@@ -131,8 +134,9 @@ def main() -> None:
     pecas = SAMPLES / "cpopg_pecas"
     pecas.mkdir(parents=True, exist_ok=True)
     (pecas / "documento.pdf").write_bytes(pdf)
-    print(f"[trf3] cpopg_pecas/documento.pdf ({len(pdf)} bytes)")
+    logger.info("[trf3] cpopg_pecas/documento.pdf (%s bytes)", len(pdf))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

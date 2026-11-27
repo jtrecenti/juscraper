@@ -11,7 +11,7 @@ import pytest
 import responses
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes, urls_enviadas
 
 LIST_URL = (
     "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
@@ -118,7 +118,7 @@ def test_cpopg_with_download_pecas_handles_missing_process(tmp_path) -> None:
     )
 
     assert df.iloc[0]["pecas"] == []
-    assert not any("documentoSemLoginHTML" in c.request.url for c in responses.calls)
+    assert not any("documentoSemLoginHTML" in url for url in urls_enviadas())
 
 
 @responses.activate

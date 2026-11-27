@@ -12,6 +12,7 @@ import responses
 import juscraper as jus
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url
 from juscraper.courts.trf3.schemas import OutputCposgTRF3
+from tests._helpers import urls_enviadas
 from tests.trf3._api import carregar, registrar_busca, registrar_processo
 
 CNJ_APELACAO = "50211226520184036100"
@@ -43,7 +44,7 @@ def test_cposg_traz_recurso_de_2o_grau_com_turma() -> None:
     assert len(row["movimentacoes"]) == total > 15
     OutputCposgTRF3.model_validate(row.to_dict())
     assert len(responses.calls) == 2 + paginas
-    assert all(c.request.url.startswith(BASE_URL_2G) for c in responses.calls)
+    assert all(url.startswith(BASE_URL_2G) for url in urls_enviadas())
 
 
 @responses.activate
@@ -70,7 +71,7 @@ def test_cposg_sem_resultado_no_2o_grau() -> None:
     assert list(df.columns) == ["id_cnj", "motivo_falha"]
     assert df.iloc[0]["id_cnj"] == CNJ_SO_NO_1G
     assert df.iloc[0]["motivo_falha"] is None
-    assert not any(c.request.url.startswith(BASE_URL_1G) for c in responses.calls)
+    assert not any(url.startswith(BASE_URL_1G) for url in urls_enviadas())
 
 
 @responses.activate
@@ -106,5 +107,5 @@ def test_cposg_dois_processos_com_o_mesmo_numero_consulta_o_primeiro_e_avisa(cap
         df = jus.scraper("trf3", sleep_time=0).cposg(CNJ_APELACAO)
 
     assert df.iloc[0]["classe"] == "APELAÇÃO CÍVEL (198)"
-    assert not any("tokenDoSegundoProcesso" in c.request.url for c in responses.calls)
+    assert not any("tokenDoSegundoProcesso" in url for url in urls_enviadas())
     assert "devolveu 2 processos com esse número" in caplog.text

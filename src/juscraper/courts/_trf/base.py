@@ -19,9 +19,10 @@ from pathlib import Path
 from typing import Any, ClassVar, NamedTuple
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from tqdm import tqdm
 
+from ...core.base import recusar_kwargs_sem_efeito
 from ...core.download import gravar_arquivo
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
@@ -36,6 +37,7 @@ from ...core.failures import (
     motivo_falha_ou_inesperada,
 )
 from ...core.http import HTTPScraper, RequestPolicy
+from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import raise_on_extra_kwargs
 from .download import (
@@ -104,7 +106,7 @@ class TRFConsultaScraper(HTTPScraper):
     #: Short name (``"TRF1"``) — drives logging, tqdm, error messages, bot check.
     TRIBUNAL_NAME: str = ""
     #: Pydantic schema validating ``cpopg`` kwargs (``extra="forbid"``).
-    INPUT_CPOPG: type[BaseModel] = InputCpopgTRF
+    INPUT_CPOPG: type[CnjInputBase] = InputCpopgTRF
     #: PJe classe form field. Every current deployment uses the ``classeJudicial``
     #: autocomplete; a deployment with another component overrides it.
     CLASSE_FIELD_NAME: str = "classeJudicial"
@@ -274,7 +276,14 @@ class TRFConsultaScraper(HTTPScraper):
         interrompem o batch; um bloqueio anti-bot encerra o batch e os CNJs
         restantes saem ``None``. As falhas entram num único ``UserWarning``
         ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
+        Não baixa as peças: ``download_pecas=True`` ou um ``diretorio``
+        levantam ``TypeError``; para elas, usar :meth:`cpopg` com
+        ``download_pecas=True``.
         """
+        recusar_kwargs_sem_efeito(
+            kwargs, self.INPUT_CPOPG, ("download_pecas", "diretorio"), self._rotulo("cpopg_download"),
+            "para baixar as peças, use cpopg(..., download_pecas=True)",
+        )
         cnjs = self._coerce_id_cnj(id_cnj, "cpopg_download", **kwargs)
         consultas = self._baixar(cnjs)
         self._avisar(cnjs, [c.motivo for c in consultas], "cpopg_download")
@@ -333,6 +342,7 @@ class TRFConsultaScraper(HTTPScraper):
             diretorio: Onde gravar as peças. Sobrescreve ``download_path``
                 para esta chamada. Quando omitido, usa ``download_path`` (que
                 vira um ``tempfile.mkdtemp()`` se nada for passado ao construtor).
+                Só tem efeito com ``download_pecas=True``.
 
         Returns:
             DataFrame com uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
@@ -377,6 +387,10 @@ class TRFConsultaScraper(HTTPScraper):
 
         Raises:
             TypeError: Kwarg desconhecido.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
         """
         cnjs = self._coerce_id_cnj(
             id_cnj,
@@ -385,10 +399,7 @@ class TRFConsultaScraper(HTTPScraper):
             diretorio=diretorio,
             **kwargs,
         )
-        pecas_dir: str | None = None
-        if download_pecas:
-            pecas_dir = diretorio if diretorio is not None else self.download_path
-            Path(pecas_dir).mkdir(parents=True, exist_ok=True)
+        pecas_dir = self._pasta_das_pecas(self._rotulo("cpopg"), diretorio=diretorio, download_pecas=download_pecas)
         consultas = self._baixar(cnjs, pecas_dir)
         htmls = [c.html for c in consultas]
         motivos = [c.motivo for c in consultas]

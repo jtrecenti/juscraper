@@ -31,12 +31,15 @@ Samples are byte-identical to what the live backend served.
 """
 from __future__ import annotations
 
+import logging
 import re
 
 import juscraper as jus
 from juscraper.courts.tjrr.download import RESULTS_PER_PAGE
 
 from ._util import samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _classify(
@@ -98,7 +101,7 @@ def main() -> None:
         filename = _classify(method, body_text, scenario, counters)
         if filename and filename not in seen_files:
             (dest / filename).write_bytes(resp.content)
-            print(f"[tjrr/{scenario}] -> {filename}")
+            logger.info("[tjrr/%s] -> %s", scenario, filename)
             seen_files.add(filename)
         return resp
 
@@ -127,15 +130,15 @@ def main() -> None:
     state["scenario"] = "typical"
     counters.clear()
     df = scraper.cjsg("dano moral", paginas=range(1, 3))
-    print(f"[tjrr/typical] DataFrame columns: {list(df.columns)}")
-    print(f"[tjrr/typical] rows: {len(df)}")
+    logger.info("[tjrr/typical] DataFrame columns: %s", list(df.columns))
+    logger.info("[tjrr/typical] rows: %s", len(df))
 
     # Single page: query whose hits fit in one page.
     _reset_session()
     state["scenario"] = "single_page"
     counters.clear()
     df = scraper.cjsg("usucapiao", paginas=1)
-    print(f"[tjrr/single_page] rows: {len(df)}")
+    logger.info("[tjrr/single_page] rows: %s", len(df))
 
     # Zero hits. Two TJRR quirks make this tricky: (1) common terms
     # (e.g. "dano moral") bypass the date filter and return the default
@@ -153,8 +156,9 @@ def main() -> None:
         data_julgamento_inicio="01/01/2099",
         data_julgamento_fim="31/12/2099",
     )
-    print(f"[tjrr/no_results] rows: {len(df)} (expected 0)")
+    logger.info("[tjrr/no_results] rows: %s (expected 0)", len(df))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

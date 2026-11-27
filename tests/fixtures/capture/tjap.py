@@ -5,12 +5,15 @@ Run from repo root::
     python -m tests.fixtures.capture.tjap
 """
 import json
+import logging
 
 import requests
 
 from juscraper.courts.tjap.download import BASE_URL, FRONT_URL, RESULTS_PER_PAGE, _build_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
@@ -30,7 +33,7 @@ def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filena
     )
     response.raise_for_status()
     dump(dest / filename, response.content)
-    print(f"[tjap] wrote {filename}")
+    logger.info("[tjap] wrote %s", filename)
 
 
 def main() -> None:
@@ -46,4 +49,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

@@ -17,7 +17,6 @@ import inspect
 import pickle
 import threading
 from collections.abc import Callable
-from importlib import import_module
 
 import numpy as np
 import pandas as pd
@@ -28,12 +27,7 @@ from juscraper.aggregators.pdpj.client import PdpjScraper
 from juscraper.core.base import BaseScraper
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.core.parse_utils import coerce_date_columns
-
-
-def _classe(sigla: str) -> type:
-    modulo, nome = _SCRAPERS[sigla].split(":")
-    classe: type = getattr(import_module(modulo), nome)
-    return classe
+from tests._helpers import classe_da_sigla
 
 
 class _Mixin:
@@ -327,7 +321,7 @@ def test_embrulho_preserva_assinatura_e_docstring():
 
 @pytest.mark.parametrize("sigla", sorted(_SCRAPERS))
 def test_todo_metodo_publico_de_raspador_registrado_e_embrulhado(sigla):
-    classe = _classe(sigla)
+    classe = classe_da_sigla(sigla)
     sem_embrulho = []
     for nome in dir(classe):
         if nome.startswith("_"):

@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import NamedTuple, TypeVar
+from typing import NamedTuple, TypeGuard, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -236,6 +236,11 @@ def resolve_total_pages(
 _PAGINAS_FORA_NO_AVISO = 5
 
 
+def _range_crescente(paginas: Iterable[int]) -> TypeGuard[range]:
+    """``range`` crescente, cortado pelos limites sem ser percorrido."""
+    return isinstance(paginas, range) and paginas.step > 0
+
+
 def menor_pagina(paginas: Iterable[int] | None) -> int:
     """A página a pedir primeiro quando o total só vem numa resposta: a menor pedida, ou 1 com ``None``.
 
@@ -245,9 +250,34 @@ def menor_pagina(paginas: Iterable[int] | None) -> int:
     """
     if paginas is None:
         return 1
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         return paginas.start
     return min(paginas)
+
+
+def maior_pagina(paginas: Iterable[int]) -> int:
+    """A maior página pedida, sem percorrer o ``range`` crescente.
+
+    Para o laço que precisa saber até onde ir antes de ler o total: o teto de
+    resultados de :func:`contador_com_teto`, o cursor que só avança (PDPJ,
+    DataJud) e a validação do payload antes da primeira requisição (STF).
+    """
+    if _range_crescente(paginas):
+        return paginas[-1]
+    return max(paginas)
+
+
+def paginas_unicas(paginas: Iterable[int]) -> Sequence[int]:
+    """As páginas pedidas na ordem pedida, cada uma uma vez só, na posição em que aparece primeiro.
+
+    Para o portal que não informa o total e por isso não corta a seleção com
+    :func:`paginas_no_intervalo`: a página repetida é baixada uma vez só,
+    como nos demais. O ``range`` volta como veio, sem ser percorrido, porque
+    não repete página.
+    """
+    if isinstance(paginas, range):
+        return paginas
+    return list(dict.fromkeys(paginas))
 
 
 def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal: str) -> list[int]:
@@ -262,10 +292,10 @@ def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal
     """
     if paginas is None:
         return list(range(1, n_pags + 1))
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         validas, primeiras_fora, n_fora = _range_no_intervalo(paginas, n_pags)
     else:
-        unicas = list(dict.fromkeys(paginas))
+        unicas = paginas_unicas(paginas)
         validas = [pagina for pagina in unicas if 1 <= pagina <= n_pags]
         fora = [pagina for pagina in unicas if not 1 <= pagina <= n_pags]
         primeiras_fora, n_fora = fora[:_PAGINAS_FORA_NO_AVISO], len(fora)
@@ -322,13 +352,11 @@ def contador_com_teto(
         ``UserWarning``, emitido pelo contador: com ``paginas=None``, quando o
         total passa de ``teto``, porque o download para nele.
     """
-    if paginas is not None:
-        maior = paginas[-1] if isinstance(paginas, range) and paginas.step > 0 else max(paginas)
-        if maior > teto:
-            raise ValueError(
-                f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
-                f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
-            )
+    if paginas is not None and (maior := maior_pagina(paginas)) > teto:
+        raise ValueError(
+            f"{tribunal}: o portal só entrega as {teto} primeiras páginas de uma busca, e foi pedida "
+            f"a página {maior}. Restrinja a busca para alcançar os demais resultados."
+        )
 
     def contar(first: _Pagina) -> int:
         n_pags = contar_paginas(first)

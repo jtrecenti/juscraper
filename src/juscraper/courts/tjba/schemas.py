@@ -18,6 +18,9 @@ from ...schemas import (
     TamanhoPagina,
 )
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJBAScraper``.
+OrdenadoPor = Literal["dataPublicacao", "relevancia"]
+
 
 class InputCJSGTJBA(SearchBase, DataPublicacaoMixin, AutoChunkMixin):
     """Accepted input for TJBA ``cjsg`` / ``cjsg_download``.
@@ -46,7 +49,7 @@ class InputCJSGTJBA(SearchBase, DataPublicacaoMixin, AutoChunkMixin):
     tipo_decisoes_monocraticas: bool = True
     # Valores do seletor "Ordenar por" do portal; o GraphQL tipa ``ordenadoPor``
     # como ``String`` e responde erro interno para qualquer outro valor.
-    ordenado_por: Literal["dataPublicacao", "relevancia"] = "dataPublicacao"
+    ordenado_por: OrdenadoPor = "dataPublicacao"
     tamanho_pagina: TamanhoPagina = 10
 
 

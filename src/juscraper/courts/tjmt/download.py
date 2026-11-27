@@ -3,7 +3,6 @@ Baixa resultados brutos da pesquisa de jurisprudência do TJMT.
 """
 import math
 import re
-import time
 import unicodedata
 from collections import deque
 from collections.abc import Callable, Iterator
@@ -11,10 +10,9 @@ from datetime import date
 from urllib.parse import urljoin, urlparse
 
 import requests
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import contador_com_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
 from juscraper.utils.params import coerce_brazilian_date
 
 PORTAL_URL = "https://jurisprudencia.tjmt.jus.br/"
@@ -515,22 +513,11 @@ def cjsg_download(
             raise TJMTResponseError("Resposta da API do TJMT não contém JSON válido.") from exc
         return _validate_response(data, tipo_consulta)
 
-    if paginas is None:
-        first, total = _fetch_page(0)
-        resultados = [first]
-        n_pags = contar_paginas(total)
-        if n_pags > 1:
-            for pagina in tqdm(range(1, n_pags), desc="Baixando páginas TJMT"):
-                page, _ = _fetch_page(pagina)
-                resultados.append(page)
-                time.sleep(1)
-        return resultados
-
-    paginas_list = list(paginas)
-    resultados = []
-    for pagina in tqdm(paginas_list, desc="Baixando páginas TJMT"):
-        page, _ = _fetch_page(pagina - 1)
-        resultados.append(page)
-        if len(paginas_list) > 1:
-            time.sleep(1)
-    return resultados
+    pages = baixar_paginas_pedidas(
+        paginas,
+        lambda pagina: _fetch_page(pagina - 1),  # a API conta as páginas a partir de 0
+        lambda resposta: contar_paginas(resposta[1]),
+        tribunal="TJMT",
+        sleep_time=1,
+    )
+    return [page for page, _ in pages]

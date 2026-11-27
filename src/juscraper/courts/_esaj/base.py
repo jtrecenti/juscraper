@@ -18,7 +18,7 @@ import functools
 import logging
 import shutil
 from collections.abc import Callable, Mapping
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar, Literal, overload
 
 import pandas as pd
 import requests
@@ -45,7 +45,7 @@ from ...utils.params import (
 from .download import _CHROME_HEADERS, _ESAJ_HEADERS, download_cjsg_pages, fetch_cjsg_first_page
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager, parse_arvore
-from .schemas import InputCJSGEsajPuro
+from .schemas import InputCJSGEsajBase, InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
 
@@ -249,7 +249,8 @@ class EsajSearchScraper(HTTPScraper):
         BASE_URL: eSAJ root, e.g. ``https://esaj.tjac.jus.br/`` (must end
             with ``/``).
         TRIBUNAL_NAME: Used in logs and :attr:`BaseScraper.tribunal_name`.
-        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs. Defaults to
+        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs (subclasse de
+            :class:`InputCJSGEsajBase`). Defaults to
             :class:`InputCJSGEsajPuro`. TJSP overrides with its own model.
         CJSG_CHROME_UA: TJSP only — sends the Chrome-flavoured UA that the
             eSAJ form expects from browsers.
@@ -263,7 +264,7 @@ class EsajSearchScraper(HTTPScraper):
 
     BASE_URL: str = ""
     TRIBUNAL_NAME: str = ""
-    INPUT_CJSG: type[BaseModel] = InputCJSGEsajPuro
+    INPUT_CJSG: type[InputCJSGEsajBase] = InputCJSGEsajPuro
     CJSG_CHROME_UA: bool = False
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
@@ -400,6 +401,48 @@ class EsajSearchScraper(HTTPScraper):
 
     # --- cjsg -----------------------------------------------------------
 
+    # Overloads só para o verificador de tipos: ``count_only=True`` devolve o
+    # ``int`` da contagem; com ``False`` ou sem ``count_only``, o ``DataFrame``.
+    # A última não nomeia ``count_only``, para que ``**filtros`` não seja
+    # conferido contra ele.
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
     def cjsg(
         self,
         pesquisa: str,
@@ -412,8 +455,8 @@ class EsajSearchScraper(HTTPScraper):
         diretorio temporario antes de retornar.
 
         Args:
-            pesquisa (str): Termo livre buscado no acordao/ementa.
-            paginas (int | list | range | None): Paginas 1-based;
+            pesquisa: Termo livre buscado no acordao/ementa.
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema configurado em
                 :attr:`INPUT_CJSG` (default :class:`InputCJSGEsajPuro`,
@@ -422,18 +465,18 @@ class EsajSearchScraper(HTTPScraper):
                 usa :class:`InputCJSGTJSP`. Filtros do schema padrao
                 (todos opcionais; ``None`` = sem filtro):
 
-                * ``ementa`` (str): Termo buscado especificamente na
+                * ``ementa`` (str | None): Termo buscado especificamente na
                   ementa.
-                * ``numero_recurso`` (str): Numero do recurso.
-                * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``numero_recurso`` (str | None): Numero do recurso.
+                * ``classe`` (int | str | list[int | str] | None): ID(s) interno(s)
                   da classe processual. Backend:
                   ``classesTreeSelection.values`` (CSV).
-                * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``assunto`` (int | str | list[int | str] | None): ID(s) interno(s)
                   do assunto. Backend: ``assuntosTreeSelection.values``
                   (CSV).
-                * ``comarca`` (int | str): ID interno da comarca. Backend:
+                * ``comarca`` (int | str | None): ID interno da comarca. Backend:
                   ``cdComarca`` (single-value, nao aceita lista).
-                * ``orgao_julgador`` (int | str | list[int | str]): ID(s)
+                * ``orgao_julgador`` (int | str | list[int | str] | None): ID(s)
                   interno(s) do orgao julgador. Backend:
                   ``secoesTreeSelection.values`` (CSV).
                 * ``origem`` (Literal["T", "R"]): ``"T"`` (segundo grau,
@@ -441,11 +484,11 @@ class EsajSearchScraper(HTTPScraper):
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
                   Default ``"acordao"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str | date | datetime): Intervalo de julgamento.
+                  (str | date | None): Intervalo de julgamento.
                   Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
                   ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
-                  (str | date | datetime): Intervalo de publicacao, nos
+                  (str | date | None): Intervalo de publicacao, nos
                   mesmos formatos.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
                   intervalo ``data_julgamento_*`` excede 1 ano,
@@ -627,10 +670,10 @@ class EsajSearchScraper(HTTPScraper):
         :meth:`cjsg`; consulte la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre buscado.
-            paginas (int | list | range | None): Paginas 1-based;
+            pesquisa: Termo livre buscado.
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            diretorio (str | None): Sobrescreve :attr:`download_path`
+            diretorio: Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjsg` (validados
                 por :attr:`INPUT_CJSG`). Veja a docstring de :meth:`cjsg`
@@ -662,8 +705,8 @@ class EsajSearchScraper(HTTPScraper):
             base_url=self.BASE_URL,
             download_path=diretorio or self.download_path,
             body=body,
-            tipo_decisao=getattr(input_model, "tipo_decisao", "acordao"),
-            paginas=input_model.paginas,
+            tipo_decisao=input_model.tipo_decisao,
+            paginas=input_model.paginas_normalizadas,
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,

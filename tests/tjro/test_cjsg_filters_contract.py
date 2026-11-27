@@ -7,7 +7,6 @@ backend Elasticsearch payload keeps the original field names
 (``ds_nome``, ``ds_classe_judicial``) — that is an internal detail of
 the JURIS API and not exposed in the public signature.
 """
-import json
 
 import pandas as pd
 import pytest
@@ -16,7 +15,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjro.download import BASE_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_json_enviado, load_sample
 
 
 @responses.activate
@@ -71,7 +70,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-    campos = json.loads(responses.calls[0].request.body)["fields"]
+    campos = corpo_json_enviado(responses.calls[0].request)["fields"]
     assert campos == {
         "tipo.raw": ["ACÓRDÃO"],
         "query": "dano moral",

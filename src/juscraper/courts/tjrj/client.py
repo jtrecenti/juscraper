@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 import requests
@@ -13,7 +13,11 @@ from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
-from .schemas import InputCJSGTJRJ
+from .schemas import Competencia, InputCJSGTJRJ, Origem
+
+# Mais os mesmos codigos em ``int``, que o schema converte para ``str``.
+CompetenciaAceita = Competencia | Literal[1, 2, 3]
+OrigemAceita = Origem | Literal[1, 2, 3, 4, 5]
 
 logger = logging.getLogger("juscraper.tjrj")
 
@@ -48,8 +52,8 @@ class TJRJScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         ano_inicio: str | int | None = None,
         ano_fim: str | int | None = None,
-        competencia: str | int | None = None,
-        origem: str | int = "1",
+        competencia: CompetenciaAceita | None = None,
+        origem: OrigemAceita = "1",
         tipo_acordao: bool = True,
         tipo_monocratica: bool = True,
         magistrado_codigo: str | None = None,
@@ -58,7 +62,7 @@ class TJRJScraper(HTTPScraper):
     ) -> list:
         """Baixa as paginas de resultado da busca de jurisprudencia do TJRJ.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
         Retorna a lista bruta de payloads JSON, sem parser.
 
         See also:
@@ -88,7 +92,7 @@ class TJRJScraper(HTTPScraper):
         return _cjsg_download(
             request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             ano_inicio=ano_inicio_s,
             ano_fim=ano_fim_s,
             competencia=inp.competencia,
@@ -117,13 +121,13 @@ class TJRJScraper(HTTPScraper):
         documentos em JSON.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None``
                 baixa todas. Default ``None``.
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJRJ`
                 (todos opcionais; ``None`` = sem filtro):
 
-                * ``ano_inicio`` / ``ano_fim`` (str | int): Ano de
+                * ``ano_inicio`` / ``ano_fim`` (str | int | None): Ano de
                   julgamento. **Granularidade anual e o unico filtro de
                   data exposto pelo backend ASPX** — use estes em vez de
                   ``data_julgamento_*``. ``None`` usa o ano mais recente
@@ -133,14 +137,14 @@ class TJRJScraper(HTTPScraper):
                   antigo da origem (1975). ``ano_inicio`` posterior a
                   ``ano_fim`` levanta ``ValidationError``. Backend:
                   ``cmbAnoInicio`` / ``cmbAnoFim``.
-                * ``competencia`` (str | int): ``"1"`` civel / ``"2"``
+                * ``competencia`` (CompetenciaAceita | None): ``"1"`` civel / ``"2"``
                   criminal / ``"3"`` fazendaria (so na Turma Recursal).
                   ``None`` (default) usa a primeira competencia do form da
                   origem: ``"1"`` na 2a instancia, no Alcada Civel e na
                   Turma Recursal, ``"2"`` no Alcada Criminal. O Conselho da
                   Magistratura nao tem competencia: deixe ``None``.
                   Backend: ``cmbCompetencia``.
-                * ``origem`` (str | int): ``"1"`` 2a instancia (default) /
+                * ``origem`` (OrigemAceita): ``"1"`` 2a instancia (default) /
                   ``"2"`` Tribunal de Alcada Civel / ``"3"`` Tribunal de
                   Alcada Criminal / ``"4"`` Turma Recursal / ``"5"``
                   Conselho da Magistratura. Backend: ``cmbOrigem``.
@@ -148,10 +152,10 @@ class TJRJScraper(HTTPScraper):
                   ``True``. Backend: ``chkAcordao``.
                 * ``tipo_monocratica`` (bool): Inclui decisoes
                   monocraticas. Default ``True``. Backend: ``chkDecMon``.
-                * ``magistrado_codigo`` (str): IDs internos do
+                * ``magistrado_codigo`` (str | None): IDs internos do
                   magistrado, separados por virgula. Backend:
                   ``hfCodMags``.
-                * ``orgao_codigo`` (str): IDs internos do orgao
+                * ``orgao_codigo`` (str | None): IDs internos do orgao
                   julgador, separados por virgula. Backend:
                   ``hfCodOrgs``.
 

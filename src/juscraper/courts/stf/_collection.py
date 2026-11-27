@@ -9,6 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
 
+from ...utils.pagination import maior_pagina
 from ._checkpoint import Attempt, Checkpoint, Window, document_ids, utc_now
 from .download import MAX_REGISTROS, build_payload
 from .parse import parse_decisoes
@@ -74,9 +75,10 @@ class Collection:
             self.filters["classe"] = sorted(set([classes] if isinstance(classes, str) else classes))
         tem_publicacao = any(self.filters[f"data_publicacao_{limite}"] for limite in ("inicio", "fim"))
         self.axis = "publicacao" if tem_publicacao else "julgamento"
-        if isinstance(entrada.paginas, range):
-            build_payload(pagina=entrada.paginas[-1], tamanho_pagina=entrada.tamanho_pagina)
-        self.pages = None if entrada.paginas is None else list(entrada.paginas)
+        paginas = entrada.paginas_normalizadas
+        if paginas is not None:  # Antes de ``list``: um ``range`` além do limite não chega a ser percorrido.
+            build_payload(pagina=maior_pagina(paginas), tamanho_pagina=entrada.tamanho_pagina)
+        self.pages = None if paginas is None else list(paginas)
         if self.pages is not None:
             if len(set(self.pages)) != len(self.pages):
                 raise ValueError("Páginas explícitas não podem se repetir.")

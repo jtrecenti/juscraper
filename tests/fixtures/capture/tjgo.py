@@ -24,21 +24,22 @@ a requisição cai noutro servidor, que abre outra sessão; o script deriva o
 ``WIDPROP`` do sufixo ``:server-<id>`` do ``JSESSIONID``. Se a resposta
 vier sem resultados, o script para sem gravar.
 """
+import logging
 import os
 import re
 import sys
 
 import requests
 
+from juscraper.courts.tjgo.client import TJGOScraper
 from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
 from juscraper.courts.tjgo.parse import has_results
 
 from ._util import dump, samples_dir_for
 
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-)
+logger = logging.getLogger(__name__)
+
+USER_AGENT = TJGOScraper.USER_AGENT
 COOKIE_DOMAIN = "projudi.tjgo.jus.br"
 # ``JSESSIONID=<id>.cp09:server-cp09-1`` vem com ``WIDPROP=.cp09-1``.
 _SERVIDOR_RE = re.compile(r":server-([\w-]+)$")
@@ -54,7 +55,7 @@ def _post(session: requests.Session, pesquisa: str, page: int) -> bytes:
 def _capture(session: requests.Session, dest, pesquisa: str, page: int, filename: str) -> None:
     content = _post(session, pesquisa, page)
     dump(dest / filename, content)
-    print(f"[tjgo] wrote {filename} (page={page}, bytes={len(content)})")
+    logger.info("[tjgo] wrote %s (page=%s, bytes=%s)", filename, page, len(content))
 
 
 def _session(jsessionid: str | None = None) -> requests.Session:
@@ -95,7 +96,7 @@ def capture_atual() -> None:
         )
     filename = "results_julgado_em_page_01.html"
     dump(samples_dir_for("tjgo", "cjsg") / filename, content)
-    print(f"[tjgo] wrote {filename} (page=1, bytes={len(content)})")
+    logger.info("[tjgo] wrote %s (page=1, bytes=%s)", filename, len(content))
 
 
 def main() -> None:
@@ -110,6 +111,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     if sys.argv[1:] == ["turnstile"]:
         capture_turnstile()
     elif sys.argv[1:] == ["atual"]:

@@ -4,6 +4,8 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjam
 """
+import logging
+
 from ._util import capture_cjsg_samples
 
 
@@ -17,4 +19,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

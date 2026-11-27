@@ -7,7 +7,6 @@ the original field name (``id_classe_judicial``) — that is an internal
 detail of the PJe API and not exposed in the public signature.
 """
 import json
-import typing
 
 import pandas as pd
 import pytest
@@ -16,10 +15,8 @@ from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjrn.client import TJRNScraper
 from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
-from juscraper.courts.tjrn.schemas import InputCJSGTJRN
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_json_enviado, load_sample
 
 
 @responses.activate
@@ -77,7 +74,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do PJe ficam pinados aqui.
-    assert json.loads(responses.calls[0].request.body) == {
+    assert corpo_json_enviado(responses.calls[0].request) == {
         "jurisprudencia": {
             "ementa": "dano moral",
             "inteiro_teor": "",
@@ -270,7 +267,7 @@ def test_cjsg_decisoes_envia_valor_do_portal(mocker, decisoes, sample, pesquisa,
         data_julgamento_fim="2026-11-20" if extras else None,
     )
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["decisoes"] == decisoes
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["decisoes"] == decisoes
     assert len(df) == len(hits)
 
 
@@ -302,7 +299,7 @@ def test_cjsg_jurisdicoes_envia_valor_do_portal(mocker, jurisdicoes):
 
     df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=jurisdicoes)
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["jurisdicoes"] == jurisdicoes
     assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
     # Turmas Recursais e Turma de Uniformizacao: so ``"TR"`` traz colegiados "Turma".
     assert all(("Turma" in c) == (jurisdicoes == "TR") for c in df["colegiado"])
@@ -328,6 +325,46 @@ def test_cjsg_jurisdicoes_com_primeiro_grau_levanta_validation_error(jurisdicoes
         getattr(jus.scraper("tjrn"), metodo)("", paginas=1, jurisdicoes=jurisdicoes, grau="1")
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença", "grau": "2"},
+        {"decisoes": "Sentença", "jurisdicoes": "TJ"},
+        {"decisoes": "Sentença", "jurisdicoes": "TR"},
+        {"decisoes": "Acórdão", "grau": "1"},
+    ],
+)
+def test_cjsg_decisoes_fora_do_seu_grau_levanta_validation_error(filtros, metodo):
+    """``"Sentença"`` so existe no 1o grau e ``"Acórdão"`` so no 2o: as
+    combinacoes cruzadas devolviam 0 resultados sem erro; agora levantam
+    ``ValidationError`` antes de qualquer requisicao (``responses`` sem rota
+    levantaria se houvesse)."""
+    with responses.RequestsMock(), pytest.raises(ValidationError, match="graus diferentes"):
+        getattr(jus.scraper("tjrn"), metodo)("", paginas=1, **filtros)
+
+
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença"},
+        {"grau": "1"},
+        {"decisoes": "Decisão", "grau": "1"},
+        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+        {"decisoes": "Decisão", "jurisdicoes": "TR"},
+        {"decisoes": "Decisão", "sistema": "PJE"},
+    ],
+)
+def test_cjsg_termo_na_ementa_sem_ementa_levanta_validation_error(filtros, metodo):
+    """So os acordaos tem ementa, onde ``pesquisa`` busca por padrao: com termo,
+    sentencas, decisoes de 1o grau e monocraticas de ``"TJ"``, ``"TR"`` ou do
+    PJe devolviam 0 resultados sem erro; agora levantam ``ValidationError`` antes
+    de qualquer requisicao (``responses`` sem rota levantaria se houvesse)."""
+    with responses.RequestsMock(), pytest.raises(ValidationError, match='buscar_em="inteiro_teor"'):
+        getattr(jus.scraper("tjrn"), metodo)("dano moral", paginas=1, **filtros)
+
+
 @responses.activate
 def test_cjsg_sistema_envia_valor_do_portal(mocker):
     """``sistema`` vai ao payload com o valor do seletor do portal; o sample
@@ -345,7 +382,7 @@ def test_cjsg_sistema_envia_valor_do_portal(mocker):
 
     df = jus.scraper("tjrn").cjsg("dano moral", paginas=1, sistema="SAJ")
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["sistema"] == "SAJ"
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["sistema"] == "SAJ"
     assert len(df) == len(json.loads(raw)["hits"]["hits"]) > 0
     assert set(df["sistema"]) == {"SAJ"}
 
@@ -389,7 +426,7 @@ def test_cjsg_grau_envia_valor_do_portal(mocker):
         data_julgamento_fim="2026-11-20",
     )
 
-    assert json.loads(responses.calls[0].request.body)["jurisprudencia"]["grau"] == "1"
+    assert corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]["grau"] == "1"
     assert len(df) == len(hits)
 
 
@@ -431,7 +468,7 @@ def test_cjsg_buscar_em_inteiro_teor_vai_no_campo_do_portal(mocker, metodo):
         "dano moral", paginas=1, buscar_em="inteiro_teor", decisoes="Sentença",
     )
 
-    corpo = json.loads(responses.calls[0].request.body)["jurisprudencia"]
+    corpo = corpo_json_enviado(responses.calls[0].request)["jurisprudencia"]
     assert (corpo["ementa"], corpo["inteiro_teor"]) == ("", "dano moral")
     if metodo == "cjsg":
         assert len(resultado) == len(hits)
@@ -570,21 +607,3 @@ def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-
-
-_CAMPOS_LITERAL = [
-    nome
-    for nome, campo in InputCJSGTJRN.model_fields.items()
-    if any(typing.get_origin(arg) is typing.Literal for arg in (campo.annotation, *typing.get_args(campo.annotation)))
-]
-
-
-@pytest.mark.parametrize("metodo", [TJRNScraper.cjsg, TJRNScraper.cjsg_download], ids=["cjsg", "cjsg_download"])
-@pytest.mark.parametrize("campo", _CAMPOS_LITERAL)
-def test_cjsg_assinatura_anota_o_dominio_do_schema(metodo, campo):
-    """Filtro com valores fixos no schema tem a mesma anotacao na assinatura.
-
-    Sem isso, o editor aceita ``sistema="pje"`` ou ``grau=2``, que so falham
-    com ``ValidationError`` em tempo de execucao.
-    """
-    assert typing.get_type_hints(metodo)[campo] == InputCJSGTJRN.model_fields[campo].annotation

@@ -4,6 +4,7 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjmt
 """
+import logging
 from typing import cast
 
 import requests
@@ -19,6 +20,8 @@ from juscraper.courts.tjmt.download import (
 )
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 
 def _capture_config(session: requests.Session) -> dict:
@@ -66,7 +69,7 @@ def _capture(
     response = session.get(f"{api_url}/consulta", params=params, timeout=60)
     response.raise_for_status()
     dump(dest / filename, response.content)
-    print(f"[tjmt] wrote {filename}")
+    logger.info("[tjmt] wrote %s", filename)
 
 
 def main() -> None:
@@ -145,4 +148,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

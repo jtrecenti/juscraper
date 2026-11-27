@@ -10,6 +10,7 @@ brasileiro)::
 Grava as respostas cruas em ``tests/stm/samples/cjsg/``. ``waf_rejected.html``
 não sai daqui: é a página que o WAF devolve a um IP recusado.
 """
+import logging
 import sys
 import time
 from typing import Any
@@ -58,4 +59,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()
