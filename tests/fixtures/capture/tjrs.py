@@ -11,6 +11,7 @@ reads ``response.docs``, so the trimmed payload preserves contract
 coverage while keeping each sample under ~100 KB.
 """
 import json
+import logging
 from urllib.parse import urlencode
 
 import requests
@@ -18,6 +19,8 @@ import requests
 from juscraper.courts.tjrs.download import BASE_URL, build_cjsg_inner_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Top-level keys the parser ignores; safe to drop from saved samples.
 _TOPLEVEL_DROP = {"facet_counts", "highlighting", "url", "query", "facets", "pages", "filtro", "hlq"}
@@ -70,7 +73,7 @@ def _fetch(session: requests.Session, pesquisa: str, pagina: int) -> bytes:
 
 def _capture(session: requests.Session, dest, pesquisa: str, pagina: int, filename: str) -> None:
     dump(dest / filename, _minify(_fetch(session, pesquisa, pagina)))
-    print(f"[tjrs] wrote {filename}")
+    logger.info("[tjrs] wrote %s", filename)
 
 
 def main() -> None:
@@ -87,8 +90,9 @@ def main() -> None:
     # Aspas sem fechar: o Solr recusa a consulta e o portal devolve HTTP 200 com
     # ``{"error": ...}`` no lugar de ``response``. Corpo pequeno, salvo como veio.
     dump(dest / "erro_solr.json", _fetch(session, '"dano moral', 1))
-    print("[tjrs] wrote erro_solr.json")
+    logger.info("[tjrs] wrote erro_solr.json")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

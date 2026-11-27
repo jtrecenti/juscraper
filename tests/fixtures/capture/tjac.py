@@ -4,6 +4,8 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjac
 """
+import logging
+
 import juscraper as jus
 
 from ._util import capture_acordao_samples, capture_cjsg_samples, dump, samples_dir_for
@@ -43,4 +45,5 @@ def capture_getarquivo_recaptcha() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

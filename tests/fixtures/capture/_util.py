@@ -12,7 +12,9 @@ Usage (from repo root)::
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
+import logging
+import warnings
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -22,6 +24,9 @@ from bs4 import BeautifulSoup
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
 from juscraper.courts._esaj.parse import _total_declarado
+from juscraper.courts._trf.base import TRFConsultaScraper
+
+logger = logging.getLogger(__name__)
 
 ESAJ_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -338,24 +343,24 @@ def capture_cjsg_samples(
     dump(dest / "post_initial.html", post_resp.content)
     for pag, resp in zip(typical_pages, get_resps, strict=False):
         dump(dest / f"results_normal_page_{pag:02d}.html", resp.content)
-    print(f"[{tribunal}] typical ({typical_query!r}) → {len(get_resps)} page(s)")
+    logger.info("[%s] typical (%r) → %s page(s)", tribunal, typical_query, len(get_resps))
 
     _, single_resps = fetch_cjsg_pages(
         session, base_url, single_page_query, paginas=(1,), body_builder=body_builder
     )
     dump(dest / "single_page.html", single_resps[0].content)
-    print(f"[{tribunal}] single_page ({single_page_query!r}) → saved")
+    logger.info("[%s] single_page (%r) → saved", tribunal, single_page_query)
 
     _, none_resps = fetch_cjsg_pages(
         session, base_url, no_results_query, paginas=(1,), body_builder=body_builder
     )
     dump(dest / "no_results.html", none_resps[0].content)
-    print(f"[{tribunal}] no_results ({no_results_query!r}) → saved")
+    logger.info("[%s] no_results (%r) → saved", tribunal, no_results_query)
 
     if monocratica_query is not None:
         capture_cjsg_monocratica_sample(session, tribunal, base_url, monocratica_query, body_builder=body_builder)
 
-    print(f"[{tribunal}] ALL samples written to {dest}")
+    logger.info("[%s] ALL samples written to %s", tribunal, dest)
 
 
 def capture_cjsg_monocratica_sample(
@@ -379,13 +384,15 @@ def capture_cjsg_monocratica_sample(
     # Mesma leitura de ``cjsg_n_results``: só o input ``-D``, sem a cascata.
     n_results = _total_declarado(soup) if soup.select_one("input#totalResultadoAbaRetornoFiltro-D") else None
     if n_results is None or not 1 <= n_results <= 20:
-        print(
-            f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}): sem o input -D "
-            f"com 1 a 20 resultados (lido: {n_results}); nada gravado"
+        logger.warning(
+            "[%s] cjsg monocratica_single_page (%r): sem o input -D com 1 a 20 resultados (lido: %s); nada gravado",
+            tribunal,
+            pesquisa,
+            n_results,
         )
         return
     dump(samples_dir_for(tribunal, "cjsg") / "monocratica_single_page.html", resps[0].content)
-    print(f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}, {n_results} resultados) → saved")
+    logger.info("[%s] cjsg monocratica_single_page (%r, %s resultados) → saved", tribunal, pesquisa, n_results)
 
 
 def capture_acordao_samples(
@@ -439,6 +446,40 @@ def capture_acordao_samples(
         scraper.session.hooks["response"].append(_gravar)
         try:
             caminho = scraper.baixar_acordao(cnj, data_julgamento)
-            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {caminho}")
+            logger.info("[%s] acordao/%s: %s %s -> %s", tribunal, cenario, cnj, data_julgamento, caminho)
         except AcordaoIndisponivelError as erro:
-            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {type(erro).__name__}: {erro}")
+            logger.info(
+                "[%s] acordao/%s: %s %s -> %s: %s", tribunal, cenario, cnj, data_julgamento, type(erro).__name__, erro
+            )
+
+
+def respostas_do_cpopg(
+    scraper: TRFConsultaScraper,
+    cnj: str,
+    descartar: Callable[[requests.Response], bool] = lambda _resp: False,
+) -> tuple[str | None, list[requests.Response]]:
+    """Roda o ``cpopg_download`` de um raspador do PJe e devolve o detalhe e as respostas que ele usou.
+
+    As respostas vêm de um hook na sessão. Ficam de fora os erros que o retry
+    repetiu, os saltos de redirecionamento e o que ``descartar`` apontar (o
+    desafio do WAF, no TJPE): sobra a resposta final de cada requisição.
+    """
+    respostas: list[requests.Response] = []
+
+    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
+        respostas.append(resp)
+
+    scraper.session.hooks["response"].append(guardar)
+    try:
+        with warnings.catch_warnings():
+            # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
+            warnings.filterwarnings("error", category=UserWarning)
+            (html,) = scraper.cpopg_download(cnj)
+    finally:
+        scraper.session.hooks["response"].remove(guardar)
+    return html, [r for r in respostas if r.ok and not r.is_redirect and not descartar(r)]
+
+
+def rotas(respostas: list[requests.Response]) -> list[str]:
+    """``MÉTODO url`` de cada resposta, sem a query string."""
+    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]

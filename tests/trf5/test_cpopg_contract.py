@@ -35,6 +35,9 @@ def _subset_form_matcher(expected: dict[str, str]):
     return _match
 
 
+# O TRF5 serve o formulário e o detalhe em latin-1, com este cabeçalho; os
+# samples guardam os bytes crus.
+HTML_LATIN1 = "text/html;charset=ISO-8859-1"
 LIST_URL = "https://pje1g.trf5.jus.br/pjeconsulta/ConsultaPublica/listView.seam"
 DETAIL_URL = (
     "https://pje1g.trf5.jus.br/pjeconsulta/"
@@ -48,8 +51,8 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -77,7 +80,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
-        content_type="text/html",
+        content_type=HTML_LATIN1,
     )
 
     scraper = jus.scraper("trf5", sleep_time=0)
@@ -120,7 +123,8 @@ def test_cpopg_missing_process_keeps_detail_columns_empty() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -222,7 +226,8 @@ def test_cpopg_batch_continues_after_download_error() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
     responses.add(
@@ -234,6 +239,7 @@ def test_cpopg_batch_continues_after_download_error() -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
 
     scraper = jus.scraper("trf5", sleep_time=0)
@@ -252,7 +258,8 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -263,6 +270,7 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -273,6 +281,7 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
 
     # ``parse_detail`` é resolvido no namespace de ``_trf.base`` (onde

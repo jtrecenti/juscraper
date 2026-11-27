@@ -30,6 +30,7 @@ Os samples gravados sao usados pelos contratos em ``tests/jusbr/`` via
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import sys
@@ -40,6 +41,8 @@ from juscraper.aggregators.jusbr.client import JusbrScraper
 from juscraper.utils.cnj import clean_cnj
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 # Coordenado com tests/jusbr/test_cpopg_contract.py — qualquer mudanca aqui
 # tem que bater com os contratos (e vice-versa).
@@ -412,7 +415,7 @@ def main() -> None:
     docs_dest = samples_dir_for("jusbr", "documents")
 
     # --- Cenario: typical_single (lista + detalhes) ---
-    print(f"[jusbr] capturing typical_single para {cnj_1!r}...")
+    logger.info("[jusbr] capturing typical_single para %r...", cnj_1)
     list_data, details_data, _ = _capture_cpopg_pair(
         scraper, real_cnj=cnj_1, neutral_digits=NEUTRAL_CNJ_1_DIGITS
     )
@@ -433,17 +436,17 @@ def main() -> None:
     details_data = _replace_numero_processo_in_details(_walk(details_data, repl_1), NEUTRAL_CNJ_1_DIGITS)
     _save_json(cpopg_dest / "typical_single.json", list_data)
     _save_json(cpopg_dest / "typical_single_details.json", details_data)
-    print("[jusbr] wrote cpopg/typical_single.json + typical_single_details.json")
+    logger.info("[jusbr] wrote cpopg/typical_single.json + typical_single_details.json")
 
     # --- Cenario: documents/text_typical + binary_typical ---
     if text_blob is None or binary_blob is None:
-        print("[jusbr] WARN: nao encontrou documento com ambos hrefs; pulando documents/")
+        logger.warning("[jusbr] nao encontrou documento com ambos hrefs; pulando documents/")
     elif _looks_binary(binary_blob):
         # A redacao de nomes so funciona em texto/HTML. Um PDF/binario opaco
         # carregaria PII das partes sem sanitizacao possivel — abortamos em vez
         # de vazar. Escolha um documento HTML (ex.: acordao/despacho .html).
-        print(
-            "[jusbr] WARN: binario do documento parece PDF/opaco — nao da para "
+        logger.warning(
+            "[jusbr] binario do documento parece PDF/opaco — nao da para "
             "redatar nomes. Pulando documents/ para nao vazar PII. Escolha um "
             "CNJ cujo primeiro documento seja HTML."
         )
@@ -454,13 +457,14 @@ def main() -> None:
         sanitized_binary = _sanitize_text_blob(binary_blob, repl_1, pii_terms, max_len=8000)
         dump(docs_dest / "text_typical.txt", sanitized_text)
         dump(docs_dest / "binary_typical.bin", sanitized_binary)
-        print(
-            f"[jusbr] wrote documents/text_typical.txt ({len(sanitized_text)} bytes) "
-            f"+ binary_typical.bin ({len(sanitized_binary)} bytes, nomes redatados)"
+        logger.info(
+            "[jusbr] wrote documents/text_typical.txt (%s bytes) + binary_typical.bin (%s bytes, nomes redatados)",
+            len(sanitized_text),
+            len(sanitized_binary),
         )
 
     # --- Cenario: list_two ---
-    print(f"[jusbr] capturing list_two para {cnj_1!r} + {cnj_2!r}...")
+    logger.info("[jusbr] capturing list_two para %r + %r...", cnj_1, cnj_2)
     list1, det1, _ = _capture_cpopg_pair(scraper, real_cnj=cnj_1, neutral_digits=NEUTRAL_CNJ_1_DIGITS)
     list2, det2, _ = _capture_cpopg_pair(scraper, real_cnj=cnj_2, neutral_digits=NEUTRAL_CNJ_2_DIGITS)
     if not det1 or not det2:
@@ -475,11 +479,12 @@ def main() -> None:
     _save_json(cpopg_dest / "list_two_first_details.json", det1)
     _save_json(cpopg_dest / "list_two_second.json", list2)
     _save_json(cpopg_dest / "list_two_second_details.json", det2)
-    print("[jusbr] wrote cpopg/list_two_*.json (4 arquivos)")
+    logger.info("[jusbr] wrote cpopg/list_two_*.json (4 arquivos)")
 
-    print(f"[jusbr] ALL samples written under {cpopg_dest.parent}")
+    logger.info("[jusbr] ALL samples written under %s", cpopg_dest.parent)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()
     sys.exit(0)

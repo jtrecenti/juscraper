@@ -15,6 +15,7 @@ also saved.
 from __future__ import annotations
 
 import json
+import logging
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -28,6 +29,8 @@ from juscraper.courts.tjrj.download import (
 )
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -73,7 +76,7 @@ def _seed_session(
     post_resp = session.post(FORM_URL, data=body, timeout=30, allow_redirects=True)
     post_resp.raise_for_status()
     page_seq = parse_qs(urlparse(post_resp.url).query)["PageSeq"][0]
-    print(f"[tjrj] form redirect: {post_resp.history[0].headers.get('Location')}")
+    logger.info("[tjrj] form redirect: %s", post_resp.history[0].headers.get('Location'))
     postback_html = postback_resp.content if postback_resp is not None else None
     return get_resp.content, postback_html, page_seq
 
@@ -108,15 +111,15 @@ def _capture_query(
     form_html, postback_html, page_seq = _seed_session(session, pesquisa, ano, origem)
     if save_form:
         dump(dest / "post_initial.html", form_html)
-        print(f"[tjrj] form HTML for '{pesquisa}' saved (bytes={len(form_html)})")
+        logger.info("[tjrj] form HTML for '%s' saved (bytes=%s)", pesquisa, len(form_html))
     if postback_file and postback_html is not None:
         dump(dest / postback_file, postback_html)
-        print(f"[tjrj] origem={origem} postback HTML saved (bytes={len(postback_html)})")
+        logger.info("[tjrj] origem=%s postback HTML saved (bytes=%s)", origem, len(postback_html))
     for num_pagina_0, filename in page_files.items():
         payload = _fetch_xhr(session, num_pagina_0, page_seq)
         dump(dest / filename, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
         total = payload.get("d", {}).get("TotalDocs")
-        print(f"[tjrj] '{pesquisa}' page={num_pagina_0} -> {filename} (TotalDocs={total})")
+        logger.info("[tjrj] '%s' page=%s -> %s (TotalDocs=%s)", pesquisa, num_pagina_0, filename, total)
 
 
 def _capture_postback(session: requests.Session, dest, origem: str, filename: str) -> None:
@@ -128,7 +131,7 @@ def _capture_postback(session: requests.Session, dest, origem: str, filename: st
     _, _, postback_resp = _form_and_postback(session, "dano", "", origem)
     assert postback_resp is not None
     dump(dest / filename, postback_resp.content)
-    print(f"[tjrj] origem={origem} postback HTML saved (bytes={len(postback_resp.content)})")
+    logger.info("[tjrj] origem=%s postback HTML saved (bytes=%s)", origem, len(postback_resp.content))
 
 
 def main() -> None:
@@ -193,8 +196,9 @@ def main() -> None:
         postback_session.headers.update({"User-Agent": USER_AGENT})
         _capture_postback(postback_session, dest, origem, filename)
 
-    print(f"[tjrj] ALL samples written to {dest}")
+    logger.info("[tjrj] ALL samples written to %s", dest)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

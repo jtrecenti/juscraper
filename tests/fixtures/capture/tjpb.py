@@ -9,12 +9,15 @@ Saves raw JSON responses (Laravel + Elasticsearch) under
 truncated — the parser only needs ementa/numero_processo/dt_ementa.
 """
 import json
+import logging
 
 import requests
 
 from juscraper.courts.tjpb.download import SEARCH_URL, build_cjsg_payload, fetch_csrf_token
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 _HIT_TRUNCATE = {"inteiro_teor": 500, "ementa": 1500}
 
@@ -48,7 +51,7 @@ def _capture(session: requests.Session, dest, xsrf_token: str, pesquisa: str,
     )
     response.raise_for_status()
     dump(dest / filename, _minify(response.content))
-    print(f"[tjpb] wrote {filename} (page={page}, bytes={len(response.content)})")
+    logger.info("[tjpb] wrote %s (page=%s, bytes=%s)", filename, page, len(response.content))
 
 
 def main() -> None:
@@ -70,4 +73,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()
