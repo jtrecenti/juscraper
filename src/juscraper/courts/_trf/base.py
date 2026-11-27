@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, ClassVar, NamedTuple
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from tqdm import tqdm
 
 from ...core.base import recusar_kwargs_sem_efeito
@@ -37,6 +37,7 @@ from ...core.failures import (
     motivo_falha_ou_inesperada,
 )
 from ...core.http import HTTPScraper, RequestPolicy
+from ...schemas import CnjInputBase
 from ...utils.cnj import clean_cnj, format_cnj
 from ...utils.params import raise_on_extra_kwargs
 from .download import (
@@ -105,7 +106,7 @@ class TRFConsultaScraper(HTTPScraper):
     #: Short name (``"TRF1"``) — drives logging, tqdm, error messages, bot check.
     TRIBUNAL_NAME: str = ""
     #: Pydantic schema validating ``cpopg`` kwargs (``extra="forbid"``).
-    INPUT_CPOPG: type[BaseModel] = InputCpopgTRF
+    INPUT_CPOPG: type[CnjInputBase] = InputCpopgTRF
     #: PJe classe form field. Every current deployment uses the ``classeJudicial``
     #: autocomplete; a deployment with another component overrides it.
     CLASSE_FIELD_NAME: str = "classeJudicial"

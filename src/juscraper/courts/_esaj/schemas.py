@@ -25,9 +25,19 @@ from ...schemas import (
 from ...schemas.cjsg import OutputCJSGBase
 
 
-class InputCJSGEsajPuro(
-    SearchBase, DataJulgamentoMixin, DataPublicacaoMixin, AutoChunkMixin, CountOnlyMixin,
-):
+class InputCJSGEsajBase(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
+    """Campos do ``cjsg`` que a base eSAJ le em todo tribunal.
+
+    Tipo de :attr:`~juscraper.courts._esaj.base.EsajSearchScraper.INPUT_CJSG`:
+    o schema de cada tribunal herda daqui, e o codigo compartilhado le
+    ``data_julgamento_*``, ``auto_chunk``, ``tipo_decisao`` e ``paginas``
+    sem depender do schema concreto.
+    """
+
+    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
+
+
+class InputCJSGEsajPuro(InputCJSGEsajBase, DataPublicacaoMixin):
     """Accepted input for TJAC/TJAL/TJAM/TJCE/TJMS ``cjsg``.
 
     Inherits ``extra='forbid'`` from :class:`SearchBase`, so unknown keyword
@@ -47,7 +57,6 @@ class InputCJSGEsajPuro(
     comarca: IdFiltroUnico = None
     orgao_julgador: IdFiltro = None
     origem: Literal["T", "R"] = "T"
-    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
 class OutputCJSGEsaj(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

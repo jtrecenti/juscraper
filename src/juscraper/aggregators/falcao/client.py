@@ -474,7 +474,11 @@ class FalcaoScraper(HTTPScraper):
                 kwargs[nome] = coerce_brazilian_date(kwargs[nome], _FORMATO_BACKEND)
                 _validar_data(kwargs[nome], nome)
         try:
-            inp = InputListarDecisoesFalcao(pesquisa=pesquisa, paginas=paginas_norm, **kwargs)
+            # ``model_validate`` porque ``pesquisa`` chega como ``str | None``:
+            # quem recusa ``None`` (sem termo nem alias) e o proprio schema.
+            inp: InputListarDecisoesFalcao = InputListarDecisoesFalcao.model_validate(
+                {"pesquisa": pesquisa, "paginas": paginas_norm, **kwargs},
+            )
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, metodo, schema_cls=InputListarDecisoesFalcao)
             raise

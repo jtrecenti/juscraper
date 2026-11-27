@@ -6,6 +6,7 @@ Mesma estrutura de ``test_cjsg_auto_chunk_contract.py``, com dedup por
 """
 import warnings
 from datetime import date
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -241,8 +242,9 @@ def test_search_alias_long_window_reaches_every_window(tmp_path, mocker, alias):
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
+        filtros: dict[str, Any] = {alias: "via alias"}
         scraper.cjpg(
-            **{alias: "via alias"},
+            **filtros,
             data_julgamento_inicio="01/01/2022",
             data_julgamento_fim="31/12/2024",
         )

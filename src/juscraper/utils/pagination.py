@@ -26,6 +26,14 @@ from ..core.avisos import avisar
 
 _Pagina = TypeVar("_Pagina")
 
+PaginasNormalizadas = list[int] | range | None
+"""``paginas`` depois de :func:`~juscraper.utils.params.normalize_paginas`, sem o ``int`` que o schema aceita.
+
+Os schemas declaram ``paginas`` com ``int`` porque refletem a API publica, mas
+o pipeline ja trocou o ``int`` por ``range`` antes de validar; quem le
+``inp.paginas`` depois disso usa ``cast(PaginasNormalizadas, inp.paginas)``.
+"""
+
 _FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 

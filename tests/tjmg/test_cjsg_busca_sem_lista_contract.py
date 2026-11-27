@@ -15,6 +15,7 @@ limite do portal à consulta, não um erro disfarçado, e o download o checa
 from __future__ import annotations
 
 import re
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 import pandas as pd
@@ -31,7 +32,7 @@ from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError, cjsg_parse
 from tests._helpers import load_sample, load_sample_bytes, query_param_subset_matcher, urls_enviadas
 from tests.tjmg._helpers import SEARCH_URL, add_captcha, add_dwr, add_form
 
-_DATAS = {"data_julgamento_inicio": "01/01/2025", "data_julgamento_fim": "31/12/2025"}
+_DATAS: dict[str, Any] = {"data_julgamento_inicio": "01/01/2025", "data_julgamento_fim": "31/12/2025"}
 
 
 def _pagina(nome: str) -> str:

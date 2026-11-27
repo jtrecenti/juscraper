@@ -5,7 +5,7 @@ import logging
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 import pandas as pd
 from pydantic import BaseModel
@@ -112,6 +112,46 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         self.method = "html"
 
     # --- cjsg -----------------------------------------------------------
+
+    # Repete as overloads de ``EsajSearchScraper.cjsg`` porque aqui ``pesquisa``
+    # tem default ``""``.
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     def cjsg(
         self,
@@ -293,7 +333,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     def cpopg(
         self,
-        id_cnj: str | list[str],
+        id_cnj: str | Iterable[str],
         method: Literal["html"] = "html",
         *,
         baixar_movimentacoes: bool = True,
@@ -303,7 +343,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
         Args:
-            id_cnj (str | list[str]): Numero CNJ ou lista de numeros CNJ.
+            id_cnj (str | Iterable[str]): Numero CNJ ou lista de numeros CNJ.
             method (str): So ``"html"`` (paginas do eSAJ), o default. O
                 ``"api"`` foi removido e levanta ``ValueError``.
             baixar_movimentacoes (bool): Com ``False``, nao baixa as
@@ -382,7 +422,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     def cpopg_download(
         self,
-        id_cnj: str | list[str],
+        id_cnj: str | Iterable[str],
         method: Literal["html"] = "html",
         diretorio: str | None = None,
         *,
@@ -459,7 +499,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     # --- cposg ----------------------------------------------------------
 
-    def cposg(self, id_cnj: str, method: Literal["html"] = "html") -> pd.DataFrame:
+    def cposg(self, id_cnj: str | Iterable[str], method: Literal["html"] = "html") -> pd.DataFrame:
         """Fetch a second-degree process by CNJ and return a DataFrame.
 
         ``method`` aceita só ``"html"``, o default; o ``"api"`` foi removido e
@@ -490,7 +530,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
     def cposg_download(
         self,
-        id_cnj: str | list,
+        id_cnj: str | Iterable[str],
         method: Literal["html"] = "html",
         diretorio: str | None = None,
     ) -> dict[str, str]:

@@ -45,15 +45,17 @@ _LOTE_ACORDAO_CJSG = DownloadEmLote(
 class EsajAcordaoCjsgScraper(EsajSearchScraper):
     """Base eSAJ que baixa o PDF do acórdão pelo ``cd_acordao`` do cjsg; ver o docstring do módulo."""
 
-    def baixar_acordao(self, cd_acordao: str, cd_foro: str, diretorio: str | None = None) -> str:
+    def baixar_acordao(self, cd_acordao: str | float, cd_foro: str | float, diretorio: str | None = None) -> str:
         """Baixa o PDF do inteiro teor do acórdão de uma linha do cjsg.
 
         Um pedido por acórdão, sem login e sem captcha. Devolve o PDF como o
         tribunal o publica; a extração de texto fica com quem usa a biblioteca.
 
         Args:
-            cd_acordao (str): Coluna ``cd_acordao`` do cjsg.
-            cd_foro (str): Coluna ``cd_foro`` do cjsg.
+            cd_acordao (str | float): Coluna ``cd_acordao`` do cjsg; o ``float``
+                inteiro da coluna lida de CSV também vale.
+            cd_foro (str | float): Coluna ``cd_foro`` do cjsg, também como
+                ``float`` inteiro.
             diretorio (str | None): Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/acordaos/<cd_acordao>.pdf``.

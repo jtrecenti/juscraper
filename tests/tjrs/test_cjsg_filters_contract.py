@@ -1,5 +1,6 @@
 """Filter-propagation contract for TJRS cjsg."""
 from datetime import date, datetime, timezone
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -57,7 +58,7 @@ def test_cjsg_all_filters_land_in_form_body(mocker):
 def test_cjsg_aceita_date_e_datetime_nos_filtros_de_data(mocker):
     """``date`` e ``datetime`` chegam ao body no formato do backend, como a string equivalente."""
     mocker.patch("time.sleep")
-    datas = {
+    datas: dict[str, Any] = {
         "data_julgamento_inicio": date(2024, 1, 1),
         "data_julgamento_fim": datetime(2024, 3, 31, 15, 30, tzinfo=timezone.utc),
         "data_publicacao_inicio": date(2024, 2, 1),
