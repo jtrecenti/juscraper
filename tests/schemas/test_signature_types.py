@@ -49,11 +49,6 @@ class Caso(typing.NamedTuple):
 #: (``np.int64(2)``, ``"3"``). ``list[int]`` recusaria ``list[np.int64]`` no mypy.
 PAGINAS_ASSINATURA = int | list | range | None
 
-#: Campos obrigatorios no schema que tambem chegam por alias deprecado
-#: (``query``/``termo``), resolvido antes do pydantic.
-CAMPOS_COM_ALIAS = frozenset({"pesquisa"})
-
-
 def _regra_data_canonica(caso: Caso) -> object:
     """Data canonica aceita ``date``, que o pipeline converte antes do pydantic.
 
@@ -80,11 +75,12 @@ def _regra_none_usa_o_padrao(caso: Caso) -> object:
 
 
 def _regra_none_via_alias(caso: Caso) -> object:
-    """Campo obrigatorio com alias deprecado tem default ``None`` para o valor vir pelo alias.
+    """``pesquisa`` obrigatorio tem default ``None`` para o termo vir por alias deprecado.
 
-    Sem nenhum dos dois, o pipeline levanta ``TypeError``.
+    Os aliases sao os de :data:`juscraper.utils.params.SEARCH_ALIASES`, resolvidos
+    antes do pydantic; sem termo nenhum, o pipeline levanta ``TypeError``.
     """
-    if caso.campo in CAMPOS_COM_ALIAS and caso.info.is_required() and caso.parametro.default is None:
+    if caso.campo == "pesquisa" and caso.info.is_required() and caso.parametro.default is None:
         return caso.info.annotation | None
     return None
 
@@ -147,7 +143,12 @@ def _tipos_livres(anotacao: object) -> set[object]:
 
 
 def _esperada(caso: Caso) -> tuple[str, object]:
-    """Origem (regra, excecao ou ``"schema"``) e anotacao esperada na assinatura."""
+    """Origem (regra, excecao ou ``"schema"``) e anotacao esperada na assinatura.
+
+    Em :data:`AMPLIADOS`, nao ha anotacao exata: :func:`_confere_ampliado` confere a forma.
+    """
+    if (caso.sigla, caso.campo) in AMPLIADOS:
+        return "AMPLIADOS", None
     if (caso.sigla, caso.campo) in ESPECIFICAS:
         return "ESPECIFICAS", ESPECIFICAS[caso.sigla, caso.campo][0]
     for nome, regra in REGRAS.items():
@@ -185,6 +186,7 @@ CASOS = _casos()
 
 def test_ha_parametros_explicitos_com_campo_no_schema():
     assert len(CASOS) > 400
+    assert sum(1 for caso in CASOS if _valores_literal(caso.info.annotation)) > 40
 
 
 def test_excecoes_existem():
@@ -195,7 +197,7 @@ def test_excecoes_existem():
 
 def test_regras_em_uso():
     """Regra que nenhum caso usa esta obsoleta: remova-a."""
-    usadas = {_esperada(caso)[0] for caso in CASOS if (caso.sigla, caso.campo) not in AMPLIADOS}
+    usadas = {_esperada(caso)[0] for caso in CASOS}
     assert not REGRAS.keys() - usadas
 
 
@@ -204,10 +206,10 @@ def test_assinatura_anota_o_tipo_do_schema(caso: Caso):
     anotacao = typing.get_type_hints(caso.metodo)[caso.campo]
     anotacao_schema = caso.info.annotation
     local = f"{caso.sigla}.{caso.metodo_nome}({caso.campo})"
-    if (caso.sigla, caso.campo) in AMPLIADOS:
+    origem, esperada = _esperada(caso)
+    if origem == "AMPLIADOS":
         _confere_ampliado(local, anotacao, anotacao_schema)
         return
-    origem, esperada = _esperada(caso)
     assert anotacao == esperada, (
         f"{local} esta anotado como {anotacao}, mas o esperado ({origem}) e {esperada}; "
         f"o schema declara {anotacao_schema}. Use na assinatura o tipo do schema, ou "
@@ -217,15 +219,14 @@ def test_assinatura_anota_o_tipo_do_schema(caso: Caso):
 
 def _confere_ampliado(local: str, anotacao: object, anotacao_schema: object) -> None:
     assert anotacao != anotacao_schema, f"{local} ja bate com o schema: remova-o de AMPLIADOS."
-    assert _valores_literal(anotacao_schema), f"{local} nao e Literal no schema: tire-o de AMPLIADOS."
-    faltam = _valores_literal(anotacao_schema) - _valores_literal(anotacao)
+    valores_schema = _valores_literal(anotacao_schema)
+    valores = _valores_literal(anotacao)
+    assert valores_schema, f"{local} nao e Literal no schema: tire-o de AMPLIADOS."
+    faltam = valores_schema - valores
     assert not faltam, f"{local} nao aceita {faltam}, que o schema aceita."
     livres = _tipos_livres(anotacao) - {type(None), bool}
     assert not livres, f"{local} aceita {livres} livre; restrinja a valores Literal."
     # Assinatura com codigos em ``int`` (que o schema converte em ``str``) repete todos eles.
-    valores = _valores_literal(anotacao)
     if any(type(valor) is int for valor in valores):
-        sem_int = {
-            v for v in _valores_literal(anotacao_schema) if isinstance(v, str) and v.isdigit() and int(v) not in valores
-        }
+        sem_int = {v for v in valores_schema if isinstance(v, str) and v.isdigit() and int(v) not in valores}
         assert not sem_int, f"{local} nao aceita em int os codigos {sem_int}, que o schema aceita em str."

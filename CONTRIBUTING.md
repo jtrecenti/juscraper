@@ -446,7 +446,7 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 
 `tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando infraestrutura e aliases conhecidos. Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. `_is_wired` reconhece atributos `INPUT_<ENDPOINT>`, inclusive herdados, e as exceções declaradas em `WIRED_WITHOUT_CLASS_ATTR`; esses casos são pulados na paridade. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
 
-`tests/schemas/test_signature_types.py` compara a anotação de cada parâmetro explícito com a do campo no schema. A assinatura só difere quando o pipeline converte o valor antes do pydantic; essas diferenças ficam nas regras por categoria do arquivo (`REGRAS`: datas canônicas com `date`, `paginas`, `None` como "usa o padrão" e `None` para o valor vir por alias deprecado) e, campo a campo, em `AMPLIADOS` e `ESPECIFICAS`, com o motivo. Ao divergir, usar na assinatura o tipo do schema; regra ou exceção nova só quando o runtime aceita mais do que o schema declara.
+`tests/schemas/test_signature_types.py` compara a anotação de cada parâmetro explícito com a do campo no schema. A assinatura só difere quando o pipeline converte o valor antes do pydantic; essas diferenças ficam nas regras por categoria do arquivo (`REGRAS`) e, campo a campo, em `AMPLIADOS` e `ESPECIFICAS`, cada uma com o motivo. Ao divergir, usar na assinatura o tipo do schema; regra ou exceção nova só quando o runtime aceita mais do que o schema declara.
 
 Para decidir quando conectar o schema ao método, seguir `CLAUDE.md` > **Testes**, que separa o PR de contratos da mudança de runtime.
 
