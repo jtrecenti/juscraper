@@ -1,52 +1,138 @@
-"""Captura o desafio do AWS WAF na consulta pública do PJe de 1º grau do TJPE.
+"""Captura os samples do ``cpopg`` do TJPE (PJe de 1º grau, atrás do AWS WAF).
 
-Rodar da raiz do repositório::
+Rodar da raiz do repositório, com o extra ``waf`` (o Playwright resolve o
+desafio quando ele aparece)::
 
-    python -m tests.fixtures.capture.tjpe_cpopg
+    uv sync --extra dev --extra waf
+    uv run playwright install chromium
+    uv run python -m tests.fixtures.capture.tjpe_cpopg
 
-Grava ``tests/tjpe/samples/cpopg/waf_challenge.html``: a página de JavaScript
-que o WAF serve, com HTTP 202, no lugar do formulário da consulta. Com o
-User-Agent de navegador do raspador o desafio é intermitente; com um cliente
-de linha de comando que pede HTML (``curl`` + ``Accept: text/html``) ele vem
-sempre (conferido em 26/11/2026). As chaves ``key``, ``iv`` e ``context`` mudam
-a cada resposta e não identificam ninguém.
+Os arquivos gravados em ``tests/tjpe/samples/cpopg/`` e o que muda entre
+capturas estão no README desta pasta (seção "TJPE cpopg").
 
-O ``form_initial.html`` da mesma pasta não é gravado aqui.
+Formulário, buscas e detalhe saem do ``cpopg_download`` de
+:class:`TJPEConsultaPublicaScraper`, o fluxo de produção, por um hook de
+resposta na sessão: se o TJPE deixar de aceitar o que o raspador manda, este
+script quebra antes. Quando o WAF desafia, o raspador obtém o cookie pelo
+Playwright e repete a requisição, e o arquivo guarda só a resposta repetida,
+com os bytes como vieram. O desafio em si (``waf_challenge.html``) vem de um
+cliente de linha de comando, que o WAF desafia sempre (conferido em
+26/11/2026); as chaves ``key``, ``iv`` e ``context`` mudam a cada resposta e
+não identificam ninguém. Nada é gravado antes de todas as respostas serem
+conferidas.
 """
 from __future__ import annotations
 
 import logging
+import warnings
 
 import requests
 
 from juscraper.core.waf import eh_desafio_waf
-from juscraper.courts._trf.download import LISTVIEW_PATH
+from juscraper.courts._trf.download import DETAIL_PATH, LISTVIEW_PATH, extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 
 from ._util import dump, samples_dir_for
 
 logger = logging.getLogger(__name__)
 
+# Execução fiscal do Município do Cabo de Santo Agostinho contra uma pessoa
+# jurídica (sociedade limitada): processo público, sem pessoa física nas
+# partes, arquivado definitivamente, com até 15 movimentações e dois
+# documentos visíveis sem login (as execuções com mais documentos tinham CPF
+# nas partes).
+FOUND_CNJ = "00147006920218172370"
+
+# CNJ com a forma de um processo do TJPE (segmento 8, tribunal 17) e ano 2099,
+# para passar pela máscara do formulário; a busca volta sem token ``ca``.
+MISSING_CNJ = "00000000020998170001"
+
 # Cliente sem cara de navegador que pede HTML: o WAF desafia toda vez. Só estes
 # dois cabeçalhos; com os padrões do ``requests`` (``Accept-Encoding``,
 # ``Connection``) o WAF deixa passar.
-HEADERS = {"User-Agent": "curl/8.7.1", "Accept": "text/html"}
+HEADERS_DESAFIO = {"User-Agent": "curl/8.7.1", "Accept": "text/html"}
 
 
-def main() -> None:
-    """Grava a página de desafio do WAF do TJPE."""
+def capturar_desafio() -> bytes:
+    """A página de desafio do WAF do TJPE."""
     url = TJPEConsultaPublicaScraper.BASE_URL + LISTVIEW_PATH
     session = requests.Session()
     session.headers.clear()
-    session.headers.update(HEADERS)
+    session.headers.update(HEADERS_DESAFIO)
     resp = session.get(url, timeout=30)
     if not eh_desafio_waf(resp) or resp.status_code != 202:
         raise RuntimeError(
             f"[tjpe] esperava o desafio do WAF (HTTP 202) em {url}, veio HTTP {resp.status_code}"
         )
-    dest = samples_dir_for("tjpe", "cpopg") / "waf_challenge.html"
-    dump(dest, resp.content)
-    logger.info("[tjpe] cpopg/waf_challenge.html (%d bytes)", len(resp.content))
+    return resp.content
+
+
+def _respostas_de(scraper: TJPEConsultaPublicaScraper, cnj: str) -> tuple[str | None, list[requests.Response]]:
+    """Roda o ``cpopg_download`` do raspador e devolve o detalhe e as respostas que ele usou.
+
+    Ficam de fora os desafios do WAF, os erros que o retry repetiu e os saltos
+    de redirecionamento: sobra a resposta final de cada requisição.
+    """
+    respostas: list[requests.Response] = []
+
+    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
+        respostas.append(resp)
+
+    scraper.session.hooks["response"].append(guardar)
+    try:
+        with warnings.catch_warnings():
+            # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
+            warnings.filterwarnings("error", category=UserWarning)
+            (html,) = scraper.cpopg_download(cnj)
+    finally:
+        scraper.session.hooks["response"].remove(guardar)
+    return html, [r for r in respostas if r.ok and not r.is_redirect and not eh_desafio_waf(r)]
+
+
+def _rotas(respostas: list[requests.Response]) -> list[str]:
+    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]
+
+
+def capturar_consulta() -> dict[str, bytes]:
+    """Formulário, buscas e detalhe, pelo ``cpopg_download`` do raspador."""
+    scraper = TJPEConsultaPublicaScraper(sleep_time=0.5)
+    listview = scraper.BASE_URL + LISTVIEW_PATH
+    detalhe = scraper.BASE_URL + DETAIL_PATH
+
+    html, respostas = _respostas_de(scraper, FOUND_CNJ)
+    # Sem página extra de movimentações ou documentos: o contrato só registra estas três.
+    esperado = [f"GET {listview}", f"POST {listview}", f"GET {detalhe}"]
+    rotas = _rotas(respostas)
+    if html is None or rotas != esperado:
+        raise RuntimeError(
+            f"[tjpe] {FOUND_CNJ}: esperava formulário, busca e detalhe numa página só, "
+            f"veio {rotas} (processo arquivado, em segredo ou grande demais?)"
+        )
+    n_docs = len(extract_documento_urls(html))
+    if n_docs < 2:
+        raise RuntimeError(f"[tjpe] {FOUND_CNJ} tem {n_docs} documento(s); o contrato das peças precisa de 2 ou mais")
+    nomes = ("form_initial.html", "search_one_result.html", "detail_normal.html")
+    arquivos = {nome: resp.content for nome, resp in zip(nomes, respostas, strict=True)}
+
+    # Sem token ``ca``, o download para na busca: só um POST.
+    _, respostas = _respostas_de(scraper, MISSING_CNJ)
+    rotas = _rotas(respostas)
+    if rotas != [f"POST {listview}"]:
+        raise RuntimeError(f"[tjpe] {MISSING_CNJ}: esperava uma busca sem resultado, veio {rotas}")
+    arquivos["search_no_results.html"] = respostas[0].content
+    return arquivos
+
+
+def main() -> None:
+    """Grava todos os samples do ``cpopg`` do TJPE, só depois de conferir todas as respostas."""
+    # O desafio vem antes: logo depois da consulta do raspador, o WAF chegou a
+    # deixar o cliente de linha de comando passar (HTTP 200, 26/11/2026).
+    desafio = capturar_desafio()
+    arquivos = {**capturar_consulta(), "waf_challenge.html": desafio}
+    dest = samples_dir_for("tjpe", "cpopg")
+    for nome, conteudo in arquivos.items():
+        dump(dest / nome, conteudo)
+        logger.info("[tjpe] cpopg/%s (%d bytes)", nome, len(conteudo))
 
 
 if __name__ == "__main__":
