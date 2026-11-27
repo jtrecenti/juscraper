@@ -22,7 +22,7 @@ from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlocke
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
+from tests._helpers import PDF_FALSO, chamadas_para, load_sample, load_sample_bytes, url_enviada
 
 ESAJ = "https://esaj.tjsp.jus.br"
 CD_PROCESSO, CD_FORO, CD_DOCUMENTO = "3I0006RUY0000", "126", "167379827"
@@ -58,10 +58,6 @@ def _registrar_sentenca(cd_documento=CD_DOCUMENTO, pdf=PDF_FALSO):
         body=pdf,
         match=[query_param_matcher(dict(parse_qsl(parametros, keep_blank_values=True)))],
     )
-
-
-def _pedidos(rota):
-    return [c.request for c in responses.calls if c.request.url.split("?")[0].endswith(rota)]
 
 
 def test_cjpg_traz_os_quatro_codigos_do_inteiro_teor():
@@ -104,14 +100,14 @@ def test_baixar_sentenca_pede_obter_arquivo_com_os_quatro_codigos(tmp_path, mock
 
     assert caminho == str(tmp_path / "destino" / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf")
     assert Path(caminho).read_bytes() == PDF_FALSO
-    (pedido,) = _pedidos("obterArquivo.do")
-    assert dict(parse_qsl(urlsplit(pedido.url).query, keep_blank_values=True)) == {
+    (pedido,) = chamadas_para("obterArquivo.do")
+    assert dict(parse_qsl(urlsplit(url_enviada(pedido)).query, keep_blank_values=True)) == {
         "cdProcesso": CD_PROCESSO,
         "cdForo": CD_FORO,
         "nmAlias": "",
         "cdDocumento": CD_DOCUMENTO,
     }
-    assert len(_pedidos("getPDF.do")) == 1
+    assert len(chamadas_para("getPDF.do")) == 1
     assert not (tmp_path / "padrao").exists()
 
 
@@ -191,7 +187,7 @@ def test_baixar_sentencas_por_linha_com_falhas_num_aviso(tmp_path, mocker):
         None,
     ]
     assert resultado["motivo_falha"].tolist() == [None, "resposta_inesperada", "entrada_invalida"]
-    assert len(_pedidos("obterArquivo.do")) == 2
+    assert len(chamadas_para("obterArquivo.do")) == 2
     mensagem = str(avisos[0].message)
     assert f"{cjpg.iloc[1].cd_processo}/{cjpg.iloc[1].cd_documento}: resposta_inesperada" in mensagem
     pd.testing.assert_frame_equal(resultado[cjpg.columns], cjpg)
@@ -224,7 +220,7 @@ def test_baixar_sentencas_desafio_anti_bot_encerra_o_lote_sem_perder_as_linhas(t
 
     assert resultado["caminho_sentenca"].isna().tolist() == [False, True, True]
     assert resultado["motivo_falha"].tolist() == [None, "bloqueio_anti_bot", "bloqueio_anti_bot"]
-    assert len(_pedidos("obterArquivo.do")) == 2
+    assert len(chamadas_para("obterArquivo.do")) == 2
 
 
 @responses.activate
@@ -238,7 +234,7 @@ def test_baixar_sentenca_aceita_codigo_float_inteiro_de_csv(tmp_path, mocker):
     )
 
     assert caminho == str(tmp_path / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf")
-    assert parse_qsl(urlsplit(_pedidos("obterArquivo.do")[0].url).query)[1] == ("cdForo", CD_FORO)
+    assert parse_qsl(urlsplit(url_enviada(chamadas_para("obterArquivo.do")[0])).query)[1] == ("cdForo", CD_FORO)
 
 
 def test_baixar_sentencas_exige_as_colunas_dos_codigos(tmp_path):

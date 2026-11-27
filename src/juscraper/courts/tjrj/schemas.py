@@ -8,6 +8,10 @@ from pydantic import field_validator, model_validator
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 from ...utils.params import validate_intervalo_datas
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJRJScraper``.
+Competencia = Literal["1", "2", "3"]
+Origem = Literal["1", "2", "3", "4", "5"]
+
 
 class InputCJSGTJRJ(SearchBase):
     """Accepted input for TJRJ ``cjsg`` / ``cjsg_download``.
@@ -27,8 +31,8 @@ class InputCJSGTJRJ(SearchBase):
     # Turma Recursal; o Conselho da Magistratura so tem ``"0"``, "Selecione...").
     # O download confere a combinacao com o form da origem; ``None`` usa a
     # primeira opcao do form, como o navegador.
-    competencia: Literal["1", "2", "3"] | None = None
-    origem: Literal["1", "2", "3", "4", "5"] = "1"
+    competencia: Competencia | None = None
+    origem: Origem = "1"
     tipo_acordao: bool = True
     tipo_monocratica: bool = True
     magistrado_codigo: str | None = None

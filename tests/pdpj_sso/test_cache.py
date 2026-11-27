@@ -12,6 +12,7 @@ from juscraper.aggregators._pdpj_sso.cache import (
     salvar_credencial,
 )
 from juscraper.aggregators._pdpj_sso.credencial import CredencialPdpj
+from juscraper.aggregators._pdpj_sso.renovacao import AuthPdpj
 from tests.pdpj_sso._jwt import token
 
 
@@ -88,6 +89,7 @@ def test_access_vencido_com_refresh_vigente_e_carregado():
     salvar_credencial(credencial)
     scraper = jus.scraper("jusbr")
     assert scraper.token == credencial.access_token
+    assert isinstance(scraper.session.auth, AuthPdpj)
     assert scraper.session.auth.credencial == credencial
 
 

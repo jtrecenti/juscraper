@@ -19,7 +19,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import chamadas_para, load_sample, load_sample_bytes, params_enviados
 
 ESAJ = "https://esaj.tjsp.jus.br"
 
@@ -146,7 +146,7 @@ def test_cpopg_html_todo_cnj_pedido_sai_em_basicos_com_motivo_falha(tmp_path, mo
     assert basicos.iloc[0]["classe"] is not None
     assert basicos.iloc[1:].drop(columns=["id_processo", "motivo_falha"]).isna().all().all()
     assert set(result["partes"]["file_path"]) == {basicos.iloc[0]["file_path"]}
-    buscas = [c.request.params["dadosConsulta.valorConsultaNuUnificado"] for c in responses.calls]
+    buscas = [params_enviados(c.request)["dadosConsulta.valorConsultaNuUnificado"] for c in responses.calls]
     assert buscas.count(CNJ_INEXISTENTE) == 1
     assert buscas.count(CNJ_SEM_CONEXAO) == 5
 
@@ -192,7 +192,8 @@ def test_cpopg_lote_so_com_entrada_invalida_nao_deixa_pasta(tmp_path):
     pasta = tmp_path / "nao_criada"
 
     with pytest.warns(UserWarning, match="123: entrada_invalida"):
-        result = jus.scraper("tjsp", download_path=str(pasta)).cpopg(["123", float("nan")])
+        # Entrada inválida de propósito.
+        result = jus.scraper("tjsp", download_path=str(pasta)).cpopg(["123", float("nan")])  # type: ignore[list-item]
 
     assert result["basicos"]["motivo_falha"].tolist() == ["entrada_invalida", "entrada_invalida"]
     assert result["basicos"]["id_processo"].iloc[0] == "123"
@@ -246,10 +247,6 @@ def _registrar_pagina_movimentacoes(pagina, cursor=None, body=None):
     )
 
 
-def _chamadas(rota):
-    return [chamada.request for chamada in responses.calls if chamada.request.url.split("?")[0].endswith(rota)]
-
-
 @responses.activate
 def test_cpopg_html_carrega_todas_as_paginas_de_movimentacoes(tmp_path, mocker):
     """A página só traz o botão; o download segue o cursor até a última página."""
@@ -261,7 +258,7 @@ def test_cpopg_html_carrega_todas_as_paginas_de_movimentacoes(tmp_path, mocker):
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert [r.params.get("cursor") for r in _chamadas("carregarMovimentacoesAjax.do")] == [
+    assert [params_enviados(r).get("cursor") for r in chamadas_para("carregarMovimentacoesAjax.do")] == [
         None, CURSOR_PAGINA_2, CURSOR_PAGINA_3,
     ]
     movimentacoes = result["movimentacoes"]
@@ -298,7 +295,7 @@ def test_cpopg_html_refaz_a_busca_quando_o_esaj_recusa_as_movimentacoes(tmp_path
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
     assert len(result["movimentacoes"]) == 14
 
 
@@ -318,7 +315,7 @@ def test_cpopg_html_para_quando_o_cursor_se_repete(tmp_path, mocker):
 
     assert falhas == {CNJ_INCIDENTE: "resposta_inesperada"}
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 2
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 2
     assert "a paginação não avançaria" in str(erro.call_args.args[-1])
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
@@ -344,7 +341,7 @@ def test_cpopg_html_para_quando_a_pagina_se_repete_com_cursor_novo(tmp_path, moc
 
     assert falhas == {CNJ_INCIDENTE: "resposta_inesperada"}
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 3
     assert "repetiu a página anterior" in str(erro.call_args.args[-1])
     assert not list((tmp_path / "cpopg").rglob("*.html"))
 
@@ -380,7 +377,7 @@ def test_cpopg_html_refaz_a_busca_quando_a_primeira_pagina_vem_fora_do_formato(t
 
     result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("search.do")) == 2
+    assert len(chamadas_para("search.do")) == 2
     assert len(result["movimentacoes"]) == 14
 
 
@@ -394,7 +391,7 @@ def test_cpopg_html_sem_movimentacoes_nao_chama_o_ajax(tmp_path, mocker):
         CNJ_INCIDENTE, method="html", baixar_movimentacoes=False,
     )
 
-    assert not _chamadas("carregarMovimentacoesAjax.do")
+    assert not chamadas_para("carregarMovimentacoesAjax.do")
     assert result["movimentacoes"].empty
     assert result["basicos"].iloc[0]["situacao"] == "Extinto"
 
@@ -421,7 +418,7 @@ def test_cpopg_download_com_movimentacoes_baixa_de_novo_o_salvo_sem_elas(tmp_pat
 
     scraper.cpopg_download(CNJ_INCIDENTE, method="html")
 
-    assert len(_chamadas("carregarMovimentacoesAjax.do")) == 3
+    assert len(chamadas_para("carregarMovimentacoesAjax.do")) == 3
     assert len(scraper.cpopg_parse(str(tmp_path / "cpopg"))["movimentacoes"]) == 14
 
 
@@ -439,7 +436,7 @@ def test_cpopg_download_pula_o_processo_ja_salvo(tmp_path, mocker, primeiro, seg
     scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=primeiro)
     scraper.cpopg_download(CNJ_INCIDENTE, method="html", baixar_movimentacoes=segundo)
 
-    assert len(_chamadas("search.do")) == 1
+    assert len(chamadas_para("search.do")) == 1
 
 
 # ---------- method='api': removido ----------------------------------------
@@ -604,8 +601,10 @@ def test_cpopg_lote_vazio_devolve_as_tabelas_vazias(tmp_path):
 
 def test_cpopg_entrada_que_nao_e_texto_vira_linha_de_falha(tmp_path):
     """Número de uma coluna numérica (``numpy.int64``) e ``None`` saem ``entrada_invalida``, sem quebrar o registro."""
+    scraper = jus.scraper("tjsp", download_path=str(tmp_path))
     with pytest.warns(UserWarning, match="entrada_invalida"):
-        result = jus.scraper("tjsp", download_path=str(tmp_path)).cpopg([np.int64(123), None])
+        # Entrada inválida de propósito.
+        result = scraper.cpopg([np.int64(123), None])  # type: ignore[list-item]
 
     assert result["basicos"][["id_processo", "motivo_falha"]].to_dict("records") == [
         {"id_processo": "123", "motivo_falha": "entrada_invalida"},

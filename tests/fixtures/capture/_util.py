@@ -12,8 +12,12 @@ Usage (from repo root)::
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
+import logging
+import warnings
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Protocol
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -21,32 +25,16 @@ from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import AcordaoIndisponivelError
+
+# Mesmos headers que o raspador eSAJ manda, importados para que os samples
+# capturados continuem batendo com o que ele recebe se o cliente mudar. O TJSP
+# usa o UA de Chrome (``CJSG_CHROME_UA``): o eSAJ responde diferente a UAs que
+# não são de navegador, e os matchers de payload dos contratos dependem disso.
+from juscraper.courts._esaj.download import _CHROME_HEADERS as TJSP_CHROME_HEADERS
+from juscraper.courts._esaj.download import _ESAJ_HEADERS as ESAJ_HEADERS
 from juscraper.courts._esaj.parse import _total_declarado
 
-ESAJ_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "juscraper/0.1 (https://github.com/jtrecenti/juscraper)",
-}
-
-# Chrome-flavoured UA that the TJSP cjsg_download.py injects. Mirroring it
-# here keeps the captured samples bit-identical to what the real scraper
-# sends — matters for both contract payload matchers and server-side
-# behaviour (eSAJ behaves differently for non-browser UAs).
-TJSP_CHROME_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-    ),
-}
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -131,6 +119,7 @@ def make_tjsp_cjsg_body(
     tipo_decisao: str = "acordao",
     baixar_sg: bool = True,
     ementa: str = "",
+    numero_recurso: str = "",
     classe: str = "",
     assunto: str = "",
     comarca: str = "",
@@ -152,7 +141,7 @@ def make_tjsp_cjsg_body(
         "dados.buscaInteiroTeor": pesquisa,
         "dados.pesquisarComSinonimos": "S",
         "dados.buscaEmenta": ementa,
-        "dados.nuProcOrigem": "",
+        "dados.nuProcOrigem": numero_recurso,
         "dados.nuRegistro": "",
         "agenteSelectedEntitiesList": "",
         "contadoragente": "0",
@@ -338,24 +327,24 @@ def capture_cjsg_samples(
     dump(dest / "post_initial.html", post_resp.content)
     for pag, resp in zip(typical_pages, get_resps, strict=False):
         dump(dest / f"results_normal_page_{pag:02d}.html", resp.content)
-    print(f"[{tribunal}] typical ({typical_query!r}) → {len(get_resps)} page(s)")
+    logger.info("[%s] typical (%r) → %s page(s)", tribunal, typical_query, len(get_resps))
 
     _, single_resps = fetch_cjsg_pages(
         session, base_url, single_page_query, paginas=(1,), body_builder=body_builder
     )
     dump(dest / "single_page.html", single_resps[0].content)
-    print(f"[{tribunal}] single_page ({single_page_query!r}) → saved")
+    logger.info("[%s] single_page (%r) → saved", tribunal, single_page_query)
 
     _, none_resps = fetch_cjsg_pages(
         session, base_url, no_results_query, paginas=(1,), body_builder=body_builder
     )
     dump(dest / "no_results.html", none_resps[0].content)
-    print(f"[{tribunal}] no_results ({no_results_query!r}) → saved")
+    logger.info("[%s] no_results (%r) → saved", tribunal, no_results_query)
 
     if monocratica_query is not None:
         capture_cjsg_monocratica_sample(session, tribunal, base_url, monocratica_query, body_builder=body_builder)
 
-    print(f"[{tribunal}] ALL samples written to {dest}")
+    logger.info("[%s] ALL samples written to %s", tribunal, dest)
 
 
 def capture_cjsg_monocratica_sample(
@@ -379,13 +368,15 @@ def capture_cjsg_monocratica_sample(
     # Mesma leitura de ``cjsg_n_results``: só o input ``-D``, sem a cascata.
     n_results = _total_declarado(soup) if soup.select_one("input#totalResultadoAbaRetornoFiltro-D") else None
     if n_results is None or not 1 <= n_results <= 20:
-        print(
-            f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}): sem o input -D "
-            f"com 1 a 20 resultados (lido: {n_results}); nada gravado"
+        logger.warning(
+            "[%s] cjsg monocratica_single_page (%r): sem o input -D com 1 a 20 resultados (lido: %s); nada gravado",
+            tribunal,
+            pesquisa,
+            n_results,
         )
         return
     dump(samples_dir_for(tribunal, "cjsg") / "monocratica_single_page.html", resps[0].content)
-    print(f"[{tribunal}] cjsg monocratica_single_page ({pesquisa!r}, {n_results} resultados) → saved")
+    logger.info("[%s] cjsg monocratica_single_page (%r, %s resultados) → saved", tribunal, pesquisa, n_results)
 
 
 def capture_acordao_samples(
@@ -439,6 +430,55 @@ def capture_acordao_samples(
         scraper.session.hooks["response"].append(_gravar)
         try:
             caminho = scraper.baixar_acordao(cnj, data_julgamento)
-            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {caminho}")
+            logger.info("[%s] acordao/%s: %s %s -> %s", tribunal, cenario, cnj, data_julgamento, caminho)
         except AcordaoIndisponivelError as erro:
-            print(f"[{tribunal}] acordao/{cenario}: {cnj} {data_julgamento} -> {type(erro).__name__}: {erro}")
+            logger.info(
+                "[%s] acordao/%s: %s %s -> %s: %s", tribunal, cenario, cnj, data_julgamento, type(erro).__name__, erro
+            )
+
+
+class _ComCpopg(Protocol):
+    """Raspador com sessão ``requests`` e ``cpopg_download`` (PJe dos TRFs e do TJPE, eproc do TRF6)."""
+
+    session: requests.Session
+
+    def cpopg_download(self, id_cnj: str, /) -> list[str | None]:
+        """HTML do detalhe de cada CNJ."""
+
+
+@contextmanager
+def respostas_da_sessao(session: requests.Session) -> Iterator[list[requests.Response]]:
+    """Guarda, por um hook na sessão, cada resposta que ela receber dentro do bloco."""
+    respostas: list[requests.Response] = []
+
+    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
+        respostas.append(resp)
+
+    session.hooks["response"].append(guardar)
+    try:
+        yield respostas
+    finally:
+        session.hooks["response"].remove(guardar)
+
+
+def respostas_do_cpopg(
+    scraper: _ComCpopg,
+    cnj: str,
+    descartar: Callable[[requests.Response], bool] = lambda _resp: False,
+) -> tuple[str | None, list[requests.Response]]:
+    """Roda o ``cpopg_download`` de um raspador e devolve o detalhe e as respostas que ele usou.
+
+    As respostas vêm de um hook na sessão. Ficam de fora os erros que o retry
+    repetiu, os saltos de redirecionamento e o que ``descartar`` apontar (o
+    desafio do WAF, no TJPE): sobra a resposta final de cada requisição.
+    """
+    with respostas_da_sessao(scraper.session) as respostas, warnings.catch_warnings():
+        # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
+        warnings.filterwarnings("error", category=UserWarning)
+        (html,) = scraper.cpopg_download(cnj)
+    return html, [r for r in respostas if r.ok and not r.is_redirect and not descartar(r)]
+
+
+def rotas(respostas: list[requests.Response]) -> list[str]:
+    """``MÉTODO url`` de cada resposta, sem a query string."""
+    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]

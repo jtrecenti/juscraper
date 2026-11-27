@@ -6,6 +6,7 @@ from types import MappingProxyType
 from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
+from juscraper.utils.pagination import paginas_unicas
 
 from .exceptions import TJAPApiError, TJAPSecurityCheckError
 
@@ -143,8 +144,8 @@ def cjsg_download_manager(
             page += 1
         return resultados
 
-    paginas_iter = list(paginas)
+    # Sem o total, a seleção não é cortada: a página além do fim volta vazia.
     resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJAP"):
+    for pagina_1based in tqdm(paginas_unicas(paginas), desc="Baixando CJSG TJAP"):
         resultados.append(_get_page(pagina_1based))
     return resultados

@@ -15,6 +15,7 @@ integral (``bounds_payload``, sem hits): o servidor falso de
 ``tests/stf/_collection_helpers.py`` a usa como molde do envelope.
 """
 import json
+import logging
 import time
 
 from juscraper.courts.stf._collection import bounds_payload
@@ -22,6 +23,8 @@ from juscraper.courts.stf.client import STFScraper
 from juscraper.courts.stf.download import build_payload
 
 from ._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 _CAMPOS_LONGOS = ("decisao_texto", "ementa_texto", "partes_lista_texto")
 
@@ -42,7 +45,7 @@ def _capture(stf: STFScraper, endpoint: str, filename: str, payload: dict | None
     resposta = _sanear(stf._buscar(payload))  # pylint: disable=protected-access
     dest = samples_dir_for("stf", endpoint)
     dump(dest / filename, json.dumps(resposta, ensure_ascii=False, indent=1).encode("utf-8"))
-    print(f"[stf] wrote {endpoint}/{filename}")
+    logger.info("[stf] wrote %s/%s", endpoint, filename)
 
 
 def main() -> None:
@@ -68,4 +71,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

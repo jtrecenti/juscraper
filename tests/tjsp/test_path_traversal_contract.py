@@ -17,6 +17,7 @@ import responses
 import juscraper as jus
 from juscraper.courts.tjsp.cpopg_download import cpopg_download_html, cpopg_download_html_single
 from juscraper.courts.tjsp.cposg_download import _cposg_download_html_single
+from tests._helpers import urls_enviadas
 
 ESAJ = "https://esaj.tjsp.jus.br"
 
@@ -264,5 +265,5 @@ def test_acordao_rejeita_cd_documento_malicioso(tmp_path):
     with pytest.raises(ValueError, match="cdDocumento"):
         scraper.baixar_acordao(CNJ, "01/10/2026")
 
-    assert not any("verificarAcesso" in c.request.url for c in responses.calls)
+    assert not any("verificarAcesso" in url for url in urls_enviadas())
     assert not list(tmp_path.rglob("*.pdf"))

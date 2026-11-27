@@ -22,7 +22,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.aggregators.datajud.client import DatajudScraper
-from tests._helpers import load_sample
+from tests._helpers import load_sample, url_enviada
 from tests.fixtures.capture.datajud import build_payload as _payload
 
 BASE = DatajudScraper.BASE_API_URL
@@ -148,7 +148,7 @@ def test_listar_processos_filtro_cnj_alias_inferido(mocker):
     # The single POST must have hit api_publica_tjsp regardless of how the
     # alias was resolved.
     assert len(responses.calls) == 1
-    assert "api_publica_tjsp" in responses.calls[0].request.url
+    assert "api_publica_tjsp" in url_enviada(responses.calls[0].request)
 
 
 @responses.activate

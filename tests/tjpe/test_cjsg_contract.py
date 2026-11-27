@@ -23,6 +23,7 @@ request in sequence.
 """
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -32,7 +33,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjpe.download import BASE_URL
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import load_sample, urlencoded_body_subset_matcher, urls_enviadas
 from tests.tjpe.test_cjsg_pagination_unit import resultado_sem_cabecalho_com_aviso_na_ementa
 
 CONSULTA_URL = f"{BASE_URL}/consulta.xhtml"
@@ -167,6 +168,22 @@ def test_cjsg_simples_typical(mocker):
     assert df["processo"].nunique() > 1, (
         "todos os processos iguais — paginacao suspeita"
     )
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_cjsg_pagina_repetida_uma_vez_e_alem_do_total_no_log(mocker, caplog):
+    """A página 2 pedida duas vezes sai num POST só; a além do total vai para o log, sem POST."""
+    mocker.patch("time.sleep")
+    _add_get_consulta()
+    _add_post_consulta("cjsg/simples_resultado.html")
+    _add_post_ajax("cjsg/simples_pagina_02.xml")
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.tjpe"):
+        brutos = jus.scraper("tjpe").cjsg_download("dano moral", paginas=[2, 2, 10**6])
+
+    assert len(brutos) == 1
+    assert urls_enviadas().count(RESULTADO_URL) == 1
+    assert "TJPE: página 1000000 fora do intervalo" in caplog.text
 
 
 @responses.activate(registry=OrderedRegistry)

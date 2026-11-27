@@ -62,8 +62,8 @@ def _e_aviso_vazio_ou_mensagem(no: ast.Call) -> bool:
     )
 
 
-def _texto(no: ast.AST) -> str | None:
-    if isinstance(no, ast.Constant) and isinstance(no.value, (str, bytes)):
+def _texto(no: ast.Constant) -> str | None:
+    if isinstance(no.value, (str, bytes)):
         return no.value if isinstance(no.value, str) else no.value.decode("utf-8", "replace")
     return None
 
@@ -92,9 +92,9 @@ def checks_fora_do_aviso(codigo: str) -> list[tuple[int, str]]:
                 continue
             if isinstance(filho, ast.Attribute) and filho.attr == "marcadores":
                 achados.append((filho.lineno, ".marcadores"))
-            texto = _texto(filho)
             if (
-                texto is not None
+                isinstance(filho, ast.Constant)
+                and (texto := _texto(filho)) is not None
                 and id(filho) not in docstrings
                 and (frase := _FRASE_DE_BUSCA_VAZIA.search(texto))
             ):

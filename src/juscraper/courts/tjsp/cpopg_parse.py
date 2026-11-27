@@ -70,40 +70,33 @@ def _normalize_field_name(label: str) -> str:
 def cpopg_parse_manager(
     path: str, metodo: str = "TJSPScraper.cpopg_parse", pedidos: list | None = None,
 ) -> dict[str, pd.DataFrame]:
-    """Parse downloaded files from the first-degree procedural query and return a dict of DataFrames.
+    """Lê os arquivos baixados da consulta processual de primeiro grau e devolve um dicionário de DataFrames.
 
-    Parameters
-    ----------
-    path : str
-        The file path or directory containing the downloaded files.
-    metodo : str
-        Método público que abre o ``UserWarning`` das falhas.
-    pedidos : list, optional
-        CNJs do lote: com eles, só os arquivos e as falhas desses números
-        entram no resultado, e o que um download anterior deixou na pasta
-        fica de fora. ``None`` lê a pasta inteira.
+    Args:
+        path: Arquivo ou diretório com os arquivos baixados.
+        metodo: Método público que abre o ``UserWarning`` das falhas.
+        pedidos: CNJs do lote: com eles, só os arquivos e as falhas desses
+            números entram no resultado, e o que um download anterior deixou na
+            pasta fica de fora. ``None`` lê a pasta inteira.
 
-    Returns
-    -------
-    dict
-        A dictionary where the keys are table names and the values are DataFrames
-        with the parsed data from the case files. Quando ``path`` é um
-        diretório, ``basicos`` ganha a coluna ``motivo_falha``: ``None`` em
-        cada arquivo lido e ``resposta_inesperada`` no arquivo que o parser
-        recusa, que fica numa linha com ``file_path``, ``id_processo`` (o CNJ
-        da pasta do processo) e as demais colunas ``None``. O processo que
-        ``cpopg_download`` não baixou nessa pasta ganha uma linha com
-        ``id_processo`` e o motivo do download. As falhas também saem num
-        único ``UserWarning``.
+    Returns:
+        Dicionário cujas chaves são os nomes das tabelas e cujos valores são
+            DataFrames com os dados lidos dos processos. Quando ``path`` é um
+            diretório, ``basicos`` ganha a coluna ``motivo_falha``: ``None`` em
+            cada arquivo lido e ``resposta_inesperada`` no arquivo que o parser
+            recusa, que fica numa linha com ``file_path``, ``id_processo`` (o CNJ
+            da pasta do processo) e as demais colunas ``None``. O processo que
+            ``cpopg_download`` não baixou nessa pasta ganha uma linha com
+            ``id_processo`` e o motivo do download. As falhas também saem num
+            único ``UserWarning``.
 
-    Raises
-    ------
-    ValueError
-        Quando ``path`` é um diretório sem falha de download registrada e
-        nenhum arquivo dele pôde ser lido, porque todos falharam ou porque
-        não há ``.html``. Devolver ``{}`` esconderia uma falha de leitura atrás
-        de um resultado vazio. Com falha de download registrada, as tabelas
-        saem vazias, com as linhas de falha em ``basicos``.
+    Raises:
+        ValueError: Quando ``path`` é um diretório sem falha de download
+            registrada e nenhum arquivo dele pôde ser lido, porque todos
+            falharam ou porque não há ``.html``. Devolver ``{}`` esconderia uma
+            falha de leitura atrás de um resultado vazio. Com falha de download
+            registrada, as tabelas saem vazias, com as linhas de falha em
+            ``basicos``.
     """
     root = Path(path)
     if root.is_file():

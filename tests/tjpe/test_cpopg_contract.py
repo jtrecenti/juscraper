@@ -12,7 +12,6 @@ from __future__ import annotations
 import errno
 import itertools
 from pathlib import Path
-from urllib.parse import parse_qsl
 
 import pandas as pd
 import pytest
@@ -21,9 +20,16 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
+from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
+from tests._helpers import (
+    assert_unknown_kwarg_raises,
+    corpo_form_enviado,
+    load_sample,
+    load_sample_bytes,
+    urls_enviadas,
+)
 
 BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
@@ -109,7 +115,7 @@ def test_cpopg_sem_desafio_nao_chama_o_playwright(tjpe, obter):
     assert row["processo"] == CNJ_FORMATADO
     assert row["documentos"]
     assert {"classe", "polo_ativo", "movimentacoes", "documentos"} <= set(df.columns)
-    enviado = dict(parse_qsl(responses.calls[1].request.body, keep_blank_values=True))
+    enviado = corpo_form_enviado(responses.calls[1].request)
     assert enviado[
         "fPP:numProcesso-inputNumeroProcessoDecoration:numProcesso-inputNumeroProcesso"
     ] == CNJ_FORMATADO
@@ -324,7 +330,7 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, mocker,
     assert [Path(p).stem for p in segundo["pecas"]] == ids
     assert segundo["pecas_falhas"] == []
     # As peças seguintes do 1º CNJ não são pedidas.
-    assert sum(c.request.url.startswith(DOC_URL) for c in responses.calls) == falha + len(ids)
+    assert sum(url.startswith(DOC_URL) for url in urls_enviadas()) == falha + len(ids)
     assert "No space left on device" in caplog.text
     # Um aviso só, o dos processos: as peças que o erro encerrou não se repetem no das peças.
     (aviso,) = avisos
@@ -385,6 +391,28 @@ def test_rejeita_kwarg_desconhecido_citando_o_metodo_publico(tjpe, metodo):
     assert_unknown_kwarg_raises(
         getattr(tjpe, metodo), "filtro_inexistente", CNJ, rotulo=f"TJPEScraper.{metodo}"
     )
+
+
+def test_cpopg_download_recusa_os_parametros_das_pecas(tjpe):
+    """``cpopg_download`` não baixa peças: o pedido vira ``TypeError``, em vez de sumir."""
+    assert_unknown_kwarg_raises(
+        tjpe.cpopg_download, ["download_pecas", "diretorio"], CNJ, rotulo="TJPEScraper.cpopg_download"
+    )
+    with pytest.raises(TypeError, match=r"use cpopg\(\.\.\., download_pecas=True\)"):
+        tjpe.cpopg_download(CNJ, download_pecas=True)
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(tjpe, mocker, tmp_path):
+    """``diretorio`` sem ``download_pecas=True`` vira aviso que cita o ``TJPEScraper``, sem baixar peças."""
+    consultar = mocker.patch.object(tjpe._consulta(), "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    with pytest.warns(UserWarning, match=r"^TJPEScraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = tjpe.cpopg(CNJ, diretorio=str(diretorio))
+    # A delegação à consulta pública não desloca o aviso para dentro do juscraper.
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with(CNJ, None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
 
 
 def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):

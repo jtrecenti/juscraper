@@ -14,12 +14,11 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 import responses
 from bs4 import BeautifulSoup
-from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpr.download import VISUALIZAR_URL, get_ementa_completa
 from juscraper.courts.tjpr.parse import cjsg_parse
-from tests._helpers import load_sample, query_param_subset_matcher
+from tests._helpers import load_sample, query_param_subset_matcher, urls_enviadas
 from tests.tjpr._helpers import add_ementa_completa, add_home, add_search_page
 
 COLUNAS_TJ = ["processo", "orgao_julgador", "relator", "data_julgamento", "ementa"]
@@ -49,9 +48,9 @@ def _add_ementas_completas() -> None:
 def _buscas_completas() -> list[tuple[str, str, str]]:
     """``(actionType, idProcesso, criterio)`` de cada GET a ``visualizarDecisao.do``."""
     buscas = []
-    for call in responses.calls:
-        if call.request.url.startswith(VISUALIZAR_URL):
-            q = parse_qs(urlsplit(call.request.url).query, keep_blank_values=True)
+    for url in urls_enviadas():
+        if url.startswith(VISUALIZAR_URL):
+            q = parse_qs(urlsplit(url).query, keep_blank_values=True)
             buscas.append((q["actionType"][0], q["idProcesso"][0], q["criterio"][0]))
     return buscas
 
@@ -200,7 +199,8 @@ def test_cjsg_incluir_corte_idh_nao_bool_levanta_antes_da_rede(valor):
 
 def test_cjsg_parse_incluir_corte_idh_nao_bool_levanta():
     with pytest.raises(TypeError, match="incluir_corte_idh deve ser bool"):
-        jus.scraper("tjpr").cjsg_parse([], incluir_corte_idh="false")
+        # Tipo errado de propósito.
+        jus.scraper("tjpr").cjsg_parse([], incluir_corte_idh="false")  # type: ignore[arg-type]
 
 
 @responses.activate

@@ -238,21 +238,6 @@ def test_total_paginas_respeita_teto(total, tamanho, esperado):
     assert FalcaoScraper._total_paginas(total, tamanho) == esperado
 
 
-@pytest.mark.parametrize(
-    "paginas,total_pags,esperado",
-    [
-        (None, 3, [1, 2, 3]),
-        (range(1, 10), 3, [1, 2, 3]),
-        (range(2, 5), 10, [2, 3, 4]),
-        (range(1, 10, 2), 6, [1, 3, 5]),
-        (range(2, 20, 3), 100, [2, 5, 8, 11, 14, 17]),
-        ([1, 5, 99], 4, [1]),
-    ],
-)
-def test_resolver_paginas(paginas, total_pags, esperado):
-    assert list(FalcaoScraper._resolver_paginas(paginas, total_pags)) == esperado
-
-
 def test_verificar_resposta_waf_cloudfront_vira_bot_challenge():
     resp = _resposta(403, b"<HTML><TITLE>ERROR: The request could not be satisfied</TITLE></HTML>",
                      **{"Server": "CloudFront", "Content-Type": "text/html"})

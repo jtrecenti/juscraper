@@ -57,6 +57,20 @@ def test_extract_total_docs_resultado_sem_contagem_com_aviso_na_ementa_nao_zera(
     assert extract_total_docs(resultado_sem_cabecalho_com_aviso_na_ementa()) is None
 
 
+def test_extract_total_docs_sem_o_cabecalho_ementa_com_n_documentos_encontrados_nao_vira_total():
+    """HTML derivado do sample real ``simples_resultado.html``, com o cabeçalho fora do seletor.
+
+    A primeira ementa passa a dizer "3 documentos encontrados". No HTML da
+    página, o rótulo "Documentos encontrados:" vem separado do número por tags,
+    e a ementa não pode virar o total da busca: sem total, o download levanta.
+    """
+    original = _sample("simples_resultado.html")
+    assert original.count("table-header-resultado") == 1
+    html = original.replace("table-header-resultado", "table-header-novo")
+    html = html.replace(_PRIMEIRA_EMENTA, "apreensão de 3 documentos encontrados", 1)
+    assert extract_total_docs(html) is None
+
+
 def test_extract_total_docs_no_results_returns_zero():
     assert extract_total_docs(_sample("no_results.html")) == 0
 

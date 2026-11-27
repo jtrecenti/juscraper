@@ -13,7 +13,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpb.download import CLASSES_URL, SEARCH_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import corpo_enviado, load_sample
 from tests.tjpb._helpers import LARAVEL_COOKIE, add_get_classes
 
 CJSG_FIELDS = {"processo", "ementa", "data_julgamento"}
@@ -96,9 +96,7 @@ def test_cjsg_xsrf_token_is_sent_in_header_and_not_body(mocker):
     assert len(post_calls) == 1
     assert post_calls[0].request.headers["X-XSRF-TOKEN"] == "contrato/csrf"
     assert "XSRF-TOKEN=contrato%2Fcsrf" in post_calls[0].request.headers["Cookie"]
-    body = post_calls[0].request.body
-    body = body.decode("utf-8") if isinstance(body, bytes) else body
-    assert "_token" not in body
+    assert "_token" not in corpo_enviado(post_calls[0].request)
 
 
 @responses.activate

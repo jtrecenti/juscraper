@@ -33,8 +33,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 from ...core.http import RequestFn
-from ...utils.pagination import AvisoVazio, extract_count_with_cascade
-from ...utils.params import normalize_paginas
+from ...utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo, paginas_unicas
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
 from .cjsg_schemas import InputCJSGTRF3
@@ -456,30 +455,25 @@ def cjsg_n_results(html: str) -> int | None:
 
 
 def _paginas_pedidas(paginas: Iterable[int] | None, n_paginas: int | None) -> list[int]:
-    """Resolve a lista de páginas a baixar, 1-based, na ordem pedida.
+    """Resolve a lista de páginas a baixar, 1-based, na ordem pedida e sem repetição.
 
     Com ``paginas=None`` baixa todas; exige o total. Páginas além do total são
-    descartadas sem requisição: o portal não tem o que devolver para elas.
+    descartadas sem requisição, com aviso no log (:func:`paginas_no_intervalo`):
+    o portal não tem o que devolver para elas.
 
     ``n_paginas=None`` só chega aqui para uma primeira página que já passou por
     :func:`_check_lista` e traz documentos, mas cujo resumo e contador não
     foram lidos. Nesse caso o pedido explícito é mantido sem corte, e cada
     página baixada passa pela mesma checagem.
     """
+    if n_paginas is not None:
+        return paginas_no_intervalo(paginas, max(n_paginas, 1), tribunal="TRF3")
     if paginas is None:
-        if n_paginas is None:
-            raise ValueError(
-                "TRF3 cjsg: a primeira página traz documentos, mas o total de "
-                "resultados não pôde ser lido; passe 'paginas' explicitamente."
-            )
-        return list(range(1, max(n_paginas, 1) + 1))
-    pedidas = list(paginas)
-    if n_paginas is None:
-        return pedidas
-    fora = [p for p in pedidas if p > max(n_paginas, 1)]
-    if fora:
-        logger.info("TRF3 cjsg: páginas %s além do total (%s); ignoradas.", fora, n_paginas)
-    return [p for p in pedidas if p <= max(n_paginas, 1)]
+        raise ValueError(
+            "TRF3 cjsg: a primeira página traz documentos, mas o total de "
+            "resultados não pôde ser lido; passe 'paginas' explicitamente."
+        )
+    return list(paginas_unicas(paginas))
 
 
 def cjsg_download_manager(
@@ -558,9 +552,7 @@ def cjsg_download_manager(
 
     total = cjsg_n_results(primeira)
     n_paginas = None if total is None else math.ceil(total / inp.tamanho_pagina)
-    # O pipeline do client já entrega ``paginas`` como lista, range ou None; a
-    # normalização só muda o inteiro de um modelo montado fora dele.
-    pedidas = _paginas_pedidas(normalize_paginas(inp.paginas), n_paginas)
+    pedidas = _paginas_pedidas(inp.paginas_normalizadas, n_paginas)
 
     resultados: list[str] = []
     for pagina in progress(pedidas, desc="Baixando CJSG TRF3", disable=len(pedidas) <= 1):

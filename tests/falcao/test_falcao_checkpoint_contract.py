@@ -4,6 +4,7 @@ O backend bloqueia o IP por cota diária: a retomada não pode gastar requisiç�
 nas páginas já gravadas, nem misturar buscas diferentes no mesmo diretório.
 """
 import json
+import logging
 import warnings
 from pathlib import Path
 
@@ -98,6 +99,22 @@ def test_retomada_com_paginas_explicitas_pula_as_gravadas(falcao, tmp_path):
     falcao.listar_decisoes_download("dano moral", paginas=[2, 4], checkpoint_dir=checkpoint, resume=True)
 
     assert _paginas_pedidas() == [4]
+
+
+@responses.activate
+def test_retomada_completa_avisa_da_pagina_alem_do_total_registrado(falcao, tmp_path, caplog):
+    """Checkpoint completo não requisita nada, mas a página além do total registrado vai para o log."""
+    checkpoint = tmp_path / "coleta"
+    for pagina in (1, 2):
+        _register("acordaos", total=20, pagina=pagina)
+    falcao.listar_decisoes_download("dano moral", checkpoint_dir=checkpoint)
+    responses.reset()
+
+    with caplog.at_level(logging.WARNING, logger="juscraper.falcao"):
+        falcao.listar_decisoes_download("dano moral", paginas=[1, 2, 9], checkpoint_dir=checkpoint, resume=True)
+
+    assert len(responses.calls) == 0
+    assert "Falcao: página 9 fora do intervalo 1-2" in caplog.text
 
 
 @responses.activate

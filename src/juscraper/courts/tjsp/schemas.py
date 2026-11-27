@@ -3,7 +3,7 @@
 TJSP has a divergent public API from the 5 eSAJ-puros:
 
 - ``cjsg``: uses ``baixar_sg: bool`` instead of ``origem: Literal["T","R"]``;
-  drops ``numero_recurso`` and ``data_publicacao_*``.
+  drops ``data_publicacao_*``.
 - ``cjpg``: schemas comuns com o TJMS, em :mod:`juscraper.courts._esaj.schemas`
   (``InputCJPGEsaj``/``OutputCJPGEsaj``); ``InputCJPGTJSP`` e
   ``OutputCJPGTJSP`` continuam aqui como aliases.
@@ -19,57 +19,34 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import (
-    AutoChunkMixin,
-    CnjInputBase,
-    CountOnlyMixin,
-    DataJulgamentoMixin,
-    IdFiltro,
-    IdFiltroUnico,
-    OutputCnjConsultaBase,
-    OutputDataPublicacaoMixin,
-    SearchBase,
-)
-from ...schemas.cjsg import OutputCJSGBase
-from .._esaj.schemas import InputCJPGEsaj, OutputCJPGEsaj
+from ...schemas import CnjInputBase, OutputCnjConsultaBase
+from .._esaj.schemas import InputCJPGEsaj, InputCJSGEsajBase, OutputCJPGEsaj, OutputCJSGEsajBase
 
 
-class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
+class InputCJSGTJSP(InputCJSGEsajBase):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
-    Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
-    TJSP **nao** suporta ``data_publicacao_*`` nem ``numero_recurso``.
+    Herda filtro de data de julgamento via :class:`InputCJSGEsajBase`.
+    TJSP **nao** suporta ``data_publicacao_*``.
 
-    ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
-    ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
-    ``int`` ou ``str`` (single-value, backend ``cdComarca``).
+    ``numero_recurso`` vai em ``dados.nuProcOrigem``, como no resto da
+    familia eSAJ, e filtra pelo numero do recurso (a coluna ``processo``),
+    nao pelo de 1o grau (conferido ao vivo em 27/11/2026).
+
+    ``classe``/``assunto``/``comarca``/``orgao_julgador`` e os demais
+    filtros do formulario vem de :class:`InputCJSGEsajBase`.
     """
 
-    ementa: str | None = None
-    classe: IdFiltro = None
-    assunto: IdFiltro = None
-    comarca: IdFiltroUnico = None
-    orgao_julgador: IdFiltro = None
     baixar_sg: bool = True
-    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
-class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):
+class OutputCJSGTJSP(OutputCJSGEsajBase):
     """Colunas observaveis em uma linha do DataFrame de :meth:`TJSPScraper.cjsg`.
 
-    Herda ``processo``, ``ementa`` e ``data_julgamento`` de
-    :class:`OutputCJSGBase` e ``data_publicacao`` de
-    :class:`OutputDataPublicacaoMixin`, e acrescenta as colunas do parser
-    eSAJ compartilhado. As paginas trazem ``"Classe/Assunto:"`` num rotulo
-    so.
+    Sao as colunas do parser eSAJ compartilhado, herdadas de
+    :class:`OutputCJSGEsajBase`. As paginas do TJSP trazem
+    ``"Classe/Assunto:"`` num rotulo so, entao nao ha coluna ``classe``.
     """
-
-    cd_acordao: str | None = None
-    cd_foro: str | None = None
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe_assunto: str | None = None
-    comarca: str | None = None
 
 
 InputCJPGTJSP = InputCJPGEsaj

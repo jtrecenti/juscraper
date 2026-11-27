@@ -11,25 +11,27 @@ aceitacao em qualquer scraper wired ou a wirar:
 2. O Input schema pydantic declarado para cada endpoint — valida
    ``paginas`` com a anotacao herdada de :class:`SearchBase`.
 
+Do metodo publico, este teste so exige que exponha ``paginas``; a anotacao
+dele e conferida contra o schema por :mod:`tests.schemas.test_signature_types`.
+
 Testar as duas pecas separadamente e mais direto e robusto do que
 chamar cada metodo publico end-to-end (alguns scrapers abrem diretorios
 temporarios, fazem setup de captcha, iniciam sessao HTTP etc. — ruido
 que nao e deste teste). Se uma peca aceitou e a outra tambem, o metodo
 publico aceita por composicao.
-
-Casos conhecidos de drift contra o contrato entram como ``xfail`` e
-viram issues separadas a corrigir em PR proprio.
 """
 from __future__ import annotations
 
 import importlib
 import inspect
+import pkgutil
 from typing import Any, get_args, get_origin
 
 import numpy as np
 import pytest
 from pydantic import BaseModel, ValidationError
 
+import juscraper
 from juscraper.schemas import PaginasMixin
 from juscraper.utils.params import normalize_paginas
 from tests.schemas.test_schema_coverage import (
@@ -37,6 +39,8 @@ from tests.schemas.test_schema_coverage import (
     EXPECTED_COURT_SCHEMAS,
     _iter_aggregator_scrapers,
     _iter_court_scrapers,
+    _resolve,
+    _schemas_mapeados,
 )
 
 SEARCH_ENDPOINTS = frozenset({"cjsg", "cjpg", "listar_processos", "listar_decisoes"})
@@ -47,9 +51,6 @@ PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("range", range(1, 2)),
     ("none", None),
 ]
-
-XFAIL_CASES: dict[tuple[str, str, str], str] = {}
-
 
 def _minimal_kwargs_for_schema(schema_cls: type[BaseModel]) -> dict[str, Any]:
     """Preenche campos ``required`` do schema com valores neutros."""
@@ -63,53 +64,22 @@ def _minimal_kwargs_for_schema(schema_cls: type[BaseModel]) -> dict[str, Any]:
     return kwargs
 
 
-def _resolve_schema(module_path: str, class_name: str) -> type[BaseModel]:
-    mod = importlib.import_module(module_path)
-    schema_cls: type[BaseModel] = getattr(mod, class_name)
-    return schema_cls
-
-
-def _resolve_method(scraper_cls: type, endpoint: str):
-    return getattr(scraper_cls, endpoint, None)
-
-
-def _search_cases(expected_map, scraper_iter):
-    scrapers = dict(scraper_iter())
-    out = []
-    for (name, endpoint), (module_path, class_name) in expected_map.items():
-        if endpoint not in SEARCH_ENDPOINTS:
-            continue
-        cls = scrapers.get(name)
-        if cls is None:
-            continue
-        out.append((name, endpoint, cls, module_path, class_name))
-    return out
-
-
-COURT_CASES = _search_cases(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
-AGGREGATOR_CASES = _search_cases(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
-
-SCHEMA_CASES = [
-    pytest.param(
-        name, endpoint, module_path, class_name, variant_name, paginas_value,
-        id=f"{name}.{endpoint}.schema.{variant_name}",
-    )
-    for name, endpoint, _cls, module_path, class_name in COURT_CASES + AGGREGATOR_CASES
-    for variant_name, paginas_value in PAGINAS_VARIANTS
+SEARCH_CASES = [
+    par
+    for par in _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
+    + _schemas_mapeados(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
+    if par.endpoint in SEARCH_ENDPOINTS
 ]
 
-SIGNATURE_CASES = [
-    pytest.param(
-        name, endpoint, cls, variant_name, paginas_value,
-        id=f"{name}.{endpoint}.signature.{variant_name}",
-    )
-    for name, endpoint, cls, _mp, _cn in COURT_CASES + AGGREGATOR_CASES
+SCHEMA_CASES = [
+    pytest.param(par, variant_name, paginas_value, id=f"{par.sigla}.{par.endpoint}.schema.{variant_name}")
+    for par in SEARCH_CASES
     for variant_name, paginas_value in PAGINAS_VARIANTS
 ]
 
 
 @pytest.mark.parametrize(
-    "variant_name,paginas_value",
+    ("variant_name", "paginas_value"),
     PAGINAS_VARIANTS,
     ids=[v[0] for v in PAGINAS_VARIANTS],
 )
@@ -139,6 +109,19 @@ def test_paginas_mixin_validates_large_range_without_scanning():
 
 
 @pytest.mark.parametrize(
+    ("paginas", "esperado"),
+    [(None, None), (3, range(1, 4)), ([2, 4], [2, 4]), (range(2, 5), range(2, 5))],
+)
+def test_paginas_normalizadas_iguala_normalize_paginas(paginas, esperado):
+    inp = PaginasMixin(paginas=paginas)
+
+    assert inp.paginas_normalizadas == esperado == normalize_paginas(paginas)
+    # ``paginas`` segue como validado, e a propriedade nao vira campo.
+    assert inp.paginas == paginas
+    assert "paginas_normalizadas" not in inp.model_dump()
+
+
+@pytest.mark.parametrize(
     "paginas",
     [0, -1, [], [0], [-1], range(3, 0, -1), True, np.True_, [True], [1, np.True_], (True,)],
 )
@@ -147,21 +130,38 @@ def test_paginas_mixin_rejects_invalid_selections(paginas):
         PaginasMixin(paginas=paginas)
 
 
-@pytest.mark.parametrize(
-    "name,endpoint,module_path,class_name,variant_name,paginas_value",
-    SCHEMA_CASES,
-)
-def test_schema_accepts_paginas(
-    name, endpoint, module_path, class_name, variant_name, paginas_value
-):
-    """Todo Input<Endpoint><Tribunal> aceita ``paginas`` em qualquer das 4 formas."""
-    xfail_reason = XFAIL_CASES.get((name, endpoint, variant_name))
-    if xfail_reason:
-        pytest.xfail(xfail_reason)
+def _schemas_com_paginas() -> list[type[BaseModel]]:
+    """Todo modelo pydantic dos modulos ``*schemas`` com campo ``paginas``."""
+    found: dict[str, type[BaseModel]] = {}
+    for modinfo in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
+        if not modinfo.name.rsplit(".", 1)[-1].endswith("schemas"):
+            continue
+        mod = importlib.import_module(modinfo.name)
+        for obj in vars(mod).values():
+            if (
+                inspect.isclass(obj)
+                and issubclass(obj, BaseModel)
+                and obj is not PaginasMixin
+                and "paginas" in getattr(obj, "model_fields", {})
+            ):
+                found[f"{obj.__module__}.{obj.__qualname__}"] = obj
+    return [found[k] for k in sorted(found)]
 
-    schema_cls = _resolve_schema(module_path, class_name)
-    if "paginas" not in schema_cls.model_fields:
-        pytest.skip(f"{class_name} nao declara campo ``paginas``")
+
+@pytest.mark.parametrize("schema_cls", _schemas_com_paginas(), ids=lambda c: c.__name__)
+def test_schema_com_paginas_herda_paginas_mixin(schema_cls):
+    """Quem declara ``paginas`` sem o mixin perde o validador (``paginas=0`` passa)."""
+    assert issubclass(schema_cls, PaginasMixin)
+    field = schema_cls.model_fields["paginas"]
+    assert field.annotation == PaginasMixin.model_fields["paginas"].annotation
+
+
+@pytest.mark.parametrize(("par", "variant_name", "paginas_value"), SCHEMA_CASES)
+def test_schema_accepts_paginas(par, variant_name, paginas_value):
+    """Todo Input<Endpoint><Tribunal> declara ``paginas`` e o aceita nas 4 formas."""
+    schema_cls = _resolve(par.modulo, par.classe)
+    assert schema_cls is not None, f"{par.modulo}:{par.classe} nao encontrado"
+    assert "paginas" in schema_cls.model_fields, f"{par.classe} nao declara campo ``paginas``"
 
     kwargs = _minimal_kwargs_for_schema(schema_cls)
     kwargs["paginas"] = paginas_value
@@ -172,7 +172,7 @@ def test_schema_accepts_paginas(
         errors = [e for e in exc.errors() if "paginas" in e.get("loc", ())]
         if errors:
             pytest.fail(
-                f"{class_name} rejeitou paginas={paginas_value!r} ({variant_name}): "
+                f"{par.classe} rejeitou paginas={paginas_value!r} ({variant_name}): "
                 f"{errors}"
             )
         # Erro em outro campo (fixture/required nao preenchido) — nao e deste teste.
@@ -180,46 +180,16 @@ def test_schema_accepts_paginas(
 
 
 @pytest.mark.parametrize(
-    "name,endpoint,scraper_cls,variant_name,paginas_value",
-    SIGNATURE_CASES,
+    "par", SEARCH_CASES, ids=[f"{par.sigla}.{par.endpoint}" for par in SEARCH_CASES]
 )
-def test_public_method_accepts_paginas(
-    name, endpoint, scraper_cls, variant_name, paginas_value
-):
-    """Assinatura do metodo publico declara ``paginas`` em tipo compativel
-    com o contrato de :class:`SearchBase` — ``int | list | range | None``.
+def test_public_method_accepts_paginas(par):
+    """Metodo publico de busca expoe ``paginas``, como promete :class:`SearchBase`.
+
+    Com o campo tambem no schema (:func:`test_schema_accepts_paginas`),
+    :mod:`tests.schemas.test_signature_types` confere a anotacao.
     """
-    xfail_reason = XFAIL_CASES.get((name, endpoint, variant_name))
-    if xfail_reason:
-        pytest.xfail(xfail_reason)
-
-    method = _resolve_method(scraper_cls, endpoint)
-    assert method is not None, f"{scraper_cls.__name__}.{endpoint} nao existe"
-
-    sig = inspect.signature(method)
-    if "paginas" not in sig.parameters:
-        pytest.fail(
-            f"{scraper_cls.__name__}.{endpoint} nao expoe parametro ``paginas`` "
-            "— viola o contrato de SearchBase para endpoints de busca."
-        )
-
-    annotation = sig.parameters["paginas"].annotation
-    # Anotacao e string (``from __future__ import annotations``) ou tipo.
-    anno_str = str(annotation).lower()
-
-    # Tipos aceitos: int, list, range, None (Optional). Checa que todos
-    # aparecem na anotacao canonica.
-    expected_tokens = {
-        "int": ("int",),
-        "list": ("list",),
-        "range": ("range",),
-        "none": ("none", "optional"),
-    }
-    if variant_name in expected_tokens:
-        tokens = expected_tokens[variant_name]
-        if not any(tok in anno_str for tok in tokens):
-            pytest.fail(
-                f"{scraper_cls.__name__}.{endpoint} tem anotacao ``paginas: "
-                f"{annotation}`` — nao inclui ``{variant_name}`` declarado no "
-                f"contrato de SearchBase (int | list | range | None)."
-            )
+    method = getattr(par.raspador, par.endpoint)
+    assert "paginas" in inspect.signature(method).parameters, (
+        f"{par.raspador.__name__}.{par.endpoint} nao expoe parametro ``paginas`` "
+        "— viola o contrato de SearchBase para endpoints de busca."
+    )

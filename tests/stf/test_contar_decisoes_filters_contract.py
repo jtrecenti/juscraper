@@ -1,5 +1,4 @@
 """Filter propagation, empty result and aliases for STF contar_decisoes."""
-import json
 
 import pytest
 import responses
@@ -8,7 +7,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.stf.download import BASE_URL, build_payload
-from tests._helpers import load_sample
+from tests._helpers import corpo_json_enviado, load_sample
 from tests.stf._collection_helpers import assert_filtros_no_corpo
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
@@ -57,7 +56,7 @@ def test_todos_os_filtros_chegam_ao_corpo_e_busca_vazia_da_total_zero(stf):
     assert len(responses.calls) == 1
     assert df.iloc[0].to_dict() == {"faceta": "total", "valor": None, "n": 0}
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
-    assert_filtros_no_corpo(json.loads(responses.calls[0].request.body), PESQUISA, ["Rcl", "ARE"])
+    assert_filtros_no_corpo(corpo_json_enviado(responses.calls[0].request), PESQUISA, ["Rcl", "ARE"])
 
 
 @responses.activate
@@ -94,7 +93,7 @@ def test_class_filter_reaches_base_and_boolean_facets(stf, base):
 
     stf.contar_decisoes(PESQUISA, base=base, classe="Rcl")
 
-    payload = json.loads(responses.calls[0].request.body)
+    payload = corpo_json_enviado(responses.calls[0].request)
     class_filter = {"terms": {"processo_classe_processual_unificada_classe_sigla.keyword": ["Rcl"]}}
     facets = {name: agg for name, agg in payload["aggs"].items() if name == "base_agg" or name.startswith("is_")}
     assert "base_agg" in facets
