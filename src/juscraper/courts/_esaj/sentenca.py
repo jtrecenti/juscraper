@@ -58,7 +58,7 @@ class EsajSentencaScraper(EsajSearchScraper):
         cd_processo: str,
         cd_foro: str | float,
         cd_documento: str | float,
-        nm_alias: str | None = None,
+        nm_alias: str | float | None = None,
         diretorio: str | None = None,
     ) -> str:
         """Baixa o PDF da sentença de uma linha do cjpg.
@@ -74,8 +74,8 @@ class EsajSentencaScraper(EsajSearchScraper):
                 inteiro (``126.0``) da coluna lida de CSV também vale.
             cd_documento (str | float): Coluna ``cd_documento`` do cjpg,
                 também como ``float`` inteiro.
-            nm_alias (str | None): Coluna ``nm_alias`` do cjpg, que costuma vir
-                vazia no TJSP. Default ``None``.
+            nm_alias (str | float | None): Coluna ``nm_alias`` do cjpg, que costuma
+                vir vazia no TJSP (``NaN`` quando lida de CSV). Default ``None``.
             diretorio (str | None): Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/sentencas/<cd_processo>_<cd_documento>.pdf``.
