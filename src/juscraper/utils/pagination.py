@@ -58,8 +58,8 @@ class AvisoVazio(NamedTuple):
             texto de cada elemento que os seletores casam.
     """
 
-    seletores: Sequence[str]
-    marcadores: Sequence[str]
+    seletores: tuple[str, ...]
+    marcadores: tuple[str, ...]
 
 
 def _tem_aviso_vazio(soup: Tag, aviso: AvisoVazio | None) -> bool:
@@ -146,7 +146,8 @@ def extract_count_with_cascade(
             (:class:`AvisoVazio`), consultado quando a cascata nao acha
             contagem; se algum marcador aparece no texto de algum elemento
             dos seletores do aviso, o util retorna ``0``. Fora desses
-            elementos o marcador nao conta.
+            elementos o marcador nao conta. Com uma ``Tag``, os seletores
+            casam os descendentes dela, como ``css_selectors``.
         fallback_html: Se ``True``, as regex rodam no HTML bruto quando
             nenhum seletor casa elemento com texto. Default ``False``: o
             HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
