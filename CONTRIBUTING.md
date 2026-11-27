@@ -514,7 +514,7 @@ Em `Args:` e `Raises:`, a primeira linha de cada entrada traz o nome inteiro at�
 
 A entrada de `Returns:` traz só a descrição: o tipo vem da anotação de retorno da assinatura. Escrito antes dos dois-pontos, como em `pd.DataFrame: ...` ou `str: ...`, ele sai repetido na tabela. Só quando a assinatura não anota o retorno, escrever o tipo entre parênteses, como em `(dict[str, str]): ...`; numa função anotada, os parênteses sobrepõem a anotação. Sem anotação e sem parênteses, a referência sai sem tipo.
 
-Em `Args:`, o parâmetro anotado na assinatura leva só o nome e a descrição, como em `pesquisa: Termo de busca livre.`: a referência mostra o tipo da anotação. Escrito entre parênteses, como em `pesquisa (str): ...`, ele se sobrepõe à anotação na tabela, mesmo quando diverge dela, e a cópia diverge na primeira mudança da assinatura. O tipo entre parênteses fica só para parâmetro sem anotação. Parâmetros anotados não se agrupam numa entrada (`inicio, fim: ...`): o griffe não acha o nome agrupado na assinatura e a referência sai sem tipo; escrever uma entrada para cada um. A descrição continua citando os valores aceitos, inclusive os deprecados, porque a anotação de um `Literal` aparece pelo nome do alias (`TipoDecisao`).
+Em `Args:`, o parâmetro anotado na assinatura leva só o nome e a descrição, como em `pesquisa: Termo de busca livre.`: a referência mostra o tipo da anotação. Escrito entre parênteses, como em `pesquisa (str): ...`, ele se sobrepõe à anotação e passa a divergir dela na primeira mudança da assinatura. O tipo entre parênteses fica só para parâmetro sem anotação. Parâmetros anotados não se agrupam numa entrada (`inicio, fim: ...`): o griffe não acha o nome agrupado na assinatura e a referência sai sem tipo; escrever uma entrada para cada um. A descrição continua citando os valores aceitos, inclusive os deprecados, porque a anotação de um `Literal` aparece pelo nome do alias (`TipoDecisao`).
 
 O `quartodoc build` passa em todos esses casos; quem reprova é `tests/test_docstring_griffe.py`.
 
@@ -576,11 +576,11 @@ Os filtros em `**kwargs` não têm anotação, então o tipo entre parênteses d
 
 - a anotação do campo, com `| None` quando o campo aceita `None` (`str | None`, `bool`, `Literal["T", "R"]`);
 - o `json_schema_input_type` do `BeforeValidator`, quando o campo o declara: em `IdFiltro`, `int | str | list[int | str] | None`;
-- `str | date | None` nos campos `data_*_inicio`/`_fim` que o pipeline converte de `date` antes do pydantic (`datetime` é subclasse de `date`; a descrição cita os dois).
+- `str | date | None` nos campos de data que o cliente converte de `date` antes do pydantic: os de `DATE_CANONICAL` (`src/juscraper/utils/params.py`) e, no Falcão, `data_juntada_*` (`datetime` é subclasse de `date`; a descrição cita os dois).
 
-`Literal` curto vai por extenso, em aspas duplas: `Literal["ementa", "inteiro_teor"]`. Quando ele não cabe na linha do bullet, escrever o nome do alias definido no módulo do schema ou do scraper, como `BaseCJSGTRF3` no TRF3 ou `CompetenciaAceita | None` no TJRJ, e listar os valores na descrição: a referência mostra o nome como texto, sem link nem valores. Valores deprecados, convertidos antes do pydantic, não entram no tipo; ficam em `Aliases deprecados:`.
+`Literal` curto vai por extenso, em aspas duplas: `Literal["ementa", "inteiro_teor"]`. Quando ele não cabe na linha do bullet, escrever o nome do alias definido no módulo do schema ou do scraper, como `BaseCJSGTRF3` no TRF3 ou `CompetenciaAceita | None` no TJRJ, e listar os valores na descrição: a referência mostra o nome como texto, sem link nem valores. Valores deprecados não entram no tipo.
 
-Campo que aceita mais do que a anotação por um `field_validator(mode="before")` ou por conversão no cliente, como o `int` que o TJRJ converte em `str`, entra em `AMPLIADOS` de `tests/schemas/test_docstring_parity.py`, com o tipo aceito e o motivo.
+Campo que aceita mais do que a anotação por um `field_validator(mode="before")` ou por conversão no cliente, como o `int` que o TJRJ converte em `str`, entra em `AMPLIADOS` de `tests/schemas/test_docstring_parity.py`, com o tipo aceito e o motivo, pela classe que declara o validador.
 
 ### Métodos de download
 
@@ -590,7 +590,7 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 
 `tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` exige igualdade entre os filtros documentados e os campos do modelo nos endpoints registrados em `CASES`. Ao adicionar um método ou override com schema próprio e filtros em `**kwargs`, registrar o caso. O teste não descobre automaticamente novos endpoints.
 
-`test_docstring_declares_schema_types` compara, nos mesmos casos, o tipo de cada bullet com o que o schema aceita, nas regras de "Tipo dos filtros em `**kwargs`". A comparação ignora a ordem da união e resolve nomes de alias.
+`test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
 
 `test_download_docstring_references_toplevel` verifica a referência `:meth:` nos pares registrados em `DOWNLOAD_REFERENCE_CASES`. Registrar novos pares nessa lista. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
 

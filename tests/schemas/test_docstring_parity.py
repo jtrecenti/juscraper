@@ -21,6 +21,8 @@ from typing import Any, Literal
 import pytest
 from pydantic_core import PydanticUndefined
 
+from juscraper.utils.params import DATE_CANONICAL
+
 # Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
 # secao propria da docstring (``Aliases deprecados``) mas nao sao campos
 # do schema. Mesma lista que tests/schemas/test_signature_parity.py.
@@ -97,20 +99,15 @@ CASES = [
 # "* ``foo`` (tipo): ..." quanto "* ``foo`` / ``bar``".
 _NAME_RE = re.compile(r"``(\w+)``")
 _BULLET_LINE_RE = re.compile(r"^\s*\*\s+")
-# Limites da regiao "**kwargs:" — qualquer secao de top-level subsequente
-# (linha que termina em ":" sem indent, ou "Aliases deprecados ..." que
-# o Google docstring formata sem dois pontos no nome canonico).
-_SECTION_END_RE = re.compile(
-    r"^(Aliases\s+deprecados|Raises|Returns|Examples|See\s+also|Yields|Note|Avisos|Warning)",
-    re.IGNORECASE,
-)
+# Tipo entre parenteses no comeco do texto, que pode ocupar mais de uma linha.
+_TYPE_RE = re.compile(r"\(([^)]*)\)")
 
 
 def _kwargs_bullets(method) -> list[str]:
-    """Bullets da seção ``**kwargs:``, cada um com as continuações numa linha.
+    """Bullets da seção ``**kwargs:``, cada um com as linhas de continuação.
 
-    A região começa em ``**kwargs:`` e termina na próxima seção top-level
-    (Aliases deprecados, Raises, Returns, Examples, See also).
+    A região começa em ``**kwargs:`` e termina na primeira linha sem recuo,
+    que é a próxima seção (``Aliases deprecados``, ``Raises``, ``Avisos``...).
     """
     doc = inspect.getdoc(method) or ""
     in_kwargs = False
@@ -123,7 +120,7 @@ def _kwargs_bullets(method) -> list[str]:
             continue
         if not in_kwargs:
             continue
-        if not line.startswith(" ") and _SECTION_END_RE.match(line):
+        if stripped and not line.startswith(" "):
             break
         if _BULLET_LINE_RE.match(line):
             recuo = len(line) - len(line.lstrip())
@@ -131,16 +128,6 @@ def _kwargs_bullets(method) -> list[str]:
         elif bullets and stripped and len(line) - len(line.lstrip()) > recuo:
             bullets[-1] += "\n" + stripped
     return bullets
-
-
-def _fecha_parenteses(texto: str) -> int:
-    """Posição do ``)`` que fecha o ``(`` em ``texto[0]``; ``-1`` sem par."""
-    nivel = 0
-    for pos, char in enumerate(texto):
-        nivel += {"(": 1, ")": -1}.get(char, 0)
-        if nivel == 0:
-            return pos
-    return -1
 
 
 def _docstring_bullets(method) -> dict[str, str | None]:
@@ -158,11 +145,8 @@ def _docstring_bullets(method) -> dict[str, str | None]:
         primeira, _, resto = bullet.partition("\n")
         cut = min((pos for pos in (primeira.find("("), primeira.find(":")) if pos != -1), default=len(primeira))
         # Os nomes ficam na primeira linha; o tipo pode abrir a continuação.
-        cauda = primeira[cut:] if cut < len(primeira) else resto
-        declared = None
-        if cauda.startswith("("):
-            fim = _fecha_parenteses(cauda)
-            declared = " ".join(cauda[1:fim].split()) if fim > 0 else None
+        tipo = _TYPE_RE.match(primeira[cut:] or resto)
+        declared = " ".join(tipo.group(1).split()) if tipo else None
         for name in _NAME_RE.findall(primeira[:cut]):
             bullets.setdefault(name, declared)
     return bullets
@@ -211,39 +195,27 @@ def test_docstring_lists_schema_fields(
 # em texto antes do pydantic (``coerce_brazilian_date``): a docstring
 # acrescenta ``date`` ao tipo do schema; ``datetime`` é subclasse de ``date``.
 # O Falcão faz o mesmo em ``data_juntada_*``.
-_DATAS_NORMALIZADAS = frozenset({
-    "data_julgamento_inicio", "data_julgamento_fim",
-    "data_publicacao_inicio", "data_publicacao_fim",
-    "data_juntada_inicio", "data_juntada_fim",
-})
+_DATAS_NORMALIZADAS = frozenset(DATE_CANONICAL) | {"data_juntada_inicio", "data_juntada_fim"}
 
 #: Campo que aceita mais do que a anotação do schema, por um
 #: ``field_validator(mode="before")`` ou por conversão no cliente antes do
-#: pydantic. O valor é o tipo que a docstring declara e o motivo.
-AMPLIADOS: dict[tuple[str, str], tuple[object, str]] = {
-    ("InputCJSGTJRJ", "competencia"): (
-        Literal["1", "2", "3", 1, 2, 3] | None,
-        "int, que o field_validator do schema converte em str",
-    ),
-    ("InputCJSGTJRJ", "origem"): (
-        Literal["1", "2", "3", "4", "5", 1, 2, 3, 4, 5],
-        "int, que o field_validator do schema converte em str",
-    ),
-    ("InputListarProcessosDataJud", "assunto"): (
-        list[str | int] | None,
-        "int, que o field_validator do schema converte em str",
-    ),
-    ("InputListarProcessosDataJud", "movimentos_codigo"): (
-        list[int | str] | None,
-        "str numérica, que o field_validator do schema converte em int",
-    ),
+#: pydantic: o tipo que a docstring declara, com o motivo em comentário. A
+#: chave é a classe que declara o campo ou o validador (vale para as subclasses).
+AMPLIADOS: dict[tuple[str, str], object] = {
+    # int, que o field_validator do schema converte em str.
+    ("InputCJSGTJRJ", "competencia"): Literal["1", "2", "3", 1, 2, 3] | None,
+    ("InputCJSGTJRJ", "origem"): Literal["1", "2", "3", "4", "5", 1, 2, 3, 4, 5],
+    ("_DatajudCoercaoMixin", "assunto"): list[str | int] | None,
+    # str numérica, que o field_validator do schema converte em int.
+    ("_DatajudCoercaoMixin", "movimentos_codigo"): list[int | str] | None,
 }
 
 
 def _tipo_de_entrada(schema, nome: str) -> object:
     """Tipo que o filtro aceita: o de entrada do validador, se houver, ou a anotação."""
-    if (schema.__name__, nome) in AMPLIADOS:
-        return AMPLIADOS[schema.__name__, nome][0]
+    for classe in schema.__mro__:
+        if (classe.__name__, nome) in AMPLIADOS:
+            return AMPLIADOS[classe.__name__, nome]
     campo = schema.model_fields[nome]
     for metadado in campo.metadata:
         entrada = getattr(metadado, "json_schema_input_type", PydanticUndefined)
@@ -272,7 +244,10 @@ def _membros(tipo: object) -> frozenset:
 
 
 def _formatar(tipo: object) -> str:
-    """Tipo como a docstring o escreve: ``Literal["a", "b"] | None``."""
+    """Tipo como a docstring o escreve (``Literal["a", "b"] | None``), para colar da mensagem.
+
+    Percorre as mesmas formas de :func:`_membros`; tipo novo entra nas duas.
+    """
     origem = typing.get_origin(tipo)
     argumentos = typing.get_args(tipo)
     if origem is typing.Annotated:

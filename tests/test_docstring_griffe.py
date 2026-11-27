@@ -6,8 +6,8 @@ falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em d
 linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
 lê com itens a mais, sem tipo, com o tipo repetido ou com tipo diferente da
 assinatura, entrada de ``Args:`` com tipo escrito em parâmetro anotado (o
-tipo da docstring se sobrepõe à anotação) e a seção ``Warns:``, que derruba o build. Os casos e as formas
-certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
+tipo da docstring se sobrepõe à anotação) e a seção ``Warns:``, que derruba
+o build. Os casos e as formas certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
