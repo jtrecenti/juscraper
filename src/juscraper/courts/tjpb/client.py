@@ -208,7 +208,7 @@ class TJPBScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             nr_processo=inp.numero_processo or "",
             id_classe=inp.id_classe or "",

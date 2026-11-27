@@ -223,7 +223,7 @@ class TJRNScraper(HTTPScraper):
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
             buscar_em=inp.buscar_em,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             nr_processo=inp.numero_processo or "",
