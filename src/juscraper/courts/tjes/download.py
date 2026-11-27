@@ -1,8 +1,10 @@
 """Downloads raw results from the TJES jurisprudence search."""
-from typing import Final
+from typing import Final, get_args
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import baixar_paginas_pedidas
+
+from .schemas import CoreCJSG
 
 BASE_URL = "https://sistemas.tjes.jus.br/consulta-jurisprudencia/api"
 
@@ -16,7 +18,7 @@ CORES = {
 }
 
 DEFAULT_CORE: Final = "pje2g"
-CJSG_CORES = {"pje2g", "pje2g_mono", "legado", "turma_recursal_legado"}
+CJSG_CORES = frozenset(get_args(CoreCJSG))
 CJPG_CORE = "pje1g"
 DEFAULT_PER_PAGE = 20
 

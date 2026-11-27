@@ -49,12 +49,6 @@ TEXTO_LIVRE: dict[tuple[str, str], str] = {
 }
 
 
-def _tem_literal(anotacao: object) -> bool:
-    return typing.get_origin(anotacao) is typing.Literal or any(
-        _tem_literal(arg) for arg in typing.get_args(anotacao)
-    )
-
-
 def _valores_literal(anotacao: object) -> set[object]:
     if typing.get_origin(anotacao) is typing.Literal:
         return set(typing.get_args(anotacao))
@@ -92,7 +86,7 @@ def _casos() -> list[Caso]:
                 casos.extend(
                     (sigla, nome, campo, metodo, info.annotation)
                     for campo, info in schema.model_fields.items()
-                    if campo in parametros and _tem_literal(info.annotation)
+                    if campo in parametros and _valores_literal(info.annotation)
                 )
     return casos
 
@@ -128,5 +122,12 @@ def test_assinatura_anota_o_dominio_do_schema(sigla, metodo_nome, campo, metodo,
     assert anotacao != anotacao_schema, f"{local} ja bate com o schema: remova-o de AMPLIADOS."
     faltam = _valores_literal(anotacao_schema) - _valores_literal(anotacao)
     assert not faltam, f"{local} nao aceita {faltam}, que o schema aceita."
-    livres = _tipos_livres(anotacao) & {str, int}
+    livres = _tipos_livres(anotacao) - {type(None), bool}
     assert not livres, f"{local} aceita {livres} livre; restrinja a valores Literal."
+    # Assinatura com codigos em ``int`` (que o schema converte em ``str``) repete todos eles.
+    valores = _valores_literal(anotacao)
+    if any(type(valor) is int for valor in valores):
+        sem_int = {
+            v for v in _valores_literal(anotacao_schema) if isinstance(v, str) and v.isdigit() and int(v) not in valores
+        }
+        assert not sem_int, f"{local} nao aceita em int os codigos {sem_int}, que o schema aceita em str."
