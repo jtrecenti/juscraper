@@ -124,8 +124,8 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         Override raso de :meth:`EsajSearchScraper.cjsg` so para ancorar a
         docstring TJSP-especifica: o schema validador e
         :class:`InputCJSGTJSP`, que difere do schema default da familia
-        (sem ``numero_recurso``/``data_publicacao_*``/``origem``; com
-        ``baixar_sg``). A logica de execucao continua na base.
+        (sem ``data_publicacao_*``/``origem``; com ``baixar_sg``). A logica
+        de execucao continua na base.
 
         Diferente da familia eSAJ pura, ``pesquisa`` aceita string vazia
         — o usuario pode buscar so por filtros (ex.: ``classe``,
@@ -143,6 +143,9 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
                 * ``ementa`` (str): Termo buscado especificamente na
                   ementa.
+                * ``numero_recurso`` (str): Numero do recurso (o
+                  ``processo`` das linhas do resultado), com ou sem
+                  mascara. Backend: ``dados.nuProcOrigem``.
                 * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
                   da classe processual.
                 * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
@@ -273,6 +276,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         body: dict = build_tjsp_cjsg_body(
             pesquisa=data["pesquisa"],
             ementa=data.get("ementa"),
+            numero_recurso=data.get("numero_recurso"),
             classe=data.get("classe"),
             assunto=data.get("assunto"),
             comarca=data.get("comarca"),

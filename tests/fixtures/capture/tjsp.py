@@ -85,6 +85,32 @@ def capture_cjsg() -> None:
         dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
         logger.info("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
     capture_cjsg_sem_ementa()
+    capture_cjsg_numero_recurso()
+
+
+# Recurso com um acórdão só (julgado em 01/10/2026), usado no filtro ``numero_recurso``.
+CJSG_NUMERO_RECURSO = "1507541-25.2025.8.26.0425"
+
+
+def capture_cjsg_numero_recurso() -> None:
+    """Grava ``cjsg/numero_recurso.html``: busca só pelo número do recurso.
+
+    O filtro vai em ``dados.nuProcOrigem``. Em 27/11/2026, a busca trouxe uma
+    linha, com o próprio recurso no ``processo``.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "",
+        body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(
+            pesquisa, numero_recurso=CJSG_NUMERO_RECURSO, **kw
+        ),
+    )
+    linhas = BeautifulSoup(resps[0].text, "html.parser").find_all("tr", class_="fundocinza1")
+    if len(linhas) != 1 or CJSG_NUMERO_RECURSO not in resps[0].text:
+        # Sem o recurso como única linha, o sample deixaria de mostrar o filtro.
+        logger.info("[tjsp] cjsg numero_recurso: %s linhas; sample mantido", len(linhas))
+        return
+    dump(samples_dir_for("tjsp", "cjsg") / "numero_recurso.html", resps[0].content)
+    logger.info("[tjsp] cjsg numero_recurso (%s) → saved", CJSG_NUMERO_RECURSO)
 
 
 def capture_cjsg_sem_ementa() -> None:
