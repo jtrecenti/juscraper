@@ -18,7 +18,7 @@ import functools
 import logging
 import shutil
 from collections.abc import Callable, Mapping
-from typing import Any, ClassVar, Literal, cast
+from typing import Any, ClassVar, Literal, cast, overload
 
 import pandas as pd
 import requests
@@ -401,6 +401,48 @@ class EsajSearchScraper(HTTPScraper):
         """
 
     # --- cjsg -----------------------------------------------------------
+
+    # Overloads só para o verificador de tipos: ``count_only=True`` devolve o
+    # ``int`` da contagem; com ``False`` ou sem ``count_only``, o ``DataFrame``.
+    # A última não nomeia ``count_only``, para que ``**filtros`` não seja
+    # conferido contra ele.
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     def cjsg(
         self,

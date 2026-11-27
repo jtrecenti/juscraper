@@ -63,6 +63,11 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 - `juscraper.core.failures`: motivo `captcha_esgotado` (`MOTIVO_CAPTCHA_ESGOTADO`), para o captcha que o portal recusou em todas as tentativas, e a exceção `juscraper.core.exceptions.CaptchaEsgotadoError`, subclasse de `RuntimeError`, que o `cjsg` do TJMG levanta nesse caso; no `cpopg` do TRF6, o captcha esgotado vira linha com esse motivo.
 - `juscraper.core.exceptions.BloqueioAntiBotWarning`, subclasse de `UserWarning`: o aviso agregado das falhas por linha sai nesta categoria quando alguma linha tem `bloqueio_anti_bot`, mesmo que a mensagem cite só as três primeiras falhas. Quem filtra `UserWarning` não precisa mudar nada.
 - `juscraper.core.exceptions.BotChallengeBlockedError` aceita `mensagem=`, que substitui o texto padrão sobre o HTTP 403.
+- Tipos para quem usa verificador de tipos (mypy, Pyright, Pylance): o pacote passa a trazer o marcador `py.typed` (PEP 561), e `jus.scraper("tjrn")` passa a ter o tipo da classe do raspador (`TJRNScraper`), com uma overload por sigla. Antes, o mypy tratava o juscraper instalado como não tipado (`import-untyped`) e tudo virava `Any`; agora ele confere as chamadas, e o editor completa os métodos e aponta filtro com valor fora do aceito (`jus.scraper("tjrn").cjsg("x", sistema="pje")`). Em tempo de execução nada muda.
+  - Com sigla em variável ou em maiúsculas, `jus.scraper(sigla)` continua `Any`, e os argumentos do construtor (`download_path`, `sleep_time` etc.) não são conferidos.
+  - O `cjsg` do eSAJ e o `cjpg` do TJSP e do TJMS devolvem `DataFrame` no tipo, e `int` só com `count_only=True`; antes o tipo era `DataFrame | int`, e `df.head()` seria apontado.
+  - Os tipos de entrada passam a aceitar o que o runtime já aceitava: qualquer coleção de CNJs (lista, tupla, coluna do DataFrame) em `cpopg`, `cposg` e seus `_download` do TJSP; o código `float` lido de CSV em `baixar_sentenca` (TJSP e TJMS) e `baixar_acordao` (TJCE e TJMS); e o `NaN` da célula vazia em `nm_alias`.
+  - Código que já passava no verificador pode passar a ter avisos, como o resultado de `cpopg_download` dos TRFs, que traz `None` para o processo que falhou e precisa ser conferido antes de `len()`.
 
 ### Changed
 

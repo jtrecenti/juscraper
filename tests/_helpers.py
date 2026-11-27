@@ -12,6 +12,7 @@ Examples
 import json
 import re
 from collections.abc import Callable, Mapping, Sequence
+from importlib import import_module
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import parse_qs, parse_qsl, urlparse
@@ -21,9 +22,17 @@ import responses
 from requests import PreparedRequest
 from responses import matchers
 
+from juscraper import _SCRAPERS
 from juscraper.courts._esaj.acordao import parse_cursor
 
 _SAMPLES_ROOT = Path(__file__).parent
+
+
+def classe_da_sigla(sigla: str) -> type:
+    """Classe do raspador que ``jus.scraper(sigla)`` instancia, pelo mapa ``_SCRAPERS``."""
+    modulo, nome = _SCRAPERS[sigla].split(":")
+    classe: type = getattr(import_module(modulo), nome)
+    return classe
 
 
 def load_sample(tribunal: str, relative_path: str, *, encoding: str = "utf-8") -> str:
