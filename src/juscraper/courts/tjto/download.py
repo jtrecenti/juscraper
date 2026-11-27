@@ -7,10 +7,12 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+import requests
 from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
+from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.pagination import descrever_paginas, extract_count_with_cascade, menor_pagina, paginas_no_intervalo
 from juscraper.utils.params import to_br_date
 
@@ -36,6 +38,12 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
     re.compile(r"\(([\d.]+)\)"),
 )
+
+
+def eh_bloqueio_waf(resp: requests.Response) -> bool:
+    """Diz se o AWS WAF do TJTO desafiou (HTTP 202) ou pediu CAPTCHA em vez de responder."""
+    # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
+    return resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha"
 
 
 def _get_total_results(html: str) -> int:
