@@ -155,11 +155,13 @@ _LITERAL_207_CASES = [
     ids=[f"{c[0].__name__}.{c[1]}" for c in _LITERAL_207_CASES],
 )
 def test_literal_207_aceita_dominio_e_recusa_o_resto(schema_cls, campo, aceitos, recusados):
+    # Sem termo: no TJRN, termo na ementa com "Sentença" ou grau "1" e recusado
+    # por outra regra (``test_tjrn_recusa_termo_na_ementa_sem_ementa``).
     for valor in aceitos:
-        schema_cls(pesquisa="x", **{campo: valor})
+        schema_cls(pesquisa="", **{campo: valor})
     for valor in recusados:
         with pytest.raises(ValidationError):
-            schema_cls(pesquisa="x", **{campo: valor})
+            schema_cls(pesquisa="", **{campo: valor})
 
 
 @pytest.mark.parametrize("core", sorted(ORDENACOES_POR_CORE.keys() - {"pje1g"}))
@@ -490,7 +492,8 @@ def test_tjrn_recusa_jurisdicao_com_primeiro_grau(jurisdicoes):
     ],
 )
 def test_tjrn_aceita_jurisdicao_sem_primeiro_grau(filtros):
-    InputCJSGTJRN(pesquisa="x", **filtros)
+    # Sem termo, porque decisoes de 1o grau nao tem ementa, onde ``pesquisa`` busca.
+    InputCJSGTJRN(pesquisa="", **filtros)
 
 
 @pytest.mark.parametrize(
@@ -524,4 +527,52 @@ def test_tjrn_recusa_decisao_fora_do_seu_grau(filtros):
     ],
 )
 def test_tjrn_aceita_decisao_no_seu_grau(filtros):
-    InputCJSGTJRN(pesquisa="x", **filtros)
+    # Sem termo, porque sentencas e monocraticas nao tem ementa, onde ``pesquisa`` busca.
+    InputCJSGTJRN(pesquisa="", **filtros)
+
+
+@pytest.mark.parametrize("pesquisa", ["dano moral", "x", "A", "a dano"])
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença"},
+        {"decisoes": "Sentença", "grau": "1"},
+        {"grau": "1"},
+        {"decisoes": "Decisão", "grau": "1"},
+        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+        {"decisoes": "Decisão", "jurisdicoes": "TR", "grau": "2"},
+        {"decisoes": "Sentença", "buscar_em": "ementa"},
+    ],
+)
+def test_tjrn_recusa_termo_na_ementa_sem_ementa(pesquisa, filtros):
+    """So os acordaos tem ementa: com termo na ementa, sentencas, decisoes de 1o
+    grau e monocraticas de ``"TJ"`` ou ``"TR"`` dao 0 resultados no portal.
+    """
+    with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
+        InputCJSGTJRN(pesquisa=pesquisa, **filtros)
+
+
+@pytest.mark.parametrize(
+    ("pesquisa", "filtros"),
+    [
+        # Sem termo, ou so com palavras que o portal ignora: a busca traz tudo do filtro.
+        ("", {"decisoes": "Sentença"}),
+        ("   ", {"grau": "1"}),
+        ("a", {"decisoes": "Sentença"}),
+        ("de", {"grau": "1"}),
+        ("a de para", {"decisoes": "Decisão", "jurisdicoes": "TJ"}),
+        # No inteiro teor, que sentencas e monocraticas tem.
+        ("dano moral", {"decisoes": "Sentença", "buscar_em": "inteiro_teor"}),
+        ("dano moral", {"grau": "1", "buscar_em": "inteiro_teor"}),
+        ("dano moral", {"decisoes": "Decisão", "jurisdicoes": "TR", "buscar_em": "inteiro_teor"}),
+        # Acordaos tem ementa; ha monocraticas antigas do SAJ com ementa, sem jurisdicao.
+        ("dano moral", {"decisoes": "Acórdão"}),
+        ("dano moral", {"decisoes": "Acórdão", "jurisdicoes": "TJ", "grau": "2"}),
+        ("dano moral", {"grau": "2"}),
+        ("dano moral", {"jurisdicoes": "TR"}),
+        ("apelação", {"decisoes": "Decisão"}),
+        ("apelação", {"decisoes": "Decisão", "grau": "2"}),
+    ],
+)
+def test_tjrn_aceita_termo_na_ementa_de_quem_tem(pesquisa, filtros):
+    InputCJSGTJRN(pesquisa=pesquisa, **filtros)
