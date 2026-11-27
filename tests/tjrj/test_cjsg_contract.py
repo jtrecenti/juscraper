@@ -176,9 +176,7 @@ def test_cjsg_payload_carries_blocked_words_hidden(mocker):
     post_calls = [c for c in responses.calls if c.request.method == "POST"
                   and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24hfListaPalavrasBloqueadas=" in body
     # Value comes from the GET sample — non-empty stopword list.
     assert "ACIMA" in body  # one of the words in the canonical TJRJ stopword list
@@ -224,9 +222,7 @@ def test_cjsg_sem_ano_usa_ano_corrente(mocker):
     post_calls = [c for c in responses.calls if c.request.method == "POST"
                   and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2026" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
     # Nunca vazio — vazio e exatamente o que disparava o 500.
@@ -252,9 +248,7 @@ def test_cjsg_so_ano_inicio_completa_o_fim_com_ano_corrente(mocker):
     post_calls = [c for c in responses.calls if c.request.method == "POST"
                   and url_enviada(c.request).startswith(FORM_URL)]
     assert len(post_calls) == 1
-    body = post_calls[0].request.body or ""
-    if isinstance(body, bytes):
-        body = body.decode("utf-8")
+    body = corpo_enviado(post_calls[0].request)
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoInicio=2020" in body
     assert "ctl00%24ContentPlaceHolder1%24cmbAnoFim=2026" in body
 

@@ -246,8 +246,9 @@ def test_cjsg_alias_campo_avisa_e_manda_o_mesmo_que_buscar_em(mocker, valor):
         jus.scraper("stm").cjsg("7000612", paginas=1, campo=valor)
     jus.scraper("stm").cjsg("7000612", paginas=1, buscar_em=valor)
 
-    assert params_enviados(responses.calls[0].request) == params_enviados(responses.calls[1].request)
-    assert params_enviados(responses.calls[0].request)["search_filter"] == valor
+    com_alias, com_canonico = (params_enviados(c.request) for c in responses.calls)
+    assert com_alias == com_canonico
+    assert com_alias["search_filter"] == valor
 
 
 def test_cjsg_alias_campo_junto_com_buscar_em_levanta():

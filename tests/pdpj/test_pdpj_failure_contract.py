@@ -61,9 +61,6 @@ def _mock_sample(path: str, sample: str) -> None:
     _mock(path, body=load_sample("pdpj", sample))
 
 
-def _urls() -> list[str]:
-    return urls_enviadas()
-
 
 # ---------------------------------------------------------------------
 # perfis HTTP
@@ -291,7 +288,7 @@ def test_corpo_comprimido_corrompido_no_meio_do_lote_vira_linha(metodo):
 
     assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["resposta_inesperada"]
     assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
-    assert len(_urls()) == 3
+    assert len(urls_enviadas()) == 3
 
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
@@ -307,7 +304,7 @@ def test_desafio_anti_bot_no_meio_do_lote_vira_linha(metodo):
 
     assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["bloqueio_anti_bot"]
     assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
-    assert len(_urls()) == 3
+    assert len(urls_enviadas()) == 3
 
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
@@ -454,7 +451,7 @@ def test_pesquisa_levanta_na_falha_da_pagina_2():
     with pytest.raises(RetryExhaustedError):
         _mk_scraper().pesquisa(tribunal="TRF1", paginas=2)
 
-    assert "searchAfter" in _urls()[1]
+    assert "searchAfter" in urls_enviadas()[1]
 
 
 @responses.activate

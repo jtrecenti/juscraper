@@ -16,7 +16,7 @@ import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes, timeout_enviado, url_enviada, urls_enviadas
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes, timeout_enviado, urls_enviadas
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
 
 COLUNAS = {
@@ -130,8 +130,7 @@ def test_cpopg_recurso_com_erro_http_vira_none_e_mantem_o_resto() -> None:
     assert "\n" in row["assunto"] and " \n" not in row["assunto"]
     id_processo = id_processo_do_cenario("cpopg", "erro_recurso")
     url_polo = recurso_url(BASE_URL_1G, id_processo, "poloPassivo")
-    tentativas = [c for c in responses.calls if url_enviada(c.request).startswith(url_polo)]
-    assert len(tentativas) == 4  # perfil "api": 4 tentativas antes de desistir
+    assert sum(url.startswith(url_polo) for url in urls_enviadas()) == 4  # perfil "api": 4 tentativas antes de desistir
 
 
 @responses.activate

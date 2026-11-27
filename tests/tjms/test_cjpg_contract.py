@@ -7,7 +7,7 @@ contra o portal está em ``tests/tjms/test_cjpg_integration.py``.
 """
 
 import json
-from urllib.parse import parse_qsl, urlsplit
+from urllib.parse import parse_qsl
 
 import pandas as pd
 import responses
@@ -16,7 +16,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, urls_enviadas
+from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, params_enviados, url_enviada, urls_enviadas
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 ESAJ = "https://esaj.tjms.jus.br"
@@ -189,10 +189,9 @@ def test_baixar_sentencas_do_cjpg_pede_ao_tjms(tmp_path, mocker):
     caminho = tmp_path / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf"
     assert resultado["caminho_sentenca"].tolist() == [str(caminho)]
     assert caminho.read_bytes() == PDF_FALSO
-    urls = urls_enviadas()
-    (url_pedido,) = [url for url in urls if "obterArquivo.do" in url]
-    assert url_pedido.startswith(f"{ESAJ}/cjpg/obterArquivo.do?")
-    assert dict(parse_qsl(urlsplit(url_pedido).query, keep_blank_values=True)) == {
+    (pedido,) = [c.request for c in responses.calls if "obterArquivo.do" in url_enviada(c.request)]
+    assert url_enviada(pedido).startswith(f"{ESAJ}/cjpg/obterArquivo.do?")
+    assert params_enviados(pedido) == {
         "cdProcesso": CD_PROCESSO,
         "cdForo": CD_FORO,
         "nmAlias": NM_ALIAS,

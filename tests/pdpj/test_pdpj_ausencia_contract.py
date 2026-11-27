@@ -21,7 +21,7 @@ import juscraper as jus
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.failures import MOTIVOS_FALHA
-from tests._helpers import load_sample, url_enviada
+from tests._helpers import load_sample, url_enviada, urls_enviadas
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -51,7 +51,7 @@ def _mock(url: str, status: int = 200, body: str = "") -> None:
 
 
 def _chamadas(url: str) -> int:
-    return sum(1 for call in responses.calls if url_enviada(call.request).split("?")[0] == url)
+    return sum(enviada.split("?")[0] == url for enviada in urls_enviadas())
 
 
 def _pagina_1() -> None:

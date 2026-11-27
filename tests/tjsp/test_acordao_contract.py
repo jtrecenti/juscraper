@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import RespostaInesperadaError
-from tests._helpers import load_sample, registrar_rota_acordao, url_enviada, urls_enviadas
+from tests._helpers import load_sample, registrar_rota_acordao, urls_enviadas
 
 BASE = "https://esaj.tjsp.jus.br/"
 CNJ = "1502870-48.2020.8.26.0161"
@@ -40,9 +40,9 @@ def tjsp(tmp_path, mocker):
 
 def _consultas(rota, *chaves):
     return [
-        tuple(parse_qs(urlparse(url_enviada(c.request)).query).get(chave, [""])[0] for chave in chaves)
-        for c in responses.calls
-        if urlparse(c.request.url).path.endswith(rota)
+        tuple(parse_qs(urlparse(url).query).get(chave, [""])[0] for chave in chaves)
+        for url in urls_enviadas()
+        if urlparse(url).path.endswith(rota)
     ]
 
 

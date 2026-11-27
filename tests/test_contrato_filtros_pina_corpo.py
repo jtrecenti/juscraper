@@ -22,7 +22,7 @@ import pytest
 RAIZ_TESTES = Path(__file__).resolve().parent
 ATRIBUTOS_DA_REQUISICAO = {"body", "params"}
 # Helpers de tests/_helpers.py que leem o corpo ou a query da requisição enviada.
-LEITORES_DE_CORPO = {"corpo_enviado", "corpo_form_enviado", "corpo_json_enviado", "params_enviados"}
+LEITORES_DA_REQUISICAO = {"corpo_enviado", "corpo_form_enviado", "corpo_json_enviado", "params_enviados"}
 
 
 def importa_builder(arvore: ast.Module) -> bool:
@@ -44,16 +44,16 @@ def _le_atributo_da_requisicao(no: ast.AST) -> bool:
     )
 
 
-def _chama_leitor_de_corpo(no: ast.AST) -> bool:
-    return isinstance(no, ast.Call) and isinstance(no.func, ast.Name) and no.func.id in LEITORES_DE_CORPO
+def _chama_leitor_da_requisicao(no: ast.AST) -> bool:
+    return isinstance(no, ast.Call) and isinstance(no.func, ast.Name) and no.func.id in LEITORES_DA_REQUISICAO
 
 
 def le_requisicao_enviada(arvore: ast.Module) -> bool:
-    """``<x>.request.body``, ``<x>.request.params`` ou um dos ``LEITORES_DE_CORPO`` no código.
+    """``<x>.request.body``, ``<x>.request.params`` ou um dos ``LEITORES_DA_REQUISICAO`` no código.
 
     Docstring e comentário não contam.
     """
-    return any(_le_atributo_da_requisicao(no) or _chama_leitor_de_corpo(no) for no in ast.walk(arvore))
+    return any(_le_atributo_da_requisicao(no) or _chama_leitor_da_requisicao(no) for no in ast.walk(arvore))
 
 
 @cache

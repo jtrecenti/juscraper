@@ -96,10 +96,11 @@ def _termos_enviados(mock_http: responses.RequestsMock) -> list[str]:
     enviados = []
     for chamada in mock_http.calls:
         requisicao = chamada.request
+        url = url_enviada(requisicao)
         if requisicao.method == "POST":
             corpo = parse_qs(corpo_enviado(requisicao))
             enviados.extend(corpo.get("dados.buscaInteiroTeor", []))
-        elif "/cjpg/pesquisar.do" in (url := url_enviada(requisicao)):
+        elif "/cjpg/pesquisar.do" in url:
             enviados.extend(parse_qs(urlparse(url).query).get("dadosConsulta.pesquisaLivre", []))
     return enviados
 

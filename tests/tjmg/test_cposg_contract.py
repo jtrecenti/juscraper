@@ -30,7 +30,7 @@ import juscraper as jus
 from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes, timeout_enviado, url_enviada
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes, timeout_enviado, urls_enviadas
 from tests.tjmg._helpers import FALHAS_DE_REDE
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
@@ -239,8 +239,7 @@ def test_cposg_500_persistente_no_resultado_nao_aborta_lote(scraper, mocker):
     with pytest.warns(UserWarning, match="12345678920208130024"):
         df = scraper.cposg(["1234567-89.2020.8.13.0024", "0000359-79.2020.8.13.0205"])
 
-    falhas = [c for c in responses.calls if "12345678920208130024" in url_enviada(c.request)]
-    assert len(falhas) == TENTATIVAS
+    assert sum("12345678920208130024" in url for url in urls_enviadas()) == TENTATIVAS
     assert list(df["id_cnj"]) == ["12345678920208130024", "00003597920208130205"]
     assert pd.isna(df.iloc[0]["processo"])
     assert df.iloc[1]["processo_interno"] == "1.0000.26.408376-7/001"

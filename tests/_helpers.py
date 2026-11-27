@@ -70,9 +70,10 @@ def url_enviada(request: PreparedRequest) -> str:
     """URL de uma requisição já enviada (``responses.calls[i].request``).
 
     O ``PreparedRequest`` tipa ``url`` como ``str | None``; depois do envio
-    ela sempre existe, e a asserção falha alto se não existir.
+    ela sempre existe, e o helper falha alto se não existir.
     """
-    assert request.url is not None, "requisição registrada sem URL"
+    if request.url is None:
+        raise AssertionError("requisição registrada sem URL")
     return request.url
 
 
@@ -119,7 +120,7 @@ def timeout_enviado(request: PreparedRequest) -> Any:
     ``PreparedRequest`` em tempo de execução, fora dos stubs do ``requests``.
     ``None`` quando o raspador não definiu timeout.
     """
-    return cast("dict[str, Any]", cast("Any", request).req_kwargs).get("timeout")
+    return cast("Any", request).req_kwargs.get("timeout")
 
 
 def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
@@ -136,10 +137,7 @@ def urlencoded_body_subset_matcher(expected: Mapping[str, str | list[str]]):
     historico, preservado para os chamadores existentes.
     """
     def matcher(request):
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        parsed_raw = parse_qs(body, keep_blank_values=True)
+        parsed_raw = parse_qs(corpo_enviado(request), keep_blank_values=True)
         missing: dict = {}
         for k, expected_v in expected.items():
             actual = parsed_raw.get(k, [])

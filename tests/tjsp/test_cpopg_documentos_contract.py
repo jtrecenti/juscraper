@@ -80,7 +80,7 @@ def _documentos_pedidos():
 
 
 def _indices(rota):
-    return [i for i, c in enumerate(responses.calls) if url_enviada(c.request).split("?")[0].endswith(rota)]
+    return [i for i, url in enumerate(urls_enviadas()) if url.split("?")[0].endswith(rota)]
 
 
 @responses.activate
