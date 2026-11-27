@@ -140,7 +140,6 @@ extend = "pyproject.toml"
 "tests/schemas/test_docstring_parity.py" = ["PT006", "PT018"]
 "tests/schemas/test_domain_rejection.py" = ["D205", "PT006"]
 "tests/schemas/test_output_parity.py" = ["PLC0415", "PT006"]
-"tests/schemas/test_paginas_acceptance.py" = ["ARG001", "D205", "PLR0913", "PT006"]
 "tests/schemas/test_schema_contract.py" = ["ARG001", "PLC0415", "PLR1714", "PT006"]
 "tests/schemas/test_schema_coverage.py" = ["PLC0415"]
 "tests/schemas/test_signature_parity.py" = ["D205", "D209", "PT006", "PT018"]

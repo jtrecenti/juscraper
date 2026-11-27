@@ -18,7 +18,8 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from typing import NamedTuple
 
 from pydantic import BaseModel
 
@@ -204,6 +205,34 @@ def _resolve(module_path: str, class_name: str) -> type[BaseModel] | None:
     if obj is None or not inspect.isclass(obj) or not issubclass(obj, BaseModel):
         return None
     return obj
+
+
+class SchemaMapeado(NamedTuple):
+    """Entrada de um mapa ``EXPECTED_*_SCHEMAS`` com a classe do raspador."""
+
+    sigla: str
+    endpoint: str
+    raspador: type
+    modulo: str
+    classe: str
+
+
+def _schemas_mapeados(
+    mapa: dict[tuple[str, str], tuple[str, str]],
+    iterar: Callable[[], Iterator[tuple[str, type]]],
+) -> list[SchemaMapeado]:
+    """Casa cada entrada de ``mapa`` com a classe do raspador que ``iterar`` acha.
+
+    Entrada sem raspador e erro do mapa, e reprova a coleta em vez de sumir dos
+    testes que dependem dela.
+    """
+    raspadores = dict(iterar())
+    sem_raspador = sorted({sigla for sigla, _ in mapa} - raspadores.keys())
+    assert not sem_raspador, f"Entradas do mapa sem raspador: {sem_raspador}"
+    return [
+        SchemaMapeado(sigla, endpoint, raspadores[sigla], modulo, classe)
+        for (sigla, endpoint), (modulo, classe) in mapa.items()
+    ]
 
 
 def test_every_court_endpoint_has_schema():

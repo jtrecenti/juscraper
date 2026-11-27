@@ -32,6 +32,7 @@ from tests.schemas.test_schema_coverage import (
     _iter_aggregator_scrapers,
     _iter_court_scrapers,
     _resolve,
+    _schemas_mapeados,
 )
 
 
@@ -160,24 +161,21 @@ def _esperada(caso: Caso) -> tuple[str, object]:
 
 def _casos() -> list[Caso]:
     casos: list[Caso] = []
-    for mapa, iterar in (
-        (EXPECTED_COURT_SCHEMAS, _iter_court_scrapers),
-        (EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers),
+    for par in _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers) + _schemas_mapeados(
+        EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers
     ):
-        raspadores = dict(iterar())
-        for (sigla, endpoint), (modulo, classe) in sorted(mapa.items()):
-            schema = _resolve(modulo, classe)
-            assert schema is not None, f"{modulo}:{classe} nao encontrado"
-            for nome in (endpoint, f"{endpoint}_download"):
-                metodo = getattr(raspadores[sigla], nome, None)
-                if metodo is None or _is_stub(metodo):
-                    continue
-                parametros = inspect.signature(metodo).parameters
-                casos.extend(
-                    Caso(sigla, nome, campo, metodo, info, parametros[campo])
-                    for campo, info in schema.model_fields.items()
-                    if campo in parametros
-                )
+        schema = _resolve(par.modulo, par.classe)
+        assert schema is not None, f"{par.modulo}:{par.classe} nao encontrado"
+        for nome in (par.endpoint, f"{par.endpoint}_download"):
+            metodo = getattr(par.raspador, nome, None)
+            if metodo is None or _is_stub(metodo):
+                continue
+            parametros = inspect.signature(metodo).parameters
+            casos.extend(
+                Caso(par.sigla, nome, campo, metodo, info, parametros[campo])
+                for campo, info in schema.model_fields.items()
+                if campo in parametros
+            )
     return casos
 
 
