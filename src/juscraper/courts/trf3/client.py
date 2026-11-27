@@ -31,6 +31,7 @@ import requests
 from pydantic import ValidationError
 from tqdm import tqdm
 
+from ...core.base import recusar_kwargs_sem_efeito
 from ...core.exceptions import BotChallengeBlockedError
 from ...core.failures import (
     COLUNA_MOTIVO_FALHA,
@@ -237,6 +238,10 @@ class TRF3Scraper(HTTPScraper):
     ) -> list[dict[str, Any] | None]:
         """Os brutos de ``cpopg_download``/``cposg_download``, com as falhas num aviso."""
         schema, base_url = self._alvo(endpoint)
+        recusar_kwargs_sem_efeito(
+            kwargs, schema, ("download_pecas", "diretorio"), f"{type(self).__name__}.{metodo}",
+            f"para baixar as peças, use {endpoint}(..., download_pecas=True)",
+        )
         cnjs = self._coerce_id_cnj(schema, metodo, id_cnj, **kwargs)
         consultas = self._baixar(cnjs, base_url, endpoint)
         self._avisar(cnjs, [c.motivo for c in consultas], metodo)
@@ -388,9 +393,9 @@ class TRF3Scraper(HTTPScraper):
     def cpopg_download(self, id_cnj: str | list[str], **kwargs: Any) -> list[dict[str, Any] | None]:
         """Baixa os envelopes JSON de 1º grau de cada CNJ, sem parsear.
 
-        Aceita os mesmos argumentos de :meth:`cpopg`. ``download_pecas`` e
-        ``diretorio`` passam pela validação e são ignorados, porque este
-        método não baixa peças. Devolve uma lista alinhada à entrada: um
+        Aceita os argumentos de :meth:`cpopg`, mas não baixa peças:
+        ``download_pecas=True`` ou um ``diretorio`` levantam ``TypeError``.
+        Devolve uma lista alinhada à entrada: um
         dicionário por processo (chaves ``busca``, ``dados`` e uma por recurso
         paginado) ou ``None`` para o CNJ que a consulta pública não devolveu
         ou cuja consulta falhou. As falhas entram num único ``UserWarning`` ao
@@ -515,9 +520,9 @@ class TRF3Scraper(HTTPScraper):
         """Baixa os envelopes JSON de 2º grau de cada CNJ, sem parsear.
 
         Mesmo retorno e mesmos avisos de :meth:`cpopg_download`, consultando a
-        aplicação de 2º grau. Os argumentos são os de :meth:`cposg`;
-        ``download_pecas`` e ``diretorio`` passam pela validação e são
-        ignorados, porque este método não baixa peças.
+        aplicação de 2º grau. Os argumentos são os de :meth:`cposg`, mas não
+        baixa peças: ``download_pecas=True`` ou um ``diretorio`` levantam
+        ``TypeError``.
         """
         return self._download("cposg", "cposg_download", id_cnj, **kwargs)
 

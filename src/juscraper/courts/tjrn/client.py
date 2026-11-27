@@ -98,18 +98,27 @@ class TJRNScraper(HTTPScraper):
             decisoes (str): Tipo de decisao, com os valores do portal:
                 ``"Decisão"`` (monocraticas), ``"Acórdão"`` (colegiadas),
                 ``"Sentença"`` ou vazio para todas. Outro valor levanta
-                ``ValidationError``. Por padrao, ``pesquisa`` busca na ementa, e no
+                ``ValidationError``. ``"Sentença"`` so existe no 1o grau e
+                ``"Acórdão"`` so no 2o; ``"Decisão"`` existe nos dois. Como o
+                portal nao devolve resultados para as combinacoes cruzadas,
+                ``"Sentença"`` com ``grau="2"``, ``"TJ"`` ou ``"TR"`` e
+                ``"Acórdão"`` com ``grau="1"`` levantam ``ValidationError``.
+                Por padrao, ``pesquisa`` busca na ementa, e no
                 portal so os acordaos tem ementa: para buscar termo em
                 ``"Decisão"`` ou ``"Sentença"``, ver ``buscar_em``.
             jurisdicoes (str): Jurisdicao, com os valores do portal: ``"TJ"``
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
                 levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
-                decisoes de 2o grau: com ``grau="1"``, em que o portal nao
-                devolve resultados, levantam ``ValidationError``.
+                decisoes de 2o grau: com ``grau="1"`` ou
+                ``decisoes="Sentença"``, em que o portal nao devolve
+                resultados, levantam ``ValidationError``.
             grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
                 todos, sempre como texto. Outro valor (inclusive o inteiro
-                ``2``) levanta ``ValidationError``. Decisoes de 1o grau nao tem
+                ``2``) levanta ``ValidationError``. ``grau="1"`` com
+                ``decisoes="Acórdão"`` e ``grau="2"`` com
+                ``decisoes="Sentença"`` tambem levantam, porque o portal nao
+                devolve resultados para elas. Decisoes de 1o grau nao tem
                 ementa: com ``grau="1"``, buscar termo com
                 ``buscar_em="inteiro_teor"``.
             buscar_em (str): Onde procurar ``pesquisa``: ``"ementa"``

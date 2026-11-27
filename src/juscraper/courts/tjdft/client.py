@@ -9,12 +9,16 @@ import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
+from juscraper.schemas import BuscarEm
 from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
 
 from .download import cjsg_download
 from .parse import cjsg_parse
 from .schemas import InputCJSGTJDFT
+
+#: ``buscar_em`` mais o ``bool`` de ``inteiro_teor`` (convertido, com aviso) e ``None`` (default do schema).
+BuscarEmAceito = BuscarEm | bool | None
 
 
 class TJDFTScraper(HTTPScraper):
@@ -43,7 +47,7 @@ class TJDFTScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         sinonimos: bool = True,
         espelho: bool = True,
-        buscar_em: str | None = None,
+        buscar_em: BuscarEmAceito = None,
         tamanho_pagina: int | None = None,
         **kwargs,
     ) -> list:

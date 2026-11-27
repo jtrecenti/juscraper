@@ -9,7 +9,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
-from ..core.base import rotulo_do_metodo_chamado
+from ..core.base import mensagem_de_kwargs_inesperados, rotulo_do_metodo_chamado
 from ..core.exceptions import ColetaParcialError
 from ..core.failures import resumir_falhas
 
@@ -708,9 +708,7 @@ def raise_on_extra_kwargs(
                 parts.append(f"'{name}' (você quis dizer '{close[0]}'?)")
             else:
                 parts.append(repr(name))
-        raise TypeError(
-            f"{method} got unexpected keyword argument(s): {', '.join(parts)}"
-        ) from exc
+        raise TypeError(mensagem_de_kwargs_inesperados(method, parts)) from exc
 
 
 def _reinject_nominal_dates(

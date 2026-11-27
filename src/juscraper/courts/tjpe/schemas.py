@@ -11,6 +11,9 @@ from typing import Literal
 
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJPEScraper``.
+TipoDecisao = Literal["acordaos", "monocraticas", "todos"]
+
 
 class InputCJSGTJPE(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJPE ``cjsg`` / ``cjsg_download``.
@@ -30,7 +33,7 @@ class InputCJSGTJPE(SearchBase, DataJulgamentoMixin):
     classe: str | None = None
     assunto: str | None = None
     meio_tramitacao: str | None = None
-    tipo_decisao: Literal["acordaos", "monocraticas", "todos"] = "acordaos"
+    tipo_decisao: TipoDecisao = "acordaos"
 
 
 class OutputCJSGTJPE(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):

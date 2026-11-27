@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 import requests
@@ -13,7 +13,11 @@ from juscraper.utils.params import apply_input_pipeline_search
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
-from .schemas import InputCJSGTJRJ
+from .schemas import Competencia, InputCJSGTJRJ, Origem
+
+# Mais os mesmos codigos em ``int``, que o schema converte para ``str``.
+CompetenciaAceita = Competencia | Literal[1, 2, 3]
+OrigemAceita = Origem | Literal[1, 2, 3, 4, 5]
 
 logger = logging.getLogger("juscraper.tjrj")
 
@@ -48,8 +52,8 @@ class TJRJScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         ano_inicio: str | int | None = None,
         ano_fim: str | int | None = None,
-        competencia: str | int | None = None,
-        origem: str | int = "1",
+        competencia: CompetenciaAceita | None = None,
+        origem: OrigemAceita = "1",
         tipo_acordao: bool = True,
         tipo_monocratica: bool = True,
         magistrado_codigo: str | None = None,

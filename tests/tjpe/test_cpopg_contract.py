@@ -387,6 +387,15 @@ def test_rejeita_kwarg_desconhecido_citando_o_metodo_publico(tjpe, metodo):
     )
 
 
+def test_cpopg_download_recusa_os_parametros_das_pecas(tjpe):
+    """``cpopg_download`` não baixa peças: o pedido vira ``TypeError``, em vez de sumir."""
+    assert_unknown_kwarg_raises(
+        tjpe.cpopg_download, ["download_pecas", "diretorio"], CNJ, rotulo="TJPEScraper.cpopg_download"
+    )
+    with pytest.raises(TypeError, match=r"use cpopg\(\.\.\., download_pecas=True\)"):
+        tjpe.cpopg_download(CNJ, download_pecas=True)
+
+
 def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
     with pytest.raises(ValueError, match="same length"):
         tjpe.cpopg_parse([None], [CNJ, OUTRO_CNJ])

@@ -16,7 +16,7 @@ import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
-from tests._helpers import load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
 
 COLUNAS = {
@@ -283,6 +283,27 @@ def test_cpopg_rejeita_kwarg_desconhecido() -> None:
         scraper.cpopg(CNJ_PAGINADO, filtro_inexistente="x")
     with pytest.raises(TypeError, match="cpopg_download"):
         scraper.cpopg_download(CNJ_PAGINADO, filtro_inexistente="x")
+
+
+@responses.activate
+@pytest.mark.parametrize(("metodo", "composto"), [("cpopg_download", "cpopg"), ("cposg_download", "cposg")])
+def test_download_recusa_os_parametros_das_pecas(metodo: str, composto: str) -> None:
+    """Os ``*_download`` não baixam peças: pedir peças vira ``TypeError``, sem requisição."""
+    scraper = jus.scraper("trf3", sleep_time=0)
+    assert_unknown_kwarg_raises(
+        getattr(scraper, metodo), ["download_pecas", "diretorio"], CNJ_PAGINADO, rotulo=f"TRF3Scraper.{metodo}"
+    )
+    with pytest.raises(TypeError, match=rf"use {composto}\(\.\.\., download_pecas=True\)"):
+        getattr(scraper, metodo)(CNJ_PAGINADO, download_pecas=True)
+
+
+@responses.activate
+def test_cpopg_download_aceita_os_valores_padrao_das_pecas() -> None:
+    """``download_pecas=False`` e ``diretorio=None`` não pedem nada e seguem aceitos."""
+    registrar_processo(BASE_URL_1G, "cpopg", "paginado")
+    scraper = jus.scraper("trf3", sleep_time=0)
+    brutos = scraper.cpopg_download(CNJ_PAGINADO, download_pecas=False, diretorio=None)
+    assert brutos[0] is not None
 
 
 @responses.activate
