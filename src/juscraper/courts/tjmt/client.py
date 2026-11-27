@@ -14,7 +14,7 @@ from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecat
 
 from .download import PRODUCTION_API_URL, _get_api_config, cjsg_download
 from .parse import CJSG_COLUMNS, cjsg_parse, coerce_tjmt_date_columns
-from .schemas import InputCJSGTJMT
+from .schemas import InputCJSGTJMT, TipoConsulta
 
 
 class TJMTScraper(HTTPScraper):
@@ -54,7 +54,7 @@ class TJMTScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_consulta: str = "Acordao",
+        tipo_consulta: TipoConsulta = "Acordao",
         relator: str | None = None,
         orgao_julgador: str | None = None,
         tipo_processo: str | None = None,
@@ -131,7 +131,7 @@ class TJMTScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        tipo_consulta: str = "Acordao",
+        tipo_consulta: TipoConsulta = "Acordao",
         relator: str | None = None,
         orgao_julgador: str | None = None,
         tipo_processo: str | None = None,

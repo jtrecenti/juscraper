@@ -12,6 +12,10 @@ from typing import Literal
 
 from ...schemas import OutputCJSGBase, OutputDataPublicacaoMixin, OutputRelatoriaMixin, SearchBase
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJAPScraper``.
+Orgao = Literal["0", "tj", "recursal"]
+Votacao = Literal["0", "Unânime", "Maioria"]
+
 
 class InputCJSGTJAP(SearchBase):
     """Accepted input for TJAP ``cjsg`` / ``cjsg_download``.
@@ -23,7 +27,7 @@ class InputCJSGTJAP(SearchBase):
     sao rejeitados por ``extra="forbid"`` herdado de :class:`SearchBase`.
     """
 
-    orgao: Literal["0", "tj", "recursal"] = "0"
+    orgao: Orgao = "0"
     numero_processo: str | None = None
     numero_acordao: str | None = None
     numero_ano: str | None = None
@@ -34,7 +38,7 @@ class InputCJSGTJAP(SearchBase):
     # Opcoes do formulario, como vem no campo ``votacao`` dos acordaos. ``"Unanime"``
     # e alias deprecado, resolvido pelo client antes deste modelo: o portal o trata
     # como ``"Maioria"``.
-    votacao: Literal["0", "Unânime", "Maioria"] = "0"
+    votacao: Votacao = "0"
     origem: str | None = None
 
 

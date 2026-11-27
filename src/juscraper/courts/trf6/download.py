@@ -9,8 +9,9 @@ A single ``cpopg`` lookup is two requests plus captcha solving:
 2. Solve the captcha with :func:`solve_captcha` (delegates to
    :mod:`txtcaptcha`).
 3. ``POST <same controller URL with action params>`` with the search
-   payload — when the CNJ matches a single process, the response is the
-   detail page directly (``Detalhes do Processo`` in the title); when the
+   payload — when the CNJ matches a single process, the POST answers 302
+   to ``acao=processo_seleciona_publica``, and ``requests`` follows it to
+   the detail page (``Detalhes do Processo`` in the title); when the
    CNJ doesn't match, the response is the form again with no error; when
    the captcha was wrong, the response is the form with a hidden
    ``txaInfraValidacao`` textarea carrying ``"Código da imagem (captcha)

@@ -10,7 +10,7 @@ from juscraper.utils.params import apply_input_pipeline_search, coerce_brazilian
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJPB
+from .schemas import IdOrigem, InputCJSGTJPB
 
 
 def _to_date(value, fallback: date) -> date:
@@ -75,7 +75,7 @@ class TJPBScraper(HTTPScraper):
         id_classe: str | None = None,
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
-        id_origem: str = "8,2",
+        id_origem: IdOrigem = "8,2",
         decisoes: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
@@ -175,7 +175,7 @@ class TJPBScraper(HTTPScraper):
         id_classe: str | None = None,
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
-        id_origem: str = "8,2",
+        id_origem: IdOrigem = "8,2",
         decisoes: bool = False,
         **kwargs,
     ) -> list:
