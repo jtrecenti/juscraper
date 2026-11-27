@@ -287,6 +287,12 @@ def test_contar_aceita_resposta_json_dict():
     assert _mk_scraper().contar(tribunal="TRF1") == 7
 
 
+@pytest.mark.parametrize("filtro", ["fase", "situacao_atual", "tipo_operacao"])
+def test_contar_rejeita_filtros_so_da_pesquisa(filtro):
+    """Motivo no comentario de ``InputContarPdpj``."""
+    assert_unknown_kwarg_raises(_mk_scraper().contar, filtro)
+
+
 # ---------------------------------------------------------------------
 # auth
 # ---------------------------------------------------------------------

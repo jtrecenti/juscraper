@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 
 # Mapeia nomes canonicos snake_case -> nomes camelCase aceitos pela API.
 # Mantido como modulo-level porque e compartilhado entre :meth:`pesquisa`
-# e :meth:`contar` (mesmo conjunto de filtros).
+# e :meth:`contar` (que aceita um subconjunto; ver :class:`InputContarPdpj`).
 _QUERY_PARAM_MAP: dict[str, str] = {
     "numero_processo": "numeroProcesso",
     "numero_processo_sintetico": "numeroProcessoSintetico",
@@ -751,8 +751,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
     def contar(self, **kwargs: Any) -> int:
         """Total de processos que casam com os filtros (``/processos:contar``).
 
-        Aceita o mesmo subconjunto de filtros de :meth:`pesquisa` exceto
-        os relacionados a paginacao/ordenacao. Retorna ``int``.
+        Aceita os filtros de :meth:`pesquisa` menos paginacao, ordenacao, ``fase``, ``situacao_atual``
+        e ``tipo_operacao``, que a API nao declara aqui (ver :class:`InputContarPdpj`). Retorna ``int``.
 
         Raises:
             requests.HTTPError: Quando a requisicao falha.

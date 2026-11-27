@@ -109,10 +109,10 @@ class InputContarPdpj(_InputFiltrosPdpj):
 
     Endpoint ``/processos:contar``, sem ordenacao nem paginacao.
     """
-    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` nunca foram aceitos
-    # aqui, embora a docstring de ``PdpjScraper.contar`` diga que o endpoint
-    # recebe os mesmos filtros da pesquisa. Falta conferir na API antes de
-    # subi-los para a base.
+    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` ficam de fora: a
+    # especificacao publica da API (``processo-api/v2/api-docs``, Swagger
+    # v1.7.36, conferida em 27/11/2026) os declara em ``GET /api/v1/processos``
+    # e nao em ``/processos:contar``. Aceita-los arriscaria um total sem filtro.
 
 
 class InputDownloadDocumentsPdpj(BaseModel):
