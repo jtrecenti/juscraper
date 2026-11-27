@@ -364,7 +364,7 @@ Os métodos abaixo baixam o PDF como o tribunal o publica, sem login e sem captc
 
 #### TJTO
 
-- `cjsg`, `cjsg_download`, `cjpg` e `cjpg_download`: o total de resultados, que define quantas páginas baixar, passa a vir da aba do `tipo_documento` pedido, e não da aba que o portal marca como ativa. Hoje o portal marca a aba certa, e nada muda. Se deixar de marcar, a busca de decisões ou sentenças sem o "(N resultados)", que o portal só mostra quando há mais de uma página, leria o total de acórdãos, a primeira contagem da página (9 em vez de 3 numa busca real de decisões), e, com mais de 20 acórdãos, pediria ao portal páginas vazias. Se a página não trouxer a contagem da aba pedida, só a primeira página é baixada, com aviso no logger `juscraper.tjto` (refs #759).
+- `cjsg`, `cjsg_download`, `cjpg` e `cjpg_download`: o total de resultados, que define quantas páginas baixar, passa a vir da aba do `tipo_documento` pedido, e não da aba que o portal marca como ativa. Hoje o portal marca a aba certa, e nada muda. Se deixar de marcar, a busca de decisões ou sentenças sem o "(N resultados)", que o portal só mostra quando há mais de uma página, leria o total de acórdãos, a primeira contagem da página (9 em vez de 3 numa busca real de decisões), e, com mais de 20 acórdãos, pediria ao portal páginas vazias. Se a primeira página não trouxer a contagem da aba pedida nem o "(N resultados)", a busca levanta `ValueError`, como no TJPI e no STM; antes, valia o primeiro "(N)" que houvesse na página, ou a coleta parava na primeira página sem aviso (refs #759).
 
 #### Demais tribunais e agregadores
 

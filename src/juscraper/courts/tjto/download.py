@@ -1,18 +1,23 @@
 """
 Downloads raw pages from the TJTO jurisprudence search.
 """
-import logging
-import math
 import re
 import time
 from collections.abc import Callable
 from typing import Any
 
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import descrever_paginas, extract_count_with_cascade, menor_pagina, paginas_no_intervalo
+from juscraper.utils.pagination import (
+    descrever_paginas,
+    extract_count_with_cascade,
+    menor_pagina,
+    paginas_no_intervalo,
+    resolve_total_pages,
+)
 from juscraper.utils.params import to_br_date
 
 from .parse import cjsg_parse_manager
@@ -29,43 +34,25 @@ TYPE_MINUTA_MAP = {
 }
 
 
-# A contagem vem da aba do tipo pedido (``li[type_minuta="<x>"]``), e não da
-# aba marcada ``active``: sem o ``active``, o primeiro "(N)" da página é sempre
-# o da aba de acórdãos. O "(N resultados)" acima da paginação só aparece em
-# busca de mais de uma página e já traz o total do tipo pedido.
-_PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
-    re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
-    # Ancorada: casa o texto inteiro da aba ("(1.284)"), nunca o HTML bruto,
-    # onde pegaria a contagem de outra aba.
-    re.compile(r"^\s*\(([\d.]+)\)\s*$"),
-)
-
-logger = logging.getLogger("juscraper.tjto")
+_NUM_ABA_RE = re.compile(r"\(([\d.]+)\)")
+_N_RESULTADOS_RE = re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE)
 
 
-def _get_total_results(html: str, type_minuta: str = "1") -> int:
-    """Extrai o total de resultados da aba do ``type_minuta`` pedido.
+def _get_total_results(html: str, type_minuta: str) -> int | None:
+    """Total de resultados da aba do ``type_minuta`` pedido, ou ``None`` sem a contagem.
 
-    Sem ``zero_markers``: a página além do total também diz "Nenhum documento
-    encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
-    a busca sem resultados traz ``(0)`` na aba. Sem a contagem, o layout mudou:
-    devolve 0 (só a primeira página é baixada) com aviso no logger
-    ``juscraper.tjto``, em vez de ler o total de outra aba.
+    A aba é escolhida pelo ``type_minuta``, e não pela classe ``active``: sem
+    ela, o primeiro "(N)" da página é sempre o da aba de acórdãos. Sem a aba,
+    vale o "(N resultados)" acima da paginação, que só aparece em busca de mais
+    de uma página e já traz o total do tipo pedido. Sem ``zero_markers``: a
+    página além do total também diz "Nenhum documento encontrado", mas a aba
+    traz o total da busca (``pagina_alem_do_total.html``); a busca sem
+    resultados traz ``(0)`` na aba.
     """
-    n = extract_count_with_cascade(
-        html,
-        css_selectors=(f'li[type_minuta="{type_minuta}"] .num_minuta',),
-        regex_patterns=_PAGINATION_REGEXES,
-        fallback_max_int=False,
-    )
-    if n is None:
-        logger.warning(
-            "TJTO: não achei o total de resultados da aba type_minuta=%s na primeira página; "
-            "o layout do portal pode ter mudado, e só a primeira página será baixada.",
-            type_minuta,
-        )
-        return 0
-    return n
+    aba = BeautifulSoup(html, "html.parser").select_one(f'li[type_minuta="{type_minuta}"] .num_minuta')
+    if aba is not None:
+        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,))
+    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,))
 
 
 def build_cjsg_payload(
@@ -150,6 +137,11 @@ def cjsg_download_manager(
 
     Returns:
         List of raw HTML strings, one per page.
+
+    Raises:
+        ValueError: Quando a primeira página não traz a contagem da aba do
+            ``type_minuta`` pedido nem o "(N resultados)"; ver
+            :func:`~juscraper.utils.pagination.resolve_total_pages`.
     """
     fetch_kwargs: dict[str, Any] = {
         "type_minuta": type_minuta,
@@ -170,8 +162,9 @@ def cjsg_download_manager(
     # passa do total, as demais também passam, e todas caem no aviso.
     primeira = menor_pagina(paginas)
     html_primeira = _get_page(primeira)
-    total = _get_total_results(html_primeira, type_minuta)
-    n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
+    n_pags = resolve_total_pages(
+        _get_total_results(html_primeira, type_minuta), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
+    )
     validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
     return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
 
