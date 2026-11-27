@@ -381,9 +381,8 @@ _TOTAL_PATTERNS = (re.compile(r"^\s*(\d[\d.]*)\s*$"),)
 # Contador do primeiro item da lista, "1/591)": fallback se o resumo mudar.
 _CONTAGEM_SELECTORS = (f"{SELETOR_DOCUMENTO} .contagem",)
 _CONTAGEM_PATTERNS = (re.compile(r"^\s*\d+\s*/\s*(\d[\d.]*)\)\s*$"),)
-_ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
-# Na contagem, o aviso só vale no lugar dos links de página, onde o portal o põe.
-_AVISO_VAZIO = AvisoVazio(("section.secao-paginas",), _ZERO_MARKERS)
+# O aviso só vale no lugar dos links de página, onde o portal o põe.
+_AVISO_VAZIO = AvisoVazio(("section.secao-paginas",), ("Nenhum Resultado Encontrado",))
 
 
 def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> None:
@@ -393,7 +392,9 @@ def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> N
     (o formulário de busca, uma página de manutenção). Sem esta checagem essa
     resposta chegaria ao parser, que não acha documento nenhum e devolve o
     mesmo DataFrame vazio de uma busca sem resultados. A lista é reconhecida
-    por ter ao menos um documento ou o aviso de nenhum resultado.
+    por ter ao menos um documento ou o aviso de nenhum resultado no lugar dos
+    links de página (``section.secao-paginas``); a frase em outro lugar da
+    página não conta.
 
     O aviso só vale como lista quando combina com a busca. Com
     ``total_da_busca`` maior que zero, a página foi pedida dentro do total e
@@ -415,8 +416,7 @@ def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> N
     soup = BeautifulSoup(html, "html.parser")
     if soup.select_one(SELETOR_DOCUMENTO) is not None:
         return
-    texto = soup.get_text(" ", strip=True).lower()
-    if any(marcador.lower() in texto for marcador in _ZERO_MARKERS):
+    if _AVISO_VAZIO.presente(soup):
         if not total_da_busca:
             return
         raise RuntimeError(
