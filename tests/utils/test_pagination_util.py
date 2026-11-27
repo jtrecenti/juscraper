@@ -141,6 +141,17 @@ def test_aviso_vazio_fora_dos_seletores_nao_zera():
     ) is None
 
 
+def test_aviso_vazio_presente_so_nos_seletores():
+    """``presente`` is the same rule the cascade uses: only the selected elements count."""
+    aviso = AvisoVazio(("div.aviso", "td.aviso"), ("Nenhum Resultado",))
+    soup = BeautifulSoup(
+        '<div class="aviso">nenhum resultado encontrado</div><p>Nenhum resultado</p>', "html.parser"
+    )
+
+    assert aviso.presente(soup)
+    assert not aviso.presente(soup.find("p"))
+
+
 
 
 

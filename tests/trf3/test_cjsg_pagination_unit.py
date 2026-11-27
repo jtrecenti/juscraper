@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 
 from juscraper.courts.trf3 import cjsg_download
 from juscraper.courts.trf3.cjsg_download import (
+    _AVISO_VAZIO,
     PAGE_URL,
     _check_lista,
     _paginas_pedidas,
@@ -138,8 +139,8 @@ def test_check_lista_aceita_todos_os_samples_de_lista(nome):
 
 AVISO_DE_ZERO = "Nenhum Resultado Encontrado"
 
-# O aviso só dentro de <script>: o usuário não o vê, então a página não é a
-# lista de uma busca sem resultados.
+# O aviso só dentro de <script>, fora de ``section.secao-paginas``: a página
+# não é a lista de uma busca sem resultados.
 AVISO_SO_EM_SCRIPT = (
     f'<html><head><script>var aviso = "{AVISO_DE_ZERO}";</script></head>'
     "<body><h1>Pesquisa de jurisprudência</h1></body></html>"
@@ -161,6 +162,28 @@ def test_check_lista_rejeita_pagina_que_nao_e_a_lista(html):
         _check_lista(html, PAGE_URL + "?np=3")
 
     assert PAGE_URL + "?np=3" in str(exc_info.value)
+
+
+def test_check_lista_rejeita_aviso_fora_da_secao_de_paginas():
+    """The notice only counts where the portal puts it, as in the count.
+
+    Starts from the real zero-hits page and moves the notice out of
+    ``section.secao-paginas`` into a paragraph: a page without documents that
+    only quotes the phrase elsewhere is not the list.
+    """
+    original = _sample("no_results.html")
+    soup = BeautifulSoup(original, "html.parser")
+    assert _AVISO_VAZIO.presente(soup)
+    for seletor in _AVISO_VAZIO.seletores:
+        for secao in soup.select(seletor):
+            secao.clear()
+    assert not _AVISO_VAZIO.presente(soup)
+    citacao = soup.new_tag("p")
+    citacao.string = f"Erro: {AVISO_DE_ZERO}"
+    soup.body.append(citacao)
+
+    with pytest.raises(RuntimeError, match="não é a lista de resultados"):
+        _check_lista(str(soup), PAGE_URL)
 
 
 @pytest.mark.parametrize("aviso", [AVISO_DE_ZERO.upper(), AVISO_DE_ZERO.lower()])
