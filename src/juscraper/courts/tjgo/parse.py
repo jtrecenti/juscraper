@@ -85,7 +85,9 @@ def _parse_block(block: str) -> dict:
         if "conteudoTexto" in attrs:
             texto = html_para_texto(content)
             break
-        cleaned = " ".join((html_para_texto(content) or "").split())
+        # Campo curto, numa linha só. O clean_html poria espaço no lugar das tags
+        # inline (``<b>foo</b>,`` -> ``"foo ,"``).
+        cleaned = (html_para_texto(content) or "").replace("\n", " ")
         if not cleaned:
             continue
         data_match = _DATA_RE.match(cleaned)

@@ -108,10 +108,13 @@ def _tjsc() -> list[str]:
     return _htmls("tjsc", "cjsg/results_normal_page_01.html", "cjsg/results_normal_page_02.html")
 
 
-def _tjsc_ementas_brutas(paginas: list[str]) -> list[str]:
+_TJSC_EMENTA = "div.resultadoItem div.resValue.completo[id$='-EMENTA']"
+
+
+def _brutos(paginas: list[str], seletor: str) -> list[str]:
+    """HTML interno dos elementos de ``seletor`` nas páginas."""
     soup = BeautifulSoup("".join(paginas), "html.parser")
-    valores = soup.select("div.resultadoItem div.resValue.completo[id$='-EMENTA']")
-    return [valor.decode_contents() for valor in valores]
+    return [valor.decode_contents() for valor in soup.select(seletor)]
 
 
 def _tjgo() -> list[str]:
@@ -121,14 +124,12 @@ def _tjgo() -> list[str]:
     )
 
 
-def _tjgo_textos_brutos(paginas: list[str]) -> list[str]:
-    soup = BeautifulSoup("".join(paginas), "html.parser")
-    return [p.decode_contents() for p in soup.select("div.search-result p.conteudoTexto")]
-
-
 def _tjrj() -> list[Any]:
-    arquivos = ("xhr_page_01.json", "xhr_page_02.json", "xhr_single_page.json", "xhr_turma_recursal.json")
-    return [pagina["d"] for pagina in _jsons("tjrj", *(f"cjsg/{arquivo}" for arquivo in arquivos))]
+    paginas = _jsons(
+        "tjrj", "cjsg/xhr_page_01.json", "cjsg/xhr_page_02.json", "cjsg/xhr_single_page.json",
+        "cjsg/xhr_turma_recursal.json",
+    )
+    return [pagina["d"] for pagina in paginas]
 
 
 def _tjmg_esperada(html: str) -> str:
@@ -182,7 +183,7 @@ CASOS = {
     "tjsc-cjsg": Caso(
         _tjsc,
         lambda paginas: list(tjsc_parse.cjsg_parse_manager(paginas)["ementa"]),
-        lambda paginas: [oraculo(e, preservar_quebras=True) for e in _tjsc_ementas_brutas(paginas)],
+        lambda paginas: [oraculo(e, preservar_quebras=True) for e in _brutos(paginas, _TJSC_EMENTA)],
         com_paragrafos=20,
     ),
     # O portal separa os parágrafos com ``\n``, sem HTML; as linhas vazias saem.
@@ -200,7 +201,7 @@ CASOS = {
     "tjgo-cjsg": Caso(
         _tjgo,
         lambda paginas: list(tjgo_parse.cjsg_parse(paginas)["texto"]),
-        lambda paginas: [oraculo(t) for t in _tjgo_textos_brutos(paginas)],
+        lambda paginas: [oraculo(t) for t in _brutos(paginas, "div.search-result p.conteudoTexto")],
         com_paragrafos=0,
     ),
     "falcao-listar_decisoes": Caso(
