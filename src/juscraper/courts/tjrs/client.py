@@ -150,30 +150,30 @@ class TJRSScraper(HTTPScraper):
         """Pesquisa jurisprudência do TJRS (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre; obrigatório.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo de busca livre; obrigatório.
+            paginas: Páginas 1-based; ``None``
                 busca todas. ``paginas=3`` baixa as páginas 1 a 3.
-            classe (int | str | None): Código da classe processual (coluna
+            classe: Código da classe processual (coluna
                 ``cod_classe_cnj`` do resultado; ``460`` é Recurso Inominado).
-            assunto (int | str | None): Código do assunto (coluna
+            assunto: Código do assunto (coluna
                 ``cod_assunto_cnj``).
-            orgao_julgador (int | str | None): Código do órgão julgador
+            orgao_julgador: Código do órgão julgador
                 (coluna ``cod_org_julg``).
-            relator (int | str | None): Código do relator (coluna
+            relator: Código do relator (coluna
                 ``cod_relator``); casa com o relator ou com o redator do
                 acórdão. Nestes quatro filtros, o portal aceita só o código:
                 um nome levanta ``ValidationError``.
-            data_julgamento_inicio (str | date | None): Início do intervalo
+            data_julgamento_inicio: Início do intervalo
                 de julgamento. Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``,
                 ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
-            data_julgamento_fim (str | date | None): Fim do intervalo de
+            data_julgamento_fim: Fim do intervalo de
                 julgamento, nos mesmos formatos.
-            data_publicacao_inicio (str | date | None): Início do intervalo
+            data_publicacao_inicio: Início do intervalo
                 de publicação, nos mesmos formatos.
-            data_publicacao_fim (str | date | None): Fim do intervalo de
+            data_publicacao_fim: Fim do intervalo de
                 publicação, nos mesmos formatos.
-            tipo_processo (str | None): Tipo de processo.
-            secao (str | None): ``"civel"``, ``"crime"`` ou ``None`` (as
+            tipo_processo: Tipo de processo.
+            secao: ``"civel"``, ``"crime"`` ou ``None`` (as
                 duas), sem distinção de caixa nem de acento (``"Cível"``
                 vale). Outro valor levanta ``ValidationError``.
             **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são

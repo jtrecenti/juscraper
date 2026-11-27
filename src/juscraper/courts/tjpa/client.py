@@ -138,28 +138,28 @@ class TJPAScraper(HTTPScraper):
         """Busca jurisprudencia no TJPA (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre, procurado no campo indicado
+            pesquisa: Termo de busca livre, procurado no campo indicado
                 por ``buscar_em``.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            relator (str | None): Nome do relator.
-            orgao_julgador_colegiado (str | None): Orgao colegiado.
-            classe (str | None): Classe processual.
-            assunto (str | None): Assunto.
-            origem (list | None): Lista de origens (default backend:
+            relator: Nome do relator.
+            orgao_julgador_colegiado: Orgao colegiado.
+            classe: Classe processual.
+            assunto: Assunto.
+            origem: Lista de origens (default backend:
                 ``["tribunal de justica do estado do para"]``).
-            tipo (list | None): Lista de tipos de decisao (default backend:
+            tipo: Lista de tipos de decisao (default backend:
                 ``["acordao", "decisao monocratica"]``).
-            sort_by (str): ``"datajulgamento"`` (default), ``"datapublicacao"``
+            sort_by: ``"datajulgamento"`` (default), ``"datapublicacao"``
                 ou ``"relevancia"``. O indice do portal tem decisoes com data
                 de julgamento impossivel, como o ano 8201 ou 2106 (observado
                 em 15/11/2026), e, com o default (``"datajulgamento"`` em
                 ordem ``"desc"``), elas vem primeiro. O juscraper repassa a
                 data como a fonte a entrega; para exclui-las, filtre
                 ``data_julgamento_fim``. Outra ordenacao so as tira do topo.
-            sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
-            query_type (str): ``"free"`` (default) ou ``"anywords"``.
-            buscar_em (str | None): Onde procurar ``pesquisa``: ``"ementa"``
+            sort_order: ``"asc"`` ou ``"desc"``. Default ``"desc"``.
+            query_type: ``"free"`` (default) ou ``"anywords"``.
+            buscar_em: Onde procurar ``pesquisa``: ``"ementa"``
                 (default; ``None`` tambem) ou ``"inteiro_teor"`` (texto
                 integral da decisao, que inclui a ementa), as duas opcoes do
                 portal. Outro valor levanta ``ValidationError``. Em

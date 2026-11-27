@@ -57,14 +57,16 @@ class TJDFTScraper(HTTPScraper):
         a lista completa.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None``
                 busca todas.
-            sinonimos (bool): Inclui sinônimos do termo na busca.
-            espelho (bool): Pesquisa no espelho do acórdão.
-            buscar_em (str | None): ``"ementa"`` (default; ``None`` também)
-                ou ``"inteiro_teor"``; ver :meth:`cjsg`.
-            tamanho_pagina (int | None): Resultados por página, de 1 a 40
+            sinonimos: Inclui sinônimos do termo na busca.
+            espelho: Pesquisa no espelho do acórdão.
+            buscar_em: ``"ementa"`` (default; ``None`` também)
+                ou ``"inteiro_teor"``; ``True``/``False``, valores do alias
+                deprecado ``inteiro_teor`` passado por posição, são
+                convertidos com aviso. Ver :meth:`cjsg`.
+            tamanho_pagina: Resultados por página, de 1 a 40
                 (acima disso a API responde HTTP 400). ``None`` usa 10.
 
         Returns:
@@ -110,7 +112,7 @@ class TJDFTScraper(HTTPScraper):
         da API: quem as converte é :meth:`cjsg`.
 
         Args:
-            resultados_brutos (list): Registros devolvidos por
+            resultados_brutos: Registros devolvidos por
                 :meth:`cjsg_download`.
 
         Returns:
@@ -131,8 +133,8 @@ class TJDFTScraper(HTTPScraper):
         data viram entradas de ``termosAcessorios`` no JSON enviado à API.
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Páginas 1-based; ``None``
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None``
                 busca todas. ``paginas=3`` baixa as páginas 1 a 3.
             **kwargs: Filtros aceitos por :class:`InputCJSGTJDFT`:
 
@@ -140,7 +142,7 @@ class TJDFTScraper(HTTPScraper):
                   Default ``True``. Backend: ``sinonimos``.
                 * ``espelho`` (bool): Pesquisa no espelho do acórdão.
                   Default ``True``. Backend: ``espelho``.
-                * ``buscar_em`` (str): Onde procurar ``pesquisa``.
+                * ``buscar_em`` (Literal["ementa", "inteiro_teor"]): Onde procurar ``pesquisa``.
                   ``"ementa"`` (default) busca no espelho do acórdão, que traz
                   a ementa, quando ``espelho=True``. ``"inteiro_teor"`` busca
                   também no inteiro teor, o que amplia o resultado. Outro

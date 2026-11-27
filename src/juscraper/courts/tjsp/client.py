@@ -173,32 +173,34 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         comportamento de :meth:`cjpg` (issue #229).
 
         Args:
-            pesquisa (str): Termo livre buscado no acordao/ementa. Default
+            pesquisa: Termo livre buscado no acordao/ementa. Default
                 ``""`` (sem termo, busca aberta por filtros). Limite de
                 120 caracteres (raises ``QueryTooLongError``).
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
             **kwargs: Filtros aceitos por :class:`InputCJSGTJSP` (todos
                 opcionais; ``None`` = sem filtro):
 
-                * ``ementa`` (str): Termo buscado especificamente na
+                * ``ementa`` (str | None): Termo buscado especificamente na
                   ementa.
-                * ``numero_recurso`` (str): Numero do recurso (o
+                * ``numero_recurso`` (str | None): Numero do recurso (o
                   ``processo`` das linhas do resultado), com ou sem
                   mascara. Backend: ``dados.nuProcOrigem``.
-                * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``classe`` (int | str | list[int | str] | None): ID(s) interno(s)
                   da classe processual.
-                * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
+                * ``assunto`` (int | str | list[int | str] | None): ID(s) interno(s)
                   do assunto.
-                * ``comarca`` (int | str): ID interno da comarca (um so).
-                * ``orgao_julgador`` (int | str | list[int | str]): ID(s)
+                * ``comarca`` (int | str | None): ID interno da comarca (um so).
+                * ``orgao_julgador`` (int | str | list[int | str] | None): ID(s)
                   interno(s) do orgao julgador.
                 * ``baixar_sg`` (bool): ``True`` (default) busca em
                   segundo grau; ``False`` busca em colegio recursal.
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
                   Default ``"acordao"``.
                 * ``data_julgamento_inicio`` / ``data_julgamento_fim``
-                  (str, ``DD/MM/AAAA``): Intervalo de julgamento.
+                  (str | date | None): Intervalo de julgamento.
+                  Aceita ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
+                  ``AAAA/MM/DD``, ``date`` ou ``datetime``.
                 * ``auto_chunk`` (bool): Default ``True``. Quando o
                   intervalo ``data_julgamento_*`` excede 1 ano,
                   divide internamente em janelas, baixa cada uma e
@@ -284,11 +286,11 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         veja la a lista completa.
 
         Args:
-            pesquisa (str): Termo livre. Default ``""`` (sem termo).
+            pesquisa: Termo livre. Default ``""`` (sem termo).
                 Limite de 120 chars.
-            paginas (int | list | range | None): Paginas 1-based;
+            paginas: Paginas 1-based;
                 ``None`` baixa todas. Default ``None``.
-            diretorio (str | None): Sobrescreve :attr:`download_path`
+            diretorio: Sobrescreve :attr:`download_path`
                 para esta unica chamada. Default ``None``.
             **kwargs: Mesmos filtros aceitos por :meth:`cjsg` (validados
                 por :class:`InputCJSGTJSP`).
@@ -343,21 +345,21 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         """Baixa processos de primeiro grau pelo CNJ e devolve as tabelas extraidas.
 
         Args:
-            id_cnj (str | Iterable[str]): Numero CNJ ou lista de numeros CNJ.
-            method (str): So ``"html"`` (paginas do eSAJ), o default. O
+            id_cnj: Numero CNJ ou lista de numeros CNJ.
+            method: So ``"html"`` (paginas do eSAJ), o default. O
                 ``"api"`` foi removido e levanta ``ValueError``.
-            baixar_movimentacoes (bool): Com ``False``, nao baixa as
+            baixar_movimentacoes: Com ``False``, nao baixa as
                 movimentacoes, e a tabela delas sai vazia (a pagina no formato
                 antigo ja traz a lista e sai completa). Cada processo custa uma
                 requisicao a mais por cinco movimentacoes, mais uma; desligar
                 poupa essas requisicoes. Default ``True``.
-            download_pecas (bool): Com ``True``, baixa tambem o PDF de cada
+            download_pecas: Com ``True``, baixa tambem o PDF de cada
                 documento publico das movimentacoes, sem login: dois pedidos
                 por documento, feitos na sessao que acabou de listar as
                 movimentacoes, porque o eSAJ so libera documento ja listado.
                 Documento com senha do processo fica de fora. So com
                 ``baixar_movimentacoes=True``. Default ``False``.
-            diretorio (str | None): Onde ficam os PDFs de ``download_pecas``,
+            diretorio: Onde ficam os PDFs de ``download_pecas``,
                 que o exige: ``cpopg`` apaga a pasta de download ao terminar.
                 Os PDFs vao para
                 ``<diretorio>/cpopg/<cnj>/documentos/<cdDocumento>.pdf``. Nao

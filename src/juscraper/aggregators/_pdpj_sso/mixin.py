@@ -88,13 +88,13 @@ class PdpjSsoMixin:
         ``PDPJ_JWT``.
 
         Args:
-            timeout (float): Segundos para concluir o login. Default ``300``.
-            salvar (bool): Grava a credencial em
+            timeout: Segundos para concluir o login. Default ``300``.
+            salvar: Grava a credencial em
                 ``$XDG_CONFIG_HOME/juscraper/pdpj_token.json`` (ou
                 ``~/.config/...``), com permissao ``0600``, para as proximas
                 instancias do JusBR e do PDPJ carregarem sem novo login; as
                 renovacoes tambem sao gravadas. Default ``True``.
-            navegador (str | None): Executavel do Chrome, Chromium ou Edge.
+            navegador: Executavel do Chrome, Chromium ou Edge.
                 ``None`` procura um instalado. Default ``None``.
             **kwargs: Nenhum parametro adicional e aceito.
 

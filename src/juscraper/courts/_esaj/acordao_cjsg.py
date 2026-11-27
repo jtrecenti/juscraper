@@ -52,11 +52,11 @@ class EsajAcordaoCjsgScraper(EsajSearchScraper):
         tribunal o publica; a extração de texto fica com quem usa a biblioteca.
 
         Args:
-            cd_acordao (str | float): Coluna ``cd_acordao`` do cjsg; o ``float``
+            cd_acordao: Coluna ``cd_acordao`` do cjsg; o ``float``
                 inteiro da coluna lida de CSV também vale.
-            cd_foro (str | float): Coluna ``cd_foro`` do cjsg, também como
+            cd_foro: Coluna ``cd_foro`` do cjsg, também como
                 ``float`` inteiro.
-            diretorio (str | None): Pasta de destino. Default
+            diretorio: Pasta de destino. Default
                 :attr:`download_path`. O PDF vai para
                 ``<diretorio>/acordaos/<cd_acordao>.pdf``.
 
@@ -89,9 +89,9 @@ class EsajAcordaoCjsgScraper(EsajSearchScraper):
         """Baixa o PDF do acórdão de cada linha do cjsg; ver :meth:`baixar_acordao`.
 
         Args:
-            cjsg (pd.DataFrame): Saída de ``cjsg``, ou qualquer tabela com as
+            cjsg: Saída de ``cjsg``, ou qualquer tabela com as
                 colunas ``cd_acordao`` e ``cd_foro``.
-            diretorio (str | None): Pasta de destino. Default :attr:`download_path`.
+            diretorio: Pasta de destino. Default :attr:`download_path`.
 
         Returns:
             As linhas de entrada com ``caminho_acordao`` (``None`` quando
