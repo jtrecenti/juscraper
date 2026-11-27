@@ -6,11 +6,12 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.schemas import BuscarEm
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_br_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJRN
+from .schemas import Decisoes, Grau, InputCJSGTJRN, Jurisdicoes, Sistema
 
 
 def _to_tjrn_date(date_str):
@@ -70,11 +71,11 @@ class TJRNScraper(HTTPScraper):
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
         id_colegiado: str | None = None,
-        sistema: str | None = None,
-        decisoes: str | None = None,
-        jurisdicoes: str | None = None,
-        grau: str | None = None,
-        buscar_em: str = "ementa",
+        sistema: Sistema | None = None,
+        decisoes: Decisoes | None = None,
+        jurisdicoes: Jurisdicoes | None = None,
+        grau: Grau | None = None,
+        buscar_em: BuscarEm = "ementa",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
@@ -104,8 +105,8 @@ class TJRNScraper(HTTPScraper):
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
                 levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
-                decisoes de 2o grau: com ``grau="1"`` a busca volta sem
-                resultados (o portal esconde ``"TR"`` quando o grau e ``"1"``).
+                decisoes de 2o grau: com ``grau="1"``, em que o portal nao
+                devolve resultados, levantam ``ValidationError``.
             grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
                 todos, sempre como texto. Outro valor (inclusive o inteiro
                 ``2``) levanta ``ValidationError``. Decisoes de 1o grau nao tem
@@ -170,11 +171,11 @@ class TJRNScraper(HTTPScraper):
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
         id_colegiado: str | None = None,
-        sistema: str | None = None,
-        decisoes: str | None = None,
-        jurisdicoes: str | None = None,
-        grau: str | None = None,
-        buscar_em: str = "ementa",
+        sistema: Sistema | None = None,
+        decisoes: Decisoes | None = None,
+        jurisdicoes: Jurisdicoes | None = None,
+        grau: Grau | None = None,
+        buscar_em: BuscarEm = "ementa",
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.
