@@ -27,7 +27,7 @@ import responses
 
 import juscraper as jus
 from juscraper.core.exceptions import ColetaParcialError
-from tests._helpers import load_sample_bytes
+from tests._helpers import corpo_enviado, load_sample_bytes, params_enviados
 
 ESAJ_PUROS = ["tjac", "tjal", "tjam", "tjce", "tjms"]
 # TJSP usa o mesmo fluxo de POST + trocaDePagina no cjsg, sem ``data_publicacao``.
@@ -59,7 +59,7 @@ def _registrar_servidor_esaj(base_url: str, tribunal: str, fora_do_ar: str | Non
     janelas: list[tuple[str, str]] = []
 
     def _post(request):
-        corpo = parse_qs(request.body if isinstance(request.body, str) else request.body.decode())
+        corpo = parse_qs(corpo_enviado(request))
         janelas.append((corpo["dados.dtJulgamentoInicio"][0], corpo["dados.dtJulgamentoFim"][0]))
         return 200, {}, b"<html></html>"
 
@@ -197,7 +197,11 @@ def _registrar_servidor_cjpg(fora_do_ar: str | None = None) -> list[tuple[str, s
     janelas: list[tuple[str, str]] = []
 
     def _pesquisar(request):
-        janelas.append((request.params["dadosConsulta.dtInicio"], request.params["dadosConsulta.dtFim"]))
+        params = params_enviados(request)
+        dt_inicio, dt_fim = params["dadosConsulta.dtInicio"], params["dadosConsulta.dtFim"]
+        assert isinstance(dt_inicio, str)
+        assert isinstance(dt_fim, str)
+        janelas.append((dt_inicio, dt_fim))
         inicio, fim = (_data(d) for d in janelas[-1])
         if fim >= _mais_um_ano(inicio) or janelas[-1][0] == fora_do_ar:
             return 404, {}, b""

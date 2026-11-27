@@ -9,7 +9,6 @@ custom subset matcher so the request shape is locked down.
 from __future__ import annotations
 
 import warnings
-from urllib.parse import parse_qsl
 
 import numpy as np
 import pandas as pd
@@ -20,7 +19,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts.trf6.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_enviado, load_sample, load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
 GET_PARAMS = {"acao": "processo_consulta_publica"}
@@ -48,10 +47,7 @@ def _subset_form_matcher(expected: dict[str, str]):
     """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
 
     def _match(request) -> tuple[bool, str]:
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        actual = dict(parse_qsl(body, keep_blank_values=True))
+        actual = corpo_form_enviado(request)
         for key, value in expected.items():
             if actual.get(key) != value:
                 return False, (
