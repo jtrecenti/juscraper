@@ -7,7 +7,10 @@ para provar que a coluna trazia o problema, e do jeito normal. A saída normal
 tem de ser exatamente a bruta passada por ``normalizar_texto``: nada além
 desses caracteres muda, e as quebras de linha ficam.
 
-O cjsg do eSAJ tem os testes em ``tests/_esaj/test_parse_granular.py``.
+O cjsg do eSAJ tem os testes em ``tests/_esaj/test_parse_granular.py``. A
+ementa que passa por :func:`~juscraper.core.parse_utils.html_para_texto`
+(TJRJ e os demais de ``tests/test_ementa_paragrafos.py``) é conferida lá, sem
+``\r`` e ``\xa0``.
 """
 from __future__ import annotations
 
@@ -30,7 +33,6 @@ from juscraper.courts.tjdft import parse as tjdft_parse
 from juscraper.courts.tjes import parse as tjes_parse
 from juscraper.courts.tjpb import parse as tjpb_parse
 from juscraper.courts.tjpi import parse as tjpi_parse
-from juscraper.courts.tjrj import parse as tjrj_parse
 from juscraper.courts.tjrr import parse as tjrr_parse
 from juscraper.courts.tjrs import parse as tjrs_parse
 from tests.schemas.test_output_columns import LEITURAS, TESTS
@@ -65,7 +67,6 @@ CASOS = [
     Caso("tjes", "cjsg", "results_legado_page_01.json", tjes_parse, ("ementa", "acordao")),
     Caso("tjpb", "cjsg", "results_normal_page_01.json", tjpb_parse, ("ementa",), quebra_de_linha=False),
     Caso("tjpi", "cjsg", "results_normal_page_01.html", tjpi_parse, ("inteiro_teor", "resumo", "ementa")),
-    Caso("tjrj", "cjsg", "xhr_page_01.json", tjrj_parse, ("ementa",)),
     Caso("tjrr", "cjsg", "step_02_search.html", tjrr_parse, ("ementa",), quebra_de_linha=False),
     Caso("tjrs", "cjsg", "single_page.json", tjrs_parse, ("ementa", "ementa_text", "ementa_referencia")),
     Caso(
