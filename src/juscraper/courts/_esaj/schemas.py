@@ -35,8 +35,7 @@ class InputCJSGEsajBase(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOn
 
     ``classe``/``assunto``/``orgao_julgador`` aceitam ``int``, ``str`` ou
     ``list[int | str]`` via :data:`IdFiltro` (refs #232). ``comarca`` aceita
-    ``int`` ou ``str`` (single-value, backend ``cdComarca``). Depois da
-    validacao, os quatro sao ``str | None``.
+    ``int`` ou ``str`` (single-value, backend ``cdComarca``).
     """
 
     tipo_decisao: Literal["acordao", "monocratica"] = "acordao"

@@ -14,8 +14,7 @@ Tipos disponiveis:
 - :data:`TamanhoPagina` — :data:`InteiroSemBool` positivo. Limites proprios do
   endpoint entram como ``Field(...)`` no campo.
 - :data:`IdFiltro` — IDs internos do tribunal que aceitam ``int``, ``str`` ou
-  ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista;
-  o campo validado e anotado como ``str | None``.
+  ``list[int | str]``. Coage para ``str | None``, montando CSV quando lista.
   Use em campos cujo backend interpreta CSV (``classeTreeSelection.values``,
   ``assuntosTreeSelection.values``, ``secoesTreeSelection.values``,
   ``varasTreeSelection.values``).
