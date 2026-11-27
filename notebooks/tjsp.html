@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -550,6 +550,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>pesquisa</code> (str): Termo de busca que será pesquisado no conteúdo das decisões e ementas. Limite de 120 caracteres.</li>
 <li><code>paginas</code> (int | list | range, opcional): Páginas 1-based; <code>None</code> (default) baixa todas. Use <code>range(1, n)</code> para baixar as primeiras <code>n-1</code> páginas</li>
 <li><code>ementa</code> (str, opcional): Termo adicional para buscar especificamente nas ementas</li>
+<li><code>numero_recurso</code> (str, opcional): Número do recurso em segundo grau (o mesmo da coluna <code>processo</code>), com ou sem máscara</li>
 <li><code>classe</code> (int | str | list, opcional): ID(s) interno(s) de classes processuais para filtrar</li>
 <li><code>assunto</code> (int | str | list, opcional): ID(s) interno(s) de assuntos para filtrar</li>
 <li><code>comarca</code> (int | str, opcional): ID interno de uma comarca para filtrar (um só)</li>
@@ -595,7 +596,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="busca-pelo-número-do-processo" class="level3">
 <h3 class="anchored" data-anchor-id="busca-pelo-número-do-processo">Busca pelo número do processo</h3>
-<p>O <code>cjsg()</code> não busca pelo número do processo ou do recurso: o termo de <code>pesquisa</code> procura no texto dos acórdãos, e o <code>juscraper</code> não tem filtro por número no CJSG do TJSP. Para consultar um processo específico em segundo grau, use <code>cposg()</code> com o número CNJ (seção abaixo). Numa coleta já feita, filtre a coluna <code>processo</code>.</p>
+<p>O termo de <code>pesquisa</code> procura no texto dos acórdãos. Para buscar os acórdãos de um recurso específico, use o filtro <code>numero_recurso</code>, com o número que aparece na coluna <code>processo</code> (com ou sem máscara). Ele dispensa o termo de busca:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tjsp.cjsg(numero_recurso<span class="op">=</span><span class="st">'1507541-25.2025.8.26.0425'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Para os dados processuais do recurso (partes, movimentações, composição do colegiado), use <code>cposg()</code> com o número CNJ (seção abaixo).</p>
 </section>
 </section>
 <section id="cpopg---consulta-processual-de-primeiro-grau" class="level2">
@@ -620,8 +623,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="exemplo-de-uso-2" class="level3">
 <h3 class="anchored" data-anchor-id="exemplo-de-uso-2">Exemplo de Uso</h3>
 <div id="cell-10" class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cpopg(<span class="st">'1000149-71.2024.8.26.0346'</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 1/1 [00:00&lt;00:00,  1.53it/s]
 Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00, 51.78it/s]</code></pre>
@@ -787,8 +790,8 @@ Processando documentos: 100%|██████████| 2/2 [00:00&lt;00:00
 <h3 class="anchored" data-anchor-id="exemplo-de-uso-3">Exemplo de Uso</h3>
 <p>Você pode consultar um único processo ou múltiplos processos de uma vez:</p>
 <div id="cell-12" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>res <span class="op">=</span> tjsp.cposg([<span class="st">'00221752420038260344'</span>, <span class="st">'10001497120248260346'</span>, <span class="st">'00039417120248260048'</span>])</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>res</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Baixando processos: 100%|██████████| 3/3 [00:03&lt;00:00,  1.25s/it]
 /var/folders/rv/jfmtd5hx5kv11464k5s9yjg80000gn/T/ipykernel_37002/1905175911.py:1: UserWarning: cposg: a consulta de 2º grau não mostra 1 processo(s), que fica(m) fora do resultado: 00039417120248260048. O número pode não existir no 2º grau, ou o processo está em segredo de justiça, que o eSAJ não mostra na consulta pública.
@@ -894,8 +897,8 @@ Processando arquivos: 100%|██████████| 3/3 [00:00&lt;00:00, 
 </div>
 </div>
 <div id="cell-13" class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(res[<span class="st">'movimentacoes'</span>].iloc[<span class="dv">2</span>]).head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 
