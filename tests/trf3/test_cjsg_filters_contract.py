@@ -14,6 +14,7 @@ GET.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -232,8 +233,9 @@ def test_cjsg_datas_de_julgamento_e_publicacao_juntas_levanta():
 @pytest.mark.parametrize("filtro", ["orgao_julgador", "ementa", "indexacao"])
 @pytest.mark.parametrize("base", ["monocraticas", "monocraticas_turmas_recursais"])
 def test_cjsg_monocraticas_recusam_filtros_sem_campo(filtro, base):
+    filtros: dict[str, Any] = {filtro: "x"}
     with pytest.raises(ValueError, match=filtro):
-        jus.scraper("trf3").cjsg("medicamento", base=base, **{filtro: "x"})
+        jus.scraper("trf3").cjsg("medicamento", base=base, **filtros)
 
 
 def test_cjsg_sem_criterio_levanta():

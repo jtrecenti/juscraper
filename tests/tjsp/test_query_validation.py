@@ -67,7 +67,8 @@ class TestDeprecatedAliases:
     def test_cjsg_accepts_query_alias_with_warning(self, tmp_path):
         scraper = jus.scraper("tjsp", download_path=str(tmp_path))
         with pytest.warns(DeprecationWarning, match="query.*deprecado"), pytest.raises(QueryTooLongError):
-            scraper.cjsg_download(pesquisa=None, query="a" * 121, paginas=1)
+            # Alias deprecado.
+            scraper.cjsg_download(pesquisa=None, query="a" * 121, paginas=1)  # type: ignore[arg-type]
 
     def test_cjpg_accepts_termo_alias_with_warning(self, tmp_path):
         scraper = jus.scraper("tjsp", download_path=str(tmp_path))

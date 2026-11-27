@@ -3,26 +3,19 @@
 ``cjsg``/``cjpg`` delegam a ``*_download``, onde os kwargs são validados; a
 mensagem precisa citar o método que o usuário chamou, em todo raspador.
 """
-from importlib import import_module
 
 import pytest
 import responses
 
 import juscraper as jus
 from juscraper import _SCRAPERS
-from tests._helpers import assert_unknown_kwarg_raises
-
-
-def _classe(sigla):
-    modulo, nome = _SCRAPERS[sigla].split(":")
-    return getattr(import_module(modulo), nome)
-
+from tests._helpers import assert_unknown_kwarg_raises, classe_da_sigla
 
 _WRAPPERS = [
     (sigla, metodo)
     for sigla in sorted(_SCRAPERS)
     for metodo in ("cjsg", "cjpg")
-    if hasattr(_classe(sigla), f"{metodo}_download")
+    if hasattr(classe_da_sigla(sigla), f"{metodo}_download")
 ]
 
 

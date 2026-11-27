@@ -8,7 +8,7 @@ de cada tribunal: o de 120 caracteres é do TJSP.
 """
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal, overload
 
 import pandas as pd
 from pydantic import BaseModel
@@ -100,6 +100,45 @@ class EsajCjpgScraper(EsajSentencaScraper):
     # (Template Method, #205). Os internals de download/parse
     # (``cjpg_download.py`` + ``cjpg_parse.py``) entram em
     # ``_run_search`` como hooks resolvidos por nome.
+
+    # Mesmas overloads de ``EsajSearchScraper.cjsg``, pelo ``count_only``.
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[True],
+        **kwargs: Any,
+    ) -> int: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: bool,
+        **kwargs: Any,
+    ) -> pd.DataFrame | int: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     def cjpg(
         self,
