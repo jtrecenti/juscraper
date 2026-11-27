@@ -11,14 +11,18 @@ plus two ``ementa_<uuid>.json`` payloads from the ``ementa.php`` endpoint
 that powers ``cjsg_ementa(uuid)``.
 
 A captura completa faz 11 buscas e 2 GETs de ementa. O AWS WAF do TJTO
-desafia (HTTP 202) a 7ª busca feita do mesmo IP em menos de uns 10 minutos e
-só volta a responder depois de uns 15 minutos (CONTRIBUTING.md > Integração
-local). Por isso o script espera ``--pausa`` segundos (padrão: 120) entre o
-fim de uma requisição e o início da seguinte, e a captura completa leva uns 24
-minutos. Medido de IP residencial em 27/11/2026: com 90 s entre as buscas, a
-7ª já recebeu o desafio; com 120 s, 14 buscas seguidas passaram, e a captura
-completa também. ``--pausa 0`` desliga a espera, o que serve com ``--only`` de
-poucos arquivos.
+desafia (HTTP 202) quando o mesmo IP faz 6 ou 7 requisições (buscas ou GETs de
+ementa) em uns 10 minutos, e só volta a responder depois de uns 15 minutos
+(CONTRIBUTING.md > Integração local). Por isso o script espera ``--pausa``
+segundos (padrão: 120) entre o fim de uma requisição e o início da seguinte, e
+a captura completa leva uns 24 minutos. A pausa não conta as requisições de
+antes do script: comece com o IP 15 minutos sem buscar no TJTO.
+
+Medido de IP residencial em 27/11/2026: com 90 s entre as buscas, a 7ª recebeu
+o desafio; com 120 s, duas sequências de 14 buscas e a captura completa
+passaram. Uma sequência de 120 s começada 15 s depois da captura recebeu o
+desafio na 4ª busca, com 6 requisições nos 10 minutos anteriores. ``--pausa 0``
+desliga a espera, o que serve com ``--only`` de poucos arquivos.
 
 ``--only`` recebe um ou mais padrões ``fnmatch`` no formato
 ``<endpoint>/<arquivo>`` e captura só os samples que casam com algum deles; os
