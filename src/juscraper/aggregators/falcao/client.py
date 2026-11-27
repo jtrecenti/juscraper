@@ -29,6 +29,7 @@ from pydantic import ValidationError
 from tqdm.auto import tqdm
 
 from ...core.avisos import avisar
+from ...core.base import mensagem_de_kwargs_inesperados
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.params import (
     coerce_brazilian_date,
@@ -240,12 +241,12 @@ class FalcaoScraper(HTTPScraper):
             :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
+        metodo = "FalcaoScraper.listar_decisoes()"
         if "diretorio" in kwargs:
             raise TypeError(
-                "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
-                "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
+                mensagem_de_kwargs_inesperados(metodo, ["'diretorio'"])
+                + ". Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
             )
-        metodo = "FalcaoScraper.listar_decisoes()"
         if kwargs.get("checkpoint_dir") is not None:
             return self.listar_decisoes_parse(self._baixar(pesquisa, paginas, None, kwargs, metodo))
         # Não usa download_path: listar_decisoes_parse lê a pasta recursivamente, e
