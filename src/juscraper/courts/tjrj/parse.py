@@ -7,21 +7,9 @@ from typing import Any
 
 import pandas as pd
 
-from juscraper.core.parse_utils import normalizar_texto
+from juscraper.core.parse_utils import html_para_texto
 
-# Mantido local (em vez de core.parse_utils.clean_html) porque clean_html
-# substitui tags por espaco e altera o output observavel quando o backend
-# envolve trechos em tags inline (<b>foo</b> -> "foo " em vez de "foo").
-# Mesma decisao registrada em TJGO/TJMT e aguardando uma variante
-# clean_html(separator="") no core.parse_utils.
-_TAG_RE = re.compile(r"<[^>]+>")
 _DATE_RE = re.compile(r"/Date\((-?\d+)\)/")
-
-
-def _strip_html(text: Any) -> str:
-    if text is None:
-        return ""
-    return normalizar_texto(_TAG_RE.sub("", str(text)).strip())
 
 
 def _parse_aspnet_date(raw: Any):
@@ -56,9 +44,11 @@ def cjsg_parse(raw_pages: list) -> pd.DataFrame:
                 "relator": doc.get("NomeMagRel"),
                 "data_julgamento": _parse_aspnet_date(doc.get("DtHrMov")),
                 "data_publicacao": _parse_aspnet_date(doc.get("DtHrPubl")),
-                "ementa": _strip_html(
-                    doc.get("TextoSemFormat") or doc.get("Texto")
-                ),
+                # O texto vem com um parágrafo por linha (``\n``), sem ``<br>``.
+                "ementa": html_para_texto(
+                    doc.get("TextoSemFormat") or doc.get("Texto"), preservar_quebras=True
+                )
+                or "",
             }
             for doc in page.get("DocumentosConsulta", []) or []
         )

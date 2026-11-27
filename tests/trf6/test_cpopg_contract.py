@@ -20,7 +20,7 @@ import responses
 import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts.trf6.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 GET_URL = "https://eproc1g.trf6.jus.br/eproc/externo_controlador.php"
 GET_PARAMS = {"acao": "processo_consulta_publica"}
@@ -505,8 +505,11 @@ def test_cpopg_parse_html_fora_do_formato_vira_linha(monkeypatch):
     assert df.iloc[1]["processo"] == "1005229-55.2023.4.06.3801"
 
 
-def test_cpopg_rejects_unknown_kwargs():
-    """Passing an unknown kwarg surfaces as a friendly ``TypeError``."""
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_cpopg_rejects_unknown_kwargs(metodo):
+    """Kwarg desconhecido vira ``TypeError`` que cita o método público chamado."""
     scraper = jus.scraper("trf6", sleep_time=0)
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        scraper.cpopg("10052295520234063801", filtro_inexistente="x")
+    assert_unknown_kwarg_raises(
+        getattr(scraper, metodo), "filtro_inexistente", "10052295520234063801",
+        rotulo=f"TRF6Scraper.{metodo}",
+    )

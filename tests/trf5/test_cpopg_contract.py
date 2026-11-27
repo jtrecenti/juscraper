@@ -14,7 +14,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 
 def _subset_form_matcher(expected: dict[str, str]):
@@ -169,11 +169,13 @@ def test_colunas_detalhe_sao_as_chaves_de_parse_detail() -> None:
     assert tuple(record) == COLUNAS_DETALHE
 
 
-def test_cpopg_rejects_unknown_kwargs() -> None:
-    """Passing an unknown kwarg surfaces as a friendly ``TypeError``."""
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_cpopg_rejects_unknown_kwargs(metodo: str) -> None:
+    """Kwarg desconhecido vira ``TypeError`` que cita o método público chamado."""
     scraper = jus.scraper("trf5", sleep_time=0)
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        scraper.cpopg("00584573120254058000", magistrado="x")
+    assert_unknown_kwarg_raises(
+        getattr(scraper, metodo), "magistrado", "00584573120254058000", rotulo=f"TRF5Scraper.{metodo}"
+    )
 
 
 @responses.activate

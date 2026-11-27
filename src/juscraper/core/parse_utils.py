@@ -2,11 +2,8 @@
 
 Consolidam lógica duplicada hoje em vários ``courts/<xx>/parse.py``:
 
-* ``clean_html`` substitui ``_clean_html`` privado de TJAP/TJRN/TJRO. A versão
-  default (``decode_entities=True``) decodifica todas as entidades HTML5 via
-  ``html.unescape`` (cobre nomeadas — ``&Aacute;``, ``&copy;``, ``&hellip;`` —
-  e numéricas — ``&#193;``, ``&#xC1;``). ``decode_entities=False`` cobre o caso
-  minimalista (só strip de tags e whitespace) usado por TJRN/TJRO.
+* ``clean_html`` converte o HTML de campo curto (relator, classe) em texto numa
+  linha só, com a mesma leitura de tags de ``html_para_texto``.
 * ``coerce_date_columns`` extrai o loop ``pd.to_datetime(..., errors="coerce").dt.date``
   repetido em ~13 tribunais.
 * ``clean_document_text`` limpa o texto bruto de documento dos agregadores
@@ -32,9 +29,6 @@ from collections.abc import Iterable
 from typing import overload
 
 import pandas as pd
-
-_TAG_RE = re.compile(r"<[^>]+>")
-_WHITESPACE_RE = re.compile(r"\s+")
 
 # Caracteres invisíveis que separam letras de uma mesma palavra: ``"MANDADO\u200c
 # \u200cDE"`` no TJES, ``"§\xad 3º"`` no TJPI. Hífen discricionário e os de
@@ -69,27 +63,31 @@ _SEPARADOR_DE_LINHA = "\x00"
 
 
 def clean_html(text: str | None, decode_entities: bool = True) -> str | None:
-    """Remove tags HTML e (opcionalmente) decodifica entidades.
+    r"""Converte HTML de campo curto (nome, classe, relator) em texto numa linha só.
+
+    Lê o HTML como :func:`html_para_texto` (a tag inline some sem deixar
+    espaço; comentários e ``<style>`` saem com o conteúdo) e junta com espaço
+    as linhas que ela separaria.
 
     Args:
         text: Conteúdo bruto. ``None``/string vazia são retornados sem alteração.
         decode_entities: Se ``True`` (default), decodifica todas as entidades
             HTML5 via ``html.unescape`` — nomeadas (``&Aacute;``, ``&amp;``,
             ``&copy;``, ``&hellip;``, ...) e numéricas (``&#193;``, ``&#xC1;``).
-            Se ``False``, só remove tags e colapsa whitespace.
+            Se ``False``, as entidades ficam como vieram. Nos dois casos, o
+            ``\xa0`` vira espaço e os caracteres invisíveis saem
+            (:func:`normalizar_texto`).
 
     Returns:
-        Texto limpo, ou o input sem alteração quando vazio/``None``.
+        Texto limpo numa linha, ou o input sem alteração quando vazio/``None``.
+
+    Examples: Exemplo
+        >>> clean_html("<p>Des.(a) <b>Fulano</b>,</p><p>relator</p>")
+        'Des.(a) Fulano, relator'
     """
     if not text:
         return text
-
-    text = _TAG_RE.sub(" ", text)
-
-    if decode_entities:
-        text = html.unescape(text)
-
-    return _WHITESPACE_RE.sub(" ", text).strip()
+    return " ".join(_linhas_do_html(text, decode_entities=decode_entities))
 
 
 def html_para_texto(text: str | None, *, preservar_quebras: bool = False) -> str | None:
@@ -107,7 +105,7 @@ def html_para_texto(text: str | None, *, preservar_quebras: bool = False) -> str
     cada linha são aparadas e as linhas vazias saem.
 
     Nomes, classes e outros campos curtos continuam com :func:`clean_html`,
-    que põe tudo numa linha só.
+    que lê o HTML do mesmo jeito e põe tudo numa linha só.
 
     Args:
         text: HTML bruto. ``None``/string vazia são retornados sem alteração.
@@ -125,15 +123,23 @@ def html_para_texto(text: str | None, *, preservar_quebras: bool = False) -> str
     """
     if not text:
         return text
+    return "\n".join(_linhas_do_html(text, preservar_quebras=preservar_quebras))
 
+
+def _linhas_do_html(
+    text: str, *, preservar_quebras: bool = False, decode_entities: bool = True
+) -> list[str]:
+    """Linhas não vazias do texto de ``text``, como :func:`html_para_texto` as separa."""
     text = _SEM_TEXTO_RE.sub("", text)
     if preservar_quebras:
         text = _FIM_DE_LINHA_RE.sub(_SEPARADOR_DE_LINHA, text)
     text = _TAG_BLOCO_RE.sub(_SEPARADOR_DE_LINHA, text)
     text = _TAG_ABERTA_RE.sub("", _TAG_CELULA_RE.sub(" ", text))
-    text = normalizar_texto(html.unescape(text))
+    if decode_entities:
+        text = html.unescape(text)
+    text = normalizar_texto(text)
     linhas = (" ".join(linha.split()) for linha in text.split(_SEPARADOR_DE_LINHA))
-    return "\n".join(linha for linha in linhas if linha)
+    return [linha for linha in linhas if linha]
 
 
 def coerce_date_columns(

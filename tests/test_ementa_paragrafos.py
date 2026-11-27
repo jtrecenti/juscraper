@@ -4,8 +4,8 @@ Cada caso roda o parser sobre samples reais e compara a ementa de cada linha
 com a de um oráculo independente, montado com o BeautifulSoup sobre o HTML
 bruto: ``<br>`` e as tags de bloco separam as linhas, o resto do texto fica
 como o ``get_text`` o devolve (as tags inline somem sem deixar espaço, e
-comentários, ``<style>`` e ``<script>`` saem). O teste também exige que
-alguma ementa do caso tenha ``\n`` e que nenhuma tenha tag, ``\r`` ou ``\xa0``.
+comentários, ``<style>`` e ``<script>`` saem). O teste também confere quantas
+ementas do caso têm ``\n`` e exige que nenhuma tenha tag, ``\r`` ou ``\xa0``.
 
 Os testes unitários de :func:`juscraper.core.parse_utils.html_para_texto`
 ficam em ``tests/core/test_parse_utils.py``.
@@ -24,8 +24,10 @@ from bs4 import BeautifulSoup
 from juscraper.aggregators.falcao import parse as falcao_parse
 from juscraper.core.parse_utils import normalizar_texto
 from juscraper.courts.tjap import parse as tjap_parse
+from juscraper.courts.tjgo import parse as tjgo_parse
 from juscraper.courts.tjmg import parse as tjmg_parse
 from juscraper.courts.tjmt import parse as tjmt_parse
+from juscraper.courts.tjrj import parse as tjrj_parse
 from juscraper.courts.tjrn import parse as tjrn_parse
 from juscraper.courts.tjro import parse as tjro_parse
 from juscraper.courts.tjsc import parse as tjsc_parse
@@ -106,10 +108,28 @@ def _tjsc() -> list[str]:
     return _htmls("tjsc", "cjsg/results_normal_page_01.html", "cjsg/results_normal_page_02.html")
 
 
-def _tjsc_ementas_brutas(paginas: list[str]) -> list[str]:
+_TJSC_EMENTA = "div.resultadoItem div.resValue.completo[id$='-EMENTA']"
+
+
+def _brutos(paginas: list[str], seletor: str) -> list[str]:
+    """HTML interno dos elementos de ``seletor`` nas páginas."""
     soup = BeautifulSoup("".join(paginas), "html.parser")
-    valores = soup.select("div.resultadoItem div.resValue.completo[id$='-EMENTA']")
-    return [valor.decode_contents() for valor in valores]
+    return [valor.decode_contents() for valor in soup.select(seletor)]
+
+
+def _tjgo() -> list[str]:
+    return _htmls(
+        "tjgo", "cjsg/results_normal_page_01.html", "cjsg/results_normal_page_02.html",
+        "cjsg/results_julgado_em_page_01.html", "cjsg/single_page.html",
+    )
+
+
+def _tjrj() -> list[Any]:
+    paginas = _jsons(
+        "tjrj", "cjsg/xhr_page_01.json", "cjsg/xhr_page_02.json", "cjsg/xhr_single_page.json",
+        "cjsg/xhr_turma_recursal.json",
+    )
+    return [pagina["d"] for pagina in paginas]
 
 
 def _tjmg_esperada(html: str) -> str:
@@ -163,8 +183,26 @@ CASOS = {
     "tjsc-cjsg": Caso(
         _tjsc,
         lambda paginas: list(tjsc_parse.cjsg_parse_manager(paginas)["ementa"]),
-        lambda paginas: [oraculo(e, preservar_quebras=True) for e in _tjsc_ementas_brutas(paginas)],
+        lambda paginas: [oraculo(e, preservar_quebras=True) for e in _brutos(paginas, _TJSC_EMENTA)],
         com_paragrafos=20,
+    ),
+    # O portal separa os parágrafos com ``\n``, sem HTML; as linhas vazias saem.
+    "tjrj-cjsg": Caso(
+        _tjrj,
+        lambda paginas: list(tjrj_parse.cjsg_parse(paginas)["ementa"]),
+        lambda paginas: [
+            oraculo(d.get("TextoSemFormat") or d.get("Texto") or "", preservar_quebras=True)
+            for p in paginas
+            for d in p["DocumentosConsulta"]
+        ],
+        com_paragrafos=19,
+    ),
+    # Coluna ``texto``: o TJGO não tem ``ementa``. O portal manda o texto numa linha só.
+    "tjgo-cjsg": Caso(
+        _tjgo,
+        lambda paginas: list(tjgo_parse.cjsg_parse(paginas)["texto"]),
+        lambda paginas: [oraculo(t) for t in _brutos(paginas, "div.search-result p.conteudoTexto")],
+        com_paragrafos=0,
     ),
     "falcao-listar_decisoes": Caso(
         lambda: [_falcao()],
