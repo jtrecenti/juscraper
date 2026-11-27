@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import TypeVar
+from typing import TypeGuard, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -211,6 +211,11 @@ def resolve_total_pages(
 _PAGINAS_FORA_NO_AVISO = 5
 
 
+def _range_crescente(paginas: Iterable[int]) -> TypeGuard[range]:
+    """``range`` crescente, cortado pelos limites sem ser percorrido."""
+    return isinstance(paginas, range) and paginas.step > 0
+
+
 def menor_pagina(paginas: Iterable[int] | None) -> int:
     """A página a pedir primeiro quando o total só vem numa resposta: a menor pedida, ou 1 com ``None``.
 
@@ -220,7 +225,7 @@ def menor_pagina(paginas: Iterable[int] | None) -> int:
     """
     if paginas is None:
         return 1
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         return paginas.start
     return min(paginas)
 
@@ -232,7 +237,7 @@ def maior_pagina(paginas: Iterable[int]) -> int:
     resultados de :func:`contador_com_teto`, o cursor que só avança (PDPJ,
     DataJud) e a validação do payload antes da primeira requisição (STF).
     """
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         return paginas[-1]
     return max(paginas)
 
@@ -262,7 +267,7 @@ def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal
     """
     if paginas is None:
         return list(range(1, n_pags + 1))
-    if isinstance(paginas, range) and paginas.step > 0:
+    if _range_crescente(paginas):
         validas, primeiras_fora, n_fora = _range_no_intervalo(paginas, n_pags)
     else:
         unicas = paginas_unicas(paginas)

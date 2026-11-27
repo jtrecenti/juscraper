@@ -38,8 +38,6 @@ EXCECOES = {
     ("courts/stf/_collection.py", "Collection.__init__"): (
         "o STF recusa página repetida com ValueError e guarda a lista pedida na identidade do checkpoint"
     ),
-    ("courts/tjpr/download.py", "_baixar_paginas"): "``paginas`` já vem resolvida por ``paginas_unicas``",
-    ("courts/tjto/download.py", "_baixar_paginas"): "``paginas`` já vem resolvida por ``paginas_no_intervalo``",
     # ``paginas`` com as respostas já baixadas, não a seleção pedida.
     ("courts/_esaj/acordao.py", "EsajAcordaoScraper.baixar_acordao"): "páginas do processo já abertas",
     ("courts/stm/parse.py", "cjsg_parse_manager"): "HTML das páginas baixadas",

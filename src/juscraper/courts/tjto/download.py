@@ -178,9 +178,9 @@ def cjsg_download_manager(
 
 
 def _baixar_paginas(
-    get_page: Callable[[int], str], paginas: list[int], primeira: int, html_primeira: str, sleep_time: float
+    get_page: Callable[[int], str], pendentes: list[int], primeira: int, html_primeira: str, sleep_time: float
 ) -> list:
-    """Baixa as ``paginas`` (1-based), com ``sleep_time`` antes de cada requisição.
+    """Baixa as ``pendentes`` (1-based), com ``sleep_time`` antes de cada requisição.
 
     ``primeira`` já foi baixada, para ler o total, e entra na sua posição sem
     nova requisição. Por isso a página que falha aqui sempre tem outra baixada
@@ -191,7 +191,7 @@ def _baixar_paginas(
     antes, como a exceção original.
     """
     resultados: list[str] = []
-    for posicao, page_num in enumerate(tqdm(paginas, desc="Baixando páginas TJTO")):
+    for posicao, page_num in enumerate(tqdm(pendentes, desc="Baixando páginas TJTO")):
         if page_num == primeira:
             resultados.append(html_primeira)
             continue
@@ -199,7 +199,7 @@ def _baixar_paginas(
         try:
             resultados.append(get_page(page_num))
         except Exception as exc:  # vai para ColetaParcialError
-            faltando = paginas[posicao:]
+            faltando = pendentes[posicao:]
             if primeira in faltando:
                 resultados.append(html_primeira)
                 faltando.remove(primeira)

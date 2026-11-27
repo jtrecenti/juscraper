@@ -392,12 +392,10 @@ class FalcaoScraper(HTTPScraper):
         alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
         # A menor pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
-        primeira = self._primeira_pendente(inp, alcancaveis, gravadas, total_anterior)
+        primeira = self._primeira_pendente(alcancaveis, gravadas, total_anterior, inp.tamanho_pagina)
         if primeira is None:
             if total_anterior is not None:
-                # Nada a requisitar: as pedidas além do total registrado só vão para o log.
-                self._paginas_ate(alcancaveis, total_anterior, inp.tamanho_pagina)
-                self._avisar_teto(inp, total_anterior)
+                self._avisar_sem_pendentes(inp, alcancaveis, total_anterior)
             return
         primeiro_json = self._buscar_pagina(inp, primeira)
         # O total ou um aviso convertido em erro não pode apagar a resposta recebida.
@@ -429,9 +427,17 @@ class FalcaoScraper(HTTPScraper):
             conteudo = self._buscar_pagina(inp, pagina)
             _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
+    def _avisar_sem_pendentes(
+        self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, total_anterior: int,
+    ) -> None:
+        """Retomada sem nada a requisitar: avisa das pedidas além do total registrado e do teto."""
+        if alcancaveis is not None:
+            ultima = self._total_paginas(total_anterior, inp.tamanho_pagina)
+            paginas_no_intervalo(alcancaveis, ultima, tribunal="Falcao")
+        self._avisar_teto(inp, total_anterior)
+
     def _primeira_pendente(
-        self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, gravadas: set[int],
-        total_anterior: int | None,
+        self, alcancaveis: list[int] | None, gravadas: set[int], total_anterior: int | None, tamanho_pagina: int,
     ) -> int | None:
         """Menor página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
@@ -442,10 +448,9 @@ class FalcaoScraper(HTTPScraper):
         anterior: página além dele não gasta a cota, e o checkpoint completo
         não requisita nada.
         """
-        ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, inp.tamanho_pagina)
-        if alcancaveis is None:
-            return next((p for p in range(1, ultima + 1) if p not in gravadas), None)
-        return min((p for p in alcancaveis if p <= ultima and p not in gravadas), default=None)
+        ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, tamanho_pagina)
+        candidatas = range(1, ultima + 1) if alcancaveis is None else alcancaveis
+        return min((p for p in candidatas if p <= ultima and p not in gravadas), default=None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
         return build_pesquisa_params(

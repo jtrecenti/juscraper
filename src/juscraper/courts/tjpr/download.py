@@ -274,26 +274,26 @@ def cjsg_download(
 
 def _baixar_paginas(
     fetch_page: Callable[[int], str],
-    paginas: list[int],
+    pendentes: list[int],
     resultados: list[str],
     ler_parcial: Callable[[list[str]], pd.DataFrame],
 ) -> list[str]:
-    """Acrescenta ``paginas`` a ``resultados``, as páginas já baixadas, e os devolve.
+    """Acrescenta ``pendentes`` a ``resultados``, as páginas já baixadas, e os devolve.
 
     Como no TJMG e no TJTO, a página que falha com outra já baixada encerra a
     busca e levanta :class:`ColetaParcialError`, com as baixadas lidas por
     ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
     original sobe.
     """
-    if not paginas:
+    if not pendentes:
         return resultados
-    for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
+    for posicao, pagina in enumerate(tqdm(pendentes, desc='Baixando páginas TJPR')):
         try:
             resultados.append(fetch_page(pagina))
         except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
             if not resultados:
                 raise
-            raise _coleta_parcial(resultados, paginas[posicao:], exc, ler_parcial) from exc
+            raise _coleta_parcial(resultados, pendentes[posicao:], exc, ler_parcial) from exc
     return resultados
 
 

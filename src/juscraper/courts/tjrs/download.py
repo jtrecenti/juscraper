@@ -1,11 +1,10 @@
 """Downloads raw files from the TJRS jurisprudence search."""
 import json
-import math
 from urllib.parse import urlencode
 
 from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas
+from juscraper.utils.pagination import baixar_paginas_pedidas, resolve_total_pages
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -179,6 +178,6 @@ def cjsg_download_manager(
 
     def _n_pags(data):
         num_found = data.get('response', {}).get('numFound', 0)
-        return math.ceil(num_found / RESULTS_PER_PAGE) if num_found else 1
+        return resolve_total_pages(num_found, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJRS")
 
     return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS")

@@ -33,7 +33,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.tjpe.download import BASE_URL
-from tests._helpers import load_sample, urlencoded_body_subset_matcher
+from tests._helpers import load_sample, urlencoded_body_subset_matcher, urls_enviadas
 
 CONSULTA_URL = f"{BASE_URL}/consulta.xhtml"
 ESCOLHA_URL = f"{BASE_URL}/escolhaResultado.xhtml"
@@ -181,7 +181,7 @@ def test_cjsg_pagina_repetida_uma_vez_e_alem_do_total_no_log(mocker, caplog):
         brutos = jus.scraper("tjpe").cjsg_download("dano moral", paginas=[2, 2, 10**6])
 
     assert len(brutos) == 1
-    assert [c.request.url for c in responses.calls].count(RESULTADO_URL) == 1
+    assert urls_enviadas().count(RESULTADO_URL) == 1
     assert "TJPE: página 1000000 fora do intervalo" in caplog.text
 
 
