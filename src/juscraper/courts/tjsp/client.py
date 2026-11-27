@@ -283,7 +283,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
         Roda :func:`validate_pesquisa_length` antes do pydantic para que
         ``QueryTooLongError`` propague limpo (em vez de virar
         ``ValidationError``). Aceita os mesmos filtros de :meth:`cjsg`;
-        veja la a lista completa.
+        veja lá a lista completa.
 
         Args:
             pesquisa: Termo livre. Default ``""`` (sem termo).

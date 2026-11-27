@@ -602,7 +602,7 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 
 `test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
 
-`test_download_docstring_references_toplevel` verifica a referência `:meth:` nos pares registrados em `DOWNLOAD_REFERENCE_CASES`. Registrar novos pares nessa lista. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
+`test_download_docstring_references_toplevel` verifica a referência `:meth:` em todo método público `*_download` cujo método principal (o mesmo nome sem `_download`) recebe `**kwargs`. Os pares saem do próprio pacote, em `DOWNLOAD_REFERENCE_CASES`, sem registro manual; o download registrado em `CASES` fica de fora. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
 
 Executar `uv run pytest tests/schemas/test_docstring_parity.py` após alterar esses contratos.
 

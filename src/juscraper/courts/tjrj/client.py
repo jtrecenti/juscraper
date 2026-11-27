@@ -62,7 +62,7 @@ class TJRJScraper(HTTPScraper):
     ) -> list:
         """Baixa as paginas de resultado da busca de jurisprudencia do TJRJ.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
         Retorna a lista bruta de payloads JSON, sem parser.
 
         See also:
