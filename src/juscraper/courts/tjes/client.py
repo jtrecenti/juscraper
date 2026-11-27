@@ -51,58 +51,13 @@ class TJESScraper(HTTPScraper):
         data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """
-        Download raw JSON results from the TJES jurisprudence search.
+        """Baixa os resultados JSON brutos da pesquisa de jurisprudência do TJES.
 
-        Parameters
-        ----------
-        pesquisa : str, optional
-            Search term. ``query`` and ``termo`` are accepted as deprecated aliases.
-        paginas : int, list, range, or None
-            Pages to download (1-based). ``int`` n means pages 1..n.
-            ``None`` downloads all available pages.
-        core : str
-            Solr core to query: ``pje2g`` (default), ``pje2g_mono``,
-            ``legado``, ``turma_recursal_legado``. For first instance
-            (``pje1g``), use :meth:`cjpg` instead.
-        busca_exata : bool
-            If True, perform exact-match search.
-        relator : str
-            Filter by judge name (exact, uppercase). Accepts the deprecated
-            alias ``magistrado``.
-        orgao_julgador : str
-            Filter by court division.
-        classe : str
-            Filter by judicial class. Accepts the deprecated alias
-            ``classe_judicial``.
-        jurisdicao : str
-            Filter by jurisdiction.
-        assunto : str
-            Filter by subject.
-        ordenacao : str, optional
-            Sort order; ``None`` (default) sorts by relevance. Options depend on
-            ``core``: ``"dt_juntada desc"``, ``"dt_juntada asc"``,
-            ``"nr_processo asc"``, ``"nr_processo desc"`` for ``pje2g``,
-            ``pje2g_mono`` and :meth:`cjpg` (``pje1g``); ``"data_julgamento desc|asc"``,
-            ``"data_publicacao desc|asc"``, ``"numero_processo_legado asc|desc"``
-            for ``legado``; ``"data_julgamento desc|asc"``,
-            ``"num_processo asc|desc"`` for ``turma_recursal_legado``.
-        tamanho_pagina : int
-            Results per page (default 20 — particularidade do backend
-            Elasticsearch do TJES; demais tribunais usam 10). Aceita
-            ``per_page`` como alias deprecado.
-        data_julgamento_inicio / data_julgamento_fim : str, date or None
-            Date range filter: ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``,
-            ``AAAA/MM/DD``, ``date`` ou ``datetime``, enviado ao backend como
-            ``AAAA-MM-DD``. TJES uses ``dataIni``/``dataFim`` which
-            filters on ``dt_juntada``. The backend does not expose a separate
-            data de publicacao filter; passing ``data_publicacao_*`` raises
-            ``TypeError``.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
-        Returns
-        -------
-        list
-            Raw JSON responses, one per page.
+        Returns:
+            Respostas JSON brutas, uma por página.
         """
         if core not in CJSG_CORES:
             raise ValueError(
@@ -152,17 +107,14 @@ class TJESScraper(HTTPScraper):
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """
-        Parse raw TJES search results into a DataFrame.
+        """Converte os resultados brutos da pesquisa do TJES em DataFrame.
 
-        Parameters
-        ----------
-        resultados_brutos : list
-            Raw JSON responses returned by :meth:`cjsg_download`.
+        Args:
+            resultados_brutos: Respostas JSON brutas devolvidas por
+                :meth:`cjsg_download`.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse(resultados_brutos)
 
@@ -183,16 +135,53 @@ class TJESScraper(HTTPScraper):
         data_julgamento_fim: str | date | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Search TJES jurisprudence (download + parse).
+        """Pesquisa jurisprudência do TJES (download + parse).
 
-        Returns a ready-to-analyze DataFrame. Accepts all the same parameters
-        as :meth:`cjsg_download`.
+        Devolve um DataFrame pronto para análise.
+
+        Args:
+            pesquisa: Termo de busca. ``query`` e ``termo`` são aceitos como
+                aliases deprecados.
+            paginas: Páginas a baixar (1-based). ``int`` n significa as páginas
+                1..n. ``None`` baixa todas as páginas disponíveis.
+            core: Core do Solr a consultar: ``pje2g`` (default), ``pje2g_mono``,
+                ``legado``, ``turma_recursal_legado``. Para o primeiro grau
+                (``pje1g``), usar :meth:`cjpg`.
+            busca_exata: Se ``True``, faz busca exata.
+            relator: Nome do magistrado (exato, em maiúsculas). Aceita o alias
+                deprecado ``magistrado``.
+            orgao_julgador: Órgão julgador.
+            classe: Classe judicial. Aceita o alias deprecado ``classe_judicial``.
+            jurisdicao: Jurisdição.
+            assunto: Assunto.
+            ordenacao: Ordem dos resultados; ``None`` (default) ordena por
+                relevância. As opções dependem do ``core``: ``"dt_juntada desc"``,
+                ``"dt_juntada asc"``, ``"nr_processo asc"``, ``"nr_processo desc"``
+                para ``pje2g``, ``pje2g_mono`` e :meth:`cjpg` (``pje1g``);
+                ``"data_julgamento desc|asc"``, ``"data_publicacao desc|asc"``,
+                ``"numero_processo_legado asc|desc"`` para ``legado``;
+                ``"data_julgamento desc|asc"``, ``"num_processo asc|desc"`` para
+                ``turma_recursal_legado``.
+            tamanho_pagina: Resultados por página (default 20 — particularidade do
+                backend Elasticsearch do TJES; demais tribunais usam 10). Aceita
+                ``per_page`` como alias deprecado.
+            data_julgamento_inicio: Início do intervalo de datas: ``DD/MM/AAAA``,
+                ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou
+                ``datetime``, enviado ao backend como ``AAAA-MM-DD``. O TJES usa
+                ``dataIni``/``dataFim``, que filtram por ``dt_juntada``. O backend
+                não expõe um filtro separado de data de publicação; passar
+                ``data_publicacao_*`` levanta ``TypeError``.
+            data_julgamento_fim: Fim do intervalo de datas (mesmos formatos e mesmo
+                campo do backend).
+            **kwargs: Aliases deprecados (ver abaixo).
 
         Aliases deprecados:
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``
+
+        Returns:
+            Uma linha por decisão.
         """
         brutos = self.cjsg_download(
             pesquisa=pesquisa,
@@ -272,16 +261,13 @@ class TJESScraper(HTTPScraper):
         tamanho_pagina: int = DEFAULT_PER_PAGE,
         **kwargs,
     ) -> list:
-        """
-        Download raw JSON results from the TJES first-instance search (core ``pje1g``).
+        """Baixa os resultados JSON brutos da pesquisa de primeiro grau do TJES (core ``pje1g``).
 
-        Accepts the same filter parameters as :meth:`cjsg_download` (except ``core``).
+        Aceita os mesmos filtros de :meth:`cjpg`; veja lá a lista completa.
         ``per_page`` é aceito como alias deprecado de ``tamanho_pagina``.
 
-        Returns
-        -------
-        list
-            Raw JSON responses, one per page.
+        Returns:
+            Respostas JSON brutas, uma por página.
         """
         resultados: list = self._cjpg_download_internal(
             pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina
@@ -289,17 +275,14 @@ class TJESScraper(HTTPScraper):
         return resultados
 
     def cjpg_parse(self, resultados_brutos: list) -> pd.DataFrame:
-        """
-        Parse raw TJES first-instance results into a DataFrame.
+        """Converte os resultados brutos de primeiro grau do TJES em DataFrame.
 
-        Parameters
-        ----------
-        resultados_brutos : list
-            Raw JSON responses returned by :meth:`cjpg_download`.
+        Args:
+            resultados_brutos: Respostas JSON brutas devolvidas por
+                :meth:`cjpg_download`.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         return cjsg_parse(resultados_brutos)
 
@@ -310,21 +293,26 @@ class TJESScraper(HTTPScraper):
         tamanho_pagina: int = DEFAULT_PER_PAGE,
         **kwargs,
     ) -> pd.DataFrame:
-        """
-        Search TJES first-instance jurisprudence (download + parse).
+        """Pesquisa jurisprudência de primeiro grau do TJES (download + parse).
 
-        Shortcut for :meth:`cjpg_download` + :meth:`cjpg_parse`.
-        Queries the ``pje1g`` core. Accepts the same filter parameters as
-        :meth:`cjsg` (except ``core``).
+        Atalho para :meth:`cjpg_download` + :meth:`cjpg_parse`. Consulta o core
+        ``pje1g``.
+
+        Args:
+            pesquisa: Termo de busca. ``query`` e ``termo`` são aceitos como
+                aliases deprecados.
+            paginas: Páginas a baixar (1-based); ``None`` baixa todas.
+            tamanho_pagina: Resultados por página (default 20). Aceita ``per_page``
+                como alias deprecado.
+            **kwargs: Os mesmos filtros de :meth:`cjsg`, exceto ``core``.
 
         Aliases deprecados:
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
+            Uma linha por decisão.
         """
         brutos = self._cjpg_download_internal(pesquisa, paginas, kwargs, tamanho_pagina=tamanho_pagina)
         return cjsg_parse(brutos)

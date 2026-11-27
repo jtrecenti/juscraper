@@ -70,36 +70,30 @@ class TJGOScraper(HTTPScraper):
         data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """Run a TJGO search and return the raw HTML of each page.
+        """Executa a busca no TJGO e devolve o HTML bruto de cada página.
 
         Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term (aliases ``query`` / ``termo`` accepted).
-        paginas : int, list, range or None
-            Pages to download (1-based). ``None`` downloads every page.
-        id_instancia : int or str
-            ``0`` all / ``15`` tribunal / ``151`` turmas recursais. ``2`` and
-            ``3`` are deprecated aliases of ``151`` and ``15``; ``1`` is
-            deprecated with no replacement.
-        id_area : int or str
-            ``0`` all / ``1`` civil / ``2`` criminal. With ``id_instancia=151``
-            only ``0`` is accepted, as in the website form.
-        id_serventia_subtipo : int or str
-            Code from the website's "Orgao" dropdown (e.g. ``14`` civil
-            chambers, ``20`` criminal chambers). ``0`` = all. A code the form
-            does not list for the chosen instance and area raises
-            ``ValidationError``.
-        numero_processo : str
-            Filter by specific CNJ process number.
-        tamanho_pagina : int
-            Items per page (default 10). Aceita ``qtde_itens_pagina`` como
-            alias deprecado.
-        data_publicacao_inicio, data_publicacao_fim : str, date or None
-            Publication date range: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
-            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+        Args:
+            pesquisa: Termo de busca livre (aliases ``query`` / ``termo`` aceitos).
+            paginas: Páginas a baixar (1-based). ``None`` baixa todas.
+            id_instancia: ``0`` todas / ``15`` tribunal / ``151`` turmas recursais.
+                ``2`` e ``3`` são aliases deprecados de ``151`` e ``15``; ``1`` é
+                deprecado sem substituto.
+            id_area: ``0`` todas / ``1`` cível / ``2`` criminal. Com
+                ``id_instancia=151``, só ``0`` é aceito, como no formulário do site.
+            id_serventia_subtipo: Código do seletor "Orgao" do site (por exemplo,
+                ``14`` Câmaras Cíveis, ``20`` Câmaras Criminais). ``0`` = todos.
+                Código que o formulário não oferece para a instância e a área
+                escolhidas levanta ``ValidationError``.
+            numero_processo: Filtra por um número CNJ específico.
+            tamanho_pagina: Itens por página (default 10). Aceita
+                ``qtde_itens_pagina`` como alias deprecado.
+            data_publicacao_inicio: Início do intervalo de publicação:
+                ``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``,
+                ``date`` ou ``datetime``.
+            data_publicacao_fim: Fim do intervalo de publicação (mesmos formatos).
+            **kwargs: Aliases deprecados; ver :meth:`cjsg`.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10

@@ -7,18 +7,14 @@ from juscraper.core.parse_utils import coerce_date_columns, normalizar_texto
 
 
 def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
-    """
-    Extract structured data from TJBA raw GraphQL responses.
+    """Extrai os dados estruturados das respostas GraphQL brutas do TJBA.
 
-    Parameters
-    ----------
-    resultados_brutos : list
-        List of raw response dicts as returned by ``cjsg_download``.
+    Args:
+        resultados_brutos: Lista dos dicionários da resposta, como devolvidos
+            por ``cjsg_download``.
 
-    Returns
-    -------
-    pd.DataFrame
-        DataFrame with one row per decision.
+    Returns:
+        Uma linha por decisão.
     """
     rows = []
     for page_data in resultados_brutos:

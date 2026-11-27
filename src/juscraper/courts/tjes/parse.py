@@ -80,21 +80,16 @@ def _normalizar_documento(documento: dict, campos: dict[str, str]) -> dict:
 
 
 def cjsg_parse(resultados_brutos: list) -> pd.DataFrame:
-    """
-    Extract structured data from raw TJES search results.
+    """Extrai os dados estruturados dos resultados brutos da pesquisa do TJES.
 
-    Parameters
-    ----------
-    resultados_brutos : list
-        List of raw JSON responses from ``cjsg_download``.
+    Args:
+        resultados_brutos: Lista das respostas JSON brutas de ``cjsg_download``.
 
-    Returns
-    -------
-    pd.DataFrame
-        Nos cores ``legado`` e ``turma_recursal_legado``, as colunas canonicas
-        vem dos campos proprios do core (ver ``_CAMPOS_POR_CORE_LEGADO``), e a
-        data e ``data_julgamento`` (mais ``data_publicacao`` no ``legado``),
-        em vez de ``dt_juntada``.
+    Returns:
+        Uma linha por decisão. Nos cores ``legado`` e ``turma_recursal_legado``,
+            as colunas canonicas vem dos campos proprios do core (ver
+            ``_CAMPOS_POR_CORE_LEGADO``), e a data e ``data_julgamento`` (mais
+            ``data_publicacao`` no ``legado``), em vez de ``dt_juntada``.
     """
     campos_padrao = dict(_FIELD_RENAMES) | {
         campo: campo for campo in _MAIN_FIELDS + _EXTRA_FIELDS if campo not in _FIELD_RENAMES.values()

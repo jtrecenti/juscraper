@@ -6,8 +6,10 @@ falha do par ``nome: descrição`` (lista de exceções ou de nomes partida em d
 linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griffe
 lê com itens a mais, sem tipo, com o tipo repetido ou com tipo diferente da
 assinatura, entrada de ``Args:`` com tipo escrito em parâmetro anotado (o
-tipo da docstring se sobrepõe à anotação) e a seção ``Warns:``, que derruba
-o build. Os casos e as formas certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
+tipo da docstring se sobrepõe à anotação), a seção ``Warns:``, que derruba
+o build, e seção no estilo numpy (título sublinhado por ``---``), que o parser
+Google publica como texto, sem a tabela de parâmetros. Os casos e as formas
+certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
 anotação de retorno da assinatura esteja disponível e módulos fora da
@@ -27,6 +29,8 @@ _FALHA_DE_PAR = "Failed to get '"
 # Um tipo (``pd.DataFrame``, ``dict[str, Any]``, ``str | None``) seguido de dois-pontos.
 _TIPO = r"[A-Za-z_][\w.]*(?:\[[^:]*\])?"
 _PREFIXO_DE_TIPO = re.compile(rf"^({_TIPO}(?:\s*\|\s*{_TIPO})*):(?:\s|$)")
+# Título de seção numpy: uma linha de texto e, logo abaixo, uma linha só de ``-``.
+_SECAO_NUMPY = re.compile(r"^[ \t]*(\S[^\n]*?)[ \t]*\n[ \t]*-{3,}[ \t]*$", re.MULTILINE)
 
 
 class _Coletor(logging.Handler):
@@ -45,6 +49,16 @@ def _objetos(objeto: griffe.Object):
     for membro in objeto.members.values():
         if not membro.is_alias:
             yield from _objetos(membro)
+
+
+def _motivo_do_estilo_numpy(docstring: str) -> str | None:
+    titulos = _SECAO_NUMPY.findall(docstring)
+    if titulos:
+        return (
+            f"seção no estilo numpy ({', '.join(titulos)}), que a referência publica como texto;"
+            " escrever no estilo Google ('Args:', 'Returns:', 'Raises:')"
+        )
+    return None
 
 
 def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> str | None:
@@ -140,6 +154,9 @@ def problemas_do_codigo(codigo: str, modulo: str = "modulo", caminho: Path | Non
         for objeto in _objetos(raiz):
             if objeto.docstring is None:
                 continue
+            motivo = _motivo_do_estilo_numpy(objeto.docstring.value)
+            if motivo:
+                problemas.append(f"{caminho}:{objeto.docstring.lineno}: {objeto.name}: {motivo}")
             for secao in objeto.docstring.parse("google"):
                 motivo = _motivo_da_secao(objeto, secao)
                 if motivo:
@@ -273,6 +290,25 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    Args:\n'
         '        **kwargs (int): Filtros.\n'
         '    """\n',
+        'def f(a: int):\n'
+        '    """Resumo.\n\n'
+        '    Parameters\n'
+        '    ----------\n'
+        '    a : int\n'
+        '        Número.\n'
+        '    """\n',
+        'def f() -> int:\n'
+        '    """Resumo.\n\n'
+        '    Returns\n'
+        '    -------\n'
+        '    int\n'
+        '        Número.\n'
+        '    """\n',
+        '"""Módulo.\n\n'
+        'Notes\n'
+        '-----\n'
+        'Texto.\n'
+        '"""\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -294,6 +330,9 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "args-tipo-com-anotacao-na-classe",
         "args-anotados-agrupados",
         "kwargs-tipo-com-anotacao",
+        "numpy-parameters",
+        "numpy-returns",
+        "numpy-no-modulo",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
