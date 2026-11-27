@@ -526,7 +526,7 @@ class FalcaoScraper(HTTPScraper):
 
     @staticmethod
     def _avisar_teto(inp: InputListarDecisoesFalcao, total: int) -> None:
-        if inp.paginas is None and total >= _MAX_RESULTADOS:
+        if inp.paginas_normalizadas is None and total >= _MAX_RESULTADOS:
             avisar(
                 f"A busca atingiu o teto de {_MAX_RESULTADOS} resultados do Falcao; o "
                 "backend nao informa o total real e o resultado pode estar incompleto. "
