@@ -10,10 +10,10 @@ import requests
 
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import HTTPScraper, RequestPolicy
-from juscraper.core.waf import USER_AGENT, eh_desafio_waf
+from juscraper.core.waf import USER_AGENT
 from juscraper.utils.params import apply_input_pipeline_search
 
-from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager
+from .download import TYPE_MINUTA_MAP, _fetch_ementa, cjsg_download_manager, eh_bloqueio_waf
 from .parse import cjsg_parse_manager
 from .schemas import InputCJPGTJTO, InputCJSGTJTO
 
@@ -57,8 +57,7 @@ class TJTOScraper(HTTPScraper):
         residencial). Sem esta checagem, o 202 vazio sairia como busca sem
         resultados.
         """
-        # O consulta.php não responde 202 fora do desafio, que pode vir sem o cabeçalho.
-        if resp.status_code == 202 or eh_desafio_waf(resp) or resp.headers.get("x-amzn-waf-action") == "captcha":
+        if eh_bloqueio_waf(resp):
             raise BotChallengeBlockedError(
                 self.tribunal_name, resp.url, bot_manager="AWS WAF",
                 mensagem=(
