@@ -95,3 +95,33 @@ class TestCJPGAceitaSingularComIdFiltro:
     def test_vara_lista_string(self):
         m = InputCJPGEsaj(vara=["1-1-1", "2-2-2"])
         assert m.vara == "1-1-1,2-2-2"
+
+
+class TestJsonSchemaIdFiltro:
+    """O JSON schema de entrada lista as formas aceitas; o de saída, ``str | None``.
+
+    ``IdFiltro`` é anotado com o tipo de saída e guarda o de entrada em
+    ``json_schema_input_type``; sem ele, o schema de entrada anunciaria só
+    ``string``/``null`` e esconderia ``int`` e ``list``.
+    """
+
+    @staticmethod
+    def _tipos(campo: str, mode: str) -> object:
+        return InputCJSGTJSP.model_json_schema(mode=mode)["properties"][campo]["anyOf"]
+
+    def test_entrada_aceita_int_str_lista(self):
+        assert self._tipos("classe", "validation") == [
+            {"type": "integer"},
+            {"type": "string"},
+            {"type": "array", "items": {"anyOf": [{"type": "integer"}, {"type": "string"}]}},
+            {"type": "null"},
+        ]
+
+    def test_entrada_unico_sem_lista(self):
+        assert self._tipos("comarca", "validation") == [
+            {"type": "integer"}, {"type": "string"}, {"type": "null"},
+        ]
+
+    def test_saida_e_str_ou_none(self):
+        for campo in ("classe", "comarca"):
+            assert self._tipos(campo, "serialization") == [{"type": "string"}, {"type": "null"}]

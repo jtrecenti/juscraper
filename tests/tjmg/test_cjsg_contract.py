@@ -40,7 +40,7 @@ from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.parse import cjsg_parse
-from tests._helpers import load_sample_bytes, query_param_subset_matcher
+from tests._helpers import load_sample_bytes, query_param_subset_matcher, timeout_enviado, urls_enviadas
 from tests.tjmg._helpers import FALHAS_DE_REDE, FORM_URL, SEARCH_URL, add_captcha, add_dwr, add_form
 
 CJSG_MIN_COLUMNS = {
@@ -156,8 +156,7 @@ def test_cjsg_revalida_captcha_quando_sessao_expira(mock_txtcaptcha, mocker):
     df = jus.scraper("tjmg").cjsg("dano moral", paginas=range(1, 3))
 
     assert df["processo"].nunique() > 10
-    dwr_calls = [c for c in responses.calls if "isCaptchaValid" in c.request.url]
-    assert len(dwr_calls) == 2
+    assert sum("isCaptchaValid" in url for url in urls_enviadas()) == 2
 
 
 
@@ -181,7 +180,7 @@ def test_cjsg_retenta_falha_de_rede_na_paginacao(mock_txtcaptcha, mocker, falha)
     df = jus.scraper("tjmg").cjsg("dano moral", paginas=range(1, 3))
 
     assert df["processo"].nunique() > 10
-    assert len([c for c in responses.calls if "numeroRegistro=11" in c.request.url]) == 2
+    assert sum("numeroRegistro=11" in url for url in urls_enviadas()) == 2
 
 
 @pytest.mark.parametrize("falha", FALHAS_DE_REDE)
@@ -242,7 +241,7 @@ def test_cjsg_falha_persistente_numa_pagina_guarda_as_anteriores(mock_txtcaptcha
     pd.testing.assert_frame_equal(erro.value.resultado, esperado)
     assert isinstance(erro.value.__cause__, requests.ConnectionError)
     assert [type(f[2]) for f in erro.value.falhas] == [requests.ConnectionError]
-    assert not [c for c in responses.calls if "numeroRegistro=31" in c.request.url]
+    assert not any("numeroRegistro=31" in url for url in urls_enviadas())
 
 
 @responses.activate(registry=OrderedRegistry)
@@ -277,4 +276,4 @@ def test_cjsg_timeout_vem_do_perfil(mock_txtcaptcha, mocker, politica, timeout):
 
     jus.scraper("tjmg", politica=politica).cjsg("homicidio", paginas=1)
 
-    assert [c.request.req_kwargs["timeout"] for c in responses.calls] == [timeout] * 4
+    assert [timeout_enviado(c.request) for c in responses.calls] == [timeout] * 4

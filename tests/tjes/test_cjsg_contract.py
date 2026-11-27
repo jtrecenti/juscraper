@@ -109,7 +109,8 @@ def test_cjsg_no_results(mocker):
 def test_cjsg_rejects_pje1g_core():
     """Public cjsg rejects first-instance core; use cjpg instead."""
     with pytest.raises(ValueError, match="cjpg"):
-        jus.scraper("tjes").cjsg("direito", core="pje1g", paginas=1)
+        # Core de 1º grau de propósito.
+        jus.scraper("tjes").cjsg("direito", core="pje1g", paginas=1)  # type: ignore[arg-type]
 
 
 @responses.activate

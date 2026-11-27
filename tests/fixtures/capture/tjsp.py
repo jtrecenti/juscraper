@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import re
 import tempfile
 import time
@@ -46,6 +47,8 @@ from ._util import (
     make_tjsp_cjsg_body,
     samples_dir_for,
 )
+
+logger = logging.getLogger(__name__)
 
 ESAJ_BASE = "https://esaj.tjsp.jus.br/"
 
@@ -77,11 +80,37 @@ def capture_cjsg() -> None:
     )
     if "BONIFICAÇÃO POR RESULTADOS" not in resps[0].text:
         # Sem a ementa, o sample deixaria de exercitar a regressão.
-        print("[tjsp] cjsg ementa_com_resultados: a 1a página mudou; sample mantido")
+        logger.info("[tjsp] cjsg ementa_com_resultados: a 1a página mudou; sample mantido")
     else:
         dump(samples_dir_for("tjsp", "cjsg") / "ementa_com_resultados.html", resps[0].content)
-        print("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
+        logger.info("[tjsp] cjsg ementa_com_resultados ('direito', baixar_sg=False) → saved")
     capture_cjsg_sem_ementa()
+    capture_cjsg_numero_recurso()
+
+
+# Recurso com um acórdão só (julgado em 01/10/2026), usado no filtro ``numero_recurso``.
+CJSG_NUMERO_RECURSO = "1507541-25.2025.8.26.0425"
+
+
+def capture_cjsg_numero_recurso() -> None:
+    """Grava ``cjsg/numero_recurso.html``: busca só pelo número do recurso.
+
+    O filtro vai em ``dados.nuProcOrigem``. Em 27/11/2026, a busca trouxe uma
+    linha, com o próprio recurso no ``processo``.
+    """
+    _, resps = fetch_cjsg_pages(
+        build_session(headers=TJSP_CHROME_HEADERS), ESAJ_BASE, "",
+        body_builder=lambda pesquisa, **kw: make_tjsp_cjsg_body(
+            pesquisa, numero_recurso=CJSG_NUMERO_RECURSO, **kw
+        ),
+    )
+    linhas = BeautifulSoup(resps[0].text, "html.parser").find_all("tr", class_="fundocinza1")
+    if len(linhas) != 1 or CJSG_NUMERO_RECURSO not in resps[0].text:
+        # Sem o recurso como única linha, o sample deixaria de mostrar o filtro.
+        logger.info("[tjsp] cjsg numero_recurso: %s linhas; sample mantido", len(linhas))
+        return
+    dump(samples_dir_for("tjsp", "cjsg") / "numero_recurso.html", resps[0].content)
+    logger.info("[tjsp] cjsg numero_recurso (%s) → saved", CJSG_NUMERO_RECURSO)
 
 
 def capture_cjsg_sem_ementa() -> None:
@@ -103,10 +132,10 @@ def capture_cjsg_sem_ementa() -> None:
     )
     if not 0 < com_ementa < len(linhas):
         # Sem as duas formas na página, o sample deixaria de exercitar o caso.
-        print(f"[tjsp] cjsg sem_ementa: {com_ementa} de {len(linhas)} linhas com ementa; sample mantido")
+        logger.info("[tjsp] cjsg sem_ementa: %s de %s linhas com ementa; sample mantido", com_ementa, len(linhas))
         return
     dump(samples_dir_for("tjsp", "cjsg") / "sem_ementa.html", resps[0].content)
-    print(f"[tjsp] cjsg sem_ementa: {len(linhas) - com_ementa} de {len(linhas)} linhas sem ementa → saved")
+    logger.info("[tjsp] cjsg sem_ementa: %s de %s linhas sem ementa → saved", len(linhas) - com_ementa, len(linhas))
 
 
 # ---------- cjpg ---------------------------------------------------------
@@ -131,10 +160,10 @@ def capture_cjpg_single_page() -> None:
     linhas = BeautifulSoup(resposta.content, "html.parser").select("#divDadosResultado tr.fundocinza1")
     if not 0 < len(linhas) < 10:
         # Com 10 linhas pode haver página 2, e o sample deixaria de exercitar o caso.
-        print(f"[tjsp] cjpg single_page: {len(linhas)} linhas na 1a página; sample mantido")
+        logger.info("[tjsp] cjpg single_page: %s linhas na 1a página; sample mantido", len(linhas))
         return
     dump(samples_dir_for("tjsp", "cjpg") / "single_page.html", resposta.content)
-    print(f"[tjsp] cjpg single_page ('jurimétrica', {len(linhas)} resultado(s)) → saved")
+    logger.info("[tjsp] cjpg single_page ('jurimétrica', %s resultado(s)) → saved", len(linhas))
 
 
 def capture_cjpg_sentenca_sem_bens() -> None:
@@ -148,10 +177,10 @@ def capture_cjpg_sentenca_sem_bens() -> None:
     resposta = fetch_cjpg_page1(session, ESAJ_BASE, '"não foram encontrados bens"')
     if "não foram encontrados" not in resposta.text:
         # Sem a frase, o sample deixaria de exercitar o caso.
-        print("[tjsp] cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; sample mantido")
+        logger.info("[tjsp] cjpg sentenca_nao_foram_encontrados: frase ausente na 1a página; sample mantido")
         return
     dump(samples_dir_for("tjsp", "cjpg") / "sentenca_nao_foram_encontrados.html", resposta.content)
-    print("[tjsp] cjpg sentenca_nao_foram_encontrados → saved")
+    logger.info("[tjsp] cjpg sentenca_nao_foram_encontrados → saved")
 
 
 def capture_cjpg() -> None:
@@ -173,27 +202,27 @@ def capture_cjpg() -> None:
         time.sleep(1.5)
         r2 = _fetch_cjpg_page_n(session, 2)
         dump(dest / "results_normal_page_02.html", r2.content)
-        print("[tjsp] cjpg typical ('dano moral') → 2 pages saved")
+        logger.info("[tjsp] cjpg typical ('dano moral') → 2 pages saved")
     except Exception as exc:  # pylint: disable=broad-except
-        print(f"[tjsp] cjpg typical FAILED: {exc}")
+        logger.warning("[tjsp] cjpg typical FAILED: %s", exc)
 
     try:
         capture_cjpg_single_page()
     except Exception as exc:  # pylint: disable=broad-except
-        print(f"[tjsp] cjpg single_page FAILED: {exc}")
+        logger.warning("[tjsp] cjpg single_page FAILED: %s", exc)
 
     try:
         capture_cjpg_sentenca_sem_bens()
     except Exception as exc:  # pylint: disable=broad-except
-        print(f"[tjsp] cjpg sentenca_nao_foram_encontrados FAILED: {exc}")
+        logger.warning("[tjsp] cjpg sentenca_nao_foram_encontrados FAILED: %s", exc)
 
     try:
         session = build_session(headers=TJSP_CHROME_HEADERS)
         r_none = fetch_cjpg_page1(session, ESAJ_BASE, "juscraper_probe_zero_hits_xyzqwe")
         dump(dest / "no_results.html", r_none.content)
-        print("[tjsp] cjpg no_results → saved")
+        logger.info("[tjsp] cjpg no_results → saved")
     except Exception as exc:  # pylint: disable=broad-except
-        print(f"[tjsp] cjpg no_results FAILED: {exc}")
+        logger.warning("[tjsp] cjpg no_results FAILED: %s", exc)
 
 
 # ---------- cpopg html ---------------------------------------------------
@@ -223,7 +252,7 @@ def capture_cpopg_html(cnj: str) -> None:
     r_search = session.get(f"{ESAJ_BASE}cpopg/search.do", params=params, timeout=60)
     r_search.raise_for_status()
     dump(dest / "search.html", r_search.content)
-    print(f"[tjsp] cpopg html search for {cnj} → saved")
+    logger.info("[tjsp] cpopg html search for %s → saved", cnj)
 
     # Número sem processo: "Não existem informações disponíveis" (#460).
     params_inexistente = {
@@ -235,14 +264,14 @@ def capture_cpopg_html(cnj: str) -> None:
     r_inexistente = session.get(f"{ESAJ_BASE}cpopg/search.do", params=params_inexistente, timeout=60)
     r_inexistente.raise_for_status()
     dump(dest / "search_sem_informacoes.html", r_inexistente.content)
-    print(f"[tjsp] cpopg html search for {CPOPG_CNJ_INEXISTENTE} → saved")
+    logger.info("[tjsp] cpopg html search for %s → saved", CPOPG_CNJ_INEXISTENTE)
 
     # parse the search response to discover the processo.codigo param
     # (simplified: regex over the HTML; scraper uses BeautifulSoup but we
     # just need the codes for sample capture)
     codigos = re.findall(r"processo\.codigo=([A-Za-z0-9]+)", r_search.text)
     if not codigos:
-        print(f"[tjsp] cpopg html: no processo.codigo in search response for {cnj}")
+        logger.info("[tjsp] cpopg html: no processo.codigo in search response for %s", cnj)
         return
     # fetch show.do for first code only — extra codes add noise
     cd = codigos[0]
@@ -253,7 +282,7 @@ def capture_cpopg_html(cnj: str) -> None:
     )
     r_show.raise_for_status()
     dump(dest / "show_real.html", r_show.content)
-    print(f"[tjsp] cpopg html show for codigo={cd} → saved")
+    logger.info("[tjsp] cpopg html show for codigo=%s → saved", cd)
 
 
 # Processo com "Outros assuntos" no bloco maisDetalhes, que vira a coluna
@@ -308,15 +337,15 @@ def capture_cpopg_outros_assuntos() -> None:
         scraper.cpopg_download(CPOPG_CNJ_OUTROS_ASSUNTOS)
         salvos = list(Path(pasta).rglob("*.html"))
         if len(salvos) != 1:
-            print(f"[tjsp] cpopg outros_assuntos: {len(salvos)} arquivos salvos; sample mantido")
+            logger.info("[tjsp] cpopg outros_assuntos: %s arquivos salvos; sample mantido", len(salvos))
             return
         html = pseudonimizar_cpopg(salvos[0].read_bytes().decode("utf-8"))
     if "Outros assuntos" not in html:
         # Sem o campo, o sample deixaria de exercitar a coluna outros_assuntos.
-        print("[tjsp] cpopg outros_assuntos: a página não traz mais o campo; sample mantido")
+        logger.warning("[tjsp] cpopg outros_assuntos: a página não traz mais o campo; sample mantido")
         return
     dump(samples_dir_for("tjsp", "cpopg") / "show_outros_assuntos.html", html.encode("utf-8"))
-    print(f"[tjsp] cpopg outros_assuntos ({CPOPG_CNJ_OUTROS_ASSUNTOS}) → saved")
+    logger.info("[tjsp] cpopg outros_assuntos (%s) → saved", CPOPG_CNJ_OUTROS_ASSUNTOS)
 
 
 # ---------- cposg html ---------------------------------------------------
@@ -336,7 +365,7 @@ def capture_cposg_html(cnj: str) -> None:
     r_open = session.get(f"{ESAJ_BASE}cposg/open.do", params={"gateway": "true"}, timeout=60)
     r_open.raise_for_status()
     dump(dest / "open.html", r_open.content)
-    print("[tjsp] cposg html open → saved")
+    logger.info("[tjsp] cposg html open → saved")
 
     num, dv = cnj.split("-")[0], cnj.split("-")[1][:2]
     ano = cnj.split(".")[1]
@@ -357,14 +386,14 @@ def capture_cposg_html(cnj: str) -> None:
     r_search = session.get(f"{ESAJ_BASE}cposg/search.do", params=params, timeout=60)
     r_search.raise_for_status()
     dump(dest / "search_listagem.html", r_search.content)
-    print(f"[tjsp] cposg html search for {cnj} → saved")
+    logger.info("[tjsp] cposg html search for %s → saved", cnj)
 
     codigos = re.findall(r"processo\.codigo=([A-Za-z0-9]+)", r_search.text)
     if not codigos:
         # Try alternative selector for the "simple" response variant
         codigos = re.findall(r"cdProcesso[\"']\s+value=[\"']([A-Za-z0-9]+)", r_search.text)
     if not codigos:
-        print(f"[tjsp] cposg html: no process code found in search response for {cnj}")
+        logger.info("[tjsp] cposg html: no process code found in search response for %s", cnj)
         return
 
     # A página do processo deixa as movimentações para o carregarMovimentacoesAjax.do,
@@ -377,7 +406,7 @@ def capture_cposg_html(cnj: str) -> None:
         )
         for numero, pagina in enumerate(paginas, start=1):
             dump(dest / f"movimentacoes_pagina_{numero}.html", pagina.encode("utf-8"))
-            print(f"[tjsp] cposg html movimentações página {numero} → saved")
+            logger.info("[tjsp] cposg html movimentações página %s → saved", numero)
 
     cd = codigos[0]
     r_show = session.get(
@@ -387,7 +416,7 @@ def capture_cposg_html(cnj: str) -> None:
     )
     r_show.raise_for_status()
     dump(dest / "show.html", r_show.content)
-    print(f"[tjsp] cposg html show for codigo={cd} → saved")
+    logger.info("[tjsp] cposg html show for codigo=%s → saved", cd)
 
 
 # ---------- acordao (movimentacao) --------------------------------------
@@ -422,7 +451,7 @@ def capture_acordao() -> None:
         "cdDocumento": "16", "origemRecurso": "M", "cdProcesso": "RI009HVDD0000", "conversationId": "",
     }, timeout=60)
     dump(samples_dir_for("tjsp", "acordao") / "verificar_acesso_nao_listado.html", r.content)
-    print("[tjsp] acordao: verificarAcesso sem movimentações carregadas → saved")
+    logger.info("[tjsp] acordao: verificarAcesso sem movimentações carregadas → saved")
 
 
 # ---------- documentos públicos (peças do cpopg e sentença do cjpg) -------
@@ -497,7 +526,7 @@ def capture_documentos() -> None:
     time.sleep(1.5)
     dump(dest / f"pasta_{cd_documento}.html", session.get(local, timeout=60).content)
     dump(dest / "redirecionamentos.json", json.dumps(redirecionamentos, indent=1).encode())
-    print(f"[tjsp] documentos: {len(redirecionamentos)} redirecionamentos em {dest}")
+    logger.info("[tjsp] documentos: %s redirecionamentos em %s", len(redirecionamentos), dest)
 
 
 # ---------- árvores de seleção (*TreeSelect.do) --------------------------
@@ -559,7 +588,7 @@ def capture_arvores() -> None:
             resposta.encoding = "utf-8"
             recorte = recortar_arvore(resposta.text, nos_extras)
         except (requests.RequestException, ValueError) as exc:
-            print(f"[tjsp] árvore {arvore} FAILED: {exc}; sample mantido")
+            logger.warning("[tjsp] árvore %s FAILED: %s; sample mantido", arvore, exc)
             continue
         cabecalho = (
             f"<!-- Recorte da resposta real de {rota} do TJSP, capturada em\n"
@@ -568,7 +597,7 @@ def capture_arvores() -> None:
             f"     aos nós {', '.join(nos_extras)}. -->\n"
         )
         dump(dest / f"{arvore}_min.html", (cabecalho + recorte).encode("utf-8"))
-        print(f"[tjsp] árvore {arvore}: {len(resposta.content)} → {len(recorte.encode())} bytes")
+        logger.info("[tjsp] árvore %s: %s → %s bytes", arvore, len(resposta.content), len(recorte.encode()))
 
 
 # ---------- orchestrator -------------------------------------------------
@@ -599,16 +628,17 @@ def main() -> None:
     ]
     for name, fn in flows:
         if name in args.skip:
-            print(f"[tjsp] skipping {name}")
+            logger.info("[tjsp] skipping %s", name)
             continue
         try:
             fn()
         except Exception as exc:  # pylint: disable=broad-except
-            print(f"[tjsp] {name} FAILED: {exc}")
+            logger.warning("[tjsp] %s FAILED: %s", name, exc)
 
     root: Path = samples_dir_for("tjsp", "cjsg").parent
-    print(f"[tjsp] done. See {root}")
+    logger.info("[tjsp] done. See %s", root)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

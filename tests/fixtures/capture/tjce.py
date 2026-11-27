@@ -8,6 +8,8 @@ Run from repo root::
 
     python -m tests.fixtures.capture.tjce
 """
+import logging
+
 import juscraper as jus
 from juscraper.courts.tjce.cjsg_download import _TJCETLSAdapter
 
@@ -39,4 +41,5 @@ def capture_acordao_samples() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

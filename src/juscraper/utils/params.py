@@ -9,7 +9,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError
 
 from ..core.avisos import avisar
-from ..core.base import rotulo_do_metodo_chamado
+from ..core.base import mensagem_de_kwargs_inesperados, rotulo_do_metodo_chamado
 from ..core.exceptions import ColetaParcialError
 from ..core.failures import resumir_falhas
 
@@ -256,6 +256,7 @@ _ACCEPTED_DATE_FORMATS: tuple[str, ...] = (
     "%Y/%m/%d",
 )
 _Data = TypeVar("_Data")  # Entrada de ``coerce_brazilian_date``, devolvida intacta quando não é data.
+_Modelo = TypeVar("_Modelo", bound=BaseModel)  # Schema validado pelo pipeline, devolvido com o tipo concreto.
 
 
 def coerce_brazilian_date(value: _Data, backend_format: str) -> _Data | str:
@@ -557,9 +558,9 @@ def run_chunked_search(
     Args:
         fetch_window: Callable accepting ``(data_inicio, data_fim)`` strings
             (same format as the inputs) and returning a ``pd.DataFrame``.
-        data_inicio, data_fim: Search interval in ``DD/MM/YYYY`` (or whatever
-            ``formato`` is configured to). Either may be ``None`` — search is
-            then forwarded to the server with no chunking.
+        data_inicio: Start of the interval in ``DD/MM/YYYY`` (or ``formato``).
+            Either bound ``None`` forwards the search with no chunking.
+        data_fim: End of the interval, in the same format.
         dedup_key: Column used to deduplicate concatenated results.
         max_dias: Window cap, in days.
         max_anos: Teto da janela em anos de calendário; substitui ``max_dias`` (ver :func:`iter_date_windows`).
@@ -708,9 +709,7 @@ def raise_on_extra_kwargs(
                 parts.append(f"'{name}' (você quis dizer '{close[0]}'?)")
             else:
                 parts.append(repr(name))
-        raise TypeError(
-            f"{method} got unexpected keyword argument(s): {', '.join(parts)}"
-        ) from exc
+        raise TypeError(mensagem_de_kwargs_inesperados(method, parts)) from exc
 
 
 def _reinject_nominal_dates(
@@ -730,10 +729,10 @@ def _reinject_nominal_dates(
 
 
 def _validate_pipeline_schema(
-    schema_cls: type[BaseModel],
+    schema_cls: type[_Modelo],
     method_name: str,
     sources: tuple[dict[str, Any], ...],
-) -> BaseModel:
+) -> _Modelo:
     """Merge unique pipeline sources, instantiate, and translate unknown fields."""
     values: dict[str, Any] = {}
     for source in sources:
@@ -748,14 +747,15 @@ def _validate_pipeline_schema(
         values.update(source)
 
     try:
-        return schema_cls(**values)
+        modelo: _Modelo = schema_cls(**values)
     except ValidationError as exc:
         raise_on_extra_kwargs(exc, rotulo_do_metodo_chamado(method_name), schema_cls=schema_cls)
         raise
+    return modelo
 
 
 def apply_input_pipeline_search(
-    schema_cls: type[BaseModel],
+    schema_cls: type[_Modelo],
     method_name: str,
     *,
     pesquisa: str | None,
@@ -771,7 +771,7 @@ def apply_input_pipeline_search(
     consume_pesquisa_aliases: bool = False,
     nullable_pesquisa: bool = False,
     **canonical_filters,
-) -> BaseModel:
+) -> _Modelo:
     """Run the canonical input-validation pipeline for search endpoints (cjsg/cjpg).
 
     Order:

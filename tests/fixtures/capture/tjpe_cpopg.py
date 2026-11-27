@@ -24,7 +24,6 @@ conferidas.
 from __future__ import annotations
 
 import logging
-import warnings
 
 import requests
 
@@ -32,7 +31,7 @@ from juscraper.core.waf import eh_desafio_waf
 from juscraper.courts._trf.download import DETAIL_PATH, LISTVIEW_PATH, extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
 
-from ._util import dump, samples_dir_for
+from ._util import dump, respostas_do_cpopg, rotas, samples_dir_for
 
 logger = logging.getLogger(__name__)
 
@@ -67,46 +66,20 @@ def capturar_desafio() -> bytes:
     return resp.content
 
 
-def _respostas_de(scraper: TJPEConsultaPublicaScraper, cnj: str) -> tuple[str | None, list[requests.Response]]:
-    """Roda o ``cpopg_download`` do raspador e devolve o detalhe e as respostas que ele usou.
-
-    Ficam de fora os desafios do WAF, os erros que o retry repetiu e os saltos
-    de redirecionamento: sobra a resposta final de cada requisição.
-    """
-    respostas: list[requests.Response] = []
-
-    def guardar(resp: requests.Response, *_args: object, **_kwargs: object) -> None:
-        respostas.append(resp)
-
-    scraper.session.hooks["response"].append(guardar)
-    try:
-        with warnings.catch_warnings():
-            # Falha da consulta vira ``UserWarning`` no raspador; aqui ela interrompe a captura.
-            warnings.filterwarnings("error", category=UserWarning)
-            (html,) = scraper.cpopg_download(cnj)
-    finally:
-        scraper.session.hooks["response"].remove(guardar)
-    return html, [r for r in respostas if r.ok and not r.is_redirect and not eh_desafio_waf(r)]
-
-
-def _rotas(respostas: list[requests.Response]) -> list[str]:
-    return [f"{r.request.method} {(r.request.url or '').split('?')[0]}" for r in respostas]
-
-
 def capturar_consulta() -> dict[str, bytes]:
     """Formulário, buscas e detalhe, pelo ``cpopg_download`` do raspador."""
     scraper = TJPEConsultaPublicaScraper(sleep_time=0.5)
     listview = scraper.BASE_URL + LISTVIEW_PATH
     detalhe = scraper.BASE_URL + DETAIL_PATH
 
-    html, respostas = _respostas_de(scraper, FOUND_CNJ)
+    html, respostas = respostas_do_cpopg(scraper, FOUND_CNJ, descartar=eh_desafio_waf)
     # Sem página extra de movimentações ou documentos: o contrato só registra estas três.
     esperado = [f"GET {listview}", f"POST {listview}", f"GET {detalhe}"]
-    rotas = _rotas(respostas)
-    if html is None or rotas != esperado:
+    obtidas = rotas(respostas)
+    if html is None or obtidas != esperado:
         raise RuntimeError(
             f"[tjpe] {FOUND_CNJ}: esperava formulário, busca e detalhe numa página só, "
-            f"veio {rotas} (processo arquivado, em segredo ou grande demais?)"
+            f"veio {obtidas} (processo arquivado, em segredo ou grande demais?)"
         )
     n_docs = len(extract_documento_urls(html))
     if n_docs < 2:
@@ -115,10 +88,10 @@ def capturar_consulta() -> dict[str, bytes]:
     arquivos = {nome: resp.content for nome, resp in zip(nomes, respostas, strict=True)}
 
     # Sem token ``ca``, o download para na busca: só um POST.
-    _, respostas = _respostas_de(scraper, MISSING_CNJ)
-    rotas = _rotas(respostas)
-    if rotas != [f"POST {listview}"]:
-        raise RuntimeError(f"[tjpe] {MISSING_CNJ}: esperava uma busca sem resultado, veio {rotas}")
+    _, respostas = respostas_do_cpopg(scraper, MISSING_CNJ, descartar=eh_desafio_waf)
+    obtidas = rotas(respostas)
+    if obtidas != [f"POST {listview}"]:
+        raise RuntimeError(f"[tjpe] {MISSING_CNJ}: esperava uma busca sem resultado, veio {obtidas}")
     arquivos["search_no_results.html"] = respostas[0].content
     return arquivos
 

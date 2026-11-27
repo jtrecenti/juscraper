@@ -7,17 +7,20 @@ from typing import Any, ClassVar, Literal
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.schemas import BuscarEm
 from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search, to_iso_date
 
 from .download import QUERY_SCOPE, cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJPA
+from .schemas import InputCJSGTJPA, QueryType, SortBy
 
 #: Valores do alias deprecado ``query_scope`` -> ``buscar_em``; ``"inteiroteor"`` e a grafia da docstring antiga.
 _QUERY_SCOPE_PARA_BUSCAR_EM = {scope: buscar_em for buscar_em, scope in QUERY_SCOPE.items()} | {
     "inteiroteor": "inteiro_teor",
 }
+#: ``buscar_em`` mais os valores de ``query_scope`` (convertidos, com aviso) e ``None`` (default do schema).
+BuscarEmAceito = BuscarEm | Literal["inteiroTeor", "inteiroteor"] | None
 
 
 class TJPAScraper(HTTPScraper):
@@ -50,19 +53,16 @@ class TJPAScraper(HTTPScraper):
         assunto: str | None = None,
         origem: list | None = None,
         tipo: list | None = None,
-        sort_by: str = "datajulgamento",
+        sort_by: SortBy = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
-        query_type: str = "free",
-        buscar_em: str | None = None,
+        query_type: QueryType = "free",
+        buscar_em: BuscarEmAceito = None,
         **kwargs,
     ) -> list:
         """Baixa resultados crus da busca de jurisprudencia do TJPA (varias paginas).
 
-        Filtros de data (``data_julgamento_inicio``/``_fim``,
-        ``data_publicacao_inicio``/``_fim``) chegam via ``**kwargs`` e sao
-        validados pelo schema :class:`InputCJSGTJPA`. Aliases deprecados
-        (``data_inicio``/``data_fim``, ``query``/``termo``) sao popados antes
-        da validacao, como ``query_scope``, alias deprecado de ``buscar_em``.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
         Returns:
             Respostas JSON cruas (uma por pagina).
@@ -91,7 +91,7 @@ class TJPAScraper(HTTPScraper):
 
         return cjsg_download_manager(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             relator=inp.relator,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
@@ -126,37 +126,37 @@ class TJPAScraper(HTTPScraper):
         assunto: str | None = None,
         origem: list | None = None,
         tipo: list | None = None,
-        sort_by: str = "datajulgamento",
+        sort_by: SortBy = "datajulgamento",
         sort_order: Literal["asc", "desc"] = "desc",
-        query_type: str = "free",
-        buscar_em: str | None = None,
+        query_type: QueryType = "free",
+        buscar_em: BuscarEmAceito = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPA (download + parse).
 
         Args:
-            pesquisa (str): Termo de busca livre, procurado no campo indicado
+            pesquisa: Termo de busca livre, procurado no campo indicado
                 por ``buscar_em``.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            relator (str | None): Nome do relator.
-            orgao_julgador_colegiado (str | None): Orgao colegiado.
-            classe (str | None): Classe processual.
-            assunto (str | None): Assunto.
-            origem (list | None): Lista de origens (default backend:
+            relator: Nome do relator.
+            orgao_julgador_colegiado: Orgao colegiado.
+            classe: Classe processual.
+            assunto: Assunto.
+            origem: Lista de origens (default backend:
                 ``["tribunal de justica do estado do para"]``).
-            tipo (list | None): Lista de tipos de decisao (default backend:
+            tipo: Lista de tipos de decisao (default backend:
                 ``["acordao", "decisao monocratica"]``).
-            sort_by (str): ``"datajulgamento"`` (default), ``"datapublicacao"``
+            sort_by: ``"datajulgamento"`` (default), ``"datapublicacao"``
                 ou ``"relevancia"``. O indice do portal tem decisoes com data
                 de julgamento impossivel, como o ano 8201 ou 2106 (observado
                 em 15/11/2026), e, com o default (``"datajulgamento"`` em
                 ordem ``"desc"``), elas vem primeiro. O juscraper repassa a
                 data como a fonte a entrega; para exclui-las, filtre
                 ``data_julgamento_fim``. Outra ordenacao so as tira do topo.
-            sort_order (str): ``"asc"`` ou ``"desc"``. Default ``"desc"``.
-            query_type (str): ``"free"`` (default) ou ``"anywords"``.
-            buscar_em (str | None): Onde procurar ``pesquisa``: ``"ementa"``
+            sort_order: ``"asc"`` ou ``"desc"``. Default ``"desc"``.
+            query_type: ``"free"`` (default) ou ``"anywords"``.
+            buscar_em: Onde procurar ``pesquisa``: ``"ementa"``
                 (default; ``None`` tambem) ou ``"inteiro_teor"`` (texto
                 integral da decisao, que inclui a ementa), as duas opcoes do
                 portal. Outro valor levanta ``ValidationError``. Em

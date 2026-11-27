@@ -13,6 +13,7 @@ from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
     descrever_paginas,
     extract_count_with_cascade,
+    paginas_unicas,
     parse_page_number,
     resolve_total_pages,
 )
@@ -48,8 +49,9 @@ _PAGE_NUMBER_RE = re.compile(r"\['pageNumber'\]\.value='([^']*)'")
 # Cascata da contagem: o rótulo "394770 registro(s) encontrado(s)" fica em
 # ``#navigator .navLeft``. O HTML da página só entra (``fallback_html``)
 # quando o seletor não casa nenhum elemento com texto, e lá a expressão
-# "registro(s) encontrado(s)" continua específica. Se o seletor casar um elemento cujo texto a regex não
-# reconhece, a contagem vem ``None`` e ``resolve_total_pages`` levanta.
+# "registro(s) encontrado(s)" continua específica. Se o seletor casar um
+# elemento cujo texto a regex não reconhece, a contagem vem ``None`` e
+# ``resolve_total_pages`` levanta.
 _COUNT_SELECTORS = ("#navigator .navLeft",)
 _COUNT_PATTERNS = (re.compile(r"([\d.]+)\s*registro\(s\)\s*encontrado", re.IGNORECASE),)
 
@@ -269,31 +271,31 @@ def cjsg_download(
         first_html = _fetch_page(1)
         n_pags = extract_total_pages(first_html)
         return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first_html], ler_parcial)
-    return _baixar_paginas(_fetch_page, list(paginas), [], ler_parcial)
+    return _baixar_paginas(_fetch_page, list(paginas_unicas(paginas)), [], ler_parcial)
 
 
 def _baixar_paginas(
     fetch_page: Callable[[int], str],
-    paginas: list[int],
+    pendentes: list[int],
     resultados: list[str],
     ler_parcial: Callable[[list[str]], pd.DataFrame],
 ) -> list[str]:
-    """Acrescenta ``paginas`` a ``resultados``, as páginas já baixadas, e os devolve.
+    """Acrescenta ``pendentes`` a ``resultados``, as páginas já baixadas, e os devolve.
 
     Como no TJMG e no TJTO, a página que falha com outra já baixada encerra a
     busca e levanta :class:`ColetaParcialError`, com as baixadas lidas por
     ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
     original sobe.
     """
-    if not paginas:
+    if not pendentes:
         return resultados
-    for posicao, pagina in enumerate(tqdm(paginas, desc='Baixando páginas TJPR')):
+    for posicao, pagina in enumerate(tqdm(pendentes, desc='Baixando páginas TJPR')):
         try:
             resultados.append(fetch_page(pagina))
         except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
             if not resultados:
                 raise
-            raise _coleta_parcial(resultados, paginas[posicao:], exc, ler_parcial) from exc
+            raise _coleta_parcial(resultados, pendentes[posicao:], exc, ler_parcial) from exc
     return resultados
 
 

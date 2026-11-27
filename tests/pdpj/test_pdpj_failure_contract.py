@@ -29,7 +29,7 @@ from juscraper.aggregators.pdpj.download import BASE_URL, USER_AGENT, fetch_docu
 from juscraper.core.exceptions import InvalidJSONResponseError, RetryExhaustedError, WafChallengeError
 from juscraper.core.failures import STATUS_CONSULTA_FALHA
 from juscraper.core.http import RequestPolicy
-from tests._helpers import load_sample
+from tests._helpers import load_sample, timeout_enviado, urls_enviadas
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -60,9 +60,6 @@ def _mock(path: str, status: int = 200, body: str | bytes | Exception = "", cont
 def _mock_sample(path: str, sample: str) -> None:
     _mock(path, body=load_sample("pdpj", sample))
 
-
-def _urls() -> list[str]:
-    return [call.request.url for call in responses.calls]
 
 
 # ---------------------------------------------------------------------
@@ -103,7 +100,7 @@ def test_timeout_de_cada_perfil_chega_a_requisicao():
     s.documentos(PROC)
     s.download_documents(pd.DataFrame([{"processo": PROC, "numero_processo": PROC, "id_documento": "doc-a"}]))
 
-    assert [call.request.req_kwargs["timeout"] for call in responses.calls] == [30.0, 60.0]
+    assert [timeout_enviado(call.request) for call in responses.calls] == [30.0, 60.0]
 
 
 # Cada ``fetch_*`` com o perfil que usa e uma chamada que o exercita. Um
@@ -137,7 +134,7 @@ def test_politica_sobrepoe_o_timeout_do_perfil_em_cada_endpoint(fetch):
 
     chamar(s)
 
-    assert responses.calls[0].request.req_kwargs["timeout"] == 7
+    assert timeout_enviado(responses.calls[0].request) == 7
     # Os perfis mesclados não têm acessor público.
     assert s._perfis_http[perfil].max_retries == 6  # noqa: SLF001
 
@@ -291,7 +288,7 @@ def test_corpo_comprimido_corrompido_no_meio_do_lote_vira_linha(metodo):
 
     assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["resposta_inesperada"]
     assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
-    assert len(_urls()) == 3
+    assert len(urls_enviadas()) == 3
 
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
@@ -307,7 +304,7 @@ def test_desafio_anti_bot_no_meio_do_lote_vira_linha(metodo):
 
     assert df.loc[df["processo"] == OUTRO, "motivo_falha"].tolist() == ["bloqueio_anti_bot"]
     assert df[df["processo"] == PROC]["motivo_falha"].isna().all()
-    assert len(_urls()) == 3
+    assert len(urls_enviadas()) == 3
 
 
 @pytest.mark.parametrize("metodo", list(METODOS_DE_LISTA))
@@ -454,7 +451,7 @@ def test_pesquisa_levanta_na_falha_da_pagina_2():
     with pytest.raises(RetryExhaustedError):
         _mk_scraper().pesquisa(tribunal="TRF1", paginas=2)
 
-    assert "searchAfter" in _urls()[1]
+    assert "searchAfter" in urls_enviadas()[1]
 
 
 @responses.activate

@@ -26,7 +26,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts.tjsp.exceptions import QueryTooLongError
-from tests._helpers import load_sample_bytes
+from tests._helpers import corpo_enviado, load_sample_bytes, url_enviada
 
 BASE = "https://esaj.tjsp.jus.br"
 
@@ -96,11 +96,12 @@ def _termos_enviados(mock_http: responses.RequestsMock) -> list[str]:
     enviados = []
     for chamada in mock_http.calls:
         requisicao = chamada.request
+        url = url_enviada(requisicao)
         if requisicao.method == "POST":
-            corpo = parse_qs(requisicao.body if isinstance(requisicao.body, str) else requisicao.body.decode())
+            corpo = parse_qs(corpo_enviado(requisicao))
             enviados.extend(corpo.get("dados.buscaInteiroTeor", []))
-        elif "/cjpg/pesquisar.do" in requisicao.url:
-            enviados.extend(parse_qs(urlparse(requisicao.url).query).get("dadosConsulta.pesquisaLivre", []))
+        elif "/cjpg/pesquisar.do" in url:
+            enviados.extend(parse_qs(urlparse(url).query).get("dadosConsulta.pesquisaLivre", []))
     return enviados
 
 

@@ -25,7 +25,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.aggregators.comunica_cnj.download import BASE_URL, build_listar_comunicacoes_params
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, params_enviados
 
 
 @responses.activate
@@ -59,7 +59,7 @@ def test_listar_comunicacoes_all_filters_land_in_querystring(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de parametro da API ficam pinados aqui.
-    assert responses.calls[0].request.params == {
+    assert params_enviados(responses.calls[0].request) == {
         "itensPorPagina": "50",
         "pagina": "1",
         "texto": "resolucao",

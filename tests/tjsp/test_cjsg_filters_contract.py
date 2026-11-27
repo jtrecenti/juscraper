@@ -15,6 +15,7 @@ from tests.fixtures.capture._util import make_tjsp_cjsg_body
 BASE = "https://esaj.tjsp.jus.br/cjsg"
 
 _EMENTA = "responsabilidade"
+_NUMERO_RECURSO = "1507541-25.2025.8.26.0425"
 _CLASSE = "cls-value"
 _ASSUNTO = "subj-value"
 _COMARCA = "comarca-value"
@@ -34,6 +35,7 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
     expected_body = make_tjsp_cjsg_body(
         pesquisa="dano moral",
         ementa=_EMENTA,
+        numero_recurso=_NUMERO_RECURSO,
         classe=_CLASSE,
         assunto=_ASSUNTO,
         comarca=_COMARCA,
@@ -65,6 +67,7 @@ def test_cjsg_all_filters_land_in_post_body(tmp_path, mocker):
         "dano moral",
         paginas=1,
         ementa=_EMENTA,
+        numero_recurso=_NUMERO_RECURSO,
         classe=_CLASSE,
         assunto=_ASSUNTO,
         comarca=_COMARCA,
@@ -83,9 +86,9 @@ def test_cjsg_unknown_kwarg_raises(tmp_path):
 
 
 def test_cjsg_rejects_esaj_puro_only_fields(tmp_path):
-    """TJSP doesn't expose ``numero_recurso``/``data_publicacao_*``/``origem``."""
+    """TJSP doesn't expose ``data_publicacao_*``/``origem``."""
     scraper = jus.scraper("tjsp", download_path=str(tmp_path))
-    for bad in ("numero_recurso", "data_publicacao_inicio", "origem"):
+    for bad in ("data_publicacao_inicio", "origem"):
         assert_unknown_kwarg_raises(scraper.cjsg, bad, "dano moral", paginas=1)
 
 
@@ -130,3 +133,39 @@ def test_cjsg_classe_lista_int_vira_csv_no_body(tmp_path, mocker):
         assunto=3607,
     )
     assert isinstance(df, pd.DataFrame)
+
+
+@responses.activate
+def test_cjsg_numero_recurso_sozinho_filtra_pelo_recurso(tmp_path, mocker):
+    """Só ``numero_recurso`` vai em ``dados.nuProcOrigem`` e devolve o próprio recurso.
+
+    Sample gravado por ``capture_cjsg_numero_recurso`` (busca sem termo, uma linha).
+    """
+    mocker.patch("time.sleep")
+    sample = load_sample_bytes("tjsp", "cjsg/numero_recurso.html")
+    responses.add(
+        responses.POST,
+        f"{BASE}/resultadoCompleta.do",
+        body=sample,
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[
+            urlencoded_params_matcher(
+                make_tjsp_cjsg_body("", numero_recurso=_NUMERO_RECURSO), allow_blank=True
+            )
+        ],
+    )
+    responses.add(
+        responses.GET,
+        f"{BASE}/trocaDePagina.do",
+        body=sample,
+        status=200,
+        content_type="text/html; charset=latin-1",
+        match=[query_param_matcher({"tipoDeDecisao": "A", "pagina": "1"})],
+    )
+
+    df = jus.scraper("tjsp", download_path=str(tmp_path)).cjsg(
+        numero_recurso=_NUMERO_RECURSO, paginas=1
+    )
+
+    assert df["processo"].tolist() == [_NUMERO_RECURSO]

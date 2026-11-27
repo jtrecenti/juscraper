@@ -14,6 +14,7 @@ GET.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -23,7 +24,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts.trf3.cjsg_schemas import InputCJSGTRF3, validar_combinacoes
-from tests._helpers import assert_unknown_kwarg_raises
+from tests._helpers import assert_unknown_kwarg_raises, params_enviados, url_enviada
 from tests.trf3._cjsg_mock import add_page, add_search
 from tests.trf3._cjsg_mock import corpo_busca as _body
 
@@ -217,7 +218,7 @@ def test_cjsg_base_escolhe_aba_e_caixas(mocker, base, indice, caixas):
 
     jus.scraper("trf3").cjsg("medicamento", paginas=1, base=base, relator="FULANO")
 
-    assert responses.calls[0].request.url.endswith(f"/jurisprudencia/home/index/{indice}")
+    assert url_enviada(responses.calls[0].request).endswith(f"/jurisprudencia/home/index/{indice}")
 
 
 def test_cjsg_datas_de_julgamento_e_publicacao_juntas_levanta():
@@ -232,8 +233,9 @@ def test_cjsg_datas_de_julgamento_e_publicacao_juntas_levanta():
 @pytest.mark.parametrize("filtro", ["orgao_julgador", "ementa", "indexacao"])
 @pytest.mark.parametrize("base", ["monocraticas", "monocraticas_turmas_recursais"])
 def test_cjsg_monocraticas_recusam_filtros_sem_campo(filtro, base):
+    filtros: dict[str, Any] = {filtro: "x"}
     with pytest.raises(ValueError, match=filtro):
-        jus.scraper("trf3").cjsg("medicamento", base=base, **{filtro: "x"})
+        jus.scraper("trf3").cjsg("medicamento", base=base, **filtros)
 
 
 def test_cjsg_sem_criterio_levanta():
@@ -513,5 +515,7 @@ def test_cjsg_tamanho_pagina_chega_ao_payload_e_a_conta_de_paginas(mocker):
     brutos = jus.scraper("trf3").cjsg_download("medicamento", tamanho_pagina=50, paginas=None)
 
     assert len(brutos) == 12
-    pedidas = [c.request.params.get("np") for c in responses.calls if "ListaResumida/2" in c.request.url]
+    pedidas = [
+        params_enviados(c.request).get("np") for c in responses.calls if "ListaResumida/2" in url_enviada(c.request)
+    ]
     assert pedidas == [str(n) for n in range(2, 13)]

@@ -75,7 +75,8 @@ class TestCJSGTJES:
     def test_cjsg_rejects_pje1g(self):
         """cjsg raises ValueError when core='pje1g' (use cjpg instead)."""
         with pytest.raises(ValueError, match="cjpg"):
-            self.scraper.cjsg("direito", core="pje1g", paginas=1)
+            # Core de 1º grau de propósito.
+            self.scraper.cjsg("direito", core="pje1g", paginas=1)  # type: ignore[arg-type]
 
 
 @pytest.mark.integration

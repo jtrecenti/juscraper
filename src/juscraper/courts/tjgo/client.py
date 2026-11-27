@@ -16,12 +16,19 @@ from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecat
 
 from .download import cjsg_download as _cjsg_download
 from .parse import cjsg_parse as _cjsg_parse
-from .schemas import InputCJSGTJGO
+from .schemas import IdServentiaSubtipo, InputCJSGTJGO
 
 logger = logging.getLogger("juscraper.tjgo")
 
 # Opcoes do seletor "Instancia" e, ate a 0.7.0, os valores deprecados 1, 2 e 3.
 IdInstancia = Literal[0, 15, 151, 1, 2, 3, "0", "15", "151", "1", "2", "3"]
+# Codigos do seletor "Orgao", tambem em ``int``, que o schema converte para ``str``.
+IdServentiaSubtipoAceito = IdServentiaSubtipo | Literal[
+    0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 14, 20, 21, 22,
+    26, 27, 34, 35, 36, 37, 39, 41, 42, 43, 44, 45, 46,
+    47, 49, 58, 60, 61, 63, 64, 66, 67, 68, 69, 70, 71,
+    72, 81, 82, 83,
+]
 
 
 class TJGOScraper(HTTPScraper):
@@ -56,43 +63,20 @@ class TJGOScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         id_instancia: IdInstancia = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
-        id_serventia_subtipo: str | int = 0,
+        id_serventia_subtipo: IdServentiaSubtipoAceito = 0,
         numero_processo: str | None = None,
         tamanho_pagina: int = 10,
         data_publicacao_inicio: str | date | None = None,
         data_publicacao_fim: str | date | None = None,
         **kwargs,
     ) -> list:
-        """Run a TJGO search and return the raw HTML of each page.
+        """Executa a busca no TJGO e devolve o HTML bruto de cada página.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa.
+        Aceita os mesmos parâmetros e aliases deprecados de :meth:`cjsg`; veja lá
+        a lista completa.
 
-        Parameters
-        ----------
-        pesquisa : str
-            Free-text search term (aliases ``query`` / ``termo`` accepted).
-        paginas : int, list, range or None
-            Pages to download (1-based). ``None`` downloads every page.
-        id_instancia : int or str
-            ``0`` all / ``15`` tribunal / ``151`` turmas recursais. ``2`` and
-            ``3`` are deprecated aliases of ``151`` and ``15``; ``1`` is
-            deprecated with no replacement.
-        id_area : int or str
-            ``0`` all / ``1`` civil / ``2`` criminal. With ``id_instancia=151``
-            only ``0`` is accepted, as in the website form.
-        id_serventia_subtipo : int or str
-            Code from the website's "Orgao" dropdown (e.g. ``14`` civil
-            chambers, ``20`` criminal chambers). ``0`` = all. A code the form
-            does not list for the chosen instance and area raises
-            ``ValidationError``.
-        numero_processo : str
-            Filter by specific CNJ process number.
-        tamanho_pagina : int
-            Items per page (default 10). Aceita ``qtde_itens_pagina`` como
-            alias deprecado.
-        data_publicacao_inicio, data_publicacao_fim : str, date or None
-            Publication date range: ``DD/MM/AAAA``, ``DD-MM-AAAA``,
-            ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
+        Returns:
+            HTML bruto de cada página baixada.
         """
         tamanho_pagina = resolve_deprecated_alias(
             kwargs, "qtde_itens_pagina", "tamanho_pagina", tamanho_pagina, sentinel=10
@@ -116,7 +100,7 @@ class TJGOScraper(HTTPScraper):
         return _cjsg_download(
             request_fn=self._request_with_retry,
             pesquisa=inp.pesquisa or "",
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             id_instancia=str(inp.id_instancia),
             id_area=str(inp.id_area),
             id_serventia_subtipo=str(inp.id_serventia_subtipo),
@@ -137,7 +121,7 @@ class TJGOScraper(HTTPScraper):
         paginas: int | list | range | None = None,
         id_instancia: IdInstancia = 0,
         id_area: Literal[0, 1, 2, "0", "1", "2"] = 0,
-        id_serventia_subtipo: str | int = 0,
+        id_serventia_subtipo: IdServentiaSubtipoAceito = 0,
         numero_processo: str | None = None,
         tamanho_pagina: int = 10,
         **kwargs,
@@ -145,23 +129,23 @@ class TJGOScraper(HTTPScraper):
         """Busca jurisprudencia no TJGO (Projudi).
 
         Args:
-            pesquisa (str): Termo de busca livre.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            pesquisa: Termo de busca livre.
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            id_instancia (int | str): ``0`` todas / ``15`` Tribunal / ``151``
+            id_instancia: ``0`` todas / ``15`` Tribunal / ``151``
                 Turma de Uniformizacao e Turmas Recursais, as opcoes do
                 seletor "Instancia" do site. ``1``, ``2`` e ``3`` sao
                 deprecados (ver abaixo); o 1o grau nao esta no seletor, e
                 ``1`` vai ao portal como esta.
-            id_area (int | str): ``0`` todas / ``1`` civel / ``2`` criminal.
+            id_area: ``0`` todas / ``1`` civel / ``2`` criminal.
                 Com ``id_instancia=151``, so ``0``, como no formulario do site.
-            id_serventia_subtipo (int | str): Codigo do seletor "Orgao" do
+            id_serventia_subtipo: Codigo do seletor "Orgao" do
                 site (por exemplo, ``14`` Camaras Civeis, ``20`` Camaras
                 Criminais, ``6`` Turma Recursal Civel e Criminal). ``0`` =
                 todos. Codigo fora da lista, ou que o formulario nao oferece
                 para a instancia e a area escolhidas, levanta ``ValidationError``.
-            numero_processo (str): Filtrar por numero CNJ especifico.
-            tamanho_pagina (int): Itens por pagina (default 10).
+            numero_processo: Filtrar por numero CNJ especifico.
+            tamanho_pagina: Itens por pagina (default 10).
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJGO`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

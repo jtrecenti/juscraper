@@ -1,7 +1,7 @@
 """``paginas`` explícito no ``cjsg``: página repetida uma vez só e página além do total sem pedido.
 
 Contrato comum dos portais JSON (TJRN e TJRO, Elasticsearch, total em
-``hits.total``; TJPA, ``data.totalPages``; TJBA, GraphQL, ``pageCount``; TJES,
+``hits.total``; TJRS, Solr, ``numFound``; TJPA, ``data.totalPages``; TJBA, GraphQL, ``pageCount``; TJES,
 ``total_pages``; TJPB, ``total``) e dos HTML (TJSC, total no cabeçalho de toda
 página; TJPI, contagem "de um total de N"), como já valia para TJGO,
 TJMG, TJRJ, TJTO e o eSAJ. A menor página pedida sai primeiro, porque é dela
@@ -31,6 +31,7 @@ from juscraper.courts.tjpa import download as tjpa_download
 from juscraper.courts.tjpb import download as tjpb_download
 from juscraper.courts.tjpi import download as tjpi_download
 from juscraper.courts.tjro import download as tjro_download
+from juscraper.courts.tjrs import download as tjrs_download
 from juscraper.courts.tjsc.download import AJAX_URL, SEARCH_URL
 from tests._helpers import load_sample, load_sample_bytes
 from tests.tjpb._helpers import add_get_classes
@@ -79,6 +80,11 @@ def _pagina_tjro(request) -> int:
     return cast("int", json.loads(request.body)["from"]) // tjro_download.RESULTS_PER_PAGE + 1
 
 
+def _pagina_tjrs(request) -> int:
+    """A página vai em ``pagina_atual`` dos parâmetros Solr, codificados dentro do corpo."""
+    return int(parse_qs(parse_qs(request.body)["parametros"][0])["pagina_atual"][0])
+
+
 def _pagina_da_query(request) -> int:
     return int(parse_qs(urlparse(request.url).query)["page"][0])
 
@@ -92,6 +98,7 @@ BUSCAS = {
     "tjpb": (responses.POST, tjpb_download.SEARCH_URL, "json", _pagina_tjpb),
     "tjpi": (responses.GET, tjpi_download.BASE_URL, "html", _pagina_da_query),
     "tjro": (responses.POST, tjro_download.BASE_URL, "json", _pagina_tjro),
+    "tjrs": (responses.POST, tjrs_download.BASE_URL, "json", _pagina_tjrs),
 }
 MODULOS_COM_TETO = {"tjba": tjba_download, "tjpb": tjpb_download, "tjro": tjro_download}
 # TJBA e TJRO dividem por data a busca acima do teto; sem a divisão, param nele, como o TJPB.
@@ -126,6 +133,7 @@ PORTAIS: dict[str, tuple[Callable[[], None], Callable[..., int | None], int]] = 
     "tjpi": (partial(_registrar_busca, "tjpi"), _pagina_da_query, 10**6),
     "tjrn": (_registrar_tjrn, _pagina_tjrn, 10**6),
     "tjro": (partial(_registrar_busca, "tjro", "alem_do_total"), _pagina_tjro, 501),
+    "tjrs": (partial(_registrar_busca, "tjrs"), _pagina_tjrs, 10**6),
     "tjsc": (_registrar_tjsc, _pagina_tjsc, 10**6),
 }
 

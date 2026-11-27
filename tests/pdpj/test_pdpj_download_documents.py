@@ -19,7 +19,7 @@ from pydantic import ValidationError
 import juscraper as jus
 from juscraper.aggregators._pdpj_sso.renovacao import SsoPdpjIndisponivelError
 from juscraper.aggregators.pdpj.download import BASE_URL
-from tests._helpers import load_sample
+from tests._helpers import load_sample, urls_enviadas
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -31,6 +31,7 @@ COERCED_DOCUMENT_COLUMNS = [
     "numero_processo",
     "id_documento",
     "id_codex",
+    "id_origem",
     "sequencia",
     "data_juntada",
     "nome",
@@ -40,7 +41,9 @@ COERCED_DOCUMENT_COLUMNS = [
     "arquivo_id",
     "arquivo_tipo",
     "arquivo_tamanho",
+    "arquivo_tamanho_texto",
     "arquivo_paginas",
+    "_raw",
 ]
 
 
@@ -201,23 +204,28 @@ def test_download_documents_coage_with_binary_falso_em_string():
 
 @responses.activate
 def test_download_documents_a_partir_de_cpopg_df():
-    """Documentos podem vir aninhados em ``tramitacoes[*].documentos``."""
+    """Documentos aninhados em ``tramitacoes[*].documentos`` saem com as colunas de :meth:`documentos`."""
+    _mock_documentos_endpoint()
     _mock_cpopg_endpoint()
+    _mock_any_text_endpoint()
     s = _mk_scraper()
+    colunas_documentos = [c for c in s.documentos(PROC).columns if c != "motivo_falha"]
     cpopg_df = s.cpopg(PROC)
     detalhes = cpopg_df.iloc[0]["detalhes"]
     docs = list(detalhes.get("documentos") or [])
     for tram in detalhes.get("tramitacoes", []) or []:
         docs.extend(tram.get("documentos") or [])
-    if not docs:
-        # processo sem nenhum documento -> retorno vazio sem erro
-        out = s.download_documents(cpopg_df)
-        assert out.empty
-        return
-    for doc in docs:
-        _mock_text_endpoint(doc["id"], f"texto:{doc['id']}")
+
     out = s.download_documents(cpopg_df)
+
     assert len(out) == len(docs)
+    assert colunas_documentos == COERCED_DOCUMENT_COLUMNS
+    assert out.columns.tolist() == [*COERCED_DOCUMENT_COLUMNS, "texto", "_raw_texto", "motivo_falha"]
+    # Valores do sample real do cpopg, em ``tramitacoes[0].documentos[0]``.
+    primeira = out.iloc[0]
+    assert primeira["id_origem"] == "141530864"
+    assert primeira["arquivo_tamanho_texto"] == 875
+    assert primeira["_raw"]["id"] == primeira["id_documento"]
 
 
 @responses.activate
@@ -323,6 +331,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
     top_document = {
         "id": "doc-top",
         "idCodex": "codex-top",
+        "idOrigem": "origem-top",
         "sequencia": 1,
         "dataHoraJuntada": "2026-01-02T03:04:05",
         "nome": "Documento do topo",
@@ -332,6 +341,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
             "id": "arquivo-top",
             "tipo": "application/pdf",
             "tamanho": 123,
+            "tamanhoTexto": 45,
             "quantidadePaginas": 2,
         },
     }
@@ -394,6 +404,7 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "numero_processo": "cnj-retornado-1",
         "id_documento": "doc-top",
         "id_codex": "codex-top",
+        "id_origem": "origem-top",
         "sequencia": 1,
         "data_juntada": "2026-01-02T03:04:05",
         "nome": "Documento do topo",
@@ -403,7 +414,9 @@ def test_download_documents_preserva_precedencia_ordem_duplicatas_e_shape():
         "arquivo_id": "arquivo-top",
         "arquivo_tipo": "application/pdf",
         "arquivo_tamanho": 123,
+        "arquivo_tamanho_texto": 45,
         "arquivo_paginas": 2,
+        "_raw": top_document,
     }
 
 
@@ -459,7 +472,7 @@ def test_download_documents_falha_consome_limite_e_gera_um_aviso_agregado():
     assert out["texto"].isna().all()
     assert out["motivo_falha"].tolist() == ["retry_esgotado_500", "http_404"]
     # O 500 é retentado até o fim das tentativas; o 404 não.
-    documentos_pedidos = [call.request.url.rsplit("/", 2)[-2] for call in responses.calls]
+    documentos_pedidos = [url.rsplit("/", 2)[-2] for url in urls_enviadas()]
     assert list(dict.fromkeys(documentos_pedidos)) == ["doc-a", "doc-b"]
     assert documentos_pedidos.count("doc-b") == 1
     assert len(avisos) == 1
@@ -567,7 +580,7 @@ def test_download_documents_id_nan_nao_ocupa_vaga_nem_vira_requisicao(caplog):
 
     assert out["id_documento"].tolist() == ["doc-b"]
     assert out.iloc[0]["texto"] == "texto b"
-    assert [call.request.url.rsplit("/", 2)[-2] for call in responses.calls] == ["doc-b"]
+    assert [url.rsplit("/", 2)[-2] for url in urls_enviadas()] == ["doc-b"]
 
 
 @responses.activate

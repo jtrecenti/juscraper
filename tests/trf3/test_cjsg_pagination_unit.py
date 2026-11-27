@@ -6,6 +6,7 @@ from the real samples and remove only the summary or the counters.
 """
 from __future__ import annotations
 
+import logging
 import re
 
 import pytest
@@ -114,8 +115,15 @@ def test_paginas_pedidas_none_sem_total_levanta():
         _paginas_pedidas(None, None)
 
 
-def test_paginas_pedidas_corta_alem_do_total_e_mantem_ordem():
-    assert _paginas_pedidas([3, 1, 5, 2], 3) == [3, 1, 2]
+def test_paginas_pedidas_corta_alem_do_total_e_mantem_ordem(caplog):
+    with caplog.at_level(logging.WARNING, logger="juscraper.trf3"):
+        assert _paginas_pedidas([3, 1, 5, 2], 3) == [3, 1, 2]
+    assert "TRF3: página 5 fora do intervalo 1-3" in caplog.text
+
+
+@pytest.mark.parametrize("n_paginas", [3, None])
+def test_paginas_pedidas_baixa_a_repetida_uma_vez(n_paginas):
+    assert _paginas_pedidas([2, 1, 2], n_paginas) == [2, 1]
 
 
 LISTAS = [

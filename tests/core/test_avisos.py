@@ -4,6 +4,7 @@ from __future__ import annotations
 import ast
 import pathlib
 import warnings
+from typing import TypeGuard
 
 import pytest
 
@@ -35,7 +36,7 @@ def test_categoria_e_repassada():
         avisar("velho", DeprecationWarning)
 
 
-def _emite_aviso_direto(no: ast.AST) -> bool:
+def _emite_aviso_direto(no: ast.AST) -> TypeGuard[ast.Attribute | ast.ImportFrom | ast.Import]:
     # Pega a referência, e não só a chamada: ``w = warnings.warn`` e
     # ``partial(warnings.warn, ...)`` também emitem sem passar por ``avisar``.
     if isinstance(no, ast.Attribute):

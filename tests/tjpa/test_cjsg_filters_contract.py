@@ -1,5 +1,4 @@
 """Filter-propagation contract for TJPA cjsg."""
-import json
 
 import pandas as pd
 import pytest
@@ -9,7 +8,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjpa.download import BASE_URL, build_cjsg_payload
-from tests._helpers import assert_unknown_kwarg_raises, load_sample
+from tests._helpers import assert_unknown_kwarg_raises, corpo_json_enviado, load_sample
 
 
 @responses.activate
@@ -63,7 +62,7 @@ def test_cjsg_all_filters_land_in_json_body(mocker):
 
     assert isinstance(df, pd.DataFrame)
     # O matcher deriva do builder; os nomes de campo do BFF ficam pinados aqui.
-    assert json.loads(responses.calls[0].request.body) == {
+    assert corpo_json_enviado(responses.calls[0].request) == {
         "query": "dano moral",
         "queryType": "anywords",
         "queryScope": "inteiroTeor",
@@ -246,7 +245,7 @@ def test_cjsg_alias_query_scope_avisa_e_manda_o_mesmo_que_buscar_em(mocker, meto
         getattr(scraper, metodo)("dano moral", paginas=1, query_scope=query_scope)
     getattr(scraper, metodo)("dano moral", paginas=1, buscar_em=buscar_em)
 
-    corpos = [json.loads(call.request.body) for call in responses.calls]
+    corpos = [corpo_json_enviado(call.request) for call in responses.calls]
     assert corpos[0] == corpos[1]
     assert corpos[0]["queryScope"] == ("ementa" if buscar_em == "ementa" else "inteiroTeor")
 

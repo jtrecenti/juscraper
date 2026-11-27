@@ -16,7 +16,7 @@ from .._trf.schemas import InputCpopgTRF
 from .consulta_publica import TJPEConsultaPublicaScraper
 from .download import cjsg_download
 from .parse import cjsg_parse
-from .schemas import InputCJSGTJPE
+from .schemas import InputCJSGTJPE, TipoDecisao
 
 
 class TJPEScraper(HTTPScraper):
@@ -50,11 +50,12 @@ class TJPEScraper(HTTPScraper):
 
         Delega a :meth:`juscraper.courts._trf.base.TRFConsultaScraper.cpopg_download`,
         na mesma sessão de :meth:`cpopg`, inclusive o cookie do AWS WAF obtido
-        quando o desafio aparece. Não baixa as peças: para elas, usar
+        quando o desafio aparece. Não baixa as peças: ``download_pecas=True``
+        ou um ``diretorio`` levantam ``TypeError``; para elas, usar
         :meth:`cpopg` com ``download_pecas=True``.
 
         Args:
-            id_cnj (str | list[str]): CNJ único ou lista, com ou sem máscara.
+            id_cnj: CNJ único ou lista, com ou sem máscara.
 
         Returns:
             Lista na ordem da entrada, com o HTML do detalhe de cada CNJ.
@@ -66,7 +67,7 @@ class TJPEScraper(HTTPScraper):
                 :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
 
         Raises:
-            TypeError: Kwarg desconhecido.
+            TypeError: Kwarg desconhecido, ``download_pecas=True`` ou ``diretorio``.
             ValidationError: CNJ em formato inválido.
             ImportError: O WAF desafiou e o Playwright não está instalado.
 
@@ -90,9 +91,9 @@ class TJPEScraper(HTTPScraper):
         o parser da família PJe; não faz requisição.
 
         Args:
-            htmls (list[str | None]): HTMLs do detalhe, como
+            htmls: HTMLs do detalhe, como
                 :meth:`cpopg_download` devolve.
-            id_cnj_list (list[str]): CNJs na mesma ordem de ``htmls``.
+            id_cnj_list: CNJs na mesma ordem de ``htmls``.
 
         Returns:
             Uma linha por CNJ, com as colunas do detalhe de :meth:`cpopg`,
@@ -127,12 +128,12 @@ class TJPEScraper(HTTPScraper):
         ``playwright install chromium``); sem desafio, nada disso é preciso.
 
         Args:
-            id_cnj (str | list[str]): CNJ único ou lista, com ou sem máscara.
-            download_pecas (bool): Se ``True``, baixa também as peças públicas
+            id_cnj: CNJ único ou lista, com ou sem máscara.
+            download_pecas: Se ``True``, baixa também as peças públicas
                 (HTML do visualizador do PJe). Default ``False``.
-            diretorio (str | None): Onde gravar as peças, em
+            diretorio: Onde gravar as peças, em
                 ``<diretorio>/<cnj>/<id>.html``. Default ``None`` (diretório
-                temporário).
+                temporário). Só tem efeito com ``download_pecas=True``.
 
         Returns:
             Uma linha por CNJ. Colunas: ``id_cnj``, ``processo``,
@@ -157,6 +158,10 @@ class TJPEScraper(HTTPScraper):
             TypeError: Kwarg desconhecido.
             ImportError: O WAF desafiou e o Playwright não está instalado,
                 inclusive durante o download das peças.
+
+        Avisos:
+            ``UserWarning``: ``diretorio`` sem ``download_pecas=True``. A
+            consulta segue, sem as peças.
 
         Examples: Exemplo
             >>> import juscraper as jus
@@ -185,12 +190,12 @@ class TJPEScraper(HTTPScraper):
         classe: str | None = None,
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
-        tipo_decisao: str = "acordaos",
+        tipo_decisao: TipoDecisao = "acordaos",
         **kwargs,
     ) -> list:
         """Baixa as paginas brutas do cjsg do TJPE.
 
-        Aceita os mesmos filtros de :meth:`cjsg`; veja la a lista completa,
+        Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa,
         e levanta e avisa nos mesmos casos.
 
         Returns:
@@ -215,7 +220,7 @@ class TJPEScraper(HTTPScraper):
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
@@ -240,7 +245,7 @@ class TJPEScraper(HTTPScraper):
         classe: str | None = None,
         assunto: str | None = None,
         meio_tramitacao: str | None = None,
-        tipo_decisao: str = "acordaos",
+        tipo_decisao: TipoDecisao = "acordaos",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJPE.
@@ -252,24 +257,24 @@ class TJPEScraper(HTTPScraper):
         ``<![CDATA[HTML]]>``.
 
         Args:
-            pesquisa (str): Termo de busca livre (ementa). Aceita os aliases
+            pesquisa: Termo de busca livre (ementa). Aceita os aliases
                 deprecados ``query`` / ``termo``.
-            paginas (int | list | range | None): Paginas 1-based; ``None`` baixa
+            paginas: Paginas 1-based; ``None`` baixa
                 todas. Default ``None``.
-            data_julgamento_inicio (str | date): Data inicial de julgamento
+            data_julgamento_inicio: Data inicial de julgamento
                 (``DD/MM/AAAA``, ``DD-MM-AAAA``, ``AAAA-MM-DD``, ``AAAA/MM/DD``,
                 :class:`datetime.date` ou :class:`datetime.datetime`).
-            data_julgamento_fim (str | date): Data final de julgamento (mesmos
+            data_julgamento_fim: Data final de julgamento (mesmos
                 formatos de ``data_julgamento_inicio``).
-            relator (str): Nome do relator (deve bater exatamente com o valor
+            relator: Nome do relator (deve bater exatamente com o valor
                 do dropdown do formulario).
-            classe (str): Codigo CNJ da classe. Aceita o alias deprecado
+            classe: Codigo CNJ da classe. Aceita o alias deprecado
                 ``classe_cnj``.
-            assunto (str): Codigo CNJ do assunto. Aceita o alias deprecado
+            assunto: Codigo CNJ do assunto. Aceita o alias deprecado
                 ``assunto_cnj``.
-            meio_tramitacao (str): Filtro de meio de tramitacao
+            meio_tramitacao: Filtro de meio de tramitacao
                 (ex.: ``"ELETRONICO"``).
-            tipo_decisao (str): ``"acordaos"`` (default), ``"monocraticas"`` ou
+            tipo_decisao: ``"acordaos"`` (default), ``"monocraticas"`` ou
                 ``"todos"``. Quando ``"todos"``, o backend marca os dois
                 checkboxes e o fluxo passa pela pagina de escolha
                 (``escolhaResultado.xhtml``), que traz os acórdãos; se a

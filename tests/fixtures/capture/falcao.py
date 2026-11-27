@@ -31,6 +31,7 @@ requisicoes e o script para na primeira resposta de bloqueio.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -46,6 +47,8 @@ from juscraper.aggregators.falcao.download import (
 )
 from juscraper.aggregators.falcao.schemas import COLECOES
 from tests.fixtures.capture._util import dump, samples_dir_for
+
+logger = logging.getLogger(__name__)
 
 PESQUISA = "dano moral"
 PESQUISA_VAZIA = "juscraper_probe_zero_hits_xyzqwe"
@@ -93,7 +96,7 @@ def _capture(session: requests.Session, session_id: str, dest: Path, cenario: Ce
     body = _truncar(resp.json(), cenario.inteiros)
     dump(dest / cenario.arquivo, json.dumps(body, ensure_ascii=False, indent=1).encode("utf-8"))
     total = body["quantidadeTotal"]
-    print(f"[falcao] wrote {cenario.arquivo} ({len(body['documentos'])} docs, quantidadeTotal={total})")
+    logger.info("[falcao] wrote %s (%s docs, quantidadeTotal=%s)", cenario.arquivo, len(body['documentos']), total)
 
 
 def main() -> None:
@@ -113,8 +116,9 @@ def main() -> None:
             time.sleep(PAUSA)
         _capture(session, session_id, dest, cenario)
 
-    print(f"[falcao] all samples written to {dest}")
+    logger.info("[falcao] all samples written to %s", dest)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     main()

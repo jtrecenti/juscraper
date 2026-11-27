@@ -52,8 +52,8 @@ class _Response(requests.Response):
     def text(self) -> str:
         return self._body
 
-    def json(self):
-        return json.loads(self._body)
+    def json(self, **kwargs: Any) -> Any:
+        return json.loads(self._body, **kwargs)
 
 
 class _ConfigRefreshRecorder:

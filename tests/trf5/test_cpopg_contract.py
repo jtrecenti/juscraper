@@ -6,35 +6,20 @@ different form field IDs (``j_id162`` vs ``j_id165``).
 """
 from __future__ import annotations
 
-from urllib.parse import parse_qsl
+import tempfile
 
 import pandas as pd
 import pytest
 import responses
 
 import juscraper as jus
+from juscraper.courts._trf.base import _Consulta
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, corpo_form_parcial_matcher, load_sample, load_sample_bytes
 
-
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        body = request.body or b""
-        if isinstance(body, bytes):
-            body = body.decode("utf-8")
-        actual = dict(parse_qsl(body, keep_blank_values=True))
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
-
-
+# O TRF5 serve o formulário e o detalhe em latin-1, com este cabeçalho; os
+# samples guardam os bytes crus.
+HTML_LATIN1 = "text/html;charset=ISO-8859-1"
 LIST_URL = "https://pje1g.trf5.jus.br/pjeconsulta/ConsultaPublica/listView.seam"
 DETAIL_URL = (
     "https://pje1g.trf5.jus.br/pjeconsulta/"
@@ -48,8 +33,8 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
-        content_type="text/html; charset=utf-8",
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -57,7 +42,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         body=load_sample("trf5", "cpopg/search_one_result.html"),
         content_type="text/xml; charset=utf-8",
         match=[
-            _subset_form_matcher(
+            corpo_form_parcial_matcher(
                 {
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "0058457-31.2025.4.05.8000",
@@ -77,7 +62,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
-        content_type="text/html",
+        content_type=HTML_LATIN1,
     )
 
     scraper = jus.scraper("trf5", sleep_time=0)
@@ -120,7 +105,8 @@ def test_cpopg_missing_process_keeps_detail_columns_empty() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -175,16 +161,53 @@ def test_cpopg_rejects_unknown_kwargs(metodo: str) -> None:
 
 
 @responses.activate
+def test_cpopg_download_recusa_os_parametros_das_pecas() -> None:
+    """``cpopg_download`` não baixa peças: pedir peças vira ``TypeError``, sem requisição."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    assert_unknown_kwarg_raises(
+        scraper.cpopg_download, ["download_pecas", "diretorio"], "00584573120254058000",
+        rotulo="TRF5Scraper.cpopg_download",
+    )
+    with pytest.raises(TypeError, match=r"\(para baixar as peças, use cpopg\(\.\.\., download_pecas=True\)\)$"):
+        scraper.cpopg_download("00584573120254058000", download_pecas=True)
+
+
+def test_cpopg_download_aceita_os_valores_padrao_das_pecas(mocker) -> None:
+    """``download_pecas=False`` e ``diretorio=None`` não pedem nada e seguem aceitos."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta("<html/>", None, [], []))
+    htmls = scraper.cpopg_download("00584573120254058000", download_pecas=False, diretorio=None)
+    assert htmls == ["<html/>"]
+    consultar.assert_called_once_with("00584573120254058000", None)
+
+
+def test_cpopg_avisa_diretorio_sem_download_pecas(mocker, tmp_path) -> None:
+    """``diretorio`` sem ``download_pecas=True`` não baixa peças: o pedido vira aviso, em vez de sumir."""
+    scraper = jus.scraper("trf5", sleep_time=0)
+    consultar = mocker.patch.object(scraper, "_consultar", return_value=_Consulta(None, None, [], []))
+    diretorio = tmp_path / "pecas"
+    mkdtemp = mocker.spy(tempfile, "mkdtemp")
+    with pytest.warns(UserWarning, match=r"^TRF5Scraper\.cpopg: diretorio=.*passe download_pecas=True\.$") as avisos:
+        df = scraper.cpopg("00584573120254058000", diretorio=str(diretorio))
+    assert avisos[0].filename == __file__
+    consultar.assert_called_once_with("00584573120254058000", None)
+    assert "pecas" not in df.columns
+    assert not diretorio.exists()
+    # Sem peças, o diretório temporário padrão não é criado.
+    mkdtemp.assert_not_called()
+
+
+@responses.activate
 def test_fetch_movs_page_decodes_fragment_as_utf8() -> None:
     """The Richfaces AJAX fragment is UTF-8; ``fetch_movs_page`` must not latin-1 it.
 
     Regression for the double-encoding bug where accented movimentação text came
     back mojibaked (``petição`` -> ``petiÃ§Ã£o``) because the UTF-8 partial
-    response was decoded as latin-1. Serves the *raw bytes* of a fragment
-    captured live (TRF5 process with 505 movs) and asserts the decoded text
-    carries clean accents.
+    response was decoded as latin-1. Serves the *raw bytes* of the page-2
+    fragment recorded by ``tests/fixtures/capture/trf5.py`` and asserts the
+    decoded text carries clean accents.
 
-    TRF5 ships no paginated-detail sample, so we build a synthetic
+    The paginated process's detail page is not kept as a sample, so we build a synthetic
     ``MovsPagination`` — the focus here is the decode, not the slider extraction
     (covered live by ``test_cpopg_returns_all_movs_pages``).
     """
@@ -222,7 +245,8 @@ def test_cpopg_batch_continues_after_download_error() -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(responses.POST, LIST_URL, body=ConnectionError("kaboom"))
     responses.add(
@@ -234,6 +258,7 @@ def test_cpopg_batch_continues_after_download_error() -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
 
     scraper = jus.scraper("trf5", sleep_time=0)
@@ -252,7 +277,8 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
     responses.add(
         responses.GET,
         LIST_URL,
-        body=load_sample("trf5", "cpopg/form_initial.html"),
+        body=load_sample_bytes("trf5", "cpopg/form_initial.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -263,6 +289,7 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
     responses.add(
         responses.POST,
@@ -273,6 +300,7 @@ def test_cpopg_batch_continues_after_parse_error(monkeypatch) -> None:
         responses.GET,
         DETAIL_URL,
         body=load_sample_bytes("trf5", "cpopg/detail_normal.html"),
+        content_type=HTML_LATIN1,
     )
 
     # ``parse_detail`` é resolvido no namespace de ``_trf.base`` (onde

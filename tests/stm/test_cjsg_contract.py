@@ -14,7 +14,7 @@ import juscraper as jus
 from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.courts.stm.download import BASE_URL, build_cjsg_params, cjsg_n_resultados
 from juscraper.courts.stm.parse import COLUNAS
-from tests._helpers import load_sample
+from tests._helpers import load_sample, params_enviados
 
 INDEX_URL = "https://jurisprudencia.stm.jus.br/index.php"
 
@@ -39,7 +39,7 @@ def test_cjsg_paginas_none_baixa_todas(mocker):
 
     df = jus.scraper("stm", sleep_time=3).cjsg('"corrupção ativa"')
 
-    assert [call.request.params["start"] for call in responses.calls] == ["0", "100", "200"]
+    assert [params_enviados(call.request)["start"] for call in responses.calls] == ["0", "100", "200"]
     assert sleep.call_args_list == [mocker.call(3), mocker.call(3)]
     assert list(df.columns) == COLUNAS
     assert len(df) == 205

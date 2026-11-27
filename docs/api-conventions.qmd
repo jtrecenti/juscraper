@@ -89,6 +89,17 @@ single `ValueError("...Formato esperado: ...")` raised by
 - `range`: e.g., `range(1, 4)` downloads pages 1, 2, 3
 - `list`: e.g., `[1, 3, 5]` downloads specific pages
 
+A page listed twice is downloaded once, in the position where it first
+appears. When the portal reports the total, pages beyond it are not requested
+and are reported in a single warning on the scraper's logger
+(`juscraper.<sigla>`, such as `juscraper.tjsp` or `juscraper.falcao`).
+Exceptions: TJAP, TJPR and TJRR still request an explicit page beyond the end
+from the portal; PDPJ and DataJud walk their
+cursor up to the largest requested page and stop silently at the end of the
+results; DataJud downloads a list as the contiguous range between its smallest
+and largest page (its cursor only moves forward); the STF raises `ValueError`
+for a repeated page.
+
 ### Page Size
 
 | Parameter | Type | Description |
