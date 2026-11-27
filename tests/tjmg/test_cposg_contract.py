@@ -30,7 +30,7 @@ import juscraper as jus
 from juscraper.courts.tjmg.client import TJMGScraper
 from juscraper.courts.tjmg.cposg_parse import parse_partes
 from juscraper.courts.tjmg.schemas import OutputCPOSGTJMG
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 from tests.tjmg._helpers import FALHAS_DE_REDE
 
 BASE = "https://www4.tjmg.jus.br/juridico/sf"
@@ -182,6 +182,13 @@ def test_cposg_not_found_keeps_id_cnj_row(scraper):
 def test_cposg_rejects_unknown_kwarg(scraper):
     with pytest.raises(TypeError, match="foo"):
         scraper.cposg("0000359-79.2020.8.13.0205", foo=1)
+
+
+def test_cposg_kwarg_desconhecido_texto_canonico(scraper):
+    """A mensagem segue o formato canônico, com o rótulo do método e nada depois dos nomes."""
+    assert_unknown_kwarg_raises(
+        scraper.cposg, ["foo", "bar"], "0000359-79.2020.8.13.0205", rotulo="TJMGScraper.cposg", exata=True
+    )
 
 
 def test_cposg_rejects_invalid_length(scraper):

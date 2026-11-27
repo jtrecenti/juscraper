@@ -466,6 +466,16 @@ def test_listar_decisoes_rejeita_diretorio(falcao):
         falcao.listar_decisoes("dano moral", paginas=1, diretorio="out")
 
 
+def test_listar_decisoes_rejeita_diretorio_com_texto_canonico(falcao):
+    """Mensagem completa: prefixo canônico de kwarg desconhecido mais a dica."""
+    with pytest.raises(TypeError) as excinfo:
+        falcao.listar_decisoes("dano moral", paginas=1, diretorio="out")
+    assert str(excinfo.value) == (
+        "FalcaoScraper.listar_decisoes() got unexpected keyword argument(s): 'diretorio'. "
+        "Para gravar o JSON bruto num diretorio, use listar_decisoes_download()."
+    )
+
+
 @responses.activate
 @pytest.mark.parametrize("alias", ["query", "termo"])
 def test_alias_deprecado_de_pesquisa(falcao, alias):

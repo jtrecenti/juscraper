@@ -537,3 +537,15 @@ def test_cpopg_parse_argumentos_ausentes_ou_desconhecidos() -> None:
         scraper.cpopg_parse([None])
     with pytest.raises(TypeError, match="unexpected keyword"):
         scraper.cpopg_parse([None], [CNJ_PAGINADO], formato="html")
+
+
+def test_cpopg_parse_kwarg_desconhecido_texto_canonico() -> None:
+    """A mensagem segue o formato canônico, com o rótulo do método e nada depois dos nomes."""
+    assert_unknown_kwarg_raises(
+        jus.scraper("trf3", sleep_time=0).cpopg_parse,
+        ["formato", "outro"],
+        [None],
+        [CNJ_PAGINADO],
+        rotulo="TRF3Scraper.cpopg_parse",
+        exata=True,
+    )

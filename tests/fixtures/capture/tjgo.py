@@ -31,6 +31,7 @@ import sys
 
 import requests
 
+from juscraper.courts.tjgo.client import TJGOScraper
 from juscraper.courts.tjgo.download import SEARCH_URL, build_cjsg_payload
 from juscraper.courts.tjgo.parse import has_results
 
@@ -38,10 +39,7 @@ from ._util import dump, samples_dir_for
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
-)
+USER_AGENT = TJGOScraper.USER_AGENT
 COOKIE_DOMAIN = "projudi.tjgo.jus.br"
 # ``JSESSIONID=<id>.cp09:server-cp09-1`` vem com ``WIDPROP=.cp09-1``.
 _SERVIDOR_RE = re.compile(r":server-([\w-]+)$")
