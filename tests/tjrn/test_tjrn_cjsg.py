@@ -128,6 +128,33 @@ class TestCJSGTJRN:
         resp.raise_for_status()
         assert resp.json()["hits"]["hits"] == []
 
+    @pytest.mark.parametrize(
+        "filtros",
+        [
+            {"decisoes": "Sentença"},
+            {"grau": "1"},
+            {"decisoes": "Decisão", "jurisdicoes": "TJ"},
+            {"decisoes": "Decisão", "jurisdicoes": "TR"},
+            {"decisoes": "Decisão", "sistema": "PJE"},
+        ],
+    )
+    def test_termo_na_ementa_sem_ementa_volta_vazio(self, filtros):
+        """Com termo na ementa, os filtros sem ementa voltam sem resultados.
+
+        E a prova de que ``InputCJSGTJRN`` pode recusar as combinacoes: como a
+        API publica levanta ``ValidationError``, o payload vai direto pela
+        sessao do scraper. So os acordaos tem ementa; as monocraticas com
+        ementa sao poucas do SAJ, de 2008, sem jurisdicao. Sem
+        data, porque a recusa vale para qualquer periodo; o mesmo termo traz
+        resultados sem o filtro e no inteiro teor
+        (``test_inteiro_teor_busca_termo_em_sentencas``).
+        """
+        resp = self.scraper.session.post(
+            BASE_URL, json=build_cjsg_payload("dano moral", **filtros), timeout=60,
+        )
+        resp.raise_for_status()
+        assert resp.json()["hits"]["total"] == 0
+
     @pytest.mark.parametrize("sistema", ["PJE", "SAJ"])
     def test_filtro_sistema_traz_so_o_sistema_pedido(self, sistema):
         """Cada valor de ``sistema`` traz so processos do sistema pedido."""
