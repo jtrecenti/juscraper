@@ -20,7 +20,7 @@ from pydantic import ValidationError
 import juscraper as jus
 from juscraper.aggregators.pdpj.client import _limite_de_paginas
 from juscraper.aggregators.pdpj.download import BASE_URL
-from juscraper.aggregators.pdpj.params import _to_query_params
+from juscraper.aggregators.pdpj.params import _QUERY_PARAM_MAP, _to_query_params
 from juscraper.aggregators.pdpj.parse import (
     build_documento_rows,
     build_movimento_rows,
@@ -443,6 +443,13 @@ def test_parse_pesquisa_response_lida_com_none():
     assert rows == []
     assert search_after is None
     assert total is None
+
+
+def test_query_param_map_cobre_todos_os_filtros():
+    """Filtro fora do mapa iria a API em snake_case, que ela ignora sem erro."""
+    # InputContarPdpj aceita um subconjunto destes campos.
+    filtros = set(InputPesquisaPdpj.model_fields) - {"paginas", "itens_por_pagina"}
+    assert filtros - set(_QUERY_PARAM_MAP) == set()
 
 
 def test_to_query_params_filtra_none_e_serializa_lista():

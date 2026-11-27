@@ -8,9 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-# Mapeia nomes canonicos snake_case -> nomes camelCase aceitos pela API.
-# Compartilhado entre ``PdpjScraper.pesquisa`` e ``PdpjScraper.contar``
-# (que aceita um subconjunto; ver ``InputContarPdpj``).
+# ``contar`` usa um subconjunto destas chaves (ver ``InputContarPdpj``).
 _QUERY_PARAM_MAP: dict[str, str] = {
     "numero_processo": "numeroProcesso",
     "numero_processo_sintetico": "numeroProcessoSintetico",

@@ -577,12 +577,10 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                   processo", "Alteração de documentos", "Alteração de metadados", "Alteração de
                   movimentos", "Alteração de partes", "Exclusão de processo" ou "Identificação
                   de petição inicial"
-                * ``data_atualizacao_inicio`` (str | None): atualizacao no Data Lake, no formato
-                  ``yyyy-MM-dd'T'HH:mm:ss.SSS``
-                * ``data_atualizacao_fim`` (str | None): idem
-                * ``data_primeiro_ajuizamento_inicio`` (str | None): primeiro ajuizamento, no
-                  formato ``yyyy-MM-dd'T'HH:mm:ss.SSS``
-                * ``data_primeiro_ajuizamento_fim`` (str | None): idem
+                * ``data_atualizacao_inicio`` / ``data_atualizacao_fim`` (str | None): atualizacao
+                  no Data Lake, no formato ``yyyy-MM-dd'T'HH:mm:ss.SSS``
+                * ``data_primeiro_ajuizamento_inicio`` / ``data_primeiro_ajuizamento_fim`` (str | None):
+                  primeiro ajuizamento, no mesmo formato
                 * ``campo_ordenacao`` (str | None): campo de ordenacao decrescente:
                   "dataHoraUltimoMovimento" (padrao da API), "dataHoraAtualizacao",
                   "dataHoraPrimeiroAjuizamento" ou "dataHoraUltimoAjuizamento"
@@ -692,29 +690,16 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 ordenacao, ``fase``, ``situacao_atual`` e ``tipo_operacao``, que
                 a especificacao publica da API nao declara neste endpoint.
 
-                * ``numero_processo`` (str | None)
-                * ``numero_processo_sintetico`` (str | None)
-                * ``id`` (str | None)
-                * ``id_fonte_dados_codex`` (str | None)
-                * ``numero_historico`` (str | None)
-                * ``cpf_cnpj_parte`` (str | None)
-                * ``nome_parte`` (str | None)
-                * ``outro_nome_parte`` (str | None)
-                * ``polo_parte`` (str | None)
-                * ``situacao_parte`` (str | None)
-                * ``nome_representante`` (str | None)
-                * ``oab_representante`` (str | None)
-                * ``href`` (str | None)
-                * ``id_classe`` (str | None)
-                * ``id_assunto_judicial`` (str | None)
+                * ``numero_processo`` / ``numero_processo_sintetico`` / ``id`` (str | None)
+                * ``id_fonte_dados_codex`` / ``numero_historico`` / ``href`` (str | None)
+                * ``cpf_cnpj_parte`` / ``nome_parte`` / ``outro_nome_parte`` (str | None)
+                * ``polo_parte`` / ``situacao_parte`` (str | None)
+                * ``nome_representante`` / ``oab_representante`` (str | None)
+                * ``id_classe`` / ``id_assunto_judicial`` (str | None)
                 * ``id_orgao_julgador`` (str | list[str] | None)
-                * ``instancia`` (str | None)
-                * ``segmento_justica`` (str | None)
-                * ``tribunal`` (str | None)
-                * ``data_atualizacao_inicio`` (str | None)
-                * ``data_atualizacao_fim`` (str | None)
-                * ``data_primeiro_ajuizamento_inicio`` (str | None)
-                * ``data_primeiro_ajuizamento_fim`` (str | None)
+                * ``instancia`` / ``segmento_justica`` / ``tribunal`` (str | None)
+                * ``data_atualizacao_inicio`` / ``data_atualizacao_fim`` (str | None)
+                * ``data_primeiro_ajuizamento_inicio`` / ``data_primeiro_ajuizamento_fim`` (str | None)
 
         Returns:
             Total informado pela API.
