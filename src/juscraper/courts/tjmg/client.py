@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.utils.cnj import clean_cnj
-from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias
+from juscraper.utils.params import apply_input_pipeline_search, raise_on_extra_kwargs, resolve_deprecated_alias
 
 from .cposg_download import PERFIL_CPOSG
 from .cposg_download import cposg_download as _cposg_download
@@ -255,12 +255,7 @@ class TJMGScraper(HTTPScraper):
         try:
             inp = InputCPOSGTJMG(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
-            extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
-            if extras and len(extras) == len(exc.errors()):
-                names = ", ".join(repr(err["loc"][-1]) for err in extras)
-                raise TypeError(
-                    f"TJMGScraper.cposg got unexpected keyword argument(s): {names}"
-                ) from exc
+            raise_on_extra_kwargs(exc, "TJMGScraper.cposg")
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
         numeros = [clean_cnj(c) for c in raw]
