@@ -181,8 +181,9 @@ class ComunicaCNJScraper(HTTPScraper):
             paginas_iter: range | list = range(1, total_paginas + 1)
         elif isinstance(paginas_norm, range):
             paginas_iter = range(
-                max(1, paginas_norm.start),
+                paginas_norm.start,
                 min(paginas_norm.stop, total_paginas + 1),
+                paginas_norm.step,
             )
         else:
             paginas_iter = [p for p in paginas_norm if 1 <= p <= total_paginas]

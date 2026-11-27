@@ -18,7 +18,7 @@ import responses
 from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.aggregators.pdpj.client import _to_query_params
+from juscraper.aggregators.pdpj.client import _limite_de_paginas, _to_query_params
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.aggregators.pdpj.parse import (
     build_documento_rows,
@@ -268,6 +268,11 @@ def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
     with pytest.raises(ValidationError, match="paginas"):
         _mk_scraper().pesquisa(tribunal="TRF1", paginas=paginas)
     assert len(responses.calls) == 0
+
+
+def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
+    """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
+    assert _limite_de_paginas(range(1, 10, 3)) == (7, {1, 4, 7})
 
 
 @pytest.mark.parametrize("paginas", [True, [True], [1, True]])

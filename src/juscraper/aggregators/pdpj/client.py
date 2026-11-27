@@ -273,7 +273,7 @@ def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, s
     if paginas is None:
         return None, None
     if isinstance(paginas, range):
-        return paginas.stop - 1, set(paginas)
+        return paginas[-1], set(paginas)
     return max(paginas), set(paginas)
 
 
@@ -670,6 +670,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
                 sem resultado devolve DataFrame vazio.
 
         Raises:
+            TypeError: Quando um kwarg desconhecido e passado ou ``paginas`` tem tipo invalido.
+            ValidationError: Quando ``paginas`` (pagina < 1, vazia, ``range`` descendente) ou um filtro e invalido.
             requests.HTTPError: Quando a requisicao de qualquer pagina falha, com status diferente de 404.
                 Pagina nao vira linha de falha, e devolver as paginas anteriores truncaria o resultado sem aviso.
             RetryExhaustedError: Quando a requisicao de qualquer pagina falha.

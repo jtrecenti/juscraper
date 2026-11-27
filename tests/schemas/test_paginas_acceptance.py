@@ -163,10 +163,10 @@ def test_paginas_mixin_rejects_invalid_selections(paginas):
 
 
 def _schemas_com_paginas() -> list[type[BaseModel]]:
-    """Todo modelo pydantic de ``juscraper.*.schemas`` com campo ``paginas``."""
+    """Todo modelo pydantic dos modulos ``*schemas`` com campo ``paginas``."""
     found: dict[str, type[BaseModel]] = {}
     for modinfo in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
-        if not modinfo.name.endswith(".schemas"):
+        if not modinfo.name.rsplit(".", 1)[-1].endswith("schemas"):
             continue
         mod = importlib.import_module(modinfo.name)
         for obj in vars(mod).values():
