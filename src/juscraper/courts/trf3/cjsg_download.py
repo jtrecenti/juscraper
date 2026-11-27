@@ -555,8 +555,6 @@ def cjsg_download_manager(
 
     total = cjsg_n_results(primeira)
     n_paginas = None if total is None else math.ceil(total / inp.tamanho_pagina)
-    # O pipeline do client já entrega ``paginas`` como lista, range ou None; a
-    # normalização só muda o inteiro de um modelo montado fora dele.
     pedidas = _paginas_pedidas(inp.paginas_normalizadas, n_paginas)
 
     resultados: list[str] = []

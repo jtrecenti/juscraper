@@ -35,10 +35,9 @@ class PaginasMixin(BaseModel):
     ``paginas`` e **1-based em todos os raspadores** — ``paginas=3`` equivale
     a ``range(1, 4)`` e baixa as paginas 1, 2 e 3. ``paginas=0`` e invalido.
     ``None`` (default) significa "todas as paginas disponiveis" — o scraper
-    consulta o backend para descobrir o total. Runtime normaliza
-    ``int`` -> ``range`` em :func:`juscraper.utils.params.normalize_paginas`
-    antes do pydantic, mas o schema aceita as 4 formas para refletir a API
-    publica.
+    consulta o backend para descobrir o total. O schema aceita as 4 formas
+    para refletir a API publica; o raspador le
+    :attr:`paginas_normalizadas`, que ja vem sem o ``int``.
 
     Schemas concretos **nao devem redeclarar** ``paginas`` — qualquer
     divergencia por tribunal vira bug a ser corrigido, nao particularidade
