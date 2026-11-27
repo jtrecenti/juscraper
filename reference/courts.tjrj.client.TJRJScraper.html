@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -229,7 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
@@ -242,7 +242,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos pelo schema <code>InputCJSGTJRJ</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ano_inicio</code> / <code>ano_fim</code> (str | int): Ano de julgamento. <strong>Granularidade anual e o unico filtro de data exposto pelo backend ASPX</strong> — use estes em vez de <code>data_julgamento_*</code>. <code>None</code> usa o ano mais recente que o form da origem oferece: o corrente, ou 1998 nos Tribunais de Alcada, que vao de 1975 a 1998. So <code>ano_fim</code> informado: <code>ano_inicio</code> vira o ano mais antigo da origem (1975). <code>ano_inicio</code> posterior a <code>ano_fim</code> levanta <code>ValidationError</code>. Backend: <code>cmbAnoInicio</code> / <code>cmbAnoFim</code>. * <code>competencia</code> (str | int): <code>"1"</code> civel / <code>"2"</code> criminal / <code>"3"</code> fazendaria (so na Turma Recursal). <code>None</code> (default) usa a primeira competencia do form da origem: <code>"1"</code> na 2a instancia, no Alcada Civel e na Turma Recursal, <code>"2"</code> no Alcada Criminal. O Conselho da Magistratura nao tem competencia: deixe <code>None</code>. Backend: <code>cmbCompetencia</code>. * <code>origem</code> (str | int): <code>"1"</code> 2a instancia (default) / <code>"2"</code> Tribunal de Alcada Civel / <code>"3"</code> Tribunal de Alcada Criminal / <code>"4"</code> Turma Recursal / <code>"5"</code> Conselho da Magistratura. Backend: <code>cmbOrigem</code>. * <code>tipo_acordao</code> (bool): Inclui acordaos. Default <code>True</code>. Backend: <code>chkAcordao</code>. * <code>tipo_monocratica</code> (bool): Inclui decisoes monocraticas. Default <code>True</code>. Backend: <code>chkDecMon</code>. * <code>magistrado_codigo</code> (str): IDs internos do magistrado, separados por virgula. Backend: <code>hfCodMags</code>. * <code>orgao_codigo</code> (str): IDs internos do orgao julgador, separados por virgula. Backend: <code>hfCodOrgs</code>.</td>
+<td>Filtros aceitos pelo schema <code>InputCJSGTJRJ</code> (todos opcionais; <code>None</code> = sem filtro): * <code>ano_inicio</code> / <code>ano_fim</code> (str | int | None): Ano de julgamento. <strong>Granularidade anual e o unico filtro de data exposto pelo backend ASPX</strong> — use estes em vez de <code>data_julgamento_*</code>. <code>None</code> usa o ano mais recente que o form da origem oferece: o corrente, ou 1998 nos Tribunais de Alcada, que vao de 1975 a 1998. So <code>ano_fim</code> informado: <code>ano_inicio</code> vira o ano mais antigo da origem (1975). <code>ano_inicio</code> posterior a <code>ano_fim</code> levanta <code>ValidationError</code>. Backend: <code>cmbAnoInicio</code> / <code>cmbAnoFim</code>. * <code>competencia</code> (CompetenciaAceita | None): <code>"1"</code> civel / <code>"2"</code> criminal / <code>"3"</code> fazendaria (so na Turma Recursal). <code>None</code> (default) usa a primeira competencia do form da origem: <code>"1"</code> na 2a instancia, no Alcada Civel e na Turma Recursal, <code>"2"</code> no Alcada Criminal. O Conselho da Magistratura nao tem competencia: deixe <code>None</code>. Backend: <code>cmbCompetencia</code>. * <code>origem</code> (OrigemAceita): <code>"1"</code> 2a instancia (default) / <code>"2"</code> Tribunal de Alcada Civel / <code>"3"</code> Tribunal de Alcada Criminal / <code>"4"</code> Turma Recursal / <code>"5"</code> Conselho da Magistratura. Backend: <code>cmbOrigem</code>. * <code>tipo_acordao</code> (bool): Inclui acordaos. Default <code>True</code>. Backend: <code>chkAcordao</code>. * <code>tipo_monocratica</code> (bool): Inclui decisoes monocraticas. Default <code>True</code>. Backend: <code>chkDecMon</code>. * <code>magistrado_codigo</code> (str | None): IDs internos do magistrado, separados por virgula. Backend: <code>hfCodMags</code>. * <code>orgao_codigo</code> (str | None): IDs internos do orgao julgador, separados por virgula. Backend: <code>hfCodOrgs</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>

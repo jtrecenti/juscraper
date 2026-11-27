@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -247,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca, procurado no campo indicado por <code>buscar_em</code> (por padrao, a ementa).</td>
 <td><code>None</code></td>
 </tr>
@@ -259,62 +259,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>numero_processo</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Numero CNJ do processo. Aceita o alias deprecado <code>nr_processo</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>id_classe</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>ID da classe judicial. Aceita o alias deprecado <code>id_classe_judicial</code> (refs #129).</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>id_orgao_julgador</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>ID do orgao julgador.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>id_relator</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>ID do relator.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>id_colegiado</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>ID do colegiado.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>sistema</td>
-<td><code>str</code></td>
+<td><code>Sistema</code> | None</td>
 <td>Sistema processual, com os valores do portal: <code>"PJE"</code>, <code>"SAJ"</code> ou vazio para todos. Outro valor (inclusive <code>"pje"</code>) levanta <code>ValidationError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>decisoes</td>
-<td><code>str</code></td>
-<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"Sentença"</code> so existe no 1o grau e <code>"Acórdão"</code> so no 2o; <code>"Decisão"</code> existe nos dois. Como o portal nao devolve resultados para as combinacoes cruzadas, <code>"Sentença"</code> com <code>grau="2"</code>, <code>"TJ"</code> ou <code>"TR"</code> e <code>"Acórdão"</code> com <code>grau="1"</code> levantam <code>ValidationError</code>. Por padrao, <code>pesquisa</code> busca na ementa, e no portal so os acordaos tem ementa: para buscar termo em <code>"Decisão"</code> ou <code>"Sentença"</code>, ver <code>buscar_em</code>.</td>
+<td><code>Decisoes</code> | None</td>
+<td>Tipo de decisao, com os valores do portal: <code>"Decisão"</code> (monocraticas), <code>"Acórdão"</code> (colegiadas), <code>"Sentença"</code> ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"Sentença"</code> so existe no 1o grau e <code>"Acórdão"</code> so no 2o; <code>"Decisão"</code> existe nos dois. Como o portal nao devolve resultados para as combinacoes cruzadas, <code>"Sentença"</code> com <code>grau="2"</code>, <code>"TJ"</code> ou <code>"TR"</code> e <code>"Acórdão"</code> com <code>grau="1"</code> levantam <code>ValidationError</code>. Por padrao, <code>pesquisa</code> busca na ementa, e no portal so os acordaos tem ementa: com termo na ementa, <code>"Sentença"</code> e <code>"Decisão"</code> com <code>jurisdicoes</code> ou <code>sistema="PJE"</code> levantam <code>ValidationError</code>. <code>"Decisão"</code> sem esses filtros segue aceita, mas so algumas monocraticas do SAJ, de 2008, tem ementa. Para buscar termo nesses tipos, ver <code>buscar_em</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>jurisdicoes</td>
-<td><code>str</code></td>
+<td><code>Jurisdicoes</code> | None</td>
 <td>Jurisdicao, com os valores do portal: <code>"TJ"</code> (orgaos do Tribunal de Justica), <code>"TR"</code> (Turmas Recursais e Turma de Uniformizacao) ou vazio para todas. Outro valor levanta <code>ValidationError</code>. <code>"TJ"</code> e <code>"TR"</code> so trazem decisoes de 2o grau: com <code>grau="1"</code> ou <code>decisoes="Sentença"</code>, em que o portal nao devolve resultados, levantam <code>ValidationError</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>grau</td>
-<td><code>str</code></td>
-<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. <code>grau="1"</code> com <code>decisoes="Acórdão"</code> e <code>grau="2"</code> com <code>decisoes="Sentença"</code> tambem levantam, porque o portal nao devolve resultados para elas. Decisoes de 1o grau nao tem ementa: com <code>grau="1"</code>, buscar termo com <code>buscar_em="inteiro_teor"</code>.</td>
+<td><code>Grau</code> | None</td>
+<td><code>"1"</code> (primeiro), <code>"2"</code> (segundo) ou vazio para todos, sempre como texto. Outro valor (inclusive o inteiro <code>2</code>) levanta <code>ValidationError</code>. <code>grau="1"</code> com <code>decisoes="Acórdão"</code> e <code>grau="2"</code> com <code>decisoes="Sentença"</code> tambem levantam, porque o portal nao devolve resultados para elas. Decisoes de 1o grau nao tem ementa: <code>grau="1"</code> com termo na ementa levanta <code>ValidationError</code>; buscar o termo com <code>buscar_em="inteiro_teor"</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>buscar_em</td>
-<td><code>str</code></td>
-<td>Onde procurar <code>pesquisa</code>: <code>"ementa"</code> (default) ou <code>"inteiro_teor"</code> (texto integral da decisao, campo “Inteiro teor” do portal). No portal so os acordaos tem ementa; o inteiro teor existe em acordaos, monocraticas e sentencas. Outro valor levanta <code>ValidationError</code>.</td>
+<td><code>BuscarEm</code></td>
+<td>Onde procurar <code>pesquisa</code>: <code>"ementa"</code> (default) ou <code>"inteiro_teor"</code> (texto integral da decisao, campo “Inteiro teor” do portal). No portal so os acordaos tem ementa; o inteiro teor existe em acordaos, monocraticas e sentencas. Outro valor levanta <code>ValidationError</code>. Com <code>"ementa"</code> e termo, <code>decisoes="Sentença"</code>, <code>grau="1"</code> e <code>decisoes="Decisão"</code> com <code>jurisdicoes</code> ou <code>sistema="PJE"</code> levantam <code>ValidationError</code>, porque o portal nao devolve resultados. O portal ignora as preposicoes e as conjuncoes <code>"e"</code> e <code>"ou"</code> em minusculas: termo so com elas (<code>"a"</code>, <code>"de"</code>) conta como busca vazia e nao levanta.</td>
 <td><code>'ementa'</code></td>
 </tr>
 <tr class="odd">

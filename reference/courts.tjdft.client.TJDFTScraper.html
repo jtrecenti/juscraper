@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -228,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
@@ -241,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos por <code>InputCJSGTJDFT</code>: * <code>sinonimos</code> (bool): Inclui sinônimos do termo na busca. Default <code>True</code>. Backend: <code>sinonimos</code>. * <code>espelho</code> (bool): Pesquisa no espelho do acórdão. Default <code>True</code>. Backend: <code>espelho</code>. * <code>buscar_em</code> (str): Onde procurar <code>pesquisa</code>. <code>"ementa"</code> (default) busca no espelho do acórdão, que traz a ementa, quando <code>espelho=True</code>. <code>"inteiro_teor"</code> busca também no inteiro teor, o que amplia o resultado. Outro valor levanta <code>ValidationError</code>. Backend: <code>inteiroTeor</code>. * <code>tamanho_pagina</code> (int): Resultados por página, de 1 a 40; acima de 40 a API responde HTTP 400, e o schema recusa antes da requisição. Default <code>10</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de julgamento. Aceita <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. <code>None</code> não filtra. Backend: <code>dataJulgamento</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de publicação, nos mesmos formatos. <code>None</code> não filtra. Backend: <code>dataPublicacao</code>.</td>
+<td>Filtros aceitos por <code>InputCJSGTJDFT</code>: * <code>sinonimos</code> (bool): Inclui sinônimos do termo na busca. Default <code>True</code>. Backend: <code>sinonimos</code>. * <code>espelho</code> (bool): Pesquisa no espelho do acórdão. Default <code>True</code>. Backend: <code>espelho</code>. * <code>buscar_em</code> (Literal[“ementa”, “inteiro_teor”]): Onde procurar <code>pesquisa</code>. <code>"ementa"</code> (default) busca no espelho do acórdão, que traz a ementa, quando <code>espelho=True</code>. <code>"inteiro_teor"</code> busca também no inteiro teor, o que amplia o resultado. Outro valor levanta <code>ValidationError</code>. Backend: <code>inteiroTeor</code>. * <code>tamanho_pagina</code> (int): Resultados por página, de 1 a 40; acima de 40 a API responde HTTP 400, e o schema recusa antes da requisição. Default <code>10</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de julgamento. Aceita <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. <code>None</code> não filtra. Backend: <code>dataJulgamento</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de publicação, nos mesmos formatos. <code>None</code> não filtra. Backend: <code>dataPublicacao</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -353,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
@@ -377,8 +377,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>buscar_em</td>
-<td><code>str</code> | None</td>
-<td><code>"ementa"</code> (default; <code>None</code> também) ou <code>"inteiro_teor"</code>; ver <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg"><code>cjsg</code></a>.</td>
+<td><code>BuscarEmAceito</code></td>
+<td><code>"ementa"</code> (default; <code>None</code> também) ou <code>"inteiro_teor"</code>; <code>True</code>/<code>False</code>, valores do alias deprecado <code>inteiro_teor</code> passado por posição, são convertidos com aviso. Ver <a href="../reference/courts.tjdft.client.TJDFTScraper.html#juscraper.courts.tjdft.client.TJDFTScraper.cjsg"><code>cjsg</code></a>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">

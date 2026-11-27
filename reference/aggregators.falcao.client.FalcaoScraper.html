@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -237,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre (parametro <code>texto</code>). Obrigatorio.</td>
 <td><code>None</code></td>
 </tr>
@@ -250,7 +250,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Filtros aceitos pelo schema <code>InputListarDecisoesFalcao</code>. Listados abaixo (todos opcionais salvo indicacao): * <code>colecao</code> (str): Colecao alvo. Uma de <code>acordaos</code>, <code>sentencas</code>, <code>decisoesmonocraticas</code>, <code>precedentes</code>, <code>recursorevista</code>. Default <code>"acordaos"</code>. <code>precedentes</code> devolve enunciados (sumulas, OJs), nao decisoes. * <code>tamanho_pagina</code> (int): Documentos por pagina. So <code>5</code> ou <code>10</code> (limite do backend para usuario nao autenticado). Default <code>10</code>. * <code>tribunais</code> (str | list[str]): Sigla(s) de tribunal (<code>"TST"</code>, <code>"TRT3"</code>, …). Backend: <code>tribunais</code>. * <code>relator</code> (str | list[str]): Nome(s) de relator. Backend: <code>nomeRelator</code>. * <code>orgao_julgador</code> (str | list[str]): Backend: <code>orgaoJulgador</code>. * <code>classe</code> (str | list[str]): Sigla(s) da classe processual (<code>"ROT"</code>, <code>"ATOrd"</code>), a mesma da coluna de saida <code>classe_sigla</code>. O nome por extenso devolve zero resultados sem erro. Backend: <code>classeProcesso</code>. * <code>fase_processual</code> (str | list[str]): Backend: <code>faseProcessual</code>. * <code>prioridade</code> (str | list[str]): Backend: <code>prioridade</code>. * <code>tem_ementa</code> (bool): Restringe a documentos com/sem ementa. * <code>somente_ementa</code> (bool): Busca <code>texto</code> so nas ementas. * <code>ordenacao</code> (str): <code>mais_relevante</code> (default do backend), <code>mais_recente</code> ou <code>menos_recente</code>. * <code>data_juntada_inicio</code> / <code>data_juntada_fim</code> (str): Intervalo de data de juntada. Aceita <code>DD/MM/AAAA</code>, <code>AAAA-MM-DD</code> ou <code>date</code>; convertido para ISO antes do backend (<code>dataInicio</code> / <code>dataFim</code>). Cada limite pode ser usado sozinho; só com o limite superior, a busca envia <code>dataInicio=1900-01-01</code>, porque o backend rejeita <code>dataFim</code> sozinho; limite superior anterior a essa data levanta <code>ValueError</code>. * <code>checkpoint_dir</code> (str | Path): Diretório de páginas e manifesto da coleta retomável. Diretório ocupado exige <code>resume=True</code>; nunca é sobrescrito por coleta nova. * <code>resume</code> (bool): Retoma o checkpoint da mesma busca (mesmo termo, coleção, filtros e <code>tamanho_pagina</code>), sem requisitar as páginas já gravadas. <code>paginas</code> pode mudar entre sessões, e a ordem dos valores de um filtro em lista não importa. Default <code>False</code>.</td>
+<td>Filtros aceitos pelo schema <code>InputListarDecisoesFalcao</code>. Listados abaixo (todos opcionais salvo indicacao): * <code>colecao</code> (str): Colecao alvo. Uma de <code>acordaos</code>, <code>sentencas</code>, <code>decisoesmonocraticas</code>, <code>precedentes</code>, <code>recursorevista</code>. Default <code>"acordaos"</code>. <code>precedentes</code> devolve enunciados (sumulas, OJs), nao decisoes. * <code>tamanho_pagina</code> (int): Documentos por pagina. So <code>5</code> ou <code>10</code> (limite do backend para usuario nao autenticado). Default <code>10</code>. * <code>tribunais</code> (str | list[str] | None): Sigla(s) de tribunal (<code>"TST"</code>, <code>"TRT3"</code>, …). Backend: <code>tribunais</code>. * <code>relator</code> (str | list[str] | None): Nome(s) de relator. Backend: <code>nomeRelator</code>. * <code>orgao_julgador</code> (str | list[str] | None): Backend: <code>orgaoJulgador</code>. * <code>classe</code> (str | list[str] | None): Sigla(s) da classe processual (<code>"ROT"</code>, <code>"ATOrd"</code>), a mesma da coluna de saida <code>classe_sigla</code>. O nome por extenso devolve zero resultados sem erro. Backend: <code>classeProcesso</code>. * <code>fase_processual</code> (str | list[str] | None): Backend: <code>faseProcessual</code>. * <code>prioridade</code> (str | list[str] | None): Backend: <code>prioridade</code>. * <code>tem_ementa</code> (bool | None): Restringe a documentos com/sem ementa. * <code>somente_ementa</code> (bool | None): Busca <code>texto</code> so nas ementas. * <code>ordenacao</code> (str | None): <code>mais_relevante</code> (default do backend), <code>mais_recente</code> ou <code>menos_recente</code>. * <code>data_juntada_inicio</code> / <code>data_juntada_fim</code> (str | date | None): Intervalo de data de juntada. Aceita <code>DD/MM/AAAA</code>, <code>AAAA-MM-DD</code> ou <code>date</code>; convertido para ISO antes do backend (<code>dataInicio</code> / <code>dataFim</code>). Cada limite pode ser usado sozinho; só com o limite superior, a busca envia <code>dataInicio=1900-01-01</code>, porque o backend rejeita <code>dataFim</code> sozinho; limite superior anterior a essa data levanta <code>ValueError</code>. * <code>checkpoint_dir</code> (str | Path | None): Diretório de páginas e manifesto da coleta retomável. Diretório ocupado exige <code>resume=True</code>; nunca é sobrescrito por coleta nova. * <code>resume</code> (bool): Retoma o checkpoint da mesma busca (mesmo termo, coleção, filtros e <code>tamanho_pagina</code>), sem requisitar as páginas já gravadas. <code>paginas</code> pode mudar entre sessões, e a ordem dos valores de um filtro em lista não importa. Default <code>False</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -359,7 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca. Obrigatorio.</td>
 <td><code>None</code></td>
 </tr>

@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -240,7 +240,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre (busca na ementa).</td>
 <td><code>None</code></td>
 </tr>
@@ -252,19 +252,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>relator</td>
-<td><code>list</code>[<code>str</code>] | None</td>
+<td><code>list</code> | None</td>
 <td>Lista de nomes regimentais de magistrados (ex.: <code>["ALMIRO PADILHA", "ERICK LINHARES"]</code>). O backend usa um <code>SelectManyCheckbox</code> (<code>menuinicial:relatorList</code>) cujos values sao beans Java serializados; o scraper baixa o form GET inicial e resolve cada nome regimental para o bean correspondente. Match insensivel a caixa e diacritico — <code>"cristovao suter"</code>, <code>"Cristóvão Suter"</code> e <code>"CRISTÓVÃO SUTER"</code> resolvem para o mesmo magistrado. <code>ValueError</code> se algum nome nao bater (a mensagem lista os nomes na forma canonica: UPPERCASE com acento). Refs #158.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>orgao_julgador</td>
-<td><code>list</code>[<code>str</code>] | None</td>
+<td><code>list</code> | None</td>
 <td>Codigos do orgao julgador (ex.: <code>["PRIMEIRA_TURMA_CIVEL"]</code>). Backend: <code>menuinicial:tipoOrgaoList</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>especie</td>
-<td><code>list</code>[<code>str</code>] | None</td>
+<td><code>list</code> | None</td>
 <td>Codigos do tipo de decisao (ex.: <code>["ACORDAO"]</code>). Backend: <code>menuinicial:tipoEspecieList</code>.</td>
 <td><code>None</code></td>
 </tr>

@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -241,7 +241,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre, procurado no campo indicado por <code>buscar_em</code>.</td>
 <td><code>None</code></td>
 </tr>
@@ -289,25 +289,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>sort_by</td>
-<td><code>str</code></td>
+<td><code>SortBy</code></td>
 <td><code>"datajulgamento"</code> (default), <code>"datapublicacao"</code> ou <code>"relevancia"</code>. O indice do portal tem decisoes com data de julgamento impossivel, como o ano 8201 ou 2106 (observado em 15/11/2026), e, com o default (<code>"datajulgamento"</code> em ordem <code>"desc"</code>), elas vem primeiro. O juscraper repassa a data como a fonte a entrega; para exclui-las, filtre <code>data_julgamento_fim</code>. Outra ordenacao so as tira do topo.</td>
 <td><code>'datajulgamento'</code></td>
 </tr>
 <tr class="even">
 <td>sort_order</td>
-<td><code>str</code></td>
+<td><code>Literal</code>['asc', 'desc']</td>
 <td><code>"asc"</code> ou <code>"desc"</code>. Default <code>"desc"</code>.</td>
 <td><code>'desc'</code></td>
 </tr>
 <tr class="odd">
 <td>query_type</td>
-<td><code>str</code></td>
+<td><code>QueryType</code></td>
 <td><code>"free"</code> (default) ou <code>"anywords"</code>.</td>
 <td><code>'free'</code></td>
 </tr>
 <tr class="even">
 <td>buscar_em</td>
-<td><code>str</code> | None</td>
+<td><code>BuscarEmAceito</code></td>
 <td>Onde procurar <code>pesquisa</code>: <code>"ementa"</code> (default; <code>None</code> tambem) ou <code>"inteiro_teor"</code> (texto integral da decisao, que inclui a ementa), as duas opcoes do portal. Outro valor levanta <code>ValidationError</code>. Em 26/11/2026, a API ignorava a escolha, tambem no site: as duas procuravam o termo na ementa e no inteiro teor e traziam o mesmo resultado.</td>
 <td><code>None</code></td>
 </tr>

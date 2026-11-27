@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -362,7 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
@@ -374,31 +374,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>tipo_documento</td>
-<td><code>str</code></td>
+<td><code>Literal</code>['acordaos', 'decisoes', 'sentencas']</td>
 <td><code>"acordaos"</code> (default), <code>"decisoes"</code> ou <code>"sentencas"</code>.</td>
 <td><code>'acordaos'</code></td>
 </tr>
 <tr class="even">
 <td>ordenacao</td>
-<td><code>str</code></td>
+<td><code>Literal</code>['ASC', 'DESC', 'RELEV']</td>
 <td><code>"DESC"</code> (mais recentes, default), <code>"ASC"</code> (mais antigos), <code>"RELEV"</code> (mais relevantes).</td>
 <td><code>'DESC'</code></td>
 </tr>
 <tr class="odd">
 <td>numero_processo</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Filtro por numero CNJ do processo.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>data_julgamento_inicio</td>
-<td><code>str</code> | <code>date</code> | <code>datetime</code> | None</td>
+<td><code>str</code> | <code>date</code> | None</td>
 <td>Data inicial. Aceita <code>DD/MM/YYYY</code>, <code>DD-MM-YYYY</code>, <code>YYYY-MM-DD</code>, <code>YYYY/MM/DD</code>, <code>date</code> ou <code>datetime</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="odd">
 <td>data_julgamento_fim</td>
-<td><code>str</code> | <code>date</code> | <code>datetime</code> | None</td>
+<td><code>str</code> | <code>date</code> | None</td>
 <td>Data final (mesmos formatos).</td>
 <td><code>None</code></td>
 </tr>

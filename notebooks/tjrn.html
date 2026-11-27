@@ -74,7 +74,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -666,7 +666,7 @@ ADVOGADOS: MARCELO NORONHA PEIXOTO E JULIANO DELESPORTE DOS SANTOS TU</code></pr
 <li><code>jurisdicoes</code>: <code>"TJ"</code> (Tribunal de Justiça) or <code>"TR"</code> (Turmas Recursais); both only cover second-instance decisions, so combining either with <code>grau="1"</code> or <code>decisoes="Sentença"</code> raises <code>ValidationError</code> (the portal returns nothing for it).</li>
 <li><code>grau</code>: <code>"1"</code> or <code>"2"</code>, as strings.</li>
 </ul>
-<p>By default <code>pesquisa</code> searches the ementa, and only acórdãos have one: with <code>decisoes="Decisão"</code>, <code>decisoes="Sentença"</code> or <code>grau="1"</code>, search the term with <code>buscar_em="inteiro_teor"</code> (see below).</p>
+<p>By default <code>pesquisa</code> searches the ementa, and only acórdãos have one. With a term in the ementa, <code>decisoes="Sentença"</code>, <code>grau="1"</code>, and <code>decisoes="Decisão"</code> with <code>jurisdicoes="TJ"</code>, <code>"TR"</code> or <code>sistema="PJE"</code> raise <code>ValidationError</code>, because the portal returns nothing for them: search the term with <code>buscar_em="inteiro_teor"</code> (see below), or leave <code>pesquisa</code> empty and filter by judgment date. <code>decisoes="Decisão"</code> without those filters is still accepted, but only a handful of old SAJ single-judge decisions (from 2008) have an ementa. The portal ignores prepositions and the conjunctions “e” and “ou” in lowercase, so a term made only of them (<code>"a"</code>, <code>"de"</code>) counts as an empty search.</p>
 <div id="cell-10" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_filtered <span class="op">=</span> tjrn.cjsg(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'direito'</span>,</span>

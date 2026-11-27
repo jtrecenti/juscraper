@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-0c8af03b2fbd4cf44d6703e337af0e8d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-117947c922f23654773abd6457656913.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-512bcec74111e8715135e0dc993a0cd7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -237,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>pesquisa</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Termo de busca livre.</td>
 <td><code>None</code></td>
 </tr>
@@ -249,25 +249,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>id_instancia</td>
-<td><code>int</code> | <code>str</code></td>
+<td><code>IdInstancia</code></td>
 <td><code>0</code> todas / <code>15</code> Tribunal / <code>151</code> Turma de Uniformizacao e Turmas Recursais, as opcoes do seletor “Instancia” do site. <code>1</code>, <code>2</code> e <code>3</code> sao deprecados (ver abaixo); o 1o grau nao esta no seletor, e <code>1</code> vai ao portal como esta.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
 <td>id_area</td>
-<td><code>int</code> | <code>str</code></td>
+<td><code>Literal</code>[0, 1, 2, '0', '1', '2']</td>
 <td><code>0</code> todas / <code>1</code> civel / <code>2</code> criminal. Com <code>id_instancia=151</code>, so <code>0</code>, como no formulario do site.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="odd">
 <td>id_serventia_subtipo</td>
-<td><code>int</code> | <code>str</code></td>
+<td><code>IdServentiaSubtipoAceito</code></td>
 <td>Codigo do seletor “Orgao” do site (por exemplo, <code>14</code> Camaras Civeis, <code>20</code> Camaras Criminais, <code>6</code> Turma Recursal Civel e Criminal). <code>0</code> = todos. Codigo fora da lista, ou que o formulario nao oferece para a instancia e a area escolhidas, levanta <code>ValidationError</code>.</td>
 <td><code>0</code></td>
 </tr>
 <tr class="even">
 <td>numero_processo</td>
-<td><code>str</code></td>
+<td><code>str</code> | None</td>
 <td>Filtrar por numero CNJ especifico.</td>
 <td><code>None</code></td>
 </tr>
