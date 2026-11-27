@@ -19,25 +19,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-from ...schemas import (
-    AutoChunkMixin,
-    CnjInputBase,
-    CountOnlyMixin,
-    DataJulgamentoMixin,
-    IdFiltro,
-    IdFiltroUnico,
-    OutputCnjConsultaBase,
-    OutputDataPublicacaoMixin,
-    SearchBase,
-)
+from ...schemas import CnjInputBase, IdFiltro, IdFiltroUnico, OutputCnjConsultaBase, OutputDataPublicacaoMixin
 from ...schemas.cjsg import OutputCJSGBase
-from .._esaj.schemas import InputCJPGEsaj, OutputCJPGEsaj
+from .._esaj.schemas import InputCJPGEsaj, InputCJSGEsajBase, OutputCJPGEsaj
 
 
-class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMixin):
+class InputCJSGTJSP(InputCJSGEsajBase):
     """Accepted input for TJSP ``cjsg``. Unknown kwargs raise via ``extra='forbid'``.
 
-    Herda filtro de data de julgamento via :class:`DataJulgamentoMixin`.
+    Herda filtro de data de julgamento via :class:`InputCJSGEsajBase`.
     TJSP **nao** suporta ``data_publicacao_*``.
 
     ``numero_recurso`` vai em ``dados.nuProcOrigem``, como no resto da
@@ -56,7 +46,6 @@ class InputCJSGTJSP(SearchBase, DataJulgamentoMixin, AutoChunkMixin, CountOnlyMi
     comarca: IdFiltroUnico = None
     orgao_julgador: IdFiltro = None
     baixar_sg: bool = True
-    tipo_decisao: Literal["acordao", "monocratica"] = "acordao"
 
 
 class OutputCJSGTJSP(OutputCJSGBase, OutputDataPublicacaoMixin):

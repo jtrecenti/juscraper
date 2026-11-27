@@ -18,7 +18,7 @@ import functools
 import logging
 import shutil
 from collections.abc import Callable, Mapping
-from typing import Any, ClassVar, Literal, overload
+from typing import Any, ClassVar, Literal, cast, overload
 
 import pandas as pd
 import requests
@@ -27,6 +27,7 @@ from pydantic import BaseModel, ValidationError
 from ...core.avisos import avisar
 from ...core.http import HTTPScraper, RequestPolicy
 from ...core.intervalo import IntervaloEntrePedidos
+from ...utils.pagination import PaginasNormalizadas
 from ...utils.params import (
     DATE_ALIAS_TO_CANONICAL,
     DATE_CANONICAL,
@@ -45,7 +46,7 @@ from ...utils.params import (
 from .download import _CHROME_HEADERS, _ESAJ_HEADERS, download_cjsg_pages, fetch_cjsg_first_page
 from .forms import build_cjsg_form_body
 from .parse import cjsg_n_pags, cjsg_n_results, cjsg_parse_manager, parse_arvore
-from .schemas import InputCJSGEsajPuro
+from .schemas import InputCJSGEsajBase, InputCJSGEsajPuro
 
 logger = logging.getLogger("juscraper._esaj.base")
 
@@ -249,7 +250,8 @@ class EsajSearchScraper(HTTPScraper):
         BASE_URL: eSAJ root, e.g. ``https://esaj.tjac.jus.br/`` (must end
             with ``/``).
         TRIBUNAL_NAME: Used in logs and :attr:`BaseScraper.tribunal_name`.
-        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs. Defaults to
+        INPUT_CJSG: Pydantic model validating ``cjsg`` inputs (subclasse de
+            :class:`InputCJSGEsajBase`). Defaults to
             :class:`InputCJSGEsajPuro`. TJSP overrides with its own model.
         CJSG_CHROME_UA: TJSP only — sends the Chrome-flavoured UA that the
             eSAJ form expects from browsers.
@@ -263,7 +265,7 @@ class EsajSearchScraper(HTTPScraper):
 
     BASE_URL: str = ""
     TRIBUNAL_NAME: str = ""
-    INPUT_CJSG: type[BaseModel] = InputCJSGEsajPuro
+    INPUT_CJSG: type[InputCJSGEsajBase] = InputCJSGEsajPuro
     CJSG_CHROME_UA: bool = False
 
     # Arvores de selecao do eSAJ (classes/assuntos/orgaos), uma por chave
@@ -704,8 +706,8 @@ class EsajSearchScraper(HTTPScraper):
             base_url=self.BASE_URL,
             download_path=diretorio or self.download_path,
             body=body,
-            tipo_decisao=getattr(input_model, "tipo_decisao", "acordao"),
-            paginas=input_model.paginas,
+            tipo_decisao=input_model.tipo_decisao,
+            paginas=cast(PaginasNormalizadas, input_model.paginas),
             get_n_pags_callback=cjsg_n_pags,
             sleep_time=self.sleep_time,
             chrome_ua=self.CJSG_CHROME_UA,

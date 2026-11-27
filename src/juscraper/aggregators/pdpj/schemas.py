@@ -12,6 +12,7 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...schemas import TamanhoPagina
+from .._pdpj_sso.schemas import InputAuthGovbrBase
 
 
 class InputAuthPdpj(BaseModel):
@@ -30,22 +31,8 @@ class InputAuthPdpj(BaseModel):
     )
 
 
-class InputAuthGovbrPdpj(BaseModel):
-    """Input aceito por :meth:`PdpjScraper.auth_govbr`.
-
-    ``timeout`` limita a espera pelo login no gov.br; ``salvar`` controla a
-    gravacao da credencial no cache local compartilhado por JusBR e PDPJ;
-    ``navegador`` aponta o executavel do Chrome, Chromium ou Edge.
-    """
-
-    timeout: float = Field(default=300.0, gt=0)
-    salvar: bool = True
-    navegador: str | None = None
-
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
+class InputAuthGovbrPdpj(InputAuthGovbrBase):
+    """Input aceito por :meth:`PdpjScraper.auth_govbr`; campos em :class:`InputAuthGovbrBase`."""
 
 
 class InputCnjPdpj(BaseModel):

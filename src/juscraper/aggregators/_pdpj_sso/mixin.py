@@ -5,13 +5,14 @@ import logging
 from typing import Any, ClassVar
 
 import requests
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ...utils.params import raise_on_extra_kwargs
 from .cache import carregar_credencial_cache, carregar_credencial_padrao, salvar_credencial
 from .credencial import CredencialPdpj
 from .login import obter_credencial_govbr
 from .renovacao import AuthPdpj
+from .schemas import InputAuthGovbrBase
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class PdpjSsoMixin:
     """
 
     NOMES_ENV_TOKEN: ClassVar[tuple[str, ...]] = ("PDPJ_JWT",)
-    INPUT_AUTH_GOVBR: ClassVar[type[BaseModel]]
+    INPUT_AUTH_GOVBR: ClassVar[type[InputAuthGovbrBase]]
     session: requests.Session
     token: str | None
 
