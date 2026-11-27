@@ -1,5 +1,4 @@
 """Filter propagation, deprecated aliases and payload shape for STF listar_decisoes."""
-import json
 from datetime import date, datetime, timezone
 
 import pytest
@@ -7,6 +6,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts.stf.download import build_payload, traduzir_operadores
+from tests._helpers import corpo_json_enviado
 from tests.stf._collection_helpers import Source, add_sample, assert_filtros_no_corpo, make_rows
 
 PESQUISA = "juscraper_probe_zero_hits_xyzqwe"
@@ -53,7 +53,7 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
     assert len(responses.calls) == 3
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
     for chamada in responses.calls:
-        assert_filtros_no_corpo(json.loads(chamada.request.body), PESQUISA, ["ARE", "Rcl"])
+        assert_filtros_no_corpo(corpo_json_enviado(chamada.request), PESQUISA, ["ARE", "Rcl"])
 
 
 @responses.activate
@@ -288,7 +288,7 @@ def test_alias_inteiro_teor_avisa_e_manda_o_mesmo_que_buscar_em(stf, mocker, int
     stf.listar_decisoes(PESQUISA, paginas=1, buscar_em=buscar_em)
 
     assert n_chamadas > 0
-    corpos = [json.loads(chamada.request.body) for chamada in responses.calls]
+    corpos = [corpo_json_enviado(chamada.request) for chamada in responses.calls]
     for antigo, novo in zip(corpos[:n_chamadas], corpos[n_chamadas:], strict=True):
         antigo["query"]["function_score"]["functions"] = novo["query"]["function_score"]["functions"]
         assert antigo == novo

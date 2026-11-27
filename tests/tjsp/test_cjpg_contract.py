@@ -23,7 +23,7 @@ import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjsp.exceptions import QueryTooLongError
-from tests._helpers import load_sample_bytes
+from tests._helpers import load_sample_bytes, timeout_enviado
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 BASE = "https://esaj.tjsp.jus.br/cjpg"
@@ -237,7 +237,7 @@ def test_todo_pedido_do_cjpg_tem_timeout(tmp_path, mocker):
     jus.scraper("tjsp", download_path=str(tmp_path)).cjpg("dano moral", paginas=range(1, 3))
 
     assert len(responses.calls) == 2
-    assert [c.request.req_kwargs.get("timeout") is not None for c in responses.calls] == [True, True]
+    assert [timeout_enviado(c.request) is not None for c in responses.calls] == [True, True]
 
 
 @responses.activate(registry=OrderedRegistry)

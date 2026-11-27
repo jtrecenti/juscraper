@@ -16,7 +16,7 @@ from responses.registries import OrderedRegistry
 
 import juscraper as jus
 from juscraper.courts._esaj.pasta import parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
+from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, urls_enviadas
 from tests.fixtures.capture._util import make_tjsp_cjpg_params
 
 ESAJ = "https://esaj.tjms.jus.br"
@@ -89,7 +89,7 @@ def test_cjpg_pagina_no_host_do_tjms_e_traz_os_codigos_da_sentenca(tmp_path, moc
         NM_ALIAS,
         CD_DOCUMENTO,
     )
-    assert all(c.request.url.startswith(f"{ESAJ}/cjpg/") for c in responses.calls)
+    assert all(url.startswith(f"{ESAJ}/cjpg/") for url in urls_enviadas())
 
 
 @responses.activate
@@ -189,9 +189,10 @@ def test_baixar_sentencas_do_cjpg_pede_ao_tjms(tmp_path, mocker):
     caminho = tmp_path / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf"
     assert resultado["caminho_sentenca"].tolist() == [str(caminho)]
     assert caminho.read_bytes() == PDF_FALSO
-    (pedido,) = [c.request for c in responses.calls if "obterArquivo.do" in c.request.url]
-    assert pedido.url.startswith(f"{ESAJ}/cjpg/obterArquivo.do?")
-    assert dict(parse_qsl(urlsplit(pedido.url).query, keep_blank_values=True)) == {
+    urls = urls_enviadas()
+    (url_pedido,) = [url for url in urls if "obterArquivo.do" in url]
+    assert url_pedido.startswith(f"{ESAJ}/cjpg/obterArquivo.do?")
+    assert dict(parse_qsl(urlsplit(url_pedido).query, keep_blank_values=True)) == {
         "cdProcesso": CD_PROCESSO,
         "cdForo": CD_FORO,
         "nmAlias": NM_ALIAS,

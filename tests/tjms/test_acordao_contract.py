@@ -23,7 +23,7 @@ import juscraper as jus
 from juscraper.core.base import _texto_ausente_como_none
 from juscraper.courts._esaj.parse import _parse_single_page
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError
-from tests._helpers import PDF_FALSO, load_sample_bytes
+from tests._helpers import PDF_FALSO, load_sample_bytes, url_enviada
 
 GET_ARQUIVO = "https://esaj.tjms.jus.br/cjsg/getArquivo.do"
 CD_ACORDAO, CD_FORO = "122903", "0"
@@ -67,7 +67,7 @@ def test_baixar_acordao_grava_o_pdf_de_get_arquivo(tjms, tmp_path):
     assert caminho == str(tmp_path / "destino" / "acordaos" / f"{CD_ACORDAO}.pdf")
     assert Path(caminho).read_bytes() == PDF_FALSO
     (chamada,) = responses.calls
-    assert dict(parse_qsl(urlsplit(chamada.request.url).query)) == {"cdAcordao": CD_ACORDAO, "cdForo": CD_FORO}
+    assert dict(parse_qsl(urlsplit(url_enviada(chamada.request)).query)) == {"cdAcordao": CD_ACORDAO, "cdForo": CD_FORO}
 
 
 @responses.activate

@@ -27,7 +27,7 @@ from responses.matchers import urlencoded_params_matcher
 import juscraper as jus
 from juscraper.core.exceptions import ColetaParcialError
 from juscraper.courts.tjpr.download import VISUALIZAR_URL, build_cjsg_form_body
-from tests._helpers import load_sample, query_param_subset_matcher
+from tests._helpers import load_sample, query_param_subset_matcher, url_enviada
 from tests.tjpr._helpers import SEARCH_URL, add_ementa_completa, add_home, add_search_page
 
 CJSG_MIN_COLUMNS = {"processo", "orgao_julgador", "relator", "data_julgamento", "ementa"}
@@ -97,7 +97,7 @@ def test_cjsg_paginas_none_pagina_unica_baixa_so_a_primeira(mocker):
     df = jus.scraper("tjpr").cjsg("quilombola", paginas=None)
 
     assert len(df) == 5
-    busca = [call for call in responses.calls if "exibirTextoCompleto" not in call.request.url]
+    busca = [call for call in responses.calls if "exibirTextoCompleto" not in url_enviada(call.request)]
     assert [call.request.method for call in busca] == ["GET", "POST"]
 
 

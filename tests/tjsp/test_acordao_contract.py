@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import RespostaInesperadaError
-from tests._helpers import load_sample, registrar_rota_acordao
+from tests._helpers import load_sample, registrar_rota_acordao, url_enviada, urls_enviadas
 
 BASE = "https://esaj.tjsp.jus.br/"
 CNJ = "1502870-48.2020.8.26.0161"
@@ -40,7 +40,7 @@ def tjsp(tmp_path, mocker):
 
 def _consultas(rota, *chaves):
     return [
-        tuple(parse_qs(urlparse(c.request.url).query).get(chave, [""])[0] for chave in chaves)
+        tuple(parse_qs(urlparse(url_enviada(c.request)).query).get(chave, [""])[0] for chave in chaves)
         for c in responses.calls
         if urlparse(c.request.url).path.endswith(rota)
     ]
@@ -60,7 +60,7 @@ def test_data_do_cjsg_escolhe_os_embargos_registrados_depois(tjsp):
     ]
     assert _consultas("verificarAcessoMovimentacao.do", "cdProcesso", "cdDocumento") == [(EMBARGOS, "12")]
     # Movimentações carregadas antes de qualquer verificação (o TJSP só libera documento já listado).
-    rotas = [urlparse(c.request.url).path.rsplit("/", 1)[-1] for c in responses.calls]
+    rotas = [urlparse(url).path.rsplit("/", 1)[-1] for url in urls_enviadas()]
     assert rotas.index("verificarAcessoMovimentacao.do") > max(
         i for i, rota in enumerate(rotas) if rota == "carregarMovimentacoesAjax.do"
     )

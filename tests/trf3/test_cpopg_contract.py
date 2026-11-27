@@ -16,7 +16,7 @@ import juscraper as jus
 from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.courts.trf3.download import BASE_URL_1G, BASE_URL_2G, busca_url, recurso_url
 from juscraper.courts.trf3.schemas import OutputCpopgTRF3
-from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample_bytes, timeout_enviado, url_enviada, urls_enviadas
 from tests.trf3._api import carregar, id_processo_do_cenario, itens_do_cenario, registrar_busca, registrar_processo
 
 COLUNAS = {
@@ -130,7 +130,7 @@ def test_cpopg_recurso_com_erro_http_vira_none_e_mantem_o_resto() -> None:
     assert "\n" in row["assunto"] and " \n" not in row["assunto"]
     id_processo = id_processo_do_cenario("cpopg", "erro_recurso")
     url_polo = recurso_url(BASE_URL_1G, id_processo, "poloPassivo")
-    tentativas = [c for c in responses.calls if c.request.url.startswith(url_polo)]
+    tentativas = [c for c in responses.calls if url_enviada(c.request).startswith(url_polo)]
     assert len(tentativas) == 4  # perfil "api": 4 tentativas antes de desistir
 
 
@@ -361,7 +361,7 @@ def test_cpopg_aceita_politica_por_perfil() -> None:
     df = jus.scraper("trf3", sleep_time=0, politica={"api": {"timeout": 5}}).cpopg(CNJ_PAGINADO)
 
     assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
-    assert {chamada.request.req_kwargs["timeout"] for chamada in responses.calls} == {5}
+    assert {timeout_enviado(chamada.request) for chamada in responses.calls} == {5}
 
 
 @responses.activate
@@ -393,7 +393,7 @@ def test_cpopg_procura_o_numero_pedido_em_todos_os_resultados() -> None:
     df = jus.scraper("trf3", sleep_time=0).cpopg(CNJ_PAGINADO)
 
     assert df.iloc[0]["processo"] == "5003536-21.2025.4.03.6342"
-    assert not any("tokenDeOutroProcesso" in c.request.url for c in responses.calls)
+    assert not any("tokenDeOutroProcesso" in url for url in urls_enviadas())
 
 
 @pytest.mark.parametrize("id_processo", ["../../v1/outra", "/abs", "a.b", "", None])
@@ -434,7 +434,7 @@ def test_cpopg_erro_de_rede_em_recurso_derruba_o_processo(falha, motivo) -> None
 
     _linha_so_com_id_cnj(df, motivo)
     url_movs = recurso_url(BASE_URL_1G, id_processo, "movimentacoes")
-    assert sum(c.request.url.startswith(url_movs) for c in responses.calls) == 4
+    assert sum(url.startswith(url_movs) for url in urls_enviadas()) == 4
 
 
 @responses.activate
@@ -449,7 +449,7 @@ def test_cpopg_erro_em_dados_derruba_o_processo() -> None:
 
     _linha_so_com_id_cnj(df, "retry_esgotado_500")
     assert len(responses.calls) == 1 + 4
-    assert not any("poloAtivo" in c.request.url for c in responses.calls)
+    assert not any("poloAtivo" in url for url in urls_enviadas())
 
 
 @responses.activate

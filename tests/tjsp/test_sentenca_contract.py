@@ -22,7 +22,7 @@ from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlocke
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.cjpg_parse import _codigos_inteiro_teor, cjpg_parse_single
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError, parse_parametros_pasta
-from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes
+from tests._helpers import PDF_FALSO, load_sample, load_sample_bytes, url_enviada
 
 ESAJ = "https://esaj.tjsp.jus.br"
 CD_PROCESSO, CD_FORO, CD_DOCUMENTO = "3I0006RUY0000", "126", "167379827"
@@ -61,7 +61,7 @@ def _registrar_sentenca(cd_documento=CD_DOCUMENTO, pdf=PDF_FALSO):
 
 
 def _pedidos(rota):
-    return [c.request for c in responses.calls if c.request.url.split("?")[0].endswith(rota)]
+    return [c.request for c in responses.calls if url_enviada(c.request).split("?")[0].endswith(rota)]
 
 
 def test_cjpg_traz_os_quatro_codigos_do_inteiro_teor():

@@ -21,7 +21,7 @@ from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import BloqueioAntiBotWarning, BotChallengeBlockedError
 from juscraper.courts._esaj.acordao import EntradaInvalidaError
 from juscraper.courts._esaj.pasta import DocumentoNaoPdfError
-from tests._helpers import PDF_FALSO, load_sample_bytes
+from tests._helpers import PDF_FALSO, load_sample_bytes, url_enviada
 
 URL = "https://esaj.tjce.jus.br/cjsg/getArquivo.do"
 SAMPLES = Path(__file__).parent / "samples"
@@ -68,7 +68,7 @@ def test_baixar_acordao_pede_get_arquivo_com_os_codigos_do_cjsg(tjce, tmp_path):
     assert caminho == str(tmp_path / "destino" / "acordaos" / f"{linha.cd_acordao}.pdf")
     assert Path(caminho).read_bytes() == PDF_FALSO
     (chamada,) = responses.calls
-    assert dict(parse_qsl(urlsplit(chamada.request.url).query)) == {"cdAcordao": "3834193", "cdForo": "0"}
+    assert dict(parse_qsl(urlsplit(url_enviada(chamada.request)).query)) == {"cdAcordao": "3834193", "cdForo": "0"}
 
 
 @responses.activate
