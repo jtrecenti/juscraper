@@ -319,11 +319,9 @@ class EsajCjpgScraper(EsajSentencaScraper):
                 pesquisa=inp.pesquisa,
                 session=self.session,
                 u_base=self.BASE_URL,
-                # ``IdFiltro`` declara a entrada (``int``/``list``); o validador
-                # ja devolveu CSV ou ``None``.
-                classe=cast("str | None", inp.classe),
-                assunto=cast("str | None", inp.assunto),
-                vara=cast("str | None", inp.vara),
+                classe=inp.classe,
+                assunto=inp.assunto,
+                vara=inp.vara,
                 id_processo=inp.id_processo,
                 data_inicio=win_i,
                 data_fim=win_f,
@@ -402,10 +400,9 @@ class EsajCjpgScraper(EsajSentencaScraper):
             u_base=self.BASE_URL,
             download_path=diretorio or self.download_path,
             sleep_time=self.sleep_time,
-            # ``IdFiltro``: CSV ou ``None`` (ver ``_probe`` em ``_cjpg_count_only``).
-            classe=cast("str | None", inp.classe),
-            assunto=cast("str | None", inp.assunto),
-            vara=cast("str | None", inp.vara),
+            classe=inp.classe,
+            assunto=inp.assunto,
+            vara=inp.vara,
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
