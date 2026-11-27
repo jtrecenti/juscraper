@@ -143,10 +143,13 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
 
                 * ``ementa`` (str): Termo buscado especificamente na
                   ementa.
-                * ``classe`` (str): ID interno da classe processual.
-                * ``assunto`` (str): ID interno do assunto.
-                * ``comarca`` (str): ID interno da comarca.
-                * ``orgao_julgador`` (str): ID interno do orgao julgador.
+                * ``classe`` (int | str | list[int | str]): ID(s) interno(s)
+                  da classe processual.
+                * ``assunto`` (int | str | list[int | str]): ID(s) interno(s)
+                  do assunto.
+                * ``comarca`` (int | str): ID interno da comarca (um so).
+                * ``orgao_julgador`` (int | str | list[int | str]): ID(s)
+                  interno(s) do orgao julgador.
                 * ``baixar_sg`` (bool): ``True`` (default) busca em
                   segundo grau; ``False`` busca em colegio recursal.
                 * ``tipo_decisao`` (Literal["acordao", "monocratica"]):
