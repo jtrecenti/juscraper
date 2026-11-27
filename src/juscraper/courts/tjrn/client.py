@@ -6,11 +6,12 @@ from typing import Any, ClassVar
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.schemas import BuscarEm
 from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecated_alias, to_br_date
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJRN
+from .schemas import Decisoes, Grau, InputCJSGTJRN, Jurisdicoes, Sistema
 
 
 def _to_tjrn_date(date_str):
@@ -70,11 +71,11 @@ class TJRNScraper(HTTPScraper):
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
         id_colegiado: str | None = None,
-        sistema: str | None = None,
-        decisoes: str | None = None,
-        jurisdicoes: str | None = None,
-        grau: str | None = None,
-        buscar_em: str = "ementa",
+        sistema: Sistema | None = None,
+        decisoes: Decisoes | None = None,
+        jurisdicoes: Jurisdicoes | None = None,
+        grau: Grau | None = None,
+        buscar_em: BuscarEm = "ementa",
         **kwargs,
     ) -> pd.DataFrame:
         """Busca jurisprudencia no TJRN.
@@ -170,11 +171,11 @@ class TJRNScraper(HTTPScraper):
         id_orgao_julgador: str | None = None,
         id_relator: str | None = None,
         id_colegiado: str | None = None,
-        sistema: str | None = None,
-        decisoes: str | None = None,
-        jurisdicoes: str | None = None,
-        grau: str | None = None,
-        buscar_em: str = "ementa",
+        sistema: Sistema | None = None,
+        decisoes: Decisoes | None = None,
+        jurisdicoes: Jurisdicoes | None = None,
+        grau: Grau | None = None,
+        buscar_em: BuscarEm = "ementa",
         **kwargs,
     ) -> list:
         """Download raw CJSG JSON responses from TJRN.

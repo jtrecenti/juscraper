@@ -14,6 +14,12 @@ from ...schemas import (
     SearchBase,
 )
 
+# Dominios dos filtros de ``cjsg``, usados tambem nas assinaturas de ``TJRNScraper``.
+Sistema = Literal["", "PJE", "SAJ"]
+Decisoes = Literal["", "Decisão", "Acórdão", "Sentença"]
+Jurisdicoes = Literal["", "TJ", "TR"]
+Grau = Literal["", "1", "2"]
+
 
 class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     """Accepted input for TJRN ``cjsg`` / ``cjsg_download``.
@@ -47,17 +53,17 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     id_colegiado: str | None = None
     # Valores do seletor "Sistema" do portal (``field-sistema.js``). O backend
     # diferencia maiusculas: "pje" ou outro valor da 0 resultados sem aviso.
-    sistema: Literal["", "PJE", "SAJ"] | None = None
+    sistema: Sistema | None = None
     # Valores do seletor "Decisoes" do portal (``field-decisao.js``), que o backend
     # compara com ``tipo_teor``: "Decisão" sao as monocraticas, "Acórdão" as
     # colegiadas e "Sentença" as de 1o grau. Vazio (ou ``None``) busca todas.
-    decisoes: Literal["", "Decisão", "Acórdão", "Sentença"] | None = None
+    decisoes: Decisoes | None = None
     # Valores do seletor "Jurisdicoes" do portal (``field-jurisdicao.js``): "TJ"
     # (Tribunal de Justica) e "TR" (Turmas Recursais e TUJ). Vazio (ou ``None``)
     # busca todas. Os nomes por extenso fazem o portal responder 502/503.
-    jurisdicoes: Literal["", "TJ", "TR"] | None = None
+    jurisdicoes: Jurisdicoes | None = None
     # Valores dos radios ``radioGrau`` do portal. Outro valor da 0 resultados.
-    grau: Literal["", "1", "2"] | None = None
+    grau: Grau | None = None
     buscar_em: BuscarEm = "ementa"
 
     @model_validator(mode="after")
