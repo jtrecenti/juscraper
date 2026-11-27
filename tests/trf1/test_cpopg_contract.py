@@ -13,23 +13,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts._trf.base import _Consulta
-from tests._helpers import corpo_form_enviado, load_sample, load_sample_bytes
-
-
-def _subset_form_matcher(expected: dict[str, str]):
-    """``responses`` 0.x lacks ``strict_match`` — homemade subset matcher."""
-
-    def _match(request) -> tuple[bool, str]:
-        actual = corpo_form_enviado(request)
-        for key, value in expected.items():
-            if actual.get(key) != value:
-                return False, (
-                    f"expected {key!r}={value!r}, got {actual.get(key)!r}"
-                )
-        return True, ""
-
-    return _match
-
+from tests._helpers import corpo_form_parcial_matcher, load_sample, load_sample_bytes
 
 LIST_URL = (
     "https://pje1g-consultapublica.trf1.jus.br/consultapublica/"
@@ -133,7 +117,7 @@ def test_cpopg_returns_dataframe_with_canonical_columns() -> None:
         body=load_sample("trf1", "cpopg/search_one_result.html"),
         content_type="text/xml; charset=utf-8",
         match=[
-            _subset_form_matcher(
+            corpo_form_parcial_matcher(
                 {
                     "fPP:numProcesso-inputNumeroProcessoDecoration:"
                     "numProcesso-inputNumeroProcesso": "1003063-27.2023.4.01.3304",
