@@ -328,6 +328,25 @@ def test_cjsg_jurisdicoes_com_primeiro_grau_levanta_validation_error(jurisdicoes
         getattr(jus.scraper("tjrn"), metodo)("", paginas=1, jurisdicoes=jurisdicoes, grau="1")
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"decisoes": "Sentença", "grau": "2"},
+        {"decisoes": "Sentença", "jurisdicoes": "TJ"},
+        {"decisoes": "Sentença", "jurisdicoes": "TR"},
+        {"decisoes": "Acórdão", "grau": "1"},
+    ],
+)
+def test_cjsg_decisoes_fora_do_seu_grau_levanta_validation_error(filtros, metodo):
+    """``"Sentença"`` so existe no 1o grau e ``"Acórdão"`` so no 2o: as
+    combinacoes cruzadas devolviam 0 resultados sem erro; agora levantam
+    ``ValidationError`` antes de qualquer requisicao (``responses`` sem rota
+    levantaria se houvesse)."""
+    with responses.RequestsMock(), pytest.raises(ValidationError, match="graus diferentes"):
+        getattr(jus.scraper("tjrn"), metodo)("", paginas=1, **filtros)
+
+
 @responses.activate
 def test_cjsg_sistema_envia_valor_do_portal(mocker):
     """``sistema`` vai ao payload com o valor do seletor do portal; o sample
