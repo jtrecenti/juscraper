@@ -26,7 +26,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from .types import InteiroSemBool
+from .types import InteiroSemBool, PaginasNormalizadas
 
 
 class PaginasMixin(BaseModel):
@@ -52,6 +52,19 @@ class PaginasMixin(BaseModel):
     paginas: InteiroSemBool | range | list[InteiroSemBool] | None = None
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @property
+    def paginas_normalizadas(self) -> PaginasNormalizadas:
+        """``paginas`` com o ``int`` ``n`` trocado por ``range(1, n + 1)``.
+
+        E o que o raspador le depois da validacao. ``paginas`` continua
+        devolvendo o valor como validado (inclusive ``int``) para quem usa o
+        schema direto; como propriedade, isto nao entra na validacao, no
+        ``model_dump()`` nem no ``model_json_schema()``.
+        """
+        if isinstance(self.paginas, int):
+            return range(1, self.paginas + 1)
+        return self.paginas
 
     @field_validator("paginas")
     @classmethod

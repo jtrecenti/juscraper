@@ -96,7 +96,7 @@ class TJMTScraper(HTTPScraper):
         )
         return cjsg_download(
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             tipo_consulta=inp.tipo_consulta,
             data_publicacao_inicio=inp.data_publicacao_inicio,
             data_publicacao_fim=inp.data_publicacao_fim,

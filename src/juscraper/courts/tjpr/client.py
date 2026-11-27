@@ -138,7 +138,7 @@ class TJPRScraper(HTTPScraper):
         brutos: list = cjsg_download(
             home_url=BASE_URL,
             pesquisa=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
             data_publicacao_inicio=inp.data_publicacao_inicio,
