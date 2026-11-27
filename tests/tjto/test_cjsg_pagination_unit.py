@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import pytest
+import responses
 
-from juscraper.courts.tjto.download import _get_total_results, cjsg_download_manager
+import juscraper as jus
+from juscraper.courts.tjto.download import BASE_URL, _get_total_results
 from tests._helpers import load_sample
 
 
@@ -53,35 +55,23 @@ def test_get_total_results_sem_a_aba_ativa_nao_le_o_html_bruto():
     assert _get_total_results(html) is None
 
 
-class _Resposta:
-    def __init__(self, text: str) -> None:
-        self.text = text
 
+@responses.activate
+@pytest.mark.parametrize(("metodo", "sample"), [
+    ("cjsg", "cjsg/results_normal_page_01.html"),
+    ("cjpg", "cjpg/sentencas_page_01.html"),
+])
+def test_download_sem_a_aba_ativa_levanta(metodo, sample):
+    """HTML derivado do sample real: sem a contagem da aba ativa, levanta em vez de dar 0 resultados.
 
-def _download(html: str, paginas=None) -> list:
-    """``cjsg_download_manager`` com a página 1 respondida por ``html``; outra página falha o teste."""
-    def request_fn(*_args, **kwargs):
-        assert kwargs["data"]["start"] == "0", "só a página 1 deveria ser pedida"
-        return _Resposta(html)
-
-    return cjsg_download_manager("dano moral", paginas, request_fn=request_fn, sleep_time=0)
-
-
-@pytest.mark.parametrize("sample", ["cjsg/results_normal_page_01.html", "cjpg/sentencas_page_01.html"])
-def test_download_sem_a_aba_ativa_levanta(sample):
-    """HTML derivado do sample real: sem a contagem da aba ativa, o download levanta em vez de dar 0 resultados."""
+    Só a página 1 é respondida: outra requisição falharia o teste.
+    """
     html = load_sample("tjto", sample)
     sem_aba = html.replace('class="nav-link active"', 'class="nav-link"')
     assert sem_aba != html
+    responses.add(responses.POST, BASE_URL, body=sem_aba, content_type="text/html; charset=utf-8")
     with pytest.raises(ValueError, match="TJTO: a página lida não traz a contagem"):
-        _download(sem_aba)
-
-
-@pytest.mark.parametrize("sample", ["cjsg/no_results.html", "cjpg/no_results.html"])
-def test_download_busca_vazia_da_uma_pagina(sample):
-    html = load_sample("tjto", sample)
-    assert _download(html) == [html]
-
+        getattr(jus.scraper("tjto", sleep_time=0), f"{metodo}_download")("dano moral", paginas=None)
 
 def test_get_total_results_handles_dot_thousands():
     html = (

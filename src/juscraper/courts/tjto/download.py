@@ -48,8 +48,7 @@ def _get_total_results(html: str) -> int | None:
 
     Sem ``zero_markers``: a página além do total também diz "Nenhum documento
     encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
-    a busca sem resultados traz ``(0)`` na aba. Sem a contagem (markup novo),
-    :func:`resolve_total_pages` levanta.
+    a busca sem resultados traz ``(0)`` na aba.
     """
     return extract_count_with_cascade(
         html,

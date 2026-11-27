@@ -73,11 +73,7 @@ def build_cjsg_payload(
 
 
 def _extract_total(html: str) -> int | None:
-    """Lê o total de resultados do ``legend``; ``None`` quando a página não o traz.
-
-    A busca vazia (ou bloqueada pelo Turnstile) volta sem ``legend`` e sem
-    mensagem: quem chama a distingue do markup novo por :func:`has_results`.
-    """
+    """Lê o total do ``legend``; ``None`` sem ele, como na busca vazia ou bloqueada."""
     return extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
@@ -159,8 +155,6 @@ def cjsg_download(
         # nao traz marcador proprio: a falta de resultados e o unico sinal.
         avisar(AVISO_TURNSTILE)
         total = 0
-    # Resultados sem o ``legend``: markup novo, e o total levanta em vez de
-    # virar uma página só.
     n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
     results: list = []

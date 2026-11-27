@@ -93,10 +93,9 @@ def extract_count_with_cascade(
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
-    O caller decide o que fazer quando a cascata falha (retorno ``None``):
-    alguns tribunais convencionam ``return 1`` (assume pagina unica), outros
-    ``return 0`` (assume zero resultados). Manter essa decisao do lado do
-    caller preserva o comportamento legado de cada scraper.
+    O retorno ``None`` quer dizer markup não reconhecido, e o caller o passa a
+    :func:`resolve_total_pages` ou levanta: assumir 1 página ou 0 resultados
+    faz o download parar na primeira página sem aviso.
 
     A ordem é: seletores e regex; ``zero_markers``; ``None``. Os marcadores
     de busca vazia só valem quando nenhuma contagem foi achada, porque
