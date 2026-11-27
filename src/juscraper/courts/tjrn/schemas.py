@@ -109,18 +109,18 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
         # No portal so os acordaos tem ementa. As monocraticas com ementa sao poucas
         # do SAJ, de 2008, sem jurisdicao. Com termo na ementa, os filtros abaixo
         # voltam com 0 resultados sem erro, em qualquer periodo e termo (27/11/2026).
-        palavras = set(self.pesquisa.replace('"', " ").split())
-        if self.buscar_em != "ementa" or palavras <= _PALAVRAS_IGNORADAS:
+        if self.buscar_em != "ementa" or set(self.pesquisa.replace('"', " ").split()) <= _PALAVRAS_IGNORADAS:
             return self
         sem_ementa = []
         if self.decisoes == "Sentença":
             sem_ementa.append('decisoes="Sentença"')
         if self.grau == "1":
             sem_ementa.append('grau="1"')
-        if self.decisoes == "Decisão" and self.jurisdicoes:
-            sem_ementa.append(f'decisoes="Decisão" com jurisdicoes="{self.jurisdicoes}"')
-        if self.decisoes == "Decisão" and self.sistema == "PJE":
-            sem_ementa.append('decisoes="Decisão" com sistema="PJE"')
+        if self.decisoes == "Decisão":
+            if self.jurisdicoes:
+                sem_ementa.append(f'decisoes="Decisão" com jurisdicoes="{self.jurisdicoes}"')
+            if self.sistema == "PJE":
+                sem_ementa.append('decisoes="Decisão" com sistema="PJE"')
         if sem_ementa:
             raise ValueError(
                 f"pesquisa busca na ementa, e no portal so os acordaos tem ementa: com "

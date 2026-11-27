@@ -532,26 +532,30 @@ def test_tjrn_aceita_decisao_no_seu_grau(filtros):
     InputCJSGTJRN(pesquisa="", **filtros)
 
 
-@pytest.mark.parametrize("pesquisa", ["dano moral", "x", "A", "a dano", "de,", '"dano moral"'])
 @pytest.mark.parametrize(
     "filtros",
     [
         {"decisoes": "Sentença"},
-        {"decisoes": "Sentença", "grau": "1"},
         {"grau": "1"},
         {"decisoes": "Decisão", "grau": "1"},
         {"decisoes": "Decisão", "jurisdicoes": "TJ"},
         {"decisoes": "Decisão", "jurisdicoes": "TR", "grau": "2"},
         {"decisoes": "Decisão", "sistema": "PJE"},
-        {"decisoes": "Sentença", "buscar_em": "ementa"},
     ],
 )
-def test_tjrn_recusa_termo_na_ementa_sem_ementa(pesquisa, filtros):
+def test_tjrn_recusa_termo_na_ementa_sem_ementa(filtros):
     """So os acordaos tem ementa: com termo na ementa, sentencas, decisoes de 1o
-    grau e monocraticas de ``"TJ"`` ou ``"TR"`` dao 0 resultados no portal.
+    grau e monocraticas de ``"TJ"``, ``"TR"`` ou do PJe dao 0 resultados no portal.
     """
     with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
-        InputCJSGTJRN(pesquisa=pesquisa, **filtros)
+        InputCJSGTJRN(pesquisa="dano moral", **filtros)
+
+
+@pytest.mark.parametrize("pesquisa", ["x", "A", "a dano", "de,", '"dano moral"'])
+def test_tjrn_recusa_termo_com_palavra_que_o_portal_nao_ignora(pesquisa):
+    """O portal so ignora preposicoes e "e"/"ou" em minusculas e sem pontuacao."""
+    with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
+        InputCJSGTJRN(pesquisa=pesquisa, grau="1")
 
 
 @pytest.mark.parametrize(
