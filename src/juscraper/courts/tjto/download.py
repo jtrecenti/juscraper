@@ -1,6 +1,7 @@
 """
 Downloads raw pages from the TJTO jurisprudence search.
 """
+import logging
 import math
 import re
 import time
@@ -28,30 +29,43 @@ TYPE_MINUTA_MAP = {
 }
 
 
-_PAGINATION_CSS_SELECTORS: tuple[str, ...] = (
-    ".nav-link.active .num_minuta",
-    ".nav-link.active span",
-)
+# A contagem vem da aba do tipo pedido (``li[type_minuta="<x>"]``), e não da
+# aba marcada ``active``: sem o ``active``, o primeiro "(N)" da página é sempre
+# o da aba de acórdãos. O "(N resultados)" acima da paginação só aparece em
+# busca de mais de uma página e já traz o total do tipo pedido.
 _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
     re.compile(r"\((\d[\d.]*)\s*resultados?\)", re.IGNORECASE),
-    re.compile(r"\(([\d.]+)\)"),
+    # Ancorada: casa o texto inteiro da aba ("(1.284)"), nunca o HTML bruto,
+    # onde pegaria a contagem de outra aba.
+    re.compile(r"^\s*\(([\d.]+)\)\s*$"),
 )
 
+logger = logging.getLogger("juscraper.tjto")
 
-def _get_total_results(html: str) -> int:
-    """Extract the total number of results from the active tab's count.
+
+def _get_total_results(html: str, type_minuta: str = "1") -> int:
+    """Extrai o total de resultados da aba do ``type_minuta`` pedido.
 
     Sem ``zero_markers``: a página além do total também diz "Nenhum documento
     encontrado", mas a aba traz o total da busca (``pagina_alem_do_total.html``);
-    a busca sem resultados traz ``(0)`` na aba.
+    a busca sem resultados traz ``(0)`` na aba. Sem a contagem, o layout mudou:
+    devolve 0 (só a primeira página é baixada) com aviso no logger
+    ``juscraper.tjto``, em vez de ler o total de outra aba.
     """
     n = extract_count_with_cascade(
         html,
-        css_selectors=_PAGINATION_CSS_SELECTORS,
+        css_selectors=(f'li[type_minuta="{type_minuta}"] .num_minuta',),
         regex_patterns=_PAGINATION_REGEXES,
         fallback_max_int=False,
     )
-    return n if n is not None else 0
+    if n is None:
+        logger.warning(
+            "TJTO: não achei o total de resultados da aba type_minuta=%s na primeira página; "
+            "o layout do portal pode ter mudado, e só a primeira página será baixada.",
+            type_minuta,
+        )
+        return 0
+    return n
 
 
 def build_cjsg_payload(
@@ -156,7 +170,7 @@ def cjsg_download_manager(
     # passa do total, as demais também passam, e todas caem no aviso.
     primeira = menor_pagina(paginas)
     html_primeira = _get_page(primeira)
-    total = _get_total_results(html_primeira)
+    total = _get_total_results(html_primeira, type_minuta)
     n_pags = math.ceil(total / RESULTS_PER_PAGE) if total else 1
     validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
     return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
