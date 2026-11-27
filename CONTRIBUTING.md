@@ -442,9 +442,9 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 
 ### Campos comuns entre endpoints da mesma família
 
-Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`contar`, `cjsg`/`cjpg`, eSAJ puro/TJSP), os filtros ficam numa base privada no módulo da família (`_InputFiltrosDataJud`, `_InputCJSGTJESBase`, `InputCJSGEsajBase`). Cada schema concreto declara só o que é dele. Os validators que valem para os dois vão na base junto com os campos. Isso aplica a **Regra de generalização**: dois schemas que repetem o bloco já são as 2 ocorrências concretas.
+Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`contar`, `cjsg`/`cjpg`, eSAJ puro/TJSP), os filtros e os validators que valem para os dois ficam numa base comum, e cada schema concreto declara só o que é dele. A base fica no `schemas.py` do pacote quando os dois endpoints são do mesmo tribunal ou agregador (`_InputFiltrosDataJud`, `_InputFiltrosSTF`, `_InputFiltrosTJTO`), ou em `_<familia>/schemas.py` quando atravessa tribunais (`InputCJSGEsajBase`). Isso aplica a **Regra de generalização**: dois schemas que repetem o bloco já são as 2 ocorrências concretas.
 
-`tests/schemas/test_campos_repetidos.py` cobra a regra. Ele falha quando dois schemas da mesma família e do mesmo papel (entrada com entrada, saída com saída), sem herança entre si, declaram 3 ou mais campos iguais (nome, tipo e default) ou o mesmo validator. A família é o pacote do schema ou, se o raspador herda de `courts._<familia>`/`aggregators._<familia>`, essa família compartilhada. Coincidência legítima (ex.: colunas canônicas de parsers diferentes) vai em `EXCECOES`, no próprio teste, com o motivo.
+`tests/schemas/test_campos_repetidos.py` cobra a regra; a docstring dele diz o que conta como família, repetição e exceção.
 
 ### Registro, paridade e wiring
 

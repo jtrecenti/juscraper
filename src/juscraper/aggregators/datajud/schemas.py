@@ -16,23 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from ...schemas import PaginasMixin, TamanhoPagina
 from .mappings import TIPOS_MOVIMENTACAO
 
-# Campos do schema que sao filtros amigaveis e constroem partes da query
-# Elasticsearch internamente. Quando ``query`` (override total) e fornecido,
-# nenhum desses pode coexistir — o validator gera ``ValidationError`` listando
-# exatamente quais foram passados junto. ``tribunal`` fica de fora porque ele
-# nao entra na query, e sim no path do alias-indice.
-_FILTROS_AMIGAVEIS = (
-    "numero_processo",
-    "ano_ajuizamento",
-    "classe",
-    "assunto",
-    "data_ajuizamento_inicio",
-    "data_ajuizamento_fim",
-    "tipos_movimentacao",
-    "movimentos_codigo",
-    "orgao_julgador",
-)
-
 
 def _coerce_to_str_list(v: Any) -> Any:
     # Codigos CNJ de assunto sao inteiros por natureza (TPU); o backend
@@ -66,12 +49,28 @@ def _coerce_to_int_list(v: Any) -> Any:
 
 
 class _InputFiltrosDataJud(BaseModel):
-    """Filtros comuns a ``listar_processos`` e ``contar_processos``.
+    """Filtros e validacoes comuns a ``listar_processos`` e ``contar_processos``.
 
-    Os dois metodos aceitam o mesmo conjunto de filtros e as mesmas regras
-    de validacao; :class:`InputListarProcessosDataJud` acrescenta so os
-    parametros de paginacao. Declarar aqui evita que um filtro novo, ou a
-    correcao de um validator, chegue a um schema e nao ao outro.
+    A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
+    acontece automaticamente a partir de ``tribunal`` (sigla) ou dos
+    digitos identificadores do ``numero_processo`` (CNJ). Quando nenhum
+    dos dois e fornecido, o client atual levanta ``ValueError`` em vez de
+    consultar tudo.
+
+    **Filtros de data**: o DataJud filtra por ``dataAjuizamento``, nao por
+    julgamento. Por isso o nome canonico aqui e ``data_ajuizamento_inicio``/
+    ``_fim`` em vez do alias generico ``data_inicio``/``_fim`` (que
+    ``normalize_datas`` mapeia para ``data_julgamento_*`` no mundo
+    jurisprudencia). ``extra='forbid'`` faz quem usar o nome generico
+    receber um erro explicito.
+
+    **Override Elasticsearch**: ``query`` recebe um ``dict`` literal que
+    vira a chave ``query`` do payload. Mutuamente exclusivo com todos os
+    filtros amigaveis (refs #49). Em troca, oferece paridade com requisicao
+    direta para ``/<alias>/_search``: o usuario consegue ``must_not``,
+    ``should``, ``range`` em campos arbitrarios, ``wildcard``, ``nested``,
+    etc., usando o shape oficial documentado em
+    https://datajud-wiki.cnj.jus.br/api-publica/.
 
     Os validators de coercao ``mode="before"`` aceitam ``int`` em
     ``assunto`` e ``str`` em ``movimentos_codigo`` (vindos de planilha/CSV)
@@ -198,35 +197,24 @@ class _InputFiltrosDataJud(BaseModel):
         return self
 
 
+# Filtros amigaveis constroem partes da query Elasticsearch. Quando ``query``
+# (override total) e fornecido, nenhum deles pode coexistir — o validator gera
+# ``ValidationError`` listando quais foram passados junto. ``tribunal`` fica
+# de fora porque nao entra na query, e sim no path do alias-indice. Derivado
+# dos campos da base para que um filtro novo entre na regra sem outra edicao.
+_FILTROS_AMIGAVEIS = tuple(
+    campo for campo in _InputFiltrosDataJud.model_fields if campo not in {"tribunal", "query"}
+)
+
+
 class InputListarProcessosDataJud(_InputFiltrosDataJud, PaginasMixin):
     """Accepted input for :meth:`DatajudScraper.listar_processos`.
 
-    A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
-    acontece automaticamente a partir de ``tribunal`` (sigla) ou dos
-    digitos identificadores do ``numero_processo`` (CNJ). Quando nenhum
-    dos dois e fornecido, o client atual levanta ``ValueError`` em vez de
-    consultar tudo.
-
-    ``paginas`` herda o contrato de :class:`PaginasMixin`
+    Filtros de :class:`_InputFiltrosDataJud` mais a paginacao. ``paginas`` herda o contrato de :class:`PaginasMixin`
     (``int | list[int] | range | None``). O cursor ``search_after`` da API
     e forwards-only, entao o metodo publico converte ``list`` esparsa em
     ``range(min, max+1)`` antes da iteracao — ``paginas=[3, 5]`` baixa as
     paginas 3, 4 e 5 e o usuario recebe o DataFrame agregado.
-
-    **Filtros de data**: o DataJud filtra por ``dataAjuizamento``, nao por
-    julgamento. Por isso o nome canonico aqui e ``data_ajuizamento_inicio``/
-    ``_fim`` em vez do alias generico ``data_inicio``/``_fim`` (que
-    ``normalize_datas`` mapeia para ``data_julgamento_*`` no mundo
-    jurisprudencia). ``extra='forbid'`` faz quem usar o nome generico
-    receber um erro explicito.
-
-    **Override Elasticsearch**: ``query`` recebe um ``dict`` literal que
-    vira a chave ``query`` do payload. Mutuamente exclusivo com todos os
-    filtros amigaveis (refs #49). Em troca, oferece paridade com requisicao
-    direta para ``/<alias>/_search``: o usuario consegue ``must_not``,
-    ``should``, ``range`` em campos arbitrarios, ``wildcard``, ``nested``,
-    etc., usando o shape oficial documentado em
-    https://datajud-wiki.cnj.jus.br/api-publica/.
     """
 
     mostrar_movs: bool = False
@@ -245,22 +233,9 @@ class InputContarProcessosDataJud(_InputFiltrosDataJud):
     """Accepted input for :meth:`DatajudScraper.contar_processos`.
 
     Conta processos sem baixar nenhum documento — usado em analise de
-    viabilidade. Aceita os mesmos filtros de
-    :class:`InputListarProcessosDataJud` **menos** os parametros de
-    paginacao (``paginas``, ``tamanho_pagina``, ``mostrar_movs``), que
-    nao se aplicam a uma contagem (``size=0`` no Elasticsearch, sem
-    cursor).
-
-    A determinacao do alias-indice segue a mesma regra do
-    ``listar_processos``: por ``tribunal`` (sigla) ou inferido do
-    ``numero_processo`` (CNJ); ambos ausentes -> ``ValueError``.
-
-    Filtros e validacoes vem de :class:`_InputFiltrosDataJud`, os mesmos
-    de :class:`InputListarProcessosDataJud` (incluindo
-    ``data_ajuizamento_*``, ``tipos_movimentacao``, ``movimentos_codigo``,
-    ``orgao_julgador`` e o escape-hatch ``query``). Ver a docstring de
-    :class:`InputListarProcessosDataJud` para a semantica e as regras de
-    exclusao mutua.
+    viabilidade. Aceita os filtros de :class:`_InputFiltrosDataJud`, sem a
+    paginacao (``paginas``, ``tamanho_pagina``, ``mostrar_movs``), que nao
+    se aplica a uma contagem (``size=0`` no Elasticsearch, sem cursor).
     """
 
 

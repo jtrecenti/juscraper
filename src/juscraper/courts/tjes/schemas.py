@@ -63,12 +63,17 @@ OrdenacaoCJSG = Literal[
 OrdenacaoCJPG = Literal["dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"]
 
 
-class _InputCJSGTJESBase(SearchBase, DataJulgamentoMixin):
+class _InputFiltrosTJES(SearchBase, DataJulgamentoMixin):
     """Filtros comuns ao ``cjsg`` e ao ``cjpg`` do TJES.
 
     Os dois endpoints usam o mesmo backend Solr e aceitam os mesmos filtros;
     :class:`InputCJSGTJES` acrescenta ``core``, e cada schema declara as
     ``ordenacao`` do seu core.
+
+    Apenas filtro de ``data_julgamento_*`` — o backend Solr expoe um unico
+    intervalo (``dataIni``/``dataFim``) mapeado para ``dt_juntada``. Nao ha
+    filtro de data de publicacao; ``data_publicacao_*`` levanta
+    ``TypeError`` em vez de ser silenciosamente descartado.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
@@ -82,7 +87,7 @@ class _InputCJSGTJESBase(SearchBase, DataJulgamentoMixin):
     tamanho_pagina: TamanhoPagina = 20
 
 
-class InputCJSGTJES(_InputCJSGTJESBase):
+class InputCJSGTJES(_InputFiltrosTJES):
     """Accepted input for TJES ``cjsg`` / ``cjsg_download``.
 
     Endpoint Elasticsearch (Solr) DSL. ``pesquisa`` aceita os aliases
@@ -90,11 +95,6 @@ class InputCJSGTJES(_InputCJSGTJESBase):
     que roda *antes* deste modelo. Apos a normalizacao, os kwargs que
     sobram caem aqui e sao rejeitados por ``extra="forbid"`` herdado de
     :class:`SearchBase`.
-
-    Apenas filtro de ``data_julgamento_*`` — o backend Solr expoe um unico
-    intervalo (``dataIni``/``dataFim``) mapeado para ``dt_juntada``. Nao ha
-    filtro de data de publicacao; ``data_publicacao_*`` levanta
-    ``TypeError`` em vez de ser silenciosamente descartado.
 
     O parametro ``core`` e restrito aos cores de segundo grau; para primeiro
     grau (``pje1g``), use :class:`InputCJPGTJES`.
@@ -155,14 +155,12 @@ class OutputCJSGTJES(_OutputCJSGTJESBase, OutputDataPublicacaoMixin):
     """
 
 
-class InputCJPGTJES(_InputCJSGTJESBase):
+class InputCJPGTJES(_InputFiltrosTJES):
     """Accepted input for TJES ``cjpg`` / ``cjpg_download``.
 
     Endpoint Elasticsearch (Solr) de primeiro grau — sempre usa o core
     ``pje1g``, por isso o campo ``core`` nao existe aqui. Os filtros vem de
-    :class:`_InputCJSGTJESBase`, os mesmos de :class:`InputCJSGTJES`.
-    Apenas filtro de ``data_julgamento_*`` — mesmo motivo de
-    :class:`InputCJSGTJES`.
+    :class:`_InputFiltrosTJES`.
     """
 
     # Opcoes do core ``pje1g`` (ver ORDENACOES_POR_CORE).

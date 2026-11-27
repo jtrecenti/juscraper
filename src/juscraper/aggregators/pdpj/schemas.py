@@ -57,8 +57,6 @@ class _InputFiltrosPdpj(BaseModel):
 
     Cada nome canonico em snake_case vira o parametro camelCase da API
     (``_QUERY_PARAM_MAP`` em :mod:`juscraper.aggregators.pdpj.client`).
-    :class:`InputPesquisaPdpj` acrescenta os filtros que so ele aceita, a
-    ordenacao e a paginacao.
     """
 
     numero_processo: str | None = None
@@ -95,11 +93,7 @@ class InputPesquisaPdpj(_InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.pesquisa`.
 
     Cobre os parametros documentados em ``GET /api/v1/processos`` (busca
-    profunda): os filtros de :class:`_InputFiltrosPdpj` mais ``fase``,
-    ``situacao_atual``, ``tipo_operacao``, a ordenacao (``campo_ordenacao``)
-    e a paginacao (``paginas``, ``itens_por_pagina``). O client converte
-    cada nome canonico em snake_case para o parametro camelCase da API
-    antes de enviar a requisicao.
+    profunda).
     """
 
     fase: str | None = None
@@ -113,11 +107,12 @@ class InputPesquisaPdpj(_InputFiltrosPdpj):
 class InputContarPdpj(_InputFiltrosPdpj):
     """Filtros aceitos por :meth:`PdpjScraper.contar`.
 
-    O endpoint ``/processos:contar`` recebe os filtros de
-    :class:`_InputFiltrosPdpj`. Ficam de fora a ordenacao e a paginacao,
-    que nao se aplicam a uma contagem, e ``fase``, ``situacao_atual`` e
-    ``tipo_operacao``, que o schema nunca aceitou aqui.
+    Endpoint ``/processos:contar``, sem ordenacao nem paginacao.
     """
+    # ``fase``, ``situacao_atual`` e ``tipo_operacao`` nunca foram aceitos
+    # aqui, embora a docstring de ``PdpjScraper.contar`` diga que o endpoint
+    # recebe os mesmos filtros da pesquisa. Falta conferir na API antes de
+    # subi-los para a base.
 
 
 class InputDownloadDocumentsPdpj(BaseModel):
