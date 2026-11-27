@@ -6,7 +6,7 @@ import logging
 import time
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Mapping
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import pandas as pd
 import requests
@@ -51,10 +51,6 @@ from .paginacao import (
 )
 from .parse import contagem_da_resposta, parse_datajud_api_response
 from .schemas import InputContarProcessosDataJud, InputListarProcessosDataJud
-
-if TYPE_CHECKING:
-    # So o tipo: ``utils.pagination`` importa ``bs4``, que o DataJud nao usa.
-    from ...utils.pagination import PaginasNormalizadas
 
 # Mapping inverso pra rotular o DataFrame devolvido por ``contar_processos``
 # com a sigla do tribunal (não só o alias-índice do Elasticsearch).
@@ -678,10 +674,8 @@ class DatajudScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
-        # ``normalize_paginas`` acima garante que ``int`` ja virou ``range``;
-        # o cast registra essa invariante sem repetir a normalizacao. Listas
-        # continuam virando o intervalo contiguo exigido pelo cursor forwards-only.
-        paginas_datajud = cast("PaginasNormalizadas", inp.paginas)
+        # Listas viram o intervalo contiguo exigido pelo cursor forwards-only.
+        paginas_datajud = inp.paginas_normalizadas
         if isinstance(paginas_datajud, list):
             paginas_datajud = range(min(paginas_datajud), max(paginas_datajud) + 1)
 

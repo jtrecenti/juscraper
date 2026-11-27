@@ -110,7 +110,7 @@ class TJRSScraper(HTTPScraper):
         )
         return cjsg_download_manager(
             termo=inp.pesquisa,
-            paginas=inp.paginas,
+            paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
             classe=inp.classe,
             assunto=inp.assunto,
