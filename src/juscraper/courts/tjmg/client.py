@@ -225,7 +225,7 @@ class TJMGScraper(HTTPScraper):
                 lista da pagina e as seguintes). Sem pagina baixada antes, sobe
                 a excecao original (``requests.ConnectionError``, por exemplo).
             TJMGBuscaSemListaError: O portal respondeu a pagina 1 com o erro
-                do banco (``ORA-20000 ... DRG-10599``), comum sem filtro de
+                do banco (``ORA-20000 ... DRG-10599``), visto sem filtro de
                 data e em faixas longas.
             CaptchaEsgotadoError: O portal recusou o captcha em todas as
                 tentativas.

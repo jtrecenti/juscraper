@@ -19,7 +19,7 @@ CJSG_FIELDS = {
 }
 
 
-def _add_post(query: str, *, start: int, sample_path: str, instancia: str = "2") -> None:
+def _add_post(query: str, *, start: int, sample_path: str, instancia: str = "2", **payload_kw) -> None:
     responses.add(
         responses.POST,
         BASE_URL,
@@ -27,7 +27,7 @@ def _add_post(query: str, *, start: int, sample_path: str, instancia: str = "2")
         status=200,
         content_type="text/html; charset=utf-8",
         match=[urlencoded_params_matcher(
-            build_cjsg_payload(query, start=start, tip_criterio_inst=instancia),
+            build_cjsg_payload(query, start=start, tip_criterio_inst=instancia, **payload_kw),
             allow_blank=True,
         )],
     )

@@ -1,6 +1,8 @@
 """Testes unitarios da extracao de contagem TJTO via util compartilhado (refs #87)."""
 from __future__ import annotations
 
+import pytest
+
 from juscraper.courts.tjto.download import _get_total_results
 from tests._helpers import load_sample
 
@@ -27,6 +29,19 @@ def test_get_total_results_no_results_returns_zero():
 def test_get_total_results_pagina_alem_do_total_traz_o_total_da_busca():
     """A página 3 de uma busca de 9 resultados diz "Nenhum documento encontrado", mas a aba traz 9."""
     assert _get_total_results(_sample("pagina_alem_do_total.html")) == 9
+
+
+@pytest.mark.parametrize(("sample", "total"), [
+    ("cjsg/decisoes_single_page.html", 3),
+    ("cjpg/sentencas_page_01.html", 1284),
+])
+def test_get_total_results_le_a_aba_do_tipo_pedido(sample, total):
+    """Fora de acórdãos, o portal marca ``active`` na aba do tipo pedido (capturas de 26/11/2026).
+
+    As outras abas trazem outros totais: (9) e (0) em decisões, (14) e (1.741) em
+    sentenças. Ler a aba de acórdãos daria 9 e 14.
+    """
+    assert _get_total_results(load_sample("tjto", sample)) == total
 
 
 def test_get_total_results_sem_a_aba_ativa_nao_le_o_html_bruto():

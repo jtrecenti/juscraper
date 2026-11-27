@@ -64,3 +64,20 @@ def test_todas_as_paginas_alem_do_total_custam_uma_requisicao(tjto, caplog):
     assert len(responses.calls) == 1
     assert df.empty
     assert ("juscraper.tjto", logging.WARNING, "TJTO: páginas 3, 4, 5 fora do intervalo 1-1") in caplog.record_tuples
+
+
+@responses.activate
+def test_cjpg_sentencas_le_o_total_da_aba_de_sentencas(tjto):
+    """``sentencas_page_01.html`` declara 1.284 sentenças e 14 acórdãos: a página 2 é pedida.
+
+    Com o total da aba de acórdãos, a busca caberia numa página e a 2 sairia no aviso.
+    A página 2 só precisa ser pedida: o corpo dela repete o da 1.
+    """
+    for start in (0, 20):
+        _add_post('"despejo"', start=start, sample_path="cjpg/sentencas_page_01.html",
+                  instancia="1", type_minuta="3")
+
+    df = tjto.cjpg('"despejo"', paginas=range(1, 3), tipo_documento="sentencas")
+
+    assert len(responses.calls) == 2
+    assert len(df) == 40

@@ -37,6 +37,7 @@ from ...core.failures import (
 )
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj, format_cnj
+from ...utils.params import raise_on_extra_kwargs
 from .download import (
     BROWSER_HEADERS,
     FormFieldIds,
@@ -165,17 +166,16 @@ class TRFConsultaScraper(HTTPScraper):
             logger.debug("%s field IDs: %s", self.TRIBUNAL_NAME, self._field_ids)
         return self._field_ids
 
-    def _coerce_id_cnj(self, id_cnj: str | list[str], **kwargs: Any) -> list[str]:
-        """Validate via pydantic and return a list of cleaned 20-digit CNJs."""
+    def _coerce_id_cnj(self, id_cnj: str | list[str], metodo: str, /, **kwargs: Any) -> list[str]:
+        """Valida via pydantic e devolve os CNJs limpos, com 20 dígitos.
+
+        ``metodo`` é o método público chamado, citado no ``TypeError`` de kwarg
+        desconhecido.
+        """
         try:
             inp = self.INPUT_CPOPG(id_cnj=id_cnj, **kwargs)
         except ValidationError as exc:
-            extras = [err for err in exc.errors() if err["type"] == "extra_forbidden"]
-            if extras and len(extras) == len(exc.errors()):
-                names = ", ".join(repr(err["loc"][-1]) for err in extras)
-                raise TypeError(
-                    f"{type(self).__name__}.cpopg got unexpected keyword argument(s): {names}"
-                ) from exc
+            raise_on_extra_kwargs(exc, self._rotulo(metodo), schema_cls=self.INPUT_CPOPG)
             raise
         raw = inp.id_cnj if isinstance(inp.id_cnj, list) else [inp.id_cnj]
         return [clean_cnj(c) for c in raw]
@@ -247,9 +247,17 @@ class TRFConsultaScraper(HTTPScraper):
             return _Consulta(html, motivo, [], [])
         return self._pecas_do_processo(cnj, html, pecas_dir)
 
+    def _rotulo(self, metodo: str) -> str:
+        """``<TRIBUNAL>Scraper.<metodo>``, o método público que avisos e erros citam.
+
+        Vem de ``TRIBUNAL_NAME``, não da classe: no TJPE, quem o usuário chama
+        é o ``TJPEScraper``, que delega a esta classe.
+        """
+        return f"{self.TRIBUNAL_NAME}Scraper.{metodo}"
+
     def _avisar(self, cnjs: list[str], motivos: list[str | None], metodo: str) -> None:
         """Um ``UserWarning`` com os CNJs que falharam, atribuído ao método público ``metodo``."""
-        avisar_falhas_de_processos(cnjs, motivos, f"{self.TRIBUNAL_NAME}Scraper.{metodo}")
+        avisar_falhas_de_processos(cnjs, motivos, self._rotulo(metodo))
 
     # --- public API ------------------------------------------------------
 
@@ -267,7 +275,7 @@ class TRFConsultaScraper(HTTPScraper):
         restantes saem ``None``. As falhas entram num único ``UserWarning``
         ao fim; :meth:`cpopg` traz o motivo de cada uma em ``motivo_falha``.
         """
-        cnjs = self._coerce_id_cnj(id_cnj, **kwargs)
+        cnjs = self._coerce_id_cnj(id_cnj, "cpopg_download", **kwargs)
         consultas = self._baixar(cnjs)
         self._avisar(cnjs, [c.motivo for c in consultas], "cpopg_download")
         return [c.html for c in consultas]
@@ -372,6 +380,7 @@ class TRFConsultaScraper(HTTPScraper):
         """
         cnjs = self._coerce_id_cnj(
             id_cnj,
+            "cpopg",
             download_pecas=download_pecas,
             diretorio=diretorio,
             **kwargs,
@@ -403,7 +412,7 @@ class TRFConsultaScraper(HTTPScraper):
         ]
         avisar_falhas(
             falhas,
-            f"{self.TRIBUNAL_NAME}Scraper.cpopg",
+            self._rotulo("cpopg"),
             "download(s) de peça",
             "As peças que faltam estão na coluna pecas_falhas.",
         )

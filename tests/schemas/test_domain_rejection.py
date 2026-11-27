@@ -470,3 +470,24 @@ def test_tjgo_recusa_combinacao_que_o_formulario_nao_monta(filtros):
 )
 def test_tjgo_aceita_combinacao_que_o_formulario_monta(filtros):
     InputCJSGTJGO(pesquisa="x", **filtros)
+
+
+@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+def test_tjrn_recusa_jurisdicao_com_primeiro_grau(jurisdicoes):
+    """``"TJ"`` e ``"TR"`` so cobrem o 2o grau; com ``grau="1"`` o portal da 0 resultados."""
+    with pytest.raises(ValidationError, match="2o grau"):
+        InputCJSGTJRN(pesquisa="x", jurisdicoes=jurisdicoes, grau="1")
+
+
+@pytest.mark.parametrize(
+    "filtros",
+    [
+        {"jurisdicoes": "TJ", "grau": "2"},
+        {"jurisdicoes": "TR", "grau": ""},
+        {"jurisdicoes": "TJ", "grau": None},
+        {"jurisdicoes": "", "grau": "1"},
+        {"jurisdicoes": None, "grau": "1"},
+    ],
+)
+def test_tjrn_aceita_jurisdicao_sem_primeiro_grau(filtros):
+    InputCJSGTJRN(pesquisa="x", **filtros)

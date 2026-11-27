@@ -155,9 +155,10 @@ def extract_count_with_cascade(
             - ``"html"``: as regex rodam no HTML bruto quando nenhum
               seletor casa elemento com texto. Sem ele, o
               HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
-              casa "(fevereiro de 2009)" nelas. Só para regex que nenhuma
-              ementa reproduz, como um rótulo inteiro ("Documentos
-              encontrados: N").
+              casa "(fevereiro de 2009)" nelas. Só quando todas as regex
+              exigem as palavras do rótulo do resumo ("Documentos
+              encontrados: N"), que tambem nao podem casar com o aviso de
+              busca vazia, porque a regex roda antes de ``zero_markers``.
 
     Returns:
         ``int`` extraido ou ``None`` se nada casar, nenhum

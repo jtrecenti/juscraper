@@ -13,11 +13,11 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL, build_cjsg_payload
+from juscraper.core.waf import USER_AGENT
+from juscraper.courts.tjto.download import BASE_URL, EMENTA_URL, TYPE_MINUTA_MAP, build_cjsg_payload
 
 from ._util import dump, samples_dir_for
 
-USER_AGENT = "juscraper/0.1 (https://github.com/jtrecenti/juscraper)"
 _UUID_RE = re.compile(r'data-id="([a-f0-9-]{30,})"')
 
 
@@ -36,8 +36,9 @@ def _minify(raw: bytes) -> bytes:
     return f"<html><body>{result}</body></html>".encode("utf-8")
 
 
-def _post(session: requests.Session, query: str, *, start: int, instancia: str) -> requests.Response:
-    payload = build_cjsg_payload(query, start=start, tip_criterio_inst=instancia)
+def _post(session: requests.Session, query: str, *, start: int, instancia: str,
+          type_minuta: str) -> requests.Response:
+    payload = build_cjsg_payload(query, start=start, tip_criterio_inst=instancia, type_minuta=type_minuta)
     response = session.post(BASE_URL, data=payload, timeout=60)
     response.raise_for_status()
     return response
@@ -45,11 +46,13 @@ def _post(session: requests.Session, query: str, *, start: int, instancia: str) 
 
 def _capture_endpoint(session: requests.Session, dest, endpoint: str,
                       instancia: str, queries: list) -> None:
+    """Cada item de ``queries`` é ``(termo, páginas, arquivos[, tipo_documento])``."""
     out = samples_dir_for("tjto", endpoint)
-    for query, pages, files in queries:
+    for query, pages, files, *tipo in queries:
+        type_minuta = TYPE_MINUTA_MAP[tipo[0] if tipo else "acordaos"]
         for page, filename in zip(pages, files, strict=False):
             start = (page - 1) * 20
-            response = _post(session, query, start=start, instancia=instancia)
+            response = _post(session, query, start=start, instancia=instancia, type_minuta=type_minuta)
             stripped = _minify(response.content)
             dump(out / filename, stripped)
             print(f"[tjto/{endpoint}] wrote {filename} (page={page}, "
@@ -87,6 +90,8 @@ def main() -> None:
          ("results_normal_page_01.html", "results_normal_page_02.html")),
         ("\"alimentos avoengos\"", (1, 3), ("single_page.html", "pagina_alem_do_total.html")),
         ("juscraper_probe_zero_hits_xyzqwe", (1,), ("no_results.html",)),
+        # Aba que não é a de acórdãos: o total sai da aba do tipo pedido.
+        ("\"alimentos avoengos\"", (1,), ("decisoes_single_page.html",), "decisoes"),
     ]
     _capture_endpoint(session, cjsg_dest, "cjsg", instancia="2",
                       queries=cjsg_queries)
@@ -97,6 +102,7 @@ def main() -> None:
          ("results_normal_page_01.html", "results_normal_page_02.html")),
         ("\"despejo\"", (1,), ("single_page.html",)),
         ("juscraper_probe_zero_hits_xyzqwe", (1,), ("no_results.html",)),
+        ("\"despejo\"", (1,), ("sentencas_page_01.html",), "sentencas"),
     ]
     _capture_endpoint(session, cjpg_dest, "cjpg", instancia="1",
                       queries=cjpg_queries)

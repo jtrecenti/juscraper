@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 
 import juscraper as jus
-from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError
 
 pytest.importorskip(
     "txtcaptcha",
@@ -79,6 +78,10 @@ def test_cjsg_segue_a_busca_categorizada():
 
 
 @pytest.mark.integration
-def test_cjsg_download_levanta_o_erro_do_banco_sem_filtro_de_data():
-    with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000"):
+def test_cjsg_download_sem_filtro_de_data_levanta_muitos_resultados():
+    """Em 26/11/2026, "muitos resultados"; em 15/11/2026, ``ORA-20000``.
+
+    O erro do banco fica coberto offline (``test_cjsg_busca_sem_lista_contract.py``).
+    """
+    with pytest.raises(ValueError, match="muitos resultados"):
         jus.scraper("tjmg").cjsg_download(pesquisa="dano moral", paginas=1)
