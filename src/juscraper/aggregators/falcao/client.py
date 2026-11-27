@@ -101,7 +101,7 @@ class FalcaoScraper(HTTPScraper):
     def listar_decisoes(
         self,
         pesquisa: str | None = None,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         **kwargs,
     ) -> pd.DataFrame:
         """Consulta a Jurisprudencia Nacional da Justica do Trabalho.
@@ -271,7 +271,7 @@ class FalcaoScraper(HTTPScraper):
     def listar_decisoes_download(
         self,
         pesquisa: str | None = None,
-        paginas: int | list[int] | range | None = None,
+        paginas: int | list | range | None = None,
         diretorio: str | None = None,
         **kwargs,
     ) -> str:
