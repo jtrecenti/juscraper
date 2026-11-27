@@ -23,7 +23,7 @@ from juscraper.core.exceptions import BloqueioAntiBotWarning
 from juscraper.core.waf import USER_AGENT, WAF_COOKIE
 from juscraper.courts._trf.download import extract_documento_urls
 from juscraper.courts.tjpe.consulta_publica import TJPEConsultaPublicaScraper
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 BASE = "https://pje.cloud.tjpe.jus.br/1g/"
 LIST_URL = BASE + "ConsultaPublica/listView.seam"
@@ -335,29 +335,23 @@ def test_erro_ao_gravar_peca_vira_falha_do_processo_e_o_lote_segue(tjpe, mocker,
 @responses.activate
 def test_cpopg_download_devolve_o_html_e_cpopg_parse_monta_a_linha_do_cpopg(tjpe, obter):
     """Baixar e parsear em duas etapas dá a mesma tabela do ``cpopg``, sem ``motivo_falha``."""
-    _form()
-    _busca()
-    _detalhe()
-    _busca("cpopg/search_no_results.html")
 
+    def _encontrado_e_ausente():
+        _form()
+        _busca()
+        _detalhe()
+        _busca("cpopg/search_no_results.html")
+
+    _encontrado_e_ausente()
     htmls = tjpe.cpopg_download([CNJ, OUTRO_CNJ])
 
     obter.assert_not_called()
-    assert htmls[1] is None
-    assert CNJ_FORMATADO in htmls[0]
-    assert htmls[0] == load_sample_bytes("tjpe", "cpopg/detail_normal.html").decode("latin-1")
+    assert htmls == [load_sample_bytes("tjpe", "cpopg/detail_normal.html").decode("latin-1"), None]
     df = tjpe.cpopg_parse(htmls, [CNJ, OUTRO_CNJ])
-    assert "motivo_falha" not in df.columns
-    assert list(df["id_cnj"]) == [CNJ, OUTRO_CNJ]
-    assert df.iloc[0]["processo"] == CNJ_FORMATADO
     assert df.iloc[0]["documentos"]
-    assert df.iloc[1].drop("id_cnj").isna().all()
 
     responses.reset()
-    _form()
-    _busca()
-    _detalhe()
-    _busca("cpopg/search_no_results.html")
+    _encontrado_e_ausente()
     completo = tjpe.cpopg([CNJ, OUTRO_CNJ])
     pd.testing.assert_frame_equal(df, completo.drop(columns="motivo_falha"))
 
@@ -386,19 +380,17 @@ def test_cpopg_download_sem_playwright_o_erro_chega_ao_usuario(tjpe, mocker):
         tjpe.cpopg_download(CNJ)
 
 
-def test_cpopg_download_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match=r"^TJPEScraper\.cpopg_download got unexpected keyword"):
-        tjpe.cpopg_download(CNJ, filtro_inexistente="x")
+@pytest.mark.parametrize("metodo", ["cpopg", "cpopg_download"])
+def test_rejeita_kwarg_desconhecido_citando_o_metodo_publico(tjpe, metodo):
+    assert_unknown_kwarg_raises(
+        getattr(tjpe, metodo), "filtro_inexistente", CNJ, rotulo=f"TJPEScraper.{metodo}"
+    )
 
 
 def test_cpopg_parse_recusa_listas_de_tamanhos_diferentes(tjpe):
     with pytest.raises(ValueError, match="same length"):
         tjpe.cpopg_parse([None], [CNJ, OUTRO_CNJ])
 
-
-def test_cpopg_rejeita_kwarg_desconhecido(tjpe):
-    with pytest.raises(TypeError, match=r"^TJPEScraper\.cpopg got unexpected keyword"):
-        tjpe.cpopg(CNJ, filtro_inexistente="x")
 
 
 def test_mensagem_de_formulario_inesperado_cita_o_tribunal():

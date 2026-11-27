@@ -14,7 +14,7 @@ import responses
 
 import juscraper as jus
 from juscraper.courts._trf.parse import COLUNAS_DETALHE, parse_detail
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import assert_unknown_kwarg_raises, load_sample, load_sample_bytes
 
 
 def _subset_form_matcher(expected: dict[str, str]):
@@ -169,8 +169,9 @@ def test_colunas_detalhe_sao_as_chaves_de_parse_detail() -> None:
 def test_cpopg_rejects_unknown_kwargs(metodo: str) -> None:
     """Kwarg desconhecido vira ``TypeError`` que cita o método público chamado."""
     scraper = jus.scraper("trf5", sleep_time=0)
-    with pytest.raises(TypeError, match=rf"^TRF5Scraper\.{metodo} got unexpected keyword"):
-        getattr(scraper, metodo)("00584573120254058000", magistrado="x")
+    assert_unknown_kwarg_raises(
+        getattr(scraper, metodo), "magistrado", "00584573120254058000", rotulo=f"TRF5Scraper.{metodo}"
+    )
 
 
 @responses.activate
