@@ -1,20 +1,14 @@
 import subprocess
 import sys
 import typing
-from importlib import import_module
 
 import juscraper
 from juscraper import _SCRAPERS, scraper
+from tests._helpers import classe_da_sigla
 
 
 def test_scraper_factory_is_callable():
     assert callable(scraper)
-
-
-def _classe(destino: str) -> type:
-    modulo, nome = destino.split(":")
-    classe: type = getattr(import_module(modulo), nome)
-    return classe
 
 
 def test_overloads_cobrem_o_mapa_de_siglas():
@@ -23,23 +17,24 @@ def test_overloads_cobrem_o_mapa_de_siglas():
     As overloads são o que o verificador de tipos de quem usa a biblioteca enxerga;
     o mapa é o que roda. Se alguém registrar um tribunal só num dos dois, este teste falha.
     """
-    classes = {destino.split(":")[1]: _classe(destino) for destino in _SCRAPERS.values()}
-    namespace = {**vars(juscraper), **classes}
+    esperado = {sigla: classe_da_sigla(sigla) for sigla in _SCRAPERS}
+    namespace = {**vars(juscraper), **{classe.__name__: classe for classe in esperado.values()}}
+
+    dicas = [typing.get_type_hints(o, globalns=namespace) for o in typing.get_overloads(scraper)]
+
+    # O fallback para `str` arbitrária (variável, maiúsculas) tem de ser a última:
+    # overload de sigla depois dele seria inalcançável para o verificador.
+    fallbacks = [i for i, d in enumerate(dicas) if d["sigla"] is str]
+    assert fallbacks == [len(dicas) - 1], "o fallback `sigla: str` deve ser a última overload, e só uma"
+    assert dicas[-1]["return"] is typing.Any
 
     por_sigla: dict[str, type] = {}
-    overloads = typing.get_overloads(scraper)
-    for overload in overloads[:-1]:
-        dicas = typing.get_type_hints(overload, globalns=namespace)
-        (sigla,) = typing.get_args(dicas["sigla"])
+    for d in dicas[:-1]:
+        (sigla,) = typing.get_args(d["sigla"])
         assert sigla not in por_sigla, f"overload repetida para {sigla!r}"
-        por_sigla[sigla] = dicas["return"]
+        por_sigla[sigla] = d["return"]
 
-    assert por_sigla == {sigla: _classe(destino) for sigla, destino in _SCRAPERS.items()}
-
-    # A última overload é o fallback para `str` arbitrária (variável, maiúsculas).
-    fallback = typing.get_type_hints(overloads[-1], globalns=namespace)
-    assert fallback["sigla"] is str
-    assert fallback["return"] is typing.Any
+    assert por_sigla == esperado
 
 
 def test_import_juscraper_nao_carrega_os_raspadores():

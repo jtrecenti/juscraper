@@ -94,8 +94,7 @@ _SCRAPERS: dict[str, str] = {
 
 
 # Uma overload por sigla de `_SCRAPERS`, para o verificador de tipos de quem usa a
-# biblioteca inferir a classe em `jus.scraper("tjrn")`. A última aceita qualquer `str`
-# (sigla em variável, maiúsculas) e devolve `Any`, como antes. O teste
+# biblioteca inferir a classe em `jus.scraper("tjrn")`. O teste
 # `tests/test_juscraper.py` confere que as overloads cobrem exatamente o mapa.
 @overload
 def scraper(sigla: Literal["tjac"], *args: Any, **kwargs: Any) -> TJACScraper: ...
@@ -245,8 +244,9 @@ def scraper(sigla: Literal["comunica_cnj"], *args: Any, **kwargs: Any) -> Comuni
 def scraper(sigla: Literal["falcao"], *args: Any, **kwargs: Any) -> FalcaoScraper: ...
 
 
-# Fallback deliberadamente `Any`: `BaseScraper` não declara `cjsg`/`cpopg`, e tipá-lo
-# como retorno faria o mypy recusar `jus.scraper(sigla).cjsg(...)` com sigla em variável.
+# Fallback para qualquer `str` (sigla em variável, maiúsculas), deliberadamente `Any`:
+# `BaseScraper` não declara `cjsg`/`cpopg`, e tipá-lo como retorno faria o mypy recusar
+# `jus.scraper(sigla).cjsg(...)` com sigla em variável.
 @overload
 def scraper(sigla: str, *args: Any, **kwargs: Any) -> Any: ...  # noqa: ANN401
 

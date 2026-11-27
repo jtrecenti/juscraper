@@ -101,9 +101,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
     # (``cjpg_download.py`` + ``cjpg_parse.py``) entram em
     # ``_run_search`` como hooks resolvidos por nome.
 
-    # Overloads só para o verificador de tipos: ``count_only=True`` devolve o
-    # ``int`` da contagem; sem ``count_only``, o ``DataFrame``. A última não
-    # nomeia ``count_only`` para ``**filtros`` com valores ``str`` continuar casando.
+    # Mesmas overloads de ``EsajSearchScraper.cjsg``, pelo ``count_only``.
     @overload
     def cjpg(
         self,
@@ -113,6 +111,16 @@ class EsajCjpgScraper(EsajSentencaScraper):
         count_only: Literal[True],
         **kwargs: Any,
     ) -> int: ...
+
+    @overload
+    def cjpg(
+        self,
+        pesquisa: str = "",
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     @overload
     def cjpg(

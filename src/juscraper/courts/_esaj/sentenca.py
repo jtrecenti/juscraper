@@ -56,8 +56,8 @@ class EsajSentencaScraper(EsajSearchScraper):
     def baixar_sentenca(
         self,
         cd_processo: str,
-        cd_foro: str,
-        cd_documento: str,
+        cd_foro: str | float,
+        cd_documento: str | float,
         nm_alias: str | None = None,
         diretorio: str | None = None,
     ) -> str:
@@ -70,8 +70,10 @@ class EsajSentencaScraper(EsajSearchScraper):
 
         Args:
             cd_processo (str): Coluna ``cd_processo`` do cjpg.
-            cd_foro (str): Coluna ``cd_foro`` do cjpg.
-            cd_documento (str): Coluna ``cd_documento`` do cjpg.
+            cd_foro (str | float): Coluna ``cd_foro`` do cjpg; o ``float``
+                inteiro (``126.0``) da coluna lida de CSV também vale.
+            cd_documento (str | float): Coluna ``cd_documento`` do cjpg,
+                também como ``float`` inteiro.
             nm_alias (str | None): Coluna ``nm_alias`` do cjpg, que costuma vir
                 vazia no TJSP. Default ``None``.
             diretorio (str | None): Pasta de destino. Default

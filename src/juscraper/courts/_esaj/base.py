@@ -401,8 +401,9 @@ class EsajSearchScraper(HTTPScraper):
     # --- cjsg -----------------------------------------------------------
 
     # Overloads só para o verificador de tipos: ``count_only=True`` devolve o
-    # ``int`` da contagem; sem ``count_only``, o ``DataFrame``. A última não
-    # nomeia ``count_only`` para ``**filtros`` com valores ``str`` continuar casando.
+    # ``int`` da contagem; com ``False`` ou sem ``count_only``, o ``DataFrame``.
+    # A última não nomeia ``count_only``, para que ``**filtros`` não seja
+    # conferido contra ele.
     @overload
     def cjsg(
         self,
@@ -412,6 +413,16 @@ class EsajSearchScraper(HTTPScraper):
         count_only: Literal[True],
         **kwargs: Any,
     ) -> int: ...
+
+    @overload
+    def cjsg(
+        self,
+        pesquisa: str,
+        paginas: int | list | range | None = None,
+        *,
+        count_only: Literal[False],
+        **kwargs: Any,
+    ) -> pd.DataFrame: ...
 
     @overload
     def cjsg(

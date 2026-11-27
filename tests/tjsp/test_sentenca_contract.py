@@ -234,8 +234,7 @@ def test_baixar_sentenca_aceita_codigo_float_inteiro_de_csv(tmp_path, mocker):
     _registrar_sentenca()
 
     caminho = jus.scraper("tjsp", download_path=str(tmp_path)).baixar_sentenca(
-        # A anotação só diz str.
-        CD_PROCESSO, float(CD_FORO), float(CD_DOCUMENTO)  # type: ignore[arg-type]
+        CD_PROCESSO, float(CD_FORO), float(CD_DOCUMENTO)
     )
 
     assert caminho == str(tmp_path / "sentencas" / f"{CD_PROCESSO}_{CD_DOCUMENTO}.pdf")
