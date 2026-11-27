@@ -742,7 +742,9 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         documento, ja com ``id_documento`` e ``numero_processo``) ou de
         :meth:`cpopg` (uma linha por processo com ``detalhes`` -- nesse
         caso a lista de documentos e extraida de
-        ``detalhes['documentos']``).
+        ``detalhes['documentos']`` e de ``documentos`` de cada item de
+        ``detalhes['tramitacoes']``, com as mesmas colunas de
+        :meth:`documentos`, inclusive ``_raw``).
 
         Um documento cujo download falha não interrompe a coleta: a linha
         sai com ``texto``/``_raw_texto`` e/ou ``binario`` iguais a ``None``
@@ -930,7 +932,8 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         """Aceita tanto o DataFrame de :meth:`documentos` quanto o de :meth:`cpopg`.
 
         No primeiro caso o df ja vem no shape esperado. No segundo, cada
-        linha tem ``detalhes['documentos']`` que precisamos achatar antes
+        linha tem ``detalhes['documentos']`` e os ``documentos`` de cada
+        item de ``detalhes['tramitacoes']``, que precisamos achatar antes
         de baixar conteudo.
         """
         if base_df.empty:
