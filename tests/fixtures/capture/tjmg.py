@@ -15,8 +15,10 @@ Saves raw responses for the four endpoints TJMG hits per ``cjsg`` call:
 - ``results_normal_page_NN.html`` — typical multi-page scenario.
 - ``single_page.html`` — single-page scenario.
 - ``no_results.html`` — zero-hit scenario.
-- ``erro_ora.html`` — search without a date filter: the portal answers with
-  ``ORA-20000 ... DRG-10599`` instead of results.
+- ``erro_ora.html`` — search without a date filter: on 15/11/2026 the portal
+  answered with ``ORA-20000 ... DRG-10599`` instead of results. On 26/11/2026
+  the same search answered "muitos resultados"; the sample is only rewritten
+  when the portal answers with the database error again.
 - ``muitos_resultados.html`` — a common search with too many hits (11,170;
   1,905 are still listed): the portal answers "Sua pesquisa encontrou muitos
   resultados (N) e não pode ser exibida" instead of results.
@@ -85,6 +87,8 @@ def main() -> None:
     counters: dict[str, int] = {}
 
     def hook(resp, *args, **kwargs):
+        if "pesquisaPalavrasEspelhoAcordao.do" in resp.url:
+            state["last_search"] = resp.content
         scenario = state.get("scenario")
         if scenario is None:
             return resp
@@ -111,8 +115,9 @@ def main() -> None:
     print(f"[tjmg/typical] DataFrame columns: {list(df.columns)}")
     print(f"[tjmg/typical] rows: {len(df)}")
 
-    # Single page: a narrower phrase whose hits fit in one page. Without a
-    # date filter the portal answers with ORA-20000 (see ``erro_ora``).
+    # Single page: a narrower phrase whose hits fit in one page. The date
+    # filter keeps the hits stable (and on 15/11/2026, without it, the portal
+    # answered with ORA-20000; see ``erro_ora``).
     state["scenario"] = "single_page"
     counters.clear()
     df = scraper.cjsg(
@@ -134,12 +139,17 @@ def main() -> None:
     )
     print(f"[tjmg/no_results] rows: {len(df)} (expected 0)")
 
-    # The database error: only the download, which raises on it.
-    state["scenario"] = "erro_ora"
+    # The database error: only the download, which raises on it. The hook
+    # does not save this page, so a "muitos resultados" answer does not
+    # overwrite the sample.
+    state["scenario"] = None
     try:
         scraper.cjsg_download("dano moral", paginas=1)
     except TJMGBuscaSemListaError as exc:
-        print(f"[tjmg/erro_ora] {exc}")
+        (dest / "erro_ora.html").write_bytes(state["last_search"])
+        print(f"[tjmg/erro_ora] {exc} -> erro_ora.html")
+    except ValueError as exc:
+        print(f"[tjmg/erro_ora] no ORA-20000 this time ({exc}); erro_ora.html kept")
     # A common search with too many hits: the download raises ValueError.
     state["scenario"] = "muitos_resultados"
     try:

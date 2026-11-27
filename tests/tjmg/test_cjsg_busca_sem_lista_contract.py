@@ -1,7 +1,8 @@
 """Páginas da busca do TJMG sem a lista de resultados.
 
-O portal responde HTTP 200 com o erro ``ORA-20000 ... DRG-10599`` nas buscas
-sem filtro de data, e com a busca categorizada quando há acórdãos de
+O portal respondeu HTTP 200 com o erro ``ORA-20000 ... DRG-10599`` nas buscas
+sem filtro de data em 15/11/2026 (em 26/11/2026, com "muitos resultados" ou com
+a lista), e responde com a busca categorizada quando há acórdãos de
 repetitivos no resultado. As duas viravam um DataFrame vazio, sem aviso. O
 erro do banco levanta logo depois da página 1; a busca categorizada é seguida
 nas listas de cada categoria. Samples capturados ao vivo por

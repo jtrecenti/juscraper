@@ -52,8 +52,10 @@ class TJMGBuscaSemListaError(HTTPSemanticError):
 
     Duas páginas observadas ao vivo viravam um DataFrame vazio, como se não
     houvesse resultados: o erro ``ORA-20000 ... DRG-10599: a coluna não está
-    indexada``, nas buscas sem filtro de data e em algumas faixas longas, e a
-    busca categorizada, quando há acórdãos de repetitivos no resultado.
+    indexada``, visto em 15/11/2026 nas buscas sem filtro de data e em algumas
+    faixas longas (em 26/11/2026, essas buscas listaram os resultados ou
+    responderam "muitos resultados"), e a busca categorizada, quando há
+    acórdãos de repetitivos no resultado.
 
     O ``cjsg_download`` levanta o erro do banco logo depois da página 1 e
     segue as listas da busca categorizada; o parse levanta os dois, para as
@@ -84,7 +86,7 @@ def _busca_sem_lista(html: str) -> str | None:
     if erro:
         return (
             f"TJMG devolveu um erro de busca: {clean_html(erro.group(1))!r}. "
-            "O portal falha assim sem filtro de data e em algumas faixas longas; "
+            "O portal já falhou assim sem filtro de data e em faixas longas; "
             "informe um filtro de data com uma faixa menor."
         )
     if _CATEGORIZADA_RE.search(html):
