@@ -318,6 +318,16 @@ def test_cjsg_jurisdicoes_fora_do_portal_levanta_validation_error(valor):
         jus.scraper("tjrn").cjsg("dano moral", paginas=1, jurisdicoes=valor)
 
 
+@pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])
+@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
+def test_cjsg_jurisdicoes_com_primeiro_grau_levanta_validation_error(jurisdicoes, metodo):
+    """``"TJ"`` e ``"TR"`` so cobrem o 2o grau: com ``grau="1"`` o portal
+    devolvia 0 resultados sem erro; agora levantam ``ValidationError`` antes
+    de qualquer requisicao (``responses`` sem rota levantaria se houvesse)."""
+    with responses.RequestsMock(), pytest.raises(ValidationError, match="2o grau"):
+        getattr(jus.scraper("tjrn"), metodo)("", paginas=1, jurisdicoes=jurisdicoes, grau="1")
+
+
 @responses.activate
 def test_cjsg_sistema_envia_valor_do_portal(mocker):
     """``sistema`` vai ao payload com o valor do seletor do portal; o sample

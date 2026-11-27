@@ -105,8 +105,8 @@ class TJRNScraper(HTTPScraper):
                 (orgaos do Tribunal de Justica), ``"TR"`` (Turmas Recursais e
                 Turma de Uniformizacao) ou vazio para todas. Outro valor
                 levanta ``ValidationError``. ``"TJ"`` e ``"TR"`` so trazem
-                decisoes de 2o grau: com ``grau="1"`` a busca volta sem
-                resultados (o portal esconde ``"TR"`` quando o grau e ``"1"``).
+                decisoes de 2o grau: com ``grau="1"``, em que o portal nao
+                devolve resultados, levantam ``ValidationError``.
             grau (str): ``"1"`` (primeiro), ``"2"`` (segundo) ou vazio para
                 todos, sempre como texto. Outro valor (inclusive o inteiro
                 ``2``) levanta ``ValidationError``. Decisoes de 1o grau nao tem

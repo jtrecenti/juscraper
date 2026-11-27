@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import ClassVar, Literal
 
+from pydantic import model_validator
+
 from ...schemas import (
     BuscarEm,
     DataJulgamentoMixin,
@@ -63,6 +65,20 @@ class InputCJSGTJRN(SearchBase, DataJulgamentoMixin):
     # Valores dos radios ``radioGrau`` do portal. Outro valor da 0 resultados.
     grau: Grau | None = None
     buscar_em: BuscarEm = "ementa"
+
+    @model_validator(mode="after")
+    def _jurisdicao_so_no_segundo_grau(self) -> InputCJSGTJRN:
+        # "TJ" e "TR" so cobrem o 2o grau: com ``grau="1"`` o portal devolve 0
+        # resultados sem erro, em qualquer periodo e termo (26/11/2026). O
+        # formulario do portal esconde "TR" quando o grau e "1".
+        if self.jurisdicoes and self.grau == "1":
+            raise ValueError(
+                f'jurisdicoes="{self.jurisdicoes}" so cobre decisoes de 2o grau e, '
+                'com grau="1", o portal nao devolve resultados. Para o 1o grau, '
+                'deixe jurisdicoes vazio; para filtrar por jurisdicao, use grau="2" '
+                "ou vazio."
+            )
+        return self
 
 
 class OutputCJSGTJRN(OutputCJSGBase, OutputRelatoriaMixin, OutputDataPublicacaoMixin):
