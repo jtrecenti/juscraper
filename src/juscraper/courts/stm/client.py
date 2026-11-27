@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import pandas as pd
 
@@ -174,7 +174,8 @@ class STMScraper(HTTPScraper):
             avisar_expressao_exata(inp.pesquisa, inp.buscar_em)
         return cjsg_download_manager(
             inp.pesquisa,
-            inp.paginas,
+            # O pipeline ja trocou ``int`` por ``range`` (``normalize_paginas``).
+            cast("range | list[int] | None", inp.paginas),
             request_fn=self._request_with_retry,
             sleep_time=self.sleep_time,
             buscar_em=inp.buscar_em,

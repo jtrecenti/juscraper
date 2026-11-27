@@ -8,10 +8,9 @@ de cada tribunal: o de 120 caracteres é do TJSP.
 """
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import pandas as pd
-from pydantic import BaseModel
 
 from ...core.avisos import avisar
 from ...utils.params import apply_input_pipeline_search, pop_deprecated_alias, validate_intervalo_datas
@@ -61,7 +60,7 @@ def _pop_cjpg_plural_aliases(kwargs: dict) -> None:
 class EsajCjpgScraper(EsajSentencaScraper):
     """Base eSAJ com ``cjpg`` e o PDF da sentença de cada linha dele (``baixar_sentenca``)."""
 
-    INPUT_CJPG: type[BaseModel] = InputCJPGEsaj
+    INPUT_CJPG: type[InputCJPGEsaj] = InputCJPGEsaj
 
     # Alem das arvores de cjsg herdadas de EsajSearchScraper, as de 1o grau
     # (cjpg). Os stems do cjpg sao no SINGULAR (``classeTreeSelect`` etc.),
@@ -280,9 +279,11 @@ class EsajCjpgScraper(EsajSentencaScraper):
                 pesquisa=inp.pesquisa,
                 session=self.session,
                 u_base=self.BASE_URL,
-                classe=inp.classe,
-                assunto=inp.assunto,
-                vara=inp.vara,
+                # ``IdFiltro`` declara a entrada (``int``/``list``); o validador
+                # ja devolveu CSV ou ``None``.
+                classe=cast("str | None", inp.classe),
+                assunto=cast("str | None", inp.assunto),
+                vara=cast("str | None", inp.vara),
                 id_processo=inp.id_processo,
                 data_inicio=win_i,
                 data_fim=win_f,
@@ -361,13 +362,16 @@ class EsajCjpgScraper(EsajSentencaScraper):
             u_base=self.BASE_URL,
             download_path=diretorio or self.download_path,
             sleep_time=self.sleep_time,
-            classe=inp.classe,
-            assunto=inp.assunto,
-            vara=inp.vara,
+            # ``IdFiltro`` e ``paginas`` declaram a entrada (``int``/``list``); o
+            # validador ja devolveu CSV ou ``None``, e o pipeline trocou ``int``
+            # por ``range`` (``normalize_paginas``).
+            classe=cast("str | None", inp.classe),
+            assunto=cast("str | None", inp.assunto),
+            vara=cast("str | None", inp.vara),
             id_processo=inp.id_processo,
             data_inicio=inp.data_julgamento_inicio,
             data_fim=inp.data_julgamento_fim,
-            paginas=inp.paginas,
+            paginas=cast("list[int] | range | None", inp.paginas),
             tribunal=self.tribunal_name,
         )
         return path
