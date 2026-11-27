@@ -13,7 +13,22 @@ from pydantic import BaseModel, ConfigDict
 from ...schemas import DataJulgamentoMixin, OutputCJSGBase, OutputRelatoriaMixin, SearchBase
 
 
-class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
+class _InputCJSGTJTOBase(SearchBase, DataJulgamentoMixin):
+    """Filtros comuns ao ``cjsg`` e ao ``cjpg`` do TJTO.
+
+    Os dois endpoints tem a mesma assinatura; so muda a ``instancia`` que o
+    download manager envia.
+    """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
+
+    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
+    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
+    numero_processo: str | None = None
+    soementa: bool = False
+
+
+class InputCJSGTJTO(_InputCJSGTJTOBase):
     """Accepted input for TJTO ``cjsg`` / ``cjsg_download``.
 
     Wired em :meth:`juscraper.courts.tjto.client.TJTOScraper.cjsg_download`
@@ -29,13 +44,6 @@ class InputCJSGTJTO(SearchBase, DataJulgamentoMixin):
     ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
     :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
     """
-
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
-
-    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
-    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
-    numero_processo: str | None = None
-    soementa: bool = False
 
 
 class _OutputCJSGTJTOBase(OutputCJSGBase, OutputRelatoriaMixin):
@@ -59,7 +67,7 @@ class OutputCJSGTJTO(_OutputCJSGTJTOBase):
     """Output do cjsg (2o grau) do TJTO."""
 
 
-class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
+class InputCJPGTJTO(_InputCJSGTJTOBase):
     """Accepted input for TJTO ``cjpg`` / ``cjpg_download``.
 
     A assinatura de ``cjpg`` e identica a de ``cjsg`` — a unica diferenca
@@ -68,13 +76,6 @@ class InputCJPGTJTO(SearchBase, DataJulgamentoMixin):
     Backend espera ``DD/MM/YYYY`` (convertido por ``to_br_date`` em
     :func:`juscraper.courts.tjto.download.build_cjsg_payload`).
     """
-
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%d/%m/%Y"
-
-    tipo_documento: Literal["acordaos", "decisoes", "sentencas"] = "acordaos"
-    ordenacao: Literal["ASC", "DESC", "RELEV"] = "DESC"
-    numero_processo: str | None = None
-    soementa: bool = False
 
 
 class OutputCJPGTJTO(_OutputCJSGTJTOBase):

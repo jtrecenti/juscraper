@@ -9,7 +9,7 @@ campos bate byte-a-byte com a assinatura publica do metodo.
 from __future__ import annotations
 
 from datetime import date
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -65,25 +65,140 @@ def _coerce_to_int_list(v: Any) -> Any:
     return out
 
 
-class _DatajudCoercaoMixin(BaseModel):
-    # Mixin local (refs #217): centraliza os validators de coercao bidirecional
-    # int<->str em ``assunto`` e ``movimentos_codigo``. Aplicado em ambos
-    # InputListarProcessosDataJud e InputContarProcessosDataJud. Nao promovido
-    # para src/juscraper/schemas/mixins.py — Regra 1 do #84 exige 2+ familias
-    # distintas, e por enquanto so o DataJud precisa.
+class _InputFiltrosDataJud(BaseModel):
+    """Filtros comuns a ``listar_processos`` e ``contar_processos``.
 
-    @field_validator("assunto", mode="before", check_fields=False)
+    Os dois metodos aceitam o mesmo conjunto de filtros e as mesmas regras
+    de validacao; :class:`InputListarProcessosDataJud` acrescenta so os
+    parametros de paginacao. Declarar aqui evita que um filtro novo, ou a
+    correcao de um validator, chegue a um schema e nao ao outro.
+
+    Os validators de coercao ``mode="before"`` aceitam ``int`` em
+    ``assunto`` e ``str`` em ``movimentos_codigo`` (vindos de planilha/CSV)
+    antes da validacao de tipo (refs #217).
+    """
+
+    numero_processo: str | list[str] | None = None
+    tribunal: str | None = None
+    ano_ajuizamento: int | None = None
+    classe: str | None = None
+    assunto: list[str] | None = None
+    data_ajuizamento_inicio: str | None = None
+    data_ajuizamento_fim: str | None = None
+    tipos_movimentacao: list[str] | None = None
+    movimentos_codigo: list[int] | None = None
+    orgao_julgador: str | None = None
+    query: dict[str, Any] | None = None
+
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+
+    @field_validator("assunto", mode="before")
     @classmethod
     def _normalize_assunto(cls, v: Any) -> Any:
         return _coerce_to_str_list(v)
 
-    @field_validator("movimentos_codigo", mode="before", check_fields=False)
+    @field_validator("movimentos_codigo", mode="before")
     @classmethod
     def _normalize_movimentos_codigo(cls, v: Any) -> Any:
         return _coerce_to_int_list(v)
 
+    @model_validator(mode="after")
+    def _validar_datas_e_ano_excluem(self) -> Self:
+        if self.ano_ajuizamento is not None and (
+            self.data_ajuizamento_inicio is not None
+            or self.data_ajuizamento_fim is not None
+        ):
+            raise ValueError(
+                "'ano_ajuizamento' e 'data_ajuizamento_inicio'/'data_ajuizamento_fim' "
+                "sao mutuamente exclusivos. Use apenas um dos dois."
+            )
+        return self
 
-class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
+    @model_validator(mode="after")
+    def _validar_formato_datas(self) -> Self:
+        for campo in ("data_ajuizamento_inicio", "data_ajuizamento_fim"):
+            valor = getattr(self, campo)
+            if valor is None:
+                continue
+            try:
+                date.fromisoformat(valor)
+            except ValueError as exc:
+                raise ValueError(
+                    f"'{campo}' deve estar no formato 'YYYY-MM-DD' (ISO 8601). "
+                    f"Recebido: {valor!r}."
+                ) from exc
+        return self
+
+    @model_validator(mode="after")
+    def _validar_range_datas(self) -> Self:
+        if (
+            self.data_ajuizamento_inicio is not None
+            and self.data_ajuizamento_fim is not None
+        ):
+            inicio = date.fromisoformat(self.data_ajuizamento_inicio)
+            fim = date.fromisoformat(self.data_ajuizamento_fim)
+            if inicio > fim:
+                raise ValueError(
+                    f"'data_ajuizamento_inicio' ({self.data_ajuizamento_inicio}) deve "
+                    f"ser <= 'data_ajuizamento_fim' ({self.data_ajuizamento_fim})."
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_tipos_movimentacao_conhecidos(self) -> Self:
+        if not self.tipos_movimentacao:
+            return self
+        desconhecidos = [
+            t for t in self.tipos_movimentacao  # pylint: disable=not-an-iterable
+            if t not in TIPOS_MOVIMENTACAO
+        ]
+        if desconhecidos:
+            validos = sorted(TIPOS_MOVIMENTACAO.keys())
+            raise ValueError(
+                f"'tipos_movimentacao' contem nomes nao mapeados: {desconhecidos}. "
+                f"Validos: {validos}. Para codigos TPU fora do mapping, use "
+                f"'movimentos_codigo' (lista de inteiros) diretamente."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_exclusiva(self) -> Self:
+        if self.query is None:
+            return self
+        coexistentes = [
+            campo for campo in _FILTROS_AMIGAVEIS if getattr(self, campo) is not None
+        ]
+        if coexistentes:
+            raise ValueError(
+                f"'query' (override total da query Elasticsearch) e mutuamente exclusivo "
+                f"com os filtros amigaveis. Recebidos junto com 'query': {coexistentes}. "
+                f"Use 'query' OU os filtros amigaveis."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_exige_tribunal(self) -> Self:
+        if self.query is not None and self.tribunal is None:
+            raise ValueError(
+                "'query' (override) exige 'tribunal' explicito — nao ha "
+                "'numero_processo' para inferir o alias-indice."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validar_query_dict_nao_vazio(self) -> Self:
+        if self.query is not None and not self.query:
+            raise ValueError(
+                "'query' deve ser um dict nao-vazio com a query Elasticsearch (ex.: "
+                "{'bool': {'must_not': [...]}}). Para 'sem filtro', omita o parametro."
+            )
+        return self
+
+
+class InputListarProcessosDataJud(_InputFiltrosDataJud, PaginasMixin):
     """Accepted input for :meth:`DatajudScraper.listar_processos`.
 
     A API do DataJud e baseada em Elasticsearch. A escolha do alias-indice
@@ -114,17 +229,6 @@ class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     https://datajud-wiki.cnj.jus.br/api-publica/.
     """
 
-    numero_processo: str | list[str] | None = None
-    tribunal: str | None = None
-    ano_ajuizamento: int | None = None
-    classe: str | None = None
-    assunto: list[str] | None = None
-    data_ajuizamento_inicio: str | None = None
-    data_ajuizamento_fim: str | None = None
-    tipos_movimentacao: list[str] | None = None
-    movimentos_codigo: list[int] | None = None
-    orgao_julgador: str | None = None
-    query: dict[str, Any] | None = None
     mostrar_movs: bool = False
     # Limites do parametro ``size`` da API publica do DataJud
     # (datajud-wiki.cnj.jus.br/api-publica/exemplos/exemplo3/): a doc
@@ -136,105 +240,8 @@ class InputListarProcessosDataJud(_DatajudCoercaoMixin, PaginasMixin):
     # ``size // 4`` (minimo ``FALLBACK_MIN_SIZE``).
     tamanho_pagina: TamanhoPagina = Field(default=5000, ge=10, le=10000)
 
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
 
-    @model_validator(mode="after")
-    def _validar_datas_e_ano_excluem(self) -> "InputListarProcessosDataJud":
-        if self.ano_ajuizamento is not None and (
-            self.data_ajuizamento_inicio is not None
-            or self.data_ajuizamento_fim is not None
-        ):
-            raise ValueError(
-                "'ano_ajuizamento' e 'data_ajuizamento_inicio'/'data_ajuizamento_fim' "
-                "sao mutuamente exclusivos. Use apenas um dos dois."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_formato_datas(self) -> "InputListarProcessosDataJud":
-        for campo in ("data_ajuizamento_inicio", "data_ajuizamento_fim"):
-            valor = getattr(self, campo)
-            if valor is None:
-                continue
-            try:
-                date.fromisoformat(valor)
-            except ValueError as exc:
-                raise ValueError(
-                    f"'{campo}' deve estar no formato 'YYYY-MM-DD' (ISO 8601). "
-                    f"Recebido: {valor!r}."
-                ) from exc
-        return self
-
-    @model_validator(mode="after")
-    def _validar_range_datas(self) -> "InputListarProcessosDataJud":
-        if (
-            self.data_ajuizamento_inicio is not None
-            and self.data_ajuizamento_fim is not None
-        ):
-            inicio = date.fromisoformat(self.data_ajuizamento_inicio)
-            fim = date.fromisoformat(self.data_ajuizamento_fim)
-            if inicio > fim:
-                raise ValueError(
-                    f"'data_ajuizamento_inicio' ({self.data_ajuizamento_inicio}) deve "
-                    f"ser <= 'data_ajuizamento_fim' ({self.data_ajuizamento_fim})."
-                )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_tipos_movimentacao_conhecidos(self) -> "InputListarProcessosDataJud":
-        if not self.tipos_movimentacao:
-            return self
-        desconhecidos = [
-            t for t in self.tipos_movimentacao  # pylint: disable=not-an-iterable
-            if t not in TIPOS_MOVIMENTACAO
-        ]
-        if desconhecidos:
-            validos = sorted(TIPOS_MOVIMENTACAO.keys())
-            raise ValueError(
-                f"'tipos_movimentacao' contem nomes nao mapeados: {desconhecidos}. "
-                f"Validos: {validos}. Para codigos TPU fora do mapping, use "
-                f"'movimentos_codigo' (lista de inteiros) diretamente."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_exclusiva(self) -> "InputListarProcessosDataJud":
-        if self.query is None:
-            return self
-        coexistentes = [
-            campo for campo in _FILTROS_AMIGAVEIS if getattr(self, campo) is not None
-        ]
-        if coexistentes:
-            raise ValueError(
-                f"'query' (override total da query Elasticsearch) e mutuamente exclusivo "
-                f"com os filtros amigaveis. Recebidos junto com 'query': {coexistentes}. "
-                f"Use 'query' OU os filtros amigaveis."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_exige_tribunal(self) -> "InputListarProcessosDataJud":
-        if self.query is not None and self.tribunal is None:
-            raise ValueError(
-                "'query' (override) exige 'tribunal' explicito — nao ha "
-                "'numero_processo' para inferir o alias-indice."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_dict_nao_vazio(self) -> "InputListarProcessosDataJud":
-        if self.query is not None and not self.query:
-            raise ValueError(
-                "'query' deve ser um dict nao-vazio com a query Elasticsearch (ex.: "
-                "{'bool': {'must_not': [...]}}). Para 'sem filtro', omita o parametro."
-            )
-        return self
-
-
-class InputContarProcessosDataJud(_DatajudCoercaoMixin):
+class InputContarProcessosDataJud(_InputFiltrosDataJud):
     """Accepted input for :meth:`DatajudScraper.contar_processos`.
 
     Conta processos sem baixar nenhum documento — usado em analise de
@@ -248,121 +255,13 @@ class InputContarProcessosDataJud(_DatajudCoercaoMixin):
     ``listar_processos``: por ``tribunal`` (sigla) ou inferido do
     ``numero_processo`` (CNJ); ambos ausentes -> ``ValueError``.
 
-    Conjunto de filtros bate com :class:`InputListarProcessosDataJud`
-    (incluindo ``data_ajuizamento_*``, ``tipos_movimentacao``,
-    ``movimentos_codigo``, ``orgao_julgador`` e o escape-hatch ``query``).
-    Ver docstring la para detalhes semanticos e regras de mutual
-    exclusivity.
+    Filtros e validacoes vem de :class:`_InputFiltrosDataJud`, os mesmos
+    de :class:`InputListarProcessosDataJud` (incluindo
+    ``data_ajuizamento_*``, ``tipos_movimentacao``, ``movimentos_codigo``,
+    ``orgao_julgador`` e o escape-hatch ``query``). Ver a docstring de
+    :class:`InputListarProcessosDataJud` para a semantica e as regras de
+    exclusao mutua.
     """
-
-    numero_processo: str | list[str] | None = None
-    tribunal: str | None = None
-    ano_ajuizamento: int | None = None
-    classe: str | None = None
-    assunto: list[str] | None = None
-    data_ajuizamento_inicio: str | None = None
-    data_ajuizamento_fim: str | None = None
-    tipos_movimentacao: list[str] | None = None
-    movimentos_codigo: list[int] | None = None
-    orgao_julgador: str | None = None
-    query: dict[str, Any] | None = None
-
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True,
-    )
-
-    @model_validator(mode="after")
-    def _validar_datas_e_ano_excluem(self) -> "InputContarProcessosDataJud":
-        if self.ano_ajuizamento is not None and (
-            self.data_ajuizamento_inicio is not None
-            or self.data_ajuizamento_fim is not None
-        ):
-            raise ValueError(
-                "'ano_ajuizamento' e 'data_ajuizamento_inicio'/'data_ajuizamento_fim' "
-                "sao mutuamente exclusivos. Use apenas um dos dois."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_formato_datas(self) -> "InputContarProcessosDataJud":
-        for campo in ("data_ajuizamento_inicio", "data_ajuizamento_fim"):
-            valor = getattr(self, campo)
-            if valor is None:
-                continue
-            try:
-                date.fromisoformat(valor)
-            except ValueError as exc:
-                raise ValueError(
-                    f"'{campo}' deve estar no formato 'YYYY-MM-DD' (ISO 8601). "
-                    f"Recebido: {valor!r}."
-                ) from exc
-        return self
-
-    @model_validator(mode="after")
-    def _validar_range_datas(self) -> "InputContarProcessosDataJud":
-        if (
-            self.data_ajuizamento_inicio is not None
-            and self.data_ajuizamento_fim is not None
-        ):
-            inicio = date.fromisoformat(self.data_ajuizamento_inicio)
-            fim = date.fromisoformat(self.data_ajuizamento_fim)
-            if inicio > fim:
-                raise ValueError(
-                    f"'data_ajuizamento_inicio' ({self.data_ajuizamento_inicio}) deve "
-                    f"ser <= 'data_ajuizamento_fim' ({self.data_ajuizamento_fim})."
-                )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_tipos_movimentacao_conhecidos(self) -> "InputContarProcessosDataJud":
-        if not self.tipos_movimentacao:
-            return self
-        desconhecidos = [
-            t for t in self.tipos_movimentacao  # pylint: disable=not-an-iterable
-            if t not in TIPOS_MOVIMENTACAO
-        ]
-        if desconhecidos:
-            validos = sorted(TIPOS_MOVIMENTACAO.keys())
-            raise ValueError(
-                f"'tipos_movimentacao' contem nomes nao mapeados: {desconhecidos}. "
-                f"Validos: {validos}. Para codigos TPU fora do mapping, use "
-                f"'movimentos_codigo' (lista de inteiros) diretamente."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_exclusiva(self) -> "InputContarProcessosDataJud":
-        if self.query is None:
-            return self
-        coexistentes = [
-            campo for campo in _FILTROS_AMIGAVEIS if getattr(self, campo) is not None
-        ]
-        if coexistentes:
-            raise ValueError(
-                f"'query' (override total da query Elasticsearch) e mutuamente exclusivo "
-                f"com os filtros amigaveis. Recebidos junto com 'query': {coexistentes}. "
-                f"Use 'query' OU os filtros amigaveis."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_exige_tribunal(self) -> "InputContarProcessosDataJud":
-        if self.query is not None and self.tribunal is None:
-            raise ValueError(
-                "'query' (override) exige 'tribunal' explicito — nao ha "
-                "'numero_processo' para inferir o alias-indice."
-            )
-        return self
-
-    @model_validator(mode="after")
-    def _validar_query_dict_nao_vazio(self) -> "InputContarProcessosDataJud":
-        if self.query is not None and not self.query:
-            raise ValueError(
-                "'query' deve ser um dict nao-vazio com a query Elasticsearch (ex.: "
-                "{'bool': {'must_not': [...]}}). Para 'sem filtro', omita o parametro."
-            )
-        return self
 
 
 class OutputListarProcessosDataJud(BaseModel):

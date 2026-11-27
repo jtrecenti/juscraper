@@ -63,7 +63,26 @@ OrdenacaoCJSG = Literal[
 OrdenacaoCJPG = Literal["dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"]
 
 
-class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
+class _InputCJSGTJESBase(SearchBase, DataJulgamentoMixin):
+    """Filtros comuns ao ``cjsg`` e ao ``cjpg`` do TJES.
+
+    Os dois endpoints usam o mesmo backend Solr e aceitam os mesmos filtros;
+    :class:`InputCJSGTJES` acrescenta ``core``, e cada schema declara as
+    ``ordenacao`` do seu core.
+    """
+
+    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
+
+    busca_exata: bool = False
+    relator: str | None = None
+    orgao_julgador: str | None = None
+    classe: str | None = None
+    jurisdicao: str | None = None
+    assunto: str | None = None
+    tamanho_pagina: TamanhoPagina = 20
+
+
+class InputCJSGTJES(_InputCJSGTJESBase):
     """Accepted input for TJES ``cjsg`` / ``cjsg_download``.
 
     Endpoint Elasticsearch (Solr) DSL. ``pesquisa`` aceita os aliases
@@ -89,17 +108,8 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
     relevancia.
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
-
     core: CoreCJSG = "pje2g"
-    busca_exata: bool = False
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe: str | None = None
-    jurisdicao: str | None = None
-    assunto: str | None = None
     ordenacao: OrdenacaoCJSG | None = None
-    tamanho_pagina: TamanhoPagina = 20
 
     @model_validator(mode="after")
     def _ordenacao_do_core(self) -> InputCJSGTJES:
@@ -145,27 +155,18 @@ class OutputCJSGTJES(_OutputCJSGTJESBase, OutputDataPublicacaoMixin):
     """
 
 
-class InputCJPGTJES(SearchBase, DataJulgamentoMixin):
+class InputCJPGTJES(_InputCJSGTJESBase):
     """Accepted input for TJES ``cjpg`` / ``cjpg_download``.
 
     Endpoint Elasticsearch (Solr) de primeiro grau — sempre usa o core
-    ``pje1g``, por isso o campo ``core`` nao existe aqui. Aceita os mesmos
-    filtros de :class:`InputCJSGTJES` (exceto ``core``) como kwargs.
+    ``pje1g``, por isso o campo ``core`` nao existe aqui. Os filtros vem de
+    :class:`_InputCJSGTJESBase`, os mesmos de :class:`InputCJSGTJES`.
     Apenas filtro de ``data_julgamento_*`` — mesmo motivo de
     :class:`InputCJSGTJES`.
     """
 
-    BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
-
-    busca_exata: bool = False
-    relator: str | None = None
-    orgao_julgador: str | None = None
-    classe: str | None = None
-    jurisdicao: str | None = None
-    assunto: str | None = None
     # Opcoes do core ``pje1g`` (ver ORDENACOES_POR_CORE).
     ordenacao: OrdenacaoCJPG | None = None
-    tamanho_pagina: TamanhoPagina = 20
 
 
 class OutputCJPGTJES(_OutputCJSGTJESBase):
