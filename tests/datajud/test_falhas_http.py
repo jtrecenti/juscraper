@@ -9,7 +9,6 @@ com espera pelo perfil ``"busca"``, e a falha que sobra chega ao
 from __future__ import annotations
 
 import functools
-import json
 import logging
 from typing import Any
 
@@ -22,6 +21,7 @@ from juscraper.aggregators.datajud.client import DatajudScraper
 from juscraper.aggregators.datajud.download import call_datajud_api
 from juscraper.core import http as core_http
 from juscraper.core.exceptions import ColetaParcialError, RetryExhaustedError
+from tests._helpers import corpo_json_enviado
 
 URL_TJAC = f"{DatajudScraper.BASE_API_URL}/api_publica_tjac/_search"
 CORPO_429 = {
@@ -153,7 +153,7 @@ def test_fallback_de_504_tambem_repete_429():
     with pytest.warns(UserWarning, match="Refazendo com ``size=100``"):
         assert _buscar(payload) == _pagina(1)
 
-    assert [json.loads(chamada.request.body)["size"] for chamada in responses.calls] == [400, 100, 100]
+    assert [corpo_json_enviado(chamada.request)["size"] for chamada in responses.calls] == [400, 100, 100]
 
 
 @responses.activate

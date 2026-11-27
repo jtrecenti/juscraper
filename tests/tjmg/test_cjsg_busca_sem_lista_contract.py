@@ -28,7 +28,7 @@ from juscraper.core.base import _texto_ausente_como_none
 from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
 from juscraper.courts.tjmg import TJMGScraper
 from juscraper.courts.tjmg.parse import TJMGBuscaSemListaError, cjsg_parse
-from tests._helpers import load_sample, load_sample_bytes, query_param_subset_matcher
+from tests._helpers import load_sample, load_sample_bytes, query_param_subset_matcher, urls_enviadas
 from tests.tjmg._helpers import SEARCH_URL, add_captcha, add_dwr, add_form
 
 _DATAS = {"data_julgamento_inicio": "01/01/2025", "data_julgamento_fim": "31/12/2025"}
@@ -57,7 +57,7 @@ def _add_sessao() -> None:
 
 
 def _consultas_da_busca() -> list[dict[str, list[str]]]:
-    return [parse_qs(urlsplit(c.request.url).query) for c in responses.calls if c.request.url.startswith(SEARCH_URL)]
+    return [parse_qs(urlsplit(url).query) for url in urls_enviadas() if url.startswith(SEARCH_URL)]
 
 
 @pytest.mark.parametrize("metodo", ["cjsg", "cjsg_download"])

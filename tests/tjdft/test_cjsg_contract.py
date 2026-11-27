@@ -9,7 +9,7 @@ from responses.matchers import json_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjdft.schemas import OutputCJSGTJDFT
-from tests._helpers import load_sample
+from tests._helpers import corpo_json_enviado, load_sample
 from tests.fixtures.capture.tjdft import DATA_PUBLICACAO_COM_MONOCRATICAS
 
 BASE = "https://jurisdf.tjdft.jus.br/api/v1/pesquisa"
@@ -179,7 +179,7 @@ def test_cjsg_paginas_none_busca_todas_as_paginas(mocker):
 
     df = jus.scraper("tjdft").cjsg("enfiteuse", paginas=None)
 
-    assert [json.loads(call.request.body)["pagina"] for call in responses.calls] == [0, 1]
+    assert [corpo_json_enviado(call.request)["pagina"] for call in responses.calls] == [0, 1]
     assert len(df) == 13
     assert df["processo"].is_unique
     assert set(df.columns) >= CJSG_MIN_COLUMNS

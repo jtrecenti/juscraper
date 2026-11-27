@@ -19,7 +19,7 @@ import responses
 from responses.matchers import query_param_matcher
 
 import juscraper as jus
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes, params_enviados, url_enviada
 
 ESAJ = "https://esaj.tjsp.jus.br"
 
@@ -146,7 +146,7 @@ def test_cpopg_html_todo_cnj_pedido_sai_em_basicos_com_motivo_falha(tmp_path, mo
     assert basicos.iloc[0]["classe"] is not None
     assert basicos.iloc[1:].drop(columns=["id_processo", "motivo_falha"]).isna().all().all()
     assert set(result["partes"]["file_path"]) == {basicos.iloc[0]["file_path"]}
-    buscas = [c.request.params["dadosConsulta.valorConsultaNuUnificado"] for c in responses.calls]
+    buscas = [params_enviados(c.request)["dadosConsulta.valorConsultaNuUnificado"] for c in responses.calls]
     assert buscas.count(CNJ_INEXISTENTE) == 1
     assert buscas.count(CNJ_SEM_CONEXAO) == 5
 
@@ -247,7 +247,7 @@ def _registrar_pagina_movimentacoes(pagina, cursor=None, body=None):
 
 
 def _chamadas(rota):
-    return [chamada.request for chamada in responses.calls if chamada.request.url.split("?")[0].endswith(rota)]
+    return [chamada.request for chamada in responses.calls if url_enviada(chamada.request).split("?")[0].endswith(rota)]
 
 
 @responses.activate

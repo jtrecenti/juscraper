@@ -10,7 +10,7 @@ from responses.matchers import urlencoded_params_matcher
 
 import juscraper as jus
 from juscraper.courts.tjto.download import BASE_URL, build_cjsg_payload
-from tests._helpers import load_sample
+from tests._helpers import corpo_enviado, load_sample
 
 CJPG_FIELDS = {
     "processo", "uuid", "classe", "tipo_julgamento", "assunto",
@@ -81,5 +81,5 @@ def test_cjpg_uses_instancia_1(mocker):
 
     jus.scraper("tjto").cjpg('"dano moral"', paginas=1)
 
-    body = responses.calls[0].request.body or ""
+    body = corpo_enviado(responses.calls[0].request)
     assert "tip_criterio_inst=1" in body

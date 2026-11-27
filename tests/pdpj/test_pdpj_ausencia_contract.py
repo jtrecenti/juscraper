@@ -21,7 +21,7 @@ import juscraper as jus
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.core.exceptions import RetryExhaustedError
 from juscraper.core.failures import MOTIVOS_FALHA
-from tests._helpers import load_sample
+from tests._helpers import load_sample, url_enviada, urls_enviadas
 
 FAKE_TOKEN = (
     "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0."
@@ -51,7 +51,7 @@ def _mock(url: str, status: int = 200, body: str = "") -> None:
 
 
 def _chamadas(url: str) -> int:
-    return sum(1 for call in responses.calls if call.request.url.split("?")[0] == url)
+    return sum(enviada.split("?")[0] == url for enviada in urls_enviadas())
 
 
 def _pagina_1() -> None:
@@ -77,7 +77,7 @@ def test_pesquisa_404_depois_da_ultima_pagina_encerra_a_coleta():
 
     assert len(df) == 1
     assert _chamadas(PESQUISA) == 2
-    assert "searchAfter" in responses.calls[1].request.url
+    assert "searchAfter" in url_enviada(responses.calls[1].request)
 
 
 @responses.activate
@@ -132,7 +132,7 @@ def test_500_com_pesquisa_404_para_na_primeira_tentativa(metodo, esperas_do_back
 
     assert _chamadas(endpoint) == 1
     assert _chamadas(PESQUISA) == 1
-    assert f"numeroProcesso={OUTRO}" in responses.calls[1].request.url
+    assert f"numeroProcesso={OUTRO}" in url_enviada(responses.calls[1].request)
     assert df["motivo_falha"].tolist() == ["nao_encontrado"]
     esperas_do_backoff.assert_not_called()
 

@@ -17,7 +17,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.courts._esaj.acordao import parse_cursor
-from tests._helpers import load_sample, load_sample_bytes
+from tests._helpers import load_sample, load_sample_bytes, timeout_enviado, url_enviada, urls_enviadas
 
 ESAJ = "https://esaj.tjsp.jus.br"
 
@@ -301,10 +301,10 @@ def test_todo_pedido_do_cposg_tem_timeout(tmp_path, mocker):
 
     jus.scraper("tjsp", download_path=str(tmp_path)).cposg_download([CNJ, cnj_listagem, cnj_incidentes])
 
-    rotas = [c.request.url.split("?")[0].rsplit("/", 1)[-1] for c in responses.calls]
+    rotas = [url.split("?")[0].rsplit("/", 1)[-1] for url in urls_enviadas()]
     assert set(rotas) == {"open.do", "search.do", "show.do", "carregarMovimentacoesAjax.do"}
     assert rotas.count("show.do") == 2
-    sem_timeout = [c.request.url for c in responses.calls if c.request.req_kwargs.get("timeout") is None]
+    sem_timeout = [url_enviada(c.request) for c in responses.calls if timeout_enviado(c.request) is None]
     assert sem_timeout == []
 
 
