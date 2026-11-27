@@ -7,7 +7,6 @@ the original field name (``id_classe_judicial``) — that is an internal
 detail of the PJe API and not exposed in the public signature.
 """
 import json
-import typing
 
 import pandas as pd
 import pytest
@@ -16,9 +15,7 @@ from pydantic import ValidationError
 from responses.matchers import json_params_matcher
 
 import juscraper as jus
-from juscraper.courts.tjrn.client import TJRNScraper
 from juscraper.courts.tjrn.download import BASE_URL, build_cjsg_payload
-from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from tests._helpers import assert_unknown_kwarg_raises, load_sample
 
 
@@ -589,21 +586,3 @@ def test_cjsg_data_julgamento_aceita_formato_brasileiro(mocker):
     )
 
     assert isinstance(df, pd.DataFrame)
-
-
-_CAMPOS_LITERAL = [
-    nome
-    for nome, campo in InputCJSGTJRN.model_fields.items()
-    if any(typing.get_origin(arg) is typing.Literal for arg in (campo.annotation, *typing.get_args(campo.annotation)))
-]
-
-
-@pytest.mark.parametrize("metodo", [TJRNScraper.cjsg, TJRNScraper.cjsg_download], ids=["cjsg", "cjsg_download"])
-@pytest.mark.parametrize("campo", _CAMPOS_LITERAL)
-def test_cjsg_assinatura_anota_o_dominio_do_schema(metodo, campo):
-    """Filtro com valores fixos no schema tem a mesma anotacao na assinatura.
-
-    Sem isso, o editor aceita ``sistema="pje"`` ou ``grau=2``, que so falham
-    com ``ValidationError`` em tempo de execucao.
-    """
-    assert typing.get_type_hints(metodo)[campo] == InputCJSGTJRN.model_fields[campo].annotation

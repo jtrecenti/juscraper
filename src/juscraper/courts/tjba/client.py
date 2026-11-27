@@ -13,7 +13,7 @@ from juscraper.utils.params import apply_input_pipeline_search, pop_deprecated_a
 
 from .download import cjsg_download
 from .parse import cjsg_parse
-from .schemas import InputCJSGTJBA
+from .schemas import InputCJSGTJBA, OrdenadoPor
 
 
 class TJBAScraper(HTTPScraper):
@@ -50,7 +50,7 @@ class TJBAScraper(HTTPScraper):
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
-        ordenado_por: str = "dataPublicacao",
+        ordenado_por: OrdenadoPor = "dataPublicacao",
         tamanho_pagina: int = 10,
         auto_chunk: bool = True,
         **kwargs,
@@ -200,7 +200,7 @@ class TJBAScraper(HTTPScraper):
         turmas_recursais: bool = True,
         tipo_acordaos: bool = True,
         tipo_decisoes_monocraticas: bool = True,
-        ordenado_por: str = "dataPublicacao",
+        ordenado_por: OrdenadoPor = "dataPublicacao",
         tamanho_pagina: int = 10,
         auto_chunk: bool = True,
         **kwargs,

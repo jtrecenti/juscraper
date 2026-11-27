@@ -1,7 +1,7 @@
 """Scraper for the Tribunal de Justica do Amapa (TJAP)."""
 
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
@@ -11,7 +11,10 @@ from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecat
 
 from .download import cjsg_download_manager
 from .parse import cjsg_parse_manager
-from .schemas import InputCJSGTJAP
+from .schemas import InputCJSGTJAP, Orgao, Votacao
+
+# Mais ``"Unanime"``, valor deprecado que ``cjsg_download`` troca por ``"Unânime"``.
+VotacaoAceita = Votacao | Literal["Unanime"]
 
 
 class TJAPScraper(HTTPScraper):
@@ -42,7 +45,7 @@ class TJAPScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        orgao: str = "0",
+        orgao: Orgao = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
@@ -50,7 +53,7 @@ class TJAPScraper(HTTPScraper):
         relator: str | None = None,
         secretaria: str | None = None,
         classe: str | None = None,
-        votacao: str = "0",
+        votacao: VotacaoAceita = "0",
         origem: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -119,7 +122,7 @@ class TJAPScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        orgao: str = "0",
+        orgao: Orgao = "0",
         numero_processo: str | None = None,
         numero_acordao: str | None = None,
         numero_ano: str | None = None,
@@ -127,7 +130,7 @@ class TJAPScraper(HTTPScraper):
         relator: str | None = None,
         secretaria: str | None = None,
         classe: str | None = None,
-        votacao: str = "0",
+        votacao: VotacaoAceita = "0",
         origem: str | None = None,
         **kwargs,
     ) -> list:

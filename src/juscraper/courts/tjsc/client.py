@@ -1,10 +1,11 @@
 """Scraper for the Tribunal de Justica de Santa Catarina (TJSC)."""
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import pandas as pd
 
 from juscraper.core.http import HTTPScraper, RequestPolicy
+from juscraper.schemas import BuscarEm
 from juscraper.utils.deprecacao import resolve_buscar_em
 from juscraper.utils.params import apply_input_pipeline_search
 
@@ -14,6 +15,8 @@ from .schemas import InputCJSGTJSC
 
 #: Valores do alias deprecado ``campo`` -> ``buscar_em``.
 _CAMPO_PARA_BUSCAR_EM = {campo: buscar_em for buscar_em, campo in RDO_CAMPO.items()}
+#: ``buscar_em`` mais os valores de ``campo`` (convertidos, com aviso) e ``None`` (default do schema).
+BuscarEmAceito = BuscarEm | Literal["E", "I"] | None
 
 
 class TJSCScraper(HTTPScraper):
@@ -56,7 +59,7 @@ class TJSCScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        buscar_em: str | None = None,
+        buscar_em: BuscarEmAceito = None,
         processo: str | None = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -126,7 +129,7 @@ class TJSCScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        buscar_em: str | None = None,
+        buscar_em: BuscarEmAceito = None,
         processo: str | None = None,
         **kwargs,
     ) -> list:

@@ -11,7 +11,7 @@ from juscraper.utils.params import apply_input_pipeline_search, resolve_deprecat
 
 from .download import CJPG_CORE, CJSG_CORES, DEFAULT_CORE, DEFAULT_PER_PAGE, cjsg_download
 from .parse import cjsg_parse
-from .schemas import InputCJPGTJES, InputCJSGTJES
+from .schemas import CoreCJSG, InputCJPGTJES, InputCJSGTJES, OrdenacaoCJSG
 
 
 class TJESScraper(HTTPScraper):
@@ -38,14 +38,14 @@ class TJESScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        core: str = DEFAULT_CORE,
+        core: CoreCJSG = DEFAULT_CORE,
         busca_exata: bool = False,
         relator: str | None = None,
         orgao_julgador: str | None = None,
         classe: str | None = None,
         jurisdicao: str | None = None,
         assunto: str | None = None,
-        ordenacao: str | None = None,
+        ordenacao: OrdenacaoCJSG | None = None,
         tamanho_pagina: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: str | date | None = None,
         data_julgamento_fim: str | date | None = None,
@@ -170,14 +170,14 @@ class TJESScraper(HTTPScraper):
         self,
         pesquisa: str | None = None,
         paginas: int | list | range | None = None,
-        core: str = DEFAULT_CORE,
+        core: CoreCJSG = DEFAULT_CORE,
         busca_exata: bool = False,
         relator: str | None = None,
         orgao_julgador: str | None = None,
         classe: str | None = None,
         jurisdicao: str | None = None,
         assunto: str | None = None,
-        ordenacao: str | None = None,
+        ordenacao: OrdenacaoCJSG | None = None,
         tamanho_pagina: int = DEFAULT_PER_PAGE,
         data_julgamento_inicio: str | date | None = None,
         data_julgamento_fim: str | date | None = None,

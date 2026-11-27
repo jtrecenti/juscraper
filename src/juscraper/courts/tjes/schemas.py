@@ -45,6 +45,7 @@ ORDENACOES_POR_CORE: dict[str, tuple[str, ...]] = {
     ),
 }
 
+CoreCJSG = Literal["pje2g", "pje2g_mono", "legado", "turma_recursal_legado"]
 OrdenacaoCJSG = Literal[
     "dt_juntada desc",
     "dt_juntada asc",
@@ -90,7 +91,7 @@ class InputCJSGTJES(SearchBase, DataJulgamentoMixin):
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%Y-%m-%d"
 
-    core: Literal["pje2g", "pje2g_mono", "legado", "turma_recursal_legado"] = "pje2g"
+    core: CoreCJSG = "pje2g"
     busca_exata: bool = False
     relator: str | None = None
     orgao_julgador: str | None = None
