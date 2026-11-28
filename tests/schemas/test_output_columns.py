@@ -16,7 +16,9 @@ passam por duas conferências:
 
 1. Nenhuma coluna tem nome de :data:`DEPRECATED_SYNONYMS` (todos os endpoints).
 2. Toda coluna está declarada no ``Output*`` do endpoint, ou em
-   :data:`AUXILIARES_NAO_DECLARADAS` com motivo. Os endpoints de
+   :data:`AUXILIARES_NAO_DECLARADAS` com motivo. Coluna com ``_`` inicial
+   (``_raw``, ``_version_``) fica de fora: o pydantic nao aceita campo assim, e
+   ela so guarda o item bruto do backend. Os endpoints de
    :data:`SO_NOMES_DEPRECADOS`, que repassam o JSON do backend, ficam só com a
    conferência 1: lá ``extra="allow"`` é o contrato e declarar cada chave da API
    não traria garantia.
@@ -54,7 +56,13 @@ from juscraper.aggregators.comunica_cnj.parse import parse_items
 from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 from juscraper.aggregators.falcao.parse import parse_documentos
 from juscraper.aggregators.jusbr.parse import parse_process_details_response
-from juscraper.aggregators.pdpj.parse import build_processo_row, parse_pesquisa_response
+from juscraper.aggregators.pdpj.parse import (
+    build_documento_rows,
+    build_movimento_rows,
+    build_parte_rows,
+    build_processo_row,
+    parse_pesquisa_response,
+)
 from juscraper.courts.stf.parse import parse_contagem, parse_decisoes
 from tests.schemas._registro import OUTPUT_SCHEMAS, resolve
 from tests.schemas.test_canonical_types import DEPRECATED_SYNONYMS
@@ -311,6 +319,9 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         ignorar={"processo_nao_encontrado.json": "lista vazia; a linha de 'Nao encontrado' sai do client"},
     ),
     ("pdpj", "pesquisa"): Leitura(_json_solto, _linhas_pesquisa_pdpj, sufixos=(".json",)),
+    ("pdpj", "documentos"): Leitura(_detalhes_jusbr, build_documento_rows, sufixos=(".json",)),
+    ("pdpj", "movimentos"): Leitura(_detalhes_jusbr, build_movimento_rows, sufixos=(".json",)),
+    ("pdpj", "partes"): Leitura(_detalhes_jusbr, build_parte_rows, sufixos=(".json",)),
 }
 
 # Endpoints sem sample que o parser leia sozinho. Motivo obrigatório.
@@ -325,6 +336,7 @@ SEM_LEITURA: dict[tuple[str, str], str] = {
     ),
     ("jusbr", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
     ("pdpj", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
+    ("pdpj", "existe"): "a linha sai do client com o booleano da resposta, sem parser; colunas fixas em pdpj/client.py",
     ("datajud", "contar_processos"): (
         "a linha da contagem sai do client a partir de hits.total, sem parser; colunas fixas "
         "em datajud/client.py, conferidas por test_output_parity"
@@ -361,11 +373,7 @@ _COLUNAS_CODIGO_TJRS = (
 AUXILIARES_NAO_DECLARADAS: dict[tuple[str, str], dict[str, str]] = {
     ("tjes", "cjsg"): dict.fromkeys(_COLUNAS_CODIGO_TJES, _CODIGOS_TJES),
     ("tjes", "cjpg"): dict.fromkeys(_COLUNAS_CODIGO_TJES, _CODIGOS_TJES),
-    ("pdpj", "pesquisa"): {"_raw": "item completo da resposta; o pydantic não aceita campo com _ inicial"},
-    ("tjrs", "cjsg"): {
-        "_version_": "versão do documento no Solr; o pydantic não aceita campo com _ inicial",
-        **dict.fromkeys(_COLUNAS_CODIGO_TJRS, _CODIGOS_TJRS),
-    },
+    ("tjrs", "cjsg"): dict.fromkeys(_COLUNAS_CODIGO_TJRS, _CODIGOS_TJRS),
 }
 
 # Sinônimo deprecado ainda entregue: o PR que o renomeia ou o motivo de a
@@ -458,13 +466,17 @@ def test_colunas_entregues_sem_nome_deprecado(tribunal, endpoint):
 
 
 def _nao_declaradas(tribunal: str, endpoint: str) -> list[str]:
-    """Colunas entregues fora do Output, de AUXILIARES_NAO_DECLARADAS e de SINONIMOS_TOLERADOS."""
+    """Colunas entregues fora do Output, de AUXILIARES_NAO_DECLARADAS e de SINONIMOS_TOLERADOS.
+
+    Coluna com ``_`` inicial nao conta: o pydantic nao aceita campo assim.
+    """
     declaradas = set(resolve(*OUTPUT_SCHEMAS[(tribunal, endpoint)]).model_fields)
     auxiliares = AUXILIARES_NAO_DECLARADAS.get((tribunal, endpoint), {})
     return [
         coluna
         for coluna in sorted(colunas_entregues(tribunal, endpoint))
-        if coluna not in declaradas
+        if not coluna.startswith("_")
+        and coluna not in declaradas
         and coluna not in auxiliares
         and (tribunal, endpoint, coluna) not in SINONIMOS_TOLERADOS
     ]

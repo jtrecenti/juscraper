@@ -11,7 +11,7 @@ from juscraper.core.http import HTTPScraper, RequestPolicy
 from juscraper.core.parse_utils import coerce_date_columns
 from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.deprecacao import buscar_em_de_inteiro_teor, resolve_buscar_em
-from juscraper.utils.params import SEARCH_ALIASES
+from juscraper.utils.params import SEARCH_ALIASES, normalize_paginas
 
 from ._collection import FILTERS, Collection
 from ._input import search_input
@@ -193,9 +193,10 @@ class STFScraper(HTTPScraper):
             dos filtros aceitos.
         """
         resolve_buscar_em(kwargs, "inteiro_teor", valores=buscar_em_de_inteiro_teor)
+        kwargs["paginas"] = normalize_paginas(paginas)
         inp = search_input(
             InputListarDecisoesSTF, "STFScraper.listar_decisoes()",
-            _pesquisa_ou_tudo(pesquisa, kwargs), paginas, kwargs,
+            _pesquisa_ou_tudo(pesquisa, kwargs), kwargs,
         )
         df = Collection(self._buscar, self.sleep_time, inp).run()
         coerce_date_columns(df, ["data_julgamento", "data_publicacao"])
@@ -251,7 +252,7 @@ class STFScraper(HTTPScraper):
         resolve_buscar_em(kwargs, "inteiro_teor", valores=buscar_em_de_inteiro_teor)
         inp = search_input(
             InputContarDecisoesSTF, "STFScraper.contar_decisoes()",
-            _pesquisa_ou_tudo(pesquisa, kwargs), None, kwargs,
+            _pesquisa_ou_tudo(pesquisa, kwargs), kwargs,
         )
         filtros = inp.model_dump(include=FILTERS)
         resposta = self._buscar(build_payload(inp.pesquisa, tamanho_pagina=0, **filtros))

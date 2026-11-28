@@ -5,7 +5,6 @@ from pydantic import ValidationError
 from juscraper.utils.params import (
     coerce_brazilian_date,
     normalize_datas,
-    normalize_paginas,
     normalize_pesquisa,
     pop_normalize_aliases,
     raise_on_extra_kwargs,
@@ -13,7 +12,7 @@ from juscraper.utils.params import (
 )
 
 
-def search_input(schema, method, pesquisa, paginas, kwargs):
+def search_input(schema, method, pesquisa, kwargs):
     """Normaliza aliases sem completar os limites de data ausentes."""
     pesquisa = normalize_pesquisa(pesquisa, **kwargs)
     dates = normalize_datas(**kwargs)
@@ -33,7 +32,6 @@ def search_input(schema, method, pesquisa, paginas, kwargs):
     try:
         return schema(
             pesquisa=pesquisa,
-            paginas=normalize_paginas(paginas),
             **{key: value for key, value in dates.items() if value is not None},
             **kwargs,
         )
