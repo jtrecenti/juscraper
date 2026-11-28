@@ -104,10 +104,30 @@ EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
 
 # Agregadores sao mapeados separadamente porque os endpoints fogem do
 # padrao cjsg/cjpg/cpopg/cposg.
+# Endpoints dos agregadores que precisam de schema mapeado abaixo.
+AGGREGATOR_ENDPOINTS = (
+    "auth",
+    "auth_firefox",
+    "cjsg",
+    "auth_govbr",
+    "contar",
+    "contar_processos",
+    "cpopg",
+    "download_documents",
+    "listar_comunicacoes",
+    "listar_decisoes",
+    "listar_processos",
+    "pesquisa",
+)
+
 EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("datajud", "listar_processos"): (
         "juscraper.aggregators.datajud.schemas",
         "InputListarProcessosDataJud",
+    ),
+    ("datajud", "contar_processos"): (
+        "juscraper.aggregators.datajud.schemas",
+        "InputContarProcessosDataJud",
     ),
     ("jusbr", "auth"): ("juscraper.aggregators.jusbr.schemas", "InputAuthJusBR"),
     ("jusbr", "auth_firefox"): (
@@ -128,6 +148,8 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
     ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "InputPesquisaPdpj"),
+    ("pdpj", "contar"): ("juscraper.aggregators.pdpj.schemas", "InputContarPdpj"),
     ("pdpj", "download_documents"): (
         "juscraper.aggregators.pdpj.schemas",
         "InputDownloadDocumentsPdpj",
@@ -255,20 +277,9 @@ def test_every_court_endpoint_has_schema():
 
 
 def test_every_aggregator_endpoint_has_schema():
-    candidates = (
-        "auth",
-        "auth_firefox",
-        "cjsg",
-        "auth_govbr",
-        "cpopg",
-        "download_documents",
-        "listar_comunicacoes",
-        "listar_decisoes",
-        "listar_processos",
-    )
     missing: list[str] = []
     for name, scraper_cls in _iter_aggregator_scrapers():
-        for endpoint in _implemented_public_endpoints(scraper_cls, candidates):
+        for endpoint in _implemented_public_endpoints(scraper_cls, AGGREGATOR_ENDPOINTS):
             key = (name, endpoint)
             if key not in EXPECTED_AGGREGATOR_SCHEMAS:
                 missing.append(
@@ -297,21 +308,10 @@ def test_no_stale_entries_in_expected_mapping():
         + "\n".join(f"{t}.{e}" for t, e in sorted(stale_court))
     )
 
-    aggregator_candidates = (
-        "auth",
-        "auth_firefox",
-        "cjsg",
-        "auth_govbr",
-        "cpopg",
-        "download_documents",
-        "listar_comunicacoes",
-        "listar_decisoes",
-        "listar_processos",
-    )
     live_agg = {
         (name, endpoint)
         for name, scraper_cls in _iter_aggregator_scrapers()
-        for endpoint in _implemented_public_endpoints(scraper_cls, aggregator_candidates)
+        for endpoint in _implemented_public_endpoints(scraper_cls, AGGREGATOR_ENDPOINTS)
     }
     stale_agg = set(EXPECTED_AGGREGATOR_SCHEMAS) - live_agg
     assert not stale_agg, (

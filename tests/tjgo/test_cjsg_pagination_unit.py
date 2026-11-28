@@ -19,9 +19,10 @@ def test_extract_total_single_page():
     assert _extract_total(html) == 1
 
 
-def test_extract_total_no_results_falls_back_to_zero():
+def test_extract_total_no_results_sem_legend_da_none():
+    """A busca vazia volta sem o ``legend``; o download a reconhece por não ter resultados."""
     html = _sample("no_results.html")
-    assert _extract_total(html) == 0
+    assert _extract_total(html) is None
 
 
 def test_extract_total_handles_dot_separated_thousands():
@@ -39,4 +40,4 @@ def test_extract_total_sem_o_legend_nao_le_o_html_bruto():
         '<div class="painel-resultados">'
         "<p>a diligência teve 456 resultados negativos</p></div>"
     )
-    assert _extract_total(html) == 0
+    assert _extract_total(html) is None

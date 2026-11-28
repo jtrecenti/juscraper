@@ -96,12 +96,15 @@ class TJRRScraper(HTTPScraper):
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
-            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
-            ValueError: Quando ``relator`` contem nome nao encontrado no form.
+            ValueError: Quando ``relator`` contem nome nao encontrado no form,
+                ou quando, com paginas alem da 1, uma tabela de resultados vem
+                sem o paginador ("(1 of N)"), por exemplo depois de uma mudanca
+                de markup do portal.
             ValidationError: Quando um filtro tem formato invalido.
 
         Returns:

@@ -46,6 +46,9 @@ def main() -> None:
     _capture(session, dest, "dano moral", 1, "results_normal_page_01.html")
     _capture(session, dest, "dano moral", 2, "results_normal_page_02.html")
     _capture(session, dest, "plano saude paciente doenca rara", 1, "single_page.html")
+    # Página 2 (AJAX) de uma busca de uma página só, 27/11/2026: traz o total da
+    # busca, e o download descarta a página pela contagem.
+    _capture(session, dest, "plano saude paciente doenca rara", 2, "pagina_alem_do_total.html")
     _capture(session, dest, "juscraper_probe_zero_hits_xyzqwe", 1, "no_results.html")
     # Classe com sigla de duas palavras (``HC TR - Habeas Corpus Criminal TR``), 16/11/2026.
     _capture(session, dest, "habeas corpus", 1, "classe_sigla_com_espaco.html")

@@ -1,0 +1,109 @@
+
+<div class="" style="height: calc(100vh - 158px)">
+    <div class="" id="headerResultados">
+        
+
+    <div>
+                <div class="row">
+            <div class="col-auto">
+                <div class="d-flex align-items-center">
+                    <a id="btn-sidebar-filtros" class="btnExibirMenu mr-2"
+                       title="Visualizar ou ocultar critérios de pesquisa">
+                        <i class="material-icons icon-aligned iconeComTexto" style="font-size: 2rem;">manage_search</i>
+                    </a>
+                    <a id="btn-modal-filtros" class="btn-modal-filtros mr-2"
+                       title="Visualizar ou ocultar critérios de pesquisa">
+                        <i class="material-icons icon-aligned iconeComTexto" style="font-size: 2rem;">manage_search</i>
+                    </a>
+                    <h2 class="mb-0 mr-3">9 documentos encontrados</h2>
+                                            <div id="filtroSelecionados" class="mr-2" style="display: none;">
+                            <a href="#/" class="btnFiltrarSelecionados"
+                               title="Filtrar pelos resultados selecionados">
+                                <i class="material-icons iconeComTexto">filter_alt</i>
+                                <span class="d-none d-lg-inline-flex">Filtrar selecionados</span>
+                            </a>
+                        </div>
+                                            <div id="visualizarSelecionados" style="display: none;">
+                            <a href="#/" class="btnVisualizarSelecionados" onclick="visualizarSelecionados(); return false;"
+                               title="Visualizar resultados selecionados">
+                                <i class="material-icons iconeComTexto">picture_as_pdf</i>
+                                <span class="d-none d-lg-inline-flex">Visualizar selecionados</span>
+                            </a>
+                        </div>
+                </div>
+            </div>
+                            <div class="col d-flex justify-content-start justify-content-md-end align-items-center text-nowrap">
+                    <div class="mr-3">
+                                                                        
+                        <i class="material-icons iconeComTexto paginaPrimeira iconeNavegacao "
+                           title="Ir para primeira página">first_page</i>
+                        <i class="material-icons iconeComTexto paginaAnterior iconeNavegacao "
+                           title="Ir para página anterior">navigate_before</i>
+                        <i class="material-icons iconeComTexto paginaProxima iconeNavegacao "
+                           title="Ir para próxima página">navigate_next</i>
+                        <i class="material-icons iconeComTexto paginaUltima iconeNavegacao "
+                           title="Ir para última página">last_page</i>
+                    </div>
+                    <div class="d-flex align-items-center">
+                                                <div class="d-inline-flex selTamanhoPagina form-group"><label class="d-flex" for="selTamanhoPagina"></label>
+<span class="uic-input-wrapper"><select id="selTamanhoPagina" name="selTamanhoPagina"><option selected="selected" value="10">10</option>
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+</select>
+</span>
+</div>
+<script>UI.PHPHelper.select.init('selTamanhoPagina', "");</script>
+                        <span for="selTamanhoPagina" class="ml-1">resultados por página</span>
+                    </div>
+                </div>
+                <input id="hdnTotalPaginas" name="hdnTotalPaginas" type="hidden" value="1" />
+
+                <input id="hdnPaginaAtual" name="hdnPaginaAtual" type="hidden" value="2" />
+
+                <input id="hdnTotalResultado" name="hdnTotalResultado" type="hidden" value="9" />
+
+                                        <input id="hdnDocsSelecionados" name="hdnDocsSelecionados" type="hidden" />
+
+                    </div>
+    </div>
+    </div>
+
+    <div class="mt-1" id="bodyResultados" style="overflow-y: auto;height: 100%">
+        
+    <input id="hdnLinkGerarPDF" name="hdnLinkGerarPDF" type="hidden" value="externo_controlador.php?acao=jurisprudencia@jurisprudencia/ajax_gerar_pdf_documento" />
+
+        
+    
+    <div class="modal mt-3" id="modalCitacao" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">
+                        Citação
+                    </h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="citacao" id="divConteudoCitacao">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a id="iconCopiarCitacao" href="#/" class="eproc-button text-success m-1" title="">
+                        <i class="material-icons icon-aligned-sm iconeComTexto" style="font-size: 1.2rem">content_paste</i>
+                        Copiar
+                    </a>
+                    <button class="btn btn-sm btn-secondary" data-dismiss="modal">Fechar</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+</div>
