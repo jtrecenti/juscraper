@@ -192,9 +192,7 @@ class EsajCjpgScraper(EsajSentencaScraper):
                   soma bruta (sem dedup por ``id_processo``). ``paginas``
                   e ignorado (emite ``UserWarning``).
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
-
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``classes`` -> ``classe``
             * ``assuntos`` -> ``assunto``

@@ -680,7 +680,7 @@ class TRF3Scraper(HTTPScraper):
                 * ``tamanho_pagina`` (Literal[10, 30, 50]): 10 (default), 30 ou 50 documentos
                   por página.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``

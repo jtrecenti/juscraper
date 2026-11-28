@@ -288,7 +288,7 @@ def coerce_brazilian_date(value: _Data, backend_format: str) -> _Data | str:
     Returns:
         ``None``, an empty string, a ``str`` in ``backend_format`` or the unchanged input.
 
-    See also:
+    See Also:
         :func:`apply_input_pipeline_search` — applies this coercion to the
         four canonical date fields before pydantic validation.
     """
@@ -973,9 +973,9 @@ def resolve_deprecated_alias(
 ):
     """Pop ``old`` alias from ``kwargs`` and merge with ``current_value``.
 
-    Centraliza o padrao repetido em cada raspador que deprecou um
-    parametro (refs #93): ``pop_deprecated_alias`` + checagem de colisao
-    + reatribuicao.
+    Centraliza o padrão repetido em cada raspador que deprecou um
+    parâmetro (refs #93): ``pop_deprecated_alias``, checagem de colisão e
+    reatribuição.
 
     - Alias ausente em ``kwargs``: retorna ``current_value`` inalterado.
     - Alias presente e ``current_value == sentinel`` (canonico nao

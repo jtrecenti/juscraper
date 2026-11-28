@@ -158,7 +158,7 @@ class STFScraper(HTTPScraper):
                   exige retomada compatível, nunca é sobrescrito por coleta nova.
                 * ``resume`` (bool): Retoma o checkpoint compatível. Default ``False``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -188,7 +188,7 @@ class STFScraper(HTTPScraper):
             >>> df = stf.listar_decisoes("pejotização", classe="Rcl", paginas=1,
             ...                          data_publicacao_fim="20/08/2023")
 
-        See also:
+        See Also:
             :class:`InputListarDecisoesSTF` — schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """

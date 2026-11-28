@@ -417,7 +417,7 @@ class DatajudScraper(HTTPScraper):
             ...     tipos_movimentacao=["decisao"],
             ... )
 
-        See also:
+        See Also:
             :meth:`listar_processos` — usa o mesmo conjunto de filtros mas
             baixa os processos.
         """
@@ -680,7 +680,7 @@ class DatajudScraper(HTTPScraper):
             ...     paginas=1,
             ... )
 
-        See also:
+        See Also:
             :class:`InputListarProcessosDataJud` — fonte da verdade dos
             filtros aceitos.
         """

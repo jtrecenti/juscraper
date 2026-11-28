@@ -1,10 +1,7 @@
-"""
-Aggregators
-~~~~~~~~~~~
-Interface pública: jus.scrapers(<sigla>, **kwargs)
+"""Agregadores; a interface pública é ``jus.scraper(<sigla>, **kwargs)``.
 
-A implementação real de cada scraper mora em:
-- juscraper.aggregators.<sigla_agregador>.client.<Nome>Scraper
+A implementação de cada raspador fica em
+``juscraper.aggregators.<sigla_agregador>.client.<Nome>Scraper``.
 """
 
 from .datajud import DatajudScraper

@@ -67,7 +67,7 @@ class TJPAScraper(HTTPScraper):
         Returns:
             Respostas JSON cruas (uma por pagina).
 
-        See also:
+        See Also:
             :class:`InputCJSGTJPA` — fonte da verdade dos filtros aceitos.
         """
         resolve_buscar_em(kwargs, "query_scope", buscar_em, _QUERY_SCOPE_PARA_BUSCAR_EM)
@@ -172,7 +172,7 @@ class TJPAScraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str | date | None): nos mesmos formatos.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -191,7 +191,7 @@ class TJPAScraper(HTTPScraper):
             DataFrame com as decisoes. ``ementa`` e ``None`` na decisao
                 monocratica, que o portal manda sem ementa.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJPA` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
