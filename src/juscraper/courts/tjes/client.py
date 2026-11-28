@@ -23,8 +23,8 @@ class TJESScraper(HTTPScraper):
         "cjsg": RequestPolicy(timeout=30, expect_json=True),
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
-        super().__init__("TJES", politica=politica)
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJES", sleep_time=sleep_time, politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first-instance case lookup not implemented for TJES."""
@@ -104,6 +104,7 @@ class TJESScraper(HTTPScraper):
             ordenacao=inp.ordenacao,
             per_page=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
         )
 
     def cjsg_parse(self, resultados_brutos: list) -> pd.DataFrame:
@@ -255,6 +256,7 @@ class TJESScraper(HTTPScraper):
             ordenacao=inp.ordenacao,
             per_page=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
         )
 
     def cjpg_download(

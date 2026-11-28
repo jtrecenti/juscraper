@@ -15,6 +15,7 @@ from juscraper.courts.tjrr.download import (
     _paginate,
     _pagination_form,
 )
+from juscraper.utils.pagination import selecao_de_paginas
 from tests._helpers import load_sample
 
 
@@ -231,19 +232,20 @@ def test_download_page_skips_table_past_its_end(paginate_calls):
     assert paginate_calls == [(4, "a")]
 
 
-def test_download_page_past_every_table_requests_acordaos(paginate_calls):
-    """Página explícita além do fim das duas tabelas: pede a de acórdãos,
-    como antes da #319, e o backend decide o que devolver."""
-    _download_page(_no_request, {}, 9, [("a", 5), ("a2", 3)], 0)
-    assert paginate_calls == [(9, "a")]
+def test_manager_pagina_alem_das_duas_tabelas_vai_para_o_log(mocker, paginate_calls, caplog):
+    """Página explícita além do fim das duas tabelas: sai no log, sem requisição.
 
-
-def test_download_page_without_datatable_raises(paginate_calls):
-    """Sem tabela na página 1, pedir a página 2 levanta, em vez de devolver
-    vazio em silêncio."""
-    with pytest.raises(RuntimeError, match="No results datatable"):
-        _download_page(_no_request, {}, 2, [], 0)
-    assert paginate_calls == []
+    Antes, a de acórdãos era pedida assim mesmo, e o backend decidia o que devolver.
+    """
+    mocker.patch.object(download, "_get_form_fields", return_value={})
+    mocker.patch.object(download, "_search", return_value="<p1>")
+    mocker.patch.object(download, "_datatables_with_pages", return_value=[("a", 5), ("a2", 3)])
+    mocker.patch.object(download, "_pagination_form", return_value={})
+    with caplog.at_level("WARNING", logger="juscraper.tjrr"):
+        out = download.cjsg_download_manager("x", selecao_de_paginas([4, 9]), request_fn=_no_request)
+    assert out == ["<a:4>"]
+    assert paginate_calls == [(4, "a")]
+    assert "TJRR: página 9 fora do intervalo 1-5" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -272,7 +274,7 @@ def test_manager_paginas_1_nao_conta_paginas(mocker, paginate_calls):
     contagem = mocker.patch.object(download, "_datatables_with_pages")
     form = mocker.patch.object(download, "_pagination_form")
     parse = mocker.spy(download, "BeautifulSoup")
-    assert download.cjsg_download_manager("x", [1], request_fn=_no_request) == ["<p1>"]
+    assert download.cjsg_download_manager("x", selecao_de_paginas([1]), request_fn=_no_request) == ["<p1>"]
     parse.assert_not_called()
     contagem.assert_not_called()
     form.assert_not_called()
@@ -295,7 +297,7 @@ def test_manager_le_o_form_da_pagina_1_uma_vez(mocker):
         return ""
 
     mocker.patch.object(download, "_paginate", fake)
-    download.cjsg_download_manager("x", range(1, 4), request_fn=_no_request)
+    download.cjsg_download_manager("x", selecao_de_paginas(range(1, 4)), request_fn=_no_request)
     assert form.call_count == 1
     assert len(recebidos) == 4
     assert all(r is form.spy_return for r in recebidos)
@@ -316,7 +318,7 @@ def test_manager_parseia_o_html_da_pagina_1_uma_vez(mocker, paginas):
     mocker.patch.object(download, "_paginate", return_value="")
     parse = mocker.spy(download, "BeautifulSoup")
     form = mocker.spy(download, "_pagination_form")
-    out = download.cjsg_download_manager("x", paginas, request_fn=_no_request)
+    out = download.cjsg_download_manager("x", selecao_de_paginas(paginas), request_fn=_no_request)
     assert len(out) == 3
     assert parse.call_count == 1
     assert form.call_count == 1
@@ -328,7 +330,7 @@ def test_manager_sem_tabela_levanta_erro_da_tabela(mocker):
     mocker.patch.object(download, "_get_form_fields", return_value={})
     mocker.patch.object(download, "_search", return_value="<html><body>erro</body></html>")
     with pytest.raises(RuntimeError, match="No results datatable"):
-        download.cjsg_download_manager("x", [1, 2], request_fn=_no_request)
+        download.cjsg_download_manager("x", selecao_de_paginas([1, 2]), request_fn=_no_request)
 
 
 def test_pagination_form_sem_viewstate_levanta():

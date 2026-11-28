@@ -65,25 +65,33 @@ EXCECOES_DEFAULT = {
     "courts/trf3/download.py": (1, _SESSAO_PJE),
 }
 
-EXCECOES_N_ITENS = dict.fromkeys(
-    (
-        "courts/tjba/download.py",
-        "courts/tjdft/download.py",
-        "courts/tjes/download.py",
-        "courts/tjmg/download.py",
-        "courts/tjmt/download.py",
-        "courts/tjpa/download.py",
-        "courts/tjpb/download.py",
-        "courts/tjpi/download.py",
-        "courts/tjpr/download.py",
-        "courts/tjrn/download.py",
-        "courts/tjro/download.py",
-        "courts/tjrs/download.py",
-        "courts/tjsc/download.py",
-        "courts/tjto/download.py",
+EXCECOES_N_ITENS = {
+    **dict.fromkeys(
+        (
+            "courts/tjba/download.py",
+            "courts/tjdft/download.py",
+            "courts/tjes/download.py",
+            "courts/tjgo/download.py",
+            "courts/tjmg/download.py",
+            "courts/tjmt/download.py",
+            "courts/tjpa/download.py",
+            "courts/tjpb/download.py",
+            "courts/tjpe/download.py",
+            "courts/tjpi/download.py",
+            "courts/tjpr/download.py",
+            "courts/tjrj/download.py",
+            "courts/tjrn/download.py",
+            "courts/tjro/download.py",
+            "courts/tjrr/download.py",
+            "courts/tjrs/download.py",
+            "courts/tjsc/download.py",
+            "courts/tjto/download.py",
+        ),
+        (1, _SESSAO_PAGINAS),
     ),
-    (1, _SESSAO_PAGINAS),
-)
+    "courts/trf3/cjsg_download.py": (1, f"{_SESSAO_PJE}: _check_lista confere em buscar; faltam chaves"),
+    "aggregators/comunica_cnj/client.py": (1, "pendente: sessão de adoção 7 (agregadores)"),
+}
 
 
 def _zero_ou_um(no: ast.AST | None) -> bool:

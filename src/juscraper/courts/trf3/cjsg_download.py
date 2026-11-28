@@ -24,12 +24,9 @@ from __future__ import annotations
 import logging
 import math
 import re
-import time
-from collections.abc import Callable, Iterable
 
 import requests
 from bs4 import BeautifulSoup
-from tqdm import tqdm
 from unidecode import unidecode
 
 from ...core.http import RequestFn
@@ -38,10 +35,10 @@ from ...utils.pagination import (
     ConferenciaDePaginas,
     PaginaEsperada,
     Paginas,
+    baixar_paginas_pedidas,
     exigir_pagina,
     extract_count_with_cascade,
-    paginas_no_intervalo,
-    paginas_unicas,
+    maior_pagina,
 )
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
@@ -476,26 +473,27 @@ def cjsg_n_results(html: str) -> int | None:
     )
 
 
-def _paginas_pedidas(paginas: Paginas | None, n_paginas: int | None) -> list[int]:
-    """Resolve a lista de páginas a baixar, 1-based, na ordem pedida e sem repetição.
+def _total_de_paginas(paginas: Paginas | None, n_paginas: int | None) -> int:
+    """O total de páginas que corta a seleção, para :func:`baixar_paginas_pedidas`.
 
-    Com ``paginas=None`` baixa todas; exige o total. Páginas além do total são
-    descartadas sem requisição, com aviso no log (:func:`paginas_no_intervalo`):
-    o portal não tem o que devolver para elas.
+    Com o total lido, as páginas além dele vão para o log, sem requisição: o
+    portal não tem o que devolver para elas. ``n_paginas=None`` só chega aqui
+    para uma primeira página que já passou por :func:`_check_lista` e traz
+    documentos, mas cujo resumo e contador não foram lidos: o pedido explícito
+    é mantido sem corte (o total vale a maior página pedida), e cada página
+    baixada passa pela mesma checagem.
 
-    ``n_paginas=None`` só chega aqui para uma primeira página que já passou por
-    :func:`_check_lista` e traz documentos, mas cujo resumo e contador não
-    foram lidos. Nesse caso o pedido explícito é mantido sem corte, e cada
-    página baixada passa pela mesma checagem.
+    Raises:
+        ValueError: ``paginas=None`` sem o total, que não diz até onde ir.
     """
     if n_paginas is not None:
-        return paginas_no_intervalo(paginas, max(n_paginas, 1), tribunal="TRF3")
+        return max(n_paginas, 1)
     if paginas is None:
         raise ValueError(
             "TRF3 cjsg: a primeira página traz documentos, mas o total de "
             "resultados não pôde ser lido; passe 'paginas' explicitamente."
         )
-    return list(paginas_unicas(paginas))
+    return maior_pagina(paginas)
 
 
 def cjsg_download_manager(
@@ -504,7 +502,6 @@ def cjsg_download_manager(
     request_fn: RequestFn,
     session: requests.Session,
     sleep_time: float = 1.0,
-    progress: Callable[..., Iterable[int]] = tqdm,
 ) -> list[str]:
     """Executa uma busca e devolve o HTML das páginas pedidas da lista resumida.
 
@@ -525,7 +522,6 @@ def cjsg_download_manager(
             ``perfil=PERFIL_CJSG`` em toda requisição.
         session: Sessão isolada da busca (:func:`build_cjsg_session`).
         sleep_time: Pausa, em segundos, entre páginas.
-        progress: Iterador com barra de progresso (``tqdm``).
 
     Returns:
         Lista de HTML, uma entrada por página baixada, na ordem pedida. A
@@ -575,24 +571,27 @@ def cjsg_download_manager(
     _check_lista(primeira, resp.url)
 
     total = cjsg_n_results(primeira)
-    n_paginas = None if total is None else math.ceil(total / inp.tamanho_pagina)
-    pedidas = _paginas_pedidas(inp.paginas_normalizadas, n_paginas)
+    n_paginas = _total_de_paginas(
+        inp.paginas_normalizadas, None if total is None else math.ceil(total / inp.tamanho_pagina)
+    )
 
-    resultados: list[str] = []
-    for pagina in progress(pedidas, desc="Baixando CJSG TRF3", disable=len(pedidas) <= 1):
-        if pagina == 1:
-            resultados.append(primeira)
-            continue
-        # Toda página além da 1 vem depois de ao menos uma requisição (o POST).
-        time.sleep(sleep_time)
+    def buscar(pagina: int) -> str:
         page = request_fn("GET", PAGE_URL, params={"np": pagina}, **comum)
         page.encoding = "utf-8"
         _check_sessao(page)
-        html = page.text
-        # Com o total lido, toda página que chega aqui está dentro dele
-        # (``_paginas_pedidas`` cortou as demais) e tem que trazer documento.
-        # Com o total ilegível, a página pode estar além do fim da busca, e o
-        # aviso de nenhum resultado continua aceito.
-        _check_lista(html, page.url, total_da_busca=total, pagina=pagina)
-        resultados.append(html)
-    return resultados
+        # Com o total lido, toda página que chega aqui está dentro dele e tem
+        # que trazer documento. Com o total ilegível, a página pode estar além
+        # do fim da busca, e o aviso de nenhum resultado continua aceito.
+        _check_lista(page.text, page.url, total_da_busca=total, pagina=pagina)
+        return page.text
+
+    # A página 1 é a resposta do POST, que abre a busca; ela vai ao laço comum
+    # em ``pagina_1`` e só entra no retorno se foi pedida.
+    return baixar_paginas_pedidas(
+        inp.paginas_normalizadas,
+        buscar,
+        lambda _primeira: n_paginas,
+        tribunal="TRF3",
+        sleep_time=sleep_time,
+        pagina_1=primeira,
+    )

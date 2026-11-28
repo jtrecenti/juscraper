@@ -135,10 +135,13 @@ def cjsg_download(
     auto_chunk: bool = True,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
 ) -> list:
     """Baixa os resultados brutos da pesquisa de jurisprudência do TJBA (várias páginas).
 
     Args:
+        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
+            o client passa ``self.sleep_time``.
         pesquisa: Termo de busca.
         paginas (list | range | None): Páginas a baixar (1-based). ``None``
             baixa todas as páginas disponíveis.
@@ -210,7 +213,7 @@ def cjsg_download(
             itens=lambda pagina: _filter(pagina).get("decisoes") or [],
             chave=_chave_da_decisao,
             parse=cjsg_parse,
-            sleep_time=1,
+            sleep_time=sleep_time,
         )
         return baixar_dividindo_por_data(
             busca, to_iso_date(data_publicacao_inicio) or None, to_iso_date(data_publicacao_fim) or None
@@ -225,6 +228,6 @@ def cjsg_download(
         lambda pagina: _fetch_page(pagina - 1, data_publicacao_inicio, data_publicacao_fim),
         _n_pags,
         tribunal="TJBA",
-        sleep_time=1,
+        sleep_time=sleep_time,
         teto=MAX_RESULTS // items_per_page,
     )

@@ -75,6 +75,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """Download raw results from the TJPB jurisprudence search.
@@ -82,6 +83,8 @@ def cjsg_download_manager(
     Returns a list of raw JSON responses (one per page).
 
     Args:
+        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
+            o client passa ``self.sleep_time``.
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
         request_fn: HTTP callable that handles retry + raise_for_status — em
@@ -115,4 +118,4 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB", sleep_time=1, teto=teto)
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB", sleep_time=sleep_time, teto=teto)
