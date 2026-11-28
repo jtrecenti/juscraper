@@ -33,6 +33,7 @@ from pydantic import BaseModel, ValidationError
 
 import juscraper
 from juscraper.schemas import PaginasMixin
+from juscraper.utils.pagination import selecao_de_paginas
 from juscraper.utils.params import normalize_paginas
 from tests.schemas.test_schema_coverage import (
     EXPECTED_AGGREGATOR_SCHEMAS,
@@ -112,10 +113,12 @@ def test_paginas_mixin_validates_large_range_without_scanning():
     ("paginas", "esperado"),
     [(None, None), (3, range(1, 4)), ([2, 4], [2, 4]), (range(2, 5), range(2, 5))],
 )
-def test_paginas_normalizadas_iguala_normalize_paginas(paginas, esperado):
+def test_paginas_normalizadas_equivale_a_normalize_paginas(paginas, esperado):
     inp = PaginasMixin(paginas=paginas)
 
-    assert inp.paginas_normalizadas == esperado == normalize_paginas(paginas)
+    assert esperado == normalize_paginas(paginas)
+    # O raspador lê a seleção opaca, com o mesmo conteúdo da normalização.
+    assert inp.paginas_normalizadas == selecao_de_paginas(esperado)
     # ``paginas`` segue como validado, e a propriedade nao vira campo.
     assert inp.paginas == paginas
     assert "paginas_normalizadas" not in inp.model_dump()
