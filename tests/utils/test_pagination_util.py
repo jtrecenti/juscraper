@@ -6,22 +6,29 @@ from __future__ import annotations
 
 import re
 
+import pandas as pd
 import pytest
 from bs4 import BeautifulSoup
 
+from juscraper.core.exceptions import ColetaParcialError
+from juscraper.schemas import PaginasMixin
 from juscraper.utils.pagination import (
     AvisoVazio,
     baixar_paginas_pedidas,
-    contador_com_teto,
     descrever_paginas,
     extract_count_with_cascade,
     maior_pagina,
     menor_pagina,
+    pagina_pedida,
     paginas_no_intervalo,
     paginas_unicas,
     parse_page_number,
+    recusar_alem_do_teto,
     resolve_total_pages,
+    selecao_de_paginas,
 )
+
+P = selecao_de_paginas
 
 
 def test_selector_and_regex_match():
@@ -307,7 +314,7 @@ def test_parse_page_number_rejeita(valor):
 
 def test_paginas_no_intervalo_mantem_a_ordem_e_avisa_as_de_fora(caplog):
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-        assert paginas_no_intervalo([3, 0, 1, 5, 2], 3, tribunal="TJXX") == [3, 1, 2]
+        assert paginas_no_intervalo(P([3, 0, 1, 5, 2]), 3, tribunal="TJXX") == [3, 1, 2]
 
     # O aviso sai no logger do tribunal, como antes do helper, numa linha só.
     assert [(r.name, r.getMessage()) for r in caplog.records] == [
@@ -317,7 +324,7 @@ def test_paginas_no_intervalo_mantem_a_ordem_e_avisa_as_de_fora(caplog):
 
 def test_paginas_no_intervalo_tira_repetidas_preservando_a_ordem(caplog):
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-        assert paginas_no_intervalo([2, 1, 2, 9, 1, 9], 3, tribunal="TJXX") == [2, 1]
+        assert paginas_no_intervalo(P([2, 1, 2, 9, 1, 9]), 3, tribunal="TJXX") == [2, 1]
 
     assert [r.getMessage() for r in caplog.records] == ["TJXX: página 9 fora do intervalo 1-3"]
 
@@ -325,7 +332,7 @@ def test_paginas_no_intervalo_tira_repetidas_preservando_a_ordem(caplog):
 def test_paginas_no_intervalo_resume_muitas_paginas_de_fora_num_aviso(caplog):
     # ``paginas=1000`` (``range(1, 1001)``) numa busca de 7 páginas.
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-        assert paginas_no_intervalo(range(1, 1001), 7, tribunal="TJXX") == list(range(1, 8))
+        assert paginas_no_intervalo(P(range(1, 1001)), 7, tribunal="TJXX") == list(range(1, 8))
 
     assert [r.getMessage() for r in caplog.records] == [
         "TJXX: páginas 8, 9, 10, 11, 12 e mais 988 fora do intervalo 1-7",
@@ -334,7 +341,7 @@ def test_paginas_no_intervalo_resume_muitas_paginas_de_fora_num_aviso(caplog):
 
 def test_paginas_no_intervalo_resume_lista_com_muitas_de_fora(caplog):
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-        assert paginas_no_intervalo([9, 0, 2, 8, 7, 6, 5, 9, 4], 3, tribunal="TJXX") == [2]
+        assert paginas_no_intervalo(P([9, 0, 2, 8, 7, 6, 5, 9, 4]), 3, tribunal="TJXX") == [2]
 
     assert [r.getMessage() for r in caplog.records] == [
         "TJXX: páginas 9, 0, 8, 7, 6 e mais 2 fora do intervalo 1-3",
@@ -344,7 +351,7 @@ def test_paginas_no_intervalo_resume_lista_com_muitas_de_fora(caplog):
 def test_paginas_no_intervalo_corta_range_sem_percorrer(caplog):
     # Como no ``PaginasMixin``: um range enorme não é percorrido página a página.
     with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-        assert paginas_no_intervalo(range(-1, 10**12, 3), 9, tribunal="TJXX") == [2, 5, 8]
+        assert paginas_no_intervalo(P(range(-1, 10**12, 3)), 9, tribunal="TJXX") == [2, 5, 8]
 
     assert [r.getMessage() for r in caplog.records] == [
         f"TJXX: páginas -1, 11, 14, 17, 20 e mais {len(range(-1, 10**12, 3)) - 3 - 5} fora do intervalo 1-9",
@@ -352,12 +359,12 @@ def test_paginas_no_intervalo_corta_range_sem_percorrer(caplog):
 
 
 def test_paginas_no_intervalo_aceita_range_e_devolve_lista_vazia_sem_validas():
-    assert paginas_no_intervalo(range(1, 4), 3, tribunal="TJXX") == [1, 2, 3]
-    assert paginas_no_intervalo(range(4, 6), 3, tribunal="TJXX") == []
+    assert paginas_no_intervalo(P(range(1, 4)), 3, tribunal="TJXX") == [1, 2, 3]
+    assert paginas_no_intervalo(P(range(4, 6)), 3, tribunal="TJXX") == []
 
 
 def test_paginas_no_intervalo_sem_paginas_pedidas_devolve_todas():
-    assert paginas_no_intervalo(None, 3, tribunal="TJXX") == [1, 2, 3]
+    assert paginas_no_intervalo(P(None), 3, tribunal="TJXX") == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
@@ -365,16 +372,16 @@ def test_paginas_no_intervalo_sem_paginas_pedidas_devolve_todas():
     [([3, 1, 5, 1], 1, 5), (range(2, 10**12, 3), 2, 10**12 - 2), (range(9, 0, -4), 1, 9), ([7], 7, 7)],
 )
 def test_menor_e_maior_pagina_sem_percorrer_range(paginas, menor, maior):
-    assert (menor_pagina(paginas), maior_pagina(paginas)) == (menor, maior)
+    assert (menor_pagina(P(paginas)), maior_pagina(P(paginas))) == (menor, maior)
 
 
 def test_paginas_unicas_tira_repetidas_na_ordem_pedida():
-    assert paginas_unicas([3, 1, 3, 2, 1]) == [3, 1, 2]
+    assert paginas_unicas(P([3, 1, 3, 2, 1])) == [3, 1, 2]
 
 
 def test_paginas_unicas_devolve_range_sem_percorrer():
     paginas = range(1, 10**12, 2)
-    assert paginas_unicas(paginas) is paginas
+    assert paginas_unicas(P(paginas)) is paginas
 
 
 class TestBaixarPaginasPedidas:
@@ -388,7 +395,7 @@ class TestBaixarPaginasPedidas:
             pedidas.append(pagina)
             return pagina
 
-        brutos = baixar_paginas_pedidas(paginas, buscar, lambda _first: n_pags, tribunal="TJXX", **kwargs)
+        brutos = baixar_paginas_pedidas(P(paginas), buscar, lambda _first: n_pags, tribunal="TJXX", **kwargs)
         return pedidas, brutos
 
     def test_todas_as_paginas_na_ordem(self):
@@ -408,31 +415,128 @@ class TestBaixarPaginasPedidas:
         sleep.assert_not_called()
 
 
-def _cinco_paginas(_first: object) -> int:
-    return 5
+def _baixar_com(paginas, n_pags, falhas=(), **kwargs):
+    """``baixar_paginas_pedidas`` sobre páginas que são o próprio número; ``falhas`` levantam."""
+    pedidas: list[int] = []
+
+    def buscar(pagina: int) -> int:
+        pedidas.append(pagina)
+        if pagina in falhas:
+            raise ConnectionError(f"página {pagina}")
+        return pagina
+
+    return pedidas, baixar_paginas_pedidas(P(paginas), buscar, lambda _first: n_pags, tribunal="TJXX", **kwargs)
 
 
-def _duas_paginas(_first: object) -> int:
-    return 2
+class TestTeto:
+    """``teto``: página além dele é erro antes de pedir; com ``None``, aviso e corte."""
+
+    @pytest.mark.parametrize("paginas", [[1, 4], range(1, 10**9), [4]])
+    def test_recusa_pagina_alem_do_teto_sem_requisicao(self, paginas):
+        pedidas: list[int] = []
+        mensagem = r"TJXX: o portal só entrega as 3 primeiras páginas.*página (4|999999999)\."
+        with pytest.raises(ValueError, match=mensagem):
+            baixar_paginas_pedidas(P(paginas), pedidas.append, lambda _first: 5, tribunal="TJXX", teto=3)
+        assert pedidas == []
+
+    @pytest.mark.parametrize(
+        ("paginas", "baixadas"), [([3, 1], [3, 1]), (range(1, 4), [1, 2, 3]), (range(3, 0, -1), [3, 2, 1])]
+    )
+    def test_limita_paginas_explicitas_sem_aviso(self, paginas, baixadas, recwarn):
+        assert _baixar_com(paginas, 5, teto=3)[1] == baixadas
+        assert len(recwarn) == 0
+
+    def test_avisa_quando_baixa_todas(self, recwarn):
+        assert _baixar_com(None, 2, teto=3)[1] == [1, 2]
+        assert len(recwarn) == 0
+        with pytest.warns(UserWarning, match=r"TJXX: a busca tem 5 páginas, e o portal só entrega as 3 primeiras"):
+            assert _baixar_com(None, 5, teto=3)[1] == [1, 2, 3]
+
+    def test_recusar_alem_do_teto_aceita_none(self):
+        recusar_alem_do_teto(None, 3, tribunal="TJXX")
 
 
-@pytest.mark.parametrize("paginas", [[1, 4], range(1, 10**9), [4]])
-def test_contador_com_teto_recusa_pagina_alem_do_teto(paginas):
-    with pytest.raises(ValueError, match=r"TJXX: o portal só entrega as 3 primeiras páginas.*página (4|999999999)\."):
-        contador_com_teto(paginas, 3, _cinco_paginas, tribunal="TJXX")
+class TestPrimeiraFixa:
+    """``primeira``: o portal que abre a busca numa página fixa."""
+
+    def test_pede_a_fixa_primeiro_e_so_a_devolve_se_pedida(self):
+        assert _baixar_com([3, 2], 5, primeira=1) == ([1, 3, 2], [3, 2])
+
+    def test_fixa_pedida_entra_na_posicao_pedida_sem_novo_pedido(self):
+        assert _baixar_com([3, 1], 5, primeira=1) == ([1, 3], [3, 1])
+
+    def test_total_lido_na_fixa_corta_as_demais(self, caplog):
+        with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+            assert _baixar_com([2, 9], 3, primeira=1) == ([1, 2], [2])
+        assert "TJXX: página 9 fora do intervalo 1-3" in caplog.text
 
 
-@pytest.mark.parametrize("paginas", [[3, 1], range(1, 4), range(3, 0, -1)])
-def test_contador_com_teto_limita_paginas_explicitas_sem_aviso(paginas, recwarn):
-    assert contador_com_teto(paginas, 3, _cinco_paginas, tribunal="TJXX")(None) == 3
-    assert len(recwarn) == 0
+class TestColetaParcial:
+    """``ler_parcial``: a falha com página pedida já baixada vira ``ColetaParcialError``."""
+
+    def test_guarda_as_baixadas_e_diz_as_que_faltam(self):
+        with pytest.raises(ColetaParcialError) as erro:
+            _baixar_com([1, 2, 3, 4, 5], 5, falhas={3}, ler_parcial=lambda brutos: pd.DataFrame({"pagina": brutos}))
+        assert erro.value.resultado["pagina"].tolist() == [1, 2]
+        assert isinstance(erro.value.__cause__, ConnectionError)
+        assert erro.value.falhas == [(None, None, erro.value.__cause__)]
+        assert str(erro.value).startswith("TJXX: a página 3 falhou (ConnectionError('página 3')), e a busca parou.")
+        assert "faltam as páginas range(3, 6)" in str(erro.value)
+
+    def test_primeira_requisicao_que_vinha_depois_entra_no_fim(self):
+        # A menor (2) sai primeiro, para o total; a 5 falha antes da posição dela na ordem pedida.
+        with pytest.raises(ColetaParcialError) as erro:
+            _baixar_com([4, 5, 2, 3], 5, falhas={5}, ler_parcial=lambda brutos: pd.DataFrame({"pagina": brutos}))
+        assert erro.value.resultado["pagina"].tolist() == [4, 2]
+        assert "faltam as páginas [5, 3]" in str(erro.value)
+
+    def test_sem_pagina_pedida_baixada_a_falha_sobe_como_veio(self):
+        # A página 1 é fixa e não foi pedida: nada a guardar.
+        with pytest.raises(ConnectionError):
+            _baixar_com([2, 3], 5, falhas={2}, primeira=1, ler_parcial=pd.DataFrame)
+
+    def test_falha_na_primeira_requisicao_sobe_como_veio(self):
+        with pytest.raises(ConnectionError):
+            _baixar_com([1, 2], 5, falhas={1}, ler_parcial=pd.DataFrame)
+
+    def test_sem_ler_parcial_a_falha_sobe_como_veio(self):
+        with pytest.raises(ConnectionError):
+            _baixar_com([1, 2], 5, falhas={2})
+
+    def test_mensagem_propria(self):
+        def mensagem(faltando, n_baixadas, exc):
+            return f"{faltando} {n_baixadas} {type(exc).__name__}"
+
+        with pytest.raises(ColetaParcialError, match=r"^\[2, 3\] 1 ConnectionError$"):
+            _baixar_com([1, 2, 3], 3, falhas={2}, ler_parcial=pd.DataFrame, mensagem_parcial=mensagem)
 
 
-def test_contador_com_teto_avisa_quando_baixa_todas(recwarn):
-    assert contador_com_teto(None, 3, _duas_paginas, tribunal="TJXX")(None) == 2
-    assert len(recwarn) == 0
-    with pytest.warns(UserWarning, match=r"TJXX: a busca tem 5 páginas, e o portal só entrega as 3 primeiras"):
-        assert contador_com_teto(None, 3, _cinco_paginas, tribunal="TJXX")(None) == 3
+class TestPaginasOpaca:
+    """``Paginas`` só se lê pelos helpers: o laço à mão falha ao rodar."""
+
+    @pytest.mark.parametrize(
+        "leitura",
+        [list, max, min, len, sorted, set, iter, lambda p: p[0], lambda p: 1 in p, lambda p: p.start, lambda p: [*p]],
+    )
+    @pytest.mark.parametrize("paginas", [[3, 1], range(1, 4)])
+    def test_leitura_a_mao_levanta(self, leitura, paginas):
+        with pytest.raises((TypeError, AttributeError)):
+            leitura(P(paginas))
+
+    def test_inteiro_vira_range_e_none_continua_none(self):
+        assert P(3) == P(range(1, 4))
+        assert P(None) is None
+        assert P(P([2])) == P([2])
+        assert repr(P([3, 1])) == "Paginas([3, 1])"
+
+    def test_paginas_normalizadas_do_schema_e_opaca(self):
+        assert PaginasMixin(paginas=2).paginas_normalizadas == P(range(1, 3))
+        assert PaginasMixin().paginas_normalizadas is None
+
+    @pytest.mark.parametrize(("paginas", "pagina", "pedida"), [(None, 7, True), ([3, 5], 5, True), ([3, 5], 4, False),
+                                                               (range(1, 10**12, 2), 10**11 + 1, True)])
+    def test_pagina_pedida(self, paginas, pagina, pedida):
+        assert pagina_pedida(P(paginas), pagina) is pedida
 
 
 @pytest.mark.parametrize(

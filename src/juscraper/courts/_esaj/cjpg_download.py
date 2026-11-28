@@ -16,7 +16,7 @@ import requests
 from tqdm import tqdm
 
 from ...utils.cnj import clean_cnj
-from ...utils.pagination import paginas_no_intervalo
+from ...utils.pagination import Paginas, paginas_no_intervalo
 from .cjpg_parse import MARCA_PAGINA_NAO_BAIXADA, cjpg_n_pags
 from .prazos import TENTATIVAS as _TENTATIVAS
 from .prazos import TIMEOUT as _TIMEOUT
@@ -54,7 +54,7 @@ def _extract_page_count(
 
 
 def _normalize_pages(
-    paginas: list[int] | range | None, n_pags: int, u_base: str, *, tribunal: str | None = None,
+    paginas: Paginas | None, n_pags: int, u_base: str, *, tribunal: str | None = None,
 ) -> list[int]:
     """Páginas pedidas dentro de ``1..n_pags``, sem repetição; ``None`` vale todas.
 
@@ -150,7 +150,7 @@ def cjpg_download(  # noqa: PLR0913 - um parâmetro por filtro do formulário
     id_processo: str | None = None,
     data_inicio: str | None = None,
     data_fim: str | None = None,
-    paginas: list[int] | range | None = None,
+    paginas: Paginas | None = None,
     tribunal: str | None = None,
 ) -> str:
     """Download cases from the eSAJ first-instance jurisprudence search (TJSP, TJMS).

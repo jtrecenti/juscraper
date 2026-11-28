@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
 
-from ...utils.pagination import maior_pagina
+from ...utils.pagination import maior_pagina, paginas_no_intervalo, paginas_unicas, selecao_de_paginas
 from ._checkpoint import Attempt, Checkpoint, Window, document_ids, utc_now
 from .download import MAX_REGISTROS, build_payload
 from .parse import parse_decisoes
@@ -78,10 +78,10 @@ class Collection:
         paginas = entrada.paginas_normalizadas
         if paginas is not None:  # Antes de ``list``: um ``range`` além do limite não chega a ser percorrido.
             build_payload(pagina=maior_pagina(paginas), tamanho_pagina=entrada.tamanho_pagina)
-        self.pages = None if paginas is None else list(paginas)
+        # A página repetida é baixada uma vez só, como nos demais raspadores; a lista sem
+        # repetição é a da identidade do checkpoint.
+        self.pages = None if paginas is None else list(paginas_unicas(paginas))
         if self.pages is not None:
-            if len(set(self.pages)) != len(self.pages):
-                raise ValueError("Páginas explícitas não podem se repetir.")
             for pagina in self.pages:
                 build_payload(pagina=pagina, tamanho_pagina=entrada.tamanho_pagina)
         identidade = {
@@ -227,7 +227,10 @@ class Collection:
         attempt = Attempt(started_at=utc_now(), total_before=total)
         window.attempts.append(attempt)
         self.store.save()
-        pages = self.pages if self.pages is not None else range(1, math.ceil(total / self.inp.tamanho_pagina) + 1)
+        # A contagem vem antes das páginas: a pedida além do total vai para o log, sem requisição.
+        pages = paginas_no_intervalo(
+            selecao_de_paginas(self.pages), math.ceil(total / self.inp.tamanho_pagina), tribunal="STF"
+        )
         seen: set[tuple[str, str]] = set()
         for page in pages:
             payload = self.payload(window, page, self.inp.tamanho_pagina)

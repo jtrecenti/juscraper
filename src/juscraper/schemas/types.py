@@ -23,8 +23,9 @@ Tipos disponiveis:
   proprio declara o seu ``Literal`` (STM: ``"numero"``).
 - :data:`IdFiltroUnico` — IDs single-value (``cdComarca`` no eSAJ). Rejeita
   ``list``/``tuple`` para nao mascarar uso indevido.
-- :data:`PaginasNormalizadas` — ``paginas`` depois da normalizacao, sem o
-  ``int``; tipo de :attr:`PaginasMixin.paginas_normalizadas`.
+- :data:`PaginasNormalizadas` — ``paginas`` depois da normalizacao, opaca
+  (:class:`~juscraper.utils.pagination.Paginas`); tipo de
+  :attr:`PaginasMixin.paginas_normalizadas`.
 """
 from __future__ import annotations
 
@@ -32,6 +33,8 @@ from typing import Annotated, Literal
 
 import numpy as np
 from pydantic import BeforeValidator, Field
+
+from ..utils.pagination import Paginas
 
 
 def _coerce_id_filtro(value):
@@ -102,5 +105,5 @@ TamanhoPagina = Annotated[InteiroSemBool, Field(ge=1)]
 
 BuscarEm = Literal["ementa", "inteiro_teor"]
 
-PaginasNormalizadas = list[int] | range | None
-"""``paginas`` sem o ``int``: ``None`` (todas), ``list`` ou ``range`` de paginas 1-based."""
+PaginasNormalizadas = Paginas | None
+"""``paginas`` depois da validacao: ``None`` (todas) ou :class:`~juscraper.utils.pagination.Paginas`, opaca."""

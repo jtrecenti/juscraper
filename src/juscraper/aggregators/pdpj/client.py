@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, ClassVar, cast
@@ -31,7 +31,7 @@ from ...core.failures import (
 from ...core.http import HTTPScraper, RequestFn, RequestPolicy
 from ...core.parse_utils import clean_document_text
 from ...utils.cnj import clean_cnj
-from ...utils.pagination import maior_pagina
+from ...utils.pagination import Paginas, maior_pagina, pagina_pedida
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs
 from .._pdpj_sso import CredencialPdpj, PdpjSsoMixin
 from .._pdpj_sso.renovacao import ErroSsoPdpj, anotar_falhas_antes_do_sso
@@ -175,15 +175,13 @@ def _linha_sem_conteudo(row: dict[str, Any], conteudos: _Conteudos) -> dict[str,
     return row
 
 
-def _limite_de_paginas(paginas: list[int] | range | None) -> tuple[int | None, Container[int] | None]:
-    """Última página a pedir e páginas cujas linhas entram; ``None`` é sem limite.
+def _limite_de_paginas(paginas: Paginas | None) -> int | None:
+    """Última página a pedir; ``None`` é sem limite.
 
     Com lista, a coleta segue até a maior página pedida, porque o cursor
-    ``searchAfter`` só se obtém percorrendo as anteriores. ``in`` num ``range`` não o percorre.
+    ``searchAfter`` só se obtém percorrendo as anteriores.
     """
-    if paginas is None:
-        return None, None
-    return maior_pagina(paginas), paginas
+    return None if paginas is None else maior_pagina(paginas)
 
 
 def _ordenar_colunas(rows: list[dict[str, Any]]) -> pd.DataFrame:
@@ -628,14 +626,14 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
         # parâmetro segue na querystring para não mudar a requisição de quem já
         # o passa, caso a API volte a aceitá-lo.
         base_params["maxElementsSize"] = inp.itens_por_pagina
-        max_paginas, permitidas = _limite_de_paginas(inp.paginas_normalizadas)
-        return pd.DataFrame(self._paginar(base_params, max_paginas, permitidas))
+        permitidas = inp.paginas_normalizadas
+        return pd.DataFrame(self._paginar(base_params, _limite_de_paginas(permitidas), permitidas))
 
     def _paginar(
         self,
         base_params: dict[str, Any],
         max_paginas: int | None,
-        permitidas: Container[int] | None,
+        permitidas: Paginas | None,
     ) -> list[dict[str, Any]]:
         """Segue o cursor ``searchAfter`` até a página vazia, o fim do cursor ou ``max_paginas``.
 
@@ -654,7 +652,7 @@ class PdpjScraper(PdpjSsoMixin, HTTPScraper):
             if lida is None:
                 return rows
             page_rows, search_after = lida
-            if permitidas is None or pagina in permitidas:
+            if pagina_pedida(permitidas, pagina):
                 rows.extend(page_rows)
             ultima = max_paginas is not None and pagina >= max_paginas
             if not search_after or not page_rows or ultima:

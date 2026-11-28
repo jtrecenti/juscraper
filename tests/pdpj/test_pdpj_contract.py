@@ -29,6 +29,7 @@ from juscraper.aggregators.pdpj.parse import (
     parse_pesquisa_response,
 )
 from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
+from juscraper.utils.pagination import selecao_de_paginas
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
 # Token JWT minimo (header + payload com ``exp`` futura) so para passar pelo
@@ -273,7 +274,7 @@ def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
 
 def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
     """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
-    assert _limite_de_paginas(range(1, 10, 3)) == (7, range(1, 10, 3))
+    assert _limite_de_paginas(selecao_de_paginas(range(1, 10, 3))) == 7
 
 
 @pytest.mark.parametrize("paginas", [True, [True], [1, True]])

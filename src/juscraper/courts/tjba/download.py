@@ -7,7 +7,7 @@ from functools import partial
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
-from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas
 from juscraper.utils.params import to_iso_date
 
 from .parse import cjsg_parse
@@ -220,11 +220,11 @@ def cjsg_download(
         page_count: int = _filter(first).get("pageCount") or 1
         return page_count
 
-    contar = contador_com_teto(paginas, MAX_RESULTS // items_per_page, _n_pags, tribunal="TJBA")
     return baixar_paginas_pedidas(
         paginas,
         lambda pagina: _fetch_page(pagina - 1, data_publicacao_inicio, data_publicacao_fim),
-        contar,
+        _n_pags,
         tribunal="TJBA",
         sleep_time=1,
+        teto=MAX_RESULTS // items_per_page,
     )

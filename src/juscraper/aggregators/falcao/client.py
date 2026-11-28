@@ -31,7 +31,7 @@ from tqdm.auto import tqdm
 from ...core.avisos import avisar
 from ...core.base import mensagem_de_kwargs_inesperados
 from ...core.http import HTTPScraper, RequestPolicy
-from ...utils.pagination import paginas_no_intervalo
+from ...utils.pagination import Paginas, paginas_no_intervalo, recusar_alem_do_teto, selecao_de_paginas
 from ...utils.params import (
     coerce_brazilian_date,
     normalize_paginas,
@@ -155,8 +155,8 @@ class FalcaoScraper(HTTPScraper):
             paginas: Paginas 1-based; ``None``
                 baixa todas as disponiveis, ate o teto de 10000 resultados
                 do backend (acima dele, emite ``UserWarning``). Default
-                ``None``. Páginas selecionadas além do teto são ignoradas
-                sem requisição.
+                ``None``. Página selecionada além do teto levanta
+                ``ValueError`` antes de qualquer requisição.
             **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesFalcao`.
                 Listados abaixo (todos opcionais salvo indicacao):
 
@@ -352,6 +352,9 @@ class FalcaoScraper(HTTPScraper):
     def _baixar(self, pesquisa, paginas, base, kwargs: dict, metodo: str) -> str:
         """Valida a entrada, pagina a busca e grava cada pagina em ``base`` ou no checkpoint."""
         inp = self._validar_input(pesquisa, normalize_paginas(paginas), kwargs, metodo)
+        # Como no TJBA e nos demais portais com teto: a página além dele é erro, antes de qualquer requisição.
+        teto = self._total_paginas(_MAX_RESULTADOS, inp.tamanho_pagina)
+        recusar_alem_do_teto(inp.paginas_normalizadas, teto, tribunal="Falcao")
         if inp.checkpoint_dir is None:
             if inp.resume:
                 raise ValueError("resume=True exige checkpoint_dir.")
@@ -387,8 +390,7 @@ class FalcaoScraper(HTTPScraper):
         """
         gravadas = checkpoint.gravadas if checkpoint is not None else set()
         total_anterior = checkpoint.total if checkpoint is not None else None
-        # O teto é conhecido antes da consulta: a página além dele sai do pedido,
-        # com aviso, antes de qualquer requisição; a além do total real, depois de lê-lo.
+        # A página além do teto já foi recusada em ``_baixar``; a além do total real sai depois de lê-lo.
         alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
         # A menor pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
@@ -414,7 +416,9 @@ class FalcaoScraper(HTTPScraper):
         self._avisar_teto(inp, total)
 
         pendentes = [
-            p for p in paginas_no_intervalo(alcancaveis, total_paginas, tribunal="Falcao") if p not in gravadas
+            p
+            for p in paginas_no_intervalo(selecao_de_paginas(alcancaveis), total_paginas, tribunal="Falcao")
+            if p not in gravadas
         ]
         if primeira not in pendentes:
             arquivo_inicial.unlink()
@@ -433,7 +437,7 @@ class FalcaoScraper(HTTPScraper):
         """Retomada sem nada a requisitar: avisa das pedidas além do total registrado e do teto."""
         if alcancaveis is not None:
             ultima = self._total_paginas(total_anterior, inp.tamanho_pagina)
-            paginas_no_intervalo(alcancaveis, ultima, tribunal="Falcao")
+            paginas_no_intervalo(selecao_de_paginas(alcancaveis), ultima, tribunal="Falcao")
         self._avisar_teto(inp, total_anterior)
 
     def _primeira_pendente(
@@ -556,7 +560,7 @@ class FalcaoScraper(HTTPScraper):
         return max(1, math.ceil(alcancavel / tamanho_pagina))
 
     @classmethod
-    def _paginas_ate(cls, paginas: list[int] | range | None, total: int, tamanho_pagina: int) -> list[int] | None:
+    def _paginas_ate(cls, paginas: Paginas | None, total: int, tamanho_pagina: int) -> list[int] | None:
         """As páginas pedidas que ``total`` resultados alcançam, uma vez cada; ``None`` continua todas.
 
         As de fora vão para o log, num aviso só (:func:`paginas_no_intervalo`).

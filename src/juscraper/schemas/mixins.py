@@ -26,6 +26,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from ..utils.pagination import selecao_de_paginas
 from .types import InteiroSemBool, PaginasNormalizadas
 
 
@@ -54,16 +55,16 @@ class PaginasMixin(BaseModel):
 
     @property
     def paginas_normalizadas(self) -> PaginasNormalizadas:
-        """``paginas`` com o ``int`` ``n`` trocado por ``range(1, n + 1)``.
+        """``paginas`` como :class:`~juscraper.utils.pagination.Paginas`; o ``int`` ``n`` vale ``range(1, n + 1)``.
 
-        E o que o raspador le depois da validacao. ``paginas`` continua
-        devolvendo o valor como validado (inclusive ``int``) para quem usa o
-        schema direto; como propriedade, isto nao entra na validacao, no
-        ``model_dump()`` nem no ``model_json_schema()``.
+        E o que o raspador le depois da validacao, e so pelos helpers de
+        ``juscraper.utils.pagination``: o tipo e opaco (sem laco, ``len`` nem
+        indice). ``paginas`` continua devolvendo o valor como validado
+        (inclusive ``int``) para quem usa o schema direto; como propriedade,
+        isto nao entra na validacao, no ``model_dump()`` nem no
+        ``model_json_schema()``.
         """
-        if isinstance(self.paginas, int):
-            return range(1, self.paginas + 1)
-        return self.paginas
+        return selecao_de_paginas(self.paginas)
 
     @field_validator("paginas")
     @classmethod

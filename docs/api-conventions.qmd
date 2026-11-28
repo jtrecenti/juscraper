@@ -94,11 +94,14 @@ appears. When the portal reports the total, pages beyond it are not requested
 and are reported in a single warning on the scraper's logger
 (`juscraper.<sigla>`, such as `juscraper.tjsp` or `juscraper.falcao`).
 Exceptions: TJAP, TJPR and TJRR still request an explicit page beyond the end
-from the portal; PDPJ and DataJud walk their
-cursor up to the largest requested page and stop silently at the end of the
-results; DataJud downloads a list as the contiguous range between its smallest
-and largest page (its cursor only moves forward); the STF raises `ValueError`
-for a repeated page.
+from the portal; PDPJ and DataJud walk their cursor (it only moves forward) up
+to the largest requested page, return only the requested pages and stop
+silently at the end of the results.
+
+Portals that serve only the first results of a search (10,000 in TJBA, TJMT,
+TJPB, TJRO and Falcão) raise `ValueError` before any request when a requested
+page is beyond that cap. With `paginas=None`, the download stops at the cap with
+a `UserWarning`.
 
 ### Page Size
 
