@@ -28,26 +28,40 @@ import juscraper.aggregators
 import juscraper.courts
 from juscraper.utils.params import DATE_ALIASES, SEARCH_ALIASES
 
-# Os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
-# ``listar_varas`` da familia eSAJ (refs #228) ficam fora deste regime de
-# proposito: nao recebem input de usuario (so ``grau``, um literal), entao um
-# ``Input*`` com ``extra="forbid"`` seria cerimonia sem valor de validacao.
-COURT_ENDPOINTS = (
-    "cjsg", "cjpg", "cpopg", "cposg", "cjsg_ementa", "listar_decisoes", "contar_decisoes",
+_LOOKUP = (
+    "devolve a tabela de codigos do formulario do portal; so recebe um literal "
+    "(``grau``, ``tribunal``), e um ``Input*`` seria cerimonia sem validacao (refs #228)"
 )
-AGGREGATOR_ENDPOINTS = (
-    "auth",
-    "auth_firefox",
-    "auth_govbr",
-    "contar",
-    "contar_processos",
-    "cpopg",
-    "download_documents",
-    "listar_comunicacoes",
-    "listar_decisoes",
-    "listar_processos",
-    "pesquisa",
+_DOCUMENTO = "baixa o documento de uma linha ja coletada; os argumentos sao os codigos dessa linha, sem filtros"
+_LOTE = (
+    "baixa os documentos das linhas de um DataFrame ja coletado e o devolve com as colunas do "
+    "caminho e de ``motivo_falha``; sem filtros, e sem Output mapeado"
 )
+_CONFIGURACAO = "configura o raspador, nao consulta o portal"
+
+#: Metodos publicos que nao pedem schema, por ``Classe.metodo`` da classe que os
+#: define, com o motivo. Os demais metodos publicos implementados
+#: (:func:`endpoints_publicos`) precisam de entrada em ``EXPECTED_*_SCHEMAS``.
+FORA_DO_REGISTRO: dict[str, str] = {
+    "EsajSearchScraper.listar_classes": _LOOKUP,
+    "EsajSearchScraper.listar_assuntos": _LOOKUP,
+    "EsajSearchScraper.listar_orgaos": _LOOKUP,
+    "EsajCjpgScraper.listar_varas": _LOOKUP,
+    "TSEScraper.listar_classes": _LOOKUP,
+    "TSEScraper.listar_eleicoes": _LOOKUP,
+    "TSEScraper.listar_normas": _LOOKUP,
+    "TSEScraper.listar_relatores": _LOOKUP,
+    "EsajAcordaoScraper.baixar_acordao": _DOCUMENTO,
+    "EsajAcordaoScraper.baixar_acordaos": _LOTE,
+    "EsajAcordaoCjsgScraper.baixar_acordao": _DOCUMENTO,
+    "EsajAcordaoCjsgScraper.baixar_acordaos": _LOTE,
+    "EsajSentencaScraper.baixar_sentenca": _DOCUMENTO,
+    "EsajSentencaScraper.baixar_sentencas": _LOTE,
+    "TSEScraper.baixar_inteiro_teor": _DOCUMENTO,
+    "TSEScraper.baixar_inteiros_teores": _LOTE,
+    "TJSPScraper.set_method": _CONFIGURACAO,
+    "TJSPScraper.set_download_path": _CONFIGURACAO,
+}
 
 #: Aliases deprecados de busca e data, resolvidos antes do pydantic.
 ALIASES_DEPRECADOS = frozenset(SEARCH_ALIASES) | frozenset(DATE_ALIASES)
@@ -147,6 +161,10 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
     ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "existe"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "documentos"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "movimentos"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "partes"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
     ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "InputPesquisaPdpj"),
     ("pdpj", "contar"): ("juscraper.aggregators.pdpj.schemas", "InputContarPdpj"),
     ("pdpj", "download_documents"): (
@@ -219,6 +237,10 @@ EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ),
     ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "OutputListarDecisoesFalcao"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "OutputCpopgPdpj"),
+    ("pdpj", "existe"): ("juscraper.aggregators.pdpj.schemas", "OutputExistePdpj"),
+    ("pdpj", "documentos"): ("juscraper.aggregators.pdpj.schemas", "OutputDocumentosPdpj"),
+    ("pdpj", "movimentos"): ("juscraper.aggregators.pdpj.schemas", "OutputMovimentosPdpj"),
+    ("pdpj", "partes"): ("juscraper.aggregators.pdpj.schemas", "OutputPartesPdpj"),
     ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "OutputPesquisaPdpj"),
     ("datajud", "contar_processos"): ("juscraper.aggregators.datajud.schemas", "OutputContarProcessosDataJud"),
     ("pdpj", "download_documents"): ("juscraper.aggregators.pdpj.schemas", "OutputDownloadDocumentsPdpj"),
@@ -272,6 +294,7 @@ def resolve(modulo: str, classe: str) -> type[BaseModel]:
     return obj
 
 
+@cache
 def is_stub(metodo: Callable[..., object]) -> bool:
     try:
         source = inspect.getsource(metodo)
@@ -280,13 +303,42 @@ def is_stub(metodo: Callable[..., object]) -> bool:
     return "raise NotImplementedError" in source
 
 
-def endpoints_implementados(cls: type, candidatos: tuple[str, ...]) -> list[str]:
-    """Candidatos que ``cls`` implementa (metodo existente e nao stub)."""
-    return [
-        endpoint
-        for endpoint in candidatos
-        if callable(metodo := getattr(cls, endpoint, None)) and not is_stub(metodo)
-    ]
+@cache
+def metodos_publicos(cls: type) -> dict[str, str]:
+    """Metodos publicos implementados do raspador -> ``Classe.metodo`` de quem o define.
+
+    Sem os metodos de ``juscraper.core`` e os stubs. Atributo publico chamavel que
+    nao e funcao nem classe (metodo com ``functools.cache``, ``partialmethod``...)
+    reprova: ficaria fora da cobertura sem aviso.
+    """
+    metodos = {}
+    for nome in dir(cls):
+        atributo = getattr(cls, nome)
+        if nome.startswith("_") or not callable(atributo) or inspect.isclass(atributo):
+            continue
+        assert inspect.isfunction(atributo) or inspect.ismethod(atributo), (
+            f"{cls.__name__}.{nome} e chamavel mas nao e funcao ({type(atributo).__name__}); "
+            "ensinar metodos_publicos a reconhece-lo"
+        )
+        dono = next(classe for classe in cls.__mro__ if nome in vars(classe))
+        if not dono.__module__.startswith("juscraper.core") and not is_stub(atributo):
+            metodos[nome] = f"{dono.__qualname__}.{nome}"
+    return metodos
+
+
+def endpoints_publicos(cls: type) -> list[str]:
+    """Metodos publicos que pedem schema mapeado.
+
+    Ficam de fora os de :data:`FORA_DO_REGISTRO` e os ``<endpoint>_download`` /
+    ``<endpoint>_parse``, que seguem o schema do endpoint.
+    """
+    metodos = metodos_publicos(cls)
+    return sorted(
+        nome
+        for nome, chave in metodos.items()
+        if chave not in FORA_DO_REGISTRO
+        and not (nome.endswith(("_download", "_parse")) and nome.rsplit("_", 1)[0] in metodos)
+    )
 
 
 class SchemaMapeado(NamedTuple):

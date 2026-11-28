@@ -503,7 +503,8 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
     validas = paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
     parcial = _Parcial(mensagem_parcial or partial(mensagem_de_coleta_parcial, tribunal), ler_parcial, inicial, first)
     resultados: list[_Pagina] = []
-    for posicao, pagina in enumerate(tqdm(validas, desc=f"Baixando páginas {tribunal}")):
+    barra = tqdm(validas, desc=f"Baixando páginas {tribunal}", disable=len(validas) <= 1)
+    for posicao, pagina in enumerate(barra):
         if pagina == inicial:
             resultados.append(first)
             continue
