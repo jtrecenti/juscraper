@@ -135,6 +135,22 @@ def test_cjsg_no_results(mock_txtcaptcha, mocker):
 
 
 @responses.activate(registry=OrderedRegistry)
+def test_cjsg_no_results_sem_a_pagina_1_pedida_nao_avisa_pagina_fora(mock_txtcaptcha, mocker, caplog):
+    """Busca vazia com ``paginas=[2, 3]``: nada a baixar nem a avisar além de "nenhum resultado"."""
+    mocker.patch("time.sleep")
+    add_form()
+    add_captcha()
+    add_dwr()
+    _add_search("cjsg/no_results.html", {"numeroRegistro": "1"})
+
+    with caplog.at_level("WARNING", logger="juscraper.tjmg"):
+        df = jus.scraper("tjmg").cjsg("juscraper_probe_zero_hits_xyzqwe", paginas=[2, 3])
+
+    assert df.empty
+    assert "fora do intervalo" not in caplog.text
+
+
+@responses.activate(registry=OrderedRegistry)
 def test_cjsg_revalida_captcha_quando_sessao_expira(mock_txtcaptcha, mocker):
     """HTTP 401 no meio da paginacao dispara nova validacao do captcha e repete a pagina."""
     mocker.patch("time.sleep")

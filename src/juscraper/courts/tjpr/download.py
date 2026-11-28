@@ -1,19 +1,21 @@
 """
 Functions for downloading specific to TJPR
 """
+import functools
 import re
 from collections.abc import Callable
 
 import pandas as pd
 from bs4 import BeautifulSoup
-from tqdm.auto import tqdm
 
-from juscraper.core.exceptions import ColetaParcialError, HTTPSemanticError
+from juscraper.core.exceptions import HTTPSemanticError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
-    descrever_paginas,
+    Paginas,
+    baixar_paginas_pedidas,
     extract_count_with_cascade,
-    paginas_unicas,
+    menor_pagina,
+    mensagem_de_coleta_parcial,
     parse_page_number,
     resolve_total_pages,
 )
@@ -169,15 +171,16 @@ def build_cjsg_form_body(
     }
 
 
-def _last_page_links(soup: BeautifulSoup) -> set[int]:
-    """Lê os totais dos links "Última Página" da página inteira.
+def _last_page_links(soup: BeautifulSoup, pagina: int) -> set[int]:
+    """Lê os totais dos links "Última Página" da ``pagina`` inteira.
 
     Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
     ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
     âncora com classe ``arrowLastOff`` e sem href, o que na primeira página
-    quer dizer total 1. A busca cobre a página inteira, e não só o
-    ``#navigator .navRight``, para que um contêiner renomeado não esconda o
-    link da conferência.
+    quer dizer total 1; nas demais, quer dizer que a ``pagina`` é a última, e
+    o link desativado não entra na conferência. A busca cobre a página
+    inteira, e não só o ``#navigator .navRight``, para que um contêiner
+    renomeado não esconda o link da conferência.
     """
     totais = set()
     for link in soup.select("a.arrowLastOn"):
@@ -188,21 +191,21 @@ def _last_page_links(soup: BeautifulSoup) -> set[int]:
             tribunal="TJPR",
             origem=f"link de última página {href!r}",
         ))
-    if soup.select_one("a.arrowLastOff") is not None:
+    if pagina == 1 and soup.select_one("a.arrowLastOff") is not None:
         totais.add(1)
     return totais
 
 
-def extract_total_pages(html: str) -> int:
-    """Extrai o total de páginas da primeira página de resultados do TJPR.
+def extract_total_pages(html: str, pagina: int = 1) -> int:
+    """Extrai o total de páginas de uma página de resultados do TJPR, a ``pagina``.
 
     O total sai da contagem "N registro(s) encontrado(s)" dividida por
     ``RESULTS_PER_PAGE``, e os links "Última Página" (ativos e desativados)
     são conferidos contra ele por
     :func:`~juscraper.utils.pagination.resolve_total_pages`. O paginador não
     exibe "Página X de Y", e o maior ``pageNumber`` visível é o fim da janela
-    de links (3 na página 1), não o total. Vale para a primeira página, a
-    única que :func:`cjsg_download` lê: na última, "Última" vem desativada.
+    de links (3 na página 1), não o total. :func:`cjsg_download` lê a menor
+    página pedida, que pode ser a última, onde "Última" vem desativada.
 
     Raises:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
@@ -218,7 +221,7 @@ def extract_total_pages(html: str) -> int:
     return resolve_total_pages(
         n_resultados,
         resultados_por_pagina=RESULTS_PER_PAGE,
-        totais_links=_last_page_links(soup),
+        totais_links=_last_page_links(soup, pagina),
         tribunal="TJPR",
     )
 
@@ -226,7 +229,7 @@ def extract_total_pages(html: str) -> int:
 def cjsg_download(
     home_url: str,
     pesquisa: str,
-    paginas=None,
+    paginas: Paginas | None = None,
     data_julgamento_inicio=None,
     data_julgamento_fim=None,
     data_publicacao_inicio=None,
@@ -241,7 +244,8 @@ def cjsg_download(
 
     Raises:
         ColetaParcialError: Uma página falhou depois de outras baixadas;
-            ``resultado`` é ``ler_parcial`` das baixadas. Ver :func:`_baixar_paginas`.
+            ``resultado`` é ``ler_parcial`` das baixadas
+            (:func:`juscraper.utils.pagination.baixar_paginas_pedidas`).
     """
     populate_session(request_fn, home_url)
     url = f"{SEARCH_URL}?actionType=pesquisar"
@@ -266,48 +270,21 @@ def cjsg_download(
         resp = request_fn("POST", url, data=data, headers=headers, perfil="cjsg")
         return resp.text
 
-    if paginas is None:
-        # Download all: fetch first page, extract total, then fetch the rest
-        first_html = _fetch_page(1)
-        n_pags = extract_total_pages(first_html)
-        return _baixar_paginas(_fetch_page, list(range(2, n_pags + 1)), [first_html], ler_parcial)
-    return _baixar_paginas(_fetch_page, list(paginas_unicas(paginas)), [], ler_parcial)
-
-
-def _baixar_paginas(
-    fetch_page: Callable[[int], str],
-    pendentes: list[int],
-    resultados: list[str],
-    ler_parcial: Callable[[list[str]], pd.DataFrame],
-) -> list[str]:
-    """Acrescenta ``pendentes`` a ``resultados``, as páginas já baixadas, e os devolve.
-
-    Como no TJMG e no TJTO, a página que falha com outra já baixada encerra a
-    busca e levanta :class:`ColetaParcialError`, com as baixadas lidas por
-    ``ler_parcial`` em ``.resultado``; se nada foi baixado ainda, a falha
-    original sobe.
-    """
-    if not pendentes:
-        return resultados
-    for posicao, pagina in enumerate(tqdm(pendentes, desc='Baixando páginas TJPR')):
-        try:
-            resultados.append(fetch_page(pagina))
-        except Exception as exc:  # vai para ColetaParcialError, como no TJMG e no TJTO
-            if not resultados:
-                raise
-            raise _coleta_parcial(resultados, pendentes[posicao:], exc, ler_parcial) from exc
-    return resultados
-
-
-def _coleta_parcial(
-    resultados: list[str], faltando: list[int], exc: Exception, ler_parcial: Callable[[list[str]], pd.DataFrame]
-) -> ColetaParcialError:
-    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar, lidas por ``ler_parcial``."""
-    mensagem = (
-        f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
-        f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
-        "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
-        f"custaria uma requisição por linha. Faltam as páginas {descrever_paginas(faltando)}, "
-        "que podem ser pedidas de novo com paginas=."
+    # O total vem da menor página pedida, também com ``paginas`` explícito: a
+    # pedida além do total vai para o log, sem requisição.
+    return baixar_paginas_pedidas(
+        paginas,
+        _fetch_page,
+        functools.partial(extract_total_pages, pagina=menor_pagina(paginas)),
+        tribunal="TJPR",
+        ler_parcial=ler_parcial,
+        mensagem_parcial=_mensagem_parcial,
     )
-    return ColetaParcialError(mensagem, resultado=ler_parcial(resultados), falhas=[(None, None, exc)])
+
+
+def _mensagem_parcial(faltando: list[int], n_baixadas: int, exc: Exception) -> str:
+    """Texto do ``ColetaParcialError``: o padrão, com o aviso das ementas truncadas no parcial."""
+    return mensagem_de_coleta_parcial("TJPR cjsg", faltando, n_baixadas, exc) + (
+        " No parcial, as ementas longas vêm truncadas em \"Leia mais..\": o portal acabou de falhar, "
+        "e a ementa completa custaria uma requisição por linha."
+    )

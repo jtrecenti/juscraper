@@ -214,7 +214,7 @@ def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
     """A página 2 estoura o prazo: a 1 não se perde, e a 3 não é pedida (como no TJMG e no TJTO)."""
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
-    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*Faltam as páginas \[2, 3\],") as info:
+    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*faltam as páginas \[2, 3\],") as info:
         jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 4))
 
     erro = info.value
@@ -245,7 +245,7 @@ def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
 def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
-    with pytest.raises(ColetaParcialError, match=r"Faltam as páginas range\(2, \d+\),") as info:
+    with pytest.raises(ColetaParcialError, match=r"faltam as páginas range\(2, \d+\),") as info:
         jus.scraper("tjpr").cjsg("dano moral")
 
     assert len(info.value.resultado) == 40
@@ -271,7 +271,7 @@ def test_cjsg_falha_na_primeira_pagina_levanta_a_excecao_original():
 
 @responses.activate
 def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
-    """Com ``paginas`` explícito a seleção não é cortada, mas a página pedida duas vezes sai num pedido só."""
+    """A página pedida duas vezes sai num pedido só."""
     mocker.patch("time.sleep")
     add_home()
     add_search_page("dano moral", 2, "cjsg/results_normal_page_02.html")
@@ -280,3 +280,20 @@ def test_cjsg_pagina_repetida_sai_uma_vez(mocker):
 
     assert len(brutos) == 1
     assert len(chamadas_para(SEARCH_URL)) == 1
+
+
+@responses.activate
+def test_cjsg_paginas_explicitas_cortadas_ao_total(caplog):
+    """O total vem da menor página pedida também com ``paginas`` explícito: a além dele não é pedida.
+
+    A página 1 do sample tem 410.614 registros, 50 por página: 8.213 páginas.
+    """
+    add_home()
+    add_search_page("dano moral", 1, "cjsg/results_normal_page_01.html")
+
+    with caplog.at_level("WARNING", logger="juscraper.tjpr"):
+        brutos = jus.scraper("tjpr").cjsg_download("dano moral", paginas=[9000, 1])
+
+    assert len(brutos) == 1
+    assert len(chamadas_para(SEARCH_URL)) == 1
+    assert "TJPR: página 9000 fora do intervalo 1-8213" in caplog.text

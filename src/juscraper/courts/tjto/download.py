@@ -2,22 +2,19 @@
 Downloads raw pages from the TJTO jurisprudence search.
 """
 import re
-import time
-from collections.abc import Callable
 from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
-from tqdm import tqdm
 
-from juscraper.core.exceptions import BotChallengeBlockedError, ColetaParcialError
+from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import RequestFn
 from juscraper.core.waf import eh_desafio_waf
 from juscraper.utils.pagination import (
-    descrever_paginas,
+    Paginas,
+    baixar_paginas_pedidas,
     extract_count_with_cascade,
-    menor_pagina,
-    paginas_no_intervalo,
+    mensagem_de_coleta_parcial,
     resolve_total_pages,
 )
 from juscraper.utils.params import to_br_date
@@ -116,7 +113,7 @@ def _fetch_ementa(request_fn: RequestFn, uuid: str) -> dict[Any, Any]:
 
 def cjsg_download_manager(
     termo: str,
-    paginas=None,
+    paginas: Paginas | None = None,
     *,
     request_fn: RequestFn,
     sleep_time: float = 1.0,
@@ -166,54 +163,28 @@ def cjsg_download_manager(
         resp = request_fn("POST", BASE_URL, data=payload, perfil="cjsg")
         return resp.text
 
-    # A menor página pedida é a única baixada antes de saber o total: se ela
-    # passa do total, as demais também passam, e todas caem no aviso.
-    primeira = menor_pagina(paginas)
-    html_primeira = _get_page(primeira)
-    n_pags = resolve_total_pages(
-        _get_total_results(html_primeira, type_minuta), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
+    def _n_pags(html: str) -> int:
+        return resolve_total_pages(
+            _get_total_results(html, type_minuta), resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJTO"
+        )
+
+    # O bloqueio do AWS WAF, que chega depois de algumas buscas seguidas, não
+    # descarta o que já veio: a página que falha com outra baixada levanta
+    # ``ColetaParcialError``.
+    return baixar_paginas_pedidas(
+        paginas,
+        _get_page,
+        _n_pags,
+        tribunal="TJTO",
+        sleep_time=sleep_time,
+        ler_parcial=cjsg_parse_manager,
+        mensagem_parcial=_mensagem_parcial,
     )
-    validas = paginas_no_intervalo(paginas, n_pags, tribunal="TJTO")
-    return _baixar_paginas(_get_page, validas, primeira, html_primeira, sleep_time)
 
 
-def _baixar_paginas(
-    get_page: Callable[[int], str], pendentes: list[int], primeira: int, html_primeira: str, sleep_time: float
-) -> list:
-    """Baixa as ``pendentes`` (1-based), com ``sleep_time`` antes de cada requisição.
-
-    ``primeira`` já foi baixada, para ler o total, e entra na sua posição sem
-    nova requisição. Por isso a página que falha aqui sempre tem outra baixada
-    e levanta :class:`ColetaParcialError`, com as baixadas lidas em
-    ``.resultado`` (``primeira`` também, se viria depois na ordem pedida), como
-    no TJMG: o bloqueio do AWS WAF, que chega depois de algumas buscas
-    seguidas, não descarta o que já veio. A falha na própria ``primeira`` sobe
-    antes, como a exceção original.
-    """
-    resultados: list[str] = []
-    for posicao, page_num in enumerate(tqdm(pendentes, desc="Baixando páginas TJTO")):
-        if page_num == primeira:
-            resultados.append(html_primeira)
-            continue
-        time.sleep(sleep_time)
-        try:
-            resultados.append(get_page(page_num))
-        except Exception as exc:  # vai para ColetaParcialError
-            faltando = pendentes[posicao:]
-            if primeira in faltando:
-                resultados.append(html_primeira)
-                faltando.remove(primeira)
-            raise _coleta_parcial(resultados, faltando, exc) from exc
-    return resultados
-
-
-def _coleta_parcial(resultados: list[str], faltando: list[int], exc: Exception) -> ColetaParcialError:
-    """``ColetaParcialError`` com as páginas baixadas antes de ``faltando[0]`` falhar."""
-    mensagem = (
-        f"TJTO: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
-        f"As {len(resultados)} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
-        f"faltam as páginas {descrever_paginas(faltando)}, que podem ser pedidas de novo com paginas="
-    )
+def _mensagem_parcial(faltando: list[int], n_baixadas: int, exc: Exception) -> str:
+    """Texto do ``ColetaParcialError``: o padrão e, no bloqueio do WAF, quando pedir de novo."""
+    mensagem = mensagem_de_coleta_parcial("TJTO", faltando, n_baixadas, exc)
     if isinstance(exc, BotChallengeBlockedError):
-        mensagem += " depois de pelo menos 10 minutos, quando o bloqueio do AWS WAF passa"
-    return ColetaParcialError(mensagem + ".", resultado=cjsg_parse_manager(resultados), falhas=[(None, None, exc)])
+        mensagem += " Peça-as de novo depois de pelo menos 10 minutos, quando o bloqueio do AWS WAF passa."
+    return mensagem
