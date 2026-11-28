@@ -145,7 +145,7 @@ class TJRNScraper(HTTPScraper):
                   Convertido para ``DD-MM-YYYY`` antes do
                   envio ao backend.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
             * ``id_classe_judicial`` -> ``id_classe``
@@ -161,7 +161,7 @@ class TJRNScraper(HTTPScraper):
         Returns:
             DataFrame com as decisoes.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJRN` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

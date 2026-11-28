@@ -30,6 +30,8 @@ _FALHA_DE_PAR = "Failed to get '"
 _TIPO = r"[A-Za-z_][\w.]*(?:\[[^:]*\])?"
 _PREFIXO_DE_TIPO = re.compile(rf"^({_TIPO}(?:\s*\|\s*{_TIPO})*):(?:\s|$)")
 # Título de seção numpy: uma linha de texto e, logo abaixo, uma linha só de ``-``.
+# Item de lista em Markdown: ``*``, ``-`` ou ``+`` seguido de espaço.
+_ITEM_DE_LISTA = re.compile(r"^\s*[*+-]\s+\S")
 _SECAO_NUMPY = re.compile(r"^[ \t]*(\S[^\n]*?)[ \t]*\n[ \t]*-{3,}[ \t]*$", re.MULTILINE)
 
 
@@ -61,7 +63,35 @@ def _motivo_do_estilo_numpy(docstring: str) -> str | None:
     return None
 
 
+def _motivo_da_lista_colada(texto: str) -> str | None:
+    """Item de lista logo abaixo de uma linha de texto, sem linha em branco entre os dois.
+
+    O Pandoc só abre a lista depois de linha em branco: colada ao texto, ela
+    vira parte do parágrafo, com os ``*`` no meio da frase. É o que acontece
+    com um título que o griffe não reconhece como seção, como ``Aliases
+    deprecados (popados com ...):``, cujo bloco fica como texto corrido.
+    """
+    na_lista = False
+    anterior = ""
+    for linha in texto.splitlines():
+        if not linha.strip():
+            na_lista = False
+        elif _ITEM_DE_LISTA.match(linha):
+            if not na_lista and anterior.strip():
+                return (
+                    f"lista colada ao texto ({anterior.strip()!r}), que a referência publica como parágrafo;"
+                    " deixar uma linha em branco antes ou usar título de seção que o griffe reconhece,"
+                    " como 'Aliases deprecados:'"
+                )
+            na_lista = True
+        anterior = linha
+    return None
+
+
 def _motivo_da_secao(objeto: griffe.Object, secao: griffe.DocstringSection) -> str | None:
+    if isinstance(secao, (griffe.DocstringSectionText, griffe.DocstringSectionAdmonition)):
+        texto = secao.value if isinstance(secao, griffe.DocstringSectionText) else secao.value.contents
+        return _motivo_da_lista_colada(texto)
     if isinstance(secao, griffe.DocstringSectionWarns):
         return "seção 'Warns:', que derruba o quartodoc build; usar 'Avisos:'"
     if isinstance(secao, griffe.DocstringSectionRaises):
@@ -309,6 +339,16 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '-----\n'
         'Texto.\n'
         '"""\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Aliases deprecados (popados antes do pydantic):\n'
+        '        * ``query`` -> ``pesquisa``\n'
+        '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    A implementação fica em:\n'
+        '    - ``juscraper.courts``\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -333,6 +373,8 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "numpy-parameters",
         "numpy-returns",
         "numpy-no-modulo",
+        "lista-sob-titulo-nao-reconhecido",
+        "lista-colada-ao-paragrafo",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):
@@ -375,6 +417,14 @@ def test_forma_correta_e_tupla_passam():
         '    """Resumo.\n\n'
         "    Returns:\n"
         "        (dict[str, str]): Motivo de cada falha.\n"
+        '    """\n\n'
+        "def lista():\n"
+        '    """Resumo, com lista depois de linha em branco:\n\n'
+        "    * um item\n"
+        "      com continuação\n"
+        "    * outro item\n\n"
+        "    Aliases deprecados:\n"
+        "        * ``query`` -> ``pesquisa``\n"
         '    """\n\n'
         "def k() -> tuple[int]:\n"
         '    """Resumo.\n\n'

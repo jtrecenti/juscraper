@@ -200,7 +200,7 @@ class FalcaoScraper(HTTPScraper):
                   entre sessões, e a ordem dos valores de um filtro em
                   lista não importa. Default ``False``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
 
         Returns:
@@ -238,7 +238,7 @@ class FalcaoScraper(HTTPScraper):
             ...                  ordenacao="menos_recente",
             ...                  data_juntada_fim="2024-12-31")
 
-        See also:
+        See Also:
             :class:`InputListarDecisoesFalcao` -- schema pydantic e a fonte da verdade
             dos filtros aceitos.
         """
@@ -310,7 +310,7 @@ class FalcaoScraper(HTTPScraper):
             varia entre chamadas, ao coletar mais de uma página ou com
             ``checkpoint_dir``; veja :meth:`listar_decisoes`.
 
-        See also:
+        See Also:
             :meth:`listar_decisoes` -- lista completa de filtros aceitos.
         """
         base: str | None = diretorio

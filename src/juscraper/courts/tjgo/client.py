@@ -155,7 +155,7 @@ class TJGOScraper(HTTPScraper):
                   Backend Projudi mapeia
                   para ``DataInicial`` / ``DataFinal`` no form body.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
             * ``qtde_itens_pagina`` -> ``tamanho_pagina``
@@ -178,7 +178,7 @@ class TJGOScraper(HTTPScraper):
             DataFrame com as decisoes (coluna ``texto`` carrega
                 o conteudo do documento; ``ementa`` nao e preenchido).
 
-        See also:
+        See Also:
             :class:`InputCJSGTJGO` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

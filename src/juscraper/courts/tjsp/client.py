@@ -211,8 +211,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                   estimar wall-clock antes de coleta longa (issue #92).
                   Soma bruta cross-janela em ``auto_chunk=True``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
+        Aliases deprecados:
 
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -239,7 +238,7 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
             >>> # Estimativa pre-scraping (issue #92):
             >>> n = tjsp.cjsg("dano moral", count_only=True)
 
-        See also:
+        See Also:
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP` —
             schema pydantic e a fonte da verdade dos filtros aceitos.
             :meth:`EsajSearchScraper.cjsg` — descricao detalhada do

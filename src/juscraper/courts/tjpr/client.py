@@ -225,8 +225,7 @@ class TJPRScraper(HTTPScraper):
             **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são
                 os parâmetros explícitos, campos de :class:`InputCJSGTJPR`.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
+        Aliases deprecados:
 
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``

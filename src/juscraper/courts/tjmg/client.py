@@ -185,7 +185,7 @@ class TJMGScraper(HTTPScraper):
                   ``dataPublicacaoInicial`` /
                   ``dataPublicacaoFinal``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -212,7 +212,7 @@ class TJMGScraper(HTTPScraper):
         Returns:
             DataFrame com os acordaos.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJMG` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """
@@ -323,7 +323,7 @@ class TJMGScraper(HTTPScraper):
             >>> df = tjmg.cposg("5000344-57.2025.8.13.0461")
             >>> advs = df.explode("partes").dropna(subset=["partes"])
 
-        See also:
+        See Also:
             :class:`InputCPOSGTJMG` / :class:`OutputCPOSGTJMG`.
         """
         return self.cposg_parse(self._download_cposg(id_cnj, kwargs))
