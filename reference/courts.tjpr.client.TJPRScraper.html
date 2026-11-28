@@ -287,11 +287,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic):</p>
-<pre><code>* ``query`` / ``termo`` -&gt; ``pesquisa``
-* ``data_inicio`` / ``data_fim`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
-* ``data_julgamento_de`` / ``data_julgamento_ate`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
-* ``data_publicacao_de`` / ``data_publicacao_ate`` -&gt; ``data_publicacao_inicio`` / ``data_publicacao_fim``</code></pre>
+</section>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></li>
+<li><code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_publicacao_de</code> / <code>data_publicacao_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code></li>
+</ul>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -317,7 +321,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Com <code>paginas=None</code>, quando a primeira página não permite fixar o total de páginas; ver <a href="../reference/courts.tjpr.client.TJPRScraper.html#juscraper.courts.tjpr.client.TJPRScraper.cjsg_download"><code>cjsg_download</code></a>.</td>
+<td>Quando a primeira página baixada (a menor pedida) não permite fixar o total de páginas; ver <a href="../reference/courts.tjpr.client.TJPRScraper.html#juscraper.courts.tjpr.client.TJPRScraper.cjsg_download"><code>cjsg_download</code></a>.</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -348,10 +352,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjpr <span class="op">=</span> jus.scraper(<span class="st">"tjpr"</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjpr.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, incluir_corte_idh<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> corte_idh <span class="op">=</span> df[df[<span class="st">"fonte"</span>] <span class="op">==</span> <span class="st">"Corte IDH"</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjpr <span class="op">=</span> jus.scraper(<span class="st">"tjpr"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjpr.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="dv">1</span>, incluir_corte_idh<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> corte_idh <span class="op">=</span> df[df[<span class="st">"fonte"</span>] <span class="op">==</span> <span class="st">"Corte IDH"</span>]</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
 <h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
@@ -360,15 +364,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg_download(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg_download(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    pesquisa<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    data_julgamento_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    data_julgamento_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    data_publicacao_inicio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    data_publicacao_fim<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Downloads raw results from the TJPR jurisprudence search (multiple pages).</p>
 <p>Returns a list of HTMLs (one per page).</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
@@ -447,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Com <code>paginas=None</code>, quando a primeira página não permite fixar o total de páginas; os casos estão em <code>juscraper.courts.tjpr.download.extract_total_pages</code>. O scraper levanta depois da primeira página, em vez de estimar.</td>
+<td>Quando a primeira página baixada (a menor pedida) não permite fixar o total de páginas; os casos estão em <code>juscraper.courts.tjpr.download.extract_total_pages</code>. O scraper levanta depois da primeira página, em vez de estimar.</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -460,12 +464,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg_parse(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    resultados_brutos,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    criterio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    incluir_corte_idh<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cjsg_parse(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    resultados_brutos,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    criterio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    incluir_corte_idh<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Extracts relevant data from the HTMLs returned by TJPR.</p>
 <p>Returns a DataFrame with the decisions.</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
@@ -523,12 +527,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Stub: Primeiro grau case consultation not implemented for TJPR.</p>
 </section>
 <section id="juscraper.courts.tjpr.client.TJPRScraper.cposg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjpr.client.TJPRScraper.cposg">cposg</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjpr.client.TJPRScraper.cposg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Stub: Segundo grau case consultation not implemented for TJPR.</p>
 
 

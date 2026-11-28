@@ -304,7 +304,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p>Todos os filtros do schema <code>InputCJSGTJPE</code> estao listados acima como parametros nomeados. O <code>**kwargs</code> so e exposto para absorver aliases deprecados (listados abaixo) e qualquer kwarg desconhecido vira <code>TypeError</code> via <code>raise_on_extra_kwargs</code>.</p>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>classe_cnj</code> -&gt; <code>classe</code> * <code>assunto_cnj</code> -&gt; <code>assunto</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> * <code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></p>
+</section>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></li>
+<li><code>classe_cnj</code> -&gt; <code>classe</code></li>
+<li><code>assunto_cnj</code> -&gt; <code>assunto</code></li>
+<li><code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+</ul>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -371,7 +380,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...                tipo_decisao<span class="op">=</span><span class="st">"acordaos"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
 <p><code>InputCJSGTJPE</code> — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
@@ -514,7 +523,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjpe.cpopg(<span class="st">"0000000-00.0000.8.17.0000"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also-1" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See also</h4>
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
 <p><code>InputCpopgTRF</code> — schema pydantic e a fonte da verdade dos parâmetros aceitos.</p>
 </section>
 </section>

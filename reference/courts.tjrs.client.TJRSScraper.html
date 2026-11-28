@@ -197,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse">cjsg_parse</a></td>
-<td>Extracts relevant data from the raw results returned by TJRS.</td>
+<td>Lê as páginas brutas de <a href="../reference/courts.tjrs.client.TJRSScraper.html#juscraper.courts.tjrs.client.TJRSScraper.cjsg_download"><code>cjsg_download</code></a> num DataFrame, uma linha por decisão.</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.tjrs.client.TJRSScraper.cpopg">cpopg</a></td>
@@ -360,6 +360,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>TJRSBuscaError</code></td>
 <td>Quando o portal responde com erro do Solr no lugar dos resultados, como em <code>pesquisa</code> com aspas sem fechar (<code>juscraper.courts.tjrs.download.TJRSBuscaError</code>).</td>
 </tr>
+<tr class="odd">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Quando uma página falha depois da primeira baixada (erro do Solr, rede depois das tentativas): a busca para ali, <code>.resultado</code> traz as páginas anteriores, <code>.falhas</code> e <code>__cause__</code> trazem a exceção da página, e a mensagem diz as páginas que faltam (<code>juscraper.core.exceptions.ColetaParcialError</code>).</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -422,6 +427,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as páginas brutas da pesquisa de jurisprudência do TJRS.</p>
 <p>Aceita os mesmos parâmetros e aliases deprecados de <a href="../reference/courts.tjrs.client.TJRSScraper.html#juscraper.courts.tjrs.client.TJRSScraper.cjsg"><code>cjsg</code></a>; veja lá a lista completa.</p>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TJRSBuscaError</code></td>
+<td>Erro do Solr na primeira página pedida, como em <a href="../reference/courts.tjrs.client.TJRSScraper.html#juscraper.courts.tjrs.client.TJRSScraper.cjsg"><code>cjsg</code></a>.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ColetaParcialError</code></td>
+<td>Falha numa página seguinte (erro do Solr, rede depois das tentativas); <code>.resultado</code> traz as páginas anteriores, já lidas, em DataFrame.</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="returns-1" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
@@ -445,7 +474,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjrs.client.TJRSScraper.cjsg_parse">cjsg_parse</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjrs.client.TJRSScraper.cjsg_parse(resultados_brutos)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Extracts relevant data from the raw results returned by TJRS. Returns a DataFrame with the decisions.</p>
+<p>Lê as páginas brutas de <a href="../reference/courts.tjrs.client.TJRSScraper.html#juscraper.courts.tjrs.client.TJRSScraper.cjsg_download"><code>cjsg_download</code></a> num DataFrame, uma linha por decisão.</p>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TJRSBuscaError</code></td>
+<td>Quando uma página é o envelope de erro do Solr, e não resultados; uma nota do erro diz a posição dela na lista. A busca sem resultados devolve DataFrame vazio.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.tjrs.client.TJRSScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjrs.client.TJRSScraper.cpopg">cpopg</h3>

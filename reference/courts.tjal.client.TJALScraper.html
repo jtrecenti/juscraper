@@ -256,11 +256,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic):</p>
-<pre><code>* ``query`` / ``termo`` -&gt; ``pesquisa``
-* ``data_inicio`` / ``data_fim`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
-* ``data_julgamento_de`` / ``data_julgamento_ate`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
-* ``data_publicacao_de`` / ``data_publicacao_ate`` -&gt; ``data_publicacao_inicio`` / ``data_publicacao_fim``</code></pre>
+</section>
+<section id="aliases-deprecados" class="level4 doc-section doc-section-aliases-deprecados">
+<h4 class="doc-section doc-section-aliases-deprecados anchored" data-anchor-id="aliases-deprecados">Aliases deprecados</h4>
+<ul>
+<li><code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code></li>
+<li><code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_publicacao_de</code> / <code>data_publicacao_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code></li>
+</ul>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -307,27 +311,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjac <span class="op">=</span> jus.scraper(<span class="st">"tjac"</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...                data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Estimativa pre-scraping (issue #92):</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> n <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, count_only<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjac <span class="op">=</span> jus.scraper(<span class="st">"tjac"</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...                data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Estimativa pre-scraping (issue #92):</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> n <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, count_only<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
 <p><code>InputCJSGEsajPuro</code> (ou <code>InputCJSGTJSP</code>) — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 <p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de <code>AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 1 ano, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>cd_acordao</code>. Janela que falha levanta <code>ColetaParcialError</code>, com as janelas que passaram em <code>.resultado</code>. <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 1 ano e <code>ValueError</code>. Para o comportamento estrito antigo (<code>ValueError</code> em janelas longas), passe <code>auto_chunk=False</code>.</p>
 </section>
 </section>
 <section id="juscraper.courts.tjal.client.TJALScraper.cjsg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjal.client.TJALScraper.cjsg_download">cjsg_download</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.cjsg_download(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    pesquisa,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.cjsg_download(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    pesquisa,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa as paginas HTML brutas do CJSG (sem parsear).</p>
 <p>Faz o GET inicial, extrai o numero de paginas, paga o resto e salva todos os HTMLs em disco. Aceita os mesmos filtros de <a href="../reference/courts.tjal.client.TJALScraper.html#juscraper.courts.tjal.client.TJALScraper.cjsg"><code>cjsg</code></a>; consulte la a lista completa.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
@@ -415,12 +419,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjal.client.TJALScraper.cjsg_parse" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjal.client.TJALScraper.cjsg_parse">cjsg_parse</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.cjsg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.cjsg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parse downloaded <code>cjsg</code> HTML files into a <code>pd.DataFrame</code>.</p>
 </section>
 <section id="juscraper.courts.tjal.client.TJALScraper.listar_assuntos" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjal.client.TJALScraper.listar_assuntos">listar_assuntos</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_assuntos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_assuntos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista os assuntos disponiveis para filtrar.</p>
 <p>Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo filtro <code>assunto</code> de <a href="../reference/courts.tjal.client.TJALScraper.html#juscraper.courts.tjal.client.TJALScraper.cjsg"><code>cjsg</code></a> (e <code>assunto</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
@@ -490,7 +494,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.courts.tjal.client.TJALScraper.listar_classes" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjal.client.TJALScraper.listar_classes">listar_classes</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_classes(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_classes(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista as classes processuais disponiveis para filtrar.</p>
 <p>Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo filtro <code>classe</code> de <a href="../reference/courts.tjal.client.TJALScraper.html#juscraper.courts.tjal.client.TJALScraper.cjsg"><code>cjsg</code></a> (e <code>classe</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
 <section id="parameters-3" class="level4 doc-section doc-section-parameters">
@@ -559,15 +563,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
 <h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes <span class="op">=</span> tjsp.listar_classes()</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes.loc[classes[<span class="st">"selecionavel"</span>], [<span class="st">"id"</span>, <span class="st">"nome"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes <span class="op">=</span> tjsp.listar_classes()</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes.loc[classes[<span class="st">"selecionavel"</span>], [<span class="st">"id"</span>, <span class="st">"nome"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="juscraper.courts.tjal.client.TJALScraper.listar_orgaos" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.tjal.client.TJALScraper.listar_orgaos">listar_orgaos</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_orgaos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>courts.tjal.client.TJALScraper.listar_orgaos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista os orgaos julgadores (secoes) de segundo grau.</p>
 <p>Baixa a arvore de secoes do eSAJ para descobrir os IDs aceitos pelo filtro <code>orgao_julgador</code> de <a href="../reference/courts.tjal.client.TJALScraper.html#juscraper.courts.tjal.client.TJALScraper.cjsg"><code>cjsg</code></a>. So existe no segundo grau.</p>
 <section id="parameters-4" class="level4 doc-section doc-section-parameters">
