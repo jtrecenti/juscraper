@@ -1,6 +1,7 @@
 """
 Functions for downloading specific to TJPR
 """
+import functools
 import re
 from collections.abc import Callable
 
@@ -14,6 +15,7 @@ from juscraper.utils.pagination import (
     baixar_paginas_pedidas,
     descrever_paginas,
     extract_count_with_cascade,
+    menor_pagina,
     parse_page_number,
     resolve_total_pages,
 )
@@ -169,15 +171,16 @@ def build_cjsg_form_body(
     }
 
 
-def _last_page_links(soup: BeautifulSoup) -> set[int]:
-    """Lê os totais dos links "Última Página" da página inteira.
+def _last_page_links(soup: BeautifulSoup, pagina: int) -> set[int]:
+    """Lê os totais dos links "Última Página" da ``pagina`` inteira.
 
     Ativo, o link é ``a.arrowLastOn`` e o href em JavaScript carrega
     ``['pageNumber'].value='<total>'``. Desativado, o portal desenha a mesma
     âncora com classe ``arrowLastOff`` e sem href, o que na primeira página
-    quer dizer total 1. A busca cobre a página inteira, e não só o
-    ``#navigator .navRight``, para que um contêiner renomeado não esconda o
-    link da conferência.
+    quer dizer total 1; nas demais, quer dizer que a ``pagina`` é a última, e
+    o link desativado não entra na conferência. A busca cobre a página
+    inteira, e não só o ``#navigator .navRight``, para que um contêiner
+    renomeado não esconda o link da conferência.
     """
     totais = set()
     for link in soup.select("a.arrowLastOn"):
@@ -188,21 +191,21 @@ def _last_page_links(soup: BeautifulSoup) -> set[int]:
             tribunal="TJPR",
             origem=f"link de última página {href!r}",
         ))
-    if soup.select_one("a.arrowLastOff") is not None:
+    if pagina == 1 and soup.select_one("a.arrowLastOff") is not None:
         totais.add(1)
     return totais
 
 
-def extract_total_pages(html: str) -> int:
-    """Extrai o total de páginas da primeira página de resultados do TJPR.
+def extract_total_pages(html: str, pagina: int = 1) -> int:
+    """Extrai o total de páginas de uma página de resultados do TJPR, a ``pagina``.
 
     O total sai da contagem "N registro(s) encontrado(s)" dividida por
     ``RESULTS_PER_PAGE``, e os links "Última Página" (ativos e desativados)
     são conferidos contra ele por
     :func:`~juscraper.utils.pagination.resolve_total_pages`. O paginador não
     exibe "Página X de Y", e o maior ``pageNumber`` visível é o fim da janela
-    de links (3 na página 1), não o total. Vale para a primeira página, a
-    única que :func:`cjsg_download` lê: na última, "Última" vem desativada.
+    de links (3 na página 1), não o total. :func:`cjsg_download` lê a menor
+    página pedida, que pode ser a última, onde "Última" vem desativada.
 
     Raises:
         ValueError: Nos casos de :func:`~juscraper.utils.pagination.resolve_total_pages`
@@ -218,7 +221,7 @@ def extract_total_pages(html: str) -> int:
     return resolve_total_pages(
         n_resultados,
         resultados_por_pagina=RESULTS_PER_PAGE,
-        totais_links=_last_page_links(soup),
+        totais_links=_last_page_links(soup, pagina),
         tribunal="TJPR",
     )
 
@@ -272,7 +275,7 @@ def cjsg_download(
     return baixar_paginas_pedidas(
         paginas,
         _fetch_page,
-        extract_total_pages,
+        functools.partial(extract_total_pages, pagina=menor_pagina(paginas)),
         tribunal="TJPR",
         ler_parcial=ler_parcial,
         mensagem_parcial=_mensagem_parcial,

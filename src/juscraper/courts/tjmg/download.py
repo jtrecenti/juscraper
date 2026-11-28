@@ -15,9 +15,15 @@ import requests
 
 from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, descrever_paginas
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, descrever_paginas, pagina_pedida
 
-from .parse import cjsg_parse, levantar_se_muitos_resultados, levantar_se_sem_lista, listas_da_busca_categorizada
+from .parse import (
+    TJMGBuscaSemListaError,
+    cjsg_parse,
+    levantar_se_muitos_resultados,
+    levantar_se_sem_lista,
+    listas_da_busca_categorizada,
+)
 
 logger = logging.getLogger("juscraper.tjmg")
 
@@ -349,7 +355,10 @@ def _baixar_lista(
         estado["total"] = _extract_total(primeira) or 0
         if estado["total"] == 0:
             logger.info("TJMG: nenhum resultado para a pesquisa.")
-        return max(1, math.ceil(estado["total"] / linhas_por_pagina))
+            # A página 1 vazia entra se foi pedida; as demais não vão para o
+            # aviso de página fora do intervalo, como numa busca vazia.
+            return 1 if pagina_pedida(paginas, 1) else 0
+        return math.ceil(estado["total"] / linhas_por_pagina)
 
     try:
         results.extend(baixar_paginas_pedidas(
@@ -364,7 +373,8 @@ def _baixar_lista(
                 lista, faltando[0], faltando, len(results) + n_baixadas, exc
             ),
         ))
-    except ColetaParcialError:
+    except (ColetaParcialError, TJMGBuscaSemListaError):
+        # O erro do banco na página 1 de uma lista sobe como na busca comum, e não como parcial.
         raise
     except Exception as exc:  # vai para ColetaParcialError se uma lista anterior já trouxe páginas
         if not results:

@@ -436,7 +436,7 @@ def mensagem_de_coleta_parcial(tribunal: str, faltando: Sequence[int], n_baixada
     )
 
 
-def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; cada gancho opcional serve a 2+ portais
+def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de página fixa, teto e coleta parcial
     paginas: Paginas | None,
     buscar: Callable[[int], _Pagina],
     contar_paginas: Callable[[_Pagina], int],
