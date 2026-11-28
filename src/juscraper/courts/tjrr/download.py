@@ -225,13 +225,25 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 
 
 def _get_total_pages(html: str | Tag) -> int:
-    """Extract total pages from the PrimeFaces paginator."""
+    """Lê o total de páginas no paginador PrimeFaces da tabela.
+
+    O paginador aparece também na busca vazia, com "(1 of 1)".
+
+    Raises:
+        ValueError: Quando o paginador não aparece (markup novo), em vez de
+            assumir uma página só e parar o download na primeira.
+    """
     n = extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
     )
-    return n if n is not None else 1
+    if n is None:
+        raise ValueError(
+            "TJRR: a tabela de resultados não traz o paginador (span.ui-paginator-current); "
+            "o total de páginas não pode ser determinado sem estimar."
+        )
+    return n
 
 
 # JSF auto-generates the numeric segment of the results datatable id
@@ -448,6 +460,10 @@ def cjsg_download_manager(
             paginação. Default 1.0; o client normalmente passa
             ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
+
+    Raises:
+        ValueError: Quando, com páginas além da 1, uma tabela de resultados
+            vem sem o paginador (markup novo).
     """
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)

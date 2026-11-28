@@ -170,6 +170,9 @@ class TJGOScraper(HTTPScraper):
             ValidationError: Quando um filtro tem formato invalido ou a
                 combinacao de ``id_instancia``, ``id_area`` e
                 ``id_serventia_subtipo`` nao existe no formulario do Projudi.
+            ValueError: Quando a pagina 1 traz resultados sem o total ("N
+                resultados encontrados"), por exemplo depois de uma mudanca de
+                markup do portal, tambem com ``paginas=1``.
 
         Returns:
             DataFrame com as decisoes (coluna ``texto`` carrega

@@ -99,7 +99,10 @@ class TJSCScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Quando ``campo`` e ``buscar_em`` sao passados juntos.
+            ValueError: Quando ``campo`` e ``buscar_em`` sao passados juntos,
+                ou quando a pagina lida nao traz "N documentos encontrados",
+                por exemplo depois de uma mudanca de markup do portal, tambem
+                com ``paginas=1``.
             RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
             requests.ConnectionError: Quando o portal derruba a conexao em
                 todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com
