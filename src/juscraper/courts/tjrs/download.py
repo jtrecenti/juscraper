@@ -1,10 +1,20 @@
 """Downloads raw files from the TJRS jurisprudence search."""
-import json
 from urllib.parse import urlencode
 
-from juscraper.core.exceptions import HTTPSemanticError, _RecriaSemInit
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, resolve_total_pages
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, resolve_total_pages
+
+from .parse import TJRSBuscaError, cjsg_parse_manager, exigir_resultados
+
+# ``TJRSBuscaError`` mora em ``parse``; este módulo é o caminho documentado dele.
+__all__ = [
+    "BASE_URL",
+    "PERFIL_CJSG",
+    "RESULTS_PER_PAGE",
+    "TJRSBuscaError",
+    "build_cjsg_inner_payload",
+    "cjsg_download_manager",
+]
 
 BASE_URL = "https://www.tjrs.jus.br/buscas/jurisprudencia/ajax.php"
 RESULTS_PER_PAGE = 10
@@ -12,48 +22,6 @@ RESULTS_PER_PAGE = 10
 #: Nome do perfil HTTP da busca de jurisprudência. O client declara a política
 #: com a mesma chave em ``TJRSScraper.perfis_http``.
 PERFIL_CJSG = "cjsg"
-
-
-class TJRSBuscaError(_RecriaSemInit, HTTPSemanticError):
-    """O portal respondeu HTTP 200 sem ``response``: o Solr recusou a consulta.
-
-    Observado ao vivo com aspas sem fechar e operador solto em ``pesquisa``
-    (código 400 do Solr) e com página absurda (código 500): o corpo vem como
-    ``{"error": "<JSON do Solr em texto>", ...}``. Sem este erro, a busca
-    voltava vazia, como se não houvesse acórdãos.
-
-    ``codigo`` é o código do Solr (``None`` se o envelope não o trouxer) e
-    ``mensagem``, o texto do erro.
-    """
-
-    def __init__(self, mensagem: str, codigo: int | None = None) -> None:
-        """Guarda ``mensagem`` e ``codigo`` e monta o texto do erro."""
-        self.mensagem = mensagem
-        self.codigo = codigo
-        super().__init__(
-            f"TJRS: a busca de jurisprudência devolveu erro em vez de resultados (código {codigo}): {mensagem}"
-        )
-
-
-def _exigir_resultados(dados: object) -> dict:
-    """Devolve ``dados`` se trouxer ``response``; senão, levanta :class:`TJRSBuscaError`."""
-    if isinstance(dados, dict) and isinstance(dados.get("response"), dict):
-        return dados
-    raise _erro_da_busca(dados)
-
-
-def _erro_da_busca(dados: object) -> TJRSBuscaError:
-    """Monta o erro a partir do envelope sem ``response``."""
-    erro = dados.get("error") if isinstance(dados, dict) else None
-    if isinstance(erro, str):
-        try:
-            erro = json.loads(erro)
-        except ValueError:
-            return TJRSBuscaError(erro[:500])
-    detalhe = erro.get("error") if isinstance(erro, dict) else None
-    if isinstance(detalhe, dict) and detalhe.get("msg"):
-        return TJRSBuscaError(str(detalhe["msg"]), detalhe.get("code"))
-    return TJRSBuscaError("resposta sem a chave 'response'")
 
 
 def build_cjsg_inner_payload(
@@ -123,7 +91,7 @@ def build_cjsg_inner_payload(
 
 def cjsg_download_manager(
     termo: str,
-    paginas=None,
+    paginas: Paginas | None = None,
     *,
     request_fn: RequestFn,
     classe: int | str | None = None,
@@ -143,13 +111,19 @@ def cjsg_download_manager(
     Returns a list of raw files (JSON).
 
     Args:
-        paginas (list, range, or None): Pages to download (1-based).
+        paginas: Pages to download (1-based).
             None: downloads all available pages.
         request_fn: HTTP callable that handles retry + raise_for_status — em
             uso normal e ``TJRSScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff exponencial
             para 429/5xx. Recebe ``perfil=PERFIL_CJSG`` em toda requisição.
         secao: 'civel', 'crime', or None.
+
+    Raises:
+        TJRSBuscaError: Erro do Solr na primeira página pedida.
+        ColetaParcialError: Falha numa página seguinte (erro do Solr, rede
+            depois das tentativas); ``.resultado`` traz as páginas
+            anteriores, já lidas, em DataFrame.
     """
     def _fetch_page(pagina_1based):
         payload = build_cjsg_inner_payload(
@@ -174,10 +148,12 @@ def cjsg_download_manager(
             'parametros': parametros_str,
         }
         resp = request_fn("POST", BASE_URL, data=data, perfil=PERFIL_CJSG)
-        return _exigir_resultados(resp.json())
+        return exigir_resultados(resp.json())
 
     def _n_pags(data):
         num_found = data.get('response', {}).get('numFound', 0)
         return resolve_total_pages(num_found, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJRS")
 
-    return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS")
+    # Vale para toda falha da página (rede depois das tentativas, corpo que não
+    # é JSON, erro do Solr), como no TJPR, no TJMG e no TJTO.
+    return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS", ler_parcial=cjsg_parse_manager)

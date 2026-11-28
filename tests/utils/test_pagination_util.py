@@ -390,12 +390,14 @@ def test_paginas_unicas_devolve_range_sem_percorrer():
     assert paginas_unicas(P(paginas)) is paginas
 
 
-def _baixar_com(paginas, n_pags, **kwargs):
-    """``baixar_paginas_pedidas`` sobre páginas que são o próprio número: ``(pedidas, retorno)``."""
+def _baixar_com(paginas, n_pags, falhas=(), **kwargs):
+    """``baixar_paginas_pedidas`` sobre páginas que são o próprio número; ``falhas`` levantam."""
     pedidas: list[int] = []
 
     def buscar(pagina: int) -> int:
         pedidas.append(pagina)
+        if pagina in falhas:
+            raise ConnectionError(f"página {pagina}")
         return pagina
 
     return pedidas, baixar_paginas_pedidas(P(paginas), buscar, lambda _first: n_pags, tribunal="TJXX", **kwargs)
@@ -451,6 +453,61 @@ class TestTeto:
 
     def test_recusar_alem_do_teto_aceita_none(self):
         recusar_alem_do_teto(None, 3, tribunal="TJXX")
+
+
+class TestPrimeiraFixa:
+    """``primeira``: o portal que abre a busca numa página fixa."""
+
+    def test_pede_a_fixa_primeiro_e_so_a_devolve_se_pedida(self):
+        assert _baixar_com([3, 2], 5, primeira=1) == ([1, 3, 2], [3, 2])
+
+    def test_fixa_pedida_entra_na_posicao_pedida_sem_novo_pedido(self):
+        assert _baixar_com([3, 1], 5, primeira=1) == ([1, 3], [3, 1])
+
+    def test_total_lido_na_fixa_corta_as_demais(self, caplog):
+        with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+            assert _baixar_com([2, 9], 3, primeira=1) == ([1, 2], [2])
+        assert "TJXX: página 9 fora do intervalo 1-3" in caplog.text
+
+
+class TestColetaParcial:
+    """``ler_parcial``: a falha com página pedida já baixada vira ``ColetaParcialError``."""
+
+    def test_guarda_as_baixadas_e_diz_as_que_faltam(self):
+        with pytest.raises(ColetaParcialError) as erro:
+            _baixar_com([1, 2, 3, 4, 5], 5, falhas={3}, ler_parcial=lambda brutos: pd.DataFrame({"pagina": brutos}))
+        assert erro.value.resultado["pagina"].tolist() == [1, 2]
+        assert isinstance(erro.value.__cause__, ConnectionError)
+        assert erro.value.falhas == [(None, None, erro.value.__cause__)]
+        assert str(erro.value).startswith("TJXX: a página 3 falhou (ConnectionError('página 3')), e a busca parou.")
+        assert "faltam as páginas range(3, 6)" in str(erro.value)
+
+    def test_primeira_requisicao_que_vinha_depois_entra_no_fim(self):
+        # A menor (2) sai primeiro, para o total; a 5 falha antes da posição dela na ordem pedida.
+        with pytest.raises(ColetaParcialError) as erro:
+            _baixar_com([4, 5, 2, 3], 5, falhas={5}, ler_parcial=lambda brutos: pd.DataFrame({"pagina": brutos}))
+        assert erro.value.resultado["pagina"].tolist() == [4, 2]
+        assert "faltam as páginas [5, 3]" in str(erro.value)
+
+    def test_sem_pagina_pedida_baixada_a_falha_sobe_como_veio(self):
+        # A página 1 é fixa e não foi pedida: nada a guardar.
+        with pytest.raises(ConnectionError):
+            _baixar_com([2, 3], 5, falhas={2}, primeira=1, ler_parcial=pd.DataFrame)
+
+    def test_falha_na_primeira_requisicao_sobe_como_veio(self):
+        with pytest.raises(ConnectionError):
+            _baixar_com([1, 2], 5, falhas={1}, ler_parcial=pd.DataFrame)
+
+    def test_sem_ler_parcial_a_falha_sobe_como_veio(self):
+        with pytest.raises(ConnectionError):
+            _baixar_com([1, 2], 5, falhas={2})
+
+    def test_mensagem_propria(self):
+        def mensagem(faltando, n_baixadas, exc):
+            return f"{faltando} {n_baixadas} {type(exc).__name__}"
+
+        with pytest.raises(ColetaParcialError, match=r"^\[2, 3\] 1 ConnectionError$"):
+            _baixar_com([1, 2, 3], 3, falhas={2}, ler_parcial=pd.DataFrame, mensagem_parcial=mensagem)
 
 
 class TestPaginasOpaca:

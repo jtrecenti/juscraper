@@ -9,12 +9,13 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 import requests
 
 from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import descrever_paginas, paginas_no_intervalo
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, descrever_paginas
 
 from .parse import cjsg_parse, levantar_se_muitos_resultados, levantar_se_sem_lista, listas_da_busca_categorizada
 
@@ -210,7 +211,7 @@ def _extract_total(html: str) -> int | None:
 
 def cjsg_download(
     pesquisa: str,
-    paginas,
+    paginas: Paginas | None,
     pesquisar_por: str,
     order_by: str,
     data_julgamento_inicial: str,
@@ -227,7 +228,7 @@ def cjsg_download(
 
     Args:
         pesquisa: Termo de busca livre.
-        paginas (int | list | range | None): Páginas a baixar (1-based), em
+        paginas: Páginas a baixar (1-based), em
             cada lista da busca; ``None`` baixa todas.
         pesquisar_por: Campo em que buscar: ``"ementa"`` ou ``"acordao"``.
         order_by: Ordem, como o portal a recebe (``"2"``, ``"1"`` ou ``"0"``).
@@ -274,11 +275,11 @@ def cjsg_download(
     listas = _listas(first_html, base)
     results: list = []
     for posicao, (nome, extra) in enumerate(listas):
+        lista = _Lista(nome, [s for s, _ in listas[posicao + 1:]], first_html if nome is None else None)
         _baixar_lista(
             results,
             functools.partial(_buscar_pagina, request_fn, session, functools.partial(params, extra=extra)),
-            functools.partial(_coleta_parcial, results, lista=nome, seguintes=[s for s, _ in listas[posicao + 1:]]),
-            first_html if nome is None else None,
+            lista,
             paginas,
             linhas_por_pagina,
             sleep_time,
@@ -309,80 +310,94 @@ def _buscar_pagina(
     return _fetch_page_revalidating(request_fn, session, params(pagina, total))
 
 
+class _Lista(NamedTuple):
+    """Uma lista da busca: o nome na busca categorizada (``None`` na comum), as seguintes e a página 1 já baixada."""
+
+    nome: str | None
+    seguintes: list[str | None]
+    primeira: str | None
+
+
 def _baixar_lista(
     results: list,
     buscar: Callable[[int, int], str],
-    erro: Callable[[int, list | None, Exception], ColetaParcialError],
-    primeira: str | None,
-    paginas,
+    lista: _Lista,
+    paginas: Paginas | None,
     linhas_por_pagina: int,
     sleep_time: float,
 ) -> None:
     """Acrescenta a ``results`` as ``paginas`` de uma lista, a partir da página 1.
 
-    ``buscar(pagina, total)`` baixa uma página da lista. ``primeira`` é a
-    página 1 já baixada, ou ``None`` para baixá-la aqui (listas da busca
-    categorizada). A página que falha com outra já em ``results`` levanta
-    ``erro(pagina, faltando, exc)``, um :class:`ColetaParcialError`.
+    ``buscar(pagina, total)`` baixa uma página da lista; as seguintes à 1
+    mandam o total lido nela. A página que falha com outra já em ``results``
+    (inclusive de uma lista anterior) levanta :class:`ColetaParcialError`.
     """
-    def baixar(pagina: int, total: int, faltando: list | None) -> str:
-        try:
-            return buscar(pagina, total)
-        except Exception as exc:  # vai para ColetaParcialError, como no auto-chunk
-            if not results:
-                raise
-            raise erro(pagina, faltando, exc) from exc
+    estado = {"total": 1, "pagina": 1}
 
-    if primeira is None:
+    def buscar_pagina(pagina: int) -> str:
+        estado["pagina"] = pagina
+        if pagina != 1:
+            return buscar(pagina, estado["total"])
+        if lista.primeira is not None:
+            return lista.primeira
         time.sleep(sleep_time)
-        primeira = baixar(1, 1, None)
+        primeira = buscar(1, 1)
         levantar_se_sem_lista(primeira)
-    total = _extract_total(primeira) or 0
-    if total == 0:
-        logger.info("TJMG: nenhum resultado para a pesquisa.")
-        results.append(primeira)
-        return
+        return primeira
 
-    validas = paginas_no_intervalo(paginas, max(1, math.ceil(total / linhas_por_pagina)), tribunal="TJMG")
-    for posicao, pagina in enumerate(validas):
-        if pagina == 1:
-            results.append(primeira)
-            continue
-        time.sleep(sleep_time)
-        results.append(baixar(pagina, total, validas[posicao:]))
+    def contar(primeira: str) -> int:
+        estado["total"] = _extract_total(primeira) or 0
+        if estado["total"] == 0:
+            logger.info("TJMG: nenhum resultado para a pesquisa.")
+        return max(1, math.ceil(estado["total"] / linhas_por_pagina))
+
+    try:
+        results.extend(baixar_paginas_pedidas(
+            paginas,
+            buscar_pagina,
+            contar,
+            tribunal="TJMG",
+            sleep_time=sleep_time,
+            primeira=1,
+            ler_parcial=lambda baixadas: cjsg_parse([*results, *baixadas]),
+            mensagem_parcial=lambda faltando, n_baixadas, exc: _mensagem_parcial(
+                lista, faltando[0], faltando, len(results) + n_baixadas, exc
+            ),
+        ))
+    except ColetaParcialError:
+        raise
+    except Exception as exc:  # vai para ColetaParcialError se uma lista anterior já trouxe páginas
+        if not results:
+            raise
+        # Nada desta lista entrou: falta a lista inteira, como foi pedida.
+        mensagem = _mensagem_parcial(lista, estado["pagina"], None, len(results), exc)
+        raise ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)]) from exc
 
 
-def _coleta_parcial(
-    results: list,
-    pagina: int,
-    faltando: list | None,
-    exc: Exception,
-    *,
-    lista: str | None,
-    seguintes: list[str | None],
-) -> ColetaParcialError:
-    """``ColetaParcialError`` com as paginas baixadas antes de ``pagina`` falhar.
+def _mensagem_parcial(lista: _Lista, pagina: int, faltando: list[int] | None, n_baixadas: int, exc: Exception) -> str:
+    """Texto do ``ColetaParcialError`` quando ``pagina`` falha com ``n_baixadas`` já baixadas.
 
     A pagina que falha encerra a paginacao, ao contrario do auto-chunk do
     eSAJ, que tenta as janelas seguintes: depois das tentativas do perfil
     ``"cjsg"``, o portal costuma seguir fora do ar, e as paginas seguintes
     custariam as mesmas tentativas. Por isso ``falhas`` tem um item so, e a
     mensagem diz todas as paginas que faltam. Na busca categorizada, a
-    mensagem nomeia a lista da pagina (``faltando`` ``None`` quando falhou a
-    pagina 1 dela) e as listas seguintes, nao baixadas; ``paginas=`` vale para
+    mensagem nomeia a lista da pagina (``faltando`` ``None`` quando nada dela
+    foi baixado) e as listas seguintes, nao baixadas; ``paginas=`` vale para
     todas as listas, entao a mensagem nao sugere pedir de novo so as que faltam.
     """
+    nome, seguintes = lista.nome, lista.seguintes
     mensagem = (
-        f"TJMG cjsg: a página {pagina}{f' da lista {lista!r}' if lista else ''} falhou ({exc!r}), "
-        f"e a busca parou. As {len(results)} página(s) baixadas antes estão, já lidas, no "
+        f"TJMG cjsg: a página {pagina}{f' da lista {nome!r}' if nome else ''} falhou ({exc!r}), "
+        f"e a busca parou. As {n_baixadas} página(s) baixadas antes estão, já lidas, no "
         "atributo .resultado do erro; "
     )
-    if lista is None:
-        # Sem lista, a página 1 que falha sobe a exceção original: ``faltando`` nunca é ``None`` aqui.
+    if nome is None:
+        # Na busca comum não há lista anterior: sem página baixada, sobe a exceção original.
         faltam = descrever_paginas(faltando or [])
         mensagem += f"faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
     else:
         faltam = "a lista inteira" if faltando is None else f"as páginas {descrever_paginas(faltando)}"
-        mensagem += f"da lista {lista!r}, faltam {faltam}"
+        mensagem += f"da lista {nome!r}, faltam {faltam}"
         mensagem += f", e as listas seguintes, {seguintes}, não foram baixadas." if seguintes else "."
-    return ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)])
+    return mensagem
