@@ -23,6 +23,8 @@ from pathlib import Path
 
 import yaml
 
+from tests._ast_do_pacote import MODULO, nome_qualificado, nos_com_escopo
+
 RAIZ = Path(__file__).resolve().parents[1]
 DOCS = RAIZ / "docs"
 FONTE = RAIZ / "src" / "juscraper"
@@ -43,20 +45,12 @@ _SHA256_INTERLINKS_LUA = "491cc9bf90b3d0bb6eca50ba1b32dcfa87d900d44723fdd8a17af8
 def _docstrings(caminho: Path) -> Iterator[tuple[str, str]]:
     """Gera ``(qualname, docstring)`` do módulo e de cada classe e função."""
     arvore = ast.parse(caminho.read_text(encoding="utf-8"))
-
-    def percorrer(no: ast.AST, prefixo: str) -> Iterator[tuple[str, str]]:
-        for filho in ast.iter_child_nodes(no):
-            if isinstance(filho, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
-                nome = f"{prefixo}{filho.name}"
-                texto = ast.get_docstring(filho)
-                if texto:
-                    yield nome, texto
-                yield from percorrer(filho, f"{nome}.")
-
     texto_modulo = ast.get_docstring(arvore)
     if texto_modulo:
-        yield "<módulo>", texto_modulo
-    yield from percorrer(arvore, "")
+        yield MODULO, texto_modulo
+    for escopo, no, _funcao in nos_com_escopo(arvore):
+        if isinstance(no, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and (texto := ast.get_docstring(no)):
+            yield nome_qualificado(escopo, no), texto
 
 
 def _varrer_see_also(docstring: str) -> tuple[list[str], list[str]]:

@@ -226,8 +226,11 @@ class Checkpoint:
 
         size = self.manifest.identity["page_size"]
         requested = self.manifest.identity["pages"]
-        numbers = list(range(1, (attempt.total_before + size - 1) // size + 1)) if requested is None else requested
-        if attempt.total_after != attempt.total_before or [page.number for page in attempt.pages] != numbers:
+        n_pags = (attempt.total_before + size - 1) // size
+        numbers = list(range(1, n_pags + 1)) if requested is None else [p for p in requested if p <= n_pags]
+        # Checkpoint gravado antes do corte ao total traz também as páginas vazias além dele.
+        aceitas = (numbers, requested)
+        if attempt.total_after != attempt.total_before or [page.number for page in attempt.pages] not in aceitas:
             raise ValueError("Tentativa concluída com contagens ou páginas inconsistentes.")
         for page in attempt.pages:
             offset = (page.number - 1) * size

@@ -280,6 +280,8 @@ class TRF6Scraper(BaseScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido é passado.
             ValidationError: Quando ``id_cnj`` não é texto nem lista de textos.
+            ImportError: Quando o pacote opcional ``txtcaptcha``, que resolve o
+                captcha, não está instalado.
 
         Returns:
             Uma linha por processo, com as colunas descritas acima.

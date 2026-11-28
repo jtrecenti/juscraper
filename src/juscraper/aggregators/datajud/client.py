@@ -24,7 +24,7 @@ from ...core.failures import (
 )
 from ...core.http import HTTPScraper, RequestPolicy, timeout_valido
 from ...utils.cnj import clean_cnj  # Assuming this utility exists and is relevant
-from ...utils.pagination import maior_pagina, menor_pagina
+from ...utils.pagination import Paginas, maior_pagina, pagina_pedida, paginas_unicas
 from ...utils.params import normalize_paginas, pop_deprecated_alias, raise_on_extra_kwargs
 from .download import (
     STATUS_REPETIVEIS,
@@ -531,14 +531,13 @@ class DatajudScraper(HTTPScraper):
         argument(s): '<nome>'`` em vez de serem silenciosamente ignorados.
 
         Args:
-            paginas: Intervalo 1-based. Aceita as 4 formas do contrato
+            paginas: Páginas 1-based. Aceita as 4 formas do contrato
                 único (refs #118): ``int`` (``3`` -> ``range(1, 4)``),
-                ``list`` (``[3, 5]`` -> ``range(3, 6)``, baixa 3-5
-                contiguamente porque o cursor ``search_after`` só avança),
-                ``range`` (respeita ``start``/``stop``/``step``) e ``None``
-                (default, todas). Como o cursor é sequencial, intervalos que
-                começam depois de 1 percorrem e descartam as páginas
-                anteriores antes de devolver apenas as solicitadas.
+                ``list`` (``[3, 5]`` devolve só as páginas 3 e 5), ``range``
+                (respeita ``start``/``stop``/``step``) e ``None`` (default,
+                todas). Como o cursor ``search_after`` só avança, a coleta
+                percorre as páginas de 1 até a maior pedida e descarta as que
+                não foram pedidas; o resultado vem na ordem do cursor.
             **kwargs: Filtros aceitos pelo schema
                 :class:`InputListarProcessosDataJud`. Listados abaixo (todos
                 opcionais; ``None`` = sem filtro):
@@ -692,23 +691,18 @@ class DatajudScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
-        # Listas viram o intervalo contiguo exigido pelo cursor forwards-only.
-        paginas_datajud = inp.paginas_normalizadas
-        if isinstance(paginas_datajud, list):
-            paginas_datajud = range(menor_pagina(paginas_datajud), maior_pagina(paginas_datajud) + 1)
-
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
             numero_processo=inp.numero_processo,
         )
-        return self._listar_aliases(aliases, inp, _resolve_movimentos_codigo(inp), paginas_datajud)
+        return self._listar_aliases(aliases, inp, _resolve_movimentos_codigo(inp), inp.paginas_normalizadas)
 
     def _listar_aliases(
         self,
         aliases: list[AliasSelection],
         inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
-        paginas: range | None,
+        paginas: Paginas | None,
     ) -> pd.DataFrame:
         """Coleta cada alias; as falhas saem juntas num ``ColetaParcialError``, e o 401 encerra a coleta."""
         frames = []
@@ -749,11 +743,11 @@ class DatajudScraper(HTTPScraper):
         numero_processo: str | list[str] | None,
         inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
-        paginas: range | None,
+        paginas: Paginas | None,
     ) -> pd.DataFrame:
         """Percorre o cursor físico e agrega somente as páginas solicitadas."""
         frames: list[pd.DataFrame] = []
-        total = None if paginas is None else len(paginas)
+        total = None if paginas is None else len(paginas_unicas(paginas))
         pbar = tqdm(
             total=total,
             desc=f"Paginando {alias}",
@@ -773,7 +767,7 @@ class DatajudScraper(HTTPScraper):
                 movimentos_codigo=movimentos_codigo,
                 paginas=paginas,
             ):
-                if paginas is not None and current_page not in paginas:
+                if not pagina_pedida(paginas, current_page):
                     continue
                 frame = _parse_pagina(
                     api_response,
@@ -811,7 +805,7 @@ class DatajudScraper(HTTPScraper):
         numero_processo: str | list[str] | None,
         inp: InputListarProcessosDataJud,
         movimentos_codigo: list[int] | None,
-        paginas: range | None,
+        paginas: Paginas | None,
     ) -> Iterator[tuple[int, dict[str, Any], dict[str, Any] | None, int]]:
         """Percorre o cursor físico até a última página necessária.
 
@@ -868,7 +862,7 @@ class DatajudScraper(HTTPScraper):
                 effective_size=effective_size,
             )
             recebidos_antes = recebidos
-            if paginas is None or current_page in paginas:
+            if pagina_pedida(paginas, current_page):
                 recebidos += len(hits)
             proxima_pagina = percorridos // tamanho_pagina + 1
             contexto = _FimPagina(alias, current_page, recebidos, last_page, proxima_pagina)

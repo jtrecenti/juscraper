@@ -12,7 +12,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas, recusar_alem_do_teto
 from juscraper.utils.params import coerce_brazilian_date
 
 PORTAL_URL = "https://jurisprudencia.tjmt.jus.br/"
@@ -481,7 +481,8 @@ def cjsg_download(
 
     # A API responde HTTP 500 além do teto; a página pedida além dele é
     # recusada aqui, antes de qualquer requisição.
-    contar_paginas = contador_com_teto(paginas, MAX_RESULTS // quantidade_por_pagina, _n_pags, tribunal="TJMT")
+    teto = MAX_RESULTS // quantidade_por_pagina
+    recusar_alem_do_teto(paginas, teto, tribunal="TJMT")
     data_publicacao_inicio = _to_tjmt_date(data_publicacao_inicio)
     data_publicacao_fim = _to_end_of_day(data_publicacao_fim)
     relator = _normalize_nome_unico(relator, "relator")
@@ -516,8 +517,9 @@ def cjsg_download(
     pages = baixar_paginas_pedidas(
         paginas,
         lambda pagina: _fetch_page(pagina - 1),  # a API conta as páginas a partir de 0
-        lambda resposta: contar_paginas(resposta[1]),
+        lambda resposta: _n_pags(resposta[1]),
         tribunal="TJMT",
         sleep_time=1,
+        teto=teto,
     )
     return [page for page, _ in pages]
