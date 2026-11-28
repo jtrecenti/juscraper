@@ -1,7 +1,7 @@
 """Parametro explicito do metodo publico tem a anotacao do campo do schema.
 
 Para cada par (schema ``Input*`` mapeado em
-:mod:`tests.schemas.test_schema_coverage`, metodo publico ``<endpoint>`` ou
+:mod:`tests.schemas._registro`, metodo publico ``<endpoint>`` ou
 ``<endpoint>_download``), todo campo do schema que e parametro explicito do
 metodo precisa ter na assinatura a anotacao do schema
 (``model_fields[campo].annotation``). Sem isso, o editor e o mypy do usuario
@@ -25,15 +25,7 @@ from pydantic.fields import FieldInfo
 
 from juscraper.schemas import PaginasMixin
 from juscraper.utils.params import DATE_CANONICAL
-from tests.schemas.test_schema_coverage import (
-    EXPECTED_AGGREGATOR_SCHEMAS,
-    EXPECTED_COURT_SCHEMAS,
-    _is_stub,
-    _iter_aggregator_scrapers,
-    _iter_court_scrapers,
-    _resolve,
-    _schemas_mapeados,
-)
+from tests.schemas._registro import is_stub, schemas_mapeados
 
 
 class Caso(typing.NamedTuple):
@@ -166,16 +158,19 @@ def _esperada(caso: Caso) -> tuple[str, object]:
 
 
 def _casos() -> list[Caso]:
+    """Campos do schema que sao parametro explicito do endpoint ou do ``_download``.
+
+    O endpoint e obrigatorio (``test_schema_coverage`` garante que existe e nao
+    e stub); so o ``<endpoint>_download`` pode faltar.
+    """
     casos: list[Caso] = []
-    for par in _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers) + _schemas_mapeados(
-        EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers
-    ):
-        schema = _resolve(par.modulo, par.classe)
-        assert schema is not None, f"{par.modulo}:{par.classe} nao encontrado"
-        for nome in (par.endpoint, f"{par.endpoint}_download"):
-            metodo = getattr(par.raspador, nome, None)
-            if metodo is None or _is_stub(metodo):
-                continue
+    for par in schemas_mapeados():
+        schema = par.schema
+        metodos = {par.endpoint: getattr(par.raspador, par.endpoint)}
+        download = getattr(par.raspador, f"{par.endpoint}_download", None)
+        if download is not None and not is_stub(download):
+            metodos[f"{par.endpoint}_download"] = download
+        for nome, metodo in metodos.items():
             parametros = inspect.signature(metodo).parameters
             casos.extend(
                 Caso(par.sigla, nome, campo, metodo, info, parametros[campo])

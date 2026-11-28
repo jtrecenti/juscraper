@@ -86,7 +86,7 @@ class TJSCScraper(HTTPScraper):
                 * ``data_publicacao_inicio`` / ``data_publicacao_fim``
                   (str | date | None): nos mesmos formatos.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -116,7 +116,7 @@ class TJSCScraper(HTTPScraper):
         Returns:
             DataFrame com as decisoes.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJSC` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

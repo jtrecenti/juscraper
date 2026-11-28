@@ -142,11 +142,18 @@ class OutputCpopgPdpj(BaseModel):
     """Colunas garantidas em :meth:`PdpjScraper.cpopg`.
 
     Cada CNJ pode gerar mais de uma linha quando a API retorna lista
-    com varias tramitacoes (raro mas suportado).
+    com varias tramitacoes (raro mas suportado). ``detalhes`` guarda a
+    resposta completa da tramitacao.
     """
 
     processo: str
     numero_processo: str | None = None
+    id: str | None = None
+    sigla_tribunal: str | None = None
+    segmento_justica: str | None = None
+    nivel_sigilo: int | None = None
+    data_atualizacao: str | None = None
+    detalhes: dict | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -177,9 +184,19 @@ class OutputPartesPdpj(BaseModel):
 
 
 class OutputPesquisaPdpj(BaseModel):
-    """Colunas garantidas em :meth:`PdpjScraper.pesquisa`."""
+    """Colunas garantidas em :meth:`PdpjScraper.pesquisa`.
+
+    ``_raw`` (fora do modelo: o pydantic nao aceita campo com ``_`` inicial)
+    guarda o item completo da resposta.
+    """
 
     numero_processo: str | None = None
+    id: str | None = None
+    sigla_tribunal: str | None = None
+    segmento_justica: str | None = None
+    data_atualizacao: str | None = None
+    data_ultimo_movimento: str | None = None
+    data_primeiro_ajuizamento: str | None = None
 
     model_config = ConfigDict(extra="allow")
 

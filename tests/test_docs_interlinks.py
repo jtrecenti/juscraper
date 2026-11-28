@@ -30,8 +30,10 @@ DOCS = RAIZ / "docs"
 FONTE = RAIZ / "src" / "juscraper"
 
 # O griffe compara o tipo da seção sem distinguir maiúsculas, e o quartodoc
-# converte os papéis quando o título, em minúsculas, é "see also".
-_TITULO_SEE_ALSO = re.compile(r"see also:\s*", re.IGNORECASE)
+# converte os papéis quando o título, em minúsculas, é "see also". O título
+# da página copia o da docstring, então só ``See Also:`` passa: com ``See
+# also:``, a seção sai com outro título que nas demais páginas.
+_TITULO_SEE_ALSO = re.compile(r"See Also:\s*")
 _LINHA_SEE_ALSO = re.compile(r"\s*see also\s*:", re.IGNORECASE)
 
 # SHA-256 de interlinks.lua em machow/quartodoc, tag v0.11.1. Ao atualizar a

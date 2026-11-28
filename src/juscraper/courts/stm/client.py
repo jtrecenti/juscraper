@@ -102,7 +102,7 @@ class STMScraper(HTTPScraper):
                 curinga, fora de aspas, emite ``UserWarning``. Informado só um lado do intervalo, o
                 outro é preenchido (01/01/1990 ou hoje), com ``UserWarning``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``

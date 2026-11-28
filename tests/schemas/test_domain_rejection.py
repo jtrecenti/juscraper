@@ -1,25 +1,23 @@
-"""Domain rejection tests for tightened cjsg/cjpg schemas (refs #184).
+"""Valores fora do domínio dos campos dos schemas ``Input*`` levantam ``ValidationError``.
 
-Cada caso aqui afirma que valor fora do domínio fechado de um campo apertado
-pela #184 levanta ``ValidationError`` em vez de ser silenciosamente repassado
-ao backend. A rede de segurança fecha o gap identificado durante o
-planejamento da #184: até a virada, ``test_cjsg_schemas.py`` só cobria 2
-casos manuais (``origem`` e ``tipo_decisao`` da família eSAJ-puro).
+Cada caso aqui afirma que um valor fora do domínio de um campo apertado
+(``Literal`` da #184 e da #207, limites de ``tamanho_pagina``, aliases de
+outro tribunal da #211, combinações de filtros que o formulário do portal não
+monta) levanta ``ValidationError`` em vez de ser silenciosamente repassado ao
+backend, e que os valores do domínio continuam aceitos. Vale para os schemas de
+tribunais e de agregadores.
 
-Os casos abaixo seguem o padrão de
-``test_cjsg_schemas.py::TestInputCJSGEsajPuro::test_origem_only_accepts_T_or_R``.
-Cada bloco exercita um schema concreto com 1-2 valores inválidos
-representativos. Adicionar um novo aperto na #184 (ou follow-up) deve vir
-acompanhado de um caso aqui.
+Adicionar um novo aperto num schema deve vir acompanhado de um caso aqui,
+de preferência como linha nova de uma das tabelas.
 """
 from __future__ import annotations
 
 import re
-from typing import get_args
+from typing import Any, get_args
 
 import numpy as np
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from juscraper.aggregators.comunica_cnj.schemas import InputListarComunicacoesComunicaCNJ
 from juscraper.aggregators.datajud.schemas import InputListarProcessosDataJud
@@ -49,98 +47,85 @@ from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
 from juscraper.courts.tjsc.schemas import InputCJSGTJSC
 from juscraper.courts.tjto.schemas import InputCJPGTJTO, InputCJSGTJTO
+from juscraper.schemas.types import InteiroSemBool
 from tests._helpers import load_sample
+from tests.schemas._registro import schemas_mapeados
+
+_COM_TERMO = {"pesquisa": "x"}
+# No TJRN, sem termo: termo na ementa com "Sentença" ou grau "1" e recusado
+# por outra regra (``test_tjrn_recusa_termo_na_ementa_sem_ementa``).
+_TJRN_SEM_TERMO = {"pesquisa": ""}
 
 
-class TestLiteralRejection:
-    """Categoria A — campos com domínio discreto fechado via ``Literal[...]``."""
-
-    def test_tjmg_order_by_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJMG(pesquisa="x", order_by=99)
-
-    def test_tjmg_order_by_accepts_int_and_str(self):
-        InputCJSGTJMG(pesquisa="x", order_by=0)
-        InputCJSGTJMG(pesquisa="x", order_by="2")
-
-    def test_tjmg_tamanho_pagina_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJMG(pesquisa="x", tamanho_pagina=99)
-
-    def test_tjmg_pesquisar_por_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJMG(pesquisa="x", pesquisar_por="texto")
-
-    def test_tjgo_id_instancia_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJGO(pesquisa="x", id_instancia=99)
-
-    def test_tjgo_id_area_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJGO(pesquisa="x", id_area=99)
-
-    def test_tjpa_sort_order_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJPA(pesquisa="x", sort_order="random")
-
-    def test_tjpa_sort_order_accepts_canonical(self):
-        InputCJSGTJPA(pesquisa="x", sort_order="asc")
-        InputCJSGTJPA(pesquisa="x", sort_order="desc")
-
-    def test_tjto_ordenacao_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJTO(pesquisa="x", ordenacao="RANDOM")
-
-    def test_tjto_ordenacao_accepts_canonical(self):
-        for valor in ("ASC", "DESC", "RELEV"):
-            InputCJSGTJTO(pesquisa="x", ordenacao=valor)
-
-    def test_tjto_tipo_documento_rejects_out_of_domain(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJTO(pesquisa="x", tipo_documento="liminares")
-
-    def test_tjto_cjpg_inherits_same_literal(self):
-        with pytest.raises(ValidationError):
-            InputCJPGTJTO(pesquisa="x", ordenacao="random")
-        with pytest.raises(ValidationError):
-            InputCJPGTJTO(pesquisa="x", tipo_documento="liminares")
+def _literal(
+    schema_cls: type[BaseModel],
+    campo: str,
+    aceitos: list[Any],
+    recusados: list[Any],
+    base: dict[str, Any] = _COM_TERMO,
+) -> Any:
+    return pytest.param(schema_cls, base, campo, aceitos, recusados, id=f"{schema_cls.__name__}.{campo}")
 
 
-# (Schema, campo, valores aceitos, valores recusados) — campos apertados na #207
-# com os valores dos formulários e APIs de cada tribunal. Os recusados incluem a
+# Campos com domínio discreto fechado via ``Literal[...]``: (Schema, campo,
+# valores aceitos, valores recusados, kwargs obrigatórios). Os da #207 trazem os
+# valores dos formulários e APIs de cada tribunal; os recusados incluem a
 # grafia que a docstring antiga indicava, quando ela não era a do backend.
-_LITERAL_207_CASES = [
-    (InputCJSGTJBA, "ordenado_por", ["dataPublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
-    (InputCJSGTJMT, "tipo_consulta", ["Acordao", "DecisaoMonocratica"], ["Decisao", "acordao"]),
-    (InputCJSGTJAP, "orgao", ["0", "tj", "recursal"], ["1", "turma"]),
+_LITERAL_CASES = [
+    _literal(InputCJSGTJMG, "order_by", [0, "2"], [99]),
+    _literal(InputCJSGTJMG, "tamanho_pagina", [10, 20, 50], [99]),
+    _literal(InputCJSGTJMG, "pesquisar_por", ["ementa", "acordao"], ["texto"]),
+    _literal(InputCJSGTJGO, "id_area", [0, 1, 2, "2"], [99]),
+    _literal(InputCJSGTJPA, "sort_order", ["asc", "desc"], ["random"]),
+    _literal(InputCJSGTJTO, "ordenacao", ["ASC", "DESC", "RELEV"], ["RANDOM"]),
+    _literal(InputCJSGTJTO, "tipo_documento", ["acordaos", "decisoes", "sentencas"], ["liminares"]),
+    _literal(InputCJPGTJTO, "ordenacao", ["ASC", "DESC", "RELEV"], ["random"]),
+    _literal(InputCJPGTJTO, "tipo_documento", ["acordaos", "decisoes", "sentencas"], ["liminares"]),
+    _literal(InputCJSGTJBA, "ordenado_por", ["dataPublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
+    _literal(InputCJSGTJMT, "tipo_consulta", ["Acordao", "DecisaoMonocratica"], ["Decisao", "acordao"]),
+    _literal(InputCJSGTJAP, "orgao", ["0", "tj", "recursal"], ["1", "turma"]),
     # "Unanime" sai do schema: o client o converte em "Unânime" com DeprecationWarning.
-    (InputCJSGTJAP, "votacao", ["0", "Unânime", "Maioria"], ["Unanime", "unanime", "Empate"]),
-    (InputCJSGTJRJ, "competencia", ["1", "2", "3", 1, 3], ["4", 9]),
-    (InputCJSGTJRJ, "origem", ["1", "5", 4], ["6", 0]),
-    (InputCJSGTJPA, "sort_by", ["datajulgamento", "datapublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
-    (InputCJSGTJPA, "query_type", ["free", "anywords"], ["any", "anyWords"]),
+    _literal(InputCJSGTJAP, "votacao", ["0", "Unânime", "Maioria"], ["Unanime", "unanime", "Empate"]),
+    _literal(InputCJSGTJRJ, "competencia", ["1", "2", "3", 1, 3], ["4", 9]),
+    _literal(InputCJSGTJRJ, "origem", ["1", "5", 4], ["6", 0]),
+    _literal(InputCJSGTJPA, "sort_by", ["datajulgamento", "datapublicacao", "relevancia"], ["dataJulgamento", "xyz"]),
+    _literal(InputCJSGTJPA, "query_type", ["free", "anywords"], ["any", "anyWords"]),
     # ``buscar_em`` aceita só os valores canônicos que o portal tem. Os nomes e
     # valores antigos (``query_scope="inteiroTeor"``, ``campo="I"``,
     # ``inteiro_teor=True``) o client converte com DeprecationWarning.
-    (InputCJSGTJPA, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "inteiroteor", "numero"]),
-    (InputCJSGTJSC, "buscar_em", ["ementa", "inteiro_teor"], ["E", "I", "numero"]),
-    (InputCJSGSTM, "buscar_em", ["ementa", "inteiro_teor", "numero"], ["inteiroTeor", "tudo"]),
-    (InputListarDecisoesSTF, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
-    (InputCJSGTJDFT, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
-    (InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
+    _literal(InputCJSGTJPA, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "inteiroteor", "numero"]),
+    _literal(InputCJSGTJSC, "buscar_em", ["ementa", "inteiro_teor"], ["E", "I", "numero"]),
+    _literal(InputCJSGSTM, "buscar_em", ["ementa", "inteiro_teor", "numero"], ["inteiroTeor", "tudo"]),
+    _literal(InputListarDecisoesSTF, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
+    _literal(InputCJSGTJDFT, "buscar_em", ["ementa", "inteiro_teor"], [True, "numero"]),
+    _literal(InputCJSGTJPB, "id_origem", ["8", "2", "8,2"], ["2,8", "1", 8]),
     # Valores do seletor "Decisoes" do portal; os da docstring antiga davam 0 resultados.
-    (InputCJSGTJRN, "decisoes", ["", "Decisão", "Acórdão", "Sentença"], ["Monocraticas", "Colegiadas", "Sentencas"]),
+    _literal(
+        InputCJSGTJRN,
+        "decisoes",
+        ["", "Decisão", "Acórdão", "Sentença"],
+        ["Monocraticas", "Colegiadas", "Sentencas"],
+        _TJRN_SEM_TERMO,
+    ),
     # Valores do seletor "Jurisdicoes" do portal; os da docstring antiga davam HTTP 502/503.
-    (InputCJSGTJRN, "jurisdicoes", ["", "TJ", "TR"], ["Tribunal de Justica", "Turmas Recursais", "tj"]),
+    _literal(
+        InputCJSGTJRN,
+        "jurisdicoes",
+        ["", "TJ", "TR"],
+        ["Tribunal de Justica", "Turmas Recursais", "tj"],
+        _TJRN_SEM_TERMO,
+    ),
     # Valores do seletor "Sistema" e dos radios de grau; outros davam 0 resultados.
-    (InputCJSGTJRN, "sistema", ["", "PJE", "SAJ"], ["pje", "Pje", "XYZ"]),
-    (InputCJSGTJRN, "grau", ["", "1", "2"], [2, "3", "Primeiro"]),
+    _literal(InputCJSGTJRN, "sistema", ["", "PJE", "SAJ"], ["pje", "Pje", "XYZ"], _TJRN_SEM_TERMO),
+    _literal(InputCJSGTJRN, "grau", ["", "1", "2"], [2, "3", "Primeiro"], _TJRN_SEM_TERMO),
     # Campos de texto do portal onde vai ``pesquisa``.
-    (InputCJSGTJRN, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "I", "numero", ""]),
+    _literal(
+        InputCJSGTJRN, "buscar_em", ["ementa", "inteiro_teor"], ["inteiroTeor", "I", "numero", ""], _TJRN_SEM_TERMO
+    ),
     # 2 e 3 saem do schema: o client os converte em 151 e 15 com DeprecationWarning.
-    (InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16]),
-    (InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
-    (
+    _literal(InputCJSGTJGO, "id_instancia", [0, 15, 151, "0", "151", 1], [2, "3", 16, 99]),
+    _literal(InputCJSGTJGO, "id_serventia_subtipo", ["0", "14", "83", 0, 14], ["4", 99, True]),
+    _literal(
         InputCJPGTJES,
         "ordenacao",
         [None, "dt_juntada desc", "dt_juntada asc", "nr_processo asc", "nr_processo desc"],
@@ -149,20 +134,13 @@ _LITERAL_207_CASES = [
 ]
 
 
-@pytest.mark.parametrize(
-    "schema_cls, campo, aceitos, recusados",
-    _LITERAL_207_CASES,
-    ids=[f"{c[0].__name__}.{c[1]}" for c in _LITERAL_207_CASES],
-)
-def test_literal_207_aceita_dominio_e_recusa_o_resto(schema_cls, campo, aceitos, recusados):
-    # No TJRN, sem termo: termo na ementa com "Sentença" ou grau "1" e recusado
-    # por outra regra (``test_tjrn_recusa_termo_na_ementa_sem_ementa``).
-    pesquisa = "" if schema_cls is InputCJSGTJRN else "x"
+@pytest.mark.parametrize(("schema_cls", "base", "campo", "aceitos", "recusados"), _LITERAL_CASES)
+def test_literal_aceita_dominio_e_recusa_o_resto(schema_cls, base, campo, aceitos, recusados):
     for valor in aceitos:
-        schema_cls(pesquisa=pesquisa, **{campo: valor})
+        schema_cls(**base, **{campo: valor})
     for valor in recusados:
         with pytest.raises(ValidationError):
-            schema_cls(pesquisa=pesquisa, **{campo: valor})
+            schema_cls(**base, **{campo: valor})
 
 
 @pytest.mark.parametrize("core", sorted(ORDENACOES_POR_CORE.keys() - {"pje1g"}))
@@ -189,43 +167,22 @@ def test_tjgo_id_serventia_subtipo_int_vira_string():
 
 
 class TestNumericFieldRejection:
-    """Categoria B — lower bound numérico via ``Field(ge=1)``.
+    """Limites numéricos de ``tamanho_pagina`` além do ``ge=1`` de ``TamanhoPagina``.
 
     O lower bound vale para todos (zero/negativo nunca faz sentido em
-    paginação). Upper bound só onde o teto real do backend foi medido ao vivo
-    (TJDFT: 40, acima disso a API responde HTTP 400).
+    paginação) e é conferido sobre :data:`_TAMANHO_PAGINA_CASES` em
+    :func:`test_tamanho_pagina_rejeita_zero`. Upper bound só onde o teto real
+    do backend foi medido ao vivo (TJDFT: 40, acima disso a API responde HTTP 400).
     """
-
-    def test_tjba_tamanho_pagina_rejects_below_ge(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJBA(pesquisa="x", tamanho_pagina=0)
 
     def test_tjba_tamanho_pagina_accepts_above_default(self):
         InputCJSGTJBA(pesquisa="x", tamanho_pagina=1)
         InputCJSGTJBA(pesquisa="x", tamanho_pagina=1000)
 
-    def test_tjdft_tamanho_pagina_rejects_below_ge(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJDFT(pesquisa="x", tamanho_pagina=0)
-
     def test_tjdft_tamanho_pagina_rejects_above_le(self):
         InputCJSGTJDFT(pesquisa="x", tamanho_pagina=40)
         with pytest.raises(ValidationError):
             InputCJSGTJDFT(pesquisa="x", tamanho_pagina=41)
-
-    def test_tjes_tamanho_pagina_rejects_below_ge_in_cjsg_and_cjpg(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJES(pesquisa="x", tamanho_pagina=0)
-        with pytest.raises(ValidationError):
-            InputCJPGTJES(pesquisa="x", tamanho_pagina=0)
-
-    def test_tjgo_tamanho_pagina_rejects_below_ge(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJGO(pesquisa="x", tamanho_pagina=0)
-
-    def test_tjmt_tamanho_pagina_rejects_below_ge(self):
-        with pytest.raises(ValidationError):
-            InputCJSGTJMT(pesquisa="x", tamanho_pagina=0)
 
 
 # (Schema, campo, kwargs obrigatórios, valor válido) — todo campo de tamanho de
@@ -247,16 +204,47 @@ _TAMANHO_PAGINA_CASES = [
 
 
 _CASE_IDS = [case[0].__name__ for case in _TAMANHO_PAGINA_CASES]
-
-
-@pytest.mark.parametrize(
+_PARAMETRIZA_CAMPO_DE_TAMANHO = pytest.mark.parametrize(
     ("schema_cls", "campo", "base"), [case[:3] for case in _TAMANHO_PAGINA_CASES], ids=_CASE_IDS
 )
+
+
+#: O ``BeforeValidator`` de ``InteiroSemBool`` (``Annotated[int, BeforeValidator(...)]``).
+_VALIDADOR_SEM_BOOL = get_args(InteiroSemBool)[1]
+
+
+def _rejeita_bool(schema_cls: type[BaseModel], campo: str) -> bool:
+    return _VALIDADOR_SEM_BOOL in schema_cls.model_fields[campo].metadata
+
+
+def test_tamanho_pagina_cases_cobre_os_schemas_mapeados():
+    """A tabela traz todo campo de schema mapeado com o validador que recusa ``bool``.
+
+    O validador vem de ``InteiroSemBool`` (base de ``TamanhoPagina``), direto
+    na anotação do campo; ``paginas`` (união com ``range``/``list``) fica fora.
+    """
+    derivados = {
+        (par.schema, campo)
+        for par in schemas_mapeados()
+        for campo in par.schema.model_fields
+        if _rejeita_bool(par.schema, campo)
+    }
+    tabela = {(schema_cls, campo) for schema_cls, campo, _base, _valido in _TAMANHO_PAGINA_CASES}
+    assert tabela == derivados
+
+
+@_PARAMETRIZA_CAMPO_DE_TAMANHO
 @pytest.mark.parametrize("booleano", [True, np.True_], ids=["bool", "numpy_bool"])
 def test_tamanho_pagina_rejeita_booleano(schema_cls, campo, base, booleano):
     """Booleans não são tamanhos de página, apesar de ``bool`` herdar de ``int``."""
     with pytest.raises(ValidationError, match="não bool"):
         schema_cls(**base, **{campo: booleano})
+
+
+@_PARAMETRIZA_CAMPO_DE_TAMANHO
+def test_tamanho_pagina_rejeita_zero(schema_cls, campo, base):
+    with pytest.raises(ValidationError):
+        schema_cls(**base, **{campo: 0})
 
 
 @pytest.mark.parametrize(("schema_cls", "campo", "base", "valido"), _TAMANHO_PAGINA_CASES, ids=_CASE_IDS)
@@ -288,23 +276,24 @@ class TestCrossTribunalAliasRejection:
     Cada tribunal deprecou exatamente um alias para ``tamanho_pagina`` —
     o nome histórico do seu backend específico. Passar o alias de outro
     tribunal não é uma migração válida, e o schema rejeita via
-    ``extra="forbid"``.
+    ``extra="forbid"``. ``test_schema_contract`` confere o ``extra_forbidden``
+    de todo Input mapeado com um kwarg inventado; aqui o kwarg é o alias real
+    de outro tribunal.
     """
 
     @pytest.mark.parametrize(
-        "schema_cls,foreign_alias",
+        ("schema_cls", "foreign_alias"),
         _FOREIGN_ALIAS_CASES,
         ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
     )
     def test_foreign_alias_rejected(self, schema_cls, foreign_alias):
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match="extra_forbidden"):
             schema_cls(pesquisa="x", **{foreign_alias: 10})
 
 
 # (Schema, field_name) — campos da Categoria C cujo default mudou de ``""``
-# para ``None``. A parametrização garante que cada um dos 8 tribunais
-# afetados preserve o contrato não-breaking: default ``None``, e ``""``
-# continua aceito.
+# para ``None``. A parametrização garante que cada tribunal afetado preserve o
+# contrato não-breaking: default ``None``, e ``""`` continua aceito.
 _CAT_C_CASES = [
     (InputCJSGTJGO, "numero_processo"),
     (InputCJSGTJPB, "numero_processo"),
@@ -342,7 +331,7 @@ class TestOptionalSentinelAcceptance:
     """
 
     @pytest.mark.parametrize(
-        "schema_cls,field_name",
+        ("schema_cls", "field_name"),
         _CAT_C_CASES,
         ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
     )
@@ -351,7 +340,7 @@ class TestOptionalSentinelAcceptance:
         assert getattr(model, field_name) is None
 
     @pytest.mark.parametrize(
-        "schema_cls,field_name",
+        ("schema_cls", "field_name"),
         _CAT_C_CASES,
         ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
     )
@@ -359,7 +348,7 @@ class TestOptionalSentinelAcceptance:
         schema_cls(pesquisa="x", **{field_name: None})
 
     @pytest.mark.parametrize(
-        "schema_cls,field_name",
+        ("schema_cls", "field_name"),
         _CAT_C_CASES,
         ids=lambda v: v.__name__ if hasattr(v, "__name__") else v,
     )
@@ -368,11 +357,11 @@ class TestOptionalSentinelAcceptance:
 
 
 class TestTJROOrgaoJulgadorIntZero:
-    """TJRO ``orgao_julgador`` aceita ``int | str | None`` — ``0`` (int) deve
-    ser preservado intacto, não confundido com ``None`` nem com ``""``.
+    """TJRO ``orgao_julgador`` aceita ``int | str | None`` e preserva o ``0`` (int).
 
-    Protege o ternário ``inp.orgao_julgador if inp.orgao_julgador is not None
-    else ""`` no client (o ingênuo ``or ""`` quebraria o caso).
+    O ``0`` não pode ser confundido com ``None`` nem com ``""``. Protege o
+    ternário ``inp.orgao_julgador if inp.orgao_julgador is not None else ""``
+    no client (o ingênuo ``or ""`` quebraria o caso).
     """
 
     def test_orgao_julgador_zero_int_preserved(self):
@@ -544,8 +533,10 @@ def test_tjrn_aceita_decisao_no_seu_grau(filtros):
     ],
 )
 def test_tjrn_recusa_termo_na_ementa_sem_ementa(filtros):
-    """So os acordaos tem ementa: com termo na ementa, sentencas, decisoes de 1o
-    grau e monocraticas de ``"TJ"``, ``"TR"`` ou do PJe dao 0 resultados no portal.
+    """So os acordaos tem ementa: com termo na ementa, os demais dao 0 resultados no portal.
+
+    Sentencas, decisoes de 1o grau e monocraticas de ``"TJ"``, ``"TR"`` ou do
+    PJe nao tem ementa.
     """
     with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
         InputCJSGTJRN(pesquisa="dano moral", **filtros)

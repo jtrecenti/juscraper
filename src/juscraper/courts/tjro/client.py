@@ -107,7 +107,7 @@ class TJROScraper(HTTPScraper):
                   (str | date | None): ``DD/MM/AAAA``, ``DD-MM-AAAA``,
                   ``AAAA-MM-DD``, ``AAAA/MM/DD``, ``date`` ou ``datetime``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
             * ``magistrado`` -> ``relator``
@@ -132,7 +132,7 @@ class TJROScraper(HTTPScraper):
                 igual: as linhas saem iguais em todas as outras colunas, e
                 nenhuma e removida.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJRO` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

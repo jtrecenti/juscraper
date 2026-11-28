@@ -168,7 +168,7 @@ class TJPEScraper(HTTPScraper):
             >>> tjpe = jus.scraper("tjpe")
             >>> df = tjpe.cpopg("0000000-00.0000.8.17.0000")
 
-        See also:
+        See Also:
             :class:`InputCpopgTRF` — schema pydantic e a fonte da verdade dos
             parâmetros aceitos.
         """
@@ -285,7 +285,7 @@ class TJPEScraper(HTTPScraper):
         absorver aliases deprecados (listados abaixo) e qualquer kwarg
         desconhecido vira ``TypeError`` via ``raise_on_extra_kwargs``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``classe_cnj`` -> ``classe``
             * ``assunto_cnj`` -> ``assunto``
@@ -325,7 +325,7 @@ class TJPEScraper(HTTPScraper):
             >>> df = tjpe.cjsg("dano moral", paginas=range(1, 3),
             ...                tipo_decisao="acordaos")
 
-        See also:
+        See Also:
             :class:`InputCJSGTJPE` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

@@ -35,6 +35,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests._helpers import classes_publicadas
 from tests.test_docs_interlinks import _docstrings
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -227,21 +228,6 @@ TOTAL_PAPEIS, PAPEIS_CRUS = _varrer_fonte()
 _METH_CURTO = re.compile(r":(?:py:)?meth:`~?([^`.]+)`")
 
 
-def _classes_publicadas() -> list[tuple[type, bool]]:
-    """Classes que ``docs/_quarto.yml`` manda o quartodoc documentar, e se a página traz os membros herdados."""
-    config = yaml.safe_load((DOCS / "_quarto.yml").read_text(encoding="utf-8"))["quartodoc"]
-    classes = []
-    for secao in config["sections"]:
-        for alvo in secao["contents"]:
-            herdados = isinstance(alvo, dict) and bool(alvo.get("include_inherited"))
-            caminho = alvo["name"] if isinstance(alvo, dict) else alvo
-            modulo, _, nome = f"juscraper.{caminho}".rpartition(".")
-            objeto = getattr(importlib.import_module(modulo), nome)
-            if isinstance(objeto, type):
-                classes.append((objeto, herdados))
-    return classes
-
-
 def _meth_curto_sem_metodo() -> tuple[int, list[str]]:
     """Confere cada ``:meth:`` curto das docstrings que a página da classe mostra.
 
@@ -253,7 +239,7 @@ def _meth_curto_sem_metodo() -> tuple[int, list[str]]:
     """
     total = 0
     sem_metodo = []
-    for classe, herdados in _classes_publicadas():
+    for classe, herdados in classes_publicadas().items():
         nomes = dir(classe) if herdados else vars(classe)
         membros = {nome: getattr(classe, nome) for nome in nomes if not nome.startswith("_")}
         docstrings = [("", classe.__doc__)]

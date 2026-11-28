@@ -2,7 +2,7 @@
 
 O padrão de ``CONTRIBUTING.md > Docstrings de métodos públicos com kwargs``
 exige correspondência entre filtros documentados e campos do schema.
-``CASES`` sai dos mapas ``EXPECTED_*_SCHEMAS`` de ``test_schema_coverage`` (um
+``CASES`` sai dos mapas ``EXPECTED_*_SCHEMAS`` de ``tests/schemas/_registro`` (um
 caso por método com ``**kwargs``), e
 ``test_metodo_publico_com_kwargs_tem_paridade_registrada`` reprova o método
 público com ``**kwargs`` que ficar fora dele sem motivo em ``SEM_PARIDADE``; ``DOWNLOAD_REFERENCE_CASES``
@@ -14,7 +14,6 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
-import pkgutil
 import re
 import types
 import typing
@@ -26,29 +25,18 @@ import griffe
 import pytest
 from pydantic_core import PydanticUndefined
 
-import juscraper
 from juscraper import _SCRAPERS
 from juscraper.utils.params import DATE_ALIAS_TO_CANONICAL, DATE_CANONICAL, SEARCH_ALIASES
 from tests._helpers import classe_da_sigla
-from tests.schemas.test_schema_coverage import (
-    EXPECTED_AGGREGATOR_SCHEMAS,
-    EXPECTED_COURT_SCHEMAS,
-    _is_stub,
-    _iter_aggregator_scrapers,
-    _iter_court_scrapers,
-    _schemas_mapeados,
+from tests.schemas._registro import (
+    ALIASES_DEPRECADOS,
+    aceita_kwargs,
+    is_stub,
+    modulos,
+    parametros_explicitos,
+    resolve,
+    schemas_mapeados,
 )
-from tests.schemas.test_signature_parity import _accepts_kwargs, _explicit_params
-
-# Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
-# secao propria da docstring (``Aliases deprecados``) mas nao sao campos
-# do schema. Mesma lista que tests/schemas/test_signature_parity.py.
-DEPRECATED_ALIASES = frozenset({
-    "query", "termo",
-    "data_inicio", "data_fim",
-    "data_julgamento_de", "data_julgamento_ate",
-    "data_publicacao_de", "data_publicacao_ate",
-})
 
 # Parametros explicitos da assinatura — citados na docstring na secao
 # ``Args:`` mas nao sao filtros via ``**kwargs``.
@@ -62,21 +50,17 @@ def _casos() -> list:
     schemas (o ``auth_govbr`` de JusBR e PDPJ) é conferido contra os dois.
     """
     casos = set()
-    for mapa, iterar in (
-        (EXPECTED_COURT_SCHEMAS, _iter_court_scrapers),
-        (EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers),
-    ):
-        for par in _schemas_mapeados(mapa, iterar):
-            dono = next(classe for classe in par.raspador.__mro__ if par.endpoint in vars(classe))
-            if _accepts_kwargs(vars(dono)[par.endpoint]):
-                casos.add((dono.__module__, dono.__qualname__, par.endpoint, par.modulo, par.classe))
+    for par in schemas_mapeados():
+        dono = next(classe for classe in par.raspador.__mro__ if par.endpoint in vars(classe))
+        if aceita_kwargs(vars(dono)[par.endpoint]):
+            casos.add((dono.__module__, dono.__qualname__, par.endpoint, par.modulo, par.classe))
     return [pytest.param(*caso, id=f"{caso[1]}.{caso[2]}-{caso[4]}") for caso in sorted(casos)]
 
 
 CASES = _casos()
 EM_CASES = {tuple(p.values[:3]) for p in CASES}
 _POR_CASO = pytest.mark.parametrize(
-    "scraper_module,scraper_class,endpoint,schema_module,schema_class",
+    ("scraper_module", "scraper_class", "endpoint", "schema_module", "schema_class"),
     CASES,
 )
 
@@ -157,20 +141,20 @@ def test_docstring_lists_schema_fields(
     mod = importlib.import_module(scraper_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
 
-    explicitos = _explicit_params(method)
-    todos = set(getattr(importlib.import_module(schema_module), schema_class).model_fields)
+    explicitos = parametros_explicitos(method)
+    todos = set(resolve(schema_module, schema_class).model_fields)
     fields = todos - EXPLICIT_PARAMS - explicitos
-    # Um nome em ``DEPRECATED_ALIASES`` so e subtraido quando NAO e um campo
+    # Um nome em ``ALIASES_DEPRECADOS`` so e subtraido quando NAO e um campo
     # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
     # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas
     # campo real aqui (``query`` no DataJud e o override Elasticsearch).
-    bullets = set(_docstring_bullets(method)) - EXPLICIT_PARAMS - (DEPRECATED_ALIASES - fields)
+    bullets = set(_docstring_bullets(method)) - EXPLICIT_PARAMS - (ALIASES_DEPRECADOS - fields)
 
     schema_only = fields - bullets
     docstring_only = bullets - fields
     sem_args = (todos & explicitos) - _args_documentados(method)
 
-    assert not schema_only and not docstring_only and not sem_args, (
+    assert not schema_only | docstring_only | sem_args, (
         f"{scraper_class}.{endpoint} — paridade docstring/schema falhou:\n"
         f"  campos no schema {schema_class} mas nao na docstring: "
         f"{sorted(schema_only) or '-'}\n"
@@ -316,8 +300,7 @@ def _pares_download() -> list[tuple[str, str, str]]:
     classe que o define.
     """
     pares = set()
-    for info in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
-        mod = importlib.import_module(info.name)
+    for mod in modulos():
         for class_name, klass in vars(mod).items():
             if not inspect.isclass(klass) or klass.__module__ != mod.__name__:
                 continue
@@ -325,7 +308,7 @@ def _pares_download() -> list[tuple[str, str, str]]:
                 if name.startswith("_") or not name.endswith("_download") or not callable(attr):
                     continue
                 principal = getattr(klass, name.removesuffix("_download"), None)
-                if principal is not None and _accepts_kwargs(principal):
+                if principal is not None and aceita_kwargs(principal):
                     pares.add((mod.__name__, class_name, name))
     return sorted(pares)
 
@@ -343,7 +326,7 @@ DOWNLOAD_REFERENCE_CASES = [
 
 
 @pytest.mark.parametrize(
-    "module_path,class_name,download_method,toplevel_method",
+    ("module_path", "class_name", "download_method", "toplevel_method"),
     DOWNLOAD_REFERENCE_CASES,
 )
 def test_download_docstring_references_toplevel(
@@ -364,7 +347,7 @@ def test_download_docstring_references_toplevel(
 
 #: Método público com ``**kwargs`` que fica fora de ``CASES``, com o motivo.
 #: Só entra aqui o que não tem filtros a conferir contra um schema; método com
-#: schema entra no mapa ``EXPECTED_*_SCHEMAS`` de ``test_schema_coverage``.
+#: schema entra no mapa ``EXPECTED_*_SCHEMAS`` de ``tests/schemas/_registro``.
 SEM_PARIDADE: dict[tuple[str, str, str], str] = {
     ("juscraper.courts.trf3.client", "TRF3Scraper", "cpopg_parse"): (
         "``**kwargs`` só recebe o alias deprecado ``htmls`` (-> ``brutos``); não há filtros nem schema"
@@ -387,7 +370,7 @@ def _metodos_com_kwargs() -> set[tuple[str, str, str]]:
                 atributo = bruto.__func__ if isinstance(bruto, (classmethod, staticmethod)) else bruto
                 if nome_metodo.startswith("_") or nome_metodo.endswith("_download") or not callable(atributo):
                     continue
-                if _accepts_kwargs(atributo) and not _is_stub(atributo):
+                if aceita_kwargs(atributo) and not is_stub(atributo):
                     metodos.add((classe.__module__, classe.__qualname__, nome_metodo))
     return metodos
 
@@ -401,9 +384,9 @@ def test_metodo_publico_com_kwargs_tem_paridade_registrada():
     achados = _metodos_com_kwargs()
     faltam = achados - EM_CASES - set(SEM_PARIDADE)
     sobram = set(SEM_PARIDADE) - achados
-    assert not faltam and not sobram, (
+    assert not faltam | sobram, (
         "Métodos públicos com **kwargs sem paridade registrada (mapear o schema em "
-        "EXPECTED_*_SCHEMAS de test_schema_coverage, ou incluir em SEM_PARIDADE, com o motivo):\n"
+        "EXPECTED_*_SCHEMAS de tests/schemas/_registro, ou incluir em SEM_PARIDADE, com o motivo):\n"
         + "".join(f"  {'.'.join(m)}\n" for m in sorted(faltam))
         + ("Entradas de SEM_PARIDADE que não existem mais:\n" if sobram else "")
         + "".join(f"  {'.'.join(m)}\n" for m in sorted(sobram))
@@ -416,7 +399,7 @@ def _aliases_aceitos(method, schema) -> set[str]:
     ``query``/``termo`` quando há ``pesquisa``; o alias de data cujo nome
     canônico é campo do schema ou parâmetro da assinatura (``DATE_ALIAS_TO_CANONICAL``).
     """
-    nomes = set(schema.model_fields) | _explicit_params(method)
+    nomes = set(schema.model_fields) | parametros_explicitos(method)
     aceitos = {a for a, canonico in DATE_ALIAS_TO_CANONICAL.items() if canonico in nomes}
     if "pesquisa" in nomes:
         aceitos |= set(SEARCH_ALIASES)
@@ -439,7 +422,7 @@ def test_docstring_cita_aliases_aceitos(
     """Cada alias deprecado que o endpoint consome aparece na docstring, pelo nome inteiro."""
     mod = importlib.import_module(scraper_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
-    schema = getattr(importlib.import_module(schema_module), schema_class)
+    schema = resolve(schema_module, schema_class)
     excluidos = ALIASES_NAO_CONSUMIDOS.get((scraper_class, endpoint), (frozenset(), ""))[0]
     citados = set(_NAME_RE.findall(inspect.getdoc(method) or ""))
     faltam = _aliases_aceitos(method, schema) - excluidos - citados
