@@ -19,9 +19,10 @@ def test_extract_total_single_page():
     assert _extract_total(html) == 1
 
 
-def test_extract_total_no_results_falls_back_to_zero():
+def test_extract_total_no_results_sem_legend_da_none():
+    """A busca vazia volta sem o ``legend``; o download a reconhece por não ter resultados."""
     html = _sample("no_results.html")
-    assert _extract_total(html) == 0
+    assert _extract_total(html) is None
 
 
 def test_extract_total_handles_dot_separated_thousands():
@@ -33,9 +34,10 @@ def test_extract_total_handles_dot_separated_thousands():
     assert _extract_total(html) == 1234
 
 
-def test_extract_total_resilient_to_legend_class_change():
+def test_extract_total_sem_o_legend_nao_le_o_html_bruto():
+    """Sem ``legend.formLocalizarLegenda``, "N resultados" fora dele (numa ementa) não vira total."""
     html = (
         '<div class="painel-resultados">'
-        "<span>456 resultados encontrados</span></div>"
+        "<p>a diligência teve 456 resultados negativos</p></div>"
     )
-    assert _extract_total(html) == 456
+    assert _extract_total(html) is None

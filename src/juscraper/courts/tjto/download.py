@@ -52,15 +52,15 @@ def _get_total_results(html: str, type_minuta: str) -> int | None:
     A aba é escolhida pelo ``type_minuta``, e não pela classe ``active``: sem
     ela, o primeiro "(N)" da página é sempre o da aba de acórdãos. Sem a aba,
     vale o "(N resultados)" acima da paginação, que só aparece em busca de mais
-    de uma página e já traz o total do tipo pedido. Sem ``zero_markers``: a
+    de uma página e já traz o total do tipo pedido. Sem ``aviso_vazio``: a
     página além do total também diz "Nenhum documento encontrado", mas a aba
     traz o total da busca (``pagina_alem_do_total.html``); a busca sem
     resultados traz ``(0)`` na aba.
     """
     aba = BeautifulSoup(html, "html.parser").select_one(f'li[type_minuta="{type_minuta}"] .num_minuta')
     if aba is not None:
-        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,))
-    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,))
+        return extract_count_with_cascade(aba, regex_patterns=(_NUM_ABA_RE,), fallback_html=True)
+    return extract_count_with_cascade(html, regex_patterns=(_N_RESULTADOS_RE,), fallback_html=True)
 
 
 def build_cjsg_payload(

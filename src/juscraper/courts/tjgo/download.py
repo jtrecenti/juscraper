@@ -1,13 +1,12 @@
 """HTTP-level helpers for the TJGO jurisprudence search."""
 from __future__ import annotations
 
-import math
 import re
 import time
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo
+from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo, resolve_total_pages
 
 from .parse import has_results
 
@@ -73,14 +72,13 @@ def build_cjsg_payload(
     }
 
 
-def _extract_total(html: str) -> int:
-    n = extract_count_with_cascade(
+def _extract_total(html: str) -> int | None:
+    """Lê o total do ``legend``; ``None`` sem ele, como na busca vazia ou bloqueada."""
+    return extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
-        fallback_max_int=False,
     )
-    return n if n is not None else 0
 
 
 def _fetch_page(
@@ -131,6 +129,9 @@ def cjsg_download(
         request_fn: HTTP callable que aplica retry + ``raise_for_status``.
             Em uso normal e ``TJGOScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``).
+
+    Raises:
+        ValueError: Quando a página 1 traz resultados sem o total (markup novo).
     """
     # Prime the session (cookies) with a GET on the form.
     request_fn("GET", SEARCH_URL, perfil="formulario")
@@ -150,9 +151,12 @@ def cjsg_download(
     total = _extract_total(first)
     if not total and not has_results(first):
         # Com o token valido, uma busca sem resultados devolve o mesmo HTML da
-        # busca bloqueada; por isso o aviso sai em toda busca vazia.
+        # busca bloqueada; por isso o aviso sai em toda busca vazia. Esse HTML
+        # nao traz marcador proprio: a falta de resultados e o unico sinal.
         avisar(AVISO_TURNSTILE)
-    n_pags = max(1, math.ceil(total / qtde_itens_pagina)) if total else 1
+        n_pags = 1
+    else:
+        n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
     results: list = []
     for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJGO"):

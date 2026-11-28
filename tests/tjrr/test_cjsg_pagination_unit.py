@@ -1,6 +1,8 @@
 """Testes unitarios da extracao de contagem TJRR via util compartilhado (refs #87)."""
 from __future__ import annotations
 
+import re
+
 import pytest
 from bs4 import BeautifulSoup
 
@@ -39,16 +41,20 @@ def test_get_total_pages_no_results_sample():
     assert _get_total_pages(html) == 1
 
 
-def test_get_total_pages_falls_back_to_one_without_paginator():
-    assert _get_total_pages("<html><body>nada de paginator</body></html>") == 1
+def test_get_total_pages_sem_o_paginador_levanta():
+    r"""HTML derivado do sample real ``single_page.html``, sem o paginador.
 
-
-def test_get_total_pages_resilient_to_class_change():
-    html = (
-        '<div class="paginator"><span class="paginator-status">'
-        "(1 of 99)</span></div>"
-    )
-    assert _get_total_pages(html) == 99
+    Sem ele, o total não vira 1 página (o download parava na primeira) nem
+    2009, da ementa que diz "(fevereiro de 2009)" e casa ``de\s+(\d+)\)``
+    no HTML bruto.
+    """
+    html = re.sub(r'<span class="ui-paginator-current">[^<]*</span>', "", _sample("single_page.html"))
+    assert "ui-paginator-current" not in html
+    assert "(fevereiro de 2009)" in html
+    with pytest.raises(ValueError, match="TJRR: a tabela de resultados não traz o paginador"):
+        _get_total_pages(html)
+    with pytest.raises(ValueError, match="TJRR"):
+        _datatables_with_pages(html, _soup(html))
 
 
 def test_extract_datatable_id_from_results_sample():

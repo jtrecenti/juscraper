@@ -17,7 +17,7 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from itertools import chain, islice, pairwise
-from typing import TypeGuard, TypeVar
+from typing import NamedTuple, TypeGuard, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
@@ -26,7 +26,6 @@ from ..core.avisos import avisar
 
 _Pagina = TypeVar("_Pagina")
 
-_FALLBACK_NUMERO_RE = re.compile(r"\d[\d.]*")
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 
 
@@ -45,25 +44,51 @@ def _extract_from_match(match: re.Match[str]) -> int | None:
     return _coerce_int(match.group(0))
 
 
-def _has_zero_marker(soup: Tag, zero_markers: Sequence[str]) -> bool:
-    if not zero_markers:
+class AvisoVazio(NamedTuple):
+    """Aviso de busca vazia: os marcadores só valem no texto dos ``seletores``.
+
+    Ementas e sentenças citam as frases do aviso ("nenhum documento
+    encontrado nos autos"), e por isso o texto da página inteira não serve:
+    o marcador é procurado só nos elementos que o portal usa para o aviso
+    (``div.alert-danger`` no STM, por exemplo).
+
+    Attributes:
+        seletores: Seletores CSS do contêiner do aviso.
+        marcadores: Substrings (sem diferença de maiúsculas) procuradas no
+            texto de cada elemento que os seletores casam.
+    """
+
+    seletores: tuple[str, ...]
+    marcadores: tuple[str, ...]
+
+
+def _tem_aviso_vazio(soup: Tag, aviso: AvisoVazio | None) -> bool:
+    if aviso is None:
         return False
-    text_lower = soup.get_text(" ", strip=True).lower()
-    return any(marker.lower() in text_lower for marker in zero_markers)
+    marcadores = [marcador.lower() for marcador in aviso.marcadores]
+    textos = (
+        elemento.get_text(" ", strip=True).lower()
+        for seletor in aviso.seletores
+        for elemento in soup.select(seletor)
+    )
+    return any(marcador in texto for texto in textos for marcador in marcadores)
 
 
 def _collect_candidates(
     soup: Tag,
-    html: str,
+    html: str | Tag,
     css_selectors: Sequence[str],
+    *,
+    fallback_html: bool,
 ) -> list[str]:
-    candidates: list[str] = []
-    for selector in css_selectors:
-        for element in soup.select(selector):
-            content = element.get_text(" ", strip=True)
-            if content:
-                candidates.append(content)
-    return candidates or [html]
+    candidates = [
+        content
+        for selector in css_selectors
+        for element in soup.select(selector)
+        if (content := element.get_text(" ", strip=True))
+    ]
+    # ``str(Tag)`` serializa a árvore inteira: só quando o HTML bruto é usado.
+    return candidates or ([str(html)] if fallback_html else [])
 
 
 def _extract_first(
@@ -81,75 +106,66 @@ def _extract_first(
     return None
 
 
-def _extract_fallback_max(candidate: str) -> int | None:
-    values = [
-        value
-        for raw in _FALLBACK_NUMERO_RE.findall(candidate)
-        if (value := _coerce_int(raw)) is not None
-    ]
-    return max(values) if values else None
-
-
 def extract_count_with_cascade(
     html: str | Tag,
     *,
     css_selectors: Sequence[str] = (),
     regex_patterns: Sequence[re.Pattern[str]] = (),
-    zero_markers: Sequence[str] = (),
-    fallback_max_int: bool = False,
+    aviso_vazio: AvisoVazio | None = None,
+    fallback_html: bool = False,
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
-    O caller decide o que fazer quando a cascata falha (retorno ``None``):
-    alguns tribunais convencionam ``return 1`` (assume pagina unica), outros
-    ``return 0`` (assume zero resultados). Manter essa decisao do lado do
-    caller preserva o comportamento legado de cada scraper.
+    O retorno ``None`` quer dizer markup não reconhecido. O caller deve
+    passá-lo a :func:`resolve_total_pages` ou levantar: assumir 1 página ou
+    0 resultados faz o download parar na primeira página sem aviso.
+
+    A ordem é: seletores e regex; ``aviso_vazio``; ``None``. O aviso de busca
+    vazia só vale quando nenhuma contagem foi achada, e só dentro dos
+    seletores dele, porque ementas e sentenças citam essas frases ("nenhum
+    documento encontrado nos autos") e uma contagem 0 faz o download parar na
+    primeira página sem aviso.
 
     Args:
         html: HTML bruto da primeira pagina de resultados, ou o trecho ja
             parseado (``Tag``) onde a contagem esta, como o ``div`` de uma
             tabela, sem parsear de novo. Com uma ``Tag``, a
-            cascata inteira (seletores, regex no HTML bruto e
-            ``zero_markers``) olha so o trecho.
+            cascata inteira (seletores, regex, ``fallback_html`` e
+            ``aviso_vazio``) olha so o trecho.
         css_selectors: Seletores CSS tentados em ordem. Para cada um,
             ``soup.select(selector)`` produz elementos cujo texto vira
-            candidato.
-            Use ``()`` quando nao houver seletor estruturado confiavel —
-            a cascata cai direto em ``regex_patterns`` sobre o HTML bruto.
-            Se ``css_selectors`` e nao vazio mas nenhum seletor casa em
-            nenhum elemento, a cascata tambem cai no HTML bruto.
+            candidato. Se nenhum seletor casa elemento com texto (ou se a
+            lista e vazia), a cascata nao acha contagem, salvo com
+            ``fallback_html=True``.
         regex_patterns: Regex tentadas em ordem para cada texto candidato.
             Se a regex tem grupos, retorna o primeiro grupo numerico
             valido; caso contrario tenta ``group(0)``. Vence o primeiro
             match valido na ordem da cascata (candidato, depois regex).
-        zero_markers: Substrings (case-insensitive) que, quando presentes
-            em **qualquer lugar** do texto da pagina, fazem o util retornar
-            ``0`` imediatamente — sem rodar a cascata de seletores. Use
-            marcadores especificos do tribunal ("Nenhum documento
-            encontrado", "Sua pesquisa nao retornou resultados") para nao
-            falso-positivar em textos de ajuda.
-        fallback_max_int: Se ``True``, ultimo recurso e pegar ``max(\\d+)``
-            no primeiro candidato — util para layouts onde varios numeros
-            aparecem mas o total e o maior. Default ``False`` (fail-fast:
-            retorna ``None``). Os callers controlam o default semantico
-            (1 pagina ou 0 resultados) do lado deles; ``True`` deve ser
-            opt-in explicito para evitar extrair numeros irrelevantes da
-            pagina (ano, codigo, etc.).
+        aviso_vazio: Contêiner e frases do aviso de busca vazia
+            (:class:`AvisoVazio`), consultado quando a cascata nao acha
+            contagem; se algum marcador aparece no texto de algum elemento
+            dos seletores do aviso, o util retorna ``0``. Fora desses
+            elementos o marcador nao conta. Com uma ``Tag``, os seletores
+            casam os descendentes dela, como ``css_selectors``.
+        fallback_html: Se ``True``, as regex rodam no HTML bruto quando
+            nenhum seletor casa elemento com texto. Default ``False``: o
+            HTML inteiro traz as ementas, e uma regex como ``de\\s+(\\d+)\\)``
+            casa "(fevereiro de 2009)" nelas. So quando todas as regex exigem
+            as palavras do rotulo do resumo ("Documentos encontrados: N"),
+            que tambem nao podem casar com o aviso de busca vazia, porque a
+            regex roda antes de ``aviso_vazio``.
 
     Returns:
-        ``int`` extraido ou ``None`` se nada casar e ``fallback_max_int``
-            nao salvar. ``0`` quando ``zero_markers`` casarem.
+        ``int`` extraido; ``0`` quando a cascata nao acha contagem e o
+            ``aviso_vazio`` aparece; ``None`` nos demais casos.
     """
-    soup, bruto = (html, str(html)) if isinstance(html, Tag) else (BeautifulSoup(html, "html.parser"), html)
-    if _has_zero_marker(soup, zero_markers):
-        return 0
-
-    candidates = _collect_candidates(soup, bruto, css_selectors)
+    soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
+    candidates = _collect_candidates(soup, html, css_selectors, fallback_html=fallback_html)
     value = _extract_first(candidates, regex_patterns)
     if value is not None:
         return value
-    if fallback_max_int:
-        return _extract_fallback_max(candidates[0])
+    if _tem_aviso_vazio(soup, aviso_vazio):
+        return 0
     return None
 
 

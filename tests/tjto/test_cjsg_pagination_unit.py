@@ -51,10 +51,11 @@ def test_get_total_results_sem_a_aba_nao_le_outra_contagem():
     assert _get_total_results(html, "2") is None
 
 
-def test_get_total_results_falls_back_to_resultados_text():
+def test_get_total_results_sem_a_aba_le_o_n_resultados_e_nao_um_ano():
+    """Sem a aba, vale o "(N resultados)"; um número entre parênteses (ano numa ementa) não vira total."""
     html = (
         '<html><body><p>pesquisando por <strong>x</strong> - '
-        "(123 resultados)</p></body></html>"
+        "(123 resultados)</p><p>Lei n. 8.112 (1990)</p></body></html>"
     )
     assert _get_total_results(html, "1") == 123
 

@@ -12,7 +12,7 @@ from responses.matchers import query_param_matcher
 
 import juscraper as jus
 from juscraper.core.exceptions import BotChallengeBlockedError
-from juscraper.courts.stm.download import BASE_URL, build_cjsg_params
+from juscraper.courts.stm.download import BASE_URL, build_cjsg_params, cjsg_n_resultados
 from juscraper.courts.stm.parse import COLUNAS
 from tests._helpers import load_sample, params_enviados
 
@@ -156,3 +156,16 @@ def test_cjsg_pagina_sem_contador_levanta():
 
     with pytest.raises(ValueError, match="não traz a contagem"):
         jus.scraper("stm").cjsg("deserção")
+
+
+def test_cjsg_n_resultados_ementa_com_o_aviso_sem_contador_nao_zera():
+    """Sem o contador, a ementa que cita o aviso de busca vazia fora do ``div.alert-danger`` não vira 0."""
+    html = load_sample("stm", "cjsg/single_page.html")
+    contador = '<div class="row message">'
+    ementa = '<blockquote data-id="ementa">'
+    assert html.count(contador) == 1
+    assert html.count(ementa) == 1
+    html = html.replace(contador, '<div class="row">')
+    html = html.replace(ementa, f"{ementa}Nenhum documento encontrado nos autos. ")
+    assert cjsg_n_resultados(html) is None
+    assert cjsg_n_resultados(load_sample("stm", "cjsg/no_results.html")) == 0

@@ -76,6 +76,23 @@ def test_cjsg_n_results_fallback_parseia_html_uma_vez(mocker):
     assert len(chamadas) == 1
 
 
+def test_cjsg_n_results_fallback_com_o_marcador_no_item_nao_zera():
+    """Sem resumo, o texto de um item que cita "Nenhum Resultado Encontrado" não zera o contador."""
+    html = _sem_resumo(_sample("results_normal_page_01.html"))
+    abertura = '<div class="informacoes-basicas">'
+    assert abertura in html
+    html = html.replace(abertura, f"{abertura}<span>Nenhum Resultado Encontrado na pesquisa de bens</span>", 1)
+    assert cjsg_n_results(html) == 591
+
+
+def test_cjsg_n_results_sem_contagem_com_o_marcador_no_item_nao_zera():
+    """Sem resumo nem contador, o item que cita "Nenhum Resultado Encontrado" não vira busca vazia."""
+    html = _sem_resumo(_sample("results_normal_page_01.html")).replace('class="contagem"', 'class="ordem"')
+    abertura = '<div class="informacoes-basicas">'
+    html = html.replace(abertura, f"{abertura}<span>Nenhum Resultado Encontrado na pesquisa de bens</span>", 1)
+    assert cjsg_n_results(html) is None
+
+
 def test_cjsg_n_results_fallback_sem_resultados():
     assert cjsg_n_results(_sem_resumo(_sample("no_results.html"))) == 0
 
