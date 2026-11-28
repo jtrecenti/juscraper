@@ -506,9 +506,7 @@ class EsajSearchScraper(HTTPScraper):
                   ``len(cjsg(...))`` quando ha acordaos republicados.
                   ``paginas`` e ignorado (emite ``UserWarning``).
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
-
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -534,7 +532,7 @@ class EsajSearchScraper(HTTPScraper):
             >>> # Estimativa pre-scraping (issue #92):
             >>> n = tjac.cjsg("dano moral", count_only=True)
 
-        See also:
+        See Also:
             :class:`InputCJSGEsajPuro` (ou
             :class:`~juscraper.courts.tjsp.schemas.InputCJSGTJSP`) —
             schema pydantic e a fonte da verdade dos filtros aceitos.

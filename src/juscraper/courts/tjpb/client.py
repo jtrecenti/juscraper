@@ -110,7 +110,7 @@ class TJPBScraper(HTTPScraper):
                   ``data_julgamento`` para garantir que a janela pedida bate
                   com o que e devolvido (refs #195).
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
             * ``id_classe_judicial`` -> ``id_classe``
@@ -126,7 +126,7 @@ class TJPBScraper(HTTPScraper):
         Returns:
             DataFrame com as decisoes.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJPB` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

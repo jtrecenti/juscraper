@@ -206,7 +206,7 @@ class TJMTScraper(HTTPScraper):
                 inclusive ``data_julgamento_inicio``/``data_julgamento_fim``,
                 que a API não filtra, levanta ``TypeError``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``quantidade_por_pagina`` -> ``tamanho_pagina``
             * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``

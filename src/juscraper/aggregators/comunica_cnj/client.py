@@ -122,7 +122,7 @@ class ComunicaCNJScraper(HTTPScraper):
             ...     paginas=range(1, 4),
             ... )
 
-        See also:
+        See Also:
             :class:`InputListarComunicacoesComunicaCNJ` -- schema pydantic
             e a fonte da verdade dos filtros aceitos.
         """
