@@ -611,11 +611,15 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 
 ### Cobertura de paridade
 
-`tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` exige igualdade entre os filtros documentados e os campos do modelo nos endpoints registrados em `CASES`. Ao adicionar um método ou override com schema próprio e filtros em `**kwargs`, registrar o caso. O teste não descobre automaticamente novos endpoints.
+`tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` confere, nos endpoints de `CASES`, que cada campo do schema está documentado: o parâmetro explícito da assinatura numa entrada de `Args:`, o filtro de `**kwargs` num bullet com o mesmo nome, sem bullet a mais.
+
+`CASES` não é escrito à mão: sai dos mapas `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` de `tests/schemas/test_schema_coverage.py`, um caso por método com `**kwargs`, na classe que o define. `test_metodo_publico_com_kwargs_tem_paridade_registrada` reprova método público com `**kwargs` de qualquer classe na hierarquia de um raspador registrado em `juscraper._SCRAPERS` (inclusive base e mixin) que não esteja em `CASES` nem em `SEM_PARIDADE`. Método novo com schema entra no mapa; `SEM_PARIDADE` é só para quem não tem filtros a conferir, como um `**kwargs` que só recebe alias, com o motivo. Stubs e `*_download` ficam de fora (estes, com o teste de remissão, abaixo).
 
 `test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
 
-`test_download_docstring_references_toplevel` verifica a referência `:meth:` em todo método público `*_download` cujo método principal (o mesmo nome sem `_download`) recebe `**kwargs`. Os pares saem do próprio pacote, em `DOWNLOAD_REFERENCE_CASES`, sem registro manual; o download registrado em `CASES` fica de fora. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e incluir o método em `CASES`, para que a lista tenha cobertura de paridade.
+`test_docstring_cita_aliases_aceitos` exige que a docstring cite, pelo nome inteiro (`data_julgamento_ate`, não `_ate`), os aliases que o pipeline de entrada consome para o endpoint: `query` e `termo` quando há `pesquisa`, e cada alias de `DATE_ALIAS_TO_CANONICAL` cujo nome canônico é campo do schema ou parâmetro da assinatura. Os aliases próprios do tribunal, de `pop_deprecated_alias` e `resolve_deprecated_alias`, continuam a cargo de quem os cria. Endpoint que não consome um alias presumido entra em `ALIASES_NAO_CONSUMIDOS`, com o motivo.
+
+`test_download_docstring_references_toplevel` verifica a referência `:meth:` em todo método público `*_download` cujo método principal (o mesmo nome sem `_download`) recebe `**kwargs`. Os pares saem do próprio pacote, em `DOWNLOAD_REFERENCE_CASES`, sem registro manual. Se houver necessidade de listar filtros também em um download, justificar a exceção no PR e estender `_casos` para que a lista tenha cobertura de paridade.
 
 Executar `uv run pytest tests/schemas/test_docstring_parity.py` após alterar esses contratos.
 
