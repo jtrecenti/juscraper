@@ -10,7 +10,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from bs4 import BeautifulSoup
 
 from juscraper.core.exceptions import PaginaInesperadaError
 from juscraper.utils.pagination import (
@@ -99,7 +98,7 @@ def test_exigir_pagina_devolve_a_resposta_reconhecida():
     assert exigir_pagina(html, esperada) is html
 
 
-def test_exigir_pagina_levanta_com_a_url_da_resposta():
+def test_exigir_pagina_levanta_com_url_e_motivo():
     """Página de outro tipo (formulário, sessão expirada) com 200: erro, e não busca vazia."""
     resp = SimpleNamespace(url="https://tj.example/sessao-expirada", text="<form></form>")
     esperada = PaginaEsperada(
@@ -111,7 +110,7 @@ def test_exigir_pagina_levanta_com_a_url_da_resposta():
     )
 
     with pytest.raises(PaginaInesperadaError) as erro:
-        exigir_pagina(resp, esperada, pagina=2)
+        exigir_pagina(resp, esperada, pagina=2, url=resp.url)
 
     assert str(erro.value) == (
         "TJXX passo 3: escolha do tipo: a resposta de https://tj.example/sessao-expirada não é "
@@ -121,15 +120,6 @@ def test_exigir_pagina_levanta_com_a_url_da_resposta():
         "passo 3: escolha do tipo", 2, "https://tj.example/sessao-expirada",
     )
     assert isinstance(erro.value, RuntimeError)
-
-
-def test_exigir_pagina_nao_le_url_de_tag():
-    """Numa ``Tag``, ``.url`` é o elemento ``<url>``, não o endereço da resposta."""
-    soup = BeautifulSoup("<feed><url>https://outro.example</url></feed>", "html.parser")
-    with pytest.raises(PaginaInesperadaError) as erro:
-        exigir_pagina(soup, PaginaEsperada("TJXX", "cjsg", lambda s: s.select_one("table")))
-    assert erro.value.url is None
-    assert "outro.example" not in str(erro.value)
 
 
 def test_exigir_pagina_sem_url_nem_motivo():

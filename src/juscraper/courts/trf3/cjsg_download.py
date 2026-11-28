@@ -386,7 +386,7 @@ _PAGINA_DA_SESSAO = PaginaEsperada(
 
 
 def _check_sessao(resp: requests.Response) -> None:
-    exigir_pagina(resp, _PAGINA_DA_SESSAO)
+    exigir_pagina(resp, _PAGINA_DA_SESSAO, url=resp.url)
 
 
 _TOTAL_SELECTORS = ("section.secao-total .qtd-total",)
@@ -399,17 +399,16 @@ _ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
 _AVISO_VAZIO = AvisoVazio(("section.secao-paginas",), _ZERO_MARKERS)
 
 
-def _e_lista(soup: BeautifulSoup) -> bool:
-    if soup.select_one(SELETOR_DOCUMENTO) is not None:
-        return True
+def _tem_aviso_de_zero(soup: BeautifulSoup) -> bool:
     texto = soup.get_text(" ", strip=True).lower()
     return any(marcador.lower() in texto for marcador in _ZERO_MARKERS)
 
 
-_LISTA = PaginaEsperada(
+# Conferida só na página sem documentos: com documento, a página é a lista.
+_LISTA_SEM_DOCUMENTOS = PaginaEsperada(
     "TRF3",
     "cjsg",
-    _e_lista,
+    _tem_aviso_de_zero,
     "a lista de resultados",
     "não traz documentos nem o aviso de nenhum resultado. O portal pode estar em manutenção ou ter mudado de layout",
 )
@@ -427,8 +426,9 @@ def _check_lista(html: str, url: str, *, total_da_busca: int | None = None, pagi
     O aviso só vale como lista quando combina com a busca. Com
     ``total_da_busca`` maior que zero, a página foi pedida dentro do total e
     tem que trazer documento: o aviso de nenhum resultado, nesse caso, também
-    levanta. Sem o total (``None``, o caso da primeira página e o de um total
-    ilegível) ou com total zero, o aviso é aceito.
+    levanta (:class:`~juscraper.utils.pagination.ConferenciaDePaginas`). Sem o
+    total (``None``, o caso da primeira página e o de um total ilegível) ou
+    com total zero, o aviso é aceito.
 
     Args:
         html: Corpo da resposta.
@@ -442,9 +442,14 @@ def _check_lista(html: str, url: str, *, total_da_busca: int | None = None, pagi
             nenhum resultado, ou traz o aviso e a busca tem
             ``total_da_busca`` resultados. Herda de ``RuntimeError``.
     """
-    soup = exigir_pagina(BeautifulSoup(html, "html.parser"), _LISTA, pagina=pagina, url=url)
+    soup = BeautifulSoup(html, "html.parser")
+    n_documentos = len(soup.select(SELETOR_DOCUMENTO))
+    if not n_documentos:
+        exigir_pagina(soup, _LISTA_SEM_DOCUMENTOS, pagina=pagina, url=url)
+    # Sem ``chaves``, a conferência não guarda estado entre as páginas, e uma
+    # por chamada basta; a repetição de página fica para a adoção com ids.
     conferencia = ConferenciaDePaginas("TRF3", n_resultados=total_da_busca, itens="documentos")
-    conferencia.conferir(pagina, len(soup.select(SELETOR_DOCUMENTO)), url=url)
+    conferencia.conferir(pagina, n_documentos, url=url)
 
 
 def cjsg_n_results(html: str) -> int | None:

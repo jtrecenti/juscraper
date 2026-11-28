@@ -135,8 +135,7 @@ def baixar_sem_n_itens(codigo: str) -> list[int]:
     for no in ast.walk(ast.parse(codigo)):
         if not isinstance(no, ast.Call):
             continue
-        funcao = no.func
-        nome = funcao.id if isinstance(funcao, ast.Name) else funcao.attr if isinstance(funcao, ast.Attribute) else None
+        nome = getattr(no.func, "id", None) or getattr(no.func, "attr", None)
         if nome == "baixar_paginas_pedidas" and not any(k.arg == "n_itens" for k in no.keywords):
             linhas.append(no.lineno)
     return sorted(linhas)

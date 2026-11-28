@@ -194,8 +194,9 @@ def contagem_json(dados: object, *caminho: str | int) -> int | None:
     Para o portal JSON que informa o total da busca: o ``None`` vai para
     :func:`resolve_total_pages`, que levanta. ``.get("total", 0)`` e ``or 0``
     leem a resposta de erro, que não traz a chave, como busca vazia, e o
-    download para na primeira página sem aviso. Generaliza o
-    ``contagem_da_resposta`` do DataJud.
+    download para na primeira página sem aviso. É a regra do
+    ``contagem_da_resposta`` do DataJud, que continua com contrato próprio
+    (``TypeError`` e ``relation``).
 
     Args:
         dados: Resposta JSON já decodificada.
@@ -211,13 +212,13 @@ def contagem_json(dados: object, *caminho: str | int) -> int | None:
     """
     valor: Any = dados
     for passo in caminho:
-        if isinstance(passo, int) and (passo < 0 or not isinstance(valor, list)):
+        if isinstance(passo, int) and passo < 0:
             return None
         try:
             valor = valor[passo]
         except (KeyError, IndexError, TypeError):
             return None
-    if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+    if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:  # ``bool`` herda de ``int``
         return None
     return valor
 
@@ -394,9 +395,7 @@ def exigir_pagina(
         resposta: O que o tribunal recebeu (HTML, ``Response``, ``Tag``, JSON).
         esperada: A página esperada e o sinal que a reconhece.
         pagina: Página da busca, guardada no erro.
-        url: Endereço da resposta; sem ele, o ``url`` de ``resposta``, quando
-            ele é texto (``requests.Response``). Numa ``Tag``, ``.url`` buscaria
-            um elemento ``<url>``, e por isso só vale ``str``.
+        url: Endereço da resposta, para a mensagem e o erro (``resp.url``).
 
     Returns:
         A própria ``resposta``, para encadear (``html = exigir_pagina(resp.text, _LISTA)``).
@@ -406,14 +405,14 @@ def exigir_pagina(
     """
     if esperada.reconhece(resposta):
         return resposta
-    da_resposta = getattr(resposta, "url", None)
-    if url is None and isinstance(da_resposta, str):
-        url = da_resposta
     origem = f" de {url}" if url else ""
     detalhe = f": {esperada.motivo}" if esperada.motivo else ""
-    mensagem = f"{esperada.tribunal} {esperada.etapa}: a resposta{origem} não é {esperada.descricao}{detalhe}"
     raise PaginaInesperadaError(
-        mensagem.rstrip(".") + ".", tribunal=esperada.tribunal, etapa=esperada.etapa, pagina=pagina, url=url
+        f"{esperada.tribunal} {esperada.etapa}: a resposta{origem} não é {esperada.descricao}{detalhe}.",
+        tribunal=esperada.tribunal,
+        etapa=esperada.etapa,
+        pagina=pagina,
+        url=url,
     )
 
 
