@@ -33,7 +33,15 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 from ...core.http import RequestFn
-from ...utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo, paginas_unicas
+from ...utils.pagination import (
+    AvisoVazio,
+    ConferenciaDePaginas,
+    PaginaEsperada,
+    exigir_pagina,
+    extract_count_with_cascade,
+    paginas_no_intervalo,
+    paginas_unicas,
+)
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
 from .cjsg_schemas import InputCJSGTRF3
@@ -368,12 +376,17 @@ def build_cjsg_payload(inp: InputCJSGTRF3) -> dict[str, str]:
     return payload
 
 
+_PAGINA_DA_SESSAO = PaginaEsperada(
+    "TRF3",
+    "cjsg",
+    lambda resp: SESSAO_EXPIRADA_PATH.lower() not in resp.url.lower(),
+    "a página da busca",
+    "o portal respondeu com sessão expirada. A busca precisa ser refeita do início",
+)
+
+
 def _check_sessao(resp: requests.Response) -> None:
-    if SESSAO_EXPIRADA_PATH.lower() in resp.url.lower():
-        raise RuntimeError(
-            "TRF3 cjsg: o portal respondeu com sessão expirada "
-            f"({resp.url}). A busca precisa ser refeita do início."
-        )
+    exigir_pagina(resp, _PAGINA_DA_SESSAO)
 
 
 _TOTAL_SELECTORS = ("section.secao-total .qtd-total",)
@@ -386,8 +399,24 @@ _ZERO_MARKERS = ("Nenhum Resultado Encontrado",)
 _AVISO_VAZIO = AvisoVazio(("section.secao-paginas",), _ZERO_MARKERS)
 
 
-def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> None:
-    """Levanta ``RuntimeError`` se a página não for a lista de resultados esperada.
+def _e_lista(soup: BeautifulSoup) -> bool:
+    if soup.select_one(SELETOR_DOCUMENTO) is not None:
+        return True
+    texto = soup.get_text(" ", strip=True).lower()
+    return any(marcador.lower() in texto for marcador in _ZERO_MARKERS)
+
+
+_LISTA = PaginaEsperada(
+    "TRF3",
+    "cjsg",
+    _e_lista,
+    "a lista de resultados",
+    "não traz documentos nem o aviso de nenhum resultado. O portal pode estar em manutenção ou ter mudado de layout",
+)
+
+
+def _check_lista(html: str, url: str, *, total_da_busca: int | None = None, pagina: int = 1) -> None:
+    """Levanta ``PaginaInesperadaError`` se a página não for a lista de resultados esperada.
 
     O portal responde 200 também quando devolve outra coisa no lugar da lista
     (o formulário de busca, uma página de manutenção). Sem esta checagem essa
@@ -406,29 +435,16 @@ def _check_lista(html: str, url: str, *, total_da_busca: int | None = None) -> N
         url: Endereço da resposta, citado na mensagem de erro.
         total_da_busca: Total de documentos lido na primeira página, para as
             páginas seguintes; ``None`` quando não se sabe.
+        pagina: Número da página, para a mensagem.
 
     Raises:
-        RuntimeError: A página não traz documentos nem o aviso de nenhum
-            resultado, ou traz o aviso e a busca tem ``total_da_busca``
-            resultados.
+        PaginaInesperadaError: A página não traz documentos nem o aviso de
+            nenhum resultado, ou traz o aviso e a busca tem
+            ``total_da_busca`` resultados. Herda de ``RuntimeError``.
     """
-    soup = BeautifulSoup(html, "html.parser")
-    if soup.select_one(SELETOR_DOCUMENTO) is not None:
-        return
-    texto = soup.get_text(" ", strip=True).lower()
-    if any(marcador.lower() in texto for marcador in _ZERO_MARKERS):
-        if not total_da_busca:
-            return
-        raise RuntimeError(
-            f"TRF3 cjsg: a resposta de {url} traz o aviso de nenhum resultado, "
-            f"mas deveria trazer documentos, porque a busca tem {total_da_busca} "
-            "resultados."
-        )
-    raise RuntimeError(
-        f"TRF3 cjsg: a resposta de {url} não é a lista de resultados: não traz "
-        "documentos nem o aviso de nenhum resultado. O portal pode estar em "
-        "manutenção ou ter mudado de layout."
-    )
+    soup = exigir_pagina(BeautifulSoup(html, "html.parser"), _LISTA, pagina=pagina, url=url)
+    conferencia = ConferenciaDePaginas("TRF3", n_resultados=total_da_busca, itens="documentos")
+    conferencia.conferir(pagina, len(soup.select(SELETOR_DOCUMENTO)), url=url)
 
 
 def cjsg_n_results(html: str) -> int | None:
@@ -513,13 +529,15 @@ def cjsg_download_manager(
     Raises:
         BotChallengeBlockedError: 403 do Akamai (``Access Denied`` ou sensor
             de bot); sem retry, porque o bloqueio vale para o IP inteiro.
-        RuntimeError: O portal redirecionou para a página de sessão expirada,
-            ou respondeu 200 com uma página que não é a lista de resultados
-            (formulário de busca, manutenção); vale para a primeira página e
-            para as seguintes. Também quando ``sistema_interamericano`` traz
-            o nome do caso e a aba não tem o dropdown. Da página 2 em diante, também quando a página
-            traz o aviso de nenhum resultado e o total lido na primeira é
-            maior que zero.
+        PaginaInesperadaError: O portal redirecionou para a página de sessão
+            expirada, ou respondeu 200 com uma página que não é a lista de
+            resultados (formulário de busca, manutenção); vale para a primeira
+            página e para as seguintes. Da página 2 em diante, também quando a
+            página traz o aviso de nenhum resultado e o total lido na primeira
+            é maior que zero. Herda de ``RuntimeError``, o erro levantado
+            antes dela.
+        RuntimeError: ``sistema_interamericano`` traz o nome do caso e a aba
+            não tem o dropdown.
         ValueError: ``orgao_julgador`` corresponde a mais de uma opção do
             dropdown da aba; o nome do caso em ``sistema_interamericano``
             não corresponde a uma opção só; ou ``paginas=None`` e a primeira página traz
@@ -569,6 +587,6 @@ def cjsg_download_manager(
         # (``_paginas_pedidas`` cortou as demais) e tem que trazer documento.
         # Com o total ilegível, a página pode estar além do fim da busca, e o
         # aviso de nenhum resultado continua aceito.
-        _check_lista(html, page.url, total_da_busca=total)
+        _check_lista(html, page.url, total_da_busca=total, pagina=pagina)
         resultados.append(html)
     return resultados

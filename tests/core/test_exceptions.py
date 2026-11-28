@@ -9,6 +9,7 @@ import pytest
 from juscraper.core.exceptions import (
     BotChallengeBlockedError,
     InvalidJSONResponseError,
+    PaginaInesperadaError,
     RetryExhaustedError,
     WafChallengeError,
 )
@@ -69,9 +70,10 @@ def test_desafio_f5_passa_a_propria_mensagem():
         PastaInesperadaError("123", "sem parametros"),
         TJAPApiError("falhou", detalhe="banco fora"),
         TJAPSecurityCheckError("A verificação de segurança falhou"),
+        PaginaInesperadaError("não é a lista", tribunal="TRF3", etapa="cjsg", pagina=2, url=URL),
     ],
     ids=["padrao", "mensagem", "waf", "f5", "json", "retry", "esaj-processo", "esaj-acordao",
-         "esaj-nao-pdf", "esaj-pasta", "tjap", "tjap-captcha"],
+         "esaj-nao-pdf", "esaj-pasta", "tjap", "tjap-captcha", "pagina-inesperada"],
 )
 @pytest.mark.parametrize("copiar", [lambda e: pickle.loads(pickle.dumps(e)), copy.copy, copy.deepcopy])
 def test_erro_com_init_proprio_sobrevive_a_pickle_e_copy(erro, copiar):
@@ -100,3 +102,11 @@ def test_erro_com_init_proprio_preserva_causa(erro, copiar):
     assert vars(copia) == vars(erro)
     assert type(copia.__cause__) is ValueError
     assert copia.__cause__.args == ("causa original",)
+
+
+def test_pagina_inesperada_e_capturada_como_os_erros_que_substitui():
+    """Quem capturava ``ValueError`` (contagem) ou ``RuntimeError`` (TRF3) continua capturando."""
+    erro = PaginaInesperadaError("x", tribunal="STM", etapa="contagem")
+    assert isinstance(erro, ValueError)
+    assert isinstance(erro, RuntimeError)
+    assert (erro.tribunal, erro.etapa, erro.pagina, erro.url) == ("STM", "contagem", None, None)

@@ -15,16 +15,19 @@ import logging
 import math
 import re
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Sequence
+from dataclasses import dataclass, field
 from itertools import chain, islice, pairwise
-from typing import NamedTuple, TypeGuard, TypeVar
+from typing import Any, NamedTuple, TypeGuard, TypeVar
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from ..core.avisos import avisar
+from ..core.exceptions import PaginaInesperadaError
 
 _Pagina = TypeVar("_Pagina")
+_Resposta = TypeVar("_Resposta")
 
 _NUMERO_PAGINA_RE = re.compile(r"[0-9]+")
 
@@ -187,12 +190,47 @@ def parse_page_number(valor: str, *, tribunal: str, origem: str) -> int:
     return int(valor)
 
 
+def contagem_json(dados: object, *caminho: str | int) -> int | None:
+    """A contagem no ``caminho`` de uma resposta JSON, ou ``None`` quando ela falta ou não é inteiro >= 0.
+
+    Para o portal JSON que informa o total da busca: o ``None`` vai para
+    :func:`resolve_total_pages`, que levanta. ``.get("total", 0)`` e ``or 0``
+    leem a resposta de erro, que não traz a chave, como busca vazia, e o
+    download para na primeira página sem aviso. Generaliza o
+    ``contagem_da_resposta`` do DataJud.
+
+    Args:
+        dados: Resposta JSON já decodificada.
+        caminho: Chaves de objeto (``str``) e índices de lista (``int`` >= 0)
+            até a contagem, como ``("hits", "total", "value")``.
+
+    Returns:
+        O inteiro no caminho; ``None`` quando alguma chave falta, quando um
+            passo não é objeto ou lista, ou quando o valor não é inteiro >= 0.
+            ``bool`` (que herda de ``int``), ``float`` e texto com dígitos não
+            contam: quem precisa converter faz isso no tribunal, com o formato
+            medido.
+    """
+    valor: Any = dados
+    for passo in caminho:
+        if isinstance(passo, int) and (passo < 0 or not isinstance(valor, list)):
+            return None
+        try:
+            valor = valor[passo]
+        except (KeyError, IndexError, TypeError):
+            return None
+    if isinstance(valor, bool) or not isinstance(valor, int) or valor < 0:
+        return None
+    return valor
+
+
 def resolve_total_pages(
     n_resultados: int | None,
     *,
     resultados_por_pagina: int,
     totais_links: Iterable[int] = (),
     tribunal: str,
+    n_linhas: int | None = None,
 ) -> int:
     """Calcula o total de páginas pela contagem de resultados e confere com os links.
 
@@ -206,22 +244,41 @@ def resolve_total_pages(
     ativa, tamanho de página errado no payload) levanta em vez de escolher um
     lado. Zero resultados dá 1 página: o caller já tem a primeira.
 
+    ``n_linhas`` são os resultados da página em que a contagem foi lida. Mais
+    linhas que a contagem (contagem 0 numa página com resultados, ou contagem
+    de outra busca) levanta: a contagem não é desta página. Linhas a menos
+    não levantam aqui, porque a página lida pode estar além do total; a
+    página dentro do total sem itens é conferida por :class:`ConferenciaDePaginas`.
+
     Raises:
-        ValueError: Quando ``n_resultados`` é ``None`` (a página não traz a
-            contagem, por exemplo página de erro ou markup novo) ou quando
-            algum link aponta para total diferente do calculado.
+        PaginaInesperadaError: Quando ``n_resultados`` é ``None`` (a página
+            não traz a contagem, por exemplo página de erro ou markup novo),
+            quando algum link aponta para total diferente do calculado ou
+            quando ``n_linhas`` passa de ``n_resultados``. Herda de
+            ``ValueError``, o erro levantado antes dela.
     """
     if n_resultados is None:
-        raise ValueError(
+        raise PaginaInesperadaError(
             f"{tribunal}: a página lida não traz a contagem de resultados; "
-            "o total de páginas não pode ser determinado sem estimar."
+            "o total de páginas não pode ser determinado sem estimar.",
+            tribunal=tribunal,
+            etapa="contagem",
+        )
+    if n_linhas is not None and n_linhas > n_resultados:
+        raise PaginaInesperadaError(
+            f"{tribunal}: a página lida traz {n_linhas} resultado(s), mas a contagem diz {n_resultados}; "
+            "a contagem não é a desta página.",
+            tribunal=tribunal,
+            etapa="contagem",
         )
     total = max(1, math.ceil(n_resultados / resultados_por_pagina))
     divergentes = sorted(set(totais_links) - {total})
     if divergentes:
-        raise ValueError(
+        raise PaginaInesperadaError(
             f"{tribunal}: o link de última página aponta {divergentes}, mas {n_resultados} resultados "
-            f"em páginas de {resultados_por_pagina} dão {total} página(s)."
+            f"em páginas de {resultados_por_pagina} dão {total} página(s).",
+            tribunal=tribunal,
+            etapa="contagem",
         )
     return total
 
@@ -297,13 +354,158 @@ def paginas_no_intervalo(paginas: Iterable[int] | None, n_pags: int, *, tribunal
     return validas
 
 
-def baixar_paginas_pedidas(
+class PaginaEsperada(NamedTuple):
+    """A página que uma etapa espera e o sinal que a reconhece, para :func:`exigir_pagina`.
+
+    Declarada uma vez no módulo do tribunal, como :class:`AvisoVazio`: o
+    reconhecimento é do tribunal, nunca de um ``if tribunal == "X"`` no
+    helper.
+
+    Attributes:
+        tribunal: Sigla do tribunal, que abre a mensagem.
+        etapa: Onde a conferência acontece (``"cjsg"``,
+            ``"passo 3: escolha do tipo"``).
+        reconhece: Diz se a resposta é a página esperada, por um sinal dela
+            (um seletor, a URL, uma chave); valor verdadeiro aceita.
+        descricao: A página esperada, para a mensagem (``"a lista de
+            resultados"``).
+        motivo: O que a resposta traz no lugar, ou o que fazer, para a
+            mensagem.
+    """
+
+    tribunal: str
+    etapa: str
+    reconhece: Callable[[Any], object]
+    descricao: str = "a página esperada"
+    motivo: str | None = None
+
+
+def exigir_pagina(
+    resposta: _Resposta, esperada: PaginaEsperada, *, pagina: int | None = None, url: str | None = None
+) -> _Resposta:
+    """Devolve ``resposta`` se ``esperada`` a reconhece; senão levanta :class:`PaginaInesperadaError`.
+
+    Toda resposta é conferida como a página esperada antes de se ler algo
+    dela: o portal responde 200 também com o formulário, a sessão expirada,
+    a manutenção ou a etapa anterior do fluxo, e o parser que lê essa página
+    não acha linha nenhuma e devolve a mesma tabela vazia de uma busca sem
+    resultados. Vale para cada etapa de um fluxo (escolha de tipo, ViewState)
+    e para a página de resultados de cada laço.
+
+    Args:
+        resposta: O que o tribunal recebeu (HTML, ``Response``, ``Tag``, JSON).
+        esperada: A página esperada e o sinal que a reconhece.
+        pagina: Página da busca, guardada no erro.
+        url: Endereço da resposta; sem ele, o ``url`` de ``resposta``, quando
+            ela tem um (``requests.Response``).
+
+    Returns:
+        A própria ``resposta``, para encadear (``html = exigir_pagina(resp.text, _LISTA)``).
+
+    Raises:
+        PaginaInesperadaError: Quando ``esperada.reconhece(resposta)`` é falso.
+    """
+    if esperada.reconhece(resposta):
+        return resposta
+    url = url or getattr(resposta, "url", None)
+    origem = f" de {url}" if url else ""
+    detalhe = f": {esperada.motivo}" if esperada.motivo else ""
+    mensagem = f"{esperada.tribunal} {esperada.etapa}: a resposta{origem} não é {esperada.descricao}{detalhe}"
+    raise PaginaInesperadaError(
+        mensagem.rstrip(".") + ".", tribunal=esperada.tribunal, etapa=esperada.etapa, pagina=pagina, url=url
+    )
+
+
+@dataclass
+class ConferenciaDePaginas:
+    """Confere as páginas de uma busca: de resultados, com item se estão no total, sem repetir outra.
+
+    É a conferência de :func:`baixar_paginas_pedidas`, para o raspador com
+    laço próprio: crie uma por busca, preencha o total quando o ler e chame
+    :meth:`conferir` a cada página. O laço mantém o próprio contrato de falha
+    (o ``ColetaParcialError`` com as páginas anteriores embrulha o erro daqui
+    como embrulha a falha HTTP). Exigir ao menos um item, e não a página
+    cheia, mantém válidas a última página e as tabelas que paginam em ritmos
+    diferentes.
+
+    Attributes:
+        tribunal: Sigla do tribunal, que abre a mensagem.
+        n_pags: Total de páginas da busca, quando conhecido.
+        n_resultados: Total de resultados da busca, quando conhecido. Com
+            ele, a regra vale também para a página 1 de uma busca de página
+            única: ``0`` itens só com ``n_resultados == 0``. Sem ele, a página
+            1 de uma busca de página única pode ser a busca vazia, e só
+            ``n_pags > 1`` obriga a trazer item.
+        itens: O que se conta, para a mensagem (``"documentos"``).
+    """
+
+    tribunal: str
+    n_pags: int | None = None
+    n_resultados: int | None = None
+    itens: str = "resultados"
+    _vistas: dict[frozenset[Hashable], int] = field(default_factory=dict, init=False, repr=False)
+
+    def _dentro_do_total(self, pagina: int) -> bool:
+        if self.n_pags is not None and pagina > self.n_pags:
+            return False
+        if self.n_resultados is not None:
+            return self.n_resultados > 0
+        return self.n_pags is not None and self.n_pags > 1
+
+    def conferir(
+        self, pagina: int, n_itens: int | None, *, chaves: Iterable[Hashable] = (), url: str | None = None
+    ) -> None:
+        """Levanta se a página não é de resultados, vem sem item dentro do total ou repete outra.
+
+        Args:
+            pagina: Número da página (1-based).
+            n_itens: Itens que o tribunal contou na página; ``None`` quando a
+                resposta não é página de resultados nem o aviso de busca
+                vazia, que conta ``0``.
+            chaves: Identificadores dos itens da página (número do processo,
+                id do documento). A página com o mesmo conjunto de uma já
+                conferida levanta; itens em comum, não, porque a ordem instável
+                do portal empurra item de uma página para a seguinte.
+            url: Endereço da resposta, para a mensagem.
+
+        Raises:
+            PaginaInesperadaError: ``n_itens`` é ``None``; ``n_itens`` é ``0``
+                numa página dentro do total; ou as ``chaves`` são as de uma
+                página anterior.
+        """
+        origem = f" ({url})" if url else ""
+        prefixo = f"{self.tribunal}: a página {pagina} da busca"
+        erro: dict[str, Any] = {"tribunal": self.tribunal, "etapa": "paginação", "pagina": pagina, "url": url}
+        if n_itens is None:
+            raise PaginaInesperadaError(
+                f"{prefixo} veio sem {self.itens}{origem}: a resposta não é uma página de resultados.", **erro
+            )
+        if n_itens == 0 and self._dentro_do_total(pagina):
+            dentro = (
+                f"a busca tem {self.n_resultados} resultados"
+                if self.n_resultados
+                else f"está dentro do total de {self.n_pags} páginas"
+            )
+            raise PaginaInesperadaError(
+                f"{prefixo} veio sem {self.itens}{origem}, mas deveria trazer {self.itens}, porque {dentro}.", **erro
+            )
+        conjunto = frozenset(chaves)
+        if conjunto and (repetida := self._vistas.setdefault(conjunto, pagina)) != pagina:
+            raise PaginaInesperadaError(
+                f"{prefixo}{origem} repete os itens da página {repetida}; o portal ignorou o pedido de página.", **erro
+            )
+
+
+def baixar_paginas_pedidas(  # noqa: PLR0913 - assinatura dos raspadores que já a usam, mais a conferência opcional
     paginas: Iterable[int] | None,
     buscar: Callable[[int], _Pagina],
     contar_paginas: Callable[[_Pagina], int],
     *,
     tribunal: str,
     sleep_time: float = 0.0,
+    n_itens: Callable[[_Pagina], int | None] | None = None,
+    chaves: Callable[[_Pagina], Iterable[Hashable]] | None = None,
+    itens: str = "resultados",
 ) -> list[_Pagina]:
     """Baixa as ``paginas`` (1-based) de um portal que informa o total em toda página.
 
@@ -311,19 +513,48 @@ def baixar_paginas_pedidas(
     as demais saem na ordem pedida, uma vez cada, com ``sleep_time`` antes de
     cada requisição, e as além do total vão para o log, sem requisição (ver
     :func:`paginas_no_intervalo`). A primeira falha de ``buscar`` sobe como
-    veio: portal com coleta parcial (TJMG, TJTO) mantém o laço próprio.
+    veio: portal com coleta parcial (TJMG, TJTO) mantém o laço próprio e
+    confere cada página com :class:`ConferenciaDePaginas`.
+
+    Com ``n_itens``, cada página baixada dentro do total passa por
+    :meth:`ConferenciaDePaginas.conferir` logo depois de chegar: a que não é
+    de resultados, a que vem sem item dentro do total e, com ``chaves``, a que
+    repete outra levantam, em vez de virar coleta menor sem erro.
+
+    Args:
+        paginas: Seleção pedida; ``None`` baixa todas.
+        buscar: Baixa uma página.
+        contar_paginas: Lê o total de páginas na primeira baixada; levanta
+            quando a contagem falta (:func:`resolve_total_pages`).
+        tribunal: Sigla do tribunal, para o log e as mensagens.
+        sleep_time: Pausa antes de cada requisição depois da primeira.
+        n_itens: Itens de uma página; ``None`` quando ela não é página de
+            resultados nem o aviso de busca vazia, que conta ``0``.
+        chaves: Identificadores dos itens de uma página. Exige ``n_itens``.
+        itens: O que ``n_itens`` conta, para a mensagem.
+
+    Raises:
+        PaginaInesperadaError: Nos casos de :meth:`ConferenciaDePaginas.conferir`.
+        TypeError: ``chaves`` sem ``n_itens``.
     """
+    if chaves is not None and n_itens is None:
+        raise TypeError("baixar_paginas_pedidas: 'chaves' exige 'n_itens'.")
     primeira = menor_pagina(paginas)
     first = buscar(primeira)
-    validas = paginas_no_intervalo(paginas, contar_paginas(first), tribunal=tribunal)
+    n_pags = contar_paginas(first)
+    validas = paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
+    conferencia = ConferenciaDePaginas(tribunal, n_pags=n_pags, itens=itens)
     resultados = []
     for pagina in tqdm(validas, desc=f"Baixando páginas {tribunal}"):
         if pagina == primeira:
-            resultados.append(first)
-            continue
-        if sleep_time:
-            time.sleep(sleep_time)
-        resultados.append(buscar(pagina))
+            conteudo = first
+        else:
+            if sleep_time:
+                time.sleep(sleep_time)
+            conteudo = buscar(pagina)
+        if n_itens is not None:
+            conferencia.conferir(pagina, n_itens(conteudo), chaves=chaves(conteudo) if chaves is not None else ())
+        resultados.append(conteudo)
     return resultados
 
 

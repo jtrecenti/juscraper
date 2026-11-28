@@ -421,6 +421,8 @@ O comportamento visível a quem usa a biblioteca está em `docs/api-conventions.
 - TJMG `_baixar_lista`, TJPR `_baixar_paginas` e TJTO `_baixar_paginas` preservam as páginas já baixadas em `ColetaParcialError.resultado`, com a causa original; se nada foi baixado, relançam a falha original. TJMG mantém categorias e TJTO mantém a detecção de WAF.
 - O auto-chunk do eSAJ pode seguir após falhas múltiplas e registra cada uma em `.falhas`; ele e o DataJud podem levantar `ColetaParcialError` com resultado vazio.
 - Só extrair laços de coleta para código comum quando dois portais tiverem o mesmo contrato de parada, ordem e dados parciais. O laço próprio lê a seleção pelos helpers de **Seleção de páginas**.
+- Toda página baixada passa pela conferência de **Contagem de páginas e resultados em HTML** > **Conferência de cada resposta** antes de entrar no resultado. No laço próprio, o `PaginaInesperadaError` de `conferir_pagina` ou `exigir_pagina` é uma falha como a HTTP: vai para o `ColetaParcialError` com as páginas anteriores, sem contrato novo.
+- `PaginaInesperadaError` (`core/exceptions.py`) é a resposta 200 que não é a página esperada ou contradiz a contagem. Herda de `HTTPSemanticError`, `ValueError` e `RuntimeError`, os erros que esses caminhos levantavam antes, e vira `resposta_inesperada` em `motivo_falha`. Não entra em `EXCECOES_DE_FALHA_POR_LINHA`: quem converte em linha de falha usa `motivo_falha_ou_inesperada`.
 
 ## Seleção de páginas (`paginas`)
 
@@ -441,6 +443,16 @@ Ao alterar contagens, usar seleção e extração em cascata para os formatos ob
 - Procurar os marcadores de busca vazia ("não foram encontrados", "nenhum resultado") fora das linhas de resultado. Ementas e sentenças citam essas frases, e uma contagem 0 faz o download parar na primeira página sem aviso. No helper, `aviso_vazio` (`AvisoVazio(seletores, marcadores)`) só vale depois da cascata, quando nenhum seletor nem regex acha a contagem, e só no texto dos elementos dos seletores dele, o contêiner do aviso que os samples `no_results*` mostram.
 - Não rodar regex de contagem no HTML inteiro, onde estão as ementas: com seletores, o helper não cai no HTML bruto quando nenhum casa, e o caller decide o default (ou levanta). `fallback_html=True` só quando todas as regex exigem as palavras do rótulo do resumo ("Documentos encontrados: N", "N registro(s) encontrado(s)", "N documentos encontrados"), nunca com regex de número solto: `de\s+(\d+)\)` no HTML bruto do TJRR leu "(fevereiro de 2009)" de uma ementa como 2009 páginas. No HTML bruto, a regex roda antes de `aviso_vazio`, e por isso ela não pode casar com o aviso de busca vazia.
 - Conferir a contagem em samples reais de uma página só e de página cheia: no layout do eSAJ, a página cheia acertava por acaso.
+
+### Conferência de cada resposta
+
+Regra: **toda resposta é conferida como a página esperada antes de se ler algo dela; contagem ausente levanta; página pedida dentro do total traz ao menos um item e não repete outra.** Sem ela, a página de erro com HTTP 200 vira busca vazia, e a página que falha no meio da paginação vira coleta menor, os dois sem erro. Os helpers ficam em `src/juscraper/utils/pagination.py` e levantam `PaginaInesperadaError`; o reconhecimento de cada página (seletor, URL, chave) fica no tribunal, nunca num `if tribunal == "X"` do helper.
+
+- Tipo da página: `exigir_pagina(resposta, predicado, tribunal=..., etapa=..., esperada=..., motivo=...)` devolve a resposta quando `predicado` a reconhece e levanta quando não. Vale para cada etapa de um fluxo (escolha de tipo, ViewState, sessão expirada) e para a página de resultados.
+- Contagem: nunca `or 0`, `or 1`, `.get("total", 0)` ou `n if n is not None else 0`. A contagem ausente vai como `None` para `resolve_total_pages`, que levanta; no JSON, ler com `contagem_json(dados, "hits", "total")`, que devolve `None` para chave ausente ou valor que não é inteiro >= 0. Com as linhas da página lida em `n_linhas=`, `resolve_total_pages` levanta também quando elas passam da contagem (contagem 0 numa página com linhas).
+- Itens e repetição: `baixar_paginas_pedidas(..., n_itens=, chaves=)` confere cada página dentro do total. `n_itens(pagina)` devolve os itens da página, `0` no aviso de busca vazia e `None` na página que não é de resultados nem o aviso; `None` levanta, e `0` levanta numa página dentro do total. Exigir ao menos um item, e não a página cheia, mantém válidas a última página e as tabelas que paginam em ritmos diferentes. `chaves(pagina)` devolve os identificadores dos itens; a página com o mesmo conjunto de uma anterior levanta. O laço próprio chama `conferir_pagina(pagina, n_itens, n_pags=, n_resultados=, chaves=, vistas=)` a cada página; com `n_resultados`, a regra vale também para a página 1 de uma busca de página única.
+
+`tests/test_conferencia_de_paginas_gates.py` reprova, em `courts/` e `aggregators/`, a contagem com default 0 ou 1 e o `baixar_paginas_pedidas` sem `n_itens=`. Os achados anteriores à regra ficam nas listas `EXCECOES_*` do teste, com quantos são e a sessão de adoção que os retira; a fragilidade de cada gate está na docstring.
 
 ## Schemas pydantic
 
