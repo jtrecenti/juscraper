@@ -158,6 +158,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.auth" id="toc-juscraper.aggregators.pdpj.client.PdpjScraper.auth" class="nav-link" data-scroll-target="#juscraper.aggregators.pdpj.client.PdpjScraper.auth">auth</a></li>
+  <li><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr" id="toc-juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr" class="nav-link" data-scroll-target="#juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr">auth_govbr</a></li>
   <li><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.contar" id="toc-juscraper.aggregators.pdpj.client.PdpjScraper.contar" class="nav-link" data-scroll-target="#juscraper.aggregators.pdpj.client.PdpjScraper.contar">contar</a></li>
   <li><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.cpopg" id="toc-juscraper.aggregators.pdpj.client.PdpjScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.aggregators.pdpj.client.PdpjScraper.cpopg">cpopg</a></li>
   <li><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.documentos" id="toc-juscraper.aggregators.pdpj.client.PdpjScraper.documentos" class="nav-link" data-scroll-target="#juscraper.aggregators.pdpj.client.PdpjScraper.documentos">documentos</a></li>
@@ -206,34 +207,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Define o JWT usado em todas as chamadas autenticadas.</td>
 </tr>
 <tr class="even">
+<td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr">auth_govbr</a></td>
+<td>Obtem o token do PDPJ pelo login no gov.br, no Chrome da maquina.</td>
+</tr>
+<tr class="odd">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.contar">contar</a></td>
 <td>Total de processos que casam com os filtros (<code>/processos:contar</code>).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.cpopg">cpopg</a></td>
 <td>Recupera os detalhes de processo(s) via API <code>/processos/{n}</code>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.documentos">documentos</a></td>
 <td>Lista documentos do(s) processo(s) (sem baixar conteudo).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.download_documents">download_documents</a></td>
 <td>Baixa textos e/ou binarios dos documentos listados.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.existe">existe</a></td>
 <td>Checa presenca de processo(s) no Data Lake.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.movimentos">movimentos</a></td>
 <td>Lista movimentos do(s) processo(s).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.partes">partes</a></td>
 <td>Lista partes do(s) processo(s).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="#juscraper.aggregators.pdpj.client.PdpjScraper.pesquisa">pesquisa</a></td>
 <td>Busca profunda em <code>GET /api/v1/processos</code> (com paginacao).</td>
 </tr>
@@ -264,12 +269,127 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </section>
 </section>
-<section id="juscraper.aggregators.pdpj.client.PdpjScraper.contar" class="level3">
-<h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.contar">contar</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.contar(<span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Total de processos que casam com os filtros (<code>/processos:contar</code>).</p>
+<section id="juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.auth_govbr">auth_govbr</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.auth_govbr(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    timeout<span class="op">=</span><span class="fl">300.0</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    salvar<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    navegador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Obtem o token do PDPJ pelo login no gov.br, no Chrome da maquina.</p>
+<p>Abre o portal de servicos do PDPJ no Chrome, Chromium ou Edge instalado, com perfil temporario; a pessoa faz o login (CPF, senha, captcha e segundo fator) e o metodo captura o token que o portal recebe. Com refresh token, as requisicoes seguintes renovam o access token sozinhas. Exige navegador com janela, entao nao roda em Colab nem em CI; nesses ambientes, use <code>auth(token)</code> ou a variavel <code>PDPJ_JWT</code>.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>timeout</td>
+<td><code>float</code></td>
+<td>Segundos para concluir o login. Default <code>300</code>.</td>
+<td><code>300.0</code></td>
+</tr>
+<tr class="even">
+<td>salvar</td>
+<td><code>bool</code></td>
+<td>Grava a credencial em <code>$XDG_CONFIG_HOME/juscraper/pdpj_token.json</code> (ou <code>~/.config/...</code>), com permissao <code>0600</code>, para as proximas instancias do JusBR e do PDPJ carregarem sem novo login; as renovacoes tambem sao gravadas. Default <code>True</code>.</td>
+<td><code>True</code></td>
+</tr>
+<tr class="odd">
+<td>navegador</td>
+<td><code>str</code> | None</td>
+<td>Executavel do Chrome, Chromium ou Edge. <code>None</code> procura um instalado. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum parametro adicional e aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>bool</code></td>
+<td><code>True</code> quando o token foi aceito.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ImportError</code></td>
+<td>Quando falta o extra <code>juscraper[govbr]</code>.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>RuntimeError</code></td>
+<td>Quando nao ha navegador, a janela e fechada ou o prazo acaba sem token.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando o token capturado e invalido ou ja expirou.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> jusbr <span class="op">=</span> jus.scraper(<span class="st">"jusbr"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> jusbr.auth_govbr()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> jusbr.cpopg(<span class="st">"0000000-00.0000.0.00.0000"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
+<p><code>InputAuthGovbrJusBR</code> e <code>InputAuthGovbrPdpj</code>.</p>
+</section>
+</section>
+<section id="juscraper.aggregators.pdpj.client.PdpjScraper.contar" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.contar">contar</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.contar(<span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Total de processos que casam com os filtros (<code>/processos:contar</code>).</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -289,8 +409,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -308,8 +428,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-1" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -357,17 +477,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
 <p><code>InputContarPdpj</code> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.cpopg(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Recupera os detalhes de processo(s) via API <code>/processos/{n}</code>.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -387,8 +507,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -406,8 +526,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-2" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -434,32 +554,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
 <p><code>UserWarning</code>: Quando pelo menos uma consulta falhou.</p>
 </section>
-<section id="see-also-1" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
+<section id="see-also-2" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
 <p><code>InputCnjPdpj</code> – schema pydantic.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.documentos" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.documentos">documentos</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.documentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.documentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista documentos do(s) processo(s) (sem baixar conteudo).</p>
 <p>O processo cuja consulta falha sai numa linha so, com <code>processo</code> e <code>motivo_falha</code> preenchidos e as demais colunas vazias. O processo ausente do data lake sai assim, com <code>nao_encontrado</code>, e nao como lista sem documentos. O 401 interrompe; ver <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.cpopg"><code>cpopg</code></a>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.download_documents" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.download_documents">download_documents</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.download_documents(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    with_text<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    with_binary<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.download_documents(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    with_text<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    with_binary<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa textos e/ou binarios dos documentos listados.</p>
 <p><code>base_df</code> pode vir de <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.documentos"><code>documentos</code></a> (uma linha por documento, ja com <code>id_documento</code> e <code>numero_processo</code>) ou de <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.cpopg"><code>cpopg</code></a> (uma linha por processo com <code>detalhes</code> – nesse caso a lista de documentos e extraida de <code>detalhes['documentos']</code> e de <code>documentos</code> de cada item de <code>detalhes['tramitacoes']</code>, com as mesmas colunas de <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.documentos"><code>documentos</code></a>, inclusive <code>_raw</code>).</p>
 <p>Um documento cujo download falha não interrompe a coleta: a linha sai com <code>texto</code>/<code>_raw_texto</code> e/ou <code>binario</code> iguais a <code>None</code> e o método segue para o próximo documento. Conta como falha qualquer erro HTTP diferente de 401 (inclusive o 403, que a API pode devolver para um documento isolado, como um sigiloso, e que por isso não é retentado), o retry de 429/5xx/timeout esgotado e o erro de conexão. A coluna <code>motivo_falha</code> guarda o motivo, no vocabulário de <code>juscraper.core.failures</code>; com texto e binário, guarda o do texto quando o texto falhou, senão o do binário, e o <code>None</code> de cada coluna diz qual conteúdo faltou. Ao fim, um único <code>UserWarning</code> informa quantos downloads falharam e cita alguns, com processo, documento, conteúdo e motivo. O 401 propaga, porque token inválido atinge o lote inteiro.</p>
 <p>O documento sem arquivo (<code>arquivo_id</code> vazio, na base que traz a coluna) não tem conteúdo no data lake, e a API responde 404 ao pedido de texto dele. Ele sai com os conteúdos <code>None</code> e <code>motivo_falha</code> <code>None</code>, sem requisição e fora do aviso, e ocupa vaga do limite, como qualquer linha devolvida.</p>
-<section id="parameters-2" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -497,8 +617,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -516,8 +636,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-3" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -554,17 +674,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos-1">Avisos</h4>
 <p><code>UserWarning</code>: Quando pelo menos um download de documento falhou. Um aviso por chamada, com a contagem e alguns exemplos, emitido só quando a coleta termina.</p>
 </section>
-<section id="see-also-2" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-2">See Also</h4>
+<section id="see-also-3" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-3">See Also</h4>
 <p><code>InputDownloadDocumentsPdpj</code>: schema pydantic e fonte da verdade dos parametros aceitos.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.existe" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.existe">existe</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.existe(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.existe(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Checa presenca de processo(s) no Data Lake.</p>
-<section id="parameters-3" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -584,8 +704,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-3" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -603,8 +723,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-4" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
+<section id="raises-5" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -647,29 +767,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="see-also-3" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-3">See Also</h4>
+<section id="see-also-4" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-4">See Also</h4>
 <p><code>InputCnjPdpj</code> – schema pydantic.</p>
 </section>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.movimentos" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.movimentos">movimentos</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.movimentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.movimentos(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista movimentos do(s) processo(s).</p>
 <p>Falha por processo como em <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.documentos"><code>documentos</code></a>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.partes" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.partes">partes</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.partes(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.partes(id_cnj)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Lista partes do(s) processo(s).</p>
 <p>Falha por processo como em <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper.documentos"><code>documentos</code></a>.</p>
 </section>
 <section id="juscraper.aggregators.pdpj.client.PdpjScraper.pesquisa" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.pdpj.client.PdpjScraper.pesquisa">pesquisa</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.pesquisa(paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>aggregators.pdpj.client.PdpjScraper.pesquisa(paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Busca profunda em <code>GET /api/v1/processos</code> (com paginacao).</p>
-<section id="parameters-4" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -695,8 +815,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-4" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -714,8 +834,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-5" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<section id="raises-6" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-6">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -763,8 +883,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="see-also-4" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-4">See Also</h4>
+<section id="see-also-5" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-5">See Also</h4>
 <p><code>InputPesquisaPdpj</code> – schema pydantic e a fonte da verdade dos filtros aceitos.</p>
 
 

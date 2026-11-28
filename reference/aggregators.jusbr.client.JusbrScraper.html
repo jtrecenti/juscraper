@@ -159,6 +159,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.auth" id="toc-juscraper.aggregators.jusbr.client.JusbrScraper.auth" class="nav-link" data-scroll-target="#juscraper.aggregators.jusbr.client.JusbrScraper.auth">auth</a></li>
   <li><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox" id="toc-juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox" class="nav-link" data-scroll-target="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_firefox">auth_firefox</a></li>
+  <li><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr" id="toc-juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr" class="nav-link" data-scroll-target="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr">auth_govbr</a></li>
   <li><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.cpopg" id="toc-juscraper.aggregators.jusbr.client.JusbrScraper.cpopg" class="nav-link" data-scroll-target="#juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</a></li>
   <li><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents" id="toc-juscraper.aggregators.jusbr.client.JusbrScraper.download_documents" class="nav-link" data-scroll-target="#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</a></li>
   </ul></li>
@@ -202,10 +203,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Obtém o token pela sessão do SSO da PDPJ aberta no Firefox.</td>
 </tr>
 <tr class="odd">
+<td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr">auth_govbr</a></td>
+<td>Obtem o token do PDPJ pelo login no gov.br, no Chrome da maquina.</td>
+</tr>
+<tr class="even">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</a></td>
 <td>Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</a></td>
 <td>Baixa e limpa os documentos dos processos de um DataFrame.</td>
 </tr>
@@ -327,14 +332,129 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </section>
 </section>
+<section id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.auth_govbr">auth_govbr</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth_govbr(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    timeout<span class="op">=</span><span class="fl">300.0</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    salvar<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    navegador<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Obtem o token do PDPJ pelo login no gov.br, no Chrome da maquina.</p>
+<p>Abre o portal de servicos do PDPJ no Chrome, Chromium ou Edge instalado, com perfil temporario; a pessoa faz o login (CPF, senha, captcha e segundo fator) e o metodo captura o token que o portal recebe. Com refresh token, as requisicoes seguintes renovam o access token sozinhas. Exige navegador com janela, entao nao roda em Colab nem em CI; nesses ambientes, use <code>auth(token)</code> ou a variavel <code>PDPJ_JWT</code>.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>timeout</td>
+<td><code>float</code></td>
+<td>Segundos para concluir o login. Default <code>300</code>.</td>
+<td><code>300.0</code></td>
+</tr>
+<tr class="even">
+<td>salvar</td>
+<td><code>bool</code></td>
+<td>Grava a credencial em <code>$XDG_CONFIG_HOME/juscraper/pdpj_token.json</code> (ou <code>~/.config/...</code>), com permissao <code>0600</code>, para as proximas instancias do JusBR e do PDPJ carregarem sem novo login; as renovacoes tambem sao gravadas. Default <code>True</code>.</td>
+<td><code>True</code></td>
+</tr>
+<tr class="odd">
+<td>navegador</td>
+<td><code>str</code> | None</td>
+<td>Executavel do Chrome, Chromium ou Edge. <code>None</code> procura um instalado. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum parametro adicional e aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>bool</code></td>
+<td><code>True</code> quando o token foi aceito.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ImportError</code></td>
+<td>Quando falta o extra <code>juscraper[govbr]</code>.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>RuntimeError</code></td>
+<td>Quando nao ha navegador, a janela e fechada ou o prazo acaba sem token.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando o token capturado e invalido ou ja expirou.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> jusbr <span class="op">=</span> jus.scraper(<span class="st">"jusbr"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> jusbr.auth_govbr()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> jusbr.cpopg(<span class="st">"0000000-00.0000.0.00.0000"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
+<p><code>InputAuthGovbrJusBR</code> e <code>InputAuthGovbrPdpj</code>.</p>
+</section>
+</section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.cpopg">cpopg</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.</p>
 <p>Uma consulta que falha não interrompe o lote: a linha sai com <code>status_consulta</code> igual a <code>STATUS_CONSULTA_FALHA</code> (de <code>juscraper.core.failures</code>) e o motivo na coluna <code>motivo_falha</code> (<code>http_&lt;status&gt;</code>, <code>retry_esgotado_&lt;status&gt;</code>, <code>timeout</code>, <code>conexao</code> ou <code>json_invalido</code>). O CNJ que a listagem responde com 404 sai “Nao encontrado na lista inicial”, com <code>motivo_falha</code> <code>None</code>; o 404 nos detalhes é falha (<code>http_404</code>).</p>
 <p>O 403 na listagem sai <code>http_403</code>, e o motivo não diz a causa. Em campo, ele apareceu junto de processo ausente do data lake da PDPJ, mas também pode ser negativa real de acesso. Este raspador não consulta a PDPJ para separar os dois casos; quem precisa separar cruza o resultado com <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper"><code>PdpjScraper</code></a>, que marca o processo ausente com <code>nao_encontrado</code>.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -360,8 +480,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-2" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -401,17 +521,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="juscraper.aggregators.jusbr.client.JusbrScraper.download_documents" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.aggregators.jusbr.client.JusbrScraper.download_documents">download_documents</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.download_documents(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.download_documents(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    base_df,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    max_docs_per_process<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Baixa e limpa os documentos dos processos de um DataFrame.</p>
 <p>O limite é aplicado ao <code>numeroProcesso</code> em todo o DataFrame, inclusive quando o mesmo processo aparece em mais de uma linha.</p>
 <p>Um download que falha não interrompe o lote: o conteúdo sai <code>None</code> e a coluna <code>motivo_falha</code> traz o motivo, o do texto quando o texto falha, senão o do binário. O <code>UserWarning</code> agregado cita as duas falhas.</p>
 <p>A peça sem <code>arquivo</code> no metadado não tem conteúdo no data lake, e a API responde 404 ao pedido de texto dela. Ela sai com os metadados, <code>texto</code> e respostas brutas <code>None</code> e <code>motivo_falha</code> <code>None</code>, sem requisição e fora do aviso: o metadado já diz por que não há texto.</p>
-<section id="parameters-2" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -443,8 +563,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-3" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -486,8 +606,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos-1">Avisos</h4>
 <p><code>UserWarning</code>: Quando pelo menos um download falhou; um aviso por chamada, emitido quando a coleta termina.</p>
 </section>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -505,8 +625,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="see-also" class="level4 doc-section doc-section-see-also">
-<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See Also</h4>
+<section id="see-also-1" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also-1">See Also</h4>
 <p><code>InputDownloadDocumentsJusBR</code> — schema pydantic e fonte da verdade dos parâmetros aceitos.</p>
 
 

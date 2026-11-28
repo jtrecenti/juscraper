@@ -153,7 +153,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.courts.tjam.client.TJAMScraper" id="toc-juscraper.courts.tjam.client.TJAMScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper">courts.tjam.client.TJAMScraper</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper" id="toc-juscraper.courts.tjam.client.TJAMScraper" class="nav-link active" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper">courts.tjam.client.TJAMScraper</a>
+  <ul class="collapse">
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg" id="toc-juscraper.courts.tjam.client.TJAMScraper.cjsg" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.cjsg">cjsg</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg_download" id="toc-juscraper.courts.tjam.client.TJAMScraper.cjsg_download" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.cjsg_download">cjsg_download</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg_parse" id="toc-juscraper.courts.tjam.client.TJAMScraper.cjsg_parse" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.cjsg_parse">cjsg_parse</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_assuntos" id="toc-juscraper.courts.tjam.client.TJAMScraper.listar_assuntos" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.listar_assuntos">listar_assuntos</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_classes" id="toc-juscraper.courts.tjam.client.TJAMScraper.listar_classes" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.listar_classes">listar_classes</a></li>
+  <li><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_orgaos" id="toc-juscraper.courts.tjam.client.TJAMScraper.listar_orgaos" class="nav-link" data-scroll-target="#juscraper.courts.tjam.client.TJAMScraper.listar_orgaos">listar_orgaos</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.tjam.client.TJAMScraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -172,8 +183,461 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>TJAM uses the eSAJ platform; <code>cjsg</code> is the only endpoint supported.</p>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg">cjsg</a></td>
+<td>Pesquisa jurisprudencia de segundo grau do tribunal (CJSG).</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg_download">cjsg_download</a></td>
+<td>Baixa as paginas HTML brutas do CJSG (sem parsear).</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.cjsg_parse">cjsg_parse</a></td>
+<td>Parse downloaded <code>cjsg</code> HTML files into a <code>pd.DataFrame</code>.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_assuntos">listar_assuntos</a></td>
+<td>Lista os assuntos disponiveis para filtrar.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_classes">listar_classes</a></td>
+<td>Lista as classes processuais disponiveis para filtrar.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.tjam.client.TJAMScraper.listar_orgaos">listar_orgaos</a></td>
+<td>Lista os orgaos julgadores (secoes) de segundo grau.</td>
+</tr>
+</tbody>
+</table>
+<section id="juscraper.courts.tjam.client.TJAMScraper.cjsg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.cjsg">cjsg</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.cjsg(pesquisa, paginas<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Pesquisa jurisprudencia de segundo grau do tribunal (CJSG).</p>
+<p>Delega para <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg_download"><code>cjsg_download</code></a> + <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg_parse"><code>cjsg_parse</code></a> e remove o diretorio temporario antes de retornar.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><code>str</code></td>
+<td>Termo livre buscado no acordao/ementa.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Filtros aceitos pelo schema configurado em <code>INPUT_CJSG</code> (default <code>InputCJSGEsajPuro</code>, herdado por TJAC/TJAL/TJAM/TJCE/TJMS). Subclasses podem trocar <code>INPUT_CJSG</code> e mudar a lista de filtros — TJSP usa <code>InputCJSGTJSP</code>. Filtros do schema padrao (todos opcionais; <code>None</code> = sem filtro): * <code>ementa</code> (str | None): Termo buscado especificamente na ementa. * <code>numero_recurso</code> (str | None): Numero do recurso. * <code>classe</code> (int | str | list[int | str] | None): ID(s) interno(s) da classe processual. Backend: <code>classesTreeSelection.values</code> (CSV). * <code>assunto</code> (int | str | list[int | str] | None): ID(s) interno(s) do assunto. Backend: <code>assuntosTreeSelection.values</code> (CSV). * <code>comarca</code> (int | str | None): ID interno da comarca. Backend: <code>cdComarca</code> (single-value, nao aceita lista). * <code>orgao_julgador</code> (int | str | list[int | str] | None): ID(s) interno(s) do orgao julgador. Backend: <code>secoesTreeSelection.values</code> (CSV). * <code>origem</code> (Literal[“T”, “R”]): <code>"T"</code> (segundo grau, default) ou <code>"R"</code> (colegio recursal). * <code>tipo_decisao</code> (Literal[“acordao”, “monocratica”]): Default <code>"acordao"</code>. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de julgamento. Aceita <code>DD/MM/AAAA</code>, <code>DD-MM-AAAA</code>, <code>AAAA-MM-DD</code>, <code>AAAA/MM/DD</code>, <code>date</code> ou <code>datetime</code>. * <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> (str | date | None): Intervalo de publicacao, nos mesmos formatos. * <code>auto_chunk</code> (bool): Default <code>True</code>. Quando o intervalo <code>data_julgamento_*</code> excede 1 ano, divide internamente em janelas, baixa cada uma e concatena com dedup por <code>cd_acordao</code>. Veja a secao “Auto-chunking” abaixo. * <code>count_only</code> (bool): Default <code>False</code>. Se <code>True</code>, faz so a chamada inicial da pagina 1, extrai o total de resultados via <code>cjsg_n_results</code> e retorna <code>int</code> em vez de <code>pd.DataFrame</code>. Util pra estimar wall-clock antes de uma coleta longa (issue #92). Com <code>auto_chunk=True</code> + janela &gt; 1 ano, itera janelas disjuntas e soma — <strong>soma bruta</strong> (sem dedup por <code>cd_acordao</code>), pode divergir ligeiramente de <code>len(cjsg(...))</code> quando ha acordaos republicados. <code>paginas</code> e ignorado (emite <code>UserWarning</code>).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic):</p>
+<pre><code>* ``query`` / ``termo`` -&gt; ``pesquisa``
+* ``data_inicio`` / ``data_fim`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
+* ``data_julgamento_de`` / ``data_julgamento_ate`` -&gt; ``data_julgamento_inicio`` / ``data_julgamento_fim``
+* ``data_publicacao_de`` / ``data_publicacao_ate`` -&gt; ``data_publicacao_inicio`` / ``data_publicacao_fim``</code></pre>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Quando um kwarg desconhecido e passado (via <code>raise_on_extra_kwargs</code>).</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValidationError</code></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code> | <code>int</code></td>
+<td>Resultados parseados (colunas conforme <code>OutputCJSGEsaj</code> — <code>processo</code>, <code>ementa</code>, <code>relator</code> via mixin, <code>data_publicacao</code> via mixin, <code>cd_acordao</code>, <code>cd_foro</code>); <code>int</code> com o total de resultados quando <code>count_only=True</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo">Exemplo</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjac <span class="op">=</span> jus.scraper(<span class="st">"tjac"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> df <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, paginas<span class="op">=</span><span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">3</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...                data_julgamento_inicio<span class="op">=</span><span class="st">"01/01/2024"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Estimativa pre-scraping (issue #92):</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> n <span class="op">=</span> tjac.cjsg(<span class="st">"dano moral"</span>, count_only<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="see-also" class="level4 doc-section doc-section-see-also">
+<h4 class="doc-section doc-section-see-also anchored" data-anchor-id="see-also">See also</h4>
+<p><code>InputCJSGEsajPuro</code> (ou <code>InputCJSGTJSP</code>) — schema pydantic e a fonte da verdade dos filtros aceitos.</p>
+<p>Auto-chunking (issue #130): Se <code>auto_chunk=True</code> (default herdado de <code>AutoChunkMixin</code>) e o intervalo <code>data_julgamento_*</code> exceder 1 ano, a busca e dividida em janelas internas, baixadas e concatenadas com dedup por <code>cd_acordao</code>. Janela que falha levanta <code>ColetaParcialError</code>, com as janelas que passaram em <code>.resultado</code>. <code>auto_chunk=True</code> + <code>paginas != None</code> em janela &gt; 1 ano e <code>ValueError</code>. Para o comportamento estrito antigo (<code>ValueError</code> em janelas longas), passe <code>auto_chunk=False</code>.</p>
+</section>
+</section>
+<section id="juscraper.courts.tjam.client.TJAMScraper.cjsg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.cjsg_download">cjsg_download</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.cjsg_download(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    pesquisa,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    paginas<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Baixa as paginas HTML brutas do CJSG (sem parsear).</p>
+<p>Faz o GET inicial, extrai o numero de paginas, paga o resto e salva todos os HTMLs em disco. Aceita os mesmos filtros de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a>; consulte la a lista completa.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pesquisa</td>
+<td><code>str</code></td>
+<td>Termo livre buscado.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>paginas</td>
+<td><code>int</code> | <code>list</code> | <code>range</code> | None</td>
+<td>Paginas 1-based; <code>None</code> baixa todas. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Sobrescreve <code>download_path</code> para esta unica chamada. Default <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Mesmos filtros aceitos por <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a> (validados por <code>INPUT_CJSG</code>). Veja a docstring de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a> para a lista detalhada e os aliases deprecados.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Quando um kwarg desconhecido e passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValidationError</code></td>
+<td>Quando um filtro tem formato invalido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>str</code></td>
+<td>Caminho do diretorio onde os HTMLs foram salvos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="juscraper.courts.tjam.client.TJAMScraper.cjsg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.cjsg_parse">cjsg_parse</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.cjsg_parse(path)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse downloaded <code>cjsg</code> HTML files into a <code>pd.DataFrame</code>.</p>
+</section>
+<section id="juscraper.courts.tjam.client.TJAMScraper.listar_assuntos" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.listar_assuntos">listar_assuntos</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.listar_assuntos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista os assuntos disponiveis para filtrar.</p>
+<p>Baixa a arvore de assuntos do eSAJ para descobrir os IDs aceitos pelo filtro <code>assunto</code> de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a> (e <code>assunto</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>grau</td>
+<td><code>str</code></td>
+<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg), só nos tribunais com <code>cjpg</code> (<code>EsajCjpgScraper</code>).</td>
+<td><code>'2'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando <code>grau</code> nao esta disponivel neste tribunal.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 12%">
+<col style="width: 82%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>'pd.DataFrame'</td>
+<td>Arvore de assuntos (mesmas colunas de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.listar_classes"><code>listar_classes</code></a>). So as linhas com <code>selecionavel=True</code> valem como filtro.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="juscraper.courts.tjam.client.TJAMScraper.listar_classes" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.listar_classes">listar_classes</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.listar_classes(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista as classes processuais disponiveis para filtrar.</p>
+<p>Baixa a arvore de classes do eSAJ para descobrir os IDs aceitos pelo filtro <code>classe</code> de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a> (e <code>classe</code> de <code>cjpg</code> no TJSP e no TJMS).</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>grau</td>
+<td><code>str</code></td>
+<td><code>"2"</code> (segundo grau / cjsg, default) ou <code>"1"</code> (primeiro grau / cjpg), só nos tribunais com <code>cjpg</code> (<code>EsajCjpgScraper</code>).</td>
+<td><code>'2'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando <code>grau</code> nao esta disponivel neste tribunal.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 9%">
+<col style="width: 85%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>'pd.DataFrame'</td>
+<td>Arvore de classes (colunas <code>id</code>, <code>nome</code>, <code>id_pai</code>, <code>nivel</code>, <code>selecionavel</code>, <code>caminho</code>). So as linhas com <code>selecionavel=True</code> valem como filtro.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exemplo-1" class="level4 doc-section doc-section-exemplo">
+<h4 class="doc-section doc-section-exemplo anchored" data-anchor-id="exemplo-1">Exemplo</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> juscraper <span class="im">as</span> jus</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> tjsp <span class="op">=</span> jus.scraper(<span class="st">"tjsp"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes <span class="op">=</span> tjsp.listar_classes()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> classes.loc[classes[<span class="st">"selecionavel"</span>], [<span class="st">"id"</span>, <span class="st">"nome"</span>]].head()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="juscraper.courts.tjam.client.TJAMScraper.listar_orgaos" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.tjam.client.TJAMScraper.listar_orgaos">listar_orgaos</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>courts.tjam.client.TJAMScraper.listar_orgaos(grau<span class="op">=</span><span class="st">'2'</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Lista os orgaos julgadores (secoes) de segundo grau.</p>
+<p>Baixa a arvore de secoes do eSAJ para descobrir os IDs aceitos pelo filtro <code>orgao_julgador</code> de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.cjsg"><code>cjsg</code></a>. So existe no segundo grau.</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>grau</td>
+<td><code>str</code></td>
+<td><code>"2"</code> (segundo grau / cjsg). Unico valor aceito.</td>
+<td><code>'2'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando <code>grau</code> nao esta disponivel neste tribunal.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 18%">
+<col style="width: 73%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>'pd.DataFrame'</td>
+<td>Arvore de orgaos julgadores (mesmas colunas de <a href="../reference/courts.tjam.client.TJAMScraper.html#juscraper.courts.tjam.client.TJAMScraper.listar_classes"><code>listar_classes</code></a>).</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

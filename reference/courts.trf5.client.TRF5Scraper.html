@@ -153,7 +153,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Nesta página</h2>
    
   <ul>
-  <li><a href="#juscraper.courts.trf5.client.TRF5Scraper" id="toc-juscraper.courts.trf5.client.TRF5Scraper" class="nav-link active" data-scroll-target="#juscraper.courts.trf5.client.TRF5Scraper">courts.trf5.client.TRF5Scraper</a></li>
+  <li><a href="#juscraper.courts.trf5.client.TRF5Scraper" id="toc-juscraper.courts.trf5.client.TRF5Scraper" class="nav-link active" data-scroll-target="#juscraper.courts.trf5.client.TRF5Scraper">courts.trf5.client.TRF5Scraper</a>
+  <ul class="collapse">
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
+  <ul class="collapse">
+  <li><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg" id="toc-juscraper.courts.trf5.client.TRF5Scraper.cpopg" class="nav-link" data-scroll-target="#juscraper.courts.trf5.client.TRF5Scraper.cpopg">cpopg</a></li>
+  <li><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_download" id="toc-juscraper.courts.trf5.client.TRF5Scraper.cpopg_download" class="nav-link" data-scroll-target="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_download">cpopg_download</a></li>
+  <li><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse" id="toc-juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse" class="nav-link" data-scroll-target="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse">cpopg_parse</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jtrecenti/juscraper/issues/new" class="toc-action"><i class="bi bi-github"></i>Criar uma issue</a></li><li><a href="https://github.com/jtrecenti/juscraper/edit/main/docs/reference/courts.trf5.client.TRF5Scraper.qmd" class="toc-action"><i class="bi empty"></i>Editar essa página</a></li></ul></div></nav>
     </div>
@@ -172,8 +180,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>TRF5 PJe consulta pública (1º grau).</p>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg">cpopg</a></td>
+<td>Consulta CPOPG: baixa o detalhe, parseia e (opcional) baixa peças.</td>
+</tr>
+<tr class="even">
+<td><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_download">cpopg_download</a></td>
+<td>Download the detail HTML for each <code>id_cnj</code>.</td>
+</tr>
+<tr class="odd">
+<td><a href="#juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse">cpopg_parse</a></td>
+<td>Parse a list of detail HTMLs into a one-row-per-process DataFrame.</td>
+</tr>
+</tbody>
+</table>
+<section id="juscraper.courts.trf5.client.TRF5Scraper.cpopg" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf5.client.TRF5Scraper.cpopg">cpopg</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.trf5.client.TRF5Scraper.cpopg(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    id_cnj,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    download_pecas<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    diretorio<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Consulta CPOPG: baixa o detalhe, parseia e (opcional) baixa peças.</p>
+<p>Por default retorna apenas os metadados + movimentações + lista de documentos (id/data/descrição). Para também baixar os arquivos das peças (HTML viewer do PJe), passe <code>download_pecas=True</code> + um <code>diretorio</code>. As peças vão para <code>&lt;diretorio&gt;/&lt;cnj&gt;/&lt;id&gt;.html</code> e a coluna <code>pecas</code> no DataFrame ganha a lista de caminhos por processo.</p>
+<p><code>download_pecas</code> vive como flag aqui (em vez de um <code>cpopg_download_pecas</code> separado) porque os tokens <code>ca</code> que identificam cada peça estão amarrados à conversa Seam que produziu o detalhe — peças precisam ser baixadas na mesma <code>requests.Session</code>. Manter as duas etapas numa só chamada evita refazer o GET do detalhe para cada peça.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>CNJ único ou lista.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>download_pecas</td>
+<td><code>bool</code></td>
+<td>Se <code>True</code>, baixa as peças junto. Default <code>False</code>.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>diretorio</td>
+<td><code>str</code> | None</td>
+<td>Onde gravar as peças. Sobrescreve <code>download_path</code> para esta chamada. Quando omitido, usa <code>download_path</code> (que vira um <code>tempfile.mkdtemp()</code> se nada for passado ao construtor). Só tem efeito com <code>download_pecas=True</code>.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>DataFrame com uma linha por CNJ. Colunas: <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>assunto</code>, <code>data_distribuicao</code>, <code>orgao_julgador</code>, <code>jurisdicao</code>, <code>endereco_orgao</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>movimentacoes</code>, <code>documentos</code> (metadados) e <code>motivo_falha</code>. Quando <code>download_pecas=True</code>, ganha ainda a coluna <code>pecas</code> com a lista de caminhos salvos e a coluna <code>pecas_falhas</code> com as peças que não puderam ser baixadas, cada uma como <code>{"id": &lt;id da peça&gt;, "motivo_falha": &lt;motivo&gt;}</code>, no mesmo vocabulário. A falha no download de uma peça não afeta <code>motivo_falha</code> do processo nem as outras peças, e as falhas de peça saem num <code>UserWarning</code> próprio ao fim. Num bloqueio anti-bot nas peças, a bloqueada e as seguintes, que não são pedidas, entram em <code>pecas_falhas</code> com <code>bloqueio_anti_bot</code>; esse bloqueio sai só no aviso dos processos, pelo <code>motivo_falha</code> da linha. Um erro ao gravar uma peça (disco cheio, sem permissão) encerra as peças daquele processo: a peça e as seguintes, que não são pedidas, entram em <code>pecas_falhas</code> com <code>resposta_inesperada</code>, a linha sai com o detalhe e esse <code>motivo_falha</code>, que, como o bloqueio, sai só no aviso dos processos, e o lote segue. <code>motivo_falha</code> é <code>None</code> quando a consulta respondeu, inclusive para processo ausente ou sob sigilo (linha só com <code>id_cnj</code> preenchido). Quando a requisição de um CNJ falha, a linha sai só com <code>id_cnj</code> e o motivo preenchidos, no vocabulário de <code>juscraper.core.failures.MOTIVOS_FALHA</code>, e o lote segue; o HTML fora do formato conhecido sai <code>resposta_inesperada</code>. As falhas entram num único <code>UserWarning</code> ao fim (<code>BloqueioAntiBotWarning</code> quando há bloqueio anti-bot). Um bloqueio anti-bot vale para a sessão inteira: o lote para no CNJ bloqueado, sem novos pedidos, e ele e os seguintes saem com <code>bloqueio_anti_bot</code>. As linhas anteriores são preservadas. Com <code>download_pecas=True</code>, as peças de cada processo são baixadas logo depois do seu detalhe: os processos anteriores ao bloqueio saem com detalhe e peças, e o bloqueado nas peças sai com <code>bloqueio_anti_bot</code>, o detalhe e as peças já salvas. Aguarde alguns minutos ou troque de IP e peça de novo só as linhas com <code>motivo_falha</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Kwarg desconhecido.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="avisos" class="level4 doc-section doc-section-avisos">
+<h4 class="doc-section doc-section-avisos anchored" data-anchor-id="avisos">Avisos</h4>
+<p><code>UserWarning</code>: <code>diretorio</code> sem <code>download_pecas=True</code>. A consulta segue, sem as peças.</p>
+</section>
+</section>
+<section id="juscraper.courts.trf5.client.TRF5Scraper.cpopg_download" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf5.client.TRF5Scraper.cpopg_download">cpopg_download</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>courts.trf5.client.TRF5Scraper.cpopg_download(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Download the detail HTML for each <code>id_cnj</code>.</p>
+<p>Returns a list aligned with the input order. <code>None</code> entries indicate processes the public consultation could not return — sigilo, CNJ inexistente ou falha da requisição. Falhas individuais não interrompem o batch; um bloqueio anti-bot encerra o batch e os CNJs restantes saem <code>None</code>. As falhas entram num único <code>UserWarning</code> ao fim; <a href="../reference/courts.trf5.client.TRF5Scraper.html#juscraper.courts.trf5.client.TRF5Scraper.cpopg"><code>cpopg</code></a> traz o motivo de cada uma em <code>motivo_falha</code>. Não baixa as peças: <code>download_pecas=True</code> ou um <code>diretorio</code> levantam <code>TypeError</code>; para elas, usar <a href="../reference/courts.trf5.client.TRF5Scraper.html#juscraper.courts.trf5.client.TRF5Scraper.cpopg"><code>cpopg</code></a> com <code>download_pecas=True</code>.</p>
+</section>
+<section id="juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse" class="level3">
+<h3 class="anchored" data-anchor-id="juscraper.courts.trf5.client.TRF5Scraper.cpopg_parse">cpopg_parse</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>courts.trf5.client.TRF5Scraper.cpopg_parse(htmls, id_cnj_list)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Parse a list of detail HTMLs into a one-row-per-process DataFrame.</p>
+<p>Rows for <code>None</code> entries carry <code>id_cnj</code> plus <code>None</code> in every other column, so callers can still distinguish “looked up but missing” from “never tried”. Um HTML que sobreviveu ao download mas falhou no parse vira linha só com <code>id_cnj</code> preenchido, com <code>UserWarning</code>, e o batch continua. As colunas do detalhe existem mesmo quando nenhum HTML foi lido. Sem a coluna <code>motivo_falha</code>: um <code>None</code> vindo de <a href="../reference/courts.trf5.client.TRF5Scraper.html#juscraper.courts.trf5.client.TRF5Scraper.cpopg_download"><code>cpopg_download</code></a> pode ser processo ausente ou requisição que falhou, e só <a href="../reference/courts.trf5.client.TRF5Scraper.html#juscraper.courts.trf5.client.TRF5Scraper.cpopg"><code>cpopg</code></a> sabe qual.</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->
