@@ -464,7 +464,7 @@ Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`con
 
 ### Registro, paridade e wiring
 
-`tests/schemas/_registro.py` mantém os registros de endpoints: `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` para os modelos Input, `EXPECTED_COURT_OUTPUT_SCHEMAS` e `EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS` para os Output. Os testes de `tests/schemas/` derivam os casos desses mapas e dos helpers do mesmo módulo, que falham alto quando um raspador não importa ou um schema não resolve. `tests/schemas/test_schema_coverage.py` reprova endpoint implementado sem entrada e entrada sem endpoint. `tests/schemas/test_output_parity.py` exige Output mapeado para todo endpoint mapeado cujo retorno anotado contém `pd.DataFrame`, e só para eles. Métodos stub com `NotImplementedError` ficam fora desse contrato.
+`tests/schemas/_registro.py` mantém os registros de endpoints: `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` para os modelos Input, `EXPECTED_COURT_OUTPUT_SCHEMAS` e `EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS` para os Output. Os testes de `tests/schemas/` derivam os casos desses mapas e dos helpers do mesmo módulo, que falham alto quando um raspador não importa ou um schema não resolve. `tests/schemas/test_schema_coverage.py` reprova método público implementado sem entrada e entrada sem método. Os candidatos saem das próprias classes: todo método público do raspador que não vem de `juscraper.core` precisa de entrada, salvo os `<endpoint>_download`/`_parse` e os nomes de `FORA_DO_REGISTRO` (tabelas de códigos, download de documento de uma linha, configuração), cada um com o motivo. O mesmo arquivo reprova atributo `INPUT_<ENDPOINT>` que diverge do mapa e `Input*`/`Output*` público que não está mapeado nem é base de um mapeado. `tests/schemas/test_output_parity.py` exige Output mapeado para todo endpoint mapeado cujo retorno anotado contém `pd.DataFrame`, e só para eles. Métodos stub com `NotImplementedError` ficam fora desse contrato.
 
 `tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando só `self` e `diretorio` (infraestrutura). Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. Vale também para endpoints que validam pelo atributo `INPUT_<ENDPOINT>`. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
 
@@ -501,7 +501,7 @@ Modelos de endpoints diferentes herdam da base apropriada e de mixins, não de o
 
 ### `paginas`: contrato único, redeclaração é drift
 
-`PaginasMixin` em `src/juscraper/schemas/mixins.py` declara o campo e seus validadores; `SearchBase` o herda. Schemas concretos herdam esse contrato sem redeclarar `paginas`, evitando divergências de tipo, default e validação. `tests/schemas/test_paginas_acceptance.py` verifica as formas aceitas; limitações de runtime devem ser tratadas no contrato do endpoint.
+`PaginasMixin` em `src/juscraper/schemas/mixins.py` declara o campo e seus validadores; `SearchBase` o herda. Schemas concretos herdam esse contrato sem redeclarar `paginas`, evitando divergências de tipo, default e validação. `tests/schemas/test_paginas_acceptance.py` verifica as formas aceitas em todo schema mapeado com `PaginasMixin` e exige que o método exponha `paginas` se e somente se o schema herda o mixin; limitações de runtime devem ser tratadas no contrato do endpoint.
 
 ### Tratamento de divergências de nome
 

@@ -76,9 +76,10 @@ def test_alias_termo_vira_pesquisa(stf):
         stf.contar_decisoes(termo=PESQUISA)
 
 
-def test_tamanho_pagina_nao_e_filtro_de_contagem(stf):
-    with pytest.raises(TypeError, match="tamanho_pagina"):
-        stf.contar_decisoes(PESQUISA, tamanho_pagina=10)
+@pytest.mark.parametrize("parametro", ["tamanho_pagina", "paginas"])
+def test_paginacao_nao_e_filtro_de_contagem(stf, parametro):
+    with pytest.raises(TypeError, match=f"unexpected keyword argument\\(s\\): '{parametro}'"):
+        stf.contar_decisoes(PESQUISA, **{parametro: 10})
 
 
 @pytest.mark.parametrize("base", ["decisoes", "acordaos"])
