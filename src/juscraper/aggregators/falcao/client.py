@@ -31,7 +31,7 @@ from tqdm.auto import tqdm
 from ...core.avisos import avisar
 from ...core.base import mensagem_de_kwargs_inesperados
 from ...core.http import HTTPScraper, RequestPolicy
-from ...utils.pagination import Paginas, paginas_no_intervalo, recusar_alem_do_teto, selecao_de_paginas
+from ...utils.pagination import Paginas, paginas_no_intervalo, paginas_unicas, recusar_alem_do_teto
 from ...utils.params import (
     coerce_brazilian_date,
     normalize_paginas,
@@ -391,7 +391,7 @@ class FalcaoScraper(HTTPScraper):
         gravadas = checkpoint.gravadas if checkpoint is not None else set()
         total_anterior = checkpoint.total if checkpoint is not None else None
         # A página além do teto já foi recusada em ``_baixar``; a além do total real sai depois de lê-lo.
-        alcancaveis = self._paginas_ate(inp.paginas_normalizadas, _MAX_RESULTADOS, inp.tamanho_pagina)
+        alcancaveis = inp.paginas_normalizadas
         # A menor pagina pendente serve tambem para ler o total; com
         # ``paginas`` que nao inclui a 1, isso poupa uma requisicao.
         primeira = self._primeira_pendente(alcancaveis, gravadas, total_anterior, inp.tamanho_pagina)
@@ -417,7 +417,7 @@ class FalcaoScraper(HTTPScraper):
 
         pendentes = [
             p
-            for p in paginas_no_intervalo(selecao_de_paginas(alcancaveis), total_paginas, tribunal="Falcao")
+            for p in paginas_no_intervalo(alcancaveis, total_paginas, tribunal="Falcao")
             if p not in gravadas
         ]
         if primeira not in pendentes:
@@ -432,16 +432,16 @@ class FalcaoScraper(HTTPScraper):
             _checkpoint.gravar_json(destino / f"{inp.colecao}_{pagina:04d}.json", conteudo)
 
     def _avisar_sem_pendentes(
-        self, inp: InputListarDecisoesFalcao, alcancaveis: list[int] | None, total_anterior: int,
+        self, inp: InputListarDecisoesFalcao, alcancaveis: Paginas | None, total_anterior: int,
     ) -> None:
         """Retomada sem nada a requisitar: avisa das pedidas além do total registrado e do teto."""
         if alcancaveis is not None:
             ultima = self._total_paginas(total_anterior, inp.tamanho_pagina)
-            paginas_no_intervalo(selecao_de_paginas(alcancaveis), ultima, tribunal="Falcao")
+            paginas_no_intervalo(alcancaveis, ultima, tribunal="Falcao")
         self._avisar_teto(inp, total_anterior)
 
     def _primeira_pendente(
-        self, alcancaveis: list[int] | None, gravadas: set[int], total_anterior: int | None, tamanho_pagina: int,
+        self, alcancaveis: Paginas | None, gravadas: set[int], total_anterior: int | None, tamanho_pagina: int,
     ) -> int | None:
         """Menor página a requisitar, ou ``None`` se nenhuma das pedidas falta.
 
@@ -453,7 +453,8 @@ class FalcaoScraper(HTTPScraper):
         não requisita nada.
         """
         ultima = self._total_paginas(_MAX_RESULTADOS if total_anterior is None else total_anterior, tamanho_pagina)
-        candidatas = range(1, ultima + 1) if alcancaveis is None else alcancaveis
+        # Pedidas dentro do teto (``_baixar``): percorrê-las custa no máximo ``ultima`` passos.
+        candidatas = range(1, ultima + 1) if alcancaveis is None else paginas_unicas(alcancaveis)
         return min((p for p in candidatas if p <= ultima and p not in gravadas), default=None)
 
     def _params(self, inp: InputListarDecisoesFalcao, pagina: int) -> dict:
@@ -558,16 +559,6 @@ class FalcaoScraper(HTTPScraper):
     def _total_paginas(total: int, tamanho_pagina: int) -> int:
         alcancavel = min(total, _MAX_RESULTADOS)
         return max(1, math.ceil(alcancavel / tamanho_pagina))
-
-    @classmethod
-    def _paginas_ate(cls, paginas: Paginas | None, total: int, tamanho_pagina: int) -> list[int] | None:
-        """As páginas pedidas que ``total`` resultados alcançam, uma vez cada; ``None`` continua todas.
-
-        As de fora vão para o log, num aviso só (:func:`paginas_no_intervalo`).
-        """
-        if paginas is None:
-            return None
-        return paginas_no_intervalo(paginas, cls._total_paginas(total, tamanho_pagina), tribunal="Falcao")
 
 
 def _validar_data(valor, nome: str) -> None:

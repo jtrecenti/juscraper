@@ -20,7 +20,7 @@ uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 
 - **Regra de generalização:** mover para `_<familia>/` ou criar mixin/base só com **2+ ocorrências concretas**. Duplicar com 1 caso é mais barato que abstrair errado.
 - Nas famílias, acomodar diferenças por hooks/atributos ou manter scraper próprio; nunca `if tribunal == "X"` no código compartilhado.
-- A seleção `paginas` chega ao raspador como `Paginas` (opaca, sem laço nem `len`) e só é lida pelos helpers de `utils/pagination.py`; o laço de páginas comum é `baixar_paginas_pedidas`, com ganchos para página fixa, teto e coleta parcial (`CONTRIBUTING.md` > **Seleção de páginas**).
+- A seleção `paginas` chega ao raspador como `Paginas` (opaca, sem laço nem `len`) e só é lida pelos helpers de `utils/pagination.py`; o laço de páginas comum é `baixar_paginas_pedidas`, e o que muda entre portais entra nele como gancho (`CONTRIBUTING.md` > **Seleção de páginas**).
 
 ## Testes
 

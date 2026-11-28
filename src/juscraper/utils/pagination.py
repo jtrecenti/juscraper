@@ -17,18 +17,13 @@ import re
 import time
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from functools import partial
 from itertools import chain, islice, pairwise
-from typing import TYPE_CHECKING, Generic, NamedTuple, TypeGuard, TypeVar, overload
+from typing import NamedTuple, TypeGuard, TypeVar, overload
 
 from bs4 import BeautifulSoup, Tag
 from tqdm import tqdm
 
 from ..core.avisos import avisar
-from ..core.exceptions import ColetaParcialError
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 _Pagina = TypeVar("_Pagina")
 
@@ -291,6 +286,19 @@ def _pedidas(paginas: SelecaoBruta) -> range | tuple[int, ...] | None:
     return None if selecao is None else selecao._pedidas  # noqa: SLF001  # pylint: disable=protected-access
 
 
+def _pedidas_obrigatorias(paginas: Paginas, helper: str) -> range | tuple[int, ...]:
+    """As páginas de uma seleção que não pode ser ``None`` (todas)."""
+    pedidas = _pedidas(paginas)
+    if pedidas is None:
+        raise TypeError(f"{helper}: paginas=None não lista páginas; trate o None antes.")
+    return pedidas
+
+
+def _unicas(pedidas: range | tuple[int, ...]) -> Sequence[int]:
+    """Sem repetição, na ordem pedida; o ``range`` volta como veio, porque não repete."""
+    return pedidas if isinstance(pedidas, range) else list(dict.fromkeys(pedidas))
+
+
 def _range_crescente(paginas: range | tuple[int, ...]) -> TypeGuard[range]:
     """``range`` crescente, cortado pelos limites sem ser percorrido."""
     return isinstance(paginas, range) and paginas.step > 0
@@ -318,9 +326,7 @@ def maior_pagina(paginas: Paginas) -> int:
     que só avança (PDPJ, DataJud) e a validação do payload antes da primeira
     requisição (STF).
     """
-    pedidas = _pedidas(paginas)
-    if pedidas is None:
-        raise TypeError("maior_pagina: paginas=None não tem maior página; trate o None antes.")
+    pedidas = _pedidas_obrigatorias(paginas, "maior_pagina")
     if _range_crescente(pedidas):
         return pedidas[-1]
     return max(pedidas)
@@ -334,12 +340,7 @@ def paginas_unicas(paginas: Paginas) -> Sequence[int]:
     checkpoint (STF). O ``range`` volta como veio, sem ser percorrido, porque
     não repete página.
     """
-    pedidas = _pedidas(paginas)
-    if pedidas is None:
-        raise TypeError("paginas_unicas: paginas=None não lista páginas; trate o None antes.")
-    if isinstance(pedidas, range):
-        return pedidas
-    return list(dict.fromkeys(pedidas))
+    return _unicas(_pedidas_obrigatorias(paginas, "paginas_unicas"))
 
 
 def pagina_pedida(paginas: Paginas | None, pagina: int) -> bool:
@@ -356,7 +357,8 @@ def paginas_no_intervalo(paginas: Paginas | None, n_pags: int, *, tribunal: str)
     """As páginas pedidas dentro de ``1..n_pags``, na ordem pedida e sem repetição; as demais vão para o log.
 
     ``paginas=None`` vale todas, de 1 a ``n_pags``. Uma página repetida é
-    baixada uma vez só, na posição em que aparece primeiro.
+    baixada uma vez só, na posição em que aparece primeiro. A busca vazia
+    (``n_pags=0``) não tem página a baixar nem a avisar.
 
     As páginas de fora saem num aviso só, no logger do tribunal
     (``juscraper.<sigla>``), onde já saía antes de o filtro virar helper:
@@ -365,10 +367,12 @@ def paginas_no_intervalo(paginas: Paginas | None, n_pags: int, *, tribunal: str)
     pedidas = _pedidas(paginas)
     if pedidas is None:
         return list(range(1, n_pags + 1))
+    if n_pags == 0:
+        return []
     if _range_crescente(pedidas):
         validas, primeiras_fora, n_fora = _range_no_intervalo(pedidas, n_pags)
     else:
-        unicas = list(dict.fromkeys(pedidas))
+        unicas = _unicas(pedidas)
         validas = [pagina for pagina in unicas if 1 <= pagina <= n_pags]
         fora = [pagina for pagina in unicas if not 1 <= pagina <= n_pags]
         primeiras_fora, n_fora = fora[:_PAGINAS_FORA_NO_AVISO], len(fora)
@@ -396,7 +400,7 @@ def recusar_alem_do_teto(paginas: Paginas | None, teto: int, *, tribunal: str) -
         )
 
 
-def avisar_teto(paginas: Paginas | None, n_pags: int, teto: int, *, tribunal: str) -> int:
+def _avisar_teto(paginas: Paginas | None, n_pags: int, teto: int, *, tribunal: str) -> int:
     """``n_pags`` limitado a ``teto``; com ``paginas=None`` e total acima do teto, ``UserWarning``.
 
     Avisos:
@@ -413,118 +417,54 @@ def avisar_teto(paginas: Paginas | None, n_pags: int, teto: int, *, tribunal: st
     return teto
 
 
-def mensagem_de_coleta_parcial(tribunal: str, faltando: Sequence[int], n_baixadas: int, exc: Exception) -> str:
-    """O texto padrão do ``ColetaParcialError`` de :func:`baixar_paginas_pedidas`.
-
-    Diz a página que falhou, quantas vieram e as que faltam num texto que vale
-    como ``paginas=`` (:func:`descrever_paginas`). O raspador que precisa de
-    mais (o bloqueio do WAF no TJTO) acrescenta ao fim.
-    """
-    return (
-        f"{tribunal}: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
-        f"As {n_baixadas} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
-        f"faltam as páginas {descrever_paginas(faltando)}, que podem ser pedidas de novo com paginas=."
-    )
-
-
-def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; cada gancho opcional serve a 2+ portais
+def baixar_paginas_pedidas(  # noqa: PLR0913 - ``teto`` é o gancho de TJBA, TJMT, TJPB e TJRO
     paginas: Paginas | None,
     buscar: Callable[[int], _Pagina],
     contar_paginas: Callable[[_Pagina], int],
     *,
     tribunal: str,
     sleep_time: float = 0.0,
-    primeira: int | None = None,
     teto: int | None = None,
-    ler_parcial: Callable[[list[_Pagina]], pd.DataFrame] | None = None,
-    mensagem_parcial: Callable[[list[int], int, Exception], str] | None = None,
 ) -> list[_Pagina]:
     """Baixa as ``paginas`` (1-based) de uma busca: o laço de páginas comum dos raspadores.
 
-    A primeira requisição é ``primeira`` ou, sem ela, a menor página pedida;
-    ``contar_paginas`` lê nela o total. As demais saem na ordem pedida, uma vez
-    cada, com ``sleep_time`` antes de cada requisição, e as além do total vão
-    para o log, sem requisição (ver :func:`paginas_no_intervalo`). O retorno
-    traz só as páginas pedidas, na ordem pedida.
+    A menor página pedida sai primeiro, e ``contar_paginas`` lê nela o total;
+    as demais saem na ordem pedida, uma vez cada, com ``sleep_time`` antes de
+    cada requisição, e as além do total vão para o log, sem requisição (ver
+    :func:`paginas_no_intervalo`). O retorno traz as páginas na ordem pedida.
+    Toda resposta, inclusive a primeira, sai de ``buscar``: é ali que entra a
+    conferência de cada página antes de ela ir para o resultado.
 
     Args:
         paginas: A seleção; ``None`` baixa todas.
         buscar: Baixa uma página (1-based).
         contar_paginas: Lê o total de páginas na resposta da primeira requisição.
-        tribunal: Sigla, para o log, a barra de progresso e as mensagens.
+        tribunal: Sigla, para o log e a barra de progresso.
         sleep_time: Segundos de espera antes de cada requisição depois da primeira.
-        primeira: A página pedida primeiro, mesmo fora da seleção, para o
-            portal que abre a busca nela (eSAJ, TJGO, TJPE, TJRJ, TJRR, TRF3:
-            página 1). Ela só entra no retorno se foi pedida.
         teto: A última página que o portal entrega. A página pedida além dela
             levanta ``ValueError`` antes de qualquer requisição
             (:func:`recusar_alem_do_teto`); com ``paginas=None`` e total
             acima do teto, ``UserWarning`` e o download para nele.
-        ler_parcial: Lê as páginas baixadas num DataFrame. Com ele, a falha de
-            ``buscar`` depois de alguma página pedida já baixada levanta
-            :class:`~juscraper.core.exceptions.ColetaParcialError`. Sem ele,
-            ou sem página pedida baixada, a falha sobe como veio.
-        mensagem_parcial: ``mensagem_parcial(faltando, n_baixadas, exc)``, o
-            texto do ``ColetaParcialError``; o padrão é
-            :func:`mensagem_de_coleta_parcial`.
 
     Raises:
-        ColetaParcialError: Com ``ler_parcial``, quando uma página falha depois
-            de outra pedida já baixada. ``resultado`` traz as baixadas, lidas
-            por ``ler_parcial`` na ordem pedida (a da primeira requisição, se
-            ela vinha depois da que falhou, entra no fim); ``falhas`` tem um
-            item ``(None, None, exc)``; ``__cause__`` é a falha.
         ValueError: Com ``teto``, quando a maior página pedida passa dele.
-        Exception: A falha de ``buscar``, como veio, na primeira requisição,
-            sem ``ler_parcial`` ou sem página pedida baixada.
     """
     if teto is not None:
         recusar_alem_do_teto(paginas, teto, tribunal=tribunal)
-    inicial = menor_pagina(paginas) if primeira is None else primeira
-    first = buscar(inicial)
+    primeira = menor_pagina(paginas)
+    first = buscar(primeira)
     n_pags = contar_paginas(first)
     if teto is not None:
-        n_pags = avisar_teto(paginas, n_pags, teto, tribunal=tribunal)
-    validas = paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
-    parcial = _Parcial(tribunal, ler_parcial, mensagem_parcial, inicial, first)
-    resultados: list[_Pagina] = []
-    for posicao, pagina in enumerate(tqdm(validas, desc=f"Baixando páginas {tribunal}")):
-        if pagina == inicial:
+        n_pags = _avisar_teto(paginas, n_pags, teto, tribunal=tribunal)
+    resultados = []
+    for pagina in tqdm(paginas_no_intervalo(paginas, n_pags, tribunal=tribunal), desc=f"Baixando páginas {tribunal}"):
+        if pagina == primeira:
             resultados.append(first)
             continue
         if sleep_time:
             time.sleep(sleep_time)
-        try:
-            resultados.append(buscar(pagina))
-        except Exception as exc:  # vai para ColetaParcialError, se houver o que guardar
-            parcial.levantar(resultados, validas[posicao:], exc)
-            raise
+        resultados.append(buscar(pagina))
     return resultados
-
-
-@dataclass(frozen=True)
-class _Parcial(Generic[_Pagina]):
-    """Os ganchos de coleta parcial de :func:`baixar_paginas_pedidas`."""
-
-    tribunal: str
-    ler: Callable[[list[_Pagina]], pd.DataFrame] | None
-    mensagem: Callable[[list[int], int, Exception], str] | None
-    inicial: int
-    first: _Pagina
-
-    def levantar(self, resultados: list[_Pagina], restantes: list[int], exc: Exception) -> None:
-        """Levanta o ``ColetaParcialError`` da falha da página ``restantes[0]``, se houver o que guardar.
-
-        A página da primeira requisição, se ainda viria em ``restantes``, entra
-        no fim das baixadas e sai das que faltam. Sem ``ler`` ou sem página
-        baixada, volta sem levantar, e quem chamou relança ``exc``.
-        """
-        baixadas = [*resultados, self.first] if self.inicial in restantes else resultados
-        if self.ler is None or not baixadas:
-            return
-        faltando = [pagina for pagina in restantes if pagina != self.inicial]
-        texto = (self.mensagem or partial(mensagem_de_coleta_parcial, self.tribunal))(faltando, len(baixadas), exc)
-        raise ColetaParcialError(texto, resultado=self.ler(baixadas), falhas=[(None, None, exc)]) from exc
 
 
 def descrever_paginas(paginas: Sequence[int]) -> str:

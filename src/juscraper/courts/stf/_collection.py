@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
 
-from ...utils.pagination import maior_pagina, paginas_no_intervalo, paginas_unicas, selecao_de_paginas
+from ...utils.pagination import maior_pagina, paginas_no_intervalo, paginas_unicas
 from ._checkpoint import Attempt, Checkpoint, Window, document_ids, utc_now
 from .download import MAX_REGISTROS, build_payload
 from .parse import parse_decisoes
@@ -75,15 +75,12 @@ class Collection:
             self.filters["classe"] = sorted(set([classes] if isinstance(classes, str) else classes))
         tem_publicacao = any(self.filters[f"data_publicacao_{limite}"] for limite in ("inicio", "fim"))
         self.axis = "publicacao" if tem_publicacao else "julgamento"
-        paginas = entrada.paginas_normalizadas
-        if paginas is not None:  # Antes de ``list``: um ``range`` além do limite não chega a ser percorrido.
-            build_payload(pagina=maior_pagina(paginas), tamanho_pagina=entrada.tamanho_pagina)
+        self.selecao = entrada.paginas_normalizadas
+        if self.selecao is not None:  # A maior página valida as demais, sem percorrer o ``range``.
+            build_payload(pagina=maior_pagina(self.selecao), tamanho_pagina=entrada.tamanho_pagina)
         # A página repetida é baixada uma vez só, como nos demais raspadores; a lista sem
         # repetição é a da identidade do checkpoint.
-        self.pages = None if paginas is None else list(paginas_unicas(paginas))
-        if self.pages is not None:
-            for pagina in self.pages:
-                build_payload(pagina=pagina, tamanho_pagina=entrada.tamanho_pagina)
+        self.pages = None if self.selecao is None else list(paginas_unicas(self.selecao))
         identidade = {
             "base": entrada.base,
             "pages": self.pages,
@@ -228,9 +225,7 @@ class Collection:
         window.attempts.append(attempt)
         self.store.save()
         # A contagem vem antes das páginas: a pedida além do total vai para o log, sem requisição.
-        # A busca vazia não tem página a pedir nem a avisar, como nos demais raspadores.
-        n_pags = math.ceil(total / self.inp.tamanho_pagina)
-        pages = paginas_no_intervalo(selecao_de_paginas(self.pages), n_pags, tribunal="STF") if n_pags else []
+        pages = paginas_no_intervalo(self.selecao, math.ceil(total / self.inp.tamanho_pagina), tribunal="STF")
         seen: set[tuple[str, str]] = set()
         for page in pages:
             payload = self.payload(window, page, self.inp.tamanho_pagina)

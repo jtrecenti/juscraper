@@ -18,7 +18,6 @@ import responses
 from pydantic import ValidationError
 
 import juscraper as jus
-from juscraper.aggregators.pdpj.client import _limite_de_paginas
 from juscraper.aggregators.pdpj.download import BASE_URL
 from juscraper.aggregators.pdpj.params import _QUERY_PARAM_MAP, _to_query_params
 from juscraper.aggregators.pdpj.parse import (
@@ -29,7 +28,6 @@ from juscraper.aggregators.pdpj.parse import (
     parse_pesquisa_response,
 )
 from juscraper.aggregators.pdpj.schemas import InputPesquisaPdpj
-from juscraper.utils.pagination import selecao_de_paginas
 from tests._helpers import assert_unknown_kwarg_raises, load_sample, query_param_subset_matcher
 
 # Token JWT minimo (header + payload com ``exp`` futura) so para passar pelo
@@ -272,9 +270,18 @@ def test_pesquisa_rejeita_paginas_invalidas_sem_requisicao(paginas):
     assert len(responses.calls) == 0
 
 
-def test_limite_de_paginas_range_com_passo_para_na_ultima_pedida():
-    """``range(1, 10, 3)`` segue o cursor ate a pagina 7, nao ate a 9."""
-    assert _limite_de_paginas(selecao_de_paginas(range(1, 10, 3))) == 7
+@responses.activate
+def test_range_com_passo_para_na_ultima_pedida_e_guarda_so_as_pedidas():
+    """``range(1, 10, 3)`` segue o cursor até a página 7, não até a 9, e guarda só as páginas 1, 4 e 7."""
+    pagina = json.loads(load_sample("pdpj", "pesquisa/single_page.json"))
+    pagina["searchAfter"] = pagina.get("searchAfter") or ["cursor"]
+    for _ in range(9):
+        responses.add(responses.GET, f"{BASE_URL}/processos", json=pagina, status=200)
+
+    df = _mk_scraper().pesquisa(tribunal="TRF1", paginas=range(1, 10, 3))
+
+    assert len(responses.calls) == 7
+    assert len(df) == 3 * len(pagina["content"])
 
 
 @pytest.mark.parametrize("paginas", [True, [True], [1, True]])

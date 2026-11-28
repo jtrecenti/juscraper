@@ -691,14 +691,11 @@ class DatajudScraper(HTTPScraper):
         except ValidationError as exc:
             raise_on_extra_kwargs(exc, "DatajudScraper.listar_processos()")
             raise
-        # O cursor só avança: percorre até a maior página pedida e guarda só as pedidas.
-        paginas_datajud = inp.paginas_normalizadas
-
         aliases = self._resolve_aliases(
             tribunal=inp.tribunal,
             numero_processo=inp.numero_processo,
         )
-        return self._listar_aliases(aliases, inp, _resolve_movimentos_codigo(inp), paginas_datajud)
+        return self._listar_aliases(aliases, inp, _resolve_movimentos_codigo(inp), inp.paginas_normalizadas)
 
     def _listar_aliases(
         self,
