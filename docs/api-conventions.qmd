@@ -448,9 +448,7 @@ except ColetaParcialError as erro:
     print(erro.falhas)
 ```
 
-TJMG `cjsg` and `cjsg_download` raise it too when a result page fails with another page already downloaded. The search stops at that page: `.resultado` holds the pages read before it (as a DataFrame, also in `cjsg_download`), `.falhas` holds only that failure, and the message lists the missing pages, to request again with `paginas=`.
-
-TJPR, TJRS and TJTO `cjsg` and `cjsg_download` follow the same rule (in TJRS, also when the portal answers a page with a Solr error in place of the results, `TJRSBuscaError`; in TJTO, also when the AWS WAF blocks the search). A failure on the first page requested raises the original exception.
+TJMG, TJPR, TJRS and TJTO `cjsg` and `cjsg_download` (and TJTO `cjpg`) raise it too when a result page fails with another page already downloaded. The search stops at that page: `.resultado` holds the pages read before it (as a DataFrame, also in `cjsg_download`), `.falhas` holds only that failure, and the message lists the missing pages, to request again with `paginas=`. In TJRS this includes a page answered with a Solr error in place of the results (`TJRSBuscaError`), and in TJTO a search blocked by the AWS WAF. A failure on the first page requested raises the original exception.
 
 DataJud's `listar_processos` follows the same rule. When a page fails (HTTP error, malformed response, a response with `_shards.failed > 0`, or a page that ends before the exact `hits.total`), the remaining aliases are still queried and `ColetaParcialError` is raised at the end. `.resultado` holds every record received, from all aliases, and each item in `.falhas` is `(None, None, exception)`; the error message names the alias and the page that failed.
 
@@ -800,8 +798,8 @@ not yet requested go to `pecas_falhas`, the row keeps the detail with
 Methods whose unit of work has no row to carry the reason (a page, a date
 window, an alias) raise `juscraper.core.exceptions.ColetaParcialError`
 instead of returning a partial result as if it were complete: the eSAJ
-auto-chunk, TJSP and TJMS `cjpg`, TJMG `cjsg`, TJPR `cjsg`, TJTO `cjsg` and
-`cjpg`, and DataJud `listar_processos`.
+auto-chunk, TJSP and TJMS `cjpg`, TJMG `cjsg`, TJPR `cjsg`, TJRS `cjsg`, TJTO
+`cjsg` and `cjpg`, and DataJud `listar_processos`.
 `erro.resultado` has what was collected, in the same format as the full
 return, and `erro.falhas` the failed units with their exceptions (see the
 `cjpg` example in the migration guide above).

@@ -436,22 +436,20 @@ def mensagem_de_coleta_parcial(tribunal: str, faltando: Sequence[int], n_baixada
     )
 
 
-def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de página fixa, teto e coleta parcial
+def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de teto e coleta parcial
     paginas: Paginas | None,
     buscar: Callable[[int], _Pagina],
     contar_paginas: Callable[[_Pagina], int],
     *,
     tribunal: str,
     sleep_time: float = 0.0,
-    primeira: int | None = None,
     teto: int | None = None,
     ler_parcial: Callable[[list[_Pagina]], pd.DataFrame] | None = None,
     mensagem_parcial: Callable[[list[int], int, Exception], str] | None = None,
 ) -> list[_Pagina]:
     """Baixa as ``paginas`` (1-based) de uma busca: o laço de páginas comum dos raspadores.
 
-    A primeira requisição é ``primeira`` ou, sem ela, a menor página pedida;
-    ``contar_paginas`` lê nela o total. As demais saem na ordem pedida, uma vez
+    A menor página pedida sai primeiro, e ``contar_paginas`` lê nela o total. As demais saem na ordem pedida, uma vez
     cada, com ``sleep_time`` antes de cada requisição, e as além do total vão
     para o log, sem requisição (ver :func:`paginas_no_intervalo`). O retorno
     traz só as páginas pedidas, na ordem pedida. Toda resposta, inclusive a
@@ -464,9 +462,6 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
         contar_paginas: Lê o total de páginas na resposta da primeira requisição.
         tribunal: Sigla, para o log, a barra de progresso e as mensagens.
         sleep_time: Segundos de espera antes de cada requisição depois da primeira.
-        primeira: A página pedida primeiro, mesmo fora da seleção, para o
-            portal que abre a busca nela (a página 1 no TJMG, que precisa do
-            total para pedir as demais). Ela só entra no retorno se foi pedida.
         teto: A última página que o portal entrega. A página pedida além dela
             levanta ``ValueError`` antes de qualquer requisição
             (:func:`recusar_alem_do_teto`); com ``paginas=None`` e total
@@ -491,7 +486,7 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
     """
     if teto is not None:
         recusar_alem_do_teto(paginas, teto, tribunal=tribunal)
-    inicial = menor_pagina(paginas) if primeira is None else primeira
+    inicial = menor_pagina(paginas)
     first = buscar(inicial)
     n_pags = contar_paginas(first)
     if teto is not None:

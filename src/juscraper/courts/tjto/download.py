@@ -170,7 +170,7 @@ def cjsg_download_manager(
 
     # O bloqueio do AWS WAF, que chega depois de algumas buscas seguidas, não
     # descarta o que já veio: a página que falha com outra baixada levanta
-    # ``ColetaParcialError``, como no TJMG, no TJPR e no TJRS.
+    # ``ColetaParcialError``.
     return baixar_paginas_pedidas(
         paginas,
         _get_page,
@@ -186,5 +186,5 @@ def _mensagem_parcial(faltando: list[int], n_baixadas: int, exc: Exception) -> s
     """Texto do ``ColetaParcialError``: o padrão e, no bloqueio do WAF, quando pedir de novo."""
     mensagem = mensagem_de_coleta_parcial("TJTO", faltando, n_baixadas, exc)
     if isinstance(exc, BotChallengeBlockedError):
-        mensagem = mensagem.removesuffix(".") + " depois de pelo menos 10 minutos, quando o bloqueio do AWS WAF passa."
+        mensagem += " Peça-as de novo depois de pelo menos 10 minutos, quando o bloqueio do AWS WAF passa."
     return mensagem

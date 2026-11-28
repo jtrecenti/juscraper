@@ -214,7 +214,7 @@ def test_cjsg_pagina_que_falha_levanta_coleta_parcial_com_as_anteriores():
     """A página 2 estoura o prazo: a 1 não se perde, e a 3 não é pedida (como no TJMG e no TJTO)."""
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
-    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*Faltam as páginas \[2, 3\],") as info:
+    with pytest.raises(ColetaParcialError, match=r"a página 2 falhou.*faltam as páginas \[2, 3\],") as info:
         jus.scraper("tjpr").cjsg("dano moral", paginas=range(1, 4))
 
     erro = info.value
@@ -245,7 +245,7 @@ def test_cjsg_coleta_parcial_respeita_incluir_corte_idh():
 def test_cjsg_paginas_none_falha_depois_da_primeira_levanta_coleta_parcial():
     _pagina_que_estoura_o_prazo("dano moral", 2)
 
-    with pytest.raises(ColetaParcialError, match=r"Faltam as páginas range\(2, \d+\),") as info:
+    with pytest.raises(ColetaParcialError, match=r"faltam as páginas range\(2, \d+\),") as info:
         jus.scraper("tjpr").cjsg("dano moral")
 
     assert len(info.value.resultado) == 40

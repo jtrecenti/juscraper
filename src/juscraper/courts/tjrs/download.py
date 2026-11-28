@@ -154,6 +154,6 @@ def cjsg_download_manager(
         num_found = data.get('response', {}).get('numFound', 0)
         return resolve_total_pages(num_found, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJRS")
 
-    # Vale para toda falha da página (rede depois das tentativas, corpo que não
-    # é JSON, erro do Solr), como no TJPR, no TJMG e no TJTO.
+    # Vale para toda falha da página: rede depois das tentativas, corpo que não
+    # é JSON e o erro do Solr.
     return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS", ler_parcial=cjsg_parse_manager)

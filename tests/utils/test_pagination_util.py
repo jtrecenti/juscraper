@@ -455,21 +455,6 @@ class TestTeto:
         recusar_alem_do_teto(None, 3, tribunal="TJXX")
 
 
-class TestPrimeiraFixa:
-    """``primeira``: o portal que abre a busca numa página fixa."""
-
-    def test_pede_a_fixa_primeiro_e_so_a_devolve_se_pedida(self):
-        assert _baixar_com([3, 2], 5, primeira=1) == ([1, 3, 2], [3, 2])
-
-    def test_fixa_pedida_entra_na_posicao_pedida_sem_novo_pedido(self):
-        assert _baixar_com([3, 1], 5, primeira=1) == ([1, 3], [3, 1])
-
-    def test_total_lido_na_fixa_corta_as_demais(self, caplog):
-        with caplog.at_level("WARNING", logger="juscraper.tjxx"):
-            assert _baixar_com([2, 9], 3, primeira=1) == ([1, 2], [2])
-        assert "TJXX: página 9 fora do intervalo 1-3" in caplog.text
-
-
 class TestColetaParcial:
     """``ler_parcial``: a falha com página pedida já baixada vira ``ColetaParcialError``."""
 
@@ -488,11 +473,6 @@ class TestColetaParcial:
             _baixar_com([4, 5, 2, 3], 5, falhas={5}, ler_parcial=lambda brutos: pd.DataFrame({"pagina": brutos}))
         assert erro.value.resultado["pagina"].tolist() == [4, 2]
         assert "faltam as páginas [5, 3]" in str(erro.value)
-
-    def test_sem_pagina_pedida_baixada_a_falha_sobe_como_veio(self):
-        # A página 1 é fixa e não foi pedida: nada a guardar.
-        with pytest.raises(ConnectionError):
-            _baixar_com([2, 3], 5, falhas={2}, primeira=1, ler_parcial=pd.DataFrame)
 
     def test_falha_na_primeira_requisicao_sobe_como_veio(self):
         with pytest.raises(ConnectionError):

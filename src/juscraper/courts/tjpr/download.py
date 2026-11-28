@@ -13,9 +13,9 @@ from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
     Paginas,
     baixar_paginas_pedidas,
-    descrever_paginas,
     extract_count_with_cascade,
     menor_pagina,
+    mensagem_de_coleta_parcial,
     parse_page_number,
     resolve_total_pages,
 )
@@ -284,10 +284,7 @@ def cjsg_download(
 
 def _mensagem_parcial(faltando: list[int], n_baixadas: int, exc: Exception) -> str:
     """Texto do ``ColetaParcialError``: o padrão, com o aviso das ementas truncadas no parcial."""
-    return (
-        f"TJPR cjsg: a página {faltando[0]} falhou ({exc!r}), e a busca parou. "
-        f"As {n_baixadas} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro, "
-        "com as ementas longas truncadas em \"Leia mais..\": o portal acabou de falhar, e a ementa completa "
-        f"custaria uma requisição por linha. Faltam as páginas {descrever_paginas(faltando)}, "
-        "que podem ser pedidas de novo com paginas=."
+    return mensagem_de_coleta_parcial("TJPR cjsg", faltando, n_baixadas, exc) + (
+        " No parcial, as ementas longas vêm truncadas em \"Leia mais..\": o portal acabou de falhar, "
+        "e a ementa completa custaria uma requisição por linha."
     )

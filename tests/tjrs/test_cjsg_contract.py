@@ -247,8 +247,10 @@ def test_cjsg_erro_do_solr_no_meio_de_todas_as_paginas_resume_as_que_faltam(mock
         match=[urlencoded_params_matcher(_form_payload("dano moral", 1), allow_blank=True)],
     )
     _add_page("dano moral", 2, "cjsg/erro_solr.json")
-    todas = None  # a página 2 responde erro, e nenhuma outra é pedida
 
+    # ``test_guarda_paginas.py`` recusa ``paginas=None`` literal; aqui a página 2
+    # responde erro, e nenhuma outra é pedida.
+    todas = None
     with pytest.raises(ColetaParcialError, match=r"faltam as páginas range\(2, 6\),") as excinfo:
         jus.scraper("tjrs").cjsg("dano moral", paginas=todas)
 
@@ -288,6 +290,7 @@ def test_cjsg_falha_de_rede_no_meio_da_paginacao_guarda_as_paginas_anteriores(mo
 
 
 def test_cjsg_parse_de_busca_sem_resultado_segue_vazio():
+    """O ``cjsg_parse`` direto recusa o envelope de erro, mas a busca sem resultados continua vazia."""
     df = jus.scraper("tjrs").cjsg_parse([json.loads(load_sample("tjrs", "cjsg/no_results.json"))])
 
     assert df.empty
