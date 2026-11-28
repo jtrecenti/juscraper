@@ -195,7 +195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#juscraper.courts.trf6.client.TRF6Scraper.cpopg">cpopg</a></td>
-<td>High-level <code>cpopg</code> lookup: download + parse.</td>
+<td>Consulta processos no eproc do TRF6 (download e parse).</td>
 </tr>
 <tr class="even">
 <td><a href="#juscraper.courts.trf6.client.TRF6Scraper.cpopg_download">cpopg_download</a></td>
@@ -210,9 +210,79 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="juscraper.courts.trf6.client.TRF6Scraper.cpopg" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf6.client.TRF6Scraper.cpopg">cpopg</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>courts.trf6.client.TRF6Scraper.cpopg(id_cnj, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>High-level <code>cpopg</code> lookup: download + parse.</p>
-<p>Accepts a single CNJ or a list. Returns a DataFrame with one row per process; columns include <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>data_autuacao</code>, <code>situacao</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>assuntos</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>mpf</code>, <code>perito</code>, <code>movimentacoes</code> and <code>motivo_falha</code>. As colunas do detalhe existem mesmo quando nenhum CNJ do lote foi lido, com <code>None</code> nas linhas não lidas.</p>
+<p>Consulta processos no eproc do TRF6 (download e parse).</p>
+<p>Devolve uma linha por processo, com as colunas <code>id_cnj</code>, <code>processo</code>, <code>classe</code>, <code>data_autuacao</code>, <code>situacao</code>, <code>relator</code>, <code>orgao_julgador</code>, <code>assuntos</code>, <code>polo_ativo</code>, <code>polo_passivo</code>, <code>mpf</code>, <code>perito</code>, <code>movimentacoes</code> e <code>motivo_falha</code>. As colunas do detalhe existem mesmo quando nenhum CNJ do lote foi lido, com <code>None</code> nas linhas não lidas.</p>
 <p><code>motivo_falha</code> é <code>None</code> quando a consulta respondeu, inclusive para processo ausente ou sob sigilo (linha só com <code>id_cnj</code> preenchido). Quando a consulta de um CNJ falha, a linha sai só com <code>id_cnj</code> e o motivo preenchidos, no vocabulário de <code>juscraper.core.failures.MOTIVOS_FALHA</code> (<code>http_&lt;status&gt;</code>, <code>timeout</code>, <code>conexao</code>; <code>captcha_esgotado</code> para captcha recusado nas <code>max_captcha_attempts</code> tentativas; <code>resposta_inesperada</code> para formulário sem captcha, HTML que o parser recusa ou outro erro), e o lote segue. Um desafio anti-bot vale para a sessão inteira: o lote para no CNJ desafiado, sem novos pedidos, e ele e os seguintes saem com <code>bloqueio_anti_bot</code>. Do mesmo modo, depois de <code>max_captcha_esgotado_seguidos</code> CNJs seguidos com <code>captcha_esgotado</code> (default 3), o resolvedor está errando sempre: o lote para, e os CNJs seguintes saem com <code>captcha_esgotado</code> sem nova consulta. As falhas entram num único <code>UserWarning</code> ao fim (<code>BloqueioAntiBotWarning</code> quando há bloqueio anti-bot).</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>Número CNJ ou lista de números.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum outro argumento é aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>TypeError</code></td>
+<td>Quando um kwarg desconhecido é passado.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><code>ValidationError</code></td>
+<td>Quando <code>id_cnj</code> não é texto nem lista de textos.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><code>pd</code>.<code>DataFrame</code></td>
+<td>Uma linha por processo, com as colunas descritas acima.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_download" class="level3">
 <h3 class="anchored" data-anchor-id="juscraper.courts.trf6.client.TRF6Scraper.cpopg_download">cpopg_download</h3>

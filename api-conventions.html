@@ -321,7 +321,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>range</code>: e.g., <code>range(1, 4)</code> downloads pages 1, 2, 3</li>
 <li><code>list</code>: e.g., <code>[1, 3, 5]</code> downloads specific pages</li>
 </ul>
-<p>A page listed twice is downloaded once, in the position where it first appears. When the portal reports the total, pages beyond it are not requested and are reported in a single warning on the scraper’s logger (<code>juscraper.&lt;sigla&gt;</code>, such as <code>juscraper.tjsp</code> or <code>juscraper.falcao</code>). Exceptions: TJAP, TJPR and TJRR still request an explicit page beyond the end from the portal; PDPJ and DataJud walk their cursor up to the largest requested page and stop silently at the end of the results; DataJud downloads a list as the contiguous range between its smallest and largest page (its cursor only moves forward); the STF raises <code>ValueError</code> for a repeated page.</p>
+<p>A page listed twice is downloaded once, in the position where it first appears. When the portal reports the total, pages beyond it are not requested and are reported in a single warning on the scraper’s logger (<code>juscraper.&lt;sigla&gt;</code>, such as <code>juscraper.tjsp</code> or <code>juscraper.falcao</code>). Exceptions: TJAP, TJPR and TJRR still request an explicit page beyond the end from the portal; PDPJ and DataJud walk their cursor (it only moves forward) up to the largest requested page, return only the requested pages and stop silently at the end of the results.</p>
+<p>Portals that serve only the first results of a search (10,000 in TJBA, TJMT, TJPB, TJRO and Falcão) raise <code>ValueError</code> before any request when a requested page is beyond that cap. With <code>paginas=None</code>, the download stops at the cap with a <code>UserWarning</code>.</p>
 </section>
 <section id="page-size" class="level3">
 <h3 class="anchored" data-anchor-id="page-size">Page Size</h3>

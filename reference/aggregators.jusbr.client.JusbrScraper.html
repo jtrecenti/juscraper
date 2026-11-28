@@ -216,6 +216,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>aggregators.jusbr.client.JusbrScraper.auth(token, <span class="op">**</span>kwargs)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Define o token JWT para autenticacao e o decodifica para verificacao.</p>
 <p>Um token recusado não muda o estado: o token anterior, se havia, continua em <code>token</code> e no header.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>token</td>
+<td><code>str</code></td>
+<td>JWT da PDPJ, como o que <code>auth_govbr()</code> obtém.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum parâmetro adicional é aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
@@ -306,6 +333,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Consulta processos pelo número CNJ (ou lista de números CNJ) via API nacional.</p>
 <p>Uma consulta que falha não interrompe o lote: a linha sai com <code>status_consulta</code> igual a <code>STATUS_CONSULTA_FALHA</code> (de <code>juscraper.core.failures</code>) e o motivo na coluna <code>motivo_falha</code> (<code>http_&lt;status&gt;</code>, <code>retry_esgotado_&lt;status&gt;</code>, <code>timeout</code>, <code>conexao</code> ou <code>json_invalido</code>). O CNJ que a listagem responde com 404 sai “Nao encontrado na lista inicial”, com <code>motivo_falha</code> <code>None</code>; o 404 nos detalhes é falha (<code>http_404</code>).</p>
 <p>O 403 na listagem sai <code>http_403</code>, e o motivo não diz a causa. Em campo, ele apareceu junto de processo ausente do data lake da PDPJ, mas também pode ser negativa real de acesso. Este raspador não consulta a PDPJ para separar os dois casos; quem precisa separar cruza o resultado com <a href="../reference/aggregators.pdpj.client.PdpjScraper.html#juscraper.aggregators.pdpj.client.PdpjScraper"><code>PdpjScraper</code></a>, que marca o processo ausente com <code>nao_encontrado</code>.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id_cnj</td>
+<td><code>str</code> | <code>list</code>[<code>str</code>]</td>
+<td>Número CNJ, com ou sem máscara, ou lista de números.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td><code>Any</code></td>
+<td>Nenhum parâmetro adicional é aceito.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="raises-2" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
 <table class="caption-top table">
@@ -356,8 +410,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>O limite é aplicado ao <code>numeroProcesso</code> em todo o DataFrame, inclusive quando o mesmo processo aparece em mais de uma linha.</p>
 <p>Um download que falha não interrompe o lote: o conteúdo sai <code>None</code> e a coluna <code>motivo_falha</code> traz o motivo, o do texto quando o texto falha, senão o do binário. O <code>UserWarning</code> agregado cita as duas falhas.</p>
 <p>A peça sem <code>arquivo</code> no metadado não tem conteúdo no data lake, e a API responde 404 ao pedido de texto dela. Ela sai com os metadados, <code>texto</code> e respostas brutas <code>None</code> e <code>motivo_falha</code> <code>None</code>, sem requisição e fora do aviso: o metadado já diz por que não há texto.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">

@@ -285,7 +285,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>qtde_itens_pagina</code> -&gt; <code>tamanho_pagina</code> * <code>id_instancia=2</code> -&gt; <code>id_instancia=151</code>; <code>id_instancia=3</code> -&gt; <code>id_instancia=15</code>; <code>id_instancia=1</code> sem substituto</p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_publicacao_de</code> / <code>data_publicacao_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> * <code>qtde_itens_pagina</code> -&gt; <code>tamanho_pagina</code> * <code>id_instancia=2</code> -&gt; <code>id_instancia=151</code>; <code>id_instancia=3</code> -&gt; <code>id_instancia=15</code>; <code>id_instancia=1</code> sem substituto</p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -307,6 +307,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><code>ValidationError</code></td>
 <td>Quando um filtro tem formato invalido ou a combinacao de <code>id_instancia</code>, <code>id_area</code> e <code>id_serventia_subtipo</code> nao existe no formulario do Projudi.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><code>ValueError</code></td>
+<td>Quando a pagina 1 traz resultados sem o total (“N resultados encontrados”), por exemplo depois de uma mudanca de markup do portal, tambem com <code>paginas=1</code>.</td>
 </tr>
 </tbody>
 </table>

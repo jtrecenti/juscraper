@@ -267,7 +267,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>**kwargs</td>
 <td></td>
-<td>Os mesmos filtros de <a href="../reference/courts.tjes.client.TJESScraper.html#juscraper.courts.tjes.client.TJESScraper.cjsg"><code>cjsg</code></a>, exceto <code>core</code>.</td>
+<td>Filtros aceitos por <code>InputCJPGTJES</code>, os mesmos de <a href="../reference/courts.tjes.client.TJESScraper.html#juscraper.courts.tjes.client.TJESScraper.cjsg"><code>cjsg</code></a> exceto <code>core</code>; a semântica de cada um está lá: * <code>busca_exata</code> (bool): Se <code>True</code>, faz busca exata. * <code>relator</code> (str | None): Nome do magistrado (exato, em maiúsculas). * <code>orgao_julgador</code> (str | None): Órgão julgador. * <code>classe</code> (str | None): Classe judicial. * <code>jurisdicao</code> (str | None): Jurisdição. * <code>assunto</code> (str | None): Assunto. * <code>ordenacao</code> (OrdenacaoCJPG | None): Ordem dos resultados: <code>"dt_juntada desc"</code>, <code>"dt_juntada asc"</code>, <code>"nr_processo asc"</code> ou <code>"nr_processo desc"</code>; <code>None</code> (default) ordena por relevância. * <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> (str | date | None): Intervalo de datas, que o TJES aplica a <code>dt_juntada</code>.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
@@ -280,6 +280,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>magistrado</code> -&gt; <code>relator</code></li>
 <li><code>classe_judicial</code> -&gt; <code>classe</code></li>
 <li><code>per_page</code> -&gt; <code>tamanho_pagina</code></li>
+<li><code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
 </ul>
 </section>
 <section id="returns" class="level4 doc-section doc-section-returns">
@@ -503,6 +505,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>magistrado</code> -&gt; <code>relator</code></li>
 <li><code>classe_judicial</code> -&gt; <code>classe</code></li>
 <li><code>per_page</code> -&gt; <code>tamanho_pagina</code></li>
+<li><code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
+<li><code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code></li>
 </ul>
 </section>
 <section id="returns-3" class="level4 doc-section doc-section-returns">

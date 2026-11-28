@@ -269,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_julgamento_de</code> / <code>_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>_fim</code> * <code>data_publicacao_de</code> / <code>_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>_fim</code> * <code>campo</code> -&gt; <code>buscar_em</code>: <code>campo="E"</code> vira <code>buscar_em="ementa"</code> e <code>campo="I"</code>, <code>buscar_em="inteiro_teor"</code>. <code>"E"</code> e <code>"I"</code> em <code>buscar_em</code> (<code>campo</code> por posicao) tambem sao convertidos, com aviso</p>
+<p>Aliases deprecados (popados com <code>DeprecationWarning</code> antes do pydantic): * <code>query</code> / <code>termo</code> -&gt; <code>pesquisa</code> * <code>data_inicio</code> / <code>data_fim</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> * <code>data_julgamento_de</code> / <code>data_julgamento_ate</code> -&gt; <code>data_julgamento_inicio</code> / <code>data_julgamento_fim</code> * <code>data_publicacao_de</code> / <code>data_publicacao_ate</code> -&gt; <code>data_publicacao_inicio</code> / <code>data_publicacao_fim</code> * <code>campo</code> -&gt; <code>buscar_em</code>: <code>campo="E"</code> vira <code>buscar_em="ementa"</code> e <code>campo="I"</code>, <code>buscar_em="inteiro_teor"</code>. <code>"E"</code> e <code>"I"</code> em <code>buscar_em</code> (<code>campo</code> por posicao) tambem sao convertidos, com aviso</p>
 </section>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
@@ -295,7 +295,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><code>ValueError</code></td>
-<td>Quando <code>campo</code> e <code>buscar_em</code> sao passados juntos.</td>
+<td>Quando <code>campo</code> e <code>buscar_em</code> sao passados juntos, ou quando a pagina lida nao traz “N documentos encontrados”, por exemplo depois de uma mudanca de markup do portal, tambem com <code>paginas=1</code>.</td>
 </tr>
 <tr class="even">
 <td></td>
