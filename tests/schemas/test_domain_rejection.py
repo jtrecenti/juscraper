@@ -202,13 +202,6 @@ _TAMANHO_PAGINA_CASES = [
     (InputPesquisaPdpj, "itens_por_pagina", {}, 2),
 ]
 
-# Casos de ``_TAMANHO_PAGINA_CASES`` cujo schema não está em ``INPUT_SCHEMAS``,
-# e por isso fora da derivação de ``test_tamanho_pagina_cases_cobre_os_schemas_mapeados``.
-_TAMANHO_PAGINA_FORA_DO_MAPA = {
-    # ``PdpjScraper.pesquisa`` não tem entrada em ``INPUT_SCHEMAS``.
-    (InputPesquisaPdpj, "itens_por_pagina"),
-}
-
 
 _CASE_IDS = [case[0].__name__ for case in _TAMANHO_PAGINA_CASES]
 _PARAMETRIZA_CAMPO_DE_TAMANHO = pytest.mark.parametrize(
@@ -237,8 +230,7 @@ def test_tamanho_pagina_cases_cobre_os_schemas_mapeados():
         if _rejeita_bool(par.schema, campo)
     }
     tabela = {(schema_cls, campo) for schema_cls, campo, _base, _valido in _TAMANHO_PAGINA_CASES}
-    assert tabela == derivados | _TAMANHO_PAGINA_FORA_DO_MAPA
-    assert all(_rejeita_bool(*caso) for caso in _TAMANHO_PAGINA_FORA_DO_MAPA)
+    assert tabela == derivados
 
 
 @_PARAMETRIZA_CAMPO_DE_TAMANHO

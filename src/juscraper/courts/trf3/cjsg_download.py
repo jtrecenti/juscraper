@@ -33,7 +33,7 @@ from tqdm import tqdm
 from unidecode import unidecode
 
 from ...core.http import RequestFn
-from ...utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo, paginas_unicas
+from ...utils.pagination import AvisoVazio, Paginas, extract_count_with_cascade, paginas_no_intervalo, paginas_unicas
 from ._tls import montar_tls_navegador, tls_navegador_disponivel
 from .cjsg_parse import SELETOR_DOCUMENTO
 from .cjsg_schemas import InputCJSGTRF3
@@ -454,7 +454,7 @@ def cjsg_n_results(html: str) -> int | None:
     )
 
 
-def _paginas_pedidas(paginas: Iterable[int] | None, n_paginas: int | None) -> list[int]:
+def _paginas_pedidas(paginas: Paginas | None, n_paginas: int | None) -> list[int]:
     """Resolve a lista de páginas a baixar, 1-based, na ordem pedida e sem repetição.
 
     Com ``paginas=None`` baixa todas; exige o total. Páginas além do total são

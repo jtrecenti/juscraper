@@ -114,16 +114,17 @@ def test_paginas_invalidas_falham_antes_do_http(monkeypatch, paginas):
         )
 
 
-def test_lista_esparsa_continua_baixando_intervalo_inteiro(monkeypatch):
+def test_lista_esparsa_devolve_so_as_paginas_pedidas(monkeypatch):
+    """Como no PDPJ: o cursor percorre de 1 a 5, e só as páginas 3 e 5 voltam."""
     calls = _install_pages(monkeypatch, [_page(page) for page in range(1, 6)])
 
     df = jus.scraper("datajud", verbose=0).listar_processos(
         tribunal="TJSP",
-        paginas=[3, 5],
+        paginas=[5, 3, 5],
         tamanho_pagina=10,
     )
 
-    assert df["pagina_fisica"].tolist() == [3] * 10 + [4] * 10 + [5] * 10
+    assert df["pagina_fisica"].tolist() == [3] * 10 + [5] * 10
     assert len(calls) == 5
 
 

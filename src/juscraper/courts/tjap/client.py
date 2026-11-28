@@ -75,7 +75,11 @@ class TJAPScraper(HTTPScraper):
             votacao: ``"0"`` para todas (default), ``"Unânime"`` ou ``"Maioria"``.
                 ``"Unanime"`` (sem acento) é alias deprecado de ``"Unânime"``.
             origem: Origem (comarca).
-            **kwargs: Aliases deprecados, como ``numero_cnj``.
+            **kwargs: Aliases deprecados (ver abaixo).
+
+        Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``numero_cnj`` -> ``numero_processo``
 
         Returns:
             Uma linha por decisão.

@@ -101,9 +101,9 @@ class TJPBScraper(HTTPScraper):
             **kwargs: Filtros aceitos pelo schema :class:`InputCJSGTJPB`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 
-                * ``data_julgamento_inicio`` / ``data_julgamento_fim`` (str |
-                  date | datetime): ``DD/MM/YYYY``, ``DD-MM-YYYY``,
-                  ``YYYY-MM-DD`` ou ``YYYY/MM/DD``. Convertido para
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): ``DD/MM/YYYY``, ``DD-MM-YYYY``,
+                  ``YYYY-MM-DD``, ``YYYY/MM/DD``, ``date`` ou ``datetime``. Convertido para
                   ``YYYY-MM-DD`` antes do envio ao backend. O backend filtra
                   por uma data interna de disponibilizacao (nao por
                   ``dt_ementa``); o cliente aplica um post-filter local sobre
@@ -114,8 +114,8 @@ class TJPBScraper(HTTPScraper):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``nr_processo`` -> ``numero_processo``
             * ``id_classe_judicial`` -> ``id_classe``
-            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.

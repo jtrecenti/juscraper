@@ -50,7 +50,8 @@ def test_todos_os_filtros_chegam_ao_corpo(stf, mocker):
         data_publicacao_fim="30/11/2024",
     )
 
-    assert len(responses.calls) == 3
+    # Contagem antes e depois; a busca vazia não pede página.
+    assert len(responses.calls) == 2
     # O matcher deriva do builder; os nomes de campo do Elasticsearch ficam pinados aqui.
     for chamada in responses.calls:
         assert_filtros_no_corpo(corpo_json_enviado(chamada.request), PESQUISA, ["ARE", "Rcl"])
@@ -79,7 +80,8 @@ def test_date_e_datetime_geram_o_mesmo_corpo_que_a_string(stf, mocker):
         data_publicacao_fim=datetime(2024, 11, 30, tzinfo=timezone.utc),
     )
 
-    assert len(responses.calls) == 3
+    # Contagem antes e depois; a busca vazia não pede página.
+    assert len(responses.calls) == 2
 
 
 @responses.activate

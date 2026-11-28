@@ -245,13 +245,12 @@ class TRF6Scraper(BaseScraper):
         id_cnj: str | list[str],
         **kwargs: Any,
     ) -> pd.DataFrame:
-        """High-level ``cpopg`` lookup: download + parse.
+        """Consulta processos no eproc do TRF6 (download e parse).
 
-        Accepts a single CNJ or a list. Returns a DataFrame with one row per
-        process; columns include ``id_cnj``, ``processo``, ``classe``,
+        Devolve uma linha por processo, com as colunas ``id_cnj``, ``processo``, ``classe``,
         ``data_autuacao``, ``situacao``, ``relator``, ``orgao_julgador``,
         ``assuntos``, ``polo_ativo``, ``polo_passivo``, ``mpf``, ``perito``,
-        ``movimentacoes`` and ``motivo_falha``. As colunas do detalhe existem
+        ``movimentacoes`` e ``motivo_falha``. As colunas do detalhe existem
         mesmo quando nenhum CNJ do lote foi lido, com ``None`` nas linhas não
         lidas.
 
@@ -273,6 +272,19 @@ class TRF6Scraper(BaseScraper):
         ``UserWarning`` ao fim
         (:class:`~juscraper.core.exceptions.BloqueioAntiBotWarning` quando
         há bloqueio anti-bot).
+
+        Args:
+            id_cnj: Número CNJ ou lista de números.
+            **kwargs: Nenhum outro argumento é aceito.
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido é passado.
+            ValidationError: Quando ``id_cnj`` não é texto nem lista de textos.
+            ImportError: Quando o pacote opcional ``txtcaptcha``, que resolve o
+                captcha, não está instalado.
+
+        Returns:
+            Uma linha por processo, com as colunas descritas acima.
         """
         cnjs = self._coerce_id_cnj(id_cnj, "cpopg", **kwargs)
         consultas = self._baixar(cnjs)

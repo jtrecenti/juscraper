@@ -54,7 +54,7 @@ from juscraper.aggregators.comunica_cnj.parse import parse_items
 from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 from juscraper.aggregators.falcao.parse import parse_documentos
 from juscraper.aggregators.jusbr.parse import parse_process_details_response
-from juscraper.aggregators.pdpj.parse import build_processo_row
+from juscraper.aggregators.pdpj.parse import build_processo_row, parse_pesquisa_response
 from juscraper.courts.stf.parse import parse_contagem, parse_decisoes
 from tests.schemas._registro import OUTPUT_SCHEMAS, resolve
 from tests.schemas.test_canonical_types import DEPRECATED_SYNONYMS
@@ -132,6 +132,10 @@ def _linha_jusbr(dados: Any, cnj: str) -> list[dict]:
 
 def _linhas_pdpj(dados: list[dict[str, Any]], cnj: str) -> list[dict]:
     return [build_processo_row(detalhe, cnj) for detalhe in dados]
+
+
+def _linhas_pesquisa_pdpj(resposta: dict[str, Any]) -> list[dict[str, Any]]:
+    return parse_pesquisa_response(resposta)[0]
 
 
 def _decisoes_stf(resposta: dict[str, Any]) -> list[dict[str, Any]]:
@@ -306,6 +310,7 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         sufixos=(".json",),
         ignorar={"processo_nao_encontrado.json": "lista vazia; a linha de 'Nao encontrado' sai do client"},
     ),
+    ("pdpj", "pesquisa"): Leitura(_json_solto, _linhas_pesquisa_pdpj, sufixos=(".json",)),
 }
 
 # Endpoints sem sample que o parser leia sozinho. Motivo obrigatório.
@@ -320,6 +325,10 @@ SEM_LEITURA: dict[tuple[str, str], str] = {
     ),
     ("jusbr", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
     ("pdpj", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
+    ("datajud", "contar_processos"): (
+        "a linha da contagem sai do client a partir de hits.total, sem parser; colunas fixas "
+        "em datajud/client.py, conferidas por test_output_parity"
+    ),
 }
 
 # Só a conferência 1 (nomes deprecados). Motivo obrigatório.
@@ -352,6 +361,7 @@ _COLUNAS_CODIGO_TJRS = (
 AUXILIARES_NAO_DECLARADAS: dict[tuple[str, str], dict[str, str]] = {
     ("tjes", "cjsg"): dict.fromkeys(_COLUNAS_CODIGO_TJES, _CODIGOS_TJES),
     ("tjes", "cjpg"): dict.fromkeys(_COLUNAS_CODIGO_TJES, _CODIGOS_TJES),
+    ("pdpj", "pesquisa"): {"_raw": "item completo da resposta; o pydantic não aceita campo com _ inicial"},
     ("tjrs", "cjsg"): {
         "_version_": "versão do documento no Solr; o pydantic não aceita campo com _ inicial",
         **dict.fromkeys(_COLUNAS_CODIGO_TJRS, _CODIGOS_TJRS),

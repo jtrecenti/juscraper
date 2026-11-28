@@ -278,6 +278,10 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         Um token recusado não muda o estado: o token anterior, se havia, continua
         em ``token`` e no header.
 
+        Args:
+            token: JWT da PDPJ, como o que ``auth_govbr()`` obtém.
+            **kwargs: Nenhum parâmetro adicional é aceito.
+
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (schema
                 :class:`InputAuthJusBR`, ``extra="forbid"``).
@@ -391,6 +395,10 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
         consulta a PDPJ para separar os dois casos; quem precisa separar cruza
         o resultado com :class:`~juscraper.aggregators.pdpj.client.PdpjScraper`,
         que marca o processo ausente com ``nao_encontrado``.
+
+        Args:
+            id_cnj: Número CNJ, com ou sem máscara, ou lista de números.
+            **kwargs: Nenhum parâmetro adicional é aceito.
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado (schema

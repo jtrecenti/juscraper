@@ -180,6 +180,8 @@ class TJESScraper(HTTPScraper):
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
 
         Returns:
             Uma linha por decisão.
@@ -306,13 +308,31 @@ class TJESScraper(HTTPScraper):
             paginas: Páginas a baixar (1-based); ``None`` baixa todas.
             tamanho_pagina: Resultados por página (default 20). Aceita ``per_page``
                 como alias deprecado.
-            **kwargs: Os mesmos filtros de :meth:`cjsg`, exceto ``core``.
+            **kwargs: Filtros aceitos por :class:`InputCJPGTJES`, os mesmos de
+                :meth:`cjsg` exceto ``core``; a semântica de cada um está lá:
+
+                * ``busca_exata`` (bool): Se ``True``, faz busca exata.
+                * ``relator`` (str | None): Nome do magistrado (exato, em
+                  maiúsculas).
+                * ``orgao_julgador`` (str | None): Órgão julgador.
+                * ``classe`` (str | None): Classe judicial.
+                * ``jurisdicao`` (str | None): Jurisdição.
+                * ``assunto`` (str | None): Assunto.
+                * ``ordenacao`` (OrdenacaoCJPG | None): Ordem dos resultados:
+                  ``"dt_juntada desc"``, ``"dt_juntada asc"``,
+                  ``"nr_processo asc"`` ou ``"nr_processo desc"``; ``None``
+                  (default) ordena por relevância.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): Intervalo de datas, que o TJES aplica a
+                  ``dt_juntada``.
 
         Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``magistrado`` -> ``relator``
             * ``classe_judicial`` -> ``classe``
             * ``per_page`` -> ``tamanho_pagina``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
 
         Returns:
             Uma linha por decisão.

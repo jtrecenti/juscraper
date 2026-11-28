@@ -211,7 +211,44 @@ def test_range_valido_preserva_ultima_pagina_e_passo(stf, paginas, tamanho, inic
     assert (corpos[0]["from"], corpos[0]["size"]) == (inicio, fim - inicio)
 
 
-@pytest.mark.parametrize("kwargs", [{"paginas": [1, 1]}, {"tamanho_pagina": 251}, {"resume": []}])
+@responses.activate
+def test_pagina_repetida_baixada_uma_vez_na_ordem_pedida(stf):
+    """Como nos demais raspadores, a página repetida sai uma vez só, sem ``ValueError``."""
+    fonte = Source(make_rows(5)).install()
+
+    resultado = stf.listar_decisoes(paginas=[2, 1, 2], tamanho_pagina=2)
+
+    assert resultado.id.tolist() == [registro["id"] for registro in fonte.rows[2:4] + fonte.rows[0:2]]
+    assert [corpo["from"] for corpo in fonte.payloads if corpo["size"]] == [2, 0]
+
+
+@responses.activate
+def test_pagina_alem_do_total_vai_para_o_log_sem_requisicao(stf, caplog):
+    """A contagem vem antes das páginas: a pedida além do total não é requisitada."""
+    fonte = Source(make_rows(5)).install()
+
+    with caplog.at_level("WARNING", logger="juscraper.stf"):
+        resultado = stf.listar_decisoes(paginas=[3, 9], tamanho_pagina=2)
+
+    assert resultado.id.tolist() == [fonte.rows[4]["id"]]
+    assert [corpo["from"] for corpo in fonte.payloads if corpo["size"]] == [4]
+    assert "STF: página 9 fora do intervalo 1-3" in caplog.text
+
+
+@responses.activate
+def test_busca_vazia_com_paginas_nao_avisa_pagina_fora(stf, caplog):
+    """Sem resultados não há página a pedir: nada de "página 1 fora do intervalo 1-0"."""
+    fonte = Source([]).install()
+
+    with caplog.at_level("WARNING", logger="juscraper.stf"):
+        resultado = stf.listar_decisoes(paginas=1, tamanho_pagina=2)
+
+    assert resultado.empty
+    assert not [corpo for corpo in fonte.payloads if corpo["size"]]
+    assert "fora do intervalo" not in caplog.text
+
+
+@pytest.mark.parametrize("kwargs", [{"tamanho_pagina": 251}, {"resume": []}])
 @responses.activate
 def test_invalid_input_fails_before_request(stf, kwargs):
     with pytest.raises((ValueError, ValidationError)):

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from juscraper.core.http import RequestFn
 from juscraper.utils.divisao_por_data import BuscaComTeto, baixar_dividindo_por_data
-from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas
 from juscraper.utils.params import OPEN_ENDED_DATE_FLOOR
 
 from .parse import cjsg_parse_manager
@@ -146,5 +146,6 @@ def cjsg_download_manager(
             busca, kwargs.get("data_julgamento_inicio") or None, kwargs.get("data_julgamento_fim") or None
         )
 
-    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJRO")
-    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJRO", sleep_time=sleep_time)
+    return baixar_paginas_pedidas(
+        paginas, _get_page, _n_pags, tribunal="TJRO", sleep_time=sleep_time, teto=MAX_RESULTS // RESULTS_PER_PAGE
+    )

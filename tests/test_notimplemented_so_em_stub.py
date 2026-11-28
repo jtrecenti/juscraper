@@ -14,12 +14,11 @@ sobrescrito pelas subclasses continuam com ``NotImplementedError``.
 """
 
 import ast
-from pathlib import Path
 from typing import TypeGuard
 
 import pytest
 
-RAIZ_PACOTE = Path(__file__).resolve().parents[1] / "src" / "juscraper"
+from tests._ast_do_pacote import Funcao, arquivos_do_pacote, nos_com_escopo
 
 # (caminho relativo a src/juscraper, nome qualificado da função) -> motivo.
 EXCECOES = {
@@ -36,7 +35,7 @@ def _levanta_not_implemented(no: ast.AST) -> TypeGuard[ast.Raise]:
     return isinstance(alvo, ast.Name) and alvo.id == "NotImplementedError"
 
 
-def _e_stub(funcao: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+def _e_stub(funcao: Funcao) -> bool:
     corpo = funcao.body
     if isinstance(corpo[0], ast.Expr) and isinstance(corpo[0].value, ast.Constant):
         corpo = corpo[1:]
@@ -50,27 +49,16 @@ def raises_fora_de_stub(codigo: str) -> list[tuple[int, str]]:
     classes e funções que a envolvem; raise fora de função sai como
     ``<módulo>``.
     """
-    achados: list[tuple[int, str]] = []
-
-    def visitar(no: ast.AST, nomes: tuple[str, ...], funcao: ast.FunctionDef | ast.AsyncFunctionDef | None) -> None:
-        for filho in ast.iter_child_nodes(no):
-            if isinstance(filho, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                visitar(filho, (*nomes, filho.name), filho)
-            elif isinstance(filho, ast.ClassDef):
-                visitar(filho, (*nomes, filho.name), funcao)
-            else:
-                if _levanta_not_implemented(filho) and not (funcao is not None and _e_stub(funcao)):
-                    achados.append((filho.lineno, ".".join(nomes) or "<módulo>"))
-                visitar(filho, nomes, funcao)
-
-    visitar(ast.parse(codigo), (), None)
-    return achados
+    return [
+        (no.lineno, escopo)
+        for escopo, no, funcao in nos_com_escopo(ast.parse(codigo))
+        if _levanta_not_implemented(no) and not (funcao is not None and _e_stub(funcao))
+    ]
 
 
 def _achados_do_pacote() -> dict[tuple[str, str], int]:
     achados: dict[tuple[str, str], int] = {}
-    for arquivo in sorted(RAIZ_PACOTE.rglob("*.py")):
-        caminho = arquivo.relative_to(RAIZ_PACOTE).as_posix()
+    for arquivo, caminho in arquivos_do_pacote():
         for linha, funcao in raises_fora_de_stub(arquivo.read_text(encoding="utf-8")):
             achados.setdefault((caminho, funcao), linha)
     return achados

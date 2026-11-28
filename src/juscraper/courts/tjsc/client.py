@@ -88,9 +88,9 @@ class TJSCScraper(HTTPScraper):
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
-            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
             * ``campo`` -> ``buscar_em``: ``campo="E"`` vira
               ``buscar_em="ementa"`` e ``campo="I"``, ``buscar_em="inteiro_teor"``.
               ``"E"`` e ``"I"`` em ``buscar_em`` (``campo`` por posicao)
@@ -99,7 +99,10 @@ class TJSCScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Quando ``campo`` e ``buscar_em`` sao passados juntos.
+            ValueError: Quando ``campo`` e ``buscar_em`` sao passados juntos,
+                ou quando a pagina lida nao traz "N documentos encontrados",
+                por exemplo depois de uma mudanca de markup do portal, tambem
+                com ``paginas=1``.
             RuntimeError: Quando o portal redireciona a busca (mudanca de endereco).
             requests.ConnectionError: Quando o portal derruba a conexao em
                 todas as tentativas do perfil HTTP ``"cjsg"`` (ajustavel com

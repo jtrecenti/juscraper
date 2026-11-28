@@ -35,16 +35,18 @@ from juscraper.utils.params import DATE_ALIASES, SEARCH_ALIASES
 COURT_ENDPOINTS = (
     "cjsg", "cjpg", "cpopg", "cposg", "cjsg_ementa", "listar_decisoes", "contar_decisoes",
 )
-# Agregadores: os endpoints publicos que eles implementam hoje (nenhum tem ``cjsg``).
 AGGREGATOR_ENDPOINTS = (
     "auth",
     "auth_firefox",
     "auth_govbr",
+    "contar",
+    "contar_processos",
     "cpopg",
     "download_documents",
     "listar_comunicacoes",
     "listar_decisoes",
     "listar_processos",
+    "pesquisa",
 )
 
 #: Aliases deprecados de busca e data, resolvidos antes do pydantic.
@@ -122,6 +124,10 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
         "juscraper.aggregators.datajud.schemas",
         "InputListarProcessosDataJud",
     ),
+    ("datajud", "contar_processos"): (
+        "juscraper.aggregators.datajud.schemas",
+        "InputContarProcessosDataJud",
+    ),
     ("jusbr", "auth"): ("juscraper.aggregators.jusbr.schemas", "InputAuthJusBR"),
     ("jusbr", "auth_firefox"): (
         "juscraper.aggregators.jusbr.schemas",
@@ -141,6 +147,8 @@ EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
     ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
+    ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "InputPesquisaPdpj"),
+    ("pdpj", "contar"): ("juscraper.aggregators.pdpj.schemas", "InputContarPdpj"),
     ("pdpj", "download_documents"): (
         "juscraper.aggregators.pdpj.schemas",
         "InputDownloadDocumentsPdpj",
@@ -211,6 +219,8 @@ EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
     ),
     ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "OutputListarDecisoesFalcao"),
     ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "OutputCpopgPdpj"),
+    ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "OutputPesquisaPdpj"),
+    ("datajud", "contar_processos"): ("juscraper.aggregators.datajud.schemas", "OutputContarProcessosDataJud"),
     ("pdpj", "download_documents"): ("juscraper.aggregators.pdpj.schemas", "OutputDownloadDocumentsPdpj"),
 }
 

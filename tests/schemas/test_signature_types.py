@@ -103,6 +103,12 @@ AMPLIADOS: dict[tuple[str, str], str] = {
 
 #: Anotacao propria de um campo, fora das regras: ``(sigla, campo) -> (anotacao, motivo)``.
 ESPECIFICAS: dict[tuple[str, str], tuple[object, str]] = {
+    ("pdpj", "paginas"): (
+        int | list[int] | range | None,
+        "PdpjScraper.pesquisa anota list[int], mais estreito que PAGINAS_ASSINATURA; "
+        "apareceu quando o endpoint entrou no mapa de schemas. Alinhar a assinatura "
+        "fica para um PR proprio, porque muda a API publica",
+    ),
     ("tjrs", "secao"): (
         str | None,
         'texto livre: o schema ignora caixa, acento e espacos ("Cível" vira "civel") '

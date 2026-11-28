@@ -2,7 +2,7 @@
 import re
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, extract_count_with_cascade
+from juscraper.utils.pagination import baixar_paginas_pedidas, extract_count_with_cascade, resolve_total_pages
 
 # Host novo; o antigo, eproc1g.tjsc.jus.br/eproc, redireciona para cá (#495).
 CONTROLADOR_URL = "https://eprocwebcon.tjsc.jus.br/consulta1g/externo_controlador.php"
@@ -57,17 +57,19 @@ _PAGINATION_REGEXES: tuple[re.Pattern[str], ...] = (
 )
 
 
-def _get_total_pages(html: str, per_page: int = RESULTS_PER_PAGE) -> int:
-    """Extract total page count from the TJSC response."""
+def _get_total_pages(html: str) -> int:
+    """Total de páginas pela contagem "N documentos encontrados".
+
+    A busca vazia traz "0 documentos encontrados" e dá 1 página; sem a
+    contagem (markup novo, página de erro), :func:`resolve_total_pages` levanta.
+    """
     total = extract_count_with_cascade(
         html,
         css_selectors=_PAGINATION_CSS_SELECTORS,
         regex_patterns=_PAGINATION_REGEXES,
         fallback_html=True,
     )
-    if total is None:
-        return 1
-    return max(1, (total + per_page - 1) // per_page)
+    return resolve_total_pages(total, resultados_por_pagina=RESULTS_PER_PAGE, tribunal="TJSC")
 
 
 def cjsg_download_manager(
@@ -92,6 +94,9 @@ def cjsg_download_manager(
         sleep_time: Delay (em segundos) entre páginas. Default 1.0; o client
             normalmente passa ``self.sleep_time`` herdado de ``HTTPScraper``.
         **kwargs: Additional filter parameters.
+
+    Raises:
+        ValueError: Quando a página lida não traz "N documentos encontrados" (markup novo).
     """
     def _get_page(pagina_1based: int) -> str:
         data = build_cjsg_form_body(pesquisa=pesquisa, page=pagina_1based, **kwargs)

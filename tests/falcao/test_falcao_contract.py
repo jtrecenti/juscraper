@@ -372,14 +372,9 @@ def test_listar_decisoes_range_com_passo_respeita_o_passo(falcao):
 @ordem_padrao_avisa
 @responses.activate
 @pytest.mark.parametrize("com_checkpoint", [False, True])
-@pytest.mark.parametrize("fora_e_ultima", [(9, 4), (5000, 1000)])
-def test_pagina_repetida_uma_vez_e_fora_do_total_num_aviso_so(falcao, tmp_path, caplog, com_checkpoint, fora_e_ultima):
-    """Repetida sai uma vez; a além do total real (9) ou do teto (5000) vai para o log uma vez, sem requisição.
-
-    O corte acontece antes da primeira requisição (teto) e depois de ler o total (real);
-    cada página de fora aparece em um só deles.
-    """
-    fora, ultima = fora_e_ultima
+def test_pagina_repetida_uma_vez_e_fora_do_total_num_aviso_so(falcao, tmp_path, caplog, com_checkpoint):
+    """Repetida sai uma vez; a além do total real (9) vai para o log uma vez, sem requisição."""
+    fora, ultima = 9, 4
     for pagina in (2, 3):
         _register("acordaos", total=40, pagina=pagina)
     destino = {"checkpoint_dir": tmp_path / "coleta"} if com_checkpoint else {"diretorio": str(tmp_path)}
@@ -415,25 +410,25 @@ def test_listar_decisoes_sem_pagina_1_nao_a_requisita(falcao):
     assert len(df) == 2 * len(_sample("acordaos")["documentos"])
 
 
-@ordem_padrao_avisa
 @responses.activate
 @pytest.mark.parametrize("tamanho_pagina,ultima", [(5, 2000), (10, 1000)])
-def test_primeira_pagina_fora_do_teto_nao_impede_paginas_validas(falcao, tamanho_pagina, ultima):
-    for pagina in (ultima, 1):
-        _register("acordaos", total=10000, pagina=pagina)
-    df = falcao.listar_decisoes(
-        "dano moral", paginas=[ultima + 1, ultima, 1], tamanho_pagina=tamanho_pagina,
-    )
-    assert _paginas_pedidas() == [1, ultima]
-    assert len(df) == 2 * len(_sample("acordaos")["documentos"])
+def test_pagina_alem_do_teto_levanta_antes_de_requisitar(falcao, tmp_path, tamanho_pagina, ultima):
+    """Como no TJBA, TJMT, TJPB e TJRO: a página além do teto é erro, e nada é requisitado nem gravado."""
+    with pytest.raises(ValueError, match=f"Falcao: o portal só entrega as {ultima} primeiras páginas.*{ultima + 1}"):
+        falcao.listar_decisoes_download(
+            "dano moral", paginas=[ultima + 1, ultima, 1], tamanho_pagina=tamanho_pagina, diretorio=str(tmp_path),
+        )
+    assert not responses.calls
+    assert not list(tmp_path.iterdir())
 
 
 @responses.activate
-@pytest.mark.parametrize("paginas", [[1001, 1002], range(1001, 1003)])
-def test_selecao_inteira_fora_do_teto_nao_requisita(falcao, paginas):
-    df = falcao.listar_decisoes("dano moral", paginas=paginas)
-    assert df.empty
+@pytest.mark.parametrize("paginas", [[1001, 1002], range(1001, 10**9)])
+def test_selecao_inteira_fora_do_teto_levanta(falcao, tmp_path, paginas):
+    with pytest.raises(ValueError, match="Falcao: o portal só entrega as 1000 primeiras páginas"):
+        falcao.listar_decisoes("dano moral", paginas=paginas, checkpoint_dir=tmp_path / "coleta")
     assert not responses.calls
+    assert not (tmp_path / "coleta").exists()
 
 
 @ordem_padrao_avisa

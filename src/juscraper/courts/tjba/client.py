@@ -200,6 +200,7 @@ class TJBAScraper(HTTPScraper):
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``items_per_page`` -> ``tamanho_pagina``
             * ``classes`` -> ``classe`` (refs #232)
+            * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
 
         Returns:
             Resultados de jurisprudência, uma linha por decisão.
