@@ -186,6 +186,20 @@ def test_lista_da_busca_categorizada_com_erro_do_banco_levanta(mocker):
 
 @pytest.mark.usefixtures("mock_txtcaptcha")
 @responses.activate(registry=OrderedRegistry)
+def test_erro_do_banco_numa_lista_seguinte_sobe_sem_virar_parcial(mocker):
+    """Com a lista de repetitivos já baixada, o erro do banco na de acórdãos sobe como ``TJMGBuscaSemListaError``."""
+    mocker.patch("time.sleep")
+    _add_sessao()
+    _add_busca("categorizada.html", {"numeroRegistro": "1"})
+    _add_busca("categorizada_repetitivos.html", {"listaClasse": "600", "numeroRegistro": "1"})
+    _add_busca("erro_ora.html", {"excluirRepetitivos": "true", "numeroRegistro": "1"})
+
+    with pytest.raises(TJMGBuscaSemListaError, match="ORA-20000"):
+        jus.scraper("tjmg").cjsg_download("usucapiao", paginas=1, **_DATAS)
+
+
+@pytest.mark.usefixtures("mock_txtcaptcha")
+@responses.activate(registry=OrderedRegistry)
 def test_busca_categorizada_com_link_sem_parametro_proprio_levanta(mocker):
     """Sem o parâmetro que distingue a lista, segui-la repetiria a busca categorizada."""
     mocker.patch("time.sleep")

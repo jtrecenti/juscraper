@@ -9,12 +9,13 @@ import tempfile
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 import requests
 
 from juscraper.core.exceptions import CaptchaEsgotadoError, ColetaParcialError
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import descrever_paginas, paginas_no_intervalo
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, descrever_paginas, menor_pagina, pagina_pedida
 
 from .parse import cjsg_parse, levantar_se_muitos_resultados, levantar_se_sem_lista, listas_da_busca_categorizada
 
@@ -210,7 +211,7 @@ def _extract_total(html: str) -> int | None:
 
 def cjsg_download(
     pesquisa: str,
-    paginas,
+    paginas: Paginas | None,
     pesquisar_por: str,
     order_by: str,
     data_julgamento_inicial: str,
@@ -227,7 +228,7 @@ def cjsg_download(
 
     Args:
         pesquisa: Termo de busca livre.
-        paginas (int | list | range | None): Páginas a baixar (1-based), em
+        paginas: Páginas a baixar (1-based), em
             cada lista da busca; ``None`` baixa todas.
         pesquisar_por: Campo em que buscar: ``"ementa"`` ou ``"acordao"``.
         order_by: Ordem, como o portal a recebe (``"2"``, ``"1"`` ou ``"0"``).
@@ -274,11 +275,11 @@ def cjsg_download(
     listas = _listas(first_html, base)
     results: list = []
     for posicao, (nome, extra) in enumerate(listas):
+        lista = _Lista(nome, [s for s, _ in listas[posicao + 1:]], first_html if nome is None else None)
         _baixar_lista(
             results,
             functools.partial(_buscar_pagina, request_fn, session, functools.partial(params, extra=extra)),
-            functools.partial(_coleta_parcial, results, lista=nome, seguintes=[s for s, _ in listas[posicao + 1:]]),
-            first_html if nome is None else None,
+            lista,
             paginas,
             linhas_por_pagina,
             sleep_time,
@@ -309,80 +310,101 @@ def _buscar_pagina(
     return _fetch_page_revalidating(request_fn, session, params(pagina, total))
 
 
+class _Lista(NamedTuple):
+    """Uma lista da busca: o nome na busca categorizada (``None`` na comum), as seguintes e a página 1 já baixada."""
+
+    nome: str | None
+    seguintes: list[str | None]
+    primeira: str | None
+
+
 def _baixar_lista(
     results: list,
     buscar: Callable[[int, int], str],
-    erro: Callable[[int, list | None, Exception], ColetaParcialError],
-    primeira: str | None,
-    paginas,
+    lista: _Lista,
+    paginas: Paginas | None,
     linhas_por_pagina: int,
     sleep_time: float,
 ) -> None:
     """Acrescenta a ``results`` as ``paginas`` de uma lista, a partir da página 1.
 
-    ``buscar(pagina, total)`` baixa uma página da lista. ``primeira`` é a
-    página 1 já baixada, ou ``None`` para baixá-la aqui (listas da busca
-    categorizada). A página que falha com outra já em ``results`` levanta
-    ``erro(pagina, faltando, exc)``, um :class:`ColetaParcialError`.
+    ``buscar(pagina, total)`` baixa uma página da lista. A página 1 sai antes
+    das demais, porque elas mandam o total lido nela. A página que falha com
+    outra já em ``results`` (inclusive de uma lista anterior) levanta
+    :class:`ColetaParcialError`.
     """
-    def baixar(pagina: int, total: int, faltando: list | None) -> str:
-        try:
-            return buscar(pagina, total)
-        except Exception as exc:  # vai para ColetaParcialError, como no auto-chunk
-            if not results:
-                raise
-            raise erro(pagina, faltando, exc) from exc
-
-    if primeira is None:
-        time.sleep(sleep_time)
-        primeira = baixar(1, 1, None)
-        levantar_se_sem_lista(primeira)
+    primeira = _primeira_da_lista(results, buscar, lista, sleep_time)
     total = _extract_total(primeira) or 0
     if total == 0:
         logger.info("TJMG: nenhum resultado para a pesquisa.")
-        results.append(primeira)
+        if pagina_pedida(paginas, 1):
+            results.append(primeira)
         return
 
-    validas = paginas_no_intervalo(paginas, max(1, math.ceil(total / linhas_por_pagina)), tribunal="TJMG")
-    for posicao, pagina in enumerate(validas):
+    def buscar_pagina(pagina: int) -> str:
         if pagina == 1:
-            results.append(primeira)
-            continue
+            return primeira
         time.sleep(sleep_time)
-        results.append(baixar(pagina, total, validas[posicao:]))
+        return buscar(pagina, total)
+
+    try:
+        results.extend(baixar_paginas_pedidas(
+            paginas,
+            buscar_pagina,
+            lambda _resposta: math.ceil(total / linhas_por_pagina),
+            tribunal="TJMG",
+            ler_parcial=lambda baixadas: cjsg_parse([*results, *baixadas]),
+            # Na busca comum, o texto padrão; na categorizada, o que nomeia as listas.
+            mensagem_parcial=None if lista.nome is None else lambda faltando, n_baixadas, exc: _mensagem_parcial(
+                lista, faltando[0], faltando, len(results) + n_baixadas, exc
+            ),
+        ))
+    except ColetaParcialError:
+        raise
+    except Exception as exc:
+        # Sem página desta lista baixada, a que falhou é a primeira requisição do laço, a menor pedida.
+        if not results:
+            raise
+        raise _falha_da_lista(results, lista, menor_pagina(paginas), exc) from exc
 
 
-def _coleta_parcial(
-    results: list,
-    pagina: int,
-    faltando: list | None,
-    exc: Exception,
-    *,
-    lista: str | None,
-    seguintes: list[str | None],
-) -> ColetaParcialError:
-    """``ColetaParcialError`` com as paginas baixadas antes de ``pagina`` falhar.
+def _primeira_da_lista(results: list, buscar: Callable[[int, int], str], lista: _Lista, sleep_time: float) -> str:
+    """A página 1 da lista: a já baixada na busca comum, ou a baixada aqui na categorizada."""
+    if lista.primeira is not None:
+        return lista.primeira
+    time.sleep(sleep_time)
+    try:
+        primeira = buscar(1, 1)
+    except Exception as exc:  # vai para ColetaParcialError se uma lista anterior já trouxe páginas
+        if not results:
+            raise
+        raise _falha_da_lista(results, lista, 1, exc) from exc
+    levantar_se_sem_lista(primeira)
+    return primeira
+
+
+def _falha_da_lista(results: list, lista: _Lista, pagina: int, exc: Exception) -> ColetaParcialError:
+    """O ``ColetaParcialError`` da lista de que nada entrou: falta a lista inteira, como foi pedida."""
+    mensagem = _mensagem_parcial(lista, pagina, None, len(results), exc)
+    return ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)])
+
+
+def _mensagem_parcial(lista: _Lista, pagina: int, faltando: list[int] | None, n_baixadas: int, exc: Exception) -> str:
+    """Texto do ``ColetaParcialError`` da busca categorizada quando ``pagina`` falha com ``n_baixadas`` já baixadas.
 
     A pagina que falha encerra a paginacao, ao contrario do auto-chunk do
     eSAJ, que tenta as janelas seguintes: depois das tentativas do perfil
     ``"cjsg"``, o portal costuma seguir fora do ar, e as paginas seguintes
-    custariam as mesmas tentativas. Por isso ``falhas`` tem um item so, e a
-    mensagem diz todas as paginas que faltam. Na busca categorizada, a
-    mensagem nomeia a lista da pagina (``faltando`` ``None`` quando falhou a
-    pagina 1 dela) e as listas seguintes, nao baixadas; ``paginas=`` vale para
-    todas as listas, entao a mensagem nao sugere pedir de novo so as que faltam.
+    custariam as mesmas tentativas. A mensagem nomeia a lista da pagina
+    (``faltando`` ``None`` quando nada dela foi baixado) e as listas
+    seguintes, nao baixadas; ``paginas=`` vale para todas as listas, entao a
+    mensagem nao sugere pedir de novo so as que faltam. A busca comum usa o
+    texto padrão de :func:`~juscraper.utils.pagination.mensagem_de_coleta_parcial`.
     """
+    faltam = "a lista inteira" if faltando is None else f"as páginas {descrever_paginas(faltando)}"
     mensagem = (
-        f"TJMG cjsg: a página {pagina}{f' da lista {lista!r}' if lista else ''} falhou ({exc!r}), "
-        f"e a busca parou. As {len(results)} página(s) baixadas antes estão, já lidas, no "
-        "atributo .resultado do erro; "
+        f"TJMG cjsg: a página {pagina} da lista {lista.nome!r} falhou ({exc!r}), e a busca parou. "
+        f"As {n_baixadas} página(s) baixadas antes estão, já lidas, no atributo .resultado do erro; "
+        f"da lista {lista.nome!r}, faltam {faltam}"
     )
-    if lista is None:
-        # Sem lista, a página 1 que falha sobe a exceção original: ``faltando`` nunca é ``None`` aqui.
-        faltam = descrever_paginas(faltando or [])
-        mensagem += f"faltam as páginas {faltam}, que podem ser pedidas de novo com paginas=."
-    else:
-        faltam = "a lista inteira" if faltando is None else f"as páginas {descrever_paginas(faltando)}"
-        mensagem += f"da lista {lista!r}, faltam {faltam}"
-        mensagem += f", e as listas seguintes, {seguintes}, não foram baixadas." if seguintes else "."
-    return ColetaParcialError(mensagem, resultado=cjsg_parse(results), falhas=[(None, None, exc)])
+    return mensagem + (f", e as listas seguintes, {lista.seguintes}, não foram baixadas." if lista.seguintes else ".")
