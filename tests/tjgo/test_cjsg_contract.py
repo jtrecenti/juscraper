@@ -116,16 +116,21 @@ def test_cjsg_colunas_sao_as_do_output():
 
 
 @responses.activate
-def test_cjsg_com_resultados_sem_contagem_nao_avisa(mocker):
-    """Results on page 1 with an unreadable count are not a Turnstile block."""
+@pytest.mark.parametrize("paginas", [None, 1])
+def test_cjsg_com_resultados_sem_contagem_levanta_sem_avisar(mocker, paginas):
+    """Results without the count ``legend`` are new markup: ValueError, no Turnstile warning, no page 2.
+
+    HTML derived from the real ``results_normal_page_01.html``.
+    """
     mocker.patch("time.sleep")
-    mocker.patch("juscraper.courts.tjgo.download._extract_total", return_value=0)
+    html = load_sample_bytes("tjgo", "cjsg/results_normal_page_01.html")
+    sem_legend = html.replace(b'class="formLocalizarLegenda"', b'class="outra-classe"')
+    assert sem_legend != html
     _add_get_prime()
-    _add_post("dano moral", page=1, sample_path="cjsg/results_normal_page_01.html")
+    _add_post("dano moral", page=1, sample_path="", body=sem_legend)
 
-    df = jus.scraper("tjgo").cjsg("dano moral", paginas=1)  # filterwarnings=error
-
-    assert not df.empty
+    with pytest.raises(ValueError, match="TJGO: a página lida não traz a contagem"):  # filterwarnings=error
+        jus.scraper("tjgo").cjsg("dano moral", paginas=paginas)
 
 
 @responses.activate

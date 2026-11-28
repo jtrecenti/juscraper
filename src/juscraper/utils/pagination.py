@@ -119,10 +119,9 @@ def extract_count_with_cascade(
 ) -> int | None:
     r"""Extrai uma contagem (resultados ou paginas) usando cascata.
 
-    O caller decide o que fazer quando a cascata falha (retorno ``None``):
-    alguns tribunais convencionam ``return 1`` (assume pagina unica), outros
-    ``return 0`` (assume zero resultados). Manter essa decisao do lado do
-    caller preserva o comportamento legado de cada scraper.
+    O retorno ``None`` quer dizer markup não reconhecido. O caller deve
+    passá-lo a :func:`resolve_total_pages` ou levantar: assumir 1 página ou
+    0 resultados faz o download parar na primeira página sem aviso.
 
     A ordem é: seletores e regex; ``aviso_vazio``; ``None``. O aviso de busca
     vazia só vale quando nenhuma contagem foi achada, e só dentro dos
@@ -161,8 +160,7 @@ def extract_count_with_cascade(
 
     Returns:
         ``int`` extraido; ``0`` quando a cascata nao acha contagem e o
-            ``aviso_vazio`` aparece; ``None`` nos demais casos. O caller
-            decide o default (1 pagina, 0 resultados) ou levanta.
+            ``aviso_vazio`` aparece; ``None`` nos demais casos.
     """
     soup = html if isinstance(html, Tag) else BeautifulSoup(html, "html.parser")
     candidates = _collect_candidates(soup, html, css_selectors, fallback_html=fallback_html)
