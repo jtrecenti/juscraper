@@ -32,8 +32,8 @@ class TJPAScraper(HTTPScraper):
         "cjsg": RequestPolicy(timeout=30),
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
-        super().__init__("TJPA", politica=politica)
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJPA", sleep_time=sleep_time, politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: first instance case consultation not implemented for TJPA."""
@@ -93,6 +93,7 @@ class TJPAScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             relator=inp.relator,
             orgao_julgador_colegiado=inp.orgao_julgador_colegiado,
             classe=inp.classe,

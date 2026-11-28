@@ -10,18 +10,16 @@ resultado e devolve um ``pandas.DataFrame``.
 from __future__ import annotations
 
 import logging
-import time
 from collections.abc import Mapping
 from typing import Any, ClassVar
 
 import pandas as pd
 import requests
 from pydantic import ValidationError
-from tqdm.auto import tqdm
 
 from ...core.http import HTTPScraper, RequestPolicy
 from ...utils.cnj import clean_cnj
-from ...utils.pagination import paginas_no_intervalo
+from ...utils.pagination import baixar_paginas_pedidas
 from ...utils.params import normalize_paginas, raise_on_extra_kwargs, to_iso_date, validate_intervalo_datas
 from .download import BASE_URL, DEFAULT_HEADERS, build_listar_comunicacoes_params
 from .parse import parse_count, parse_items
@@ -167,28 +165,18 @@ class ComunicaCNJScraper(HTTPScraper):
                 data_disponibilizacao_fim=inp.data_disponibilizacao_fim,
             )
 
-        # Descobrir total de paginas a partir da pagina 1 quando o usuario
-        # nao especificou ``paginas`` (ou para fechar o ``range``).
-        primeira_resp = self._request_with_retry(
-            "GET", BASE_URL, params=_params_para_pagina(1), perfil="listagem"
+        def _buscar(pagina: int) -> requests.Response:
+            return self._request_with_retry("GET", BASE_URL, params=_params_para_pagina(pagina), perfil="listagem")
+
+        def _total_paginas(resp: requests.Response) -> int:
+            total = parse_count(resp)
+            total_paginas = max(1, (total + inp.itens_por_pagina - 1) // inp.itens_por_pagina)
+            if self.verbose:
+                logger.info("ComunicaCNJ: %d resultados em %d paginas.", total, total_paginas)
+            return total_paginas
+
+        # O total vem em toda página: a menor pedida sai primeiro e o informa.
+        respostas = baixar_paginas_pedidas(
+            inp.paginas_normalizadas, _buscar, _total_paginas, tribunal="ComunicaCNJ", sleep_time=self.sleep_time
         )
-        total = parse_count(primeira_resp)
-        total_paginas = max(1, (total + inp.itens_por_pagina - 1) // inp.itens_por_pagina)
-        if self.verbose:
-            logger.info("ComunicaCNJ: %d resultados em %d paginas.", total, total_paginas)
-
-        validas = paginas_no_intervalo(inp.paginas_normalizadas, total_paginas, tribunal="ComunicaCNJ")
-
-        rows: list[dict] = []
-        for pagina in tqdm(validas, desc="ComunicaCNJ", disable=not self.verbose):
-            if pagina == 1:
-                resp = primeira_resp
-            else:
-                if self.sleep_time:
-                    time.sleep(self.sleep_time)
-                resp = self._request_with_retry(
-                    "GET", BASE_URL, params=_params_para_pagina(pagina), perfil="listagem"
-                )
-            rows.extend(parse_items(resp))
-
-        return pd.DataFrame(rows)
+        return pd.DataFrame([item for resp in respostas for item in parse_items(resp)])

@@ -7,7 +7,7 @@ import time
 from urllib.parse import parse_qs, urlparse
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import paginas_no_intervalo
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas
 
 FORM_URL = "https://www3.tjrj.jus.br/ejuris/ConsultarJurisprudencia.aspx"
 RESULT_URL = (
@@ -274,7 +274,7 @@ def _fetch_page(request_fn: RequestFn, num_pagina_0: int, page_seq: str) -> dict
 
 def cjsg_download(
     pesquisa: str,
-    paginas,
+    paginas: Paginas | None,
     *,
     request_fn: RequestFn,
     ano_inicio: str | None,
@@ -306,16 +306,16 @@ def cjsg_download(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
+    # A sessão abre na página 1 (``numPagina`` 0), que traz o total; as demais
+    # saem pelo laço comum, que devolve esta quando ela é pedida.
     first = _fetch_page(request_fn, 0, page_seq)
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
-    results: list = []
-    for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJRJ"):
+    def buscar(pagina: int) -> dict:
         if pagina == 1:
-            results.append(first)
-            continue
+            return first
         time.sleep(sleep_time)
-        data = _fetch_page(request_fn, pagina - 1, page_seq)
-        results.append(data)
-    return results
+        return _fetch_page(request_fn, pagina - 1, page_seq)
+
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRJ")

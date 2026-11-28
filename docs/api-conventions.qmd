@@ -93,8 +93,8 @@ A page listed twice is downloaded once, in the position where it first
 appears. When the portal reports the total, pages beyond it are not requested
 and are reported in a single warning on the scraper's logger
 (`juscraper.<sigla>`, such as `juscraper.tjsp` or `juscraper.falcao`).
-Exceptions: TJAP and TJRR still request an explicit page beyond the end
-from the portal; PDPJ and DataJud walk their cursor (it only moves forward) up
+Exceptions: TJAP, which does not report the total, still requests an explicit
+page beyond the end from the portal; PDPJ and DataJud walk their cursor (it only moves forward) up
 to the largest requested page, return only the requested pages and stop
 silently at the end of the results.
 

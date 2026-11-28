@@ -4,10 +4,9 @@ import time
 import unicodedata
 
 from bs4 import BeautifulSoup, Tag
-from tqdm import tqdm
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, paginas_unicas
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, extract_count_with_cascade, maior_pagina
 
 BASE_URL = "https://jurisprudencia.tjrr.jus.br/index.xhtml"
 RESULTS_PER_PAGE = 10
@@ -394,15 +393,14 @@ def _download_page(
 ) -> str:
     """Baixa a página ``page`` (2+) de cada tabela que a tem e junta o HTML.
 
-    A tabela cujo paginador termina antes de ``page`` fica de fora. Se
-    nenhuma chega a ``page`` (``paginas`` explícito além do fim), pede a de
-    acórdãos assim mesmo, como antes da #319, e o backend decide.
+    A tabela cujo paginador termina antes de ``page`` fica de fora; a página
+    além do fim das duas não chega aqui, porque o laço a corta ao total.
     """
     if not tables:
         raise RuntimeError(
             f"No results datatable on the TJRR results page; cannot fetch page {page}."
         )
-    alvos = [dtid for dtid, n_pags in tables if page <= n_pags] or [tables[0][0]]
+    alvos = [dtid for dtid, n_pags in tables if page <= n_pags]
     partes = []
     for dtid in alvos:
         time.sleep(sleep_time)
@@ -410,31 +408,9 @@ def _download_page(
     return "".join(partes)
 
 
-def _plano_de_paginacao(
-    first_html: str, paginas
-) -> tuple[list[int], list[tuple[str, int]], dict]:
-    """Páginas a baixar, tabelas de resultados e form da paginação.
-
-    O HTML da página 1 é parseado uma vez, para a contagem e para o form, e
-    só quando há o que contar: com ``paginas`` explícito, só se houver
-    página além da 1. Sem tabela, o form fica vazio e ``_download_page``
-    levanta antes de qualquer requisição.
-    """
-    paginas_iter = [] if paginas is None else list(paginas_unicas(paginas))
-    if paginas is not None and all(p == 1 for p in paginas_iter):
-        return paginas_iter, [], {}
-    soup = BeautifulSoup(first_html, "html.parser")
-    tables = _datatables_with_pages(first_html, soup)
-    if paginas is None:
-        paginas_iter = list(range(1, max([1, *(n for _, n in tables)]) + 1))
-    paginar = any(p != 1 for p in paginas_iter)
-    form = _pagination_form(soup) if tables and paginar else {}
-    return paginas_iter, tables, form
-
-
 def cjsg_download_manager(
     pesquisa: str,
-    paginas=None,
+    paginas: Paginas | None = None,
     *,
     request_fn: RequestFn,
     sleep_time: float = 1.0,
@@ -452,7 +428,8 @@ def cjsg_download_manager(
 
     Args:
         pesquisa: Search term.
-        paginas (list, range, or None): Pages to download (1-based).
+        paginas: Pages to download (1-based). A página além do fim da
+            tabela mais longa vai para o log ``juscraper.tjrr``, sem requisição.
         request_fn: HTTP callable que faz retry + raise_for_status — em uso
             normal e ``TJRRScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``), centralizando backoff para 429/5xx.
@@ -464,18 +441,28 @@ def cjsg_download_manager(
     Raises:
         ValueError: Quando, com páginas além da 1, uma tabela de resultados
             vem sem o paginador (markup novo).
+        RuntimeError: Quando, com páginas além da 1 pedidas, a página 1 não
+            traz tabela de resultados.
     """
     form_fields = _get_form_fields(request_fn)
     first_html = _search(request_fn, form_fields, pesquisa, **kwargs)
+    if paginas is not None and maior_pagina(paginas) == 1:
+        # Só a página 1: nada a contar nem a paginar.
+        return [first_html]
 
-    paginas_iter, tables, form = _plano_de_paginacao(first_html, paginas)
+    # A busca abre na página 1, e dela saem o total e o form das demais: um
+    # parse só para os dois.
+    soup = BeautifulSoup(first_html, "html.parser")
+    tables = _datatables_with_pages(first_html, soup)
+    if not tables and paginas is not None:
+        raise RuntimeError(
+            f"No results datatable on the TJRR results page; cannot fetch page {maior_pagina(paginas)}."
+        )
+    n_pags = max([1, *(n for _, n in tables)])
+    form = _pagination_form(soup) if n_pags > 1 else {}
 
-    resultados = []
-    for pagina_1based in tqdm(paginas_iter, desc="Baixando CJSG TJRR"):
-        if pagina_1based == 1:
-            resultados.append(first_html)
-        else:
-            resultados.append(
-                _download_page(request_fn, form, pagina_1based, tables, sleep_time)
-            )
-    return resultados
+    def buscar(pagina: int) -> str:
+        return first_html if pagina == 1 else _download_page(request_fn, form, pagina, tables, sleep_time)
+
+    # A pausa vai antes de cada requisição de tabela, em ``_download_page``.
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRR")

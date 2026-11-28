@@ -237,6 +237,7 @@ def cjsg_download(
     *,
     request_fn: RequestFn,
     ler_parcial: Callable[[list[str]], pd.DataFrame],
+    sleep_time: float = 1.0,
 ) -> list:
     """
     Downloads raw results from the TJPR 'jurisprudence search' (multiple pages).
@@ -277,6 +278,7 @@ def cjsg_download(
         _fetch_page,
         functools.partial(extract_total_pages, pagina=menor_pagina(paginas)),
         tribunal="TJPR",
+        sleep_time=sleep_time,
         ler_parcial=ler_parcial,
         mensagem_parcial=_mensagem_parcial,
     )

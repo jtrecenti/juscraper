@@ -48,15 +48,17 @@ class TJRSScraper(HTTPScraper):
         ),
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None):
         """Cria o raspador.
 
         Args:
+            sleep_time: Pausa, em segundos, antes de cada página depois da
+                primeira. Default 1.
             politica: Ajustes por campo do perfil HTTP ``"cjsg"`` (ver
                 :class:`~juscraper.core.http.RequestPolicy`), por exemplo
                 ``{"cjsg": {"timeout": 60, "max_retries": 5}}``.
         """
-        super().__init__("TJRS", politica=politica)
+        super().__init__("TJRS", sleep_time=sleep_time, politica=politica)
 
     def cpopg(self, id_cnj: str | list[str]):
         """Stub: Primeiro grau case consultation not implemented for TJRS."""
@@ -118,6 +120,7 @@ class TJRSScraper(HTTPScraper):
             termo=inp.pesquisa,
             paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             classe=inp.classe,
             assunto=inp.assunto,
             orgao_julgador=inp.orgao_julgador,

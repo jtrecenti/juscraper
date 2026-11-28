@@ -1,12 +1,13 @@
 """HTTP-level helpers for the TJGO jurisprudence search."""
 from __future__ import annotations
 
+import functools
 import re
 import time
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import extract_count_with_cascade, paginas_no_intervalo, resolve_total_pages
+from juscraper.utils.pagination import Paginas, baixar_paginas_pedidas, extract_count_with_cascade, resolve_total_pages
 
 from .parse import has_results
 
@@ -111,7 +112,7 @@ def _fetch_page(
 
 def cjsg_download(
     pesquisa: str,
-    paginas,
+    paginas: Paginas | None,
     *,
     request_fn: RequestFn,
     id_instancia: str,
@@ -135,11 +136,10 @@ def cjsg_download(
     """
     # Prime the session (cookies) with a GET on the form.
     request_fn("GET", SEARCH_URL, perfil="formulario")
-
-    first = _fetch_page(
+    buscar_pagina = functools.partial(
+        _fetch_page,
         request_fn=request_fn,
         pesquisa=pesquisa,
-        page=1,
         id_instancia=id_instancia,
         id_area=id_area,
         id_serventia_subtipo=id_serventia_subtipo,
@@ -148,6 +148,9 @@ def cjsg_download(
         numero_processo=numero_processo,
         qtde_itens_pagina=qtde_itens_pagina,
     )
+    # A busca abre na página 1, que traz o total; as demais saem pelo laço
+    # comum, que devolve esta quando ela é pedida.
+    first = buscar_pagina(page=1)
     total = _extract_total(first)
     if not total and not has_results(first):
         # Com o token valido, uma busca sem resultados devolve o mesmo HTML da
@@ -158,23 +161,10 @@ def cjsg_download(
     else:
         n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
-    results: list = []
-    for pagina in paginas_no_intervalo(paginas, n_pags, tribunal="TJGO"):
+    def buscar(pagina: int) -> str:
         if pagina == 1:
-            results.append(first)
-            continue
+            return first
         time.sleep(sleep_time)
-        html = _fetch_page(
-            request_fn=request_fn,
-            pesquisa=pesquisa,
-            page=pagina,
-            id_instancia=id_instancia,
-            id_area=id_area,
-            id_serventia_subtipo=id_serventia_subtipo,
-            data_publicacao_inicio=data_publicacao_inicio,
-            data_publicacao_fim=data_publicacao_fim,
-            numero_processo=numero_processo,
-            qtde_itens_pagina=qtde_itens_pagina,
-        )
-        results.append(html)
-    return results
+        return buscar_pagina(page=pagina)
+
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJGO")

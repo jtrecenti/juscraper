@@ -100,6 +100,7 @@ def cjsg_download_manager(
     paginas=None,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """
@@ -107,6 +108,8 @@ def cjsg_download_manager(
     Returns a list of raw JSON responses.
 
     Args:
+        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
+            o client passa ``self.sleep_time``.
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.
@@ -126,5 +129,5 @@ def cjsg_download_manager(
     # isso o total corta as páginas pedidas antes da requisição.
     return baixar_paginas_pedidas(
         paginas, _get_page, lambda first: (first.get("data") or {}).get("totalPages") or 1, tribunal="TJPA",
-        sleep_time=1,
+        sleep_time=sleep_time,
     )

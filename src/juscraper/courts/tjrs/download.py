@@ -104,6 +104,7 @@ def cjsg_download_manager(
     data_publicacao_fim: str | None = None,
     tipo_processo: str | None = None,
     secao: str | None = None,
+    sleep_time: float = 1.0,
     **kwargs,
 ) -> list:
     """
@@ -111,6 +112,8 @@ def cjsg_download_manager(
     Returns a list of raw files (JSON).
 
     Args:
+        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
+            o client passa ``self.sleep_time``.
         paginas: Pages to download (1-based).
             None: downloads all available pages.
         request_fn: HTTP callable that handles retry + raise_for_status — em
@@ -156,4 +159,6 @@ def cjsg_download_manager(
 
     # Vale para toda falha da página: rede depois das tentativas, corpo que não
     # é JSON e o erro do Solr.
-    return baixar_paginas_pedidas(paginas, _fetch_page, _n_pags, tribunal="TJRS", ler_parcial=cjsg_parse_manager)
+    return baixar_paginas_pedidas(
+        paginas, _fetch_page, _n_pags, tribunal="TJRS", sleep_time=sleep_time, ler_parcial=cjsg_parse_manager
+    )

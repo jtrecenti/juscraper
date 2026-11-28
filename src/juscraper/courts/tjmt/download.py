@@ -433,10 +433,13 @@ def cjsg_download(
     request_fn: RequestFn,
     session: requests.Session,
     api_config_provider: Callable[..., dict[str, str]] | None = None,
+    sleep_time: float = 1.0,
 ) -> list:
     """Baixa resultados JSON brutos da API de jurisprudência do TJMT.
 
     Args:
+        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
+            o client passa ``self.sleep_time``.
         pesquisa: Termo de pesquisa.
         paginas: Páginas a baixar, 1-based, como ``range`` ou ``list``. ``None``
             baixa todas, até o teto de ``MAX_RESULTS`` resultados. Chega já
@@ -519,7 +522,7 @@ def cjsg_download(
         lambda pagina: _fetch_page(pagina - 1),  # a API conta as páginas a partir de 0
         lambda resposta: _n_pags(resposta[1]),
         tribunal="TJMT",
-        sleep_time=1,
+        sleep_time=sleep_time,
         teto=teto,
     )
     return [page for page, _ in pages]

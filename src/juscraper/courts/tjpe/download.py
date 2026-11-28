@@ -15,11 +15,10 @@ import re
 import time
 
 from bs4 import BeautifulSoup, Tag
-from tqdm import tqdm
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import AvisoVazio, extract_count_with_cascade, paginas_no_intervalo
+from juscraper.utils.pagination import AvisoVazio, Paginas, baixar_paginas_pedidas, extract_count_with_cascade
 
 logger = logging.getLogger(__name__)
 
@@ -340,7 +339,7 @@ def step4_paginate(
 
 def cjsg_download(
     pesquisa: str,
-    paginas=None,
+    paginas: Paginas | None = None,
     *,
     request_fn: RequestFn,
     data_julgamento_inicio: str | None = None,
@@ -350,6 +349,7 @@ def cjsg_download(
     assunto: str | None = None,
     meio_tramitacao: str | None = None,
     tipo_decisao: str = "acordaos",
+    sleep_time: float = 1.0,
 ) -> list[str]:
     """
     Download raw HTML pages from the TJPE jurisprudence search.
@@ -358,6 +358,8 @@ def cjsg_download(
         request_fn: HTTP callable que aplica retry + ``raise_for_status``.
             Em uso normal e ``TJPEScraper._request_with_retry`` (via
             ``core.http.HTTPScraper``).
+        sleep_time: Pausa, em segundos, antes de cada requisição depois da
+            primeira; o client passa ``self.sleep_time``.
 
     Returns a list of HTML strings, one per page.
     """
@@ -368,7 +370,7 @@ def cjsg_download(
 
     # Step 1 - GET search page
     search_html, vs = step1_get_session(request_fn)
-    time.sleep(1)
+    time.sleep(sleep_time)
 
     # Step 2 - POST search form
     response_html, vs = step2_post_search(
@@ -382,7 +384,7 @@ def cjsg_download(
         tipo_decisao=tipo_decisao,
         search_html=search_html,
     )
-    time.sleep(1)
+    time.sleep(sleep_time)
 
     if is_sem_resultados_page(response_html):
         avisar(
@@ -399,7 +401,6 @@ def cjsg_download(
         if tipo_decisao == "todos" and tipo_zerado_na_escolha(response_html, tipo_label):
             tipo_label = "Decisões Monocráticas"
         results_html, vs = step3_choose_tipo(request_fn, vs, response_html, tipo_label)
-        time.sleep(1)
     elif is_results_page(response_html):
         results_html = response_html
     else:
@@ -418,17 +419,12 @@ def cjsg_download(
 
     form_id, scroller_id = extract_pagination_ids(results_html)
 
-    # A repetida sai uma vez; a além do total vai para o log, sem requisição.
-    pages_iter = paginas_no_intervalo(paginas, total_pages, tribunal="TJPE")
+    def buscar(pagina: int) -> str:
+        if pagina == 1:
+            return results_html
+        time.sleep(sleep_time)
+        return step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, pagina)
 
-    results = []
-
-    for page_num in tqdm(pages_iter, desc=f"Downloading TJPE {tipo_label}"):
-        if page_num == 1:
-            results.append(results_html)
-        else:
-            html = step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, page_num)
-            results.append(html)
-            time.sleep(1)
-
-    return results
+    # A busca abre na página 1, que traz o total; as demais saem pelo laço
+    # comum, que devolve esta quando ela é pedida.
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: total_pages, tribunal="TJPE")
