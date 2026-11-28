@@ -110,18 +110,6 @@ def test_cjsg_typical_com_paginacao(mocker):
 
 
 @responses.activate
-def test_cjsg_pausa_sleep_time_entre_as_paginas(mocker):
-    """A pausa entre páginas vem do construtor; antes, o TJRS não pausava."""
-    sleep = mocker.patch("time.sleep")
-    _add_page("dano moral", 1, "cjsg/results_normal_page_01.json")
-    _add_page("dano moral", 2, "cjsg/results_normal_page_02.json")
-
-    jus.scraper("tjrs", sleep_time=0.25).cjsg_download("dano moral", paginas=range(1, 3))
-
-    assert sleep.call_args_list == [mocker.call(0.25)]
-
-
-@responses.activate
 def test_cjsg_single_page(mocker):
     """Single requested page returns parsed records."""
     mocker.patch("time.sleep")

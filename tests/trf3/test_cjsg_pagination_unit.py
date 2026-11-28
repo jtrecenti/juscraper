@@ -6,7 +6,6 @@ from the real samples and remove only the summary or the counters.
 """
 from __future__ import annotations
 
-import logging
 import re
 
 import pytest
