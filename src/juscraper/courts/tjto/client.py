@@ -186,8 +186,8 @@ class TJTOScraper(HTTPScraper):
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
-            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
@@ -283,15 +283,46 @@ class TJTOScraper(HTTPScraper):
         soementa: bool = False,
         **kwargs,
     ) -> pd.DataFrame:
-        """Busca jurisprudencia de 1o grau no TJTO (download + parse).
+        """Busca jurisprudência de 1º grau no TJTO (download e parse).
 
-        Mesmos parametros de :meth:`cjsg` — a unica diferenca interna e
-        ``instancia='1'`` em vez de ``'2'``. Veja a docstring de :meth:`cjsg`
-        para a lista completa.
+        Recebe os mesmos parâmetros de :meth:`cjsg`; a única diferença é que
+        consulta a instância 1 em vez da 2.
 
-        See also:
-            :class:`InputCJPGTJTO` — schema pydantic e a fonte da verdade dos
-            filtros aceitos.
+        Args:
+            pesquisa: Termo de busca livre.
+            paginas: Páginas 1-based; ``None`` (default) baixa todas.
+            tipo_documento: ``"acordaos"`` (default), ``"decisoes"`` ou
+                ``"sentencas"``.
+            ordenacao: ``"DESC"`` (mais recentes, default), ``"ASC"``
+                (mais antigos) ou ``"RELEV"`` (mais relevantes).
+            numero_processo: Número CNJ do processo.
+            data_julgamento_inicio: Data inicial, em ``DD/MM/YYYY``,
+                ``DD-MM-YYYY``, ``YYYY-MM-DD``, ``YYYY/MM/DD``, ``date`` ou
+                ``datetime``.
+            data_julgamento_fim: Data final, nos mesmos formatos.
+            soementa: Se ``True``, restringe a busca ao texto da ementa.
+            **kwargs: Aliases deprecados (ver abaixo).
+
+        Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+
+        Raises:
+            TypeError: Quando um kwarg desconhecido é passado.
+            ValueError: Quando um parâmetro canônico e seu alias deprecado são
+                passados juntos.
+            ValidationError: Quando um filtro tem formato inválido.
+            BotChallengeBlockedError: Quando o AWS WAF do portal desafia ou
+                pede CAPTCHA antes de qualquer página.
+            ColetaParcialError: Quando uma página falha depois de outra já
+                baixada; ``.resultado`` traz as anteriores.
+
+        Returns:
+            Uma linha por decisão, com as colunas de :meth:`cjsg`.
+
+        See Also:
+            :class:`InputCJPGTJTO`: fonte dos filtros aceitos.
         """
         brutos = self.cjpg_download(
             pesquisa=pesquisa,

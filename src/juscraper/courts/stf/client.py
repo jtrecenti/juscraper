@@ -159,9 +159,9 @@ class STFScraper(HTTPScraper):
 
         Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
             * ``query`` / ``termo`` -> ``pesquisa``
-            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_julgamento_de`` / ``_ate`` -> ``data_julgamento_inicio`` / ``_fim``
-            * ``data_publicacao_de`` / ``_ate`` -> ``data_publicacao_inicio`` / ``_fim``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
             * ``inteiro_teor`` -> ``buscar_em``: ``inteiro_teor=True`` vira
               ``buscar_em="inteiro_teor"`` e ``inteiro_teor=False``,
               ``buscar_em="ementa"``
@@ -203,18 +203,38 @@ class STFScraper(HTTPScraper):
     def contar_decisoes(self, pesquisa: str | None = None, **kwargs) -> pd.DataFrame:
         """Conta os resultados de uma busca e devolve as facetas do portal, sem baixar documentos.
 
-        Uma requisicao com ``size=0``. Aceita os mesmos filtros e aliases deprecados de
+        Uma requisição com ``size=0``. Aceita os mesmos filtros e aliases deprecados de
         :meth:`listar_decisoes`, exceto ``tamanho_pagina``, ``checkpoint_dir`` e ``resume``.
 
         Args:
             pesquisa: Termos na sintaxe do portal. ``None`` conta tudo o
                 que os filtros selecionam.
-            **kwargs: Filtros aceitos pelo schema :class:`InputContarDecisoesSTF`.
+            **kwargs: Filtros aceitos pelo schema :class:`InputContarDecisoesSTF`,
+                com a semântica descrita em :meth:`listar_decisoes`:
+
+                * ``base`` (Literal["decisoes", "acordaos"]): ``"decisoes"``
+                  (monocráticas, default) ou ``"acordaos"``.
+                * ``classe`` (str | list[str] | None): Sigla da classe
+                  processual (``"Rcl"``).
+                * ``buscar_em`` (Literal["ementa", "inteiro_teor"]): Onde
+                  procurar ``pesquisa``; ``"ementa"`` é o default.
+                * ``data_julgamento_inicio`` / ``data_julgamento_fim``
+                  (str | date | None): Intervalo de data de julgamento.
+                * ``data_publicacao_inicio`` / ``data_publicacao_fim``
+                  (str | date | None): Intervalo de data de publicação.
+
+        Aliases deprecados:
+            * ``query`` / ``termo`` -> ``pesquisa``
+            * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
+            * ``data_publicacao_de`` / ``data_publicacao_ate`` -> ``data_publicacao_inicio`` / ``data_publicacao_fim``
+            * ``inteiro_teor`` -> ``buscar_em``, como em :meth:`listar_decisoes`
 
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Quando ``inteiro_teor`` e ``buscar_em`` sao passados juntos.
+            ValueError: Quando ``inteiro_teor`` e ``buscar_em`` sao passados juntos,
+                ou quando um parâmetro canônico e seu alias deprecado são passados juntos.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 
