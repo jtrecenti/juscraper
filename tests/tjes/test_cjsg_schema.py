@@ -1,4 +1,4 @@
-"""Regras do schema ``InputCJSGTJES`` que valem so para o TJES.
+"""Regras dos schemas ``InputCJSGTJES``/``InputCJPGTJES`` que valem so para o TJES.
 
 As tabelas que cruzam tribunais ficam em ``tests/schemas/test_domain_rejection.py``.
 """

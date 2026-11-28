@@ -410,7 +410,9 @@ def _pasta(tribunal: str, endpoint: str, leitura: Leitura) -> Path:
 def _arquivos(tribunal: str, endpoint: str, leitura: Leitura) -> list[Path]:
     return sorted(
         arquivo for arquivo in _pasta(tribunal, endpoint, leitura).iterdir()
-        if not any(fnmatch.fnmatch(arquivo.name, padrao) for padrao in leitura.ignorar)
+        if arquivo.is_file()
+        and not arquivo.name.startswith(".")
+        and not any(fnmatch.fnmatch(arquivo.name, padrao) for padrao in leitura.ignorar)
     )
 
 
