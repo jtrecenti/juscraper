@@ -233,7 +233,8 @@ class STFScraper(HTTPScraper):
         Raises:
             TypeError: Quando um kwarg desconhecido e passado.
             ValidationError: Quando um filtro tem formato invalido.
-            ValueError: Quando ``inteiro_teor`` e ``buscar_em`` sao passados juntos.
+            ValueError: Quando ``inteiro_teor`` e ``buscar_em`` sao passados juntos,
+                ou quando um parâmetro canônico e seu alias deprecado são passados juntos.
             RuntimeError: Quando a busca retorna uma resposta parcial por timeout ou shards falhos.
             ImportError: Quando o WAF desafia e o Playwright nao esta instalado.
 

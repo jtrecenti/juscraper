@@ -362,7 +362,8 @@ class DatajudScraper(HTTPScraper):
                 * ``tribunal`` (str | None): Sigla do tribunal (``"TJSP"``).
                 * ``ano_ajuizamento`` (int | None): Ano de ajuizamento.
                 * ``classe`` (str | None): Código da classe processual CNJ.
-                * ``assunto`` (list[str | int] | None): Códigos de assuntos CNJ.
+                * ``assunto`` (list[str | int] | None): Códigos de assuntos
+                  CNJ. ``assuntos`` (plural) é aceito como alias deprecado.
                 * ``data_ajuizamento_inicio`` / ``data_ajuizamento_fim``
                   (str | None): Intervalo de ajuizamento em ``YYYY-MM-DD``.
                 * ``tipos_movimentacao`` (list[str] | None): Categorias de
