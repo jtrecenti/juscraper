@@ -173,33 +173,29 @@ quartodoc:
         - scraper
     - title: Scrapers de Agregadores
       desc: "Classes para coletar dados de agregadores de jurisprudência."
+      # A página de cada raspador traz também os métodos herdados da família
+      # (_esaj/, _trf/) e dos mixins (_pdpj_sso/); tests/test_docs_referencia.py.
+      options:
+        include_inherited: true
       contents:
         - aggregators.datajud.client.DatajudScraper
-        # auth_govbr vem de _pdpj_sso/mixin.py.
-        - name: aggregators.jusbr.client.JusbrScraper
-          include_inherited: true
-        - name: aggregators.pdpj.client.PdpjScraper
-          include_inherited: true
+        - aggregators.jusbr.client.JusbrScraper
+        - aggregators.pdpj.client.PdpjScraper
         - aggregators.falcao.client.FalcaoScraper
         - aggregators.comunica_cnj.client.ComunicaCNJScraper
     - title: Scrapers de Tribunais
       desc: "Classes para coletar dados de tribunais específicos."
+      options:
+        include_inherited: true
       contents:
-        # Os eSAJ-puros herdam cjsg, listar_* e baixar_acordao(s) de _esaj/.
-        - name: courts.tjac.client.TJACScraper
-          include_inherited: true
-        - name: courts.tjal.client.TJALScraper
-          include_inherited: true
-        - name: courts.tjam.client.TJAMScraper
-          include_inherited: true
+        - courts.tjac.client.TJACScraper
+        - courts.tjal.client.TJALScraper
+        - courts.tjam.client.TJAMScraper
         - courts.tjap.client.TJAPScraper
-        - name: courts.tjce.client.TJCEScraper
-          include_inherited: true
+        - courts.tjce.client.TJCEScraper
         - courts.tjba.client.TJBAScraper
         - courts.tjgo.client.TJGOScraper
-        # cjpg e baixar_sentenca(s) vêm de _esaj/cjpg.py (#487).
-        - name: courts.tjsp.client.TJSPScraper
-          include_inherited: true
+        - courts.tjsp.client.TJSPScraper
         - courts.tjdft.client.TJDFTScraper
         - courts.tjrs.client.TJRSScraper
         - courts.tjpa.client.TJPAScraper
@@ -208,8 +204,7 @@ quartodoc:
         - courts.tjmt.client.TJMTScraper
         - courts.tjes.client.TJESScraper
         - courts.tjmg.client.TJMGScraper
-        - name: courts.tjms.client.TJMSScraper
-          include_inherited: true
+        - courts.tjms.client.TJMSScraper
         - courts.tjto.client.TJTOScraper
         - courts.tjpb.client.TJPBScraper
         - courts.tjpi.client.TJPIScraper
@@ -218,12 +213,9 @@ quartodoc:
         - courts.tjro.client.TJROScraper
         - courts.tjrr.client.TJRRScraper
         - courts.tjsc.client.TJSCScraper
-        # TRF1 e TRF5 herdam cpopg de _trf/base.py.
-        - name: courts.trf1.client.TRF1Scraper
-          include_inherited: true
+        - courts.trf1.client.TRF1Scraper
         - courts.trf3.client.TRF3Scraper
-        - name: courts.trf5.client.TRF5Scraper
-          include_inherited: true
+        - courts.trf5.client.TRF5Scraper
         - courts.trf6.client.TRF6Scraper
         - courts.tse.client.TSEScraper
         - courts.stm.client.STMScraper

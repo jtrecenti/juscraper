@@ -19,6 +19,7 @@ from urllib.parse import parse_qs, parse_qsl, urlparse
 
 import pytest
 import responses
+import yaml
 from requests import PreparedRequest
 from responses import matchers
 
@@ -26,6 +27,26 @@ from juscraper import _SCRAPERS
 from juscraper.courts._esaj.acordao import parse_cursor
 
 _SAMPLES_ROOT = Path(__file__).parent
+
+
+def classes_publicadas() -> dict[type, bool]:
+    """Classes que ``docs/_quarto.yml`` manda o quartodoc documentar -> se a página traz os herdados.
+
+    ``include_inherited`` vale como no quartodoc: o da entrada, senão o das
+    ``options`` da seção, senão o das ``options`` globais.
+    """
+    config = yaml.safe_load((_SAMPLES_ROOT.parent / "docs" / "_quarto.yml").read_text(encoding="utf-8"))["quartodoc"]
+    padrao = config.get("options", {}).get("include_inherited", False)
+    classes = {}
+    for secao in config["sections"]:
+        da_secao = secao.get("options", {}).get("include_inherited", padrao)
+        for alvo in secao["contents"]:
+            entrada = alvo if isinstance(alvo, dict) else {"name": alvo}
+            modulo, _, nome = f"juscraper.{entrada['name']}".rpartition(".")
+            objeto = getattr(import_module(modulo), nome)
+            if isinstance(objeto, type):
+                classes[objeto] = bool(entrada.get("include_inherited", da_secao))
+    return classes
 
 
 def classe_da_sigla(sigla: str) -> type:
