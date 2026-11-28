@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import math
 import re
-import time
 from urllib.parse import parse_qs, urlparse
 
 from juscraper.core.http import RequestFn
@@ -312,8 +311,11 @@ def cjsg_download(
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
-    def buscar(pagina: int) -> dict:
-        time.sleep(sleep_time)
-        return _fetch_page(request_fn, pagina - 1, page_seq)
-
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRJ", pagina_1=first)
+    return baixar_paginas_pedidas(
+        paginas,
+        lambda pagina: _fetch_page(request_fn, pagina - 1, page_seq),
+        lambda _primeira: n_pags,
+        tribunal="TJRJ",
+        sleep_time=sleep_time,
+        pagina_1=first,
+    )

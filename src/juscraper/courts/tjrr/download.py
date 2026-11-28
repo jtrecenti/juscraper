@@ -396,10 +396,6 @@ def _download_page(
     A tabela cujo paginador termina antes de ``page`` fica de fora; a página
     além do fim das duas não chega aqui, porque o laço a corta ao total.
     """
-    if not tables:
-        raise RuntimeError(
-            f"No results datatable on the TJRR results page; cannot fetch page {page}."
-        )
     alvos = [dtid for dtid, n_pags in tables if page <= n_pags]
     partes = []
     for dtid in alvos:

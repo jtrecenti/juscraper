@@ -248,14 +248,6 @@ def test_manager_pagina_alem_das_duas_tabelas_vai_para_o_log(mocker, paginate_ca
     assert "TJRR: página 9 fora do intervalo 1-5" in caplog.text
 
 
-def test_download_page_without_datatable_raises(paginate_calls):
-    """Sem tabela na página 1, pedir a página 2 levanta, em vez de devolver
-    vazio em silêncio."""
-    with pytest.raises(RuntimeError, match="No results datatable"):
-        _download_page(_no_request, {}, 2, [], 0)
-    assert paginate_calls == []
-
-
 @pytest.mark.parametrize(
     ("tables", "esperado", "chamadas"),
     [

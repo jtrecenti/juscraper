@@ -9,6 +9,7 @@ The TJPE website is a stateful JSF/RichFaces application.  The search flow is:
 4. AJAX POST resultado.xhtml    -> paginate to page N
 """
 
+import functools
 import logging
 import math
 import re
@@ -419,12 +420,13 @@ def cjsg_download(
 
     form_id, scroller_id = extract_pagination_ids(results_html)
 
-    def buscar(pagina: int) -> str:
-        time.sleep(sleep_time)
-        return step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, pagina)
-
     # A busca abre na página 1, que traz o total; ela vai ao laço comum em
     # ``pagina_1``, e as demais saem de ``buscar``.
     return baixar_paginas_pedidas(
-        paginas, buscar, lambda _primeira: total_pages, tribunal="TJPE", pagina_1=results_html
+        paginas,
+        functools.partial(step4_paginate, request_fn, vs, form_id, scroller_id, pesquisa),
+        lambda _primeira: total_pages,
+        tribunal="TJPE",
+        sleep_time=sleep_time,
+        pagina_1=results_html,
     )

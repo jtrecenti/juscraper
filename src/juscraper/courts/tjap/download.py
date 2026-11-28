@@ -108,8 +108,8 @@ def cjsg_download_manager(
     Returns a list of raw JSON responses (one per page).
 
     Args:
-        sleep_time: Pausa, em segundos, antes de cada página depois da primeira;
-            o client passa ``self.sleep_time``.
+        sleep_time: Pausa, em segundos, depois de cada requisição; o client
+            passa ``self.sleep_time``.
         pesquisa: Search term.
         paginas (list, range, or None): Pages to download (1-based).
             None: downloads all available pages.

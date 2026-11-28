@@ -24,7 +24,6 @@ from __future__ import annotations
 import logging
 import math
 import re
-import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -553,7 +552,6 @@ def cjsg_download_manager(
     )
 
     def buscar(pagina: int) -> str:
-        time.sleep(sleep_time)
         page = request_fn("GET", PAGE_URL, params={"np": pagina}, **comum)
         page.encoding = "utf-8"
         _check_sessao(page)
@@ -566,5 +564,10 @@ def cjsg_download_manager(
     # A página 1 é a resposta do POST, que abre a busca; ela vai ao laço comum
     # em ``pagina_1`` e só entra no retorno se foi pedida.
     return baixar_paginas_pedidas(
-        inp.paginas_normalizadas, buscar, lambda _primeira: n_paginas, tribunal="TRF3", pagina_1=primeira
+        inp.paginas_normalizadas,
+        buscar,
+        lambda _primeira: n_paginas,
+        tribunal="TRF3",
+        sleep_time=sleep_time,
+        pagina_1=primeira,
     )

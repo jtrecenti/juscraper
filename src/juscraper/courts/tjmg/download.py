@@ -341,16 +341,13 @@ def _baixar_lista(
             results.append(primeira)
         return
 
-    def buscar_pagina(pagina: int) -> str:
-        time.sleep(sleep_time)
-        return buscar(pagina, total)
-
     try:
         results.extend(baixar_paginas_pedidas(
             paginas,
-            buscar_pagina,
+            lambda pagina: buscar(pagina, total),
             lambda _resposta: math.ceil(total / linhas_por_pagina),
             tribunal="TJMG",
+            sleep_time=sleep_time,
             pagina_1=primeira,
             ler_parcial=lambda baixadas: cjsg_parse([*results, *baixadas]),
             # Na busca comum, o texto padrão; na categorizada, o que nomeia as listas.

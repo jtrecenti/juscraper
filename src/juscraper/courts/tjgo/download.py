@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import functools
 import re
-import time
 
 from juscraper.core.avisos import avisar
 from juscraper.core.http import RequestFn
@@ -161,8 +160,11 @@ def cjsg_download(
     else:
         n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
-    def buscar(pagina: int) -> str:
-        time.sleep(sleep_time)
-        return buscar_pagina(page=pagina)
-
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJGO", pagina_1=first)
+    return baixar_paginas_pedidas(
+        paginas,
+        lambda pagina: buscar_pagina(page=pagina),
+        lambda _primeira: n_pags,
+        tribunal="TJGO",
+        sleep_time=sleep_time,
+        pagina_1=first,
+    )
