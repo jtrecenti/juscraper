@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from juscraper.core.exceptions import PaginaInesperadaError
+from juscraper.core.exceptions import ColetaParcialError, PaginaInesperadaError
 from juscraper.utils.pagination import (
     ConferenciaDePaginas,
     PaginaEsperada,
@@ -265,6 +265,31 @@ def test_baixar_paginas_pedidas_primeira_alem_do_total_nao_e_conferida():
     buscar, contar, n_itens, _, pedidas = _portal({}, 2)
     assert baixar_paginas_pedidas(selecao_de_paginas([5]), buscar, contar, tribunal="TJXX", n_itens=n_itens) == []
     assert pedidas == [5]
+
+
+def test_baixar_paginas_pedidas_pagina_reprovada_vira_coleta_parcial():
+    """Com ``ler_parcial``, a página reprovada é uma falha como a HTTP: as anteriores ficam no erro."""
+    buscar, contar, n_itens, _, pedidas = _portal({1: ["a"], 2: ["b"], 3: None, 4: ["d"]}, 4)
+
+    with pytest.raises(ColetaParcialError, match=r"faltam as páginas \[3, 4\]") as erro:
+        baixar_paginas_pedidas(
+            None, buscar, contar, tribunal="TJXX", n_itens=n_itens, ler_parcial=lambda baixadas: baixadas
+        )
+
+    assert [pagina["pagina"] for pagina in erro.value.resultado] == [1, 2]
+    assert isinstance(erro.value.__cause__, PaginaInesperadaError)
+    assert pedidas == [1, 2, 3]
+
+
+def test_baixar_paginas_pedidas_primeira_reprovada_levanta_sem_coleta_parcial():
+    buscar, contar, n_itens, _, pedidas = _portal({1: None, 2: ["b"]}, 2)
+
+    with pytest.raises(PaginaInesperadaError, match="página 1"):
+        baixar_paginas_pedidas(
+            None, buscar, contar, tribunal="TJXX", n_itens=n_itens, ler_parcial=lambda baixadas: baixadas
+        )
+
+    assert pedidas == [1]
 
 
 def test_baixar_paginas_pedidas_chaves_sem_n_itens_e_erro_de_uso():

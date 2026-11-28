@@ -1,320 +1,86 @@
-"""Meta-teste: todo metodo publico nao-stub tem schema pydantic Input correspondente.
+"""Meta-teste: os mapas de :mod:`tests.schemas._registro` cobrem os endpoints publicos.
 
-Varre ``juscraper.courts`` e ``juscraper.aggregators`` via reflexao e, para
-cada metodo publico implementado (nao ``NotImplementedError``), confirma
-que existe uma classe ``Input<Endpoint><Tribunal>`` mapeada em
-``EXPECTED_SCHEMAS``.
+Os candidatos saem das proprias classes: todo metodo publico implementado de um
+raspador (:func:`~tests.schemas._registro.endpoints_publicos`) precisa de uma
+classe ``Input*`` mapeada em ``EXPECTED_COURT_SCHEMAS`` ou
+``EXPECTED_AGGREGATOR_SCHEMAS``, salvo os de ``FORA_DO_REGISTRO``, com o motivo,
+e os ``<endpoint>_download``/``_parse``. Na direcao oposta, reprova entrada do
+mapa cujo endpoint virou stub ou cujo raspador sumiu.
 
-A manutencao da lista e explicita de proposito: quando alguem adiciona um
-tribunal novo ou implementa um endpoint que antes era stub, o teste falha
-ate o mapping ser atualizado. Isso impede que schemas fiquem "orfaos"
-silenciosamente.
-
-Stubs (``raise NotImplementedError``) sao detectados automaticamente por
-inspecao do source; nao precisam entrar em nenhuma lista.
+Metodo publico novo, tribunal novo ou endpoint que deixou de ser stub reprova o
+teste ate o mapa ser atualizado. Stubs (``raise NotImplementedError``) sao
+detectados pelo source e nao entram em lista nenhuma.
 """
 from __future__ import annotations
 
-import importlib
-import inspect
-import pkgutil
-from collections.abc import Callable, Iterator
-from typing import NamedTuple
+from functools import cache
 
-from pydantic import BaseModel
-
-PUBLIC_SEARCH_ENDPOINTS = ("cjsg", "cjpg")
-PUBLIC_CONSULTA_ENDPOINTS = ("cpopg", "cposg")
-# Endpoints especificos de um ou poucos tribunais (fora do quarteto canonico).
-CUSTOM_ENDPOINTS = ("cjsg_ementa", "listar_decisoes", "contar_decisoes")
-# Nota: os metodos ``listar_classes``/``listar_assuntos``/``listar_orgaos``/
-# ``listar_varas`` da familia eSAJ (refs #228) ficam DE FORA deste regime de
-# schema de proposito — nao recebem input de usuario (so ``grau``, um literal),
-# entao um ``Input*`` com ``extra="forbid"`` seria cerimonia sem valor de
-# validacao. Por nao aparecerem em ALL_PUBLIC_ENDPOINTS, sao invisiveis aos
-# testes de paridade aqui. Se um dia ganharem filtros livres, ai sim entram.
-ALL_PUBLIC_ENDPOINTS = (
-    PUBLIC_SEARCH_ENDPOINTS + PUBLIC_CONSULTA_ENDPOINTS + CUSTOM_ENDPOINTS
+from tests.schemas._registro import (
+    FORA_DO_REGISTRO,
+    INPUT_SCHEMAS,
+    OUTPUT_SCHEMAS,
+    endpoints_publicos,
+    metodos_publicos,
+    raspadores,
+    resolve,
+    schemas_definidos,
 )
 
-# (tribunal_code_lowercase, endpoint_name) -> (module_path, class_name)
-#
-# eSAJ-puros (TJAC/TJAL/TJAM/TJCE/TJMS) compartilham ``InputCJSGEsajPuro`` em
-# ``juscraper.courts._esaj.schemas`` porque a assinatura publica e identica.
-# TJSP tem schema proprio porque a API diverge (``baixar_sg`` vs ``origem``).
-EXPECTED_COURT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
-    # Familia eSAJ-puros (wired, ja existe)
-    ("tjac", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
-    ("tjal", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
-    ("tjam", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
-    ("tjce", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
-    ("tjms", "cjsg"): ("juscraper.courts._esaj.schemas", "InputCJSGEsajPuro"),
-    # TJSP (wired, ja existe)
-    ("tjsp", "cjsg"): ("juscraper.courts.tjsp.schemas", "InputCJSGTJSP"),
-    ("tjsp", "cjpg"): ("juscraper.courts._esaj.schemas", "InputCJPGEsaj"),
-    ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "InputCPOPGTJSP"),
-    ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "InputCPOSGTJSP"),
-    # TJMS herda o cjpg do TJSP (``_esaj/cjpg.py``), com o mesmo schema (#487).
-    ("tjms", "cjpg"): ("juscraper.courts._esaj.schemas", "InputCJPGEsaj"),
-    # Tribunais nao wired (schema-arquivo, documentacao executavel)
-    ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "InputCJSGTJAP"),
-    ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "InputCJSGTJBA"),
-    ("tjdft", "cjsg"): ("juscraper.courts.tjdft.schemas", "InputCJSGTJDFT"),
-    ("tjes", "cjsg"): ("juscraper.courts.tjes.schemas", "InputCJSGTJES"),
-    ("tjes", "cjpg"): ("juscraper.courts.tjes.schemas", "InputCJPGTJES"),
-    ("tjgo", "cjsg"): ("juscraper.courts.tjgo.schemas", "InputCJSGTJGO"),
-    ("tjmg", "cjsg"): ("juscraper.courts.tjmg.schemas", "InputCJSGTJMG"),
-    ("tjmg", "cposg"): ("juscraper.courts.tjmg.schemas", "InputCPOSGTJMG"),
-    ("tjmt", "cjsg"): ("juscraper.courts.tjmt.schemas", "InputCJSGTJMT"),
-    ("tjpa", "cjsg"): ("juscraper.courts.tjpa.schemas", "InputCJSGTJPA"),
-    ("tjpb", "cjsg"): ("juscraper.courts.tjpb.schemas", "InputCJSGTJPB"),
-    ("tjpe", "cjsg"): ("juscraper.courts.tjpe.schemas", "InputCJSGTJPE"),
-    ("tjpi", "cjsg"): ("juscraper.courts.tjpi.schemas", "InputCJSGTJPI"),
-    ("stm", "cjsg"): ("juscraper.courts.stm.schemas", "InputCJSGSTM"),
-    ("tjpr", "cjsg"): ("juscraper.courts.tjpr.schemas", "InputCJSGTJPR"),
-    ("tjrj", "cjsg"): ("juscraper.courts.tjrj.schemas", "InputCJSGTJRJ"),
-    ("tjrn", "cjsg"): ("juscraper.courts.tjrn.schemas", "InputCJSGTJRN"),
-    ("tjro", "cjsg"): ("juscraper.courts.tjro.schemas", "InputCJSGTJRO"),
-    ("tjrr", "cjsg"): ("juscraper.courts.tjrr.schemas", "InputCJSGTJRR"),
-    ("tjrs", "cjsg"): ("juscraper.courts.tjrs.schemas", "InputCJSGTJRS"),
-    ("tjsc", "cjsg"): ("juscraper.courts.tjsc.schemas", "InputCJSGTJSC"),
-    ("tjto", "cjsg"): ("juscraper.courts.tjto.schemas", "InputCJSGTJTO"),
-    ("tjto", "cjpg"): ("juscraper.courts.tjto.schemas", "InputCJPGTJTO"),
-    ("tjto", "cjsg_ementa"): (
-        "juscraper.courts.tjto.schemas",
-        "InputCjsgEmentaTJTO",
-    ),
-    # PJe consulta pública JSF (TRF1, TRF5): schema compartilhado da
-    # família ``_trf`` (assinatura pública idêntica nos dois).
-    ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
-    ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
-    # TRF3: consulta pública do PJe pela API JSON, fora da família ``_trf``.
-    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "InputCpopgTRF3"),
-    ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "InputCposgTRF3"),
-    # Busca de jurisprudência do TRF3 (portal próprio, fora do PJe).
-    ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "InputCJSGTRF3"),
-    # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
-    ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "InputCpopgTRF"),
-    # eproc consulta pública (TRF6) — captcha-gated.
-    ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "InputCpopgTRF6"),
-    # Busca de jurisprudencia do STF (acordaos e monocraticas).
-    ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "InputListarDecisoesSTF"),
-    ("stf", "contar_decisoes"): ("juscraper.courts.stf.schemas", "InputContarDecisoesSTF"),
-}
 
-# Agregadores sao mapeados separadamente porque os endpoints fogem do
-# padrao cjsg/cjpg/cpopg/cposg.
-# Endpoints dos agregadores que precisam de schema mapeado abaixo.
-AGGREGATOR_ENDPOINTS = (
-    "auth",
-    "auth_firefox",
-    "cjsg",
-    "auth_govbr",
-    "contar",
-    "contar_processos",
-    "cpopg",
-    "download_documents",
-    "listar_comunicacoes",
-    "listar_decisoes",
-    "listar_processos",
-    "pesquisa",
-)
-
-EXPECTED_AGGREGATOR_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
-    ("datajud", "listar_processos"): (
-        "juscraper.aggregators.datajud.schemas",
-        "InputListarProcessosDataJud",
-    ),
-    ("datajud", "contar_processos"): (
-        "juscraper.aggregators.datajud.schemas",
-        "InputContarProcessosDataJud",
-    ),
-    ("jusbr", "auth"): ("juscraper.aggregators.jusbr.schemas", "InputAuthJusBR"),
-    ("jusbr", "auth_firefox"): (
-        "juscraper.aggregators.jusbr.schemas",
-        "InputAuthFirefoxJusBR",
-    ),
-    ("jusbr", "auth_govbr"): ("juscraper.aggregators.jusbr.schemas", "InputAuthGovbrJusBR"),
-    ("jusbr", "cpopg"): ("juscraper.aggregators.jusbr.schemas", "InputCPOPGJusBR"),
-    ("jusbr", "download_documents"): (
-        "juscraper.aggregators.jusbr.schemas",
-        "InputDownloadDocumentsJusBR",
-    ),
-    ("comunica_cnj", "listar_comunicacoes"): (
-        "juscraper.aggregators.comunica_cnj.schemas",
-        "InputListarComunicacoesComunicaCNJ",
-    ),
-    ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "InputListarDecisoesFalcao"),
-    ("pdpj", "auth"): ("juscraper.aggregators.pdpj.schemas", "InputAuthPdpj"),
-    ("pdpj", "auth_govbr"): ("juscraper.aggregators.pdpj.schemas", "InputAuthGovbrPdpj"),
-    ("pdpj", "cpopg"): ("juscraper.aggregators.pdpj.schemas", "InputCnjPdpj"),
-    ("pdpj", "pesquisa"): ("juscraper.aggregators.pdpj.schemas", "InputPesquisaPdpj"),
-    ("pdpj", "contar"): ("juscraper.aggregators.pdpj.schemas", "InputContarPdpj"),
-    ("pdpj", "download_documents"): (
-        "juscraper.aggregators.pdpj.schemas",
-        "InputDownloadDocumentsPdpj",
-    ),
-}
+@cache
+def _implementados() -> set[tuple[str, str]]:
+    return {(sigla, endpoint) for sigla, cls in raspadores().items() for endpoint in endpoints_publicos(cls)}
 
 
-def _iter_court_scrapers() -> Iterator[tuple[str, type]]:
-    import juscraper.courts as pkg
-
-    for modinfo in pkgutil.iter_modules(pkg.__path__):
-        if modinfo.name.startswith("_"):
-            continue
-        try:
-            mod = importlib.import_module(f"juscraper.courts.{modinfo.name}.client")
-        except ImportError:
-            continue
-        for name, obj in vars(mod).items():
-            if (
-                inspect.isclass(obj)
-                and name.endswith("Scraper")
-                and name != "BaseScraper"
-                and obj.__module__ == mod.__name__
-            ):
-                yield modinfo.name, obj
-                break
+def test_endpoint_publico_tem_schema():
+    faltam = sorted(_implementados() - INPUT_SCHEMAS.keys())
+    assert not faltam, (
+        "Metodos publicos sem entrada em EXPECTED_*_SCHEMAS (mapear o Input, ou registrar "
+        "em FORA_DO_REGISTRO com o motivo):\n" + "\n".join(f"{s}.{e}" for s, e in faltam)
+    )
 
 
-def _iter_aggregator_scrapers() -> Iterator[tuple[str, type]]:
-    import juscraper.aggregators as pkg
-
-    for modinfo in pkgutil.iter_modules(pkg.__path__):
-        if modinfo.name.startswith("_"):
-            continue
-        try:
-            mod = importlib.import_module(f"juscraper.aggregators.{modinfo.name}.client")
-        except ImportError:
-            continue
-        for name, obj in vars(mod).items():
-            if (
-                inspect.isclass(obj)
-                and name.endswith("Scraper")
-                and obj.__module__ == mod.__name__
-            ):
-                yield modinfo.name, obj
-                break
+def test_mapa_sem_entradas_orfas():
+    """Impede que entradas sobrevivam depois que um endpoint vira stub ou o raspador some."""
+    orfas = sorted(INPUT_SCHEMAS.keys() - _implementados())
+    assert not orfas, "Entradas orfas em EXPECTED_*_SCHEMAS (remover):\n" + "\n".join(f"{s}.{e}" for s, e in orfas)
 
 
-def _is_stub(method) -> bool:
-    try:
-        source = inspect.getsource(method)
-    except (OSError, TypeError):
-        return False
-    return "raise NotImplementedError" in source
+def test_fora_do_registro_ainda_existe():
+    existentes = {chave for cls in raspadores().values() for chave in metodos_publicos(cls).values()}
+    sobram = sorted(FORA_DO_REGISTRO.keys() - existentes)
+    assert not sobram, f"Entradas de FORA_DO_REGISTRO sem metodo publico (remover): {sobram}"
 
 
-def _implemented_public_endpoints(cls: type, candidates) -> list[str]:
-    found = []
-    for endpoint in candidates:
-        method = getattr(cls, endpoint, None)
-        if method is None or not callable(method):
-            continue
-        if _is_stub(method):
-            continue
-        found.append(endpoint)
-    return found
+def test_atributo_input_bate_com_o_mapa():
+    """``INPUT_<ENDPOINT>`` do raspador e o schema mapeado para ``(sigla, endpoint)``.
 
-
-def _resolve(module_path: str, class_name: str) -> type[BaseModel] | None:
-    try:
-        mod = importlib.import_module(module_path)
-    except ImportError:
-        return None
-    obj = getattr(mod, class_name, None)
-    if obj is None or not inspect.isclass(obj) or not issubclass(obj, BaseModel):
-        return None
-    return obj
-
-
-class SchemaMapeado(NamedTuple):
-    """Entrada de um mapa ``EXPECTED_*_SCHEMAS`` com a classe do raspador."""
-
-    sigla: str
-    endpoint: str
-    raspador: type
-    modulo: str
-    classe: str
-
-
-def _schemas_mapeados(
-    mapa: dict[tuple[str, str], tuple[str, str]],
-    iterar: Callable[[], Iterator[tuple[str, type]]],
-) -> list[SchemaMapeado]:
-    """Casa cada entrada de ``mapa`` com a classe do raspador que ``iterar`` acha.
-
-    Entrada sem raspador e erro do mapa, e reprova a coleta em vez de sumir dos
-    testes que dependem dela.
+    O atributo e o que o metodo valida; se diverge do mapa, os testes daqui
+    conferem um schema e o metodo usa outro.
     """
-    raspadores = dict(iterar())
-    sem_raspador = sorted({sigla for sigla, _ in mapa} - raspadores.keys())
-    assert not sem_raspador, f"Entradas do mapa sem raspador: {sem_raspador}"
-    return [
-        SchemaMapeado(sigla, endpoint, raspadores[sigla], modulo, classe)
-        for (sigla, endpoint), (modulo, classe) in mapa.items()
-    ]
-
-
-def test_every_court_endpoint_has_schema():
-    missing: list[str] = []
-    for tribunal, scraper_cls in _iter_court_scrapers():
-        for endpoint in _implemented_public_endpoints(scraper_cls, ALL_PUBLIC_ENDPOINTS):
-            key = (tribunal, endpoint)
-            if key not in EXPECTED_COURT_SCHEMAS:
-                missing.append(
-                    f"{tribunal}.{endpoint}: nao mapeado em EXPECTED_COURT_SCHEMAS"
-                )
+    divergentes = []
+    for sigla, cls in raspadores().items():
+        for nome in dir(cls):
+            if not nome.startswith("INPUT_"):
                 continue
-            module_path, class_name = EXPECTED_COURT_SCHEMAS[key]
-            resolved = _resolve(module_path, class_name)
-            if resolved is None:
-                missing.append(
-                    f"{tribunal}.{endpoint}: {module_path}:{class_name} nao encontrado ou nao e BaseModel"
-                )
-    assert not missing, "Schemas faltando:\n" + "\n".join(missing)
+            entrada = INPUT_SCHEMAS.get((sigla, nome.removeprefix("INPUT_").lower()))
+            atributo = getattr(cls, nome)
+            if entrada is None or atributo is not resolve(*entrada):
+                divergentes.append(f"{sigla}.{nome} = {atributo!r}, mapa: {entrada}")
+    assert not divergentes, "Atributos INPUT_* fora do mapa:\n" + "\n".join(divergentes)
 
 
-def test_every_aggregator_endpoint_has_schema():
-    missing: list[str] = []
-    for name, scraper_cls in _iter_aggregator_scrapers():
-        for endpoint in _implemented_public_endpoints(scraper_cls, AGGREGATOR_ENDPOINTS):
-            key = (name, endpoint)
-            if key not in EXPECTED_AGGREGATOR_SCHEMAS:
-                missing.append(
-                    f"{name}.{endpoint}: nao mapeado em EXPECTED_AGGREGATOR_SCHEMAS"
-                )
-                continue
-            module_path, class_name = EXPECTED_AGGREGATOR_SCHEMAS[key]
-            resolved = _resolve(module_path, class_name)
-            if resolved is None:
-                missing.append(
-                    f"{name}.{endpoint}: {module_path}:{class_name} nao encontrado ou nao e BaseModel"
-                )
-    assert not missing, "Schemas faltando:\n" + "\n".join(missing)
+def test_schema_publico_esta_mapeado():
+    """Todo ``Input*``/``Output*`` publico dos modulos de schemas esta mapeado ou e base de um mapeado.
 
-
-def test_no_stale_entries_in_expected_mapping():
-    """Impede que entradas sobrevivam depois que um endpoint vira stub ou o scraper some."""
-    live_court = {
-        (tribunal, endpoint)
-        for tribunal, scraper_cls in _iter_court_scrapers()
-        for endpoint in _implemented_public_endpoints(scraper_cls, ALL_PUBLIC_ENDPOINTS)
-    }
-    stale_court = set(EXPECTED_COURT_SCHEMAS) - live_court
-    assert not stale_court, (
-        "Entradas orfas em EXPECTED_COURT_SCHEMAS (remover):\n"
-        + "\n".join(f"{t}.{e}" for t, e in sorted(stale_court))
+    Schema que ninguem mapeia nao passa por nenhum teste daqui (contrato, paridade,
+    tipos canonicos) e tende a divergir do metodo em silencio.
+    """
+    mapeados = [resolve(*entrada) for mapa in (INPUT_SCHEMAS, OUTPUT_SCHEMAS) for entrada in mapa.values()]
+    soltos = sorted(
+        f"{schema.__module__}.{schema.__name__}"
+        for schema in schemas_definidos()
+        if schema.__name__.startswith(("Input", "Output"))
+        and not any(issubclass(mapeado, schema) for mapeado in mapeados)
     )
-
-    live_agg = {
-        (name, endpoint)
-        for name, scraper_cls in _iter_aggregator_scrapers()
-        for endpoint in _implemented_public_endpoints(scraper_cls, AGGREGATOR_ENDPOINTS)
-    }
-    stale_agg = set(EXPECTED_AGGREGATOR_SCHEMAS) - live_agg
-    assert not stale_agg, (
-        "Entradas orfas em EXPECTED_AGGREGATOR_SCHEMAS (remover):\n"
-        + "\n".join(f"{n}.{e}" for n, e in sorted(stale_agg))
-    )
+    assert not soltos, "Schemas publicos sem entrada em EXPECTED_* (mapear ou remover):\n" + "\n".join(soltos)

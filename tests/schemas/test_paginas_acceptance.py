@@ -1,50 +1,32 @@
 """Teste de aceitacao do parametro ``paginas`` em todos os raspadores.
 
-O contrato de :class:`juscraper.schemas.SearchBase` promete que todo
-endpoint de busca aceita ``int``, ``list[int]``, ``range`` ou ``None``
-em ``paginas``. Este teste valida as **duas pecas** que decidem essa
-aceitacao em qualquer scraper wired ou a wirar:
+:class:`juscraper.schemas.PaginasMixin` e a fonte unica do contrato: ``int``,
+``list[int]``, ``range`` ou ``None``. Os casos saem dos schemas mapeados que
+herdam o mixin, e o teste confere:
 
-1. :func:`juscraper.utils.params.normalize_paginas` — converte a entrada
-   em um iteravel canonico; rejeita com ``TypeError`` tipos fora do
-   contrato.
-2. O Input schema pydantic declarado para cada endpoint — valida
-   ``paginas`` com a anotacao herdada de :class:`SearchBase`.
+1. :func:`juscraper.utils.params.normalize_paginas` aceita as quatro formas e
+   rejeita com ``TypeError`` o que estiver fora do contrato.
+2. Cada schema paginado aceita as quatro formas.
+3. O metodo publico expoe ``paginas`` se e somente se o schema herda o mixin, e
+   todo endpoint de busca (``cjsg``, ``cjpg``, ``pesquisa``, ``listar_*``) o herda.
+   A anotacao do parametro fica com :mod:`tests.schemas.test_signature_types`.
 
-Do metodo publico, este teste so exige que exponha ``paginas``; a anotacao
-dele e conferida contra o schema por :mod:`tests.schemas.test_signature_types`.
-
-Testar as duas pecas separadamente e mais direto e robusto do que
-chamar cada metodo publico end-to-end (alguns scrapers abrem diretorios
-temporarios, fazem setup de captcha, iniciam sessao HTTP etc. — ruido
-que nao e deste teste). Se uma peca aceitou e a outra tambem, o metodo
-publico aceita por composicao.
+Testar as pecas separadamente evita chamar cada metodo de ponta a ponta (captcha,
+sessao HTTP, diretorios temporarios). Se o schema aceita e o metodo expoe o
+parametro, o metodo aceita por composicao.
 """
 from __future__ import annotations
 
-import importlib
-import inspect
-import pkgutil
 from typing import Any, get_args, get_origin
 
 import numpy as np
 import pytest
 from pydantic import BaseModel, ValidationError
 
-import juscraper
 from juscraper.schemas import PaginasMixin
 from juscraper.utils.pagination import selecao_de_paginas
 from juscraper.utils.params import normalize_paginas
-from tests.schemas.test_schema_coverage import (
-    EXPECTED_AGGREGATOR_SCHEMAS,
-    EXPECTED_COURT_SCHEMAS,
-    _iter_aggregator_scrapers,
-    _iter_court_scrapers,
-    _resolve,
-    _schemas_mapeados,
-)
-
-SEARCH_ENDPOINTS = frozenset({"cjsg", "cjpg", "listar_processos", "listar_decisoes"})
+from tests.schemas._registro import parametros_explicitos, payload_minimo, schemas_definidos, schemas_mapeados
 
 PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("int", 1),
@@ -53,24 +35,26 @@ PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("none", None),
 ]
 
-def _minimal_kwargs_for_schema(schema_cls: type[BaseModel]) -> dict[str, Any]:
-    """Preenche campos ``required`` do schema com valores neutros."""
-    kwargs: dict[str, Any] = {}
-    for name, field in schema_cls.model_fields.items():
-        if not field.is_required():
-            continue
-        # Tipos comuns em fields required: str, str | list[str].
-        # ``pesquisa``: str; ``id_cnj``: str | list[str]; ``token``: str; ``base_df``: Any.
-        kwargs[name] = "teste"
-    return kwargs
+TODOS = schemas_mapeados()
+#: Endpoints paginados: os de schema com :class:`PaginasMixin`.
+SEARCH_CASES = [par for par in TODOS if issubclass(par.schema, PaginasMixin)]
 
 
-SEARCH_CASES = [
-    par
-    for par in _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
-    + _schemas_mapeados(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
-    if par.endpoint in SEARCH_ENDPOINTS
-]
+def _e_busca(endpoint: str) -> bool:
+    return endpoint in {"cjsg", "cjpg", "pesquisa"} or endpoint.startswith("listar_")
+
+
+def test_endpoint_de_busca_e_paginado():
+    """Busca (``cjsg``, ``cjpg``, ``pesquisa``, ``listar_*``) tem schema com :class:`PaginasMixin`.
+
+    Sem isso, um schema de busca que perdesse o mixin, junto com o ``paginas`` do
+    metodo, sairia de ``SEARCH_CASES`` sem nenhum teste reprovar.
+    """
+    soltos = sorted(
+        par.id for par in TODOS if _e_busca(par.endpoint) and not issubclass(par.schema, PaginasMixin)
+    )
+    assert not soltos, f"Endpoints de busca sem PaginasMixin: {soltos}"
+
 
 SCHEMA_CASES = [
     pytest.param(par, variant_name, paginas_value, id=f"{par.sigla}.{par.endpoint}.schema.{variant_name}")
@@ -134,21 +118,11 @@ def test_paginas_mixin_rejects_invalid_selections(paginas):
 
 
 def _schemas_com_paginas() -> list[type[BaseModel]]:
-    """Todo modelo pydantic dos modulos ``*schemas`` com campo ``paginas``."""
-    found: dict[str, type[BaseModel]] = {}
-    for modinfo in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
-        if not modinfo.name.rsplit(".", 1)[-1].endswith("schemas"):
-            continue
-        mod = importlib.import_module(modinfo.name)
-        for obj in vars(mod).values():
-            if (
-                inspect.isclass(obj)
-                and issubclass(obj, BaseModel)
-                and obj is not PaginasMixin
-                and "paginas" in getattr(obj, "model_fields", {})
-            ):
-                found[f"{obj.__module__}.{obj.__qualname__}"] = obj
-    return [found[k] for k in sorted(found)]
+    """Todo modelo pydantic dos modulos de schemas com campo ``paginas``."""
+    return sorted(
+        (obj for obj in schemas_definidos() if obj is not PaginasMixin and "paginas" in obj.model_fields),
+        key=lambda obj: f"{obj.__module__}.{obj.__qualname__}",
+    )
 
 
 @pytest.mark.parametrize("schema_cls", _schemas_com_paginas(), ids=lambda c: c.__name__)
@@ -162,11 +136,10 @@ def test_schema_com_paginas_herda_paginas_mixin(schema_cls):
 @pytest.mark.parametrize(("par", "variant_name", "paginas_value"), SCHEMA_CASES)
 def test_schema_accepts_paginas(par, variant_name, paginas_value):
     """Todo Input<Endpoint><Tribunal> declara ``paginas`` e o aceita nas 4 formas."""
-    schema_cls = _resolve(par.modulo, par.classe)
-    assert schema_cls is not None, f"{par.modulo}:{par.classe} nao encontrado"
+    schema_cls = par.schema
     assert "paginas" in schema_cls.model_fields, f"{par.classe} nao declara campo ``paginas``"
 
-    kwargs = _minimal_kwargs_for_schema(schema_cls)
+    kwargs = payload_minimo(schema_cls)
     kwargs["paginas"] = paginas_value
 
     try:
@@ -182,17 +155,18 @@ def test_schema_accepts_paginas(par, variant_name, paginas_value):
         raise
 
 
-@pytest.mark.parametrize(
-    "par", SEARCH_CASES, ids=[f"{par.sigla}.{par.endpoint}" for par in SEARCH_CASES]
-)
-def test_public_method_accepts_paginas(par):
-    """Metodo publico de busca expoe ``paginas``, como promete :class:`SearchBase`.
+@pytest.mark.parametrize("par", TODOS, ids=[par.id for par in TODOS])
+def test_metodo_expoe_paginas_sse_schema_e_paginado(par):
+    """O metodo publico expoe ``paginas`` se e somente se o schema herda :class:`PaginasMixin`.
 
-    Com o campo tambem no schema (:func:`test_schema_accepts_paginas`),
-    :mod:`tests.schemas.test_signature_types` confere a anotacao.
+    Schema paginado com metodo sem ``paginas`` aceita o campo e o ignora (ou o
+    recusa com mensagem confusa); metodo com ``paginas`` e schema sem o mixin
+    perde o validador. :mod:`tests.schemas.test_signature_types` confere a anotacao.
     """
     method = getattr(par.raspador, par.endpoint)
-    assert "paginas" in inspect.signature(method).parameters, (
-        f"{par.raspador.__name__}.{par.endpoint} nao expoe parametro ``paginas`` "
-        "— viola o contrato de SearchBase para endpoints de busca."
+    expoe = "paginas" in parametros_explicitos(method)
+    paginado = issubclass(par.schema, PaginasMixin)
+    assert expoe == paginado, (
+        f"{par.raspador.__name__}.{par.endpoint}: parametro ``paginas`` {'sim' if expoe else 'nao'}, "
+        f"{par.classe} {'herda' if paginado else 'nao herda'} PaginasMixin"
     )

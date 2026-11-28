@@ -1,12 +1,20 @@
-"""Schema-level contract tests for cjsg pydantic models (refs #93).
+"""Schema-level tests for the eSAJ search models and for ``AutoChunkMixin`` (refs #93, #130).
 
 Pydantic with ``extra='forbid'`` is the single source of truth for the
-public ``cjsg`` API. These tests assert that:
+public ``cjsg``/``cjpg`` API. For the three eSAJ models
+(``InputCJSGEsajPuro``, ``InputCJSGTJSP``, ``InputCJPGEsaj``) these tests
+assert that:
 
-1. Every documented parameter is accepted (with its correct default).
-2. Any unknown kwarg raises ``ValidationError``.
-3. Where relevant, tribunal-specific types (``baixar_sg: bool``,
-   ``origem: Literal["T","R"]``) reject obviously wrong values.
+1. Every documented parameter is accepted, and the defaults are the documented ones.
+2. Parameters of the sibling eSAJ endpoints and typos are rejected
+   (``extra_forbidden``).
+3. Tribunal-specific types (``origem: Literal["T","R"]``,
+   ``tipo_decisao``) reject obviously wrong values.
+
+``TestAutoChunkMixin`` covers every mapped Input: only the schemas with a
+result cap inherit ``auto_chunk``. The generic "unknown kwarg raises
+``extra_forbidden``" check for every mapped Input lives in
+:mod:`tests.schemas.test_schema_contract`.
 
 The tests are pure pydantic — no HTTP, no scraper instantiation. They
 complement the per-tribunal HTTP contract tests in
@@ -15,10 +23,14 @@ complement the per-tribunal HTTP contract tests in
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from juscraper.courts._esaj.schemas import InputCJPGEsaj, InputCJSGEsajPuro
+from juscraper.courts.tjba.schemas import InputCJSGTJBA
+from juscraper.courts.tjro.schemas import InputCJSGTJRO
 from juscraper.courts.tjsp.schemas import InputCJSGTJSP
+from juscraper.schemas.mixins import AutoChunkMixin
+from tests.schemas._registro import payload_minimo, schemas_mapeados
 
 
 class TestInputCJSGEsajPuro:
@@ -50,10 +62,6 @@ class TestInputCJSGEsajPuro:
         assert model.origem == "T"
         assert model.tipo_decisao == "acordao"
         assert model.numero_recurso is None
-
-    def test_unknown_kwarg_rejected(self):
-        with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJSGEsajPuro(pesquisa="x", parametro_desconhecido="y")
 
     def test_typo_on_known_param_rejected(self):
         with pytest.raises(ValidationError, match="extra_forbidden"):
@@ -101,10 +109,6 @@ class TestInputCJSGTJSP:
         with pytest.raises(ValidationError, match="extra_forbidden"):
             InputCJSGTJSP(pesquisa="x", origem="T")
 
-    def test_unknown_kwarg_rejected(self):
-        with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJSGTJSP(pesquisa="x", foo="bar")
-
 
 class TestInputCJPGEsaj:
     def test_all_documented_params_accepted(self):
@@ -131,7 +135,7 @@ class TestInputCJPGEsaj:
         assert model.id_processo is None
 
     def test_rejects_cjsg_fields(self):
-        """cjpg nao tem ementa/comarca/orgao_julgador/baixar_sg.
+        """O cjpg nao tem ementa/comarca/orgao_julgador/baixar_sg.
 
         ``classe``/``assunto`` agora **sao** aceitos (singular canonico,
         refs #232). Os plurais ``classes``/``assuntos``/``varas`` viraram
@@ -148,48 +152,38 @@ class TestInputCJPGEsaj:
             with pytest.raises(ValidationError, match="extra_forbidden"):
                 InputCJPGEsaj(**{plural: ["x"]})
 
-    def test_unknown_kwarg_rejected(self):
-        with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJPGEsaj(parametro_bobo=True)
+
+#: Classes ``Input*`` de ``INPUT_SCHEMAS``, sem repetir as compartilhadas.
+_SCHEMAS_MAPEADOS_UNICOS: list[type[BaseModel]] = list(dict.fromkeys(par.schema for par in schemas_mapeados()))
+_COM_AUTO_CHUNK = [schema for schema in _SCHEMAS_MAPEADOS_UNICOS if issubclass(schema, AutoChunkMixin)]
+_SEM_AUTO_CHUNK = [schema for schema in _SCHEMAS_MAPEADOS_UNICOS if not issubclass(schema, AutoChunkMixin)]
 
 
 class TestAutoChunkMixin:
-    """`auto_chunk` so deve estar declarado em schemas de busca com teto (#130).
+    """O ``auto_chunk`` so deve estar declarado em schemas de busca com teto (#130).
 
     Tribunais sem teto **nao devem herdar** o mixin — ``extra='forbid'`` da
     classe concreta rejeita o flag e o usuario entende que a busca nao tem
     teto a contornar (Regra 1 do #84).
     """
 
-    def test_esaj_puro_accepts_auto_chunk(self):
-        model = InputCJSGEsajPuro(pesquisa="x", auto_chunk=False)
-        assert model.auto_chunk is False
+    #: eSAJ (cjsg e cjpg) e os portais que cortam a busca em 10.000 resultados
+    #: (TJBA e TJRO), onde ``auto_chunk`` divide a busca por data.
+    ESPERADOS = frozenset({InputCJSGEsajPuro, InputCJSGTJSP, InputCJPGEsaj, InputCJSGTJBA, InputCJSGTJRO})
 
-    def test_esaj_puro_default_is_true(self):
-        model = InputCJSGEsajPuro(pesquisa="x")
-        assert model.auto_chunk is True
+    def test_so_os_schemas_com_teto_herdam_o_mixin(self):
+        """Herdar ``AutoChunkMixin`` e decisao por tribunal: entrada nova passa por aqui."""
+        assert set(_COM_AUTO_CHUNK) == self.ESPERADOS
 
-    def test_tjsp_cjsg_accepts_auto_chunk(self):
-        model = InputCJSGTJSP(pesquisa="x", auto_chunk=False)
-        assert model.auto_chunk is False
+    @pytest.mark.parametrize("schema_cls", _COM_AUTO_CHUNK, ids=lambda cls: cls.__name__)
+    def test_schema_com_teto_aceita_auto_chunk(self, schema_cls):
+        payload = payload_minimo(schema_cls)
+        assert schema_cls(**payload).auto_chunk is True
+        assert schema_cls(**payload, auto_chunk=False).auto_chunk is False
 
-    def test_tjsp_cjpg_accepts_auto_chunk(self):
-        model = InputCJPGEsaj(auto_chunk=False)
-        assert model.auto_chunk is False
-
-    @pytest.mark.parametrize("tribunal", ["tjba", "tjro"])
-    def test_portal_com_teto_de_resultados_aceita_auto_chunk(self, tribunal):
-        """TJBA e TJRO cortam a busca em 10.000 resultados e a dividem por data."""
-        import importlib
-
-        schemas = importlib.import_module(f"juscraper.courts.{tribunal}.schemas")
-        input_cls = getattr(schemas, f"InputCJSG{tribunal.upper()}")
-        assert input_cls(pesquisa="x").auto_chunk is True
-        assert input_cls(pesquisa="x", auto_chunk=False).auto_chunk is False
-
-    def test_non_esaj_schema_rejects_auto_chunk(self):
-        """Schemas sem teto rejeitam o flag (1C-a/1C-b sem o mixin)."""
-        from juscraper.courts.tjpa.schemas import InputCJSGTJPA
-
-        with pytest.raises(ValidationError, match="extra_forbidden"):
-            InputCJSGTJPA(pesquisa="x", auto_chunk=True)
+    def test_schemas_sem_teto_rejeitam_auto_chunk(self):
+        """Todo Input mapeado sem o mixin recusa o flag (1C-a/1C-b sem o mixin)."""
+        assert _SEM_AUTO_CHUNK
+        for schema_cls in _SEM_AUTO_CHUNK:
+            with pytest.raises(ValidationError, match="extra_forbidden"):
+                schema_cls(**payload_minimo(schema_cls), auto_chunk=True)

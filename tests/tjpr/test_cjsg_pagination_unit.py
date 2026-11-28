@@ -76,6 +76,16 @@ def test_extract_total_pages_pagina_unica_real_devolve_um():
     assert extract_total_pages(html) == 1
 
 
+def test_extract_total_pages_na_ultima_pagina_ignora_ultima_desativada():
+    """Com ``paginas`` explícito, a menor pedida pode ser a última, onde "Última" vem desativada."""
+    html = _LINK_ULTIMA_RE.sub(lambda _m: _ancora("arrowLastOff"), _sample("results_normal_page_02.html"))
+    assert "arrowLastOn" not in html
+    assert extract_total_pages(html, pagina=_TOTAL) == _TOTAL
+    # Na página 1, a mesma âncora desativada quer dizer total 1 e diverge da contagem.
+    with pytest.raises(ValueError, match=r"aponta \[1\]"):
+        extract_total_pages(html)
+
+
 def test_extract_total_pages_dois_links_ultima_iguais_no_mesmo_paginador():
     html = _acrescenta_depois_da_ultima(_pagina_1(), lambda link: link)
     assert html.count(_PAGE_NUMBER_ULTIMA) == 4

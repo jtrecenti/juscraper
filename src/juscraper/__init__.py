@@ -1,11 +1,9 @@
-"""
-juscraper
-~~~~~~~~~
-Public interface: jus.scraper(<sigla>, **kwargs)
+"""Interface pública do juscraper: ``jus.scraper(<sigla>, **kwargs)``.
 
-The real implementation of each scraper is in:
-- juscraper.courts.<sigla_tribunal>.client.TJ<sigla_tribunal>Scraper
-- juscraper.aggregators.<sigla_agregador>.client.<Nome>Scraper
+A implementação de cada raspador fica em:
+
+- ``juscraper.courts.<sigla_tribunal>.client.<SIGLA>Scraper``
+- ``juscraper.aggregators.<sigla_agregador>.client.<Nome>Scraper``
 """
 from __future__ import annotations
 

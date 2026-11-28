@@ -1,8 +1,8 @@
 """Pydantic schemas for STF scraper endpoints.
 
 Wired em :mod:`juscraper.courts.stf.client`: :meth:`STFScraper.listar_decisoes` e
-:meth:`STFScraper.contar_decisoes` validam kwargs com ``extra="forbid"`` herdado
-de :class:`SearchBase`.
+:meth:`STFScraper.contar_decisoes` validam kwargs com ``extra="forbid"``. So a
+listagem tem ``paginas`` (:class:`PaginasMixin`); a contagem e uma requisicao so.
 """
 from __future__ import annotations
 
@@ -11,25 +11,28 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...schemas import BuscarEm, DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, SearchBase, TamanhoPagina
+from ...schemas import BuscarEm, DataJulgamentoMixin, DataPublicacaoMixin, OutputCJSGBase, PaginasMixin, TamanhoPagina
 from ...schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
 from .download import MAX_TAMANHO_PAGINA
 
 
-class _InputFiltrosSTF(SearchBase, DataJulgamentoMixin, DataPublicacaoMixin):
-    """Filtros comuns a ``listar_decisoes`` e ``contar_decisoes``.
+class _InputFiltrosSTF(DataJulgamentoMixin, DataPublicacaoMixin):
+    """Filtros comuns a ``listar_decisoes`` e ``contar_decisoes``, sem ``paginas``.
 
     Datas saem para o backend em ``ddMMyyyy``, formato dos filtros ``range`` do portal.
     """
 
     BACKEND_DATE_FORMAT: ClassVar[str] = "%d%m%Y"
 
+    pesquisa: str
     base: Literal["decisoes", "acordaos"] = "decisoes"
     classe: str | list[str] | None = None
     buscar_em: BuscarEm = "ementa"
 
+    model_config = ConfigDict(extra="forbid")
 
-class InputListarDecisoesSTF(_InputFiltrosSTF):
+
+class InputListarDecisoesSTF(PaginasMixin, _InputFiltrosSTF):
     """Accepted input for :meth:`STFScraper.listar_decisoes`.
 
     Filtros de :class:`_InputFiltrosSTF`, mais o tamanho da pagina e o
@@ -46,7 +49,8 @@ class InputContarDecisoesSTF(_InputFiltrosSTF):
     """Accepted input for :meth:`STFScraper.contar_decisoes`.
 
     Filtros de :class:`_InputFiltrosSTF`, os mesmos de
-    :class:`InputListarDecisoesSTF`, sem ``tamanho_pagina`` nem checkpoint.
+    :class:`InputListarDecisoesSTF`, sem ``paginas``, ``tamanho_pagina`` nem
+    checkpoint: a contagem e uma requisicao so.
     """
 
 

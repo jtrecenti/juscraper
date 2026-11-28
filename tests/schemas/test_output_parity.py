@@ -1,263 +1,167 @@
 """Paridade entre campos declarados no Output schema e chaves do parser.
 
-Para cada par ``(tribunal, endpoint)`` mapeado em
-:data:`EXPECTED_COURT_SCHEMAS_OUTPUTS` / :data:`EXPECTED_AGGREGATOR_SCHEMAS_OUTPUTS`,
-o teste carrega o **source do modulo de parser** e verifica que todo
-campo nao-herdado declarado no Output aparece como string literal no
-parser — ``"campo"`` ou ``'campo'``. Busca por substring (nao AST) e
-deliberada: pega chaves em dicts literais, listas de whitelist (ex.
+Para cada endpoint mapeado em :data:`tests.schemas._registro.OUTPUT_SCHEMAS`
+(tribunais e agregadores), o teste carrega o **source dos modulos de parser**
+do raspador e verifica que todo campo proprio do Output aparece como string
+literal no parser — ``"campo"`` ou ``'campo'``. Busca por substring (nao AST)
+e deliberada: pega chaves em dicts literais, listas de whitelist (ex.
 ``_MAIN_FIELDS``), dicts de rename (ex. ``_FIELD_RENAMES``) e docstrings
 que mencionam colunas — tudo que indica que o parser "fala" daquele
 campo.
 
-Campos herdados de :class:`OutputCJSGBase` (``processo``, ``ementa``,
-``data_julgamento``) sao contratos universais e nao precisam aparecer no
-parser concreto (muitos parsers os entregam sem nome explicito via
-``rows.append({"processo": ...})``; a conferencia acima ja cobre isso).
+Campo proprio e o que o Output declara sem herdar de uma base contratual
+(:data:`BASES_CONTRATUAIS`: :class:`OutputCJSGBase`,
+:class:`OutputCnjConsultaBase` e os mixins de Output). So entram na conta as
+bases que estao no MRO do Output: um Output que declara ``relator`` por conta
+propria, sem o mixin, tem ``relator`` conferido.
 
-Parsers dinamicos que extraem rotulos de HTML sem dict literal
-(``cjsg`` e ``cjpg`` do eSAJ) sao ``skip`` aqui: as colunas que entregam
-sao conferidas contra o Output sobre os samples reais em
-:mod:`tests.schemas.test_output_columns`.
+Endpoints sem campo proprio ficam fora da parametrizacao; endpoints cujo
+parser nao nomeia as colunas no source ficam em :data:`SKIP_REASONS`, e um
+teste de orfaos cobra a remocao da entrada quando ela deixa de ser necessaria.
+
+A direcao oposta (coluna entregue que o Output nao declara) e conferida sobre
+os samples reais em :mod:`tests.schemas.test_output_columns`.
 """
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import inspect
-from collections.abc import Iterable
+import typing
 
+import pandas as pd
 import pytest
 from pydantic import BaseModel
 
-from tests.schemas.test_schema_coverage import _iter_aggregator_scrapers, _iter_court_scrapers
+from juscraper.courts._esaj.schemas import OutputCJPGEsaj, OutputCJSGEsajBase
+from juscraper.schemas.cjsg import OutputCJSGBase
+from juscraper.schemas.consulta import OutputCnjConsultaBase
+from juscraper.schemas.mixins import OutputDataPublicacaoMixin, OutputRelatoriaMixin
+from tests.schemas._registro import INPUT_SCHEMAS, OUTPUT_SCHEMAS, SchemaMapeado, schemas_mapeados
 
-# Mapping (tribunal, endpoint) -> (module_with_output, output_class_name).
-# Paralelo ao EXPECTED_COURT_SCHEMAS do test_schema_coverage, mas para
-# Outputs (o outro mapa cuida de Inputs).
-EXPECTED_COURT_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
-    # eSAJ-puros compartilham Output — parser dinamico, marcar skip.
-    ("tjac", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
-    ("tjal", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
-    ("tjam", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
-    ("tjce", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
-    ("tjms", "cjsg"): ("juscraper.courts._esaj.schemas", "OutputCJSGEsaj"),
-    ("tjsp", "cjsg"): ("juscraper.courts.tjsp.schemas", "OutputCJSGTJSP"),
-    ("tjsp", "cjpg"): ("juscraper.courts._esaj.schemas", "OutputCJPGEsaj"),
-    ("tjsp", "cpopg"): ("juscraper.courts.tjsp.schemas", "OutputCPOPGTJSP"),
-    ("tjsp", "cposg"): ("juscraper.courts.tjsp.schemas", "OutputCPOSGTJSP"),
-    ("tjms", "cjpg"): ("juscraper.courts._esaj.schemas", "OutputCJPGEsaj"),
-    ("tjap", "cjsg"): ("juscraper.courts.tjap.schemas", "OutputCJSGTJAP"),
-    ("tjba", "cjsg"): ("juscraper.courts.tjba.schemas", "OutputCJSGTJBA"),
-    ("tjdft", "cjsg"): ("juscraper.courts.tjdft.schemas", "OutputCJSGTJDFT"),
-    ("tjes", "cjsg"): ("juscraper.courts.tjes.schemas", "OutputCJSGTJES"),
-    ("tjes", "cjpg"): ("juscraper.courts.tjes.schemas", "OutputCJPGTJES"),
-    ("tjgo", "cjsg"): ("juscraper.courts.tjgo.schemas", "OutputCJSGTJGO"),
-    ("tjmg", "cjsg"): ("juscraper.courts.tjmg.schemas", "OutputCJSGTJMG"),
-    ("tjmg", "cposg"): ("juscraper.courts.tjmg.schemas", "OutputCPOSGTJMG"),
-    ("tjmt", "cjsg"): ("juscraper.courts.tjmt.schemas", "OutputCJSGTJMT"),
-    ("tjpa", "cjsg"): ("juscraper.courts.tjpa.schemas", "OutputCJSGTJPA"),
-    ("tjpb", "cjsg"): ("juscraper.courts.tjpb.schemas", "OutputCJSGTJPB"),
-    ("tjpe", "cjsg"): ("juscraper.courts.tjpe.schemas", "OutputCJSGTJPE"),
-    ("tjpi", "cjsg"): ("juscraper.courts.tjpi.schemas", "OutputCJSGTJPI"),
-    ("stm", "cjsg"): ("juscraper.courts.stm.schemas", "OutputCJSGSTM"),
-    ("tjpr", "cjsg"): ("juscraper.courts.tjpr.schemas", "OutputCJSGTJPR"),
-    ("tjrj", "cjsg"): ("juscraper.courts.tjrj.schemas", "OutputCJSGTJRJ"),
-    ("tjrn", "cjsg"): ("juscraper.courts.tjrn.schemas", "OutputCJSGTJRN"),
-    ("tjro", "cjsg"): ("juscraper.courts.tjro.schemas", "OutputCJSGTJRO"),
-    ("tjrr", "cjsg"): ("juscraper.courts.tjrr.schemas", "OutputCJSGTJRR"),
-    ("tjrs", "cjsg"): ("juscraper.courts.tjrs.schemas", "OutputCJSGTJRS"),
-    ("tjsc", "cjsg"): ("juscraper.courts.tjsc.schemas", "OutputCJSGTJSC"),
-    ("tjto", "cjsg"): ("juscraper.courts.tjto.schemas", "OutputCJSGTJTO"),
-    ("tjto", "cjpg"): ("juscraper.courts.tjto.schemas", "OutputCJPGTJTO"),
-    ("trf1", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
-    ("trf3", "cpopg"): ("juscraper.courts.trf3.schemas", "OutputCpopgTRF3"),
-    ("trf3", "cposg"): ("juscraper.courts.trf3.schemas", "OutputCposgTRF3"),
-    ("trf3", "cjsg"): ("juscraper.courts.trf3.cjsg_schemas", "OutputCJSGTRF3"),
-    ("trf5", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
-    # TJPE 1º grau roda o mesmo PJe ConsultaPública dos TRFs.
-    ("tjpe", "cpopg"): ("juscraper.courts._trf.schemas", "OutputCpopgTRF"),
-    ("trf6", "cpopg"): ("juscraper.courts.trf6.schemas", "OutputCpopgTRF6"),
-    ("stf", "listar_decisoes"): ("juscraper.courts.stf.schemas", "OutputListarDecisoesSTF"),
-    ("stf", "contar_decisoes"): ("juscraper.courts.stf.schemas", "OutputContarDecisoesSTF"),
-}
+#: Bases cujos campos sao contrato universal: o parser concreto nao precisa
+#: nomea-los (a garantia e estrutural). Os mixins foram promovidos por
+#: evidencia (>=10 e >=9 parsers) e auditados caso a caso na subida.
+BASES_CONTRATUAIS: tuple[type[BaseModel], ...] = (
+    OutputCJSGBase,
+    OutputCnjConsultaBase,
+    OutputRelatoriaMixin,
+    OutputDataPublicacaoMixin,
+)
 
-EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS: dict[tuple[str, str], tuple[str, str]] = {
-    ("datajud", "listar_processos"): (
-        "juscraper.aggregators.datajud.schemas",
-        "OutputListarProcessosDataJud",
-    ),
-    ("jusbr", "cpopg"): ("juscraper.aggregators.jusbr.schemas", "OutputCPOPGJusBR"),
-    ("jusbr", "download_documents"): (
-        "juscraper.aggregators.jusbr.schemas",
-        "OutputDownloadDocumentsJusBR",
-    ),
-    ("comunica_cnj", "listar_comunicacoes"): (
-        "juscraper.aggregators.comunica_cnj.schemas",
-        "OutputListarComunicacoesComunicaCNJ",
-    ),
-    ("falcao", "listar_decisoes"): ("juscraper.aggregators.falcao.schemas", "OutputListarDecisoesFalcao"),
-}
+PARES = schemas_mapeados(OUTPUT_SCHEMAS)
+PARES_POR_CHAVE = {(par.sigla, par.endpoint): par for par in PARES}
 
-# Campos que herdamos de OutputCJSGBase / OutputCnjConsultaBase e nao
-# precisamos verificar no parser concreto (contratos de base).
-BASE_FIELDS_CJSG = frozenset({"processo", "ementa", "data_julgamento"})
-BASE_FIELDS_CONSULTA = frozenset({"id_cnj"})
-
-# Casos em que o parser e dinamico (label-based) ou passthrough — nao da
-# para detectar campos por substring no source. Marcar skip com motivo.
+# Parser dinamico (label-based) ou passthrough: nao da para detectar campos
+# por substring no source.
+_MOTIVO_ESAJ = "o parser do eSAJ monta as chaves a partir dos rotulos do HTML, sem dict literal"
 SKIP_REASONS: dict[tuple[str, str], str] = {
-    # eSAJ: o parser monta a chave a partir do rotulo do HTML, sem dict
-    # literal. As colunas entregues sao conferidas contra o Output sobre os
-    # samples em test_output_columns.
     **{
-        (trib, "cjsg"): "eSAJ monta chaves dos rotulos do HTML — conferido em test_output_columns"
-        for trib in ("tjac", "tjal", "tjam", "tjce", "tjms", "tjsp")
-    },
-    **{
-        (trib, "cjpg"): "eSAJ monta chaves dos rotulos do HTML — conferido em test_output_columns"
-        for trib in ("tjsp", "tjms")
+        (par.sigla, par.endpoint): _MOTIVO_ESAJ
+        for par in PARES
+        if issubclass(par.schema, (OutputCJSGEsajBase, OutputCJPGEsaj))
     },
     # STF: parser renomeia 6 chaves e repassa o resto do _source da API.
     ("stf", "listar_decisoes"): "STF parser e passthrough do _source — extra=allow e o contrato",
-    # TJSP cpopg/cposg retornam 4 DataFrames; Output e pivot.
-    ("tjsp", "cpopg"): "TJSP cpopg retorna 4 DataFrames — Output cobre apenas o pivot",
-    ("tjsp", "cposg"): "TJSP cposg retorna 4 DataFrames — Output cobre apenas o pivot",
-    # Agregadores com backend rico — Output e pivot + extra=allow.
+    # DataJud: Output e pivot + extra=allow.
     ("datajud", "listar_processos"): "DataJud passthrough ES _source — extra=allow e o contrato",
-    ("jusbr", "cpopg"): "JusBR passthrough PDPJ-CNJ — extra=allow e o contrato",
-    ("jusbr", "download_documents"): (
-        "JusBR download_documents passthrough — extra=allow e o contrato"
-    ),
-    ("comunica_cnj", "listar_comunicacoes"): (
-        "ComunicaCNJ passthrough JSON da API — extra=allow e o contrato"
-    ),
 }
 
 
-# Raspador de cada tribunal, para achar o parser da familia (``courts/_<familia>/``).
-COURT_CLASSES = dict(_iter_court_scrapers())
+def _parser_sources(par: SchemaMapeado) -> str:
+    """Concatena o source dos modulos de parser que existem para ``par``.
 
+    Candidatos, no pacote do raspador (``juscraper.courts.<sigla>`` ou
+    ``juscraper.aggregators.<sigla>``) e em cada pacote de familia
+    (``_esaj``, ``_trf``, ``_pdpj_sso``...) do MRO do raspador:
 
-def _parser_sources(tribunal: str, endpoint: str) -> str:
-    """Concatena source de todos os modulos de parser relevantes para ``tribunal``.
+    - ``<pacote>.parse`` (convencao #84)
+    - ``<pacote>.<endpoint>_parse`` (ex.: ``cjsg_parse`` do TJSP, ``cjpg_parse`` do eSAJ)
+    - ``<pacote>.client``, so no pacote do raspador (parser como metodo)
 
-    Tenta varias convencoes:
-    - ``juscraper.courts.<trib>.parse`` (convencao #84)
-    - ``juscraper.courts.<trib>.<endpoint>_parse`` (TJSP tem cjsg_parse, cjpg_parse)
-    - ``juscraper.aggregators.<name>.parse``
-    - ``juscraper.courts.<trib>.client`` (fallback, caso cjsg_parse seja metodo)
-    - ``juscraper.courts._<familia>.<endpoint>_parse``, de cada pacote de
-      familia no MRO do raspador (ex.: o ``cjpg`` do eSAJ para TJSP e TJMS)
+    Modulo inexistente fica de fora pelo ``find_spec``; erro ao importar ou ao
+    ler o source de um modulo existente falha o teste.
     """
-    sources: list[str] = []
-    candidates = [
-        f"juscraper.courts.{tribunal}.parse",
-        f"juscraper.courts.{tribunal}.{endpoint}_parse",
-        f"juscraper.aggregators.{tribunal}.parse",
-        f"juscraper.courts.{tribunal}.client",
-    ]
-    for cls in getattr(COURT_CLASSES.get(tribunal), "__mro__", ()):
-        pacote = cls.__module__.rpartition(".")[0]
-        if pacote.startswith("juscraper.courts._"):
-            candidates.append(f"{pacote}.{endpoint}_parse")
-    candidates = list(dict.fromkeys(candidates))
-    for module_path in candidates:
-        try:
-            mod = importlib.import_module(module_path)
-        except ImportError:
-            continue
-        try:
-            sources.append(inspect.getsource(mod))
-        except (OSError, TypeError):
-            continue
-    return "\n".join(sources)
+    pacote = par.raspador.__module__.rpartition(".")[0]
+    candidatos = [f"{pacote}.parse", f"{pacote}.{par.endpoint}_parse", f"{pacote}.client"]
+    for cls in par.raspador.__mro__:
+        familia = cls.__module__.rpartition(".")[0]
+        if familia.rpartition(".")[2].startswith("_"):
+            candidatos += [f"{familia}.parse", f"{familia}.{par.endpoint}_parse"]
+    return "\n".join(
+        inspect.getsource(importlib.import_module(modulo))
+        for modulo in dict.fromkeys(candidatos)
+        if importlib.util.find_spec(modulo) is not None
+    )
 
 
-def _own_fields(output_cls: type[BaseModel]) -> Iterable[str]:
-    """Campos do Output que nao sao herdados de bases contratuais.
-
-    Considera herdados os campos de :class:`OutputCJSGBase` e
-    :class:`OutputCnjConsultaBase` — ja sao contrato universal e nao
-    precisam aparecer no parser concreto (a garantia e estrutural).
-    Tambem considera herdados os mixins de :mod:`juscraper.schemas.mixins`,
-    que foram promovidos por evidencia (>=10 e >=9 parsers).
-    """
-    fields = set(output_cls.model_fields.keys())
-    # Remove campos das bases.
-    fields -= BASE_FIELDS_CJSG | BASE_FIELDS_CONSULTA
-    # Remove campos dos mixins de Output (relator, orgao_julgador,
-    # data_publicacao) — o teste os cobre indiretamente: se o tribunal
-    # herda o mixin, significa que o parser entrega. Os mixins ja foram
-    # auditados caso a caso na subida.
-    fields -= {"relator", "orgao_julgador", "data_publicacao"}
-    return fields
+def _own_fields(output_cls: type[BaseModel]) -> set[str]:
+    """Campos do Output menos os das bases contratuais que estao no seu MRO."""
+    herdados = {
+        nome
+        for base in output_cls.__mro__
+        if base in BASES_CONTRATUAIS
+        for nome in base.model_fields
+    }
+    return set(output_cls.model_fields) - herdados
 
 
-def _resolve_output(module_path: str, class_name: str) -> type[BaseModel]:
-    mod = importlib.import_module(module_path)
-    output_cls: type[BaseModel] = getattr(mod, class_name)
-    return output_cls
+def _faltando(par: SchemaMapeado) -> list[str]:
+    source = _parser_sources(par)
+    assert source, f"nenhum modulo de parser encontrado para {par.id}"
+    return sorted(
+        campo for campo in _own_fields(par.schema)
+        if f'"{campo}"' not in source and f"'{campo}'" not in source
+    )
 
 
-COURT_NAMES = set(COURT_CLASSES)
-AGG_NAMES = {name for name, _cls in _iter_aggregator_scrapers()}
-
-COURT_CASES = [
-    pytest.param(name, endpoint, module_path, class_name, id=f"{name}.{endpoint}")
-    for (name, endpoint), (module_path, class_name) in EXPECTED_COURT_OUTPUT_SCHEMAS.items()
-    if name in COURT_NAMES
-]
-
-AGG_CASES = [
-    pytest.param(name, endpoint, module_path, class_name, id=f"{name}.{endpoint}")
-    for (name, endpoint), (module_path, class_name) in EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS.items()
-    if name in AGG_NAMES
-]
+# Outputs sem campos proprios nao tem o que conferir no parser.
+CASOS = [pytest.param(par, id=par.id) for par in PARES if _own_fields(par.schema)]
 
 
-@pytest.mark.parametrize(
-    "name,endpoint,module_path,class_name", COURT_CASES + AGG_CASES
-)
-def test_output_fields_appear_in_parser_source(
-    name, endpoint, module_path, class_name
-):
-    """Cada campo nao-herdado do Output aparece como string literal no source do parser."""
-    reason = SKIP_REASONS.get((name, endpoint))
+@pytest.mark.parametrize("par", CASOS)
+def test_output_fields_appear_in_parser_source(par: SchemaMapeado):
+    """Cada campo proprio do Output aparece como string literal no source do parser."""
+    reason = SKIP_REASONS.get((par.sigla, par.endpoint))
     if reason:
         pytest.skip(reason)
 
-    output_cls = _resolve_output(module_path, class_name)
-    source = _parser_sources(name, endpoint)
-    if not source:
-        pytest.skip(f"nenhum modulo de parser encontrado para {name}")
-
-    missing = [
-        field for field in _own_fields(output_cls)
-        if f'"{field}"' not in source and f"'{field}'" not in source
-    ]
-
+    missing = _faltando(par)
     assert not missing, (
-        f"{class_name} declara campos que nao aparecem em nenhum parser de {name}: "
-        f"{sorted(missing)}. Possivel drift: Output foi inchado alem do que o "
+        f"{par.classe} declara campos que nao aparecem em nenhum parser de {par.sigla}: "
+        f"{missing}. Possivel drift: Output foi inchado alem do que o "
         "parser entrega, ou o parser foi alterado e o Output nao acompanhou."
     )
 
 
-def test_output_coverage_mapping_matches_input_mapping():
-    """EXPECTED_COURT_OUTPUT_SCHEMAS nao tem entradas orfas nem faltando."""
-    from tests.schemas.test_schema_coverage import EXPECTED_COURT_SCHEMAS
+def test_skips_ainda_sao_necessarios():
+    """Entrada de SKIP_REASONS e endpoint mapeado cuja conferencia ainda falharia; senao e orfa."""
+    sem_mapa = sorted(SKIP_REASONS.keys() - PARES_POR_CHAVE.keys())
+    assert not sem_mapa, f"SKIP_REASONS para endpoint sem Output mapeado: {sem_mapa}"
+    # Sem campo proprio, ``_faltando`` tambem devolve ``[]``.
+    desnecessarios = sorted(chave for chave in SKIP_REASONS if not _faltando(PARES_POR_CHAVE[chave]))
+    assert not desnecessarios, (
+        f"Remova de SKIP_REASONS (a conferencia ja passa ou nao ha campo proprio): {desnecessarios}"
+    )
 
-    input_keys = {
-        k for k in EXPECTED_COURT_SCHEMAS
-        # cjsg_ementa nao tem Output separado (retorna string, nao DataFrame)
-        if k[1] != "cjsg_ementa"
+
+def _tem_dataframe(tipo: object) -> bool:
+    """``pd.DataFrame`` na anotacao, tambem em uniao (``DataFrame | int``) ou ``dict[str, DataFrame]``."""
+    return tipo is pd.DataFrame or any(map(_tem_dataframe, typing.get_args(tipo)))
+
+
+def test_output_mapeado_para_endpoint_que_devolve_dataframe():
+    """Endpoint com Input tem Output mapeado se, e so se, devolve DataFrame.
+
+    Os demais (autenticacao, que devolve ``bool``; ``cjsg_ementa`` do TJTO,
+    que devolve ``dict``) nao tem colunas a descrever.
+    """
+    devolvem_dataframe = {
+        (par.sigla, par.endpoint)
+        for par in schemas_mapeados(INPUT_SCHEMAS)
+        if _tem_dataframe(typing.get_type_hints(getattr(par.raspador, par.endpoint))["return"])
     }
-    output_keys = set(EXPECTED_COURT_OUTPUT_SCHEMAS)
-    missing_output = input_keys - output_keys
-    extra_output = output_keys - input_keys
-    assert not missing_output, (
-        f"Sem Output mapeado para: {sorted(missing_output)}"
-    )
-    assert not extra_output, (
-        f"Output mapeado para endpoint inexistente: {sorted(extra_output)}"
-    )
+    sem_output = sorted(devolvem_dataframe - OUTPUT_SCHEMAS.keys())
+    assert not sem_output, f"Endpoints que devolvem DataFrame sem Output mapeado: {sem_output}"
+    sobrando = sorted(OUTPUT_SCHEMAS.keys() - devolvem_dataframe)
+    assert not sobrando, f"Output mapeado para endpoint sem Input ou que nao devolve DataFrame: {sobrando}"

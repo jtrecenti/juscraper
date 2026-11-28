@@ -65,7 +65,7 @@ class TJRJScraper(HTTPScraper):
         Aceita os mesmos filtros de :meth:`cjsg`; veja lá a lista completa.
         Retorna a lista bruta de payloads JSON, sem parser.
 
-        See also:
+        See Also:
             :class:`InputCJSGTJRJ` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
             :meth:`cjsg` — versao high-level que ja parseia para DataFrame.
@@ -159,7 +159,7 @@ class TJRJScraper(HTTPScraper):
                   julgador, separados por virgula. Backend:
                   ``hfCodOrgs``.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do pydantic):
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
 
         Raises:
@@ -188,7 +188,7 @@ class TJRJScraper(HTTPScraper):
             >>> df = tjrj.cjsg("dano moral", ano_inicio=2024, ano_fim=2024,
             ...                paginas=range(1, 3))
 
-        See also:
+        See Also:
             :class:`InputCJSGTJRJ` — schema pydantic e a fonte da verdade dos
             filtros aceitos.
         """

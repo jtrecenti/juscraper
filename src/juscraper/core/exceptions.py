@@ -221,9 +221,10 @@ class ColetaParcialError(_RecriaSemInit, RuntimeError):
     pode ser lida: ``resultado`` traz as páginas lidas, e cada item de
     ``falhas`` vem como ``(None, None, excecao)``, com o arquivo na mensagem.
 
-    O ``cjsg`` do TJMG, o do TJPR e o ``cjsg``/``cjpg`` do TJTO o levantam quando uma
-    página falha depois das tentativas (no TJTO, também pelo bloqueio do AWS
-    WAF): a busca para ali, ``resultado`` traz as páginas anteriores, e
+    O ``cjsg`` do TJMG, o do TJPR, o do TJRS e o ``cjsg``/``cjpg`` do TJTO o
+    levantam quando uma página falha depois das tentativas (no TJTO, também
+    pelo bloqueio do AWS WAF; no TJRS, também pelo erro do Solr no lugar dos
+    resultados): a busca para ali, ``resultado`` traz as páginas anteriores, e
     ``falhas`` tem um item ``(None, None, excecao)``; as páginas que faltam
     estão na mensagem.
 

@@ -142,44 +142,115 @@ class OutputCpopgPdpj(BaseModel):
     """Colunas garantidas em :meth:`PdpjScraper.cpopg`.
 
     Cada CNJ pode gerar mais de uma linha quando a API retorna lista
-    com varias tramitacoes (raro mas suportado).
+    com varias tramitacoes (raro mas suportado). ``detalhes`` guarda a
+    resposta completa da tramitacao.
     """
 
     processo: str
     numero_processo: str | None = None
+    id: str | None = None
+    sigla_tribunal: str | None = None
+    segmento_justica: str | None = None
+    nivel_sigilo: int | None = None
+    data_atualizacao: str | None = None
+    detalhes: dict | None = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class OutputExistePdpj(BaseModel):
+    """Uma linha do DataFrame de :meth:`PdpjScraper.existe` com lista de CNJs.
+
+    ``existe`` sai ``None`` no processo cuja consulta falhou, com o motivo em
+    ``motivo_falha``. Com um CNJ so (``str``), o metodo devolve ``bool``.
+    """
+
+    processo: str
+    existe: bool | None = None
 
     model_config = ConfigDict(extra="allow")
 
 
 class OutputDocumentosPdpj(BaseModel):
-    """Colunas garantidas em :meth:`PdpjScraper.documentos`."""
+    """Colunas garantidas em :meth:`PdpjScraper.documentos`.
+
+    ``_raw`` guarda o item completo da resposta.
+    """
 
     processo: str
+    numero_processo: str | None = None
     id_documento: str | None = None
+    id_codex: int | None = None
+    id_origem: str | None = None
+    sequencia: int | None = None
+    data_juntada: str | None = None
+    nome: str | None = None
+    nivel_sigilo: str | None = None
+    tipo_codigo: int | None = None
+    tipo_nome: str | None = None
+    arquivo_id: str | None = None
+    arquivo_tipo: str | None = None
+    arquivo_tamanho: int | None = None
+    arquivo_tamanho_texto: int | None = None
+    arquivo_paginas: int | None = None
 
     model_config = ConfigDict(extra="allow")
 
 
 class OutputMovimentosPdpj(BaseModel):
-    """Colunas garantidas em :meth:`PdpjScraper.movimentos`."""
+    """Colunas garantidas em :meth:`PdpjScraper.movimentos`.
+
+    ``_raw`` guarda o item completo da resposta.
+    """
 
     processo: str
+    numero_processo: str | None = None
+    sequencia: int | None = None
+    data_hora: str | None = None
+    id_codex: int | None = None
+    id_origem: str | None = None
+    descricao: str | None = None
+    tipo_id: int | None = None
+    tipo_nome: str | None = None
+    tipo_hierarquia: str | None = None
+    classe_codigo: int | None = None
+    classe_descricao: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
 
 class OutputPartesPdpj(BaseModel):
-    """Colunas garantidas em :meth:`PdpjScraper.partes`."""
+    """Colunas garantidas em :meth:`PdpjScraper.partes`.
+
+    ``_raw`` guarda o item completo da resposta.
+    """
 
     processo: str
+    numero_processo: str | None = None
+    polo: str | None = None
+    tipo_parte: str | None = None
+    situacao: str | None = None
+    nome: str | None = None
+    tipo_pessoa: str | None = None
+    documento_numero: str | None = None
+    documento_tipo: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
 
 class OutputPesquisaPdpj(BaseModel):
-    """Colunas garantidas em :meth:`PdpjScraper.pesquisa`."""
+    """Colunas garantidas em :meth:`PdpjScraper.pesquisa`.
+
+    ``_raw`` guarda o item completo da resposta.
+    """
 
     numero_processo: str | None = None
+    id: str | None = None
+    sigla_tribunal: str | None = None
+    segmento_justica: str | None = None
+    data_atualizacao: str | None = None
+    data_ultimo_movimento: str | None = None
+    data_primeiro_ajuizamento: str | None = None
 
     model_config = ConfigDict(extra="allow")
 

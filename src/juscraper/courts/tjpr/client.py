@@ -85,7 +85,7 @@ class TJPRScraper(HTTPScraper):
             TypeError: Com ``incluir_corte_idh``, que não muda o download: as
                 páginas brutas sempre trazem as linhas da Corte IDH. Para
                 mantê-las, passe ``incluir_corte_idh=True`` a :meth:`cjsg_parse`.
-            ValueError: Com ``paginas=None``, quando a primeira página não
+            ValueError: Quando a primeira página baixada (a menor pedida) não
                 permite fixar o total de páginas; os casos estão em
                 :func:`juscraper.courts.tjpr.download.extract_total_pages`. O
                 scraper levanta depois da primeira página, em vez de estimar.
@@ -225,9 +225,7 @@ class TJPRScraper(HTTPScraper):
             **kwargs: Só os aliases deprecados abaixo; os filtros aceitos são
                 os parâmetros explícitos, campos de :class:`InputCJSGTJPR`.
 
-        Aliases deprecados (popados com ``DeprecationWarning`` antes do
-        pydantic):
-
+        Aliases deprecados:
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
@@ -237,7 +235,7 @@ class TJPRScraper(HTTPScraper):
             TypeError: Quando todos os erros são kwargs desconhecidos, ou
                 quando ``incluir_corte_idh`` não é ``bool``.
             ValidationError: Para os demais erros de validação do schema.
-            ValueError: Com ``paginas=None``, quando a primeira página não
+            ValueError: Quando a primeira página baixada (a menor pedida) não
                 permite fixar o total de páginas; ver :meth:`cjsg_download`.
             ColetaParcialError: Uma página falhou (prazo estourado, erro HTTP
                 depois das tentativas) quando outras já tinham sido baixadas.
