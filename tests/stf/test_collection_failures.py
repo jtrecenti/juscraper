@@ -235,6 +235,19 @@ def test_pagina_alem_do_total_vai_para_o_log_sem_requisicao(stf, caplog):
     assert "STF: página 9 fora do intervalo 1-3" in caplog.text
 
 
+@responses.activate
+def test_busca_vazia_com_paginas_nao_avisa_pagina_fora(stf, caplog):
+    """Sem resultados não há página a pedir: nada de "página 1 fora do intervalo 1-0"."""
+    fonte = Source([]).install()
+
+    with caplog.at_level("WARNING", logger="juscraper.stf"):
+        resultado = stf.listar_decisoes(paginas=1, tamanho_pagina=2)
+
+    assert resultado.empty
+    assert not [corpo for corpo in fonte.payloads if corpo["size"]]
+    assert "fora do intervalo" not in caplog.text
+
+
 @pytest.mark.parametrize("kwargs", [{"tamanho_pagina": 251}, {"resume": []}])
 @responses.activate
 def test_invalid_input_fails_before_request(stf, kwargs):

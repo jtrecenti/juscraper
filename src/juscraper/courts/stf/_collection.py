@@ -228,9 +228,9 @@ class Collection:
         window.attempts.append(attempt)
         self.store.save()
         # A contagem vem antes das páginas: a pedida além do total vai para o log, sem requisição.
-        pages = paginas_no_intervalo(
-            selecao_de_paginas(self.pages), math.ceil(total / self.inp.tamanho_pagina), tribunal="STF"
-        )
+        # A busca vazia não tem página a pedir nem a avisar, como nos demais raspadores.
+        n_pags = math.ceil(total / self.inp.tamanho_pagina)
+        pages = paginas_no_intervalo(selecao_de_paginas(self.pages), n_pags, tribunal="STF") if n_pags else []
         seen: set[tuple[str, str]] = set()
         for page in pages:
             payload = self.payload(window, page, self.inp.tamanho_pagina)
