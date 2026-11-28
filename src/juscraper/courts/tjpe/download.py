@@ -420,11 +420,11 @@ def cjsg_download(
     form_id, scroller_id = extract_pagination_ids(results_html)
 
     def buscar(pagina: int) -> str:
-        if pagina == 1:
-            return results_html
         time.sleep(sleep_time)
         return step4_paginate(request_fn, vs, form_id, scroller_id, pesquisa, pagina)
 
-    # A busca abre na página 1, que traz o total; as demais saem pelo laço
-    # comum, que devolve esta quando ela é pedida.
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: total_pages, tribunal="TJPE")
+    # A busca abre na página 1, que traz o total; ela vai ao laço comum em
+    # ``pagina_1``, e as demais saem de ``buscar``.
+    return baixar_paginas_pedidas(
+        paginas, buscar, lambda _primeira: total_pages, tribunal="TJPE", pagina_1=results_html
+    )

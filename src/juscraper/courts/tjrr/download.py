@@ -462,7 +462,7 @@ def cjsg_download_manager(
     form = _pagination_form(soup) if n_pags > 1 else {}
 
     def buscar(pagina: int) -> str:
-        return first_html if pagina == 1 else _download_page(request_fn, form, pagina, tables, sleep_time)
+        return _download_page(request_fn, form, pagina, tables, sleep_time)
 
     # A pausa vai antes de cada requisição de tabela, em ``_download_page``.
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRR")
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRR", pagina_1=first_html)

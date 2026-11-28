@@ -148,8 +148,8 @@ def cjsg_download(
         numero_processo=numero_processo,
         qtde_itens_pagina=qtde_itens_pagina,
     )
-    # A busca abre na página 1, que traz o total; as demais saem pelo laço
-    # comum, que devolve esta quando ela é pedida.
+    # A busca abre na página 1, que traz o total; ela vai ao laço comum em
+    # ``pagina_1``, e as demais saem de ``buscar``.
     first = buscar_pagina(page=1)
     total = _extract_total(first)
     if not total and not has_results(first):
@@ -162,9 +162,7 @@ def cjsg_download(
         n_pags = resolve_total_pages(total, resultados_por_pagina=qtde_itens_pagina, tribunal="TJGO")
 
     def buscar(pagina: int) -> str:
-        if pagina == 1:
-            return first
         time.sleep(sleep_time)
         return buscar_pagina(page=pagina)
 
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJGO")
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJGO", pagina_1=first)

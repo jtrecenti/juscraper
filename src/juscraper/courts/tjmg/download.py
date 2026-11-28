@@ -342,8 +342,6 @@ def _baixar_lista(
         return
 
     def buscar_pagina(pagina: int) -> str:
-        if pagina == 1:
-            return primeira
         time.sleep(sleep_time)
         return buscar(pagina, total)
 
@@ -353,6 +351,7 @@ def _baixar_lista(
             buscar_pagina,
             lambda _resposta: math.ceil(total / linhas_por_pagina),
             tribunal="TJMG",
+            pagina_1=primeira,
             ler_parcial=lambda baixadas: cjsg_parse([*results, *baixadas]),
             # Na busca comum, o texto padrão; na categorizada, o que nomeia as listas.
             mensagem_parcial=None if lista.nome is None else lambda faltando, n_baixadas, exc: _mensagem_parcial(

@@ -306,16 +306,14 @@ def cjsg_download(
         magistrado_codigo=magistrado_codigo,
         orgao_codigo=orgao_codigo,
     )
-    # A sessão abre na página 1 (``numPagina`` 0), que traz o total; as demais
-    # saem pelo laço comum, que devolve esta quando ela é pedida.
+    # A sessão abre na página 1 (``numPagina`` 0), que traz o total; ela vai
+    # ao laço comum em ``pagina_1``, e as demais saem de ``buscar``.
     first = _fetch_page(request_fn, 0, page_seq)
     total = int(first.get("TotalDocs") or 0)
     n_pags = max(1, math.ceil(total / RESULTS_PER_PAGE)) if total else 1
 
     def buscar(pagina: int) -> dict:
-        if pagina == 1:
-            return first
         time.sleep(sleep_time)
         return _fetch_page(request_fn, pagina - 1, page_seq)
 
-    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRJ")
+    return baixar_paginas_pedidas(paginas, buscar, lambda _primeira: n_pags, tribunal="TJRJ", pagina_1=first)

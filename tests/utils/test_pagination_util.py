@@ -426,6 +426,16 @@ class TestBaixarPaginasPedidas:
         self._baixar(None)
         sleep.assert_not_called()
 
+    @pytest.mark.parametrize(("paginas", "pedidas", "baixadas"), [([3, 1, 2], [3, 2], [3, 1, 2]), ([2], [2], [2])])
+    def test_pagina_1_ja_baixada_nao_sai_de_buscar(self, paginas, pedidas, baixadas):
+        assert self._baixar(paginas, pagina_1=1) == (pedidas, baixadas)
+
+    def test_pagina_1_ja_baixada_corta_a_menor_alem_do_total_sem_requisicao(self, caplog):
+        """O portal que abre a busca na página 1 não pede a menor página quando ela passa do total."""
+        with caplog.at_level("WARNING", logger="juscraper.tjxx"):
+            assert self._baixar([9, 12], n_pags=3, pagina_1=1) == ([], [])
+        assert "TJXX: páginas 9, 12 fora do intervalo 1-3" in caplog.text
+
 
 class TestTeto:
     """``teto``: página além dele é erro antes de pedir; com ``None``, aviso e corte."""

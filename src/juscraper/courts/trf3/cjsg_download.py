@@ -553,9 +553,6 @@ def cjsg_download_manager(
     )
 
     def buscar(pagina: int) -> str:
-        # A página 1 é a resposta do POST, que abre a busca; ela só entra no retorno se foi pedida.
-        if pagina == 1:
-            return primeira
         time.sleep(sleep_time)
         page = request_fn("GET", PAGE_URL, params={"np": pagina}, **comum)
         page.encoding = "utf-8"
@@ -566,4 +563,8 @@ def cjsg_download_manager(
         _check_lista(page.text, page.url, total_da_busca=total)
         return page.text
 
-    return baixar_paginas_pedidas(inp.paginas_normalizadas, buscar, lambda _primeira: n_paginas, tribunal="TRF3")
+    # A página 1 é a resposta do POST, que abre a busca; ela vai ao laço comum
+    # em ``pagina_1`` e só entra no retorno se foi pedida.
+    return baixar_paginas_pedidas(
+        inp.paginas_normalizadas, buscar, lambda _primeira: n_paginas, tribunal="TRF3", pagina_1=primeira
+    )
