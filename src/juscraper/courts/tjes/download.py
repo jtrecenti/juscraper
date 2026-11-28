@@ -82,6 +82,7 @@ def cjsg_download(
     per_page=DEFAULT_PER_PAGE,
     *,
     request_fn: RequestFn,
+    sleep_time: float = 1.0,
 ) -> list:
     """Download raw JSON results from the TJES jurisprudence search.
 
@@ -118,4 +119,4 @@ def cjsg_download(
         total_pages: int = first.get("total_pages") or 1
         return total_pages
 
-    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJES", sleep_time=1)
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJES", sleep_time=sleep_time)

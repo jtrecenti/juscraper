@@ -37,15 +37,17 @@ class TJPRScraper(HTTPScraper):
         "ementa": RequestPolicy(timeout=30),
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None) -> None:
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None) -> None:
         """Cria o raspador do TJPR.
 
         Args:
+            sleep_time: Pausa, em segundos, antes de cada página depois da
+                primeira. Default 1.
             politica: Ajuste dos perfis HTTP ``"cjsg"`` (home e busca) e
                 ``"ementa"`` (ementa completa), por exemplo
                 ``{"cjsg": {"timeout": 120}}``.
         """
-        super().__init__("TJPR", politica=politica)
+        super().__init__("TJPR", sleep_time=sleep_time, politica=politica)
 
     def _configure_session(self, session: requests.Session) -> None:
         """TJPR's portal applies User-Agent gating — keep the Chrome UA."""
@@ -144,6 +146,7 @@ class TJPRScraper(HTTPScraper):
             data_publicacao_inicio=inp.data_publicacao_inicio,
             data_publicacao_fim=inp.data_publicacao_fim,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             # Sem ``request_fn``: a leitura do parcial não faz requisição.
             ler_parcial=lambda paginas: cjsg_parse(paginas, inp.pesquisa, incluir_corte_idh=incluir_corte_idh),
         )

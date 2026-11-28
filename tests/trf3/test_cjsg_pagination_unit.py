@@ -6,7 +6,6 @@ from the real samples and remove only the summary or the counters.
 """
 from __future__ import annotations
 
-import logging
 import re
 
 import pytest
@@ -16,7 +15,7 @@ from juscraper.courts.trf3 import cjsg_download
 from juscraper.courts.trf3.cjsg_download import (
     PAGE_URL,
     _check_lista,
-    _paginas_pedidas,
+    _total_de_paginas,
     build_cjsg_session,
     cjsg_download_manager,
     cjsg_n_results,
@@ -103,28 +102,21 @@ def test_cjsg_n_results_pagina_sem_lista_devolve_none():
     assert cjsg_n_results(_sample("index_acordaos.html")) is None
 
 
-def test_paginas_pedidas_none_baixa_todas():
-    assert _paginas_pedidas(None, 3) == [1, 2, 3]
+def test_total_de_paginas_le_o_total():
+    assert _total_de_paginas(None, 3) == 3
 
 
-def test_paginas_pedidas_none_sem_resultados_baixa_so_a_primeira():
-    assert _paginas_pedidas(None, 0) == [1]
+def test_total_de_paginas_sem_resultados_baixa_so_a_primeira():
+    assert _total_de_paginas(None, 0) == 1
 
 
-def test_paginas_pedidas_none_sem_total_levanta():
+def test_total_de_paginas_none_sem_total_levanta():
     with pytest.raises(ValueError, match="total de resultados"):
-        _paginas_pedidas(None, None)
+        _total_de_paginas(None, None)
 
 
-def test_paginas_pedidas_corta_alem_do_total_e_mantem_ordem(caplog):
-    with caplog.at_level(logging.WARNING, logger="juscraper.trf3"):
-        assert _paginas_pedidas(selecao_de_paginas([3, 1, 5, 2]), 3) == [3, 1, 2]
-    assert "TRF3: página 5 fora do intervalo 1-3" in caplog.text
-
-
-@pytest.mark.parametrize("n_paginas", [3, None])
-def test_paginas_pedidas_baixa_a_repetida_uma_vez(n_paginas):
-    assert _paginas_pedidas(selecao_de_paginas([2, 1, 2]), n_paginas) == [2, 1]
+def test_total_de_paginas_sem_total_nao_corta_o_pedido_explicito():
+    assert _total_de_paginas(selecao_de_paginas([3, 1, 5, 2]), None) == 5
 
 
 LISTAS = [
@@ -226,7 +218,6 @@ def _baixar(pagina: str, paginas, **filtros):
         request_fn=request_fn,
         session=build_cjsg_session(),
         sleep_time=0,
-        progress=lambda pedidas, **_: pedidas,
     )
     return brutos, chamadas
 

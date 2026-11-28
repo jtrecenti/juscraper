@@ -189,6 +189,18 @@ def test_menor_pagina_volta_na_posicao_pedida(tribunal, mocker):
     assert brutos == (esperado if BUSCAS[tribunal][2] == "html" else [json.loads(corpo) for corpo in esperado])
 
 
+@pytest.mark.parametrize("tribunal", ["tjba", "tjes", "tjpa", "tjpb", "tjrs"])
+@responses.activate
+def test_pausa_entre_as_paginas_e_o_sleep_time_do_construtor(tribunal, mocker):
+    """Antes, 1 s fixo no download (TJRS: nenhuma pausa) (refs #801)."""
+    sleep = mocker.patch("time.sleep")
+    _registrar_busca(tribunal)
+
+    jus.scraper(tribunal, sleep_time=0.25).cjsg_download("dano moral", paginas=[2, 3])
+
+    assert sleep.call_args_list == [mocker.call(0.25)]
+
+
 @responses.activate
 def test_tjes_cjpg_segue_o_mesmo_contrato(mocker, caplog):
     """O ``cjpg`` do TJES usa o download do ``cjsg``, com ``core=pje1g``."""

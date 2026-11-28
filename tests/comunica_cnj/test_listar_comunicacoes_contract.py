@@ -83,6 +83,23 @@ def test_listar_comunicacoes_typical_multi_page(mocker):
 
 
 @responses.activate
+def test_listar_comunicacoes_sem_a_pagina_1_nao_a_requisita(mocker):
+    """O total vem em toda página: a menor pedida sai primeiro, e a 1, não pedida, não gasta requisição."""
+    mocker.patch("time.sleep")
+    _add_page(
+        "listar_comunicacoes/results_normal_page_02.json",
+        pesquisa="resolucao",
+        pagina=2,
+        itens_por_pagina=10,
+    )
+
+    df = jus.scraper("comunica_cnj").listar_comunicacoes(pesquisa="resolucao", paginas=[2], itens_por_pagina=10)
+
+    assert len(responses.calls) == 1
+    assert len(df) == 10
+
+
+@responses.activate
 def test_listar_comunicacoes_range_com_passo_pula_paginas(mocker):
     """``range(1, 4, 2)`` baixa as paginas 1 e 3; a 2, sem mock, falharia."""
     mocker.patch("time.sleep")

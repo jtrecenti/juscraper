@@ -116,6 +116,25 @@ def test_cjsg_pagina_fora_do_total_e_pulada_sem_requisicao(mocker, caplog):
 
 
 @responses.activate
+def test_cjsg_so_paginas_alem_do_total_nao_viram_requisicao(mocker, caplog):
+    """Sem página pedida dentro do total, só a página 1, que abre a sessão, é requisitada."""
+    mocker.patch("time.sleep")
+    _add_form_get()
+    _add_form_post("dano moral", ano_inicio="2024", ano_fim="2024")
+    _add_xhr(0, "xhr_page_01.json")
+    alem_do_total = 10_000  # a amostra tem 78.523 resultados, ou 7.853 páginas
+
+    with caplog.at_level("WARNING", logger="juscraper.tjrj"):
+        brutos = jus.scraper("tjrj").cjsg_download(
+            "dano moral", ano_inicio=2024, ano_fim=2024, paginas=[alem_do_total],
+        )
+
+    assert brutos == []
+    assert len([c for c in responses.calls if c.request.url == RESULT_URL]) == 1
+    assert f"TJRJ: página {alem_do_total} fora do intervalo" in caplog.text
+
+
+@responses.activate
 def test_cjsg_single_page(mocker):
     """Narrow query whose hits fit on a single XHR call."""
     mocker.patch("time.sleep")

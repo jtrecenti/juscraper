@@ -27,8 +27,8 @@ class TJMTScraper(HTTPScraper):
         "busca": RequestPolicy(timeout=60, expect_json=True),
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
-        super().__init__("TJMT", politica=politica)
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJMT", sleep_time=sleep_time, politica=politica)
         self._api_config: dict[str, str] | None = None
 
     def _get_cached_api_config(self, *, force_refresh: bool = False) -> dict[str, str]:
@@ -107,6 +107,7 @@ class TJMTScraper(HTTPScraper):
             thesaurus=inp.thesaurus,
             quantidade_por_pagina=inp.tamanho_pagina,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             session=self.session,
             api_config_provider=self._get_cached_api_config,
         )

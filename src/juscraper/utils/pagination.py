@@ -436,7 +436,7 @@ def mensagem_de_coleta_parcial(tribunal: str, faltando: Sequence[int], n_baixada
     )
 
 
-def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de teto e coleta parcial
+def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de página fixa, teto e coleta parcial
     paginas: Paginas | None,
     buscar: Callable[[int], _Pagina],
     contar_paginas: Callable[[_Pagina], int],
@@ -444,6 +444,7 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
     tribunal: str,
     sleep_time: float = 0.0,
     teto: int | None = None,
+    pagina_1: _Pagina | None = None,
     ler_parcial: Callable[[list[_Pagina]], pd.DataFrame] | None = None,
     mensagem_parcial: Callable[[list[int], int, Exception], str] | None = None,
 ) -> list[_Pagina]:
@@ -454,7 +455,8 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
     para o log, sem requisição (ver :func:`paginas_no_intervalo`). O retorno
     traz só as páginas pedidas, na ordem pedida. Toda resposta, inclusive a
     primeira, sai de ``buscar``: é ali que entra a conferência de cada página
-    antes de ela ir para o resultado.
+    antes de ela ir para o resultado. A exceção é ``pagina_1``, a do portal
+    que abre a busca na página 1.
 
     Args:
         paginas: A seleção; ``None`` baixa todas.
@@ -466,6 +468,10 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
             levanta ``ValueError`` antes de qualquer requisição
             (:func:`recusar_alem_do_teto`); com ``paginas=None`` e total
             acima do teto, ``UserWarning`` e o download para nele.
+        pagina_1: A página 1, já baixada por quem abriu a busca nela (TJGO,
+            TJMG, TJPE, TJRJ, TJRR e TRF3). O total é lido nela, e ``buscar``
+            só é chamado para as demais páginas pedidas dentro do total: a
+            menor pedida, se passa do total, vai para o log sem requisição.
         ler_parcial: Lê as páginas baixadas num DataFrame. Com ele, a falha de
             ``buscar`` depois de alguma página pedida já baixada levanta
             :class:`~juscraper.core.exceptions.ColetaParcialError`. Sem ele,
@@ -486,15 +492,19 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - laço comum; ganchos opcionais de
     """
     if teto is not None:
         recusar_alem_do_teto(paginas, teto, tribunal=tribunal)
-    inicial = menor_pagina(paginas)
-    first = buscar(inicial)
+    if pagina_1 is None:
+        inicial = menor_pagina(paginas)
+        first = buscar(inicial)
+    else:
+        inicial, first = 1, pagina_1
     n_pags = contar_paginas(first)
     if teto is not None:
         n_pags = _avisar_teto(paginas, n_pags, teto, tribunal=tribunal)
     validas = paginas_no_intervalo(paginas, n_pags, tribunal=tribunal)
     parcial = _Parcial(mensagem_parcial or partial(mensagem_de_coleta_parcial, tribunal), ler_parcial, inicial, first)
     resultados: list[_Pagina] = []
-    for posicao, pagina in enumerate(tqdm(validas, desc=f"Baixando páginas {tribunal}")):
+    barra = tqdm(validas, desc=f"Baixando páginas {tribunal}", disable=len(validas) <= 1)
+    for posicao, pagina in enumerate(barra):
         if pagina == inicial:
             resultados.append(first)
             continue

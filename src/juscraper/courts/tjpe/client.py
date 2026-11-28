@@ -31,8 +31,8 @@ class TJPEScraper(HTTPScraper):
         "cpopg": TJPEConsultaPublicaScraper.perfis_http["cpopg"],
     }
 
-    def __init__(self, *, politica: Mapping[str, Mapping[str, Any]] | None = None):
-        super().__init__("TJPE", politica=politica)
+    def __init__(self, *, sleep_time: float = 1.0, politica: Mapping[str, Mapping[str, Any]] | None = None):
+        super().__init__("TJPE", sleep_time=sleep_time, politica=politica)
         self._consulta_publica: TJPEConsultaPublicaScraper | None = None
         self._politica_cpopg = (
             {"cpopg": dict(politica["cpopg"])} if politica and "cpopg" in politica else None
@@ -222,6 +222,7 @@ class TJPEScraper(HTTPScraper):
             pesquisa=inp.pesquisa,
             paginas=inp.paginas_normalizadas,
             request_fn=self._request_with_retry,
+            sleep_time=self.sleep_time,
             data_julgamento_inicio=inp.data_julgamento_inicio,
             data_julgamento_fim=inp.data_julgamento_fim,
             relator=inp.relator,
