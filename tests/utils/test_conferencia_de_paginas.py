@@ -10,6 +10,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
+from bs4 import BeautifulSoup
 
 from juscraper.core.exceptions import PaginaInesperadaError
 from juscraper.utils.pagination import (
@@ -120,6 +121,15 @@ def test_exigir_pagina_levanta_com_a_url_da_resposta():
         "passo 3: escolha do tipo", 2, "https://tj.example/sessao-expirada",
     )
     assert isinstance(erro.value, RuntimeError)
+
+
+def test_exigir_pagina_nao_le_url_de_tag():
+    """Numa ``Tag``, ``.url`` é o elemento ``<url>``, não o endereço da resposta."""
+    soup = BeautifulSoup("<feed><url>https://outro.example</url></feed>", "html.parser")
+    with pytest.raises(PaginaInesperadaError) as erro:
+        exigir_pagina(soup, PaginaEsperada("TJXX", "cjsg", lambda s: s.select_one("table")))
+    assert erro.value.url is None
+    assert "outro.example" not in str(erro.value)
 
 
 def test_exigir_pagina_sem_url_nem_motivo():

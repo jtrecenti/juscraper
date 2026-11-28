@@ -395,7 +395,8 @@ def exigir_pagina(
         esperada: A página esperada e o sinal que a reconhece.
         pagina: Página da busca, guardada no erro.
         url: Endereço da resposta; sem ele, o ``url`` de ``resposta``, quando
-            ela tem um (``requests.Response``).
+            ele é texto (``requests.Response``). Numa ``Tag``, ``.url`` buscaria
+            um elemento ``<url>``, e por isso só vale ``str``.
 
     Returns:
         A própria ``resposta``, para encadear (``html = exigir_pagina(resp.text, _LISTA)``).
@@ -405,7 +406,9 @@ def exigir_pagina(
     """
     if esperada.reconhece(resposta):
         return resposta
-    url = url or getattr(resposta, "url", None)
+    da_resposta = getattr(resposta, "url", None)
+    if url is None and isinstance(da_resposta, str):
+        url = da_resposta
     origem = f" de {url}" if url else ""
     detalhe = f": {esperada.motivo}" if esperada.motivo else ""
     mensagem = f"{esperada.tribunal} {esperada.etapa}: a resposta{origem} não é {esperada.descricao}{detalhe}"
@@ -511,7 +514,7 @@ def baixar_paginas_pedidas(  # noqa: PLR0913 - assinatura dos raspadores que já
     as demais saem na ordem pedida, uma vez cada, com ``sleep_time`` antes de
     cada requisição, e as além do total vão para o log, sem requisição (ver
     :func:`paginas_no_intervalo`). A primeira falha de ``buscar`` sobe como
-    veio: portal com coleta parcial (TJMG, TJTO) mantém o laço próprio e
+    veio: portal com coleta parcial (TJMG, TJTO) mantém o laço próprio, que
     confere cada página com :class:`ConferenciaDePaginas`.
 
     Com ``n_itens``, cada página baixada dentro do total passa por

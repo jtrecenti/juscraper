@@ -26,7 +26,7 @@ literal (``or default``, ``max(n, 1)``, ``try/except: return 0`` e
 ``getattr(r, "total", 0)`` passam) e, no ``.get``, só as chaves de
 ``_CHAVES_DE_CONTAGEM``; ``or 0`` fora de contagem (soma de conferência)
 entra em ``EXCECOES``. O gate de ``n_itens`` vê só a chamada pelo nome
-``baixar_paginas_pedidas``; laço próprio usa ``conferir_pagina`` e fica fora.
+``baixar_paginas_pedidas``; laço próprio usa ``ConferenciaDePaginas`` e fica fora.
 """
 from __future__ import annotations
 
