@@ -2,17 +2,17 @@
 
 Cada caso aqui afirma que um valor fora do domínio de um campo apertado
 (``Literal`` da #184 e da #207, limites de ``tamanho_pagina``, aliases de
-outro tribunal da #211, combinações de filtros que o formulário do portal não
-monta) levanta ``ValidationError`` em vez de ser silenciosamente repassado ao
-backend, e que os valores do domínio continuam aceitos. Vale para os schemas de
-tribunais e de agregadores.
+outro tribunal da #211) levanta ``ValidationError`` em vez de ser silenciosamente
+repassado ao backend, e que os valores do domínio continuam aceitos. Vale para os
+schemas de tribunais e de agregadores.
 
 Adicionar um novo aperto num schema deve vir acompanhado de um caso aqui,
-de preferência como linha nova de uma das tabelas.
+como linha nova de uma das tabelas. Regra de um tribunal só (combinações de
+filtros que o formulário do portal não monta, opções conferidas contra o HTML
+do portal) fica em ``tests/<sigla>/test_cjsg_schema.py``.
 """
 from __future__ import annotations
 
-import re
 from typing import Any, get_args
 
 import numpy as np
@@ -28,32 +28,24 @@ from juscraper.courts.stm.schemas import InputCJSGSTM
 from juscraper.courts.tjap.schemas import InputCJSGTJAP
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
 from juscraper.courts.tjdft.schemas import InputCJSGTJDFT
-from juscraper.courts.tjes.schemas import (
-    ORDENACOES_POR_CORE,
-    InputCJPGTJES,
-    InputCJSGTJES,
-    OrdenacaoCJPG,
-    OrdenacaoCJSG,
-)
-from juscraper.courts.tjgo.schemas import ORGAOS_POR_INSTANCIA_E_AREA, InputCJSGTJGO
+from juscraper.courts.tjes.schemas import InputCJPGTJES, InputCJSGTJES
+from juscraper.courts.tjgo.schemas import InputCJSGTJGO
 from juscraper.courts.tjmg.schemas import InputCJSGTJMG
 from juscraper.courts.tjmt.schemas import InputCJSGTJMT
 from juscraper.courts.tjpa.schemas import InputCJSGTJPA
 from juscraper.courts.tjpb.schemas import InputCJSGTJPB
 from juscraper.courts.tjpi.schemas import InputCJSGTJPI
-from juscraper.courts.tjrj.download import extract_select_options
 from juscraper.courts.tjrj.schemas import InputCJSGTJRJ
 from juscraper.courts.tjrn.schemas import InputCJSGTJRN
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
 from juscraper.courts.tjsc.schemas import InputCJSGTJSC
 from juscraper.courts.tjto.schemas import InputCJPGTJTO, InputCJSGTJTO
 from juscraper.schemas.types import InteiroSemBool
-from tests._helpers import load_sample
 from tests.schemas._registro import schemas_mapeados
 
 _COM_TERMO = {"pesquisa": "x"}
 # No TJRN, sem termo: termo na ementa com "Sentença" ou grau "1" e recusado
-# por outra regra (``test_tjrn_recusa_termo_na_ementa_sem_ementa``).
+# por outra regra (``tests/tjrn/test_cjsg_schema.py``).
 _TJRN_SEM_TERMO = {"pesquisa": ""}
 
 
@@ -141,29 +133,6 @@ def test_literal_aceita_dominio_e_recusa_o_resto(schema_cls, base, campo, aceito
     for valor in recusados:
         with pytest.raises(ValidationError):
             schema_cls(**base, **{campo: valor})
-
-
-@pytest.mark.parametrize("core", sorted(ORDENACOES_POR_CORE.keys() - {"pje1g"}))
-def test_tjes_cjsg_ordenacao_aceita_so_as_opcoes_do_core(core):
-    aceitas = set(ORDENACOES_POR_CORE[core])
-    todas = set(get_args(OrdenacaoCJSG))
-    for valor in aceitas:
-        InputCJSGTJES(pesquisa="x", core=core, ordenacao=valor)
-    for valor in todas - aceitas:
-        with pytest.raises(ValidationError, match="nao existe no core"):
-            InputCJSGTJES(pesquisa="x", core=core, ordenacao=valor)
-    assert InputCJSGTJES(pesquisa="x", core=core).ordenacao is None
-
-
-def test_tjes_cjsg_ordenacao_cobre_as_opcoes_de_todos_os_cores():
-    opcoes = {v for valores in ORDENACOES_POR_CORE.values() for v in valores}
-    assert opcoes == set(get_args(OrdenacaoCJSG))
-    assert set(ORDENACOES_POR_CORE["pje1g"]) == set(get_args(OrdenacaoCJPG))
-
-
-def test_tjgo_id_serventia_subtipo_int_vira_string():
-    assert InputCJSGTJGO(pesquisa="x", id_serventia_subtipo=14).id_serventia_subtipo == "14"
-    assert InputCJSGTJGO(pesquisa="x").id_serventia_subtipo == "0"
 
 
 class TestNumericFieldRejection:
@@ -354,225 +323,3 @@ class TestOptionalSentinelAcceptance:
     )
     def test_accepts_empty_string(self, schema_cls, field_name):
         schema_cls(pesquisa="x", **{field_name: ""})
-
-
-class TestTJROOrgaoJulgadorIntZero:
-    """TJRO ``orgao_julgador`` aceita ``int | str | None`` e preserva o ``0`` (int).
-
-    O ``0`` não pode ser confundido com ``None`` nem com ``""``. Protege o
-    ternário ``inp.orgao_julgador if inp.orgao_julgador is not None else ""``
-    no client (o ingênuo ``or ""`` quebraria o caso).
-    """
-
-    def test_orgao_julgador_zero_int_preserved(self):
-        inp = InputCJSGTJRO(pesquisa="x", orgao_julgador=0)
-        assert inp.orgao_julgador == 0
-        assert inp.orgao_julgador is not None
-
-    def test_orgao_julgador_colegiado_zero_int_preserved(self):
-        inp = InputCJSGTJRO(pesquisa="x", orgao_julgador_colegiado=0)
-        assert inp.orgao_julgador_colegiado == 0
-        assert inp.orgao_julgador_colegiado is not None
-
-
-def _tipos_do_script_tjgo() -> list[tuple[str, str, str]]:
-    """``(areaId, servTipoId, codigo)`` do array ``tipos`` do script do formulário do TJGO."""
-    script = load_sample("tjgo", "cjsg/consulta_jurisprudencia.js", encoding="latin-1")
-    tipos = script.split("const tipos", 1)[1].split("];", 1)[0]
-    return re.findall(r'"areaId": "(\d+)", "servTipoId": "(\d+)", "codigo": "(\d+)"', tipos)
-
-
-def test_tjgo_id_serventia_subtipo_bate_com_o_seletor_do_projudi():
-    """A lista do ``Literal`` vem do array ``tipos`` do script do formulário (#207)."""
-    codigos = {"0"} | {codigo for _, _, codigo in _tipos_do_script_tjgo()}
-    campo = InputCJSGTJGO.model_fields["id_serventia_subtipo"].annotation
-    assert set(get_args(campo)) == codigos
-
-
-def test_tjgo_id_instancia_bate_com_o_seletor_do_projudi():
-    """O ``Literal`` traz as opções do seletor "Instância" do formulário atual.
-
-    ``1`` (1º grau) fica fora da comparação: deprecado, segue aceito até a 0.7.0.
-    """
-    html = load_sample("tjgo", "cjsg/blocked_turnstile.html", encoding="latin-1")
-    select = re.search(r'<select id="Id_Instancia".*?</select>', html, re.S)
-    assert select is not None
-    opcoes = set(re.findall(r'<option value="(\d+)"', select.group(0)))
-    aceitos = {str(v) for v in get_args(InputCJSGTJGO.model_fields["id_instancia"].annotation)}
-    assert aceitos - {"1"} == opcoes
-
-
-def test_tjrj_competencia_e_origem_batem_com_os_seletores_do_ejuris():
-    """Origens do form inicial; competências da origem padrão e da Turma Recursal (#207)."""
-    def opcoes(html: str, campo: str) -> set[str]:
-        valores = extract_select_options(html, campo)
-        assert valores, campo
-        return set(valores)
-
-    inicial = load_sample("tjrj", "cjsg/post_initial.html")
-    turma_recursal = load_sample("tjrj", "cjsg/postback_origem_turma_recursal.html")
-    campos = InputCJSGTJRJ.model_fields
-    assert set(get_args(campos["origem"].annotation)) == opcoes(inicial, "cmbOrigem")
-    # ``competencia`` e ``Literal[...] | None``: ``None`` usa o padrao do form.
-    literal_competencia, nenhum = get_args(campos["competencia"].annotation)
-    assert nenhum is type(None)
-    assert set(get_args(literal_competencia)) == (
-        opcoes(inicial, "cmbCompetencia") | opcoes(turma_recursal, "cmbCompetencia")
-    )
-
-
-def test_tjgo_orgaos_por_instancia_e_area_batem_com_o_script_do_projudi():
-    """A tabela que confere as combinacoes vem do array ``tipos`` do formulario."""
-    do_script: dict[tuple[str, str], set[str]] = {}
-    for area, instancia, codigo in _tipos_do_script_tjgo():
-        do_script.setdefault((instancia, area), set()).add(codigo)
-    assert do_script == ORGAOS_POR_INSTANCIA_E_AREA
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"id_instancia": 151, "id_area": 1},
-        {"id_instancia": "151", "id_area": "2", "id_serventia_subtipo": "6"},
-        {"id_instancia": 15, "id_serventia_subtipo": 66},
-        {"id_instancia": 151, "id_serventia_subtipo": 14},
-        # Orgaos do 1o grau so aparecem com "Todas as instancias".
-        {"id_instancia": 15, "id_serventia_subtipo": 27},
-        {"id_instancia": 0, "id_area": 1, "id_serventia_subtipo": 20},
-        {"id_instancia": 0, "id_area": 2, "id_serventia_subtipo": 6},
-    ],
-)
-def test_tjgo_recusa_combinacao_que_o_formulario_nao_monta(filtros):
-    with pytest.raises(ValidationError, match="formulario do Projudi"):
-        InputCJSGTJGO(pesquisa="x", **filtros)
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"id_instancia": 151, "id_serventia_subtipo": 6},
-        {"id_instancia": 15, "id_area": 1, "id_serventia_subtipo": 22},
-        {"id_instancia": 15, "id_area": 2, "id_serventia_subtipo": "22"},
-        {"id_instancia": 0, "id_serventia_subtipo": 27},
-        {"id_instancia": 0, "id_area": 2, "id_serventia_subtipo": 42},
-        {"id_instancia": 0, "id_area": 1},
-        # ``1`` (deprecado, fora do formulario) fica sem conferencia.
-        {"id_instancia": 1, "id_area": 2, "id_serventia_subtipo": 14},
-    ],
-)
-def test_tjgo_aceita_combinacao_que_o_formulario_monta(filtros):
-    InputCJSGTJGO(pesquisa="x", **filtros)
-
-
-@pytest.mark.parametrize("jurisdicoes", ["TJ", "TR"])
-def test_tjrn_recusa_jurisdicao_com_primeiro_grau(jurisdicoes):
-    """``"TJ"`` e ``"TR"`` so cobrem o 2o grau; com ``grau="1"`` o portal da 0 resultados."""
-    with pytest.raises(ValidationError, match="2o grau"):
-        InputCJSGTJRN(pesquisa="x", jurisdicoes=jurisdicoes, grau="1")
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"jurisdicoes": "TJ", "grau": "2"},
-        {"jurisdicoes": "TR", "grau": ""},
-        {"jurisdicoes": "TJ", "grau": None},
-        {"jurisdicoes": "", "grau": "1"},
-        {"jurisdicoes": None, "grau": "1"},
-    ],
-)
-def test_tjrn_aceita_jurisdicao_sem_primeiro_grau(filtros):
-    # Sem termo, porque decisoes de 1o grau nao tem ementa, onde ``pesquisa`` busca.
-    InputCJSGTJRN(pesquisa="", **filtros)
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"decisoes": "Sentença", "grau": "2"},
-        {"decisoes": "Sentença", "jurisdicoes": "TJ"},
-        {"decisoes": "Sentença", "jurisdicoes": "TR", "grau": ""},
-        {"decisoes": "Sentença", "jurisdicoes": "TJ", "grau": "1"},
-        {"decisoes": "Acórdão", "grau": "1"},
-    ],
-)
-def test_tjrn_recusa_decisao_fora_do_seu_grau(filtros):
-    """``"Sentença"`` so existe no 1o grau e ``"Acórdão"`` so no 2o; cruzadas, o portal da 0 resultados."""
-    with pytest.raises(ValidationError, match="graus diferentes"):
-        InputCJSGTJRN(pesquisa="x", **filtros)
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"decisoes": "Sentença", "grau": "1"},
-        {"decisoes": "Sentença", "jurisdicoes": None, "grau": None},
-        {"decisoes": "Acórdão", "grau": "2"},
-        {"decisoes": "Acórdão", "jurisdicoes": "TJ"},
-        {"decisoes": "Acórdão", "jurisdicoes": "TR"},
-        {"decisoes": "Decisão", "grau": "1"},
-        {"decisoes": "Decisão", "grau": "2"},
-        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
-        {"decisoes": "Decisão", "jurisdicoes": "TR"},
-    ],
-)
-def test_tjrn_aceita_decisao_no_seu_grau(filtros):
-    # Sem termo, porque sentencas e monocraticas nao tem ementa, onde ``pesquisa`` busca.
-    InputCJSGTJRN(pesquisa="", **filtros)
-
-
-@pytest.mark.parametrize(
-    "filtros",
-    [
-        {"decisoes": "Sentença"},
-        {"grau": "1"},
-        {"decisoes": "Decisão", "grau": "1"},
-        {"decisoes": "Decisão", "jurisdicoes": "TJ"},
-        {"decisoes": "Decisão", "jurisdicoes": "TR", "grau": "2"},
-        {"decisoes": "Decisão", "sistema": "PJE"},
-    ],
-)
-def test_tjrn_recusa_termo_na_ementa_sem_ementa(filtros):
-    """So os acordaos tem ementa: com termo na ementa, os demais dao 0 resultados no portal.
-
-    Sentencas, decisoes de 1o grau e monocraticas de ``"TJ"``, ``"TR"`` ou do
-    PJe nao tem ementa.
-    """
-    with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
-        InputCJSGTJRN(pesquisa="dano moral", **filtros)
-
-
-@pytest.mark.parametrize("pesquisa", ["x", "A", "a dano", "de,", '"dano moral"'])
-def test_tjrn_recusa_termo_com_palavra_que_o_portal_nao_ignora(pesquisa):
-    """O portal so ignora preposicoes e "e"/"ou" em minusculas e sem pontuacao."""
-    with pytest.raises(ValidationError, match="so os acordaos tem ementa"):
-        InputCJSGTJRN(pesquisa=pesquisa, grau="1")
-
-
-@pytest.mark.parametrize(
-    ("pesquisa", "filtros"),
-    [
-        # Sem termo, ou so com palavras que o portal ignora: a busca traz tudo do filtro.
-        ("", {"decisoes": "Sentença"}),
-        ("   ", {"grau": "1"}),
-        ("a", {"decisoes": "Sentença"}),
-        ("de", {"grau": "1"}),
-        ("a de para", {"decisoes": "Decisão", "jurisdicoes": "TJ"}),
-        ('"a"', {"decisoes": "Decisão", "sistema": "PJE"}),
-        # No inteiro teor, que sentencas e monocraticas tem.
-        ("dano moral", {"decisoes": "Sentença", "buscar_em": "inteiro_teor"}),
-        ("dano moral", {"grau": "1", "buscar_em": "inteiro_teor"}),
-        ("dano moral", {"decisoes": "Decisão", "jurisdicoes": "TR", "buscar_em": "inteiro_teor"}),
-        # Acordaos tem ementa; ha monocraticas antigas do SAJ com ementa, sem jurisdicao.
-        ("dano moral", {"decisoes": "Acórdão"}),
-        ("dano moral", {"decisoes": "Acórdão", "jurisdicoes": "TJ", "grau": "2"}),
-        ("dano moral", {"grau": "2"}),
-        ("dano moral", {"jurisdicoes": "TR"}),
-        ("apelação", {"decisoes": "Decisão"}),
-        ("apelação", {"decisoes": "Decisão", "grau": "2"}),
-        ("apelação", {"decisoes": "Decisão", "sistema": "SAJ"}),
-        ("dano moral", {"decisoes": "Acórdão", "sistema": "PJE"}),
-    ],
-)
-def test_tjrn_aceita_termo_na_ementa_de_quem_tem(pesquisa, filtros):
-    InputCJSGTJRN(pesquisa=pesquisa, **filtros)

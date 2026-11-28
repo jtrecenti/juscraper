@@ -27,7 +27,6 @@ from pydantic import BaseModel, ValidationError
 
 from juscraper.courts._esaj.schemas import InputCJPGEsaj, InputCJSGEsajPuro
 from juscraper.courts.tjba.schemas import InputCJSGTJBA
-from juscraper.courts.tjgo.schemas import OutputCJSGTJGO
 from juscraper.courts.tjro.schemas import InputCJSGTJRO
 from juscraper.courts.tjsp.schemas import InputCJSGTJSP
 from juscraper.schemas.mixins import AutoChunkMixin
@@ -188,25 +187,3 @@ class TestAutoChunkMixin:
         for schema_cls in _SEM_AUTO_CHUNK:
             with pytest.raises(ValidationError, match="extra_forbidden"):
                 schema_cls(**payload_minimo(schema_cls), auto_chunk=True)
-
-
-def test_tjgo_output_accepts_parser_shape():
-    """OutputCJSGTJGO aceita o shape real do parser (sem ``ementa``, com ``texto``).
-
-    O parser do TJGO (``src/juscraper/courts/tjgo/parse.py``) entrega
-    o conteudo do documento em ``texto`` e nao produz coluna ``ementa``,
-    ao contrario dos demais cjsg. O schema tem que refletir isso em vez
-    de herdar ``ementa: str`` required de :class:`OutputCJSGBase`.
-    """
-    row = {
-        "processo": "0000000-00.2024.8.09.0001",
-        "id_arquivo": "abc",
-        "serventia": "1a Vara",
-        "relator": "Fulano",
-        "tipo_ato": "Decisao",
-        "data_publicacao": "2024-01-15",
-        "texto": "Conteudo do documento ...",
-    }
-    model = OutputCJSGTJGO(**row)
-    assert model.processo == row["processo"]
-    assert model.ementa is None

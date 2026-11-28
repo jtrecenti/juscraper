@@ -27,10 +27,11 @@ A conferência 2 pega o sinônimo que ainda não está na lista: um rótulo novo
 do portal que vira coluna nova falha o teste até alguém declará-la ou
 renomeá-la para o nome canônico.
 
-Sample novo entra sozinho. Arquivo da pasta que não é página de resultado
-(formulário, captcha, resposta de outro endpoint) ou que foi escrito à mão com
-rótulos inventados vai em ``Leitura.ignorar`` com motivo; arquivo que o parser
-não lê e não está ali reprova o teste.
+Todo arquivo da pasta é lido, qualquer que seja a extensão, e sample novo entra
+sozinho. Arquivo que não é página de resultado (formulário, captcha, script,
+resposta de outro endpoint) ou que foi escrito à mão com rótulos inventados vai
+em ``Leitura.ignorar`` com motivo; arquivo que o parser não lê e não está ali
+reprova o teste.
 
 Sinônimo deprecado que ainda sai do parser fica em :data:`SINONIMOS_TOLERADOS`,
 com o PR que o renomeia ou a decisão de API pendente; o teste de órfãos cobra
@@ -165,7 +166,6 @@ class Leitura:
     entrada: Callable[[Path], tuple] = _paginas
     parser: Callable[..., Any] | None = None
     pasta: str | None = None
-    sufixos: tuple[str, ...] = (".html", ".json")
     ignorar: Mapping[str, str] = field(default_factory=dict)
 
 
@@ -191,11 +191,16 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjce", "cjsg"): _ESAJ_CJSG,
     ("tjms", "cjsg"): _ESAJ_CJSG,
     ("tjsp", "cjsg"): _ESAJ_CJSG,
-    ("tjsp", "cjpg"): Leitura(_caminho, sufixos=(".html",)),
+    ("tjsp", "cjpg"): Leitura(
+        _caminho,
+        ignorar={"results_normal_expected.json": "colunas esperadas escritas à mão, não é resposta do portal"},
+    ),
     ("tjms", "cjpg"): Leitura(
         _caminho,
-        sufixos=(".html",),
-        ignorar={"pasta_*.html": "pasta digital de um processo, lida por outro endpoint"},
+        ignorar={
+            "pasta_*.html": "pasta digital de um processo, lida por outro endpoint",
+            "redirecionamentos.json": "links do documento de cada sentença, gravados pela captura",
+        },
     ),
     ("tjsp", "cpopg"): Leitura(
         _caminho,
@@ -222,28 +227,29 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjes", "cjsg"): _PAGINAS,
     ("tjes", "cjpg"): _PAGINAS,
     ("tjgo", "cjsg"): Leitura(
-        sufixos=(".html",),
-        ignorar={"blocked_turnstile.html": "desafio anti-bot, sem resultado"},
+        ignorar={
+            "blocked_turnstile.html": "desafio anti-bot, sem resultado",
+            "consulta_jurisprudencia.js": "script do formulário do portal, não chega ao parser",
+        },
     ),
     ("tjmg", "cjsg"): Leitura(
-        sufixos=(".html",),
         ignorar={
             "categorizada*.html": "busca categorizada, que o parser recusa de propósito",
             "erro_ora.html": "erro do portal, que o parser levanta de propósito",
             "muitos_resultados.html": "aviso de muitos resultados, que o parser levanta de propósito",
             "form_acordao.html": "formulário de busca, não chega ao parser",
+            "captcha.png": "imagem do captcha, resolvida no download",
+            "dwr_validate.txt": "resposta DWR da validação do captcha, lida no download",
         },
     ),
     ("tjmg", "cposg"): Leitura(
         _resultado_tjmg,
-        sufixos=(".html",),
         ignorar={"partes_*.html": "página de partes, lida junto com o resultado (coluna partes)"},
     ),
     ("tjmt", "cjsg"): _PAGINAS,
     ("tjpa", "cjsg"): _PAGINAS,
     ("tjpb", "cjsg"): _PAGINAS,
     ("tjpe", "cjsg"): Leitura(
-        sufixos=(".html", ".xml"),
         ignorar={
             "step_01_consulta.html": "formulário de busca, não chega ao parser",
             "step_02_escolha.html": "escolha de tipo de decisão, não chega ao parser",
@@ -251,21 +257,27 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ),
     ("tjpi", "cjsg"): _PAGINAS,
     ("stm", "cjsg"): Leitura(
-        sufixos=(".html",),
-        ignorar={"waf_rejected.html": "recusa do WAF, que o parser levanta de propósito"},
+        ignorar={
+            "waf_rejected.html": "recusa do WAF, que o parser levanta de propósito",
+            "README.md": "descrição dos samples",
+        },
     ),
     ("tjpr", "cjsg"): Leitura(
-        sufixos=(".html",),
         ignorar={
             "home.html": "página inicial, não chega ao parser",
             "pagina_intranet.html": "página da intranet, que o parser recusa de propósito",
         },
     ),
-    ("tjrj", "cjsg"): Leitura(_xhr_tjrj, sufixos=(".json",)),
+    ("tjrj", "cjsg"): Leitura(
+        _xhr_tjrj,
+        ignorar={
+            "post_initial.html": "formulário ASP.NET, lido no download para montar o postback",
+            "postback_*.html": "postback do formulário ASP.NET, lido no download",
+        },
+    ),
     ("tjrn", "cjsg"): _PAGINAS,
     ("tjro", "cjsg"): _PAGINAS,
     ("tjrr", "cjsg"): Leitura(
-        sufixos=(".html", ".xml"),
         ignorar={
             "step_01_consulta.html": "formulário de busca, não chega ao parser",
         },
@@ -293,35 +305,36 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
         },
     ),
     ("trf3", "cjsg"): Leitura(
-        sufixos=(".html",),
         ignorar={"index_*.html": "página inicial da pesquisa, não chega ao parser"},
     ),
-    ("stf", "listar_decisoes"): Leitura(_json_solto, _decisoes_stf, sufixos=(".json",)),
-    ("stf", "contar_decisoes"): Leitura(_json_solto, parse_contagem, sufixos=(".json",)),
-    ("datajud", "listar_processos"): Leitura(_json_solto, parse_datajud_api_response, sufixos=(".json",)),
-    ("comunica_cnj", "listar_comunicacoes"): Leitura(_resposta_comunica_cnj, parse_items, sufixos=(".json",)),
+    ("stf", "listar_decisoes"): Leitura(_json_solto, _decisoes_stf),
+    ("stf", "contar_decisoes"): Leitura(_json_solto, parse_contagem),
+    ("datajud", "listar_processos"): Leitura(_json_solto, parse_datajud_api_response),
+    ("comunica_cnj", "listar_comunicacoes"): Leitura(_resposta_comunica_cnj, parse_items),
     ("jusbr", "cpopg"): Leitura(
         _detalhes_jusbr,
         _linha_jusbr,
-        sufixos=(".json",),
         ignorar={
             "list_*.json": "listagem, lida no download para achar o processo",
             "typical_single.json": "listagem, lida no download para achar o processo",
         },
     ),
     ("falcao", "listar_decisoes"): Leitura(
-        _colecao_falcao, parse_documentos, pasta="pesquisa", sufixos=(".json",),
+        _colecao_falcao, parse_documentos, pasta="pesquisa",
     ),
     ("pdpj", "cpopg"): Leitura(
         _detalhes_jusbr,
         _linhas_pdpj,
-        sufixos=(".json",),
         ignorar={"processo_nao_encontrado.json": "lista vazia; a linha de 'Nao encontrado' sai do client"},
     ),
-    ("pdpj", "pesquisa"): Leitura(_json_solto, _linhas_pesquisa_pdpj, sufixos=(".json",)),
-    ("pdpj", "documentos"): Leitura(_detalhes_jusbr, build_documento_rows, sufixos=(".json",)),
-    ("pdpj", "movimentos"): Leitura(_detalhes_jusbr, build_movimento_rows, sufixos=(".json",)),
-    ("pdpj", "partes"): Leitura(_detalhes_jusbr, build_parte_rows, sufixos=(".json",)),
+    ("pdpj", "pesquisa"): Leitura(_json_solto, _linhas_pesquisa_pdpj),
+    ("pdpj", "documentos"): Leitura(
+        _detalhes_jusbr,
+        build_documento_rows,
+        ignorar={"texto_normal.txt": "texto de um documento, conteúdo do download_documents"},
+    ),
+    ("pdpj", "movimentos"): Leitura(_detalhes_jusbr, build_movimento_rows),
+    ("pdpj", "partes"): Leitura(_detalhes_jusbr, build_parte_rows),
 }
 
 # Endpoints sem sample que o parser leia sozinho. Motivo obrigatório.
@@ -397,7 +410,8 @@ def _pasta(tribunal: str, endpoint: str, leitura: Leitura) -> Path:
 def _arquivos(tribunal: str, endpoint: str, leitura: Leitura) -> list[Path]:
     return sorted(
         arquivo for arquivo in _pasta(tribunal, endpoint, leitura).iterdir()
-        if arquivo.suffix in leitura.sufixos
+        if arquivo.is_file()
+        and not arquivo.name.startswith(".")
         and not any(fnmatch.fnmatch(arquivo.name, padrao) for padrao in leitura.ignorar)
     )
 
