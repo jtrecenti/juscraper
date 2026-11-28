@@ -208,9 +208,8 @@ class JusbrScraper(PdpjSsoMixin, HTTPScraper):
     )
 
     # Schemas pydantic da API publica (``extra="forbid"``). Expostos como
-    # atributos de classe — fonte da verdade dos parametros aceitos e marcador
-    # de "wired" para ``tests/schemas/test_signature_parity.py`` (mesmo padrao
-    # do agregador irmao PDPJ).
+    # atributos de classe — fonte da verdade dos parametros aceitos (mesmo
+    # padrao do agregador irmao PDPJ).
     INPUT_AUTH = InputAuthJusBR
     INPUT_AUTH_GOVBR = InputAuthGovbrJusBR
     INPUT_CPOPG = InputCPOPGJusBR

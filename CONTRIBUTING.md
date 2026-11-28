@@ -464,9 +464,9 @@ Quando dois endpoints da mesma família aceitam os mesmos filtros (`listar`/`con
 
 ### Registro, paridade e wiring
 
-`tests/schemas/test_schema_coverage.py` mantém `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS`, os registros de endpoints com modelos Input. Métodos stub com `NotImplementedError` ficam fora desse contrato. O schema pode existir como documentação executável antes de ser usado pelo método em runtime.
+`tests/schemas/_registro.py` mantém os registros de endpoints: `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` para os modelos Input, `EXPECTED_COURT_OUTPUT_SCHEMAS` e `EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS` para os Output. Os testes de `tests/schemas/` derivam os casos desses mapas e dos helpers do mesmo módulo, que falham alto quando um raspador não importa ou um schema não resolve. `tests/schemas/test_schema_coverage.py` reprova endpoint implementado sem entrada e entrada sem endpoint. `tests/schemas/test_output_parity.py` exige Output mapeado para todo endpoint mapeado cujo retorno anotado contém `pd.DataFrame`, e só para eles. Métodos stub com `NotImplementedError` ficam fora desse contrato.
 
-`tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando infraestrutura e aliases conhecidos. Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. `_is_wired` reconhece atributos `INPUT_<ENDPOINT>`, inclusive herdados, e as exceções declaradas em `WIRED_WITHOUT_CLASS_ATTR`; esses casos são pulados na paridade. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
+`tests/schemas/test_signature_parity.py` compara campos e parâmetros explícitos, descontando só `self` e `diretorio` (infraestrutura). Em métodos com `**kwargs`, verifica se os parâmetros explícitos estão no schema, permitindo filtros adicionais no modelo. Vale também para endpoints que validam pelo atributo `INPUT_<ENDPOINT>`. A presença no registro não comprova wiring: conferir o método e seus contratos de validação.
 
 `tests/schemas/test_signature_types.py` compara a anotação de cada parâmetro explícito com a do campo no schema. A assinatura só difere quando o pipeline converte o valor antes do pydantic; essas diferenças ficam nas regras por categoria do arquivo (`REGRAS`) e, campo a campo, em `AMPLIADOS` e `ESPECIFICAS`, cada uma com o motivo. Ao divergir, usar na assinatura o tipo do schema; regra ou exceção nova só quando o runtime aceita mais do que o schema declara.
 
@@ -474,7 +474,7 @@ Para decidir quando conectar o schema ao método, seguir `CLAUDE.md` > **Testes*
 
 ### Nomes e tipos canônicos
 
-As bases e os mixins em `src/juscraper/schemas/` definem os tipos compartilhados. `tests/schemas/test_canonical_types.py::DEPRECATED_SYNONYMS` mapeia os nomes substituídos; `TYPE_GRACE_PERIOD` e `SYNONYM_GRACE_PERIOD` registram exceções com justificativa. Consultar essas fontes ao criar campos, sem copiar suas listas para documentação.
+As bases e os mixins em `src/juscraper/schemas/` definem os tipos compartilhados. `tests/schemas/test_canonical_types.py::DEPRECATED_SYNONYMS` mapeia os nomes substituídos; `TYPE_GRACE_PERIOD` registra exceções com justificativa. Consultar essas fontes ao criar campos, sem copiar suas listas para documentação.
 
 O Output reflete o shape real do parser e usa `extra="allow"` para campos auxiliares do backend. Renomear chaves brutas para os nomes canônicos antes de construir o DataFrame; não preencher lacunas com valores provisórios. Campos específicos, como texto integral ou datas próprias do tribunal, continuam no schema concreto quando não representam o mesmo conceito de um campo compartilhado.
 
@@ -525,7 +525,7 @@ Cada `Input*` declara um `BACKEND_DATE_FORMAT: ClassVar[str]` (default `"%d/%m/%
 1. Criar `courts/<xx>/schemas.py` com Input+Output para cada método **implementado**.
 2. Herdar `SearchBase` + mixins aplicáveis; Output herda `OutputCJSGBase` + `OutputRelatoriaMixin`/`OutputDataPublicacaoMixin` conforme o parser entregue. Campos não-herdados do Output são declarados Optional.
 3. Se o parser usa nomes divergentes do canônico (`classe_cnj`, `magistrado`, `nr_processo`, ...), renomear no parser antes de commitar — Output fica com o nome canônico.
-4. Registrar em `tests/schemas/test_schema_coverage.py::EXPECTED_COURT_SCHEMAS` **e** `tests/schemas/test_output_parity.py::EXPECTED_COURT_OUTPUT_SCHEMAS`, rodar `pytest tests/schemas/`.
+4. Registrar em `tests/schemas/_registro.py`, em `EXPECTED_COURT_SCHEMAS` **e** `EXPECTED_COURT_OUTPUT_SCHEMAS`, e rodar `pytest tests/schemas/`.
 5. Se já refatorado, wirar o schema no método público seguindo o pipeline canônico de `_esaj/base.py`.
 
 ## Docstrings de métodos públicos com kwargs
@@ -618,7 +618,7 @@ Exemplos e a lista de filtros ficam no método principal, como `cjsg` ou `cjpg`.
 
 `tests/schemas/test_docstring_parity.py::test_docstring_lists_schema_fields` confere, nos endpoints de `CASES`, que cada campo do schema está documentado: o parâmetro explícito da assinatura numa entrada de `Args:`, o filtro de `**kwargs` num bullet com o mesmo nome, sem bullet a mais.
 
-`CASES` não é escrito à mão: sai dos mapas `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` de `tests/schemas/test_schema_coverage.py`, um caso por método com `**kwargs`, na classe que o define. `test_metodo_publico_com_kwargs_tem_paridade_registrada` reprova método público com `**kwargs` de qualquer classe na hierarquia de um raspador registrado em `juscraper._SCRAPERS` (inclusive base e mixin) que não esteja em `CASES` nem em `SEM_PARIDADE`. Método novo com schema entra no mapa; `SEM_PARIDADE` é só para quem não tem filtros a conferir, como um `**kwargs` que só recebe alias, com o motivo. Stubs e `*_download` ficam de fora (estes, com o teste de remissão, abaixo).
+`CASES` não é escrito à mão: sai dos mapas `EXPECTED_COURT_SCHEMAS` e `EXPECTED_AGGREGATOR_SCHEMAS` de `tests/schemas/_registro.py`, um caso por método com `**kwargs`, na classe que o define. `test_metodo_publico_com_kwargs_tem_paridade_registrada` reprova método público com `**kwargs` de qualquer classe na hierarquia de um raspador registrado em `juscraper._SCRAPERS` (inclusive base e mixin) que não esteja em `CASES` nem em `SEM_PARIDADE`. Método novo com schema entra no mapa; `SEM_PARIDADE` é só para quem não tem filtros a conferir, como um `**kwargs` que só recebe alias, com o motivo. Stubs e `*_download` ficam de fora (estes, com o teste de remissão, abaixo).
 
 `test_docstring_declares_schema_types` aplica aos mesmos casos as regras de "Tipo dos filtros em `**kwargs`".
 

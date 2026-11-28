@@ -22,27 +22,16 @@ publico aceita por composicao.
 """
 from __future__ import annotations
 
-import importlib
-import inspect
-import pkgutil
 from typing import Any, get_args, get_origin
 
 import numpy as np
 import pytest
 from pydantic import BaseModel, ValidationError
 
-import juscraper
 from juscraper.schemas import PaginasMixin
 from juscraper.utils.pagination import selecao_de_paginas
 from juscraper.utils.params import normalize_paginas
-from tests.schemas.test_schema_coverage import (
-    EXPECTED_AGGREGATOR_SCHEMAS,
-    EXPECTED_COURT_SCHEMAS,
-    _iter_aggregator_scrapers,
-    _iter_court_scrapers,
-    _resolve,
-    _schemas_mapeados,
-)
+from tests.schemas._registro import parametros_explicitos, payload_minimo, schemas_definidos, schemas_mapeados
 
 SEARCH_ENDPOINTS = frozenset({"cjsg", "cjpg", "listar_processos", "listar_decisoes"})
 
@@ -53,24 +42,7 @@ PAGINAS_VARIANTS: list[tuple[str, Any]] = [
     ("none", None),
 ]
 
-def _minimal_kwargs_for_schema(schema_cls: type[BaseModel]) -> dict[str, Any]:
-    """Preenche campos ``required`` do schema com valores neutros."""
-    kwargs: dict[str, Any] = {}
-    for name, field in schema_cls.model_fields.items():
-        if not field.is_required():
-            continue
-        # Tipos comuns em fields required: str, str | list[str].
-        # ``pesquisa``: str; ``id_cnj``: str | list[str]; ``token``: str; ``base_df``: Any.
-        kwargs[name] = "teste"
-    return kwargs
-
-
-SEARCH_CASES = [
-    par
-    for par in _schemas_mapeados(EXPECTED_COURT_SCHEMAS, _iter_court_scrapers)
-    + _schemas_mapeados(EXPECTED_AGGREGATOR_SCHEMAS, _iter_aggregator_scrapers)
-    if par.endpoint in SEARCH_ENDPOINTS
-]
+SEARCH_CASES = [par for par in schemas_mapeados() if par.endpoint in SEARCH_ENDPOINTS]
 
 SCHEMA_CASES = [
     pytest.param(par, variant_name, paginas_value, id=f"{par.sigla}.{par.endpoint}.schema.{variant_name}")
@@ -134,21 +106,11 @@ def test_paginas_mixin_rejects_invalid_selections(paginas):
 
 
 def _schemas_com_paginas() -> list[type[BaseModel]]:
-    """Todo modelo pydantic dos modulos ``*schemas`` com campo ``paginas``."""
-    found: dict[str, type[BaseModel]] = {}
-    for modinfo in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
-        if not modinfo.name.rsplit(".", 1)[-1].endswith("schemas"):
-            continue
-        mod = importlib.import_module(modinfo.name)
-        for obj in vars(mod).values():
-            if (
-                inspect.isclass(obj)
-                and issubclass(obj, BaseModel)
-                and obj is not PaginasMixin
-                and "paginas" in getattr(obj, "model_fields", {})
-            ):
-                found[f"{obj.__module__}.{obj.__qualname__}"] = obj
-    return [found[k] for k in sorted(found)]
+    """Todo modelo pydantic dos modulos de schemas com campo ``paginas``."""
+    return sorted(
+        (obj for obj in schemas_definidos() if obj is not PaginasMixin and "paginas" in obj.model_fields),
+        key=lambda obj: f"{obj.__module__}.{obj.__qualname__}",
+    )
 
 
 @pytest.mark.parametrize("schema_cls", _schemas_com_paginas(), ids=lambda c: c.__name__)
@@ -162,11 +124,10 @@ def test_schema_com_paginas_herda_paginas_mixin(schema_cls):
 @pytest.mark.parametrize(("par", "variant_name", "paginas_value"), SCHEMA_CASES)
 def test_schema_accepts_paginas(par, variant_name, paginas_value):
     """Todo Input<Endpoint><Tribunal> declara ``paginas`` e o aceita nas 4 formas."""
-    schema_cls = _resolve(par.modulo, par.classe)
-    assert schema_cls is not None, f"{par.modulo}:{par.classe} nao encontrado"
+    schema_cls = par.schema
     assert "paginas" in schema_cls.model_fields, f"{par.classe} nao declara campo ``paginas``"
 
-    kwargs = _minimal_kwargs_for_schema(schema_cls)
+    kwargs = payload_minimo(schema_cls)
     kwargs["paginas"] = paginas_value
 
     try:
@@ -182,9 +143,7 @@ def test_schema_accepts_paginas(par, variant_name, paginas_value):
         raise
 
 
-@pytest.mark.parametrize(
-    "par", SEARCH_CASES, ids=[f"{par.sigla}.{par.endpoint}" for par in SEARCH_CASES]
-)
+@pytest.mark.parametrize("par", SEARCH_CASES, ids=[par.id for par in SEARCH_CASES])
 def test_public_method_accepts_paginas(par):
     """Metodo publico de busca expoe ``paginas``, como promete :class:`SearchBase`.
 
@@ -192,7 +151,7 @@ def test_public_method_accepts_paginas(par):
     :mod:`tests.schemas.test_signature_types` confere a anotacao.
     """
     method = getattr(par.raspador, par.endpoint)
-    assert "paginas" in inspect.signature(method).parameters, (
+    assert "paginas" in parametros_explicitos(method), (
         f"{par.raspador.__name__}.{par.endpoint} nao expoe parametro ``paginas`` "
         "— viola o contrato de SearchBase para endpoints de busca."
     )

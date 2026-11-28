@@ -239,6 +239,22 @@ class InputContarProcessosDataJud(_InputFiltrosDataJud):
     """
 
 
+class OutputContarProcessosDataJud(BaseModel):
+    """Uma linha do DataFrame de :meth:`DatajudScraper.contar_processos`, por tribunal.
+
+    Na consulta que falha, ``count`` e ``relation`` saem ``None`` e ``error`` traz
+    o motivo.
+    """
+
+    tribunal: str
+    alias: str
+    count: int | None = None
+    relation: str | None = None
+    error: str | None = None
+
+    model_config = ConfigDict(extra="allow")
+
+
 class OutputListarProcessosDataJud(BaseModel):
     """Colunas observaveis em uma linha do DataFrame de
     :meth:`DatajudScraper.listar_processos`.
