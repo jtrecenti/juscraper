@@ -224,7 +224,7 @@ class DatajudScraper(HTTPScraper):
     DEFAULT_API_KEY = "cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw=="
     BASE_API_URL = "https://api-publica.datajud.cnj.jus.br"
 
-    # Schema pydantic detectado por ``tests/schemas/test_signature_parity._is_wired``.
+    # Schema pydantic da API publica (``extra="forbid"``) de ``listar_processos``.
     INPUT_LISTAR_PROCESSOS = InputListarProcessosDataJud
 
     PREFIXO_DIRETORIO_TEMPORARIO = "datajud_api_"

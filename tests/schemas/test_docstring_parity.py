@@ -11,7 +11,6 @@ from __future__ import annotations
 import importlib
 import inspect
 import json
-import pkgutil
 import re
 import types
 import typing
@@ -22,19 +21,8 @@ from typing import Any, Literal
 import pytest
 from pydantic_core import PydanticUndefined
 
-import juscraper
 from juscraper.utils.params import DATE_CANONICAL
-from tests.schemas.test_signature_parity import _accepts_kwargs
-
-# Aliases deprecados resolvidos *antes* do pydantic. Aparecem em uma
-# secao propria da docstring (``Aliases deprecados``) mas nao sao campos
-# do schema. Mesma lista que tests/schemas/test_signature_parity.py.
-DEPRECATED_ALIASES = frozenset({
-    "query", "termo",
-    "data_inicio", "data_fim",
-    "data_julgamento_de", "data_julgamento_ate",
-    "data_publicacao_de", "data_publicacao_ate",
-})
+from tests.schemas._registro import ALIASES_DEPRECADOS, aceita_kwargs, modulos, resolve
 
 # Parametros explicitos da assinatura — citados na docstring na secao
 # ``Args:`` mas nao sao filtros via ``**kwargs``.
@@ -166,13 +154,11 @@ def _docstring_bullets(method) -> dict[str, str | None]:
 
 
 def _schema_filter_fields(module_path: str, class_name: str) -> set[str]:
-    mod = importlib.import_module(module_path)
-    klass = getattr(mod, class_name)
-    return set(klass.model_fields.keys()) - EXPLICIT_PARAMS
+    return set(resolve(module_path, class_name).model_fields) - EXPLICIT_PARAMS
 
 
 @pytest.mark.parametrize(
-    "scraper_module,scraper_class,endpoint,schema_module,schema_class",
+    ("scraper_module", "scraper_class", "endpoint", "schema_module", "schema_class"),
     CASES,
 )
 def test_docstring_lists_schema_fields(
@@ -182,16 +168,16 @@ def test_docstring_lists_schema_fields(
     method = getattr(getattr(mod, scraper_class), endpoint)
 
     fields = _schema_filter_fields(schema_module, schema_class)
-    # Um nome em ``DEPRECATED_ALIASES`` so e subtraido quando NAO e um campo
+    # Um nome em ``ALIASES_DEPRECADOS`` so e subtraido quando NAO e um campo
     # real do schema do caso atual. Cobre colisoes onde o mesmo nome e
     # alias deprecado em outros tribunais (``query`` -> ``pesquisa``) mas
     # campo real aqui (``query`` no DataJud e o override Elasticsearch).
-    bullets = set(_docstring_bullets(method)) - EXPLICIT_PARAMS - (DEPRECATED_ALIASES - fields)
+    bullets = set(_docstring_bullets(method)) - EXPLICIT_PARAMS - (ALIASES_DEPRECADOS - fields)
 
     schema_only = fields - bullets
     docstring_only = bullets - fields
 
-    assert not schema_only and not docstring_only, (
+    assert not schema_only | docstring_only, (
         f"{scraper_class}.{endpoint} — paridade docstring/schema falhou:\n"
         f"  campos no schema {schema_class} mas nao na docstring: "
         f"{sorted(schema_only) or '-'}\n"
@@ -287,7 +273,7 @@ def _avaliar(declarado: str, *modulos) -> object:
 
 
 @pytest.mark.parametrize(
-    "scraper_module,scraper_class,endpoint,schema_module,schema_class",
+    ("scraper_module", "scraper_class", "endpoint", "schema_module", "schema_class"),
     CASES,
 )
 def test_docstring_declares_schema_types(
@@ -303,7 +289,7 @@ def test_docstring_declares_schema_types(
     mod = importlib.import_module(scraper_module)
     schema_mod = importlib.import_module(schema_module)
     method = getattr(getattr(mod, scraper_class), endpoint)
-    klass = getattr(schema_mod, schema_class)
+    klass = resolve(schema_module, schema_class)
 
     wrong = {}
     for name, declared in _docstring_bullets(method).items():
@@ -340,8 +326,7 @@ def _pares_download() -> list[tuple[str, str, str]]:
     """
     em_cases = {tuple(p.values[:3]) for p in CASES}
     pares = set()
-    for info in pkgutil.walk_packages(juscraper.__path__, "juscraper."):
-        mod = importlib.import_module(info.name)
+    for mod in modulos():
         for class_name, klass in vars(mod).items():
             if not inspect.isclass(klass) or klass.__module__ != mod.__name__:
                 continue
@@ -349,7 +334,7 @@ def _pares_download() -> list[tuple[str, str, str]]:
                 if name.startswith("_") or not name.endswith("_download") or not callable(attr):
                     continue
                 principal = getattr(klass, name.removesuffix("_download"), None)
-                if principal is not None and _accepts_kwargs(principal):
+                if principal is not None and aceita_kwargs(principal):
                     pares.add((mod.__name__, class_name, name))
     return sorted(pares - em_cases)
 
@@ -368,7 +353,7 @@ DOWNLOAD_REFERENCE_CASES = [
 
 
 @pytest.mark.parametrize(
-    "module_path,class_name,download_method,toplevel_method",
+    ("module_path", "class_name", "download_method", "toplevel_method"),
     DOWNLOAD_REFERENCE_CASES,
 )
 def test_download_docstring_references_toplevel(

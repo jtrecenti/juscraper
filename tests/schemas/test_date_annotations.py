@@ -17,7 +17,7 @@ from datetime import date
 import pytest
 
 from juscraper.utils.params import DATE_CANONICAL
-from tests.schemas.test_schema_coverage import _iter_aggregator_scrapers, _iter_court_scrapers
+from tests.schemas._registro import raspadores
 
 DATAS_CANONICAS = frozenset(DATE_CANONICAL)
 
@@ -25,7 +25,7 @@ DATAS_CANONICAS = frozenset(DATE_CANONICAL)
 def _casos() -> list[tuple[str, str, str, Callable[..., object]]]:
     return [
         (sigla, nome, parametro, metodo)
-        for sigla, cls in [*_iter_court_scrapers(), *_iter_aggregator_scrapers()]
+        for sigla, cls in raspadores().items()
         for nome, metodo in inspect.getmembers(cls, inspect.isfunction)
         if not nome.startswith("_")
         for parametro in sorted(DATAS_CANONICAS & inspect.signature(metodo).parameters.keys())

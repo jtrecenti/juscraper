@@ -40,7 +40,7 @@ class InputListarComunicacoesComunicaCNJ(PaginasMixin):
     ``normalize_datas`` mapeia para ``data_julgamento_inicio``/
     ``data_julgamento_fim``. O ComunicaCNJ filtra por data de
     disponibilizacao (semantica diferente), entao usar nome explicito evita
-    colisao com o pipeline canonico (``DEPRECATED_ALIASES``/``DATE_ALIASES``
+    colisao com o pipeline canonico (``DATE_ALIASES``
     em ``utils/params.py``).
     """
 

@@ -9,8 +9,8 @@ estivesse em :data:`DEPRECATED_SYNONYMS`. Os parsers que montam a chave a
 partir do rótulo do HTML (eSAJ) ou repassam o JSON da API nem passam pela
 conferência por substring de ``test_output_parity``.
 
-Aqui, o parser público de cada endpoint de :data:`EXPECTED_COURT_OUTPUT_SCHEMAS`
-/ :data:`EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS` roda sobre os arquivos de
+Aqui, o parser público de cada endpoint de
+:data:`tests.schemas._registro.OUTPUT_SCHEMAS` roda sobre os arquivos de
 ``tests/<sigla>/samples/<pasta>/``, e as colunas **efetivamente entregues**
 passam por duas conferências:
 
@@ -54,18 +54,13 @@ from juscraper.aggregators.comunica_cnj.parse import parse_items
 from juscraper.aggregators.datajud.parse import parse_datajud_api_response
 from juscraper.aggregators.falcao.parse import parse_documentos
 from juscraper.aggregators.jusbr.parse import parse_process_details_response
+from juscraper.aggregators.pdpj.parse import build_processo_row
 from juscraper.courts.stf.parse import parse_contagem, parse_decisoes
+from tests.schemas._registro import OUTPUT_SCHEMAS, resolve
 from tests.schemas.test_canonical_types import DEPRECATED_SYNONYMS
-from tests.schemas.test_output_parity import (
-    EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
-    EXPECTED_COURT_OUTPUT_SCHEMAS,
-    _resolve_output,
-)
 
 TESTS = Path(__file__).resolve().parent.parent
 CNJ_FICTICIO = "0000000-00.0000.0.00.0000"
-
-OUTPUT_SCHEMAS = {**EXPECTED_COURT_OUTPUT_SCHEMAS, **EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS}
 
 
 def _texto(arquivo: Path) -> str:
@@ -109,7 +104,7 @@ def _detalhe_com_cnj(arquivo: Path) -> tuple:
 
 def _registros_tjdft(arquivo: Path) -> tuple:
     """O download do TJDFT entrega a lista ``registros`` de cada página ao parser."""
-    return (_json(arquivo).get("registros", []),)
+    return (_json(arquivo)["registros"],)
 
 
 def _resultado_tjmg(arquivo: Path) -> tuple:
@@ -133,6 +128,10 @@ def _detalhes_jusbr(arquivo: Path) -> tuple:
 
 def _linha_jusbr(dados: Any, cnj: str) -> list[dict]:
     return [parse_process_details_response(dados, cnj)]
+
+
+def _linhas_pdpj(dados: list[dict[str, Any]], cnj: str) -> list[dict]:
+    return [build_processo_row(detalhe, cnj) for detalhe in dados]
 
 
 def _decisoes_stf(resposta: dict[str, Any]) -> list[dict[str, Any]]:
@@ -161,11 +160,14 @@ class Leitura:
 _ESAJ_CJSG = Leitura(_caminho)
 _PAGINAS = Leitura()
 _MOTIVO_PJE_PIVOT = "o Output cobre só o pivot (id_cnj); o detalhe do PJe vem descrito no docstring"
+_PJE_CPOPG_BUSCA = {
+    "form_initial.html": "formulário de busca, não chega ao parser",
+    "search_*.html": "lista de busca, lida no download para achar o detalhe",
+}
 _PJE_CPOPG = Leitura(
     _detalhe_com_cnj,
     ignorar={
-        "form_initial.html": "formulário de busca, não chega ao parser",
-        "search_*.html": "lista de busca, lida no download para achar o detalhe",
+        **_PJE_CPOPG_BUSCA,
         "movs_page_*.html": "página extra de movimentações, juntada ao detalhe no download",
     },
 )
@@ -267,7 +269,7 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("tjpe", "cpopg"): Leitura(
         _detalhe_com_cnj,
         ignorar={
-            **_PJE_CPOPG.ignorar,
+            **_PJE_CPOPG_BUSCA,
             "waf_challenge.html": "desafio do AWS WAF, que o download repete com cookie novo",
         },
     ),
@@ -298,6 +300,12 @@ LEITURAS: dict[tuple[str, str], Leitura] = {
     ("falcao", "listar_decisoes"): Leitura(
         _colecao_falcao, parse_documentos, pasta="pesquisa", sufixos=(".json",),
     ),
+    ("pdpj", "cpopg"): Leitura(
+        _detalhes_jusbr,
+        _linhas_pdpj,
+        sufixos=(".json",),
+        ignorar={"processo_nao_encontrado.json": "lista vazia; a linha de 'Nao encontrado' sai do client"},
+    ),
 }
 
 # Endpoints sem sample que o parser leia sozinho. Motivo obrigatório.
@@ -311,6 +319,7 @@ SEM_LEITURA: dict[tuple[str, str], str] = {
         "trf3/parse.py, conferidas por test_output_parity"
     ),
     ("jusbr", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
+    ("pdpj", "download_documents"): "devolve texto/binário de documento, sem samples de DataFrame",
 }
 
 # Só a conferência 1 (nomes deprecados). Motivo obrigatório.
@@ -363,10 +372,13 @@ SINONIMOS_TOLERADOS: dict[tuple[str, str, str], str] = {
 }
 
 
+def _pasta(tribunal: str, endpoint: str, leitura: Leitura) -> Path:
+    return TESTS / tribunal / "samples" / (leitura.pasta or endpoint)
+
+
 def _arquivos(tribunal: str, endpoint: str, leitura: Leitura) -> list[Path]:
-    pasta = TESTS / tribunal / "samples" / (leitura.pasta or endpoint)
     return sorted(
-        arquivo for arquivo in pasta.iterdir()
+        arquivo for arquivo in _pasta(tribunal, endpoint, leitura).iterdir()
         if arquivo.suffix in leitura.sufixos
         and not any(fnmatch.fnmatch(arquivo.name, padrao) for padrao in leitura.ignorar)
     )
@@ -435,20 +447,27 @@ def test_colunas_entregues_sem_nome_deprecado(tribunal, endpoint):
     )
 
 
+def _nao_declaradas(tribunal: str, endpoint: str) -> list[str]:
+    """Colunas entregues fora do Output, de AUXILIARES_NAO_DECLARADAS e de SINONIMOS_TOLERADOS."""
+    declaradas = set(resolve(*OUTPUT_SCHEMAS[(tribunal, endpoint)]).model_fields)
+    auxiliares = AUXILIARES_NAO_DECLARADAS.get((tribunal, endpoint), {})
+    return [
+        coluna
+        for coluna in sorted(colunas_entregues(tribunal, endpoint))
+        if coluna not in declaradas
+        and coluna not in auxiliares
+        and (tribunal, endpoint, coluna) not in SINONIMOS_TOLERADOS
+    ]
+
+
 @pytest.mark.parametrize(("tribunal", "endpoint"), CASOS)
 def test_colunas_entregues_estao_declaradas(tribunal, endpoint):
     if (tribunal, endpoint) in SO_NOMES_DEPRECADOS:
         pytest.skip(SO_NOMES_DEPRECADOS[(tribunal, endpoint)])
-    module_path, class_name = OUTPUT_SCHEMAS[(tribunal, endpoint)]
-    declaradas = set(_resolve_output(module_path, class_name).model_fields)
-    auxiliares = AUXILIARES_NAO_DECLARADAS.get((tribunal, endpoint), {})
+    class_name = OUTPUT_SCHEMAS[(tribunal, endpoint)][1]
     entregues = colunas_entregues(tribunal, endpoint)
     fora = [
-        f"{coluna} (em {_onde(entregues, coluna)})"
-        for coluna in sorted(entregues)
-        if coluna not in declaradas
-        and coluna not in auxiliares
-        and (tribunal, endpoint, coluna) not in SINONIMOS_TOLERADOS
+        f"{coluna} (em {_onde(entregues, coluna)})" for coluna in _nao_declaradas(tribunal, endpoint)
     ]
     assert not fora, (
         f"{tribunal}.{endpoint} entrega colunas que {class_name} não declara:\n * "
@@ -471,10 +490,27 @@ def test_registro_cobre_todos_os_outputs():
 
 
 def test_excecoes_ainda_sao_necessarias():
-    """Exceção sem a coluna correspondente nos samples é órfã: remover."""
+    """Exceção que já não faz diferença nos samples é órfã: remover.
+
+    Vale para coluna auxiliar ou sinônimo que sumiu dos samples, endpoint de
+    :data:`SO_NOMES_DEPRECADOS` que já declara toda coluna entregue e padrão de
+    ``Leitura.ignorar`` que não casa com nenhum arquivo da pasta.
+    """
     orfas = [
         f"SO_NOMES_DEPRECADOS: {chave}" for chave in SO_NOMES_DEPRECADOS if chave not in LEITURAS
     ]
+    orfas += [
+        f"SO_NOMES_DEPRECADOS: {tribunal}.{endpoint} (toda coluna entregue já está declarada)"
+        for tribunal, endpoint in SO_NOMES_DEPRECADOS
+        if (tribunal, endpoint) in LEITURAS and not _nao_declaradas(tribunal, endpoint)
+    ]
+    for (tribunal, endpoint), leitura in LEITURAS.items():
+        nomes = [arquivo.name for arquivo in _pasta(tribunal, endpoint, leitura).iterdir()]
+        orfas += [
+            f"Leitura.ignorar: {tribunal}.{endpoint} {padrao!r} (nenhum arquivo da pasta)"
+            for padrao in leitura.ignorar
+            if not fnmatch.filter(nomes, padrao)
+        ]
     for (tribunal, endpoint), colunas in AUXILIARES_NAO_DECLARADAS.items():
         entregues = colunas_entregues(tribunal, endpoint)
         orfas += [
@@ -485,6 +521,6 @@ def test_excecoes_ainda_sao_necessarias():
         if coluna not in colunas_entregues(tribunal, endpoint):
             orfas.append(f"SINONIMOS_TOLERADOS: {tribunal}.{endpoint}.{coluna}")
     assert not orfas, (
-        "Exceções que já não aparecem nos samples (a correção provavelmente entrou; "
+        "Exceções que já não fazem diferença nos samples (a correção provavelmente entrou; "
         "remover a entrada):\n * " + "\n * ".join(orfas)
     )

@@ -5,7 +5,7 @@ Filtro que o backend não oferece sai do schema pydantic do endpoint, e o
 Schemas pydantic). Um ``NotImplementedError`` levantado no meio do downloader
 quebra esse contrato de dois jeitos: quem consome a API, como o helper dos
 testes de release, só reconhece filtro recusado por ``TypeError``; e
-``tests/schemas/test_schema_coverage.py`` trata como stub todo método cujo
+``tests/schemas/_registro.py`` (``is_stub``) trata como stub todo método cujo
 código contém ``raise NotImplementedError``, então um endpoint implementado
 com esse raise num ramo sai do registro de schemas sem aviso.
 

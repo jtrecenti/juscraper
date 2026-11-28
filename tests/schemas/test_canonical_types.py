@@ -1,7 +1,7 @@
 """Rede de seguranca contra drift de nomes canonicos e tipos de campo.
 
 Dois enforcamentos em schemas concretos Input/Output (mapeados em
-:mod:`tests.schemas.test_schema_coverage` e :mod:`tests.schemas.test_output_parity`):
+:mod:`tests.schemas._registro`):
 
 1. **Tipos consistentes para nomes canonicos** — um campo cujo nome
    coincide com um campo das bases/mixins deve ter o mesmo tipo
@@ -12,15 +12,12 @@ Dois enforcamentos em schemas concretos Input/Output (mapeados em
    ``DEPRECATED_SYNONYMS`` mapeia as substituições; declarar um desses
    nomes em schema novo reintroduz a divergência e quebra o teste.
 
-:data:`TYPE_GRACE_PERIOD` e :data:`SYNONYM_GRACE_PERIOD` documentam
-excecoes conhecidas que ainda aparecem por razao explicita — p.ex.
-TJPI/TJGO nao convertem ``data_publicacao`` para ``date``, DataJud
-ainda so aceita ``range`` na assinatura. Cada entrada tem a razao e o
-PR pendente.
+:data:`TYPE_GRACE_PERIOD` documenta as excecoes de tipo conhecidas,
+cada uma com o motivo: TJPI/TJGO nao convertem ``data_publicacao`` para
+``date`` (pendente de limpeza no parser) e as linhas da Corte IDH no TJPR
+saem sem ``processo`` (permanente, imposta pela fonte).
 """
 from __future__ import annotations
-
-import importlib
 
 import pytest
 from pydantic import BaseModel
@@ -35,8 +32,7 @@ from juscraper.schemas import (
     OutputRelatoriaMixin,
     SearchBase,
 )
-from tests.schemas.test_output_parity import EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS, EXPECTED_COURT_OUTPUT_SCHEMAS
-from tests.schemas.test_schema_coverage import EXPECTED_AGGREGATOR_SCHEMAS, EXPECTED_COURT_SCHEMAS
+from tests.schemas._registro import INPUT_SCHEMAS, OUTPUT_SCHEMAS, SchemaMapeado, resolve, schemas_mapeados
 
 # Fonte da verdade Input: bases/mixins que concretos de Input podem
 # herdar/redeclarar. Cada campo declarado aqui fixa o tipo canonico.
@@ -92,9 +88,8 @@ DEPRECATED_SYNONYMS: dict[str, str] = {
 
 
 # Excecoes de tipo keyed por (nome_da_classe, nome_do_campo). Documentam
-# divergencias conhecidas com o PR pendente. Remover a entrada quando
-# o PR de correcao entrar. Entradas permanentes, impostas pela fonte, dizem
-# isso no comentario.
+# divergencias conhecidas e o motivo. Remover a entrada quando a correcao
+# entrar. Entradas permanentes, impostas pela fonte, dizem isso no comentario.
 TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
     # TJPI e TJGO entregam data_publicacao sempre como string crua (nao
     # convertem para datetime.date). O canonico do mixin e
@@ -117,60 +112,31 @@ TYPE_GRACE_PERIOD: dict[tuple[str, str], str] = {
 }
 
 
-# Excecoes de sinonimo keyed por (nome_da_classe, nome_do_campo).
-# Documentam tribunais que ainda nao passaram pelo rename canonico
-# mas estao na agenda.
-SYNONYM_GRACE_PERIOD: dict[tuple[str, str], str] = {
-}
-
-
-def _resolve(module_path: str, class_name: str) -> type[BaseModel]:
-    mod = importlib.import_module(module_path)
-    cls: type[BaseModel] = getattr(mod, class_name)
-    return cls
-
-
 def _is_output(class_name: str) -> bool:
     return class_name.startswith("Output")
 
 
 def _all_schema_cases():
-    """Toda classe Input + Output mapeada, deduplicada por (module, class)."""
-    seen: set[tuple[str, str]] = set()
-    cases: list[pytest.ParameterSet] = []
-    for mapping in (
-        EXPECTED_COURT_SCHEMAS,
-        EXPECTED_AGGREGATOR_SCHEMAS,
-        EXPECTED_COURT_OUTPUT_SCHEMAS,
-        EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
-    ):
-        for (tribunal, endpoint), (module_path, class_name) in mapping.items():
-            key = (module_path, class_name)
-            if key in seen:
-                continue
-            seen.add(key)
-            cases.append(
-                pytest.param(
-                    module_path,
-                    class_name,
-                    id=f"{tribunal}.{endpoint}.{class_name}",
-                )
-            )
-    return cases
+    """Toda classe Input + Output mapeada, sem repetir as compartilhadas (id da primeira entrada)."""
+    primeira: dict[type[BaseModel], SchemaMapeado] = {}
+    for mapping in (INPUT_SCHEMAS, OUTPUT_SCHEMAS):
+        for par in schemas_mapeados(mapping):
+            primeira.setdefault(par.schema, par)
+    return [pytest.param(par, id=f"{par.id}.{par.classe}") for par in primeira.values()]
 
 
 SCHEMA_CASES = _all_schema_cases()
 
 
-@pytest.mark.parametrize("module_path,class_name", SCHEMA_CASES)
-def test_canonical_field_types_are_consistent(module_path, class_name):
+@pytest.mark.parametrize("par", SCHEMA_CASES)
+def test_canonical_field_types_are_consistent(par: SchemaMapeado):
     """Campos com nome canonico carregam o tipo declarado na base/mixin.
 
     Input e Output tem palettes separadas: um campo ``id_cnj`` num Input
     segue ``CnjInputBase`` (``str | list[str]``); num Output segue
     ``OutputCnjConsultaBase`` (``str``).
     """
-    schema_cls = _resolve(module_path, class_name)
+    schema_cls, class_name = par.schema, par.classe
     palette = CANONICAL_OUTPUT_TYPES if _is_output(class_name) else CANONICAL_INPUT_TYPES
     divergencias: list[str] = []
     for name, info in schema_cls.model_fields.items():
@@ -191,20 +157,18 @@ def test_canonical_field_types_are_consistent(module_path, class_name):
         )
 
 
-@pytest.mark.parametrize("module_path,class_name", SCHEMA_CASES)
-def test_no_deprecated_synonyms_in_schemas(module_path, class_name):
-    """Rejeita nomes de DEPRECATED_SYNONYMS fora das exceções justificadas.
+@pytest.mark.parametrize("par", SCHEMA_CASES)
+def test_no_deprecated_synonyms_in_schemas(par: SchemaMapeado):
+    """Rejeita nomes de DEPRECATED_SYNONYMS em qualquer schema mapeado.
 
     Ver CONTRIBUTING.md > Schemas pydantic > Nomes e tipos canônicos.
     """
-    schema_cls = _resolve(module_path, class_name)
-    proibidos: list[str] = []
-    for name in schema_cls.model_fields:
-        if name not in DEPRECATED_SYNONYMS:
-            continue
-        if (class_name, name) in SYNONYM_GRACE_PERIOD:
-            continue
-        proibidos.append(f"{name} (use {DEPRECATED_SYNONYMS[name]})")
+    schema_cls, class_name = par.schema, par.classe
+    proibidos = [
+        f"{name} (use {DEPRECATED_SYNONYMS[name]})"
+        for name in schema_cls.model_fields
+        if name in DEPRECATED_SYNONYMS
+    ]
     if proibidos:
         items = "\n * ".join(proibidos)
         pytest.fail(
@@ -215,38 +179,26 @@ def test_no_deprecated_synonyms_in_schemas(module_path, class_name):
 
 
 def test_grace_period_exceptions_are_still_needed():
-    """Cada grace-period exception aparece no schema que referencia.
+    """Cada excecao de TYPE_GRACE_PERIOD aparece no schema que referencia.
 
-    Impede que a lista cresca silenciosamente: quando o PR de correcao
-    entra, essa entrada precisa sair daqui junto — se nao sair, o teste
-    falha lembrando de limpar.
+    Impede que a lista cresca silenciosamente: quando a correcao entra, a
+    entrada precisa sair daqui junto — se nao sair, o teste falha lembrando
+    de limpar. Schema que saiu dos mapas tambem deixa a excecao orfa.
     """
-    orphans: list[str] = []
-
-    def _check(class_name: str, field_name: str, kind: str):
-        # Acha o modulo via EXPECTED_*; caso o schema tenha sido removido
-        # do mapeamento, e obviamente orphan.
-        for mapping in (
-            EXPECTED_COURT_SCHEMAS,
-            EXPECTED_AGGREGATOR_SCHEMAS,
-            EXPECTED_COURT_OUTPUT_SCHEMAS,
-            EXPECTED_AGGREGATOR_OUTPUT_SCHEMAS,
-        ):
-            for module_path, cn in mapping.values():
-                if cn != class_name:
-                    continue
-                schema_cls = _resolve(module_path, class_name)
-                if field_name in schema_cls.model_fields:
-                    return
-        orphans.append(f"{kind}: {class_name}.{field_name}")
-
-    for (class_name, field_name) in TYPE_GRACE_PERIOD:
-        _check(class_name, field_name, "TYPE_GRACE_PERIOD")
-    for (class_name, field_name) in SYNONYM_GRACE_PERIOD:
-        _check(class_name, field_name, "SYNONYM_GRACE_PERIOD")
-
-    assert not orphans, (
-        "Grace-period exceptions que ja nao aparecem no schema (remover "
-        "da lista — a correcao provavelmente ja entrou):\n  - "
-        + "\n * ".join(orphans)
-    )
+    mapeados = {
+        class_name: module_path
+        for mapping in (INPUT_SCHEMAS, OUTPUT_SCHEMAS)
+        for module_path, class_name in mapping.values()
+    }
+    orphans = [
+        f"{class_name}.{field_name}"
+        for class_name, field_name in TYPE_GRACE_PERIOD
+        if class_name not in mapeados
+        or field_name not in resolve(mapeados[class_name], class_name).model_fields
+    ]
+    if orphans:
+        items = "\n * ".join(orphans)
+        pytest.fail(
+            "TYPE_GRACE_PERIOD tem excecoes que ja nao aparecem no schema "
+            f"(remover da lista — a correcao provavelmente ja entrou):\n * {items}"
+        )
