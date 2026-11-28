@@ -193,7 +193,6 @@ class EsajCjpgScraper(EsajSentencaScraper):
                   e ignorado (emite ``UserWarning``).
 
         Aliases deprecados:
-
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``classes`` -> ``classe``
             * ``assuntos`` -> ``assunto``

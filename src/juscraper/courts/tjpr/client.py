@@ -226,7 +226,6 @@ class TJPRScraper(HTTPScraper):
                 os parâmetros explícitos, campos de :class:`InputCJSGTJPR`.
 
         Aliases deprecados:
-
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``

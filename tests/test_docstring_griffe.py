@@ -7,8 +7,10 @@ linhas), entrada de ``Raises:`` com várias exceções, ``Returns:`` que o griff
 lê com itens a mais, sem tipo, com o tipo repetido ou com tipo diferente da
 assinatura, entrada de ``Args:`` com tipo escrito em parâmetro anotado (o
 tipo da docstring se sobrepõe à anotação), a seção ``Warns:``, que derruba
-o build, e seção no estilo numpy (título sublinhado por ``---``), que o parser
-Google publica como texto, sem a tabela de parâmetros. Os casos e as formas
+o build, seção no estilo numpy (título sublinhado por ``---``), que o parser
+Google publica como texto, sem a tabela de parâmetros, título ``Nome:`` que o
+griffe deixa de abrir como seção e lista colada a uma linha de texto, que o
+Pandoc junta ao parágrafo. Os casos e as formas
 certas estão no CONTRIBUTING, em "Docstrings de métodos públicos com kwargs".
 
 Cada módulo é lido com ``griffe.visit``, sem importar o pacote, para que a
@@ -29,17 +31,21 @@ _FALHA_DE_PAR = "Failed to get '"
 # Um tipo (``pd.DataFrame``, ``dict[str, Any]``, ``str | None``) seguido de dois-pontos.
 _TIPO = r"[A-Za-z_][\w.]*(?:\[[^:]*\])?"
 _PREFIXO_DE_TIPO = re.compile(rf"^({_TIPO}(?:\s*\|\s*{_TIPO})*):(?:\s|$)")
-# Título de seção numpy: uma linha de texto e, logo abaixo, uma linha só de ``-``.
 # Item de lista em Markdown: ``*``, ``-`` ou ``+`` seguido de espaço.
 _ITEM_DE_LISTA = re.compile(r"^\s*[*+-]\s+\S")
+# O griffe registra em DEBUG o título ``Nome:`` que ele deixa de abrir como seção
+# ("Possible section skipped" ou "Possible admonition skipped"), por linha em
+# branco logo abaixo do título ou por falta dela acima: o bloco sai como texto.
+_SECAO_PULADA = "Possible "
+# Título de seção numpy: uma linha de texto e, logo abaixo, uma linha só de ``-``.
 _SECAO_NUMPY = re.compile(r"^[ \t]*(\S[^\n]*?)[ \t]*\n[ \t]*-{3,}[ \t]*$", re.MULTILINE)
 
 
 class _Coletor(logging.Handler):
-    """Guarda os avisos que o griffe registra enquanto lê as docstrings."""
+    """Guarda as mensagens que o griffe registra enquanto lê as docstrings."""
 
     def __init__(self) -> None:
-        super().__init__(logging.WARNING)
+        super().__init__(logging.DEBUG)
         self.mensagens: list[str] = []
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -72,8 +78,15 @@ def _motivo_da_lista_colada(texto: str) -> str | None:
     deprecados (popados com ...):``, cujo bloco fica como texto corrido.
     """
     na_lista = False
+    em_codigo = False
     anterior = ""
     for linha in texto.splitlines():
+        if linha.lstrip().startswith(("```", "~~~")):
+            em_codigo = not em_codigo
+            anterior = ""
+            continue
+        if em_codigo:
+            continue
         if not linha.strip():
             na_lista = False
         elif _ITEM_DE_LISTA.match(linha):
@@ -179,7 +192,7 @@ def problemas_do_codigo(codigo: str, modulo: str = "modulo", caminho: Path | Non
     logger = logging.getLogger("griffe")
     nivel = logger.level
     logger.addHandler(coletor)
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(logging.DEBUG)
     try:
         for objeto in _objetos(raiz):
             if objeto.docstring is None:
@@ -194,7 +207,9 @@ def problemas_do_codigo(codigo: str, modulo: str = "modulo", caminho: Path | Non
     finally:
         logger.removeHandler(coletor)
         logger.setLevel(nivel)
-    problemas.extend(mensagem for mensagem in coletor.mensagens if _FALHA_DE_PAR in mensagem)
+    problemas.extend(
+        mensagem for mensagem in coletor.mensagens if _FALHA_DE_PAR in mensagem or _SECAO_PULADA in mensagem
+    )
     return problemas
 
 
@@ -349,6 +364,11 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         '    A implementação fica em:\n'
         '    - ``juscraper.courts``\n'
         '    """\n',
+        'def f():\n'
+        '    """Resumo.\n\n'
+        '    Aliases deprecados:\n\n'
+        '        * ``query`` -> ``pesquisa``\n'
+        '    """\n',
     ],
     ids=[
         "raises-com-virgula",
@@ -375,6 +395,7 @@ def test_docstrings_do_pacote_sao_lidas_como_pretendido():
         "numpy-no-modulo",
         "lista-sob-titulo-nao-reconhecido",
         "lista-colada-ao-paragrafo",
+        "titulo-de-secao-com-linha-em-branco",
     ],
 )
 def test_forma_lida_errado_e_reprovada(codigo):

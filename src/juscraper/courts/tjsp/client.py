@@ -212,7 +212,6 @@ class TJSPScraper(EsajCjpgScraper, EsajAcordaoScraper):
                   Soma bruta cross-janela em ``auto_chunk=True``.
 
         Aliases deprecados:
-
             * ``query`` / ``termo`` -> ``pesquisa``
             * ``data_inicio`` / ``data_fim`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
             * ``data_julgamento_de`` / ``data_julgamento_ate`` -> ``data_julgamento_inicio`` / ``data_julgamento_fim``
