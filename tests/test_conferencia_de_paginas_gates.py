@@ -47,7 +47,6 @@ _SESSAO_JSF = "pendente: sessão de adoção 1 (JSF/sessão: TJPE, TJRR, TJMG, T
 _SESSAO_PAGINAS = "pendente: sessão de adoção 2 (baixar_paginas_pedidas com n_itens)"
 _SESSAO_JSON = "pendente: sessão de adoção 3 (contagem estrita nos JSON)"
 _SESSAO_PJE = "pendente: sessão de adoção 6 (_trf/PJe, TRF3 cpopg e TJSP show.do)"
-_SESSAO_771 = "pendente: sessão TJGO/TJRR/TJSC que retoma o #771"
 
 # Caminho relativo a src/juscraper -> (achados, motivo).
 EXCECOES_DEFAULT = {
@@ -55,7 +54,6 @@ EXCECOES_DEFAULT = {
     "courts/stf/_collection.py": (1, "soma de conferência das janelas filhas, não default de contagem"),
     "courts/tjba/download.py": (2, _SESSAO_JSON),
     "courts/tjes/download.py": (1, _SESSAO_JSON),
-    "courts/tjgo/download.py": (1, _SESSAO_771),
     "courts/tjmg/download.py": (1, _SESSAO_JSF),
     "courts/tjpa/download.py": (1, _SESSAO_JSON),
     "courts/tjpb/download.py": (1, _SESSAO_JSON),
@@ -63,9 +61,7 @@ EXCECOES_DEFAULT = {
     "courts/tjrj/download.py": (1, _SESSAO_JSON),
     "courts/tjrn/download.py": (1, _SESSAO_JSON),
     "courts/tjro/download.py": (3, _SESSAO_JSON),
-    "courts/tjrr/download.py": (1, _SESSAO_771),
     "courts/tjrs/download.py": (1, _SESSAO_JSON),
-    "courts/tjsc/download.py": (1, _SESSAO_771),
     "courts/trf3/download.py": (1, _SESSAO_PJE),
 }
 
