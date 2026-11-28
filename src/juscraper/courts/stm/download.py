@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 import requests
@@ -12,6 +12,7 @@ from juscraper.core.exceptions import BotChallengeBlockedError
 from juscraper.core.http import RequestFn
 from juscraper.utils.pagination import (
     AvisoVazio,
+    Paginas,
     baixar_paginas_pedidas,
     extract_count_with_cascade,
     resolve_total_pages,
@@ -204,7 +205,7 @@ def cjsg_n_pags(html: str) -> int:
 
 def cjsg_download_manager(
     pesquisa: str,
-    paginas: Iterable[int] | None = None,
+    paginas: Paginas | None = None,
     *,
     request_fn: RequestFn,
     sleep_time: float = 1.0,

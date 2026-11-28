@@ -37,6 +37,7 @@ from ...utils.pagination import (
     AvisoVazio,
     ConferenciaDePaginas,
     PaginaEsperada,
+    Paginas,
     exigir_pagina,
     extract_count_with_cascade,
     paginas_no_intervalo,
@@ -475,7 +476,7 @@ def cjsg_n_results(html: str) -> int | None:
     )
 
 
-def _paginas_pedidas(paginas: Iterable[int] | None, n_paginas: int | None) -> list[int]:
+def _paginas_pedidas(paginas: Paginas | None, n_paginas: int | None) -> list[int]:
     """Resolve a lista de páginas a baixar, 1-based, na ordem pedida e sem repetição.
 
     Com ``paginas=None`` baixa todas; exige o total. Páginas além do total são

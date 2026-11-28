@@ -13,6 +13,7 @@ import pytest
 import juscraper
 from juscraper.courts._esaj.cjpg_download import _TIMEOUT, _normalize_pages, cjpg_download
 from juscraper.courts._esaj.cjpg_parse import cjpg_n_pags, cjpg_n_results, cjpg_parse_manager, cjpg_parse_single
+from juscraper.utils.pagination import selecao_de_paginas
 from tests._helpers import load_sample, load_sample_bytes
 
 
@@ -411,7 +412,7 @@ class TestCJPGDownload1Based:
 
     def test_aviso_sai_no_logger_do_tribunal_de_u_base(self, caplog):
         with caplog.at_level(logging.WARNING, logger="juscraper.tjms"):
-            assert _normalize_pages([1, 5], 2, "https://esaj.tjms.jus.br/") == [1]
+            assert _normalize_pages(selecao_de_paginas([1, 5]), 2, "https://esaj.tjms.jus.br/") == [1]
 
         assert [(r.name, r.getMessage()) for r in caplog.records] == [
             ("juscraper.tjms", "TJMS: página 5 fora do intervalo 1-2"),

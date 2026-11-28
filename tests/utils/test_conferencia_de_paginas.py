@@ -19,6 +19,7 @@ from juscraper.utils.pagination import (
     contagem_json,
     exigir_pagina,
     resolve_total_pages,
+    selecao_de_paginas,
 )
 
 # ---------------------------------------------------------------------------
@@ -262,7 +263,7 @@ def test_baixar_paginas_pedidas_busca_vazia_e_ultima_pagina_curta_passam():
 def test_baixar_paginas_pedidas_primeira_alem_do_total_nao_e_conferida():
     """A página pedida além do total vai para o log, sem conferência nem segunda requisição."""
     buscar, contar, n_itens, _, pedidas = _portal({}, 2)
-    assert baixar_paginas_pedidas([5], buscar, contar, tribunal="TJXX", n_itens=n_itens) == []
+    assert baixar_paginas_pedidas(selecao_de_paginas([5]), buscar, contar, tribunal="TJXX", n_itens=n_itens) == []
     assert pedidas == [5]
 
 

@@ -3,7 +3,7 @@ import math
 from urllib.parse import unquote
 
 from juscraper.core.http import RequestFn
-from juscraper.utils.pagination import baixar_paginas_pedidas, contador_com_teto
+from juscraper.utils.pagination import baixar_paginas_pedidas, recusar_alem_do_teto
 
 BASE_URL = "https://pje-jurisprudencia.tjpb.jus.br"
 CLASSES_URL = f"{BASE_URL}/api/pje/classes/list"
@@ -95,7 +95,8 @@ def cjsg_download_manager(
         return math.ceil(total / RESULTS_PER_PAGE) if total else 1
 
     # Antes do token: a página além do teto é recusada sem nenhuma requisição.
-    contar = contador_com_teto(paginas, MAX_RESULTS // RESULTS_PER_PAGE, _n_pags, tribunal="TJPB")
+    teto = MAX_RESULTS // RESULTS_PER_PAGE
+    recusar_alem_do_teto(paginas, teto, tribunal="TJPB")
     xsrf_token = fetch_csrf_token(request_fn)
     headers = {
         "X-Requested-With": "XMLHttpRequest",
@@ -114,4 +115,4 @@ def cjsg_download_manager(
         data: dict = resp.json()
         return data
 
-    return baixar_paginas_pedidas(paginas, _get_page, contar, tribunal="TJPB", sleep_time=1)
+    return baixar_paginas_pedidas(paginas, _get_page, _n_pags, tribunal="TJPB", sleep_time=1, teto=teto)

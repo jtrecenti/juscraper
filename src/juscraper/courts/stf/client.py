@@ -129,7 +129,8 @@ class STFScraper(HTTPScraper):
                 (``terceiriz$``), ``ou`` como disjuncao, ``AND``/``NOT`` e aspas do
                 Elasticsearch. ``None`` busca tudo o que os filtros selecionam.
             paginas: Paginas 1-based; ``None`` baixa
-                todas. Default ``None``.
+                todas. Default ``None``. A página repetida sai uma vez só, e a
+                além do total vai para o log, sem requisição.
             **kwargs: Filtros aceitos pelo schema :class:`InputListarDecisoesSTF`.
                 Listados abaixo (todos opcionais; ``None`` = sem filtro):
 

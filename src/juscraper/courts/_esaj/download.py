@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING
 
 from tqdm import tqdm
 
-from ...utils.pagination import paginas_no_intervalo
+from ...utils.pagination import Paginas, paginas_no_intervalo
 
 if TYPE_CHECKING:
     from ...core.http import HTTPScraper
@@ -124,7 +124,7 @@ def download_cjsg_pages(
     download_path: str,
     body: dict,
     tipo_decisao: str,
-    paginas: "list | range | None" | None,
+    paginas: Paginas | None,
     get_n_pags_callback: Callable[[str], int],
     sleep_time: float = 1.0,
     chrome_ua: bool = False,
