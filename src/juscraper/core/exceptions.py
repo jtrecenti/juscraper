@@ -64,6 +64,46 @@ class HTTPSemanticError(Exception):
     """Base para respostas HTTP-200 semanticamente erradas (página de erro disfarçada)."""
 
 
+class PaginaInesperadaError(_RecriaSemInit, HTTPSemanticError, ValueError, RuntimeError):
+    """A resposta não é a página que o fluxo espera, ou contradiz a contagem da busca.
+
+    Levantada pelos helpers de :mod:`juscraper.utils.pagination` que conferem
+    cada resposta antes de se ler algo dela: ``exigir_pagina`` (página de
+    outro tipo, como formulário, sessão expirada ou etapa intermediária),
+    ``ConferenciaDePaginas`` e ``baixar_paginas_pedidas`` (página dentro do total
+    sem itens, ou que repete uma anterior) e ``resolve_total_pages``
+    (contagem ausente ou menor que as linhas da página). Sem a conferência,
+    essas respostas viram busca vazia ou coleta menor sem erro.
+
+    Vira o motivo :data:`juscraper.core.failures.MOTIVO_RESPOSTA_INESPERADA`.
+    Herda de ``ValueError`` e de ``RuntimeError``, os erros que esses
+    caminhos levantavam antes dela, para que o ``except`` de quem já os
+    capturava continue valendo.
+
+    Attributes:
+        tribunal: Sigla do tribunal ou nome do agregador.
+        etapa: Onde a conferência falhou (``"contagem"``, ``"paginação"``,
+            ``"cjsg"``, ``"passo 3: escolha do tipo"``).
+        pagina: Página da busca, quando a etapa é paginada.
+        url: Endereço da resposta, quando conhecido.
+    """
+
+    def __init__(
+        self,
+        mensagem: str,
+        *,
+        tribunal: str,
+        etapa: str,
+        pagina: int | None = None,
+        url: str | None = None,
+    ):
+        self.tribunal = tribunal
+        self.etapa = etapa
+        self.pagina = pagina
+        self.url = url
+        super().__init__(mensagem)
+
+
 class CaptchaEsgotadoError(HTTPSemanticError, RuntimeError):
     """O portal recusou o captcha resolvido em todas as tentativas de uma consulta.
 

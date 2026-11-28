@@ -37,6 +37,7 @@ from juscraper.core.exceptions import (
     BotChallengeBlockedError,
     CaptchaEsgotadoError,
     InvalidJSONResponseError,
+    PaginaInesperadaError,
     RetryExhaustedError,
 )
 
@@ -62,6 +63,8 @@ MOTIVO_NAO_PDF = "nao_pdf"
 
 MOTIVO_RESPOSTA_INESPERADA = "resposta_inesperada"
 """Página HTML fora do formato conhecido, no lugar da que o fluxo espera.
+
+É o motivo de :class:`~juscraper.core.exceptions.PaginaInesperadaError`.
 
 Também é o motivo de erro do item sem motivo próprio no vocabulário, por
 :func:`motivo_falha_ou_inesperada`, para que a linha siga no lote em vez de
@@ -184,6 +187,7 @@ _MOTIVO_POR_TIPO: tuple[tuple[tuple[type[BaseException], ...], str], ...] = (
     # Corpo comprimido que não descomprime: a conexão entregou tudo (a queda
     # no meio do gzip sai ChunkedEncodingError), mas a resposta é inválida.
     ((requests.exceptions.ContentDecodingError,), MOTIVO_RESPOSTA_INESPERADA),
+    ((PaginaInesperadaError,), MOTIVO_RESPOSTA_INESPERADA),
 )
 """Motivo das exceções sem status, na ordem em que :func:`motivo_falha` testa."""
 

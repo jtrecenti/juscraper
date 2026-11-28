@@ -14,6 +14,7 @@ from juscraper.core.exceptions import (
     BotChallengeBlockedError,
     CaptchaEsgotadoError,
     InvalidJSONResponseError,
+    PaginaInesperadaError,
     RetryExhaustedError,
     WafChallengeError,
 )
@@ -21,6 +22,7 @@ from juscraper.core.failures import (
     COLUNA_MOTIVO_FALHA,
     EXCECOES_DE_FALHA_POR_LINHA,
     EXEMPLOS_NO_AVISO,
+    MOTIVO_RESPOSTA_INESPERADA,
     MOTIVOS_FALHA,
     STATUS_CONSULTA_FALHA,
     STATUS_TOKEN_INVALIDO,
@@ -138,6 +140,12 @@ def test_motivo_falha_ou_inesperada():
     assert motivo_falha_ou_inesperada(_http_error(404)) == "http_404"
     assert motivo_falha_ou_inesperada(requests.TooManyRedirects()) == "resposta_inesperada"
     assert motivo_falha_ou_inesperada(ValueError("layout")) == "resposta_inesperada"
+
+
+def test_pagina_inesperada_tem_motivo_resposta_inesperada():
+    erro = PaginaInesperadaError("não é a lista", tribunal="TRF3", etapa="cjsg")
+    assert motivo_falha(erro) == MOTIVO_RESPOSTA_INESPERADA
+    assert motivo_falha_ou_inesperada(erro) == MOTIVO_RESPOSTA_INESPERADA
 
 
 def test_avisar_falhas_sem_falha_nao_avisa(recwarn):

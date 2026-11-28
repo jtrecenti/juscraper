@@ -118,7 +118,10 @@ class STMScraper(HTTPScraper):
                 quando há filtro de data e ``pesquisa`` tem aspas no
                 meio ou barra invertida, ou, em ``buscar_em="numero"``, algo além
                 do número do processo; quando a página devolvida não traz o
-                contador de documentos nem o aviso de busca vazia.
+                contador de documentos nem o aviso de busca vazia, ou uma
+                página dentro do total vem sem documentos
+                (:class:`~juscraper.core.exceptions.PaginaInesperadaError`,
+                subclasse de ``ValueError``).
             BotChallengeBlockedError: Quando o WAF do portal recusa a
                 requisição.
 

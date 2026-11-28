@@ -39,6 +39,7 @@ uv run pre-commit run --files <arquivos>    # antes de concluir uma alteração
 | HTTP, retry, falhas por linha, coleta parcial | `CONTRIBUTING.md` > **Falhas HTTP, falhas por linha e coleta parcial** |
 | Laço de páginas, `paginas` explícito | `CONTRIBUTING.md` > **Seleção de páginas** |
 | Contagem de páginas/resultados em HTML | `CONTRIBUTING.md` > **Contagem de páginas e resultados em HTML** |
+| Conferir resposta antes de ler (tipo da página, contagem ausente, página vazia ou repetida) | `CONTRIBUTING.md` > **Contagem de páginas e resultados em HTML** > **Conferência de cada resposta** |
 | Samples, integração, CI | `CONTRIBUTING.md` > **Tests** |
 | Lint e complexidade | `CONTRIBUTING.md` > **Política de lint e adoção gradual** e **Complexidade de código (lizard + complexipy)** |
 

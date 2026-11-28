@@ -15,7 +15,6 @@ from juscraper.utils.pagination import (
     Paginas,
     baixar_paginas_pedidas,
     extract_count_with_cascade,
-    menor_pagina,
     resolve_total_pages,
 )
 
@@ -220,15 +219,14 @@ def cjsg_download_manager(
     Raises:
         BotChallengeBlockedError: Quando o WAF recusa a requisição.
         ValueError: Quando há filtro de data e o termo não cabe na consulta
-            avançada (ver :func:`montar_consulta_avancada`); quando a primeira página pedida não traz o contador de
-            documentos nem o aviso de busca vazia, ou quando uma das seguintes
-            vem sem documentos.
+            avançada (ver :func:`montar_consulta_avancada`).
+        PaginaInesperadaError: Quando a primeira página pedida não traz o
+            contador de documentos nem o aviso de busca vazia, ou quando uma
+            das seguintes vem sem documentos. Herda de ``ValueError``.
 
     Returns:
         O HTML de cada página, na ordem pedida.
     """
-    primeira = menor_pagina(paginas)
-
     def buscar(pagina: int) -> str:
         resp = request_fn(
             "GET",
@@ -238,11 +236,18 @@ def cjsg_download_manager(
             on_response=conferir_bloqueio,
         )
         resp.encoding = "utf-8"
-        html = resp.text
-        # ``primeira`` é conferida por ``cjsg_n_pags``. As demais só são
-        # pedidas dentro do total: sem contador, não são de resultados.
-        if pagina != primeira and not cjsg_n_resultados(html):
-            raise ValueError(f"STM: a página {pagina} da busca veio sem o contador de documentos.")
-        return html
+        return resp.text
 
-    return baixar_paginas_pedidas(paginas, buscar, cjsg_n_pags, tribunal="STM", sleep_time=sleep_time)
+    # ``n_itens`` recebe o total do contador ("1 - 100 de 351 documentos"),
+    # que só aparece em página com documentos: o aviso de busca vazia conta 0,
+    # e página sem um nem outro, ``None``. Basta para a regra de ao menos um
+    # item por página dentro do total.
+    return baixar_paginas_pedidas(
+        paginas,
+        buscar,
+        cjsg_n_pags,
+        tribunal="STM",
+        sleep_time=sleep_time,
+        n_itens=cjsg_n_resultados,
+        itens="o contador de documentos",
+    )
